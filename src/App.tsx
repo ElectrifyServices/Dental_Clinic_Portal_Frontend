@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+
+
+
+
+import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { LoginForm } from './components/Auth/LoginForm';
@@ -40,6 +44,12 @@ import { ConsentFormViewer } from './components/Consent/ConsentFormViewer';
 import { User, Phone, Stethoscope, MessageSquare, AlertTriangle, X, DollarSign } from 'lucide-react';
 
 function MainApp() {
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [patients, setPatients] = useState<any[]>(() => {
+  const stored = localStorage.getItem("patients");
+  return stored ? JSON.parse(stored) : [];
+});
+
   const { state } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -51,7 +61,25 @@ function MainApp() {
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [isQuickBooking, setIsQuickBooking] = useState(false);
-  const [appointments, setAppointments] = useState<any[]>([]);
+const [appointments, setAppointments] = useState<any[]>(() => {
+  try {
+    const stored = localStorage.getItem("appointments");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
+const today = new Date()
+
+const todayAppointments = appointments.filter(a => {
+  const d = new Date(a.date)
+  return d.toDateString() === today.toDateString()
+})
+// const listCount = todayAppointments.length;
+const listCount = appointments.filter(
+  a => a.status !== 'no-show'
+).length;
+
   const [showConsentViewer, setShowConsentViewer] = useState(false);
   const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
   const [showTreatmentViewer, setShowTreatmentViewer] = useState(false);
@@ -60,7 +88,7 @@ function MainApp() {
   const [showSessionManager, setShowSessionManager] = useState(false);
   const [selectedTreatmentId, setSelectedTreatmentId] = useState('');
   const [treatments, setTreatments] = useState<any[]>([]);
-  const [patients, setPatients] = useState<any[]>([]);
+
   const [showDoctorScheduleManager, setShowDoctorScheduleManager] = useState(false);
   const [selectedDoctorIdForSchedule, setSelectedDoctorIdForSchedule] = useState('');
   const [selectedDoctorNameForSchedule, setSelectedDoctorNameForSchedule] = useState('');
@@ -76,7 +104,33 @@ function MainApp() {
   const [showDiagnoseForm, setShowDiagnoseForm] = useState(false);
   const [selectedPatientForDiagnose, setSelectedPatientForDiagnose] = useState<any>(null);
   const [viewMode, setViewMode] = useState('calendar');
+const [patientFormType, setPatientFormType] = useState<'normal' | 'person'>('normal');
+const [parentPatientId, setParentPatientId] = useState('');
+const selectedPatient = patients.find(p => p.id === selectedPatientId);
+const familyMembers = patients.filter(p => {
+  if (!selectedPatient) return false;
 
+  const parentId = selectedPatient.parentId || selectedPatient.id;
+
+  return (
+    p.id !== selectedPatient.id && ( // khud ko exclude karo
+      p.parentId === parentId ||     // siblings + children
+      p.id === parentId              // parent
+    )
+  );
+});
+useEffect(() => {
+  localStorage.setItem("patients", JSON.stringify(patients));
+}, [patients]);
+useEffect(() => {
+  localStorage.setItem("appointments", JSON.stringify(appointments));
+}, [appointments]);
+const handleSendReminder = (patientId: string, amount: number) => {
+  console.log("Reminder sent to:", patientId, "Amount:", amount);
+
+  // optional UI feedback
+  alert(`Reminder sent for ₹${amount}`);
+};
   // Mock queued patients data
   const mockQueuedPatients = [
     {
@@ -229,11 +283,13 @@ function MainApp() {
     setIsQuickBooking(true);
     setShowAppointmentForm(true);
   };
+const [selectedDate, setSelectedDate] = useState(null)
 
-  const handleNewAppointment = () => {
-    setIsQuickBooking(false);
-    setShowAppointmentForm(true);
-  };
+const handleNewAppointment = (date?) => {
+  setSelectedDate(date || null)
+  setIsQuickBooking(false)
+  setShowAppointmentForm(true)
+}
 
   const handleViewPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -245,11 +301,20 @@ function MainApp() {
     alert(`Payment reminder sent to patient ${patientId} for ₹${amount.toLocaleString()}`);
   };
 
-  const handleSaveAppointment = (appointment: any) => {
-    setAppointments(prev => [...prev, appointment]);
-    setShowAppointmentForm(false);
-    setIsQuickBooking(false);
-  };
+const handleSaveAppointment = (appointment: any) => {
+  setAppointments(prev => {
+    const existing = prev.find(a => a.id === appointment.id)
+
+    if (existing) {
+      return prev.map(a => a.id === appointment.id ? appointment : a)
+    }
+
+    return [...prev, appointment]
+  })
+
+  setShowAppointmentForm(false)
+  setSelectedAppointment(null)
+}
 
   const handleViewConsentForm = (formId: string) => {
     setSelectedItemId(formId);
@@ -365,19 +430,36 @@ function MainApp() {
     setSelectedItemId('');
   };
 
-  const handleSavePatient = (patient: any) => {
-    setLoading(true);
-    if (selectedPatientId) {
-      setPatients(prev => prev.map(p => p.id === selectedPatientId ? patient : p));
-    } else {
-      setPatients(prev => [...prev, patient]);
+const handleSavePatient = (patient) => {
+  setPatients(prev => {
+    const existing = prev.find(p => p.id === patient.id);
+
+    const updatedPatient = {
+      ...patient,
+
+      isPerson: existing
+        ? existing.isPerson
+        : patientFormType === 'person',
+
+      parentId: existing
+        ? existing.parentId
+        : (patientFormType === 'person' ? parentPatientId : null),
+      prescriptionHistory: existing?.prescriptionHistory || [],
+      documents: existing?.documents || []
+    };
+
+    if (existing) {
+      return prev.map(p => p.id === patient.id ? updatedPatient : p);
     }
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    setShowPatientForm(false);
-    setSelectedPatientId('');
-  };
+
+    return [...prev, updatedPatient];
+  });
+
+  setShowPatientForm(false);
+};
+  const handleDeletePatient = (patientId: string) => {
+  setPatients(prev => prev.filter(p => p.id !== patientId));
+};
 
   const renderPage = () => {
     switch (currentPage) {
@@ -423,7 +505,7 @@ function MainApp() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  List
+                  List ({listCount})
                 </button>
                 <button
                   onClick={() => setViewMode('no-show')}
@@ -437,11 +519,15 @@ function MainApp() {
                 </button>
               </div>
             </div>
-            {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} />}
+            {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} appointments={appointments} />}
             {viewMode === 'list' && (
               <AppointmentList 
                 appointments={appointments.filter(apt => apt.status !== 'no-show')}
-                onEditAppointment={(id) => console.log('Edit appointment:', id)}
+onEditAppointment={(id) => {
+  const apt = appointments.find(a => a.id === id)
+  setSelectedAppointment(apt)
+  setShowAppointmentForm(true)
+}}
                 onDeleteAppointment={handleDeleteAppointment}
                 onUpdateStatus={handleUpdateAppointmentStatus}
                 onCheckInPatient={handleCheckInPatient}
@@ -452,7 +538,11 @@ function MainApp() {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">No Show Appointments</h3>
                 <AppointmentList 
                   appointments={appointments.filter(apt => apt.status === 'no-show')}
-                  onEditAppointment={(id) => console.log('Edit appointment:', id)}
+                  onEditAppointment={(id) => {
+  const apt = appointments.find(a => a.id === id)
+  setSelectedAppointment(apt)
+  setShowAppointmentForm(true)
+}}
                   onDeleteAppointment={handleDeleteAppointment}
                   onUpdateStatus={handleUpdateAppointmentStatus}
                   onCheckInPatient={handleCheckInPatient}
@@ -705,7 +795,7 @@ function MainApp() {
             </div>
             <PatientQueue
               doctorName={state.user?.name || 'Doctor'}
-              queuedPatients={queuedPatients.length > 0 ? queuedPatients : mockQueuedPatients}
+              queuedPatients={queuedPatients}
               onSelectPatient={(patient) => {
                 setSelectedPatientForConsultation(patient);
                 setShowPatientConsultation(true);
@@ -724,18 +814,26 @@ function MainApp() {
       case 'patients':
         return (
           <PatientList
-            onAddPatient={() => setShowPatientForm(true)}
+            patients={patients}  
+onAddPatient={(type, patientId) => {
+  if (type === 'person') {
+    setParentPatientId(patientId); // ✅ store parent
+  }
+
+  setSelectedPatientId(''); // ✅ RESET (IMPORTANT)
+  setPatientFormType(type === 'person' ? 'person' : 'normal');
+  setShowPatientForm(true);
+}}
             onViewPatient={handleViewPatient}
             onEditPatient={(patientId) => {
               setSelectedPatientId(patientId);
               setShowPatientForm(true);
             }}
-            onDeletePatient={(patientId) => {
-              if (confirm('Are you sure you want to delete this patient?')) {
-                console.log('Delete patient:', patientId);
-                // In a real app, this would call an API to delete the patient
-              }
-            }}
+onDeletePatient={(patientId) => {
+  if (confirm('Are you sure you want to delete this patient?')) {
+    handleDeletePatient(patientId); 
+  }
+}}
           />
         );
       
@@ -800,22 +898,22 @@ function MainApp() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header 
-        onQuickAppointment={handleQuickAppointment} 
-        onShowTodaySchedule={() => setShowTodaySchedulePopup(true)}
-      />
+return (
+  <div className="min-h-screen bg-gray-50">
+    <Header 
+      onQuickAppointment={handleQuickAppointment} 
+      onShowTodaySchedule={() => setShowTodaySchedulePopup(true)}
+    />
+    
+    <div className="flex">
+      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
       
-      <div className="flex flex-1">
-        <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-        
-        <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-            {renderPage()}
-          </main>
-        </div>
+      <div className="flex-1 min-w-0">
+        <main className="p-4 md:p-6 pb-20 md:pb-6">
+          {renderPage()}
+        </main>
       </div>
+    </div>
       
       {/* Diagnose Form */}
       {showDiagnoseForm && selectedPatientForDiagnose && (
@@ -932,13 +1030,18 @@ function MainApp() {
       <MobileNav currentPage={currentPage} onPageChange={setCurrentPage} />
       
       {/* Modals */}
-      {showPatientForm && (
-        <PatientForm
-          onClose={() => setShowPatientForm(false)}
-          onSave={handleSavePatient}
-          patient={selectedPatientId ? patients.find(p => p.id === selectedPatientId) : undefined}
-        />
-      )}
+{showPatientForm && (
+  <PatientForm
+    onClose={() => setShowPatientForm(false)}
+    onSave={handleSavePatient}
+patient={
+  patientFormType === 'person'
+    ? undefined   
+    : patients.find(p => p.id === selectedPatientId)
+}
+    type={patientFormType} 
+  />
+)}
       
       {showAppointmentForm && (
         <AppointmentForm
@@ -947,9 +1050,12 @@ function MainApp() {
             setIsQuickBooking(false);
           }}
           onSave={handleSaveAppointment}
+          appointment={selectedAppointment}  
           isQuickBooking={isQuickBooking}
           doctors={doctorsWithSchedules}
           doctorAvailability={doctorAvailability}
+          appointments={appointments}
+          selectedDate={selectedDate}
         />
       )}
       
@@ -991,14 +1097,14 @@ function MainApp() {
         />
       )}
       
-      {showPatientDetails && (
-        <PatientDetails
-          patientId={selectedPatientId}
-          onClose={() => setShowPatientDetails(false)}
-          onSendReminder={handleSendPaymentReminder}
-        />
-      )}
-      
+{showPatientDetails && selectedPatient && (
+<PatientDetails
+  patient={selectedPatient}
+  familyMembers={familyMembers} 
+  onClose={() => setShowPatientDetails(false)}
+  onSendReminder={handleSendReminder} 
+/>
+)}      
       {showEMRForm && (
         <EMRForm
           onClose={() => setShowEMRForm(false)}

@@ -15,11 +15,49 @@ interface PatientFormProps {
   onClose: () => void;
   onSave: (patient: any) => void;
   patient?: any;
+  type?: 'normal' | 'person';
 }
 
-export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
+export function PatientForm({ onClose, onSave, patient, type }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  React.useEffect(() => {
+  if (patient) {
+    setFormData({
+      ...patient,
+      patientId: patient.id,
+      medicalHistory: patient.medicalHistory?.join('\n') || '',
+      allergies: patient.allergies?.join('\n') || '',
+    });
+  } else {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: 'male',
+      address: '',
+      emergencyContact: '',
+      emergencyName: '',
+      medicalHistory: '',
+      pastDentalHistory: '',
+      allergies: '',
+      allergyOther: '',
+      allergyNotes: '',
+      patientId: generatePatientId(),
+      barcode: '',
+      bloodGroup: '',
+      relation: '',
+      customRelation: '',
+      occupation: '',
+      maritalStatus: '',
+      insuranceProvider: '',
+      insuranceNumber: '',
+      referredBy: '',
+      avatar: ''
+    });
+  }
+}, [patient]);
   const [formData, setFormData] = useState({
     name: patient?.name || '',
     email: patient?.email || '',
@@ -37,6 +75,8 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
     patientId: patient?.id || generatePatientId(),
     barcode: patient?.barcode || '',
     bloodGroup: patient?.bloodGroup || '',
+    relation: '',
+    customRelation: '',
     occupation: patient?.occupation || '',
     maritalStatus: patient?.maritalStatus || '',
     insuranceProvider: patient?.insuranceProvider || '',
@@ -96,22 +136,32 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
       setStep(step + 1);
     }
   };
-
+const applyCustomRelation = () => {
+  if (formData.customRelation.trim()) {
+    setFormData(prev => ({
+      ...prev,
+      relation: prev.customRelation, 
+      customRelation: ''
+    }));
+  }
+};
+const handleCustomRelation = (value: string) => {
+  setFormData(prev => ({
+    ...prev,
+    customRelation: value
+  }));
+};
   const handlePrevious = () => {
     setStep(step - 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Only submit if we're on the final step (step 3)
     if (step !== 3) {
-      handleNext();
-      return;
-    }
-    
+  e.preventDefault(); 
+  return;
+} 
     setLoading(true);
-    
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
@@ -128,7 +178,10 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
       lastVisit: patient?.lastVisit || null,
       totalVisits: patient?.totalVisits || 0,
       outstandingBalance: patient?.outstandingBalance || 0,
-      status: patient?.status || 'new'
+      status: patient?.status || 'new',
+      relation: formData.relation === 'Other'
+  ? formData.customRelation
+  : formData.relation,
     });
     
     setLoading(false);
@@ -252,13 +305,13 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <div className="text-center mb-6">
+      {/* <div className="text-center mb-6">
         <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <User className="w-10 h-10 text-blue-600" />
         </div>
         <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
         <p className="text-gray-600">Enter patient's personal details</p>
-      </div>
+      </div> */}
 
       {/* Avatar Upload */}
       <div className="text-center">
@@ -404,7 +457,87 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
             <option value="O+">O+</option>
             <option value="O-">O-</option>
           </select>
-        </div>
+              </div>
+         {type === 'person' && (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Relation
+    </label>
+
+<select
+  name="relation"
+  value={formData.relation}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    setFormData(prev => ({
+      ...prev,
+      relation: value,
+      customRelation: value === 'Other' ? prev.customRelation : ''
+    }));
+  }}
+  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">Select Relation</option>
+  <option value="Father">Father</option>
+  <option value="Mother">Mother</option>
+  <option value="Brother">Brother</option>
+  <option value="Sister">Sister</option>
+  <option value="Wife">Wife</option>
+  <option value="Husband">Husband</option>
+  <option value="Friend">Friend</option>
+  <option value="Other">Other</option>
+
+  {/* ✅ Dynamic value */}
+  {formData.relation &&
+    ![
+      '',
+      'Father',
+      'Mother',
+      'Brother',
+      'Sister',
+      'Wife',
+      'Husband',
+      'Friend',
+      'Other'
+    ].includes(formData.relation) && (
+      <option value={formData.relation}>
+        {formData.relation}
+      </option>
+  )}
+</select>
+
+    {/* Other input */}
+{formData.relation === 'Other' && (
+  <div className="flex mt-3">
+    <input
+      type="text"
+      value={formData.customRelation}
+      onChange={(e) => handleCustomRelation(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyCustomRelation();
+        }
+      }}
+      placeholder="Enter custom relation"
+      className="w-full px-4 py-3 border border-gray-300 rounded-l-xl"
+    />
+
+    <button
+      type="button"
+      onClick={applyCustomRelation}
+      className="px-4 bg-blue-600 text-white rounded-r-xl"
+    >
+      →
+    </button>
+  </div>
+)}
+  </div>
+)}
+
+    
+        
       </div>
 
       <div>
@@ -775,7 +908,7 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -816,7 +949,7 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <div className="p-6">
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}
@@ -854,6 +987,7 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
                 <button
                   type="submit"
                   disabled={loading}
+                  onClick={(e) => handleSubmit(e as any)}
                   className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
                 >
                   {loading ? (
@@ -871,7 +1005,7 @@ export function PatientForm({ onClose, onSave, patient }: PatientFormProps) {
               )}
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
