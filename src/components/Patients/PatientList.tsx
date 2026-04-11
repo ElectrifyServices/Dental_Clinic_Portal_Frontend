@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, User, Phone, Calendar, MoreVertical, Edit, Trash2, QrCode, Download, Eye, UserCheck, UserX, Mail, MapPin, Heart, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Filter, User, Phone, Calendar, MoreVertical, Edit, Trash2, QrCode, Download, Eye, UserCheck, UserX, Mail, MapPin, Heart, AlertTriangle, UserPlus } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -17,90 +17,91 @@ interface Patient {
   allergies?: string[];
   avatar?: string;
   barcode?: string;
+  isPerson?: boolean;
 }
 
-const patients: Patient[] = [
-  { 
-    id: 'PAT001', 
-    name: 'Rajesh Kumar', 
-    phone: '+91 98765 43210', 
-    email: 'rajesh@email.com', 
-    lastVisit: '2024-01-10', 
-    totalVisits: 5, 
-    outstandingBalance: 0, 
-    status: 'active',
-    dateOfBirth: '1985-06-15',
-    gender: 'male',
-    address: '123 MG Road, Bangalore',
-    medicalHistory: ['Diabetes Type 2', 'Hypertension'],
-    allergies: ['Penicillin'],
-    barcode: '*PAT001*'
-  },
-  { 
-    id: 'PAT002', 
-    name: 'Priya Sharma', 
-    phone: '+91 87654 32109', 
-    email: 'priya@email.com', 
-    lastVisit: '2024-01-15', 
-    totalVisits: 1, 
-    outstandingBalance: 1500, 
-    status: 'new',
-    dateOfBirth: '1992-03-22',
-    gender: 'female',
-    address: '456 Brigade Road, Bangalore',
-    medicalHistory: [],
-    allergies: ['Latex'],
-    barcode: '*PAT002*'
-  },
-  { 
-    id: 'PAT003', 
-    name: 'Amit Singh', 
-    phone: '+91 76543 21098', 
-    email: 'amit@email.com', 
-    lastVisit: '2024-01-08', 
-    totalVisits: 12, 
-    outstandingBalance: 2500, 
-    status: 'active',
-    dateOfBirth: '1978-11-08',
-    gender: 'male',
-    address: '789 Commercial Street, Bangalore',
-    medicalHistory: ['Previous root canal'],
-    allergies: [],
-    barcode: '*PAT003*'
-  },
-  { 
-    id: 'PAT004', 
-    name: 'Neha Gupta', 
-    phone: '+91 65432 10987', 
-    email: 'neha@email.com', 
-    lastVisit: '2023-12-20', 
-    totalVisits: 3, 
-    outstandingBalance: 0, 
-    status: 'inactive',
-    dateOfBirth: '1990-07-14',
-    gender: 'female',
-    address: '321 Koramangala, Bangalore',
-    medicalHistory: ['Allergic rhinitis'],
-    allergies: ['Dust'],
-    barcode: '*PAT004*'
-  },
-  { 
-    id: 'PAT005', 
-    name: 'Suresh Patel', 
-    phone: '+91 54321 09876', 
-    email: 'suresh@email.com', 
-    lastVisit: '2024-01-12', 
-    totalVisits: 8, 
-    outstandingBalance: 800, 
-    status: 'active',
-    dateOfBirth: '1982-09-30',
-    gender: 'male',
-    address: '654 Indiranagar, Bangalore',
-    medicalHistory: ['High blood pressure'],
-    allergies: ['Iodine'],
-    barcode: '*PAT005*'
-  },
-];
+// const patients: Patient[] = [
+//   { 
+//     id: 'PAT001', 
+//     name: 'Rajesh Kumar', 
+//     phone: '+91 98765 43210', 
+//     email: 'rajesh@email.com', 
+//     lastVisit: '2024-01-10', 
+//     totalVisits: 5, 
+//     outstandingBalance: 0, 
+//     status: 'active',
+//     dateOfBirth: '1985-06-15',
+//     gender: 'male',
+//     address: '123 MG Road, Bangalore',
+//     medicalHistory: ['Diabetes Type 2', 'Hypertension'],
+//     allergies: ['Penicillin'],
+//     barcode: '*PAT001*'
+//   },
+//   { 
+//     id: 'PAT002', 
+//     name: 'Priya Sharma', 
+//     phone: '+91 87654 32109', 
+//     email: 'priya@email.com', 
+//     lastVisit: '2024-01-15', 
+//     totalVisits: 1, 
+//     outstandingBalance: 1500, 
+//     status: 'new',
+//     dateOfBirth: '1992-03-22',
+//     gender: 'female',
+//     address: '456 Brigade Road, Bangalore',
+//     medicalHistory: [],
+//     allergies: ['Latex'],
+//     barcode: '*PAT002*'
+//   },
+//   { 
+//     id: 'PAT003', 
+//     name: 'Amit Singh', 
+//     phone: '+91 76543 21098', 
+//     email: 'amit@email.com', 
+//     lastVisit: '2024-01-08', 
+//     totalVisits: 12, 
+//     outstandingBalance: 2500, 
+//     status: 'active',
+//     dateOfBirth: '1978-11-08',
+//     gender: 'male',
+//     address: '789 Commercial Street, Bangalore',
+//     medicalHistory: ['Previous root canal'],
+//     allergies: [],
+//     barcode: '*PAT003*'
+//   },
+//   { 
+//     id: 'PAT004', 
+//     name: 'Neha Gupta', 
+//     phone: '+91 65432 10987', 
+//     email: 'neha@email.com', 
+//     lastVisit: '2023-12-20', 
+//     totalVisits: 3, 
+//     outstandingBalance: 0, 
+//     status: 'inactive',
+//     dateOfBirth: '1990-07-14',
+//     gender: 'female',
+//     address: '321 Koramangala, Bangalore',
+//     medicalHistory: ['Allergic rhinitis'],
+//     allergies: ['Dust'],
+//     barcode: '*PAT004*'
+//   },
+//   { 
+//     id: 'PAT005', 
+//     name: 'Suresh Patel', 
+//     phone: '+91 54321 09876', 
+//     email: 'suresh@email.com', 
+//     lastVisit: '2024-01-12', 
+//     totalVisits: 8, 
+//     outstandingBalance: 800, 
+//     status: 'active',
+//     dateOfBirth: '1982-09-30',
+//     gender: 'male',
+//     address: '654 Indiranagar, Bangalore',
+//     medicalHistory: ['High blood pressure'],
+//     allergies: ['Iodine'],
+//     barcode: '*PAT005*'
+//   },
+// ];
 
 interface PaginationProps {
   currentPage: number;
@@ -195,13 +196,14 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
 }
 
 interface PatientListProps {
-  onAddPatient: () => void;
+   patients: Patient[]; 
+   onAddPatient: (type?: string, patientId?: string) => void;
   onViewPatient: (patientId: string) => void;
   onEditPatient: (patientId: string) => void;
   onDeletePatient: (patientId: string) => void;
 }
 
-export function PatientList({ onAddPatient, onViewPatient, onEditPatient, onDeletePatient }: PatientListProps) {
+export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient }: PatientListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -516,6 +518,15 @@ export function PatientList({ onAddPatient, onViewPatient, onEditPatient, onDele
                 )}
                 Edit
               </button>
+     {!patient.isPerson && (
+  <button
+    onClick={() => handleAction(() => onAddPatient('person', patient.id), 'person')}
+    className="px-3 py-2 text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 font-medium text-sm flex items-center"
+  >
+    <UserPlus className="w-4 h-4 mr-1" />
+    Person
+  </button>
+)}
             </div>
             <div className="flex space-x-2">
               <button
@@ -795,7 +806,7 @@ export function PatientList({ onAddPatient, onViewPatient, onEditPatient, onDele
             </div>
             <button
               id="add-patient-btn"
-              onClick={() => handleAction(onAddPatient, 'add-patient')}
+              onClick={() => handleAction(() => onAddPatient('normal'), 'add-patient')}
               disabled={actionLoading === 'add-patient'}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >

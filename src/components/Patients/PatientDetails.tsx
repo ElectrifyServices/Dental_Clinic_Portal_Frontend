@@ -2,65 +2,67 @@ import React, { useState } from 'react';
 import { X, User, Phone, Mail, Calendar, MapPin, Heart, AlertTriangle, CreditCard, Send, FileText, Stethoscope, Image, Pill, Download, QrCode, Edit, Activity, TrendingUp } from 'lucide-react';
 
 interface PatientDetailsProps {
-  patientId: string;
+  patient: any; 
+   familyMembers: any[]; 
   onClose: () => void;
   onSendReminder: (patientId: string, amount: number) => void;
 }
 
-export function PatientDetails({ patientId, onClose, onSendReminder }: PatientDetailsProps) {
+
+export function PatientDetails({ patient, onClose, familyMembers, onSendReminder }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
 
   // Mock patient data - in real app, fetch from API
-  const patient = {
-    id: patientId,
-    name: 'Rajesh Kumar',
-    email: 'rajesh@email.com',
-    phone: '+91 98765 43210',
-    dateOfBirth: '1985-06-15',
-    gender: 'male',
-    address: '123 MG Road, Bangalore, Karnataka 560001',
-    emergencyContact: '+91 98765 43211',
-    medicalHistory: ['Diabetes Type 2', 'Hypertension', 'Previous root canal treatment'],
-    allergies: ['Penicillin', 'Latex'],
-    bloodGroup: 'B+',
-    occupation: 'Software Engineer',
-    maritalStatus: 'married',
-    insuranceProvider: 'Star Health Insurance',
-    insuranceNumber: 'SH123456789',
-    referredBy: 'Dr. Ramesh Kumar',
-    createdAt: '2023-01-15',
-    lastVisit: '2024-01-10',
-    totalVisits: 5,
-    outstandingBalance: 2500,
-    status: 'active',
-    barcode: '*PAT001*',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    documents: [
-      { id: '1', name: 'X-Ray Report', type: 'x-ray', date: '2024-01-15', url: 'https://images.pexels.com/photos/4269693/pexels-photo-4269693.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
-      { id: '2', name: 'Blood Test Report', type: 'lab-report', date: '2024-01-10', url: 'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
-      { id: '3', name: 'Previous Treatment Photos', type: 'photo', date: '2024-01-08', url: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' }
-    ],
-    prescriptionHistory: [
-      {
-        id: '1',
-        date: '2024-01-15',
-        treatment: 'Root Canal Treatment',
-        prescriptions: [
-          { medicine: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '5 days' },
-          { medicine: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', duration: '3 days' }
-        ]
-      },
-      {
-        id: '2',
-        date: '2024-01-08',
-        treatment: 'Dental Cleaning',
-        prescriptions: [
-          { medicine: 'Chlorhexidine Mouthwash', dosage: '10ml', frequency: '2 times daily', duration: '7 days' }
-        ]
-      }
-    ]
-  };
+  // const patient = {
+  //   id: patientId,
+  //   name: 'Rajesh Kumar',
+  //   email: 'rajesh@email.com',
+  //   phone: '+91 98765 43210',
+  //   dateOfBirth: '1985-06-15',
+  //   gender: 'male',
+  //   address: '123 MG Road, Bangalore, Karnataka 560001',
+  //   emergencyContact: '+91 98765 43211',
+  //   medicalHistory: ['Diabetes Type 2', 'Hypertension', 'Previous root canal treatment'],
+  //   allergies: ['Penicillin', 'Latex'],
+  //   bloodGroup: 'B+',
+  //   occupation: 'Software Engineer',
+  //   maritalStatus: 'married',
+  //   insuranceProvider: 'Star Health Insurance',
+  //   insuranceNumber: 'SH123456789',
+  //   referredBy: 'Dr. Ramesh Kumar',
+  //   createdAt: '2023-01-15',
+  //   lastVisit: '2024-01-10',
+  //   totalVisits: 5,
+  //   outstandingBalance: 2500,
+  //   status: 'active',
+  //   barcode: '*PAT001*',
+  //   avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+  //   documents: [
+  //     { id: '1', name: 'X-Ray Report', type: 'x-ray', date: '2024-01-15', url: 'https://images.pexels.com/photos/4269693/pexels-photo-4269693.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
+  //     { id: '2', name: 'Blood Test Report', type: 'lab-report', date: '2024-01-10', url: 'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
+  //     { id: '3', name: 'Previous Treatment Photos', type: 'photo', date: '2024-01-08', url: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' }
+  //   ],
+  //   prescriptionHistory: [
+  //     {
+  //       id: '1',
+  //       date: '2024-01-15',
+  //       treatment: 'Root Canal Treatment',
+  //       prescriptions: [
+  //         { medicine: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '5 days' },
+  //         { medicine: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', duration: '3 days' }
+  //       ]
+  //     },
+  //     {
+  //       id: '2',
+  //       date: '2024-01-08',
+  //       treatment: 'Dental Cleaning',
+  //       prescriptions: [
+  //         { medicine: 'Chlorhexidine Mouthwash', dosage: '10ml', frequency: '2 times daily', duration: '7 days' }
+  //       ]
+  //     }
+  //   ]
+  // };
 
   const appointments = [
     { id: '1', date: '2024-01-15', time: '10:00 AM', type: 'Root Canal', status: 'completed', doctor: 'Dr. Sharma' },
@@ -172,7 +174,8 @@ export function PatientDetails({ patientId, onClose, onSendReminder }: PatientDe
     { id: 'treatments', label: 'Treatments', icon: Stethoscope },
     { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
     { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'documents', label: 'Documents', icon: FileText }
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'family', label: 'Family', icon: User }
   ];
 
   return (
@@ -698,6 +701,67 @@ export function PatientDetails({ patientId, onClose, onSendReminder }: PatientDe
               </div>
             </div>
           )}
+{activeTab === 'family' && (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h3 className="text-xl font-semibold text-gray-900">Family Members</h3>
+      <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+        {familyMembers.length} {familyMembers.length === 1 ? 'Member' : 'Members'}
+      </span>
+    </div>
+
+    {familyMembers.length === 0 ? (
+      <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <p className="text-gray-500">No family members found</p>
+        <p className="text-sm text-gray-400 mt-1">Add your first family member to get started</p>
+      </div>
+    ) : (
+      <div className="grid gap-4">
+        {familyMembers.map((member) => (
+          <div
+            key={member.id}
+            className="group bg-white rounded-2xl p-5 border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-lg">{member.name}</p>
+                  <p className="text-sm text-gray-500 font-mono">{member.id}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 text-sm">
+                <div className="bg-gray-50 px-3 py-1.5 rounded-lg">
+                  <span className="text-gray-500">Age:</span>
+                  <span className="ml-1 font-medium text-gray-900">
+                    {member.dateOfBirth
+                      ? Math.floor(
+                          (Date.now() - new Date(member.dateOfBirth).getTime()) /
+                          (365.25 * 24 * 60 * 60 * 1000)
+                        )
+                      : '-'}
+                  </span>
+                </div>
+                <div className="bg-gray-50 px-3 py-1.5 rounded-lg">
+                  <span className="text-gray-500">Relation:</span>
+                  <span className="ml-1 font-medium text-gray-900">{member.relation || '-'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
         </div>
       </div>
     </div>
