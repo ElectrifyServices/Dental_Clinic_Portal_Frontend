@@ -611,44 +611,54 @@ export function PatientDetails({ patient, onClose, familyMembers, onSendReminder
               ))}
             </div>
           )}
+{activeTab === 'prescriptions' && (
+  <div className="space-y-4">
+    <h3 className="text-lg font-bold text-gray-900">Prescription History</h3>
 
-          {activeTab === 'prescriptions' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">Prescription History</h3>
-              {patient.prescriptionHistory.map((record) => (
-                <div key={record.id} className="bg-green-50 rounded-2xl p-6 border border-green-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <Pill className="w-5 h-5 text-green-600 mr-3" />
-                      <div>
-                        <p className="font-semibold text-green-900">{record.treatment}</p>
-                        <p className="text-sm text-green-700">{new Date(record.date).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {record.prescriptions.map((prescription, index) => (
-                      <div key={index} className="bg-white rounded-xl p-4 border border-green-200">
-                        <h4 className="font-bold text-green-900 mb-2">{prescription.medicine}</h4>
-                        <div className="space-y-1 text-sm text-green-800">
-                          <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
-                          <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
-                          <p><span className="font-medium">Duration:</span> {prescription.duration}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+    {patient.prescriptionHistory?.length > 0 ? (
+      patient.prescriptionHistory.map((record) => (
+        <div key={record.id} className="bg-green-50 rounded-2xl p-6 border border-green-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Pill className="w-5 h-5 text-green-600 mr-3" />
+              <div>
+                <p className="font-semibold text-green-900">{record.treatment}</p>
+                <p className="text-sm text-green-700">
+                  {new Date(record.date).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-          )}
+          </div>
+          console.log("PATIENT DATA:", patient);
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {record.prescriptions?.map((prescription, index) => (
+              <div key={index} className="bg-white rounded-xl p-4 border border-green-200">
+                <h4 className="font-bold text-green-900 mb-2">{prescription.medicine}</h4>
+                <div className="space-y-1 text-sm text-green-800">
+                  <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
+                  <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
+                  <p><span className="font-medium">Duration:</span> {prescription.duration}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="text-center py-10 text-gray-500">
+        No prescriptions found
+      </div>
+    )}
+  </div> 
+)}
 
           {activeTab === 'documents' && (
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-6">Patient Documents & Images</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {patient.documents.map((document) => (
+                  {patient.documents?.length > 0 && patient.documents.map((document) => (
                     <div key={document.id} className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-200">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
@@ -691,7 +701,7 @@ export function PatientDetails({ patient, onClose, familyMembers, onSendReminder
                   ))}
                 </div>
                 
-                {patient.documents.length === 0 && (
+                {(!patient.documents || patient.documents.length === 0) && (
                   <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
                     <Image className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No documents uploaded</h3>

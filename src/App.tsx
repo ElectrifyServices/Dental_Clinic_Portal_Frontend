@@ -44,10 +44,12 @@ import { ConsentFormViewer } from './components/Consent/ConsentFormViewer';
 import { User, Phone, Stethoscope, MessageSquare, AlertTriangle, X, DollarSign } from 'lucide-react';
 
 function MainApp() {
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [patients, setPatients] = useState<any[]>(() => {
   const stored = localStorage.getItem("patients");
   return stored ? JSON.parse(stored) : [];
 });
+
   const { state } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -59,7 +61,25 @@ function MainApp() {
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [isQuickBooking, setIsQuickBooking] = useState(false);
-  const [appointments, setAppointments] = useState<any[]>([]);
+const [appointments, setAppointments] = useState<any[]>(() => {
+  try {
+    const stored = localStorage.getItem("appointments");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
+const today = new Date()
+
+const todayAppointments = appointments.filter(a => {
+  const d = new Date(a.date)
+  return d.toDateString() === today.toDateString()
+})
+// const listCount = todayAppointments.length;
+const listCount = appointments.filter(
+  a => a.status !== 'no-show'
+).length;
+
   const [showConsentViewer, setShowConsentViewer] = useState(false);
   const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
   const [showTreatmentViewer, setShowTreatmentViewer] = useState(false);
@@ -102,6 +122,9 @@ const familyMembers = patients.filter(p => {
 useEffect(() => {
   localStorage.setItem("patients", JSON.stringify(patients));
 }, [patients]);
+useEffect(() => {
+  localStorage.setItem("appointments", JSON.stringify(appointments));
+}, [appointments]);
 const handleSendReminder = (patientId: string, amount: number) => {
   console.log("Reminder sent to:", patientId, "Amount:", amount);
 
@@ -260,11 +283,13 @@ const handleSendReminder = (patientId: string, amount: number) => {
     setIsQuickBooking(true);
     setShowAppointmentForm(true);
   };
+const [selectedDate, setSelectedDate] = useState(null)
 
-  const handleNewAppointment = () => {
-    setIsQuickBooking(false);
-    setShowAppointmentForm(true);
-  };
+const handleNewAppointment = (date?) => {
+  setSelectedDate(date || null)
+  setIsQuickBooking(false)
+  setShowAppointmentForm(true)
+}
 
   const handleViewPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -276,11 +301,20 @@ const handleSendReminder = (patientId: string, amount: number) => {
     alert(`Payment reminder sent to patient ${patientId} for ₹${amount.toLocaleString()}`);
   };
 
-  const handleSaveAppointment = (appointment: any) => {
-    setAppointments(prev => [...prev, appointment]);
-    setShowAppointmentForm(false);
-    setIsQuickBooking(false);
-  };
+const handleSaveAppointment = (appointment: any) => {
+  setAppointments(prev => {
+    const existing = prev.find(a => a.id === appointment.id)
+
+    if (existing) {
+      return prev.map(a => a.id === appointment.id ? appointment : a)
+    }
+
+    return [...prev, appointment]
+  })
+
+  setShowAppointmentForm(false)
+  setSelectedAppointment(null)
+}
 
   const handleViewConsentForm = (formId: string) => {
     setSelectedItemId(formId);
@@ -402,13 +436,16 @@ const handleSavePatient = (patient) => {
 
     const updatedPatient = {
       ...patient,
-      isPerson: existing 
-        ? existing.isPerson   // ✅ preserve old value
+
+      isPerson: existing
+        ? existing.isPerson
         : patientFormType === 'person',
 
       parentId: existing
-        ? existing.parentId   // ✅ preserve old parent
-        : (patientFormType === 'person' ? parentPatientId : null)
+        ? existing.parentId
+        : (patientFormType === 'person' ? parentPatientId : null),
+      prescriptionHistory: existing?.prescriptionHistory || [],
+      documents: existing?.documents || []
     };
 
     if (existing) {
@@ -468,7 +505,7 @@ const handleSavePatient = (patient) => {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  List
+                  List ({listCount})
                 </button>
                 <button
                   onClick={() => setViewMode('no-show')}
@@ -482,11 +519,15 @@ const handleSavePatient = (patient) => {
                 </button>
               </div>
             </div>
-            {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} />}
+            {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} appointments={appointments} />}
             {viewMode === 'list' && (
               <AppointmentList 
                 appointments={appointments.filter(apt => apt.status !== 'no-show')}
-                onEditAppointment={(id) => console.log('Edit appointment:', id)}
+onEditAppointment={(id) => {
+  const apt = appointments.find(a => a.id === id)
+  setSelectedAppointment(apt)
+  setShowAppointmentForm(true)
+}}
                 onDeleteAppointment={handleDeleteAppointment}
                 onUpdateStatus={handleUpdateAppointmentStatus}
                 onCheckInPatient={handleCheckInPatient}
@@ -497,7 +538,11 @@ const handleSavePatient = (patient) => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">No Show Appointments</h3>
                 <AppointmentList 
                   appointments={appointments.filter(apt => apt.status === 'no-show')}
-                  onEditAppointment={(id) => console.log('Edit appointment:', id)}
+                  onEditAppointment={(id) => {
+  const apt = appointments.find(a => a.id === id)
+  setSelectedAppointment(apt)
+  setShowAppointmentForm(true)
+}}
                   onDeleteAppointment={handleDeleteAppointment}
                   onUpdateStatus={handleUpdateAppointmentStatus}
                   onCheckInPatient={handleCheckInPatient}
@@ -750,7 +795,7 @@ const handleSavePatient = (patient) => {
             </div>
             <PatientQueue
               doctorName={state.user?.name || 'Doctor'}
-              queuedPatients={queuedPatients.length > 0 ? queuedPatients : mockQueuedPatients}
+              queuedPatients={queuedPatients}
               onSelectPatient={(patient) => {
                 setSelectedPatientForConsultation(patient);
                 setShowPatientConsultation(true);
@@ -991,10 +1036,10 @@ return (
     onSave={handleSavePatient}
 patient={
   patientFormType === 'person'
-    ? undefined   // ✅ blank form for Person
+    ? undefined   
     : patients.find(p => p.id === selectedPatientId)
 }
-    type={patientFormType} // ✅ for Person
+    type={patientFormType} 
   />
 )}
       
@@ -1005,9 +1050,12 @@ patient={
             setIsQuickBooking(false);
           }}
           onSave={handleSaveAppointment}
+          appointment={selectedAppointment}  
           isQuickBooking={isQuickBooking}
           doctors={doctorsWithSchedules}
           doctorAvailability={doctorAvailability}
+          appointments={appointments}
+          selectedDate={selectedDate}
         />
       )}
       

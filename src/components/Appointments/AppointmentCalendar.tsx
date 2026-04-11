@@ -16,30 +16,30 @@ export function AppointmentCalendar({ onNewAppointment, appointments = [] }: Cal
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const mockAppointments = {
-    '2024-01-15': [
-      { time: '09:00', patient: 'Rajesh Kumar', type: 'Consultation' },
-      { time: '10:30', patient: 'Priya Sharma', type: 'Cleaning' },
-      { time: '14:00', patient: 'Amit Singh', type: 'Filling' },
-    ],
-    '2024-01-16': [
-      { time: '09:00', patient: 'Neha Gupta', type: 'Root Canal' },
-      { time: '11:00', patient: 'Suresh Patel', type: 'Crown' },
-      { time: '15:00', patient: 'Kavya Reddy', type: 'Extraction' },
-      { time: '16:30', patient: 'Rohit Sharma', type: 'Consultation' },
-      { time: '17:30', patient: 'Anita Desai', type: 'Cleaning' },
-    ],
-    '2024-01-17': [
-      { time: '10:00', patient: 'Vikram Singh', type: 'Orthodontics' },
-      { time: '14:30', patient: 'Meera Joshi', type: 'Surgery' },
-    ],
-    '2024-01-20': [
-      { time: '09:30', patient: 'Arjun Patel', type: 'Consultation' },
-      { time: '11:00', patient: 'Deepika Rao', type: 'Filling' },
-      { time: '15:00', patient: 'Kiran Kumar', type: 'Cleaning' },
-      { time: '16:30', patient: 'Sanjay Gupta', type: 'Crown' },
-    ],
-  };
+  // const mockAppointments = {
+  //   '2024-01-15': [
+  //     { time: '09:00', patient: 'Rajesh Kumar', type: 'Consultation' },
+  //     { time: '10:30', patient: 'Priya Sharma', type: 'Cleaning' },
+  //     { time: '14:00', patient: 'Amit Singh', type: 'Filling' },
+  //   ],
+  //   '2024-01-16': [
+  //     { time: '09:00', patient: 'Neha Gupta', type: 'Root Canal' },
+  //     { time: '11:00', patient: 'Suresh Patel', type: 'Crown' },
+  //     { time: '15:00', patient: 'Kavya Reddy', type: 'Extraction' },
+  //     { time: '16:30', patient: 'Rohit Sharma', type: 'Consultation' },
+  //     { time: '17:30', patient: 'Anita Desai', type: 'Cleaning' },
+  //   ],
+  //   '2024-01-17': [
+  //     { time: '10:00', patient: 'Vikram Singh', type: 'Orthodontics' },
+  //     { time: '14:30', patient: 'Meera Joshi', type: 'Surgery' },
+  //   ],
+  //   '2024-01-20': [
+  //     { time: '09:30', patient: 'Arjun Patel', type: 'Consultation' },
+  //     { time: '11:00', patient: 'Deepika Rao', type: 'Filling' },
+  //     { time: '15:00', patient: 'Kiran Kumar', type: 'Cleaning' },
+  //     { time: '16:30', patient: 'Sanjay Gupta', type: 'Crown' },
+  //   ],
+  // };
 
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
@@ -49,22 +49,37 @@ export function AppointmentCalendar({ onNewAppointment, appointments = [] }: Cal
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
-  const isToday = (day: number) => {
+  const isToday = (day: number) => {  
     const today = new Date();
     return today.getDate() === day && 
            today.getMonth() === currentDate.getMonth() && 
            today.getFullYear() === currentDate.getFullYear();
   };
+const getDayAppointments = (day: number) => {
+  return appointments.filter(a => {
+    const d = new Date(a.date)
+    return (
+      d.getDate() === day &&
+      d.getMonth() === currentDate.getMonth() &&
+      d.getFullYear() === currentDate.getFullYear()
+    )
+  })
+}
+const getSelectedDateAppointments = () => {
+  return appointments.filter(a => {
+    const d = new Date(a.date)
+    return d.toDateString() === selectedDate.toDateString()
+  })
+}
+  // const getDayAppointments = (day: number) => {
+  //   const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  //   return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
+  // };
 
-  const getDayAppointments = (day: number) => {
-    const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
-  };
-
-  const getSelectedDateAppointments = () => {
-    const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-    return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
-  };
+  // const getSelectedDateAppointments = () => {
+  //   const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+  //   return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
+  // };
 
   return (
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -142,7 +157,12 @@ export function AppointmentCalendar({ onNewAppointment, appointments = [] }: Cal
                     ? 'bg-blue-50 text-blue-700 border-blue-300'
                     : 'hover:bg-gray-50 border-transparent hover:border-gray-300 bg-white'
                 }`}
-                onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
+                // onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
+                onClick={() => {
+  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+  setSelectedDate(date)
+  onNewAppointment(date) 
+}}
               >
                 <div className="font-semibold text-sm md:text-lg">{day}</div>
                 {dayAppointments.length > 0 && (
@@ -190,7 +210,7 @@ export function AppointmentCalendar({ onNewAppointment, appointments = [] }: Cal
                 </div>
                 <div className="flex items-center">
                   <User className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="text-gray-900 font-medium">{appointment.patient}</span>
+                  <span className="text-gray-900 font-medium">{appointment.patientName}</span>
                 </div>
               </div>
             ))

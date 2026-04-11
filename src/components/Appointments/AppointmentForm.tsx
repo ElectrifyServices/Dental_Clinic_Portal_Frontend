@@ -9,28 +9,58 @@ interface AppointmentFormProps {
   isQuickBooking?: boolean;
   doctors?: any[];
   doctorAvailability?: { [key: string]: boolean };
+   appointments?: any[] ;
+   selectedDate?: Date | null
 }
 
-export function AppointmentForm({ onClose, onSave, appointment, isQuickBooking = false, doctors = [], doctorAvailability = {} }: AppointmentFormProps) {
-  const [formData, setFormData] = useState({
-    patientName: appointment?.patientName || '',
-    patientPhone: appointment?.patientPhone || '',
-    treatment: appointment?.treatment || '',
-    doctorId: appointment?.doctorId || '1',
-    doctorName: appointment?.doctorName || 'Dr. Sharma',
-    date: appointment?.date || new Date().toISOString().split('T')[0],
-    time: appointment?.time || '09:00',
-    duration: appointment?.duration || 30,
-    type: appointment?.type || 'consultation',
-    notes: appointment?.notes || '',
-    fee: appointment?.fee || 500,
-    patientConcern: appointment?.patientConcern || '',
-    treatmentType: appointment?.treatmentType || '',
-  });
+export function AppointmentForm({ 
+  onClose, 
+  onSave, 
+  appointment, 
+  isQuickBooking = false, 
+  doctors = [], 
+  doctorAvailability = {},
+  appointments = [] ,
+   selectedDate
+}: AppointmentFormProps) {
+  const formatDateLocal = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-  const [bookedSlots, setBookedSlots] = useState<string[]>([
-    '09:00', '10:30', '14:00', '16:30' // Mock booked slots
-  ]);
+const safeDate = selectedDate ? new Date(selectedDate) : new Date()
+const [formData, setFormData] = useState({
+  patientName: appointment?.patientName || '',
+  patientPhone: appointment?.patientPhone || '',
+  treatment: appointment?.treatment || '',
+  doctorId: appointment?.doctorId || '1',
+  doctorName: appointment?.doctorName || 'Dr. Sharma',
+
+ date: appointment?.date || formatDateLocal(safeDate),
+
+  time: appointment?.time || '09:00',
+  duration: appointment?.duration || 30,
+  type: appointment?.type || 'consultation',
+  notes: appointment?.notes || '',
+  fee: appointment?.fee || 500,
+  patientConcern: appointment?.patientConcern || '',
+  treatmentType: appointment?.treatmentType || '',
+});
+const getBookedSlots = () => {
+  return (appointments || [])
+    .filter(a =>
+      a.doctorId === formData.doctorId &&
+      a.date === formData.date
+    )
+    .map(a => a.time)
+}
+
+const bookedSlots = getBookedSlots()
+  // const [bookedSlots, setBookedSlots] = useState<string[]>([
+  //   '09:00', '10:30', '14:00', '16:30' // Mock booked slots
+  // ]);
 
   const appointmentTypes = [
     { value: 'consultation', label: 'General Consultation', fee: 500 },
@@ -108,6 +138,16 @@ export function AppointmentForm({ onClose, onSave, appointment, isQuickBooking =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const conflict = (appointments || []).find(a =>
+  a.doctorId === formData.doctorId &&
+  a.date === formData.date &&
+  a.time === formData.time
+)
+
+if (conflict) {
+  alert("❌ This slot is already booked")
+  return
+}
     onSave({
       ...formData,
       id: appointment?.id || Date.now().toString(),
@@ -203,7 +243,10 @@ export function AppointmentForm({ onClose, onSave, appointment, isQuickBooking =
                 type="tel"
                 name="patientPhone"
                 value={formData.patientPhone}
-                onChange={handleChange}
+                  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, '') // 🔥 only numbers
+    setFormData(prev => ({ ...prev, patientPhone: value }))
+  }}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 placeholder="+91 98765 43210"
