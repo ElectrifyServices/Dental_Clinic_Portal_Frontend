@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, User } from 'lucide-react';
 
 interface CalendarProps {
-  onNewAppointment: () => void;
+  onNewAppointment: (date?: Date) => void;
   appointments?: any[];
 }
 
@@ -15,7 +15,21 @@ export function AppointmentCalendar({ onNewAppointment, appointments = [] }: Cal
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
+const formatTime = (time: string) => {
+  if (!time) return '';
 
+  if (time.includes('AM') || time.includes('PM')) return time;
+
+  const cleanTime = time.replace('.', ':');
+
+  const [hourStr, minute] = cleanTime.split(':');
+  let hour = parseInt(hourStr);
+
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+
+  return `${hour.toString().padStart(2, '0')}:${minute} ${ampm}`;
+};
   // const mockAppointments = {
   //   '2024-01-15': [
   //     { time: '09:00', patient: 'Rajesh Kumar', type: 'Consultation' },
@@ -71,6 +85,16 @@ const getSelectedDateAppointments = () => {
     return d.toDateString() === selectedDate.toDateString()
   })
 }
+const isPastDate = (day: number) => {
+  const today = new Date()
+  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+
+  // remove time part
+  today.setHours(0,0,0,0)
+  date.setHours(0,0,0,0)
+
+  return date < today
+}
   // const getDayAppointments = (day: number) => {
   //   const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   //   return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
@@ -120,7 +144,7 @@ const getSelectedDateAppointments = () => {
               <ChevronRight className="w-5 h-5" />
             </button>
             <button
-              onClick={onNewAppointment}
+              onClick={() => onNewAppointment(selectedDate)}
               className="ml-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -150,19 +174,29 @@ const getSelectedDateAppointments = () => {
             return (
               <div
                 key={day}
-                className={`p-2 md:p-3 text-center cursor-pointer rounded-xl transition-all duration-200 min-h-[60px] md:min-h-[80px] border-2 ${
-                  isToday(day)
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg border-blue-600'
-                    : isSelected
-                    ? 'bg-blue-50 text-blue-700 border-blue-300'
-                    : 'hover:bg-gray-50 border-transparent hover:border-gray-300 bg-white'
-                }`}
+className={`p-2 md:p-3 text-center rounded-xl transition-all duration-200 min-h-[60px] md:min-h-[80px] border-2 ${
+  isPastDate(day)
+    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+    : isToday(day)
+    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg border-blue-600'
+    : isSelected
+    ? 'bg-blue-50 text-blue-700 border-blue-300'
+    : 'hover:bg-gray-50 border-transparent hover:border-gray-300 bg-white cursor-pointer'
+}`}
                 // onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-                onClick={() => {
+onClick={() => {
+  if (isPastDate(day)) return 
+
   const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
   setSelectedDate(date)
-  onNewAppointment(date) 
 }}
+  title={
+    dayAppointments.length > 0
+      ? dayAppointments
+          .map(a => `${a.time} - ${a.patientName}`)
+          .join('\n')
+      : ''
+  }
               >
                 <div className="font-semibold text-sm md:text-lg">{day}</div>
                 {dayAppointments.length > 0 && (
@@ -173,7 +207,7 @@ const getSelectedDateAppointments = () => {
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-blue-100 text-blue-600'
                   }`}>
-                    {dayAppointments.length}
+{dayAppointments.length}
                   </div>
                 )}
               </div>
@@ -195,23 +229,41 @@ const getSelectedDateAppointments = () => {
           </h3>
         </div>
         
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+       <div className="space-y-3 overflow-y-auto h-[500px]">
           {getSelectedDateAppointments().length > 0 ? (
             getSelectedDateAppointments().map((appointment, index) => (
               <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center">
                     <Clock className="w-4 h-4 text-blue-600 mr-2" />
-                    <span className="font-semibold text-blue-700">{appointment.time}</span>
+                    <span className="font-semibold text-blue-700">{formatTime(appointment.time)}</span>
                   </div>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                    {appointment.type}
-                  </span>
+<span
+  className={`text-xs px-2 py-1 rounded-full font-medium ${
+    appointment.status === 'checked-in'
+      ? 'bg-blue-100 text-blue-700'
+      : 'bg-gray-100 text-gray-600'
+  }`}
+>
+  {appointment.status === 'checked-in'
+    ? (appointment.type || appointment.treatment || 'consultation')
+    : 'Booked'}
+</span>
                 </div>
-                <div className="flex items-center">
-                  <User className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="text-gray-900 font-medium">{appointment.patientName}</span>
-                </div>
+<div className="flex items-start justify-between">
+  <div className="flex items-center">
+    <User className="w-4 h-4 text-gray-500 mr-2" />
+    <span className="text-gray-900 font-medium">
+      {appointment.patientName}
+    </span>
+  </div>
+
+  <div className="text-right">
+    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+     Treatment: {appointment.treatment || appointment.type}
+    </span>
+  </div>
+</div>
               </div>
             ))
           ) : (
@@ -219,7 +271,7 @@ const getSelectedDateAppointments = () => {
               <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">No appointments scheduled</p>
               <button
-                onClick={onNewAppointment}
+                onClick={() => onNewAppointment(selectedDate)}
                 className="mt-3 text-blue-600 hover:text-blue-700 font-medium text-sm"
               >
                 Schedule an appointment

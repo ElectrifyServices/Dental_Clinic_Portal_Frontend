@@ -94,7 +94,14 @@ const listCount = appointments.filter(
   const [selectedDoctorNameForSchedule, setSelectedDoctorNameForSchedule] = useState('');
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [queuedPatients, setQueuedPatients] = useState<any[]>([]);
+  const [queuedPatients, setQueuedPatients] = useState<any[]>(() => {
+  try {
+    const stored = localStorage.getItem("queuedPatients");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
   const [showPatientConsultation, setShowPatientConsultation] = useState(false);
   const [selectedPatientForConsultation, setSelectedPatientForConsultation] = useState<any>(null);
   const [showEMRForm, setShowEMRForm] = useState(false);
@@ -125,69 +132,15 @@ useEffect(() => {
 useEffect(() => {
   localStorage.setItem("appointments", JSON.stringify(appointments));
 }, [appointments]);
+useEffect(() => {
+  localStorage.setItem("queuedPatients", JSON.stringify(queuedPatients));
+}, [queuedPatients]);
 const handleSendReminder = (patientId: string, amount: number) => {
   console.log("Reminder sent to:", patientId, "Amount:", amount);
 
   // optional UI feedback
   alert(`Reminder sent for ₹${amount}`);
 };
-  // Mock queued patients data
-  const mockQueuedPatients = [
-    {
-      id: '1',
-      appointmentId: 'APT-001',
-      patientName: 'Rajesh Kumar',
-      patientPhone: '+91 98765 43210',
-      appointmentTime: '10:00 AM',
-      treatmentType: 'Root Canal Treatment',
-      patientConcern: 'Severe pain in upper right molar, especially when eating hot or cold foods. Pain started 3 days ago.',
-      checkInTime: '9:55 AM',
-      status: 'waiting',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2024-01-08',
-        totalVisits: 5,
-        medicalHistory: ['Diabetes Type 2', 'Hypertension'],
-        allergies: ['Penicillin']
-      }
-    },
-    {
-      id: '2',
-      appointmentId: 'APT-002',
-      patientName: 'Priya Sharma',
-      patientPhone: '+91 87654 32109',
-      appointmentTime: '10:30 AM',
-      treatmentType: 'Teeth Cleaning',
-      patientConcern: 'Regular cleaning and checkup. Some bleeding while brushing teeth.',
-      checkInTime: '10:25 AM',
-      status: 'in-consultation',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2023-12-15',
-        totalVisits: 2,
-        medicalHistory: [],
-        allergies: ['Latex']
-      }
-    },
-    {
-      id: '3',
-      appointmentId: 'APT-003',
-      patientName: 'Amit Singh',
-      patientPhone: '+91 76543 21098',
-      appointmentTime: '11:00 AM',
-      treatmentType: 'Dental Filling',
-      patientConcern: 'Cavity in lower left molar. Mild pain when chewing.',
-      checkInTime: '10:58 AM',
-      status: 'waiting',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2024-01-05',
-        totalVisits: 8,
-        medicalHistory: ['Previous root canal'],
-        allergies: []
-      }
-    }
-  ];
 
   // Mock doctors data with schedules
   const doctorsWithSchedules = [
@@ -280,12 +233,14 @@ const handleSendReminder = (patientId: string, amount: number) => {
   };
 
   const handleQuickAppointment = () => {
+     setSelectedAppointment(null); 
     setIsQuickBooking(true);
     setShowAppointmentForm(true);
   };
 const [selectedDate, setSelectedDate] = useState(null)
 
 const handleNewAppointment = (date?) => {
+  setSelectedAppointment(null); 
   setSelectedDate(date || null)
   setIsQuickBooking(false)
   setShowAppointmentForm(true)
@@ -331,6 +286,20 @@ const handleSaveAppointment = (appointment: any) => {
     setSelectedItemId(treatmentId);
     setShowTreatmentViewer(true);
   };
+  const formatTime = (time: string) => {
+  if (!time) return '';
+
+  if (time.includes('AM') || time.includes('PM')) return time;
+
+  const cleanTime = time.replace('.', ':');
+  const [h, m] = cleanTime.split(':');
+
+  let hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+
+  return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+};
 
   const handleUpdateAppointmentStatus = (appointmentId: string, status: string) => {
     setAppointments(prev => prev.map(apt => 
@@ -349,7 +318,7 @@ const handleSaveAppointment = (appointment: any) => {
       appointmentId: appointment.id,
       patientName: appointment.patientName || appointment.patient,
       patientPhone: appointment.patientPhone || appointment.phone,
-      appointmentTime: appointment.time,
+      appointmentTime: formatTime(appointment.time),
       treatmentType: appointment.treatment || appointment.type,
       patientConcern: appointment.patientConcern || 'General consultation',
       checkInTime: new Date().toLocaleTimeString('en-US', { 
@@ -368,12 +337,21 @@ const handleSaveAppointment = (appointment: any) => {
     };
     
     // Add to diagnosis queue
-    setQueuedPatients(prev => [...prev, queuedPatient]);
+   setQueuedPatients(prev => {
+  const alreadyExists = prev.some(p => p.id === appointment.id);
+  if (alreadyExists) return prev; 
+
+  return [...prev, queuedPatient];
+});
     
     // Update appointment status to checked-in
-    setAppointments(prev => prev.map(apt => 
-      apt.id === appointment.id ? { ...apt, status: 'checked-in' } : apt
-    ));
+  setAppointments(prev =>
+    prev.map(a =>
+      a.id === appointment.id
+        ? { ...a, status: 'checked-in' }
+        : a
+    )
+  );
     
     // Show success message
     alert(`${queuedPatient.patientName} has been checked in and added to the diagnosis queue.`);
@@ -393,7 +371,6 @@ const handleSaveAppointment = (appointment: any) => {
       t.id === treatmentId ? { ...t, status: 'completed' } : t
     ));
   };
-
   const handleSaveTreatment = (treatment: any) => {
     if (selectedItemId) {
       setTreatments(prev => prev.map(t => t.id === selectedItemId ? treatment : t));
@@ -521,6 +498,7 @@ const handleSavePatient = (patient) => {
             </div>
             {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} appointments={appointments} />}
             {viewMode === 'list' && (
+              
               <AppointmentList 
                 appointments={appointments.filter(apt => apt.status !== 'no-show')}
 onEditAppointment={(id) => {
@@ -1048,6 +1026,7 @@ patient={
           onClose={() => {
             setShowAppointmentForm(false);
             setIsQuickBooking(false);
+            setSelectedAppointment(null);
           }}
           onSave={handleSaveAppointment}
           appointment={selectedAppointment}  
@@ -1240,9 +1219,9 @@ patient={
             
             // Update patient status to completed
             if (queuedPatients.length > 0) {
-              setQueuedPatients(prev => prev.map(p => 
-                p.id === consultationData.patientId ? { ...p, status: 'completed' } : p
-              ));
+setQueuedPatients(prev =>
+  prev.filter(p => p.id !== consultationData.patientId)
+);
             }
             
             setShowPatientConsultation(false);
