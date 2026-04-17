@@ -178,12 +178,23 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
   };
 
   const handleMarkNoShow       = (id: string) => onUpdateStatus?.(id, 'no-show');
+  const handleRestoreFromNoShow = (id: string) => 
+  onUpdateStatus?.(id, 'scheduled');
   const handleEditAppointment  = (id: string) => onEditAppointment?.(id);
   const handleDeleteAppointment = (id: string) => {
     if (window.confirm('Are you sure you want to delete this appointment?'))
       onDeleteAppointment?.(id);
   };
-  // ─────────────────────────────────────────────────────────────────────────
+  const formatTime = (time: string) => {
+  const [hours, minutes] = time.split(':');
+  let h = parseInt(hours);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+
+  h = h % 12;
+  if (h === 0) h = 12;
+
+  return `${h}:${minutes} ${ampm}`;
+};
 
   return (
     <div
@@ -262,7 +273,7 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                     className="text-center min-w-[52px]"
                   >
                     <div className="text-sm font-semibold text-gray-900 tabular-nums leading-tight">
-                      {appointment.time}
+                      {formatTime(appointment.time)}
                     </div>
                     <div className="text-xs text-gray-400 mt-0.5">
                       {appointment.duration || '30 min'}
@@ -334,7 +345,15 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                       No Show
                     </button>
                   )}
-
+{appointment.status === 'no-show' && (
+  <button
+    onClick={() => handleRestoreFromNoShow(appointment.id)}
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-100 rounded-lg hover:bg-green-100 transition-colors"
+  >
+    <CheckCircle className="w-3.5 h-3.5" />
+    Move To List
+  </button>
+)}
                   {/* Three-dot menu */}
                   <div
                     id={`appointment-menu-${appointment.id}`}

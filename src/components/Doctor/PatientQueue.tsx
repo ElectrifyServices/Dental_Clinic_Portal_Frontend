@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Clock, User, Phone, MessageSquare, Stethoscope, CheckCircle, AlertTriangle, Calendar, FileText } from 'lucide-react';
+import { Search, Clock, User, Phone, MessageSquare, Stethoscope, CheckCircle, AlertTriangle, Calendar, FileText, History } from 'lucide-react';
+import ConsultationHistoryModal from './ConsultationHistoryModal';
 
 interface QueuedPatient {
   id: string;
@@ -30,6 +31,7 @@ interface PatientQueueProps {
 export function PatientQueue({ doctorName, queuedPatients, onSelectPatient, onUpdatePatientStatus }: PatientQueueProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showHistory, setShowHistory] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -49,13 +51,21 @@ export function PatientQueue({ doctorName, queuedPatients, onSelectPatient, onUp
     }
   };
 
-  const filteredPatients = queuedPatients.filter(patient => {
-    const matchesSearch = patient.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.patientConcern.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || patient.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+const safe = (val: any) => (val || '').toString().toLowerCase();
+
+const filteredPatients = queuedPatients.filter(patient => {
+  const search = searchTerm.toLowerCase();
+
+  const matchesSearch =
+    safe(patient.patientName).includes(search) ||
+    safe(patient.treatmentType).includes(search) ||
+    safe(patient.patientConcern).includes(search);
+
+  const matchesFilter =
+    filterStatus === 'all' || patient.status === filterStatus;
+
+  return matchesSearch && matchesFilter;
+});
 
   const waitingCount = queuedPatients.filter(p => p.status === 'waiting').length;
   const inConsultationCount = queuedPatients.filter(p => p.status === 'in-consultation').length;
@@ -118,6 +128,18 @@ export function PatientQueue({ doctorName, queuedPatients, onSelectPatient, onUp
             <option value="in-consultation">In Consultation</option>
             <option value="completed">Completed</option>
           </select>
+<button
+  onClick={() => setShowHistory(true)}
+  className="ml-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 
+             text-white text-sm font-medium 
+             rounded-xl shadow-sm 
+             transition-all duration-200 ease-in-out 
+             focus:outline-none focus:ring-2 focus:ring-blue-300
+             flex items-center gap-2"
+>
+  <History className="w-4 h-4" />
+  History
+</button>
         </div>
       </div>
 
@@ -229,6 +251,10 @@ export function PatientQueue({ doctorName, queuedPatients, onSelectPatient, onUp
           </div>
         ))}
       </div>
+
+      {showHistory && (
+  <ConsultationHistoryModal onClose={() => setShowHistory(false)} />
+)}
 
       {/* Empty State */}
       {filteredPatients.length === 0 && (

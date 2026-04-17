@@ -217,10 +217,21 @@ export function TodaySchedulePopup({
                             ₹{appointment.fee?.toLocaleString()}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 sm:col-span-2">
-                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="text-gray-700">{appointment.type}</span>
-                        </div>
+<div className="flex items-center gap-2 text-xs text-gray-500 sm:col-span-2">
+  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+  
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-medium ${
+      appointment.status === 'checked-in'
+        ? 'bg-blue-100 text-blue-700'
+        : 'bg-gray-100 text-gray-600'
+    }`}
+  >
+    {appointment.status === 'checked-in'
+      ? (appointment.type || appointment.treatment || 'consultation')
+      : 'Booked'}
+  </span>
+</div>
                       </div>
 
                       {/* doctor unavailable warning */}

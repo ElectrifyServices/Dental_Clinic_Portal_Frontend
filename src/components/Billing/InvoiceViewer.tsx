@@ -1,30 +1,33 @@
 import React from 'react';
-import { X, Download, FileText, User, Calendar, DollarSign } from 'lucide-react';
+import { X, Download, FileText, User, Calendar, DollarSign, Stethoscope } from 'lucide-react';
 
 interface InvoiceViewerProps {
   invoiceId: string;
   onClose: () => void;
+   onUpdateStatus?: (id: string, status: string) => void; 
 }
 
-export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
-  // Mock data - in real app, fetch from API
-  const invoice = {
-    id: invoiceId,
-    patientName: 'Rajesh Kumar',
-    patientPhone: '+91 98765 43210',
-    date: '2024-01-15',
-    dueDate: '2024-01-22',
-    items: [
-      { id: '1', description: 'Root Canal Treatment', quantity: 1, rate: 5000, amount: 5000 },
-      { id: '2', description: 'Crown Placement', quantity: 1, rate: 8000, amount: 8000 },
-      { id: '3', description: 'Consultation Fee', quantity: 1, rate: 500, amount: 500 }
-    ],
-    subtotal: 13500,
-    discount: 1350, // 10%
-    tax: 2187, // 18%
-    total: 14337,
-    status: 'pending'
-  };
+export function InvoiceViewer({ invoiceId, onClose ,onUpdateStatus}: InvoiceViewerProps) {
+const [invoice, setInvoice] = React.useState<any>(null);
+
+React.useEffect(() => {
+  const stored = localStorage.getItem("invoices");
+  const invoices = stored ? JSON.parse(stored) : [];
+
+  const found = invoices.find((inv: any) => inv.id === invoiceId);
+
+  if (found) {
+    setInvoice(found);
+  }
+}, [invoiceId]);
+// const handleWhatsApp = () => {
+//   const message = `Invoice ${invoice.id}
+// Patient: ${invoice.patientName}
+// Amount: ₹${invoice.total}`;
+
+//   const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+//   window.open(url, "_blank");
+// };
 
   const handleDownload = () => {
     const printContent = `
@@ -61,7 +64,9 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
             <div class="patient-info">
               <h3>Bill To:</h3>
               <p><strong>${invoice.patientName}</strong></p>
-              <p>Phone: ${invoice.patientPhone}</p>
+              
+                       <h3>Doctor</h3>
+              <p><strong>Doctor:</strong> ${invoice.doctor || '-'}</p>
             </div>
             <div class="invoice-info">
               <h3>Invoice Details:</h3>
@@ -82,14 +87,14 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
               </tr>
             </thead>
             <tbody>
-              ${invoice.items.map(item => `
-                <tr>
-                  <td>${item.description}</td>
-                  <td>${item.quantity}</td>
-                  <td>₹${item.rate.toLocaleString()}</td>
-                  <td>₹${item.amount.toLocaleString()}</td>
-                </tr>
-              `).join('')}
+             ${invoice.items.map((item: any) => `
+  <tr>
+    <td>${item.description}</td>
+    <td>${item.quantity}</td>
+    <td>₹${item.rate.toLocaleString()}</td>
+    <td>₹${item.amount.toLocaleString()}</td>
+  </tr>
+`).join('')}
             </tbody>
           </table>
 
@@ -118,10 +123,30 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleMarkAsPaid = () => {
-    alert(`Invoice ${invoice.id} marked as paid!`);
-  };
+const handleMarkAsPaid = () => {
+  const stored = localStorage.getItem("invoices");
+  const invoices = stored ? JSON.parse(stored) : [];
 
+  const updated = invoices.map((inv: any) =>
+    inv.id === invoice.id ? { ...inv, status: 'paid' } : inv
+  );
+
+  localStorage.setItem("invoices", JSON.stringify(updated));
+
+  setInvoice((prev: any) => ({ ...prev, status: 'paid' }));
+
+  // IMPORTANT
+  onUpdateStatus?.(invoice.id, 'paid');
+};
+if (!invoice) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div className="bg-white p-6 rounded-xl">
+        Loading...
+      </div>
+    </div>
+  );
+}
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
@@ -135,7 +160,7 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {invoice.status === 'pending' && (
+              {invoice.status !== 'paid' && (
                 <button
                   onClick={handleMarkAsPaid}
                   className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center transition-all duration-200"
@@ -143,6 +168,9 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
                   Mark as Paid
                 </button>
               )}
+              {/* <button onClick={handleWhatsApp}>
+  Send WhatsApp
+</button> */}
               <button
                 onClick={handleDownload}
                 className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center transition-all duration-200"
@@ -171,16 +199,34 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
 
           {/* Invoice Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2" />
-                Bill To
-              </h3>
-              <div className="space-y-2">
-                <p className="font-semibold text-gray-900">{invoice.patientName}</p>
-                <p className="text-gray-600">Phone: {invoice.patientPhone}</p>
-              </div>
-            </div>
+<div className="bg-gray-50 rounded-2xl p-6 space-y-6">
+  
+  {/* Bill To */}
+  <div>
+    <h3 className="text-sm font-semibold text-gray-500 mb-2 flex items-center">
+      <User className="w-4 h-4 mr-2" />
+      Bill To
+    </h3>
+    <p className="text-base font-semibold text-gray-900">
+      {invoice.patientName}
+    </p>
+  </div>
+
+  {/* Divider */}
+  <div className="border-t border-gray-200"></div>
+
+  {/* Doctor */}
+  <div>
+    <h3 className="text-sm font-semibold text-gray-500 mb-2 flex items-center">
+      <Stethoscope className="w-4 h-4 mr-2" />
+      Doctor
+    </h3>
+    <p className="text-base font-semibold text-gray-900">
+      {invoice.doctor}
+    </p>
+  </div>
+
+</div>
 
             <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
               <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
@@ -193,11 +239,11 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
                 <p><span className="font-medium">Due Date:</span> {new Date(invoice.dueDate).toLocaleDateString()}</p>
                 <p>
                   <span className="font-medium">Status:</span> 
-                  <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
-                    invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                  }`}>
-                    {invoice.status.toUpperCase()}
-                  </span>
+<span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
+  invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+}`}>
+  {invoice.status === 'paid' ? 'Paid' : invoice.status}
+</span>
                 </p>
               </div>
             </div>
@@ -215,7 +261,7 @@ export function InvoiceViewer({ invoiceId, onClose }: InvoiceViewerProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {invoice.items.map((item) => (
+                {invoice.items.map((item: any) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 text-sm text-gray-900">{item.description}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-center">{item.quantity}</td>

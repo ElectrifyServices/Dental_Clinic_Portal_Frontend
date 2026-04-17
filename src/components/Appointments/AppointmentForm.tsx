@@ -133,6 +133,13 @@ export function AppointmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+  appointment?.status === "checked-in" &&
+  formData.patientPhone !== appointment.patientPhone
+) {
+  alert(" Phone number cannot be changed after consultation");
+  return;
+}
     const conflict = (appointments || []).find(
       a => a.doctorId === formData.doctorId && a.date === formData.date && a.time === formData.time &&  a.id !== appointment?.id
     );
@@ -193,22 +200,22 @@ export function AppointmentForm({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 md:p-6 overflow-y-auto">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-gray-100 my-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-gray-100 my-4 overflow-hidden">
 
         {/* ── Header ── */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between gap-4 z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-[#2563eb] to-[#0d9488] border-b border-white/10 px-4 py-3 rounded-t-2xl flex items-center justify-between gap-4 z-10 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
               <Calendar className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-gray-900 leading-tight">{title}</h2>
-              <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+              <h2 className="ttext-base font-semibold text-white leading-tight">{title}</h2>
+              <p className="text-xs text-white/80 mt-0.5">{subtitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0"
+            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 hover:bg-gray-50 transition-colors flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -246,9 +253,15 @@ export function AppointmentForm({
                   setFormData(prev => ({ ...prev, patientPhone: value }));
                 }}
                 required
+                 disabled={appointment?.status === "checked-in"} 
                 className={inputCls}
                 placeholder="98765 43210"
               />
+              {appointment?.status === "checked-in" && (
+  <p className="text-xs text-red-500 mt-1">
+    Phone number cannot be changed after consultation
+  </p>
+)}
             </div>
           </div>
 

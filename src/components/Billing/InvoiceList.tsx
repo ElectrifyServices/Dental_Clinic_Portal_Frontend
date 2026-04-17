@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Download, Eye, MoreVertical } from 'lucide-react';
+import { Search, Plus, Filter, Download, Eye, MoreVertical, Delete, Trash2, Send } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -10,23 +10,26 @@ interface Invoice {
   dueDate: string;
 }
 
-const invoices: Invoice[] = [
-  { id: 'INV-001', patientName: 'Rajesh Kumar', date: '2024-01-15', amount: 2500, status: 'paid', dueDate: '2024-01-22' },
-  { id: 'INV-002', patientName: 'Priya Sharma', date: '2024-01-14', amount: 1500, status: 'sent', dueDate: '2024-01-21' },
-  { id: 'INV-003', patientName: 'Amit Singh', date: '2024-01-12', amount: 3200, status: 'overdue', dueDate: '2024-01-19' },
-  { id: 'INV-004', patientName: 'Neha Gupta', date: '2024-01-10', amount: 1800, status: 'draft', dueDate: '2024-01-17' },
-  { id: 'INV-005', patientName: 'Suresh Patel', date: '2024-01-08', amount: 4500, status: 'paid', dueDate: '2024-01-15' },
-];
+// const invoices: Invoice[] = [
+//   { id: 'INV-001', patientName: 'Rajesh Kumar', date: '2024-01-15', amount: 2500, status: 'paid', dueDate: '2024-01-22' },
+//   { id: 'INV-002', patientName: 'Priya Sharma', date: '2024-01-14', amount: 1500, status: 'sent', dueDate: '2024-01-21' },
+//   { id: 'INV-003', patientName: 'Amit Singh', date: '2024-01-12', amount: 3200, status: 'overdue', dueDate: '2024-01-19' },
+//   { id: 'INV-004', patientName: 'Neha Gupta', date: '2024-01-10', amount: 1800, status: 'draft', dueDate: '2024-01-17' },
+//   { id: 'INV-005', patientName: 'Suresh Patel', date: '2024-01-08', amount: 4500, status: 'paid', dueDate: '2024-01-15' },
+// ];
 
 interface InvoiceListProps {
   onCreateInvoice: () => void;
   onViewInvoice?: (invoiceId: string) => void;
+   onDeleteInvoice?: (invoiceId: string) => void;
+   invoices: Invoice[];
+   onUpdateStatus?: (id: string, status: string) => void;
 }
 
-export function InvoiceList({ onCreateInvoice, onViewInvoice }: InvoiceListProps) {
+export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, invoices , onUpdateStatus}: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [invoiceList, setInvoiceList] = useState(invoices);
+  // const [invoiceList, setInvoiceList] = useState(invoices);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -38,12 +41,14 @@ export function InvoiceList({ onCreateInvoice, onViewInvoice }: InvoiceListProps
     }
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
+const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || invoice.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   return (
     <div className="space-y-6">
@@ -124,22 +129,96 @@ export function InvoiceList({ onCreateInvoice, onViewInvoice }: InvoiceListProps
                       {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-700 p-1">
-                        <Eye 
-                          className="w-4 h-4" 
-                          onClick={() => onViewInvoice?.(invoice.id)}
-                        />
-                      </button>
-                      <button className="text-green-600 hover:text-green-700 p-1">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-400 hover:text-gray-600 p-1">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+<td className="px-6 py-4 relative">
+  <div>
+    {/* 3 dots button */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX - 120, // Adjusts menu to align right
+        });
+        setOpenMenuId(openMenuId === invoice.id ? null : invoice.id);
+      }}
+      className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
+    >
+      <MoreVertical className="w-4 h-4" />
+    </button>
+
+    {/* Dropdown Menu */}
+    {openMenuId === invoice.id && (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[9998]"
+          onClick={() => setOpenMenuId(null)}
+        />
+
+        {/* Dropdown */}
+        <div
+          className="fixed bg-white rounded-lg shadow-lg border border-gray-200 w-44 z-[9999] overflow-hidden"
+          style={{
+            top: menuPosition.top,
+            left: menuPosition.left,
+          }}
+        >
+          {/* View */}
+          <button
+            onClick={() => {
+              onViewInvoice?.(invoice.id);
+              setOpenMenuId(null);
+            }}
+            className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
+          >
+            <Eye className="w-4 h-4 text-blue-500" />
+            <span className="text-gray-700">View Details</span>
+          </button>
+
+          {/* <div className="border-t border-gray-100" /> */}
+
+          {/* Download */}
+          {/* <button
+            onClick={() => {
+              console.log("Download", invoice.id);
+              setOpenMenuId(null);
+            }}
+            className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
+          >
+            <Download className="w-4 h-4 text-green-500" />
+            <span className="text-gray-700">Download</span>
+          </button> */}
+
+          <button
+  onClick={() => {
+    onUpdateStatus?.(invoice.id, 'sent');
+    setOpenMenuId(null);
+  }}
+  className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 text-blue-600"
+>
+  <Send className='w-4 h-4'/>
+  Mark as Sent
+</button>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Delete */}
+          <button
+            onClick={() => {
+              onDeleteInvoice?.(invoice.id);
+              setOpenMenuId(null);
+            }}
+            className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-3 transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-red-500" />
+            <span className="text-red-600">Delete</span>
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+</td>
                 </tr>
               ))}
             </tbody>

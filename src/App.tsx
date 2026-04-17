@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
@@ -42,6 +38,7 @@ import { EMRViewer } from './components/EMR/EMRViewer';
 import { InvoiceViewer } from './components/Billing/InvoiceViewer';
 import { ConsentFormViewer } from './components/Consent/ConsentFormViewer';
 import { User, Phone, Stethoscope, MessageSquare, AlertTriangle, X, DollarSign } from 'lucide-react';
+// import { ConsultationHistory } from "./components/Reports/ConsultationHistory";
 
 function MainApp() {
   const [selectedAppointment, setSelectedAppointment] = useState(null)
@@ -61,10 +58,23 @@ function MainApp() {
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [isQuickBooking, setIsQuickBooking] = useState(false);
-const [appointments, setAppointments] = useState<any[]>(() => {
+  const cleanOldAppointments = (appointments) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // normalize
+
+  return appointments.filter(a => {
+    const apptDate = new Date(a.date);
+    apptDate.setHours(0, 0, 0, 0);
+
+    return apptDate >= today; 
+  });
+};
+const [appointments, setAppointments] = useState(() => {
   try {
     const stored = localStorage.getItem("appointments");
-    return stored ? JSON.parse(stored) : [];
+    const parsed = stored ? JSON.parse(stored) : [];
+
+    return cleanOldAppointments(parsed);
   } catch {
     return [];
   }
@@ -102,18 +112,33 @@ const listCount = appointments.filter(
     return [];
   }
 });
+const handleDeleteInvoice = (id: string) => {
+  if (window.confirm("Are you sure you want to delete this invoice?")) {
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+  }
+};
   const [showPatientConsultation, setShowPatientConsultation] = useState(false);
   const [selectedPatientForConsultation, setSelectedPatientForConsultation] = useState<any>(null);
   const [showEMRForm, setShowEMRForm] = useState(false);
   const [showEMRViewer, setShowEMRViewer] = useState(false);
   const [emrRecords, setEmrRecords] = useState<any[]>([]);
-  const [invoices, setInvoices] = useState<any[]>([]);
+ const [invoices, setInvoices] = useState<any[]>(() => {
+  const stored = localStorage.getItem("invoices");
+  return stored ? JSON.parse(stored) : [];
+});
   const [showDiagnoseForm, setShowDiagnoseForm] = useState(false);
   const [selectedPatientForDiagnose, setSelectedPatientForDiagnose] = useState<any>(null);
   const [viewMode, setViewMode] = useState('calendar');
 const [patientFormType, setPatientFormType] = useState<'normal' | 'person'>('normal');
 const [parentPatientId, setParentPatientId] = useState('');
 const selectedPatient = patients.find(p => p.id === selectedPatientId);
+const handleUpdateInvoiceStatus = (id: string, status: string) => {
+  setInvoices(prev =>
+    prev.map(inv =>
+      inv.id === id ? { ...inv, status } : inv
+    )
+  );
+};
 const familyMembers = patients.filter(p => {
   if (!selectedPatient) return false;
 
@@ -130,11 +155,38 @@ useEffect(() => {
   localStorage.setItem("patients", JSON.stringify(patients));
 }, [patients]);
 useEffect(() => {
-  localStorage.setItem("appointments", JSON.stringify(appointments));
+  const cleaned = cleanOldAppointments(appointments);
+  localStorage.setItem("appointments", JSON.stringify(cleaned));
 }, [appointments]);
 useEffect(() => {
   localStorage.setItem("queuedPatients", JSON.stringify(queuedPatients));
 }, [queuedPatients]);
+useEffect(() => {
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+}, [invoices]);
+useEffect(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); 
+
+  let changed = false;
+
+  const updatedInvoices = invoices.map(inv => {
+    const due = new Date(inv.dueDate); 
+    due.setHours(0, 0, 0, 0); 
+
+    if (inv.status !== 'paid' && due < today && inv.status !== 'overdue') {
+      changed = true;
+      return { ...inv, status: 'overdue' };
+    }
+
+    return inv;
+  });
+
+  if (changed) {
+    setInvoices(updatedInvoices);
+  }
+}, [invoices]);
+
 const handleSendReminder = (patientId: string, amount: number) => {
   console.log("Reminder sent to:", patientId, "Amount:", amount);
 
@@ -310,8 +362,31 @@ const handleSaveAppointment = (appointment: any) => {
   const handleDeleteAppointment = (appointmentId: string) => {
     setAppointments(prev => prev.filter(apt => apt.id !== appointmentId));
   };
+  const [prefillPatientData, setPrefillPatientData] = useState<any>(null);
+  const [showCreatePatientPopup, setShowCreatePatientPopup] = useState(false);
+const [missingPatientData, setMissingPatientData] = useState<any>(null);
+
+const normalizePhone = (phone: string) => phone?.replace(/\D/g, '');
 
   const handleCheckInPatient = (appointment: any) => {
+    const appointmentPhone = normalizePhone(
+    appointment.patientPhone || appointment.phone
+  );
+
+  const existingPatient = patients.find(
+    p => normalizePhone(p.phone) === appointmentPhone
+  );
+
+  // Patient NOT found
+  if (!existingPatient) {
+    setMissingPatientData({
+      name: appointment.patientName || appointment.patient,
+      phone: appointment.patientPhone || appointment.phone,
+    });
+
+    setShowCreatePatientPopup(true);
+    return;
+  }
     // Move patient from appointments to diagnosis queue
     const queuedPatient = {
       id: appointment.id,
@@ -335,8 +410,8 @@ const handleSaveAppointment = (appointment: any) => {
         allergies: ['Penicillin']
       }
     };
-    
-    // Add to diagnosis queue
+  
+  
    setQueuedPatients(prev => {
   const alreadyExists = prev.some(p => p.id === appointment.id);
   if (alreadyExists) return prev; 
@@ -371,6 +446,16 @@ const handleSaveAppointment = (appointment: any) => {
       t.id === treatmentId ? { ...t, status: 'completed' } : t
     ));
   };
+  const [completedConsultations, setCompletedConsultations] = useState(() => {
+  const stored = localStorage.getItem("completedConsultations");
+  return stored ? JSON.parse(stored) : [];
+});
+useEffect(() => {
+  localStorage.setItem(
+    "completedConsultations",
+    JSON.stringify(completedConsultations)
+  );
+}, [completedConsultations]);
   const handleSaveTreatment = (treatment: any) => {
     if (selectedItemId) {
       setTreatments(prev => prev.map(t => t.id === selectedItemId ? treatment : t));
@@ -408,6 +493,7 @@ const handleSaveAppointment = (appointment: any) => {
   };
 
 const handleSavePatient = (patient) => {
+  setPrefillPatientData(null); 
   setPatients(prev => {
     const existing = prev.find(p => p.id === patient.id);
 
@@ -440,6 +526,8 @@ const handleSavePatient = (patient) => {
 
   const renderPage = () => {
     switch (currentPage) {
+  //     case 'consultation-history':
+  // return <ConsultationHistory />;
       case 'dashboard':
         return (
           <div className="space-y-6">
@@ -795,10 +883,10 @@ onEditAppointment={(id) => {
             patients={patients}  
 onAddPatient={(type, patientId) => {
   if (type === 'person') {
-    setParentPatientId(patientId); // ✅ store parent
+    setParentPatientId(patientId); 
   }
 
-  setSelectedPatientId(''); // ✅ RESET (IMPORTANT)
+  setSelectedPatientId('');
   setPatientFormType(type === 'person' ? 'person' : 'normal');
   setShowPatientForm(true);
 }}
@@ -829,8 +917,11 @@ onDeletePatient={(patientId) => {
       case 'billing':
         return (
           <InvoiceList 
+           invoices={invoices} 
             onCreateInvoice={() => setShowInvoiceForm(true)}
             onViewInvoice={handleViewInvoice}
+            onDeleteInvoice={handleDeleteInvoice}
+             onUpdateStatus={handleUpdateInvoiceStatus}
           />
         );
       
@@ -1018,6 +1109,7 @@ patient={
     : patients.find(p => p.id === selectedPatientId)
 }
     type={patientFormType} 
+    prefillData={prefillPatientData}
   />
 )}
       
@@ -1037,14 +1129,110 @@ patient={
           selectedDate={selectedDate}
         />
       )}
+{showCreatePatientPopup && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div
+      className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+      style={{ animation: 'modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+    >
+      <style>{`
+        @keyframes modalPop {
+          from { opacity: 0; transform: scale(0.92) translateY(8px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        }
+      `}</style>
+
+      {/* ── Top accent bar + icon ── */}
+      <div className="bg-gradient-to-r from-[#349edb] to-[#005ba5] px-6 pt-6 pb-5 text-white">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            {/* User-search icon */}
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round"
+                d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-base font-bold leading-tight">Patient Not Found</h2>
+            <p className="text-white/75 text-xs mt-0.5">Patient is not registered</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Body ── */}
+      <div className="px-6 py-5">
+
+        <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+          This patient is not in the system. Review the details below and create a new record to continue.
+        </p>
+
+        {/* Data card */}
+        <div className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100 mb-5 overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <span className="w-7 h-7 rounded-full bg-[#e6f4f1] flex items-center justify-center flex-shrink-0">
+              <svg className="w-3.5 h-3.5 text-[#1a6b5a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</p>
+              <p className="text-sm font-semibold text-gray-800 capitalize">{missingPatientData?.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <span className="w-7 h-7 rounded-full bg-[#e6f4f1] flex items-center justify-center flex-shrink-0">
+              <svg className="w-3.5 h-3.5 text-[#005ba5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Phone</p>
+              <p className="text-sm font-semibold text-gray-800">{missingPatientData?.phone}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2.5">
+          <button
+            onClick={() => setShowCreatePatientPopup(false)}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors duration-150"
+          >
+            Cancel
+          </button>
+<button
+  onClick={() => {
+    setShowCreatePatientPopup(false);
+    setPrefillPatientData(missingPatientData);
+    setCurrentPage('patients');
+    setSelectedPatientId('');
+    setShowPatientForm(true);
+  }}
+  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:opacity-90 hover:shadow-lg active:scale-[0.98]"
+  style={{ backgroundColor: '#005ba5' }}
+>
+  + Create Patient
+</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
       
       {showInvoiceForm && (
         <InvoiceForm
           onClose={() => setShowInvoiceForm(false)}
-          onSave={(invoice) => {
-            setInvoices(prev => [...prev, invoice]);
-            setShowInvoiceForm(false);
-          }}
+onSave={(invoice) => {
+  const newInvoice = {
+    ...invoice,
+    amount: invoice.total
+  };
+
+  setInvoices(prev => [newInvoice, ...prev]);
+
+  setShowInvoiceForm(false);
+}}
         />
       )}
       
@@ -1106,6 +1294,7 @@ patient={
         <InvoiceViewer
           invoiceId={selectedItemId}
           onClose={() => setShowInvoiceViewer(false)}
+          onUpdateStatus={handleUpdateInvoiceStatus}
         />
       )}
       
@@ -1219,6 +1408,45 @@ patient={
             
             // Update patient status to completed
             if (queuedPatients.length > 0) {
+const patient = queuedPatients.find(p => p.id === consultationData.patientId);
+
+if (patient) {
+const newRecord = {
+  id: Date.now(),
+
+  // patient info
+  patientId: patient.id,
+  patientName: patient.patientName,
+  phone: patient.patientPhone,
+  treatmentType: patient.treatmentType,
+
+  diagnosis: consultationData.diagnosis,
+  observations: consultationData.observations,
+  treatmentPlan: consultationData.treatmentPlan,
+
+  prescriptions: consultationData.prescriptions || [],
+  consultationNotes: consultationData.consultationNotes,
+  treatmentCost: consultationData.treatmentCost,         
+  followUpDate: consultationData.followUpDate,           
+  followUpRequired: consultationData.followUpRequired,  
+
+  images: consultationData.images || [],
+
+  completedAt: new Date().toISOString(),
+};
+
+ setCompletedConsultations(prev => [...prev, newRecord]);
+}
+  // setCompletedConsultations(prev => {
+  // const updated = [...prev, newRecord];
+
+  // localStorage.setItem("completedConsultations", JSON.stringify(updated));
+
+//   return updated;
+// });
+// }
+
+// remove from queue
 setQueuedPatients(prev =>
   prev.filter(p => p.id !== consultationData.patientId)
 );

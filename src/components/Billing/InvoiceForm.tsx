@@ -11,6 +11,7 @@ interface InvoiceFormProps {
 export function InvoiceForm({ onClose, onSave, invoice }: InvoiceFormProps) {
   const [formData, setFormData] = useState({
     patientName: invoice?.patientName || '',
+     doctor: (invoice as any)?.doctor || '',
     date: invoice?.date || new Date().toISOString().split('T')[0],
     dueDate: invoice?.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     discount: invoice?.discount || 0,
@@ -30,6 +31,12 @@ export function InvoiceForm({ onClose, onSave, invoice }: InvoiceFormProps) {
     'Neha Gupta',
     'Suresh Patel'
   ];
+
+  const doctors = [
+"Dr. Rajesh Sharma — General Dentistry",
+"Dr. Priya Patel — Orthodontics",
+"Dr. Amit Singh — Oral Surgery",
+];
 
   const commonServices = [
     { name: 'Consultation', rate: 500 },
@@ -158,7 +165,21 @@ export function InvoiceForm({ onClose, onSave, invoice }: InvoiceFormProps) {
               />
             </div>
           </div>
-
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    Doctor *
+  </label>
+  <select
+    value={formData.doctor || ""}
+    onChange={(e) => setFormData({ ...formData, doctor: e.target.value })}
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+  >
+    <option value="">Select Doctor</option>
+    {doctors.map(doc => (
+      <option key={doc} value={doc}>{doc}</option>
+    ))}
+  </select>
+</div>
           {/* Invoice Items */}
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -180,31 +201,48 @@ export function InvoiceForm({ onClose, onSave, invoice }: InvoiceFormProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Service/Description
                     </label>
-                    <select
-                      value={item.description}
-                      onChange={(e) => {
-                        const selectedService = commonServices.find(s => s.name === e.target.value);
-                        updateItem(item.id, 'description', e.target.value);
-                        if (selectedService) {
-                          updateItem(item.id, 'rate', selectedService.rate);
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select Service</option>
-                      {commonServices.map(service => (
-                        <option key={service.name} value={service.name}>{service.name}</option>
-                      ))}
-                      <option value="custom">Custom Service</option>
-                    </select>
-                    {item.description === 'custom' && (
-                      <input
-                        type="text"
-                        placeholder="Enter custom service"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-2"
-                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                      />
-                    )}
+<select
+  value={item.description}
+onChange={(e) => {
+  const value = e.target.value;
+  const selectedService = commonServices.find(s => s.name === value);
+
+  setItems(prev =>
+    prev.map(it => {
+      if (it.id === item.id) {
+        const rate = selectedService ? selectedService.rate : it.rate;
+        return {
+          ...it,
+          description: value,
+          rate,
+          amount: it.quantity * rate
+        };
+      }
+      return it;
+    })
+  );
+}}
+  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+>
+  <option value="">Select Service</option>
+
+  {commonServices.map(service => (
+    <option key={service.name} value={service.name}>
+      {service.name}
+    </option>
+  ))}
+
+  <option value="custom">Custom Service</option>
+</select>
+
+{item.description === 'custom' && (
+  <input
+    type="text"
+    placeholder="Enter custom service"
+    onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+    className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-2"
+  />
+)}
                   </div>
 
                   <div className="col-span-2">

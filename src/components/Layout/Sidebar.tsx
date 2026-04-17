@@ -206,6 +206,7 @@ const menuItems = [
     icon: Activity, 
     color: 'orange'
   },
+  
   { 
     id: 'treatments', 
     label: 'Treatments', 
@@ -255,6 +256,7 @@ const menuItems = [
     color: 'amber'
   }
 ];
+
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { state } = useAuth();
