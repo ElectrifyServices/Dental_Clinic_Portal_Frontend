@@ -4,6 +4,7 @@ import { Search, Plus, Filter, Download, Eye, MoreVertical, Delete, Trash2, Send
 interface Invoice {
   id: string;
   patientName: string;
+  phone: string;
   date: string;
   amount: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue';
@@ -191,14 +192,21 @@ const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
           </button> */}
 
           <button
-  onClick={() => {
-    onUpdateStatus?.(invoice.id, 'sent');
-    setOpenMenuId(null);
-  }}
+onClick={() => {
+  const message = `Hello ${invoice.patientName},
+Your invoice (${invoice.id}) of ₹${invoice.amount} is ready.
+Please complete your payment.
+Thank you!`;
+  const phone = invoice.phone || ''; // make sure number exists
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+  onUpdateStatus?.(invoice.id, 'send');
+  setOpenMenuId(null);
+}}
   className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 text-blue-600"
 >
   <Send className='w-4 h-4'/>
-  Mark as Sent
+  Send Invoices
 </button>
 
           <div className="border-t border-gray-100" />

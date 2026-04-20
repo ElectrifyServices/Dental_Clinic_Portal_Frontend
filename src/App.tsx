@@ -1233,6 +1233,9 @@ onSave={(invoice) => {
 
   setShowInvoiceForm(false);
 }}
+ patients={patients} 
+   appointments={appointments}
+  queuedPatients={queuedPatients} 
         />
       )}
       
@@ -1437,15 +1440,6 @@ const newRecord = {
 
  setCompletedConsultations(prev => [...prev, newRecord]);
 }
-  // setCompletedConsultations(prev => {
-  // const updated = [...prev, newRecord];
-
-  // localStorage.setItem("completedConsultations", JSON.stringify(updated));
-
-//   return updated;
-// });
-// }
-
 // remove from queue
 setQueuedPatients(prev =>
   prev.filter(p => p.id !== consultationData.patientId)
@@ -1463,7 +1457,6 @@ setQueuedPatients(prev =>
     </div>
   );
 }
-
 function App() {
   return (
     <AuthProvider>
@@ -1473,7 +1466,6 @@ function App() {
     </AuthProvider>
   );
 }
-
 function AuthenticatedApp() {
   const { state } = useAuth();
 
@@ -1483,5 +1475,4 @@ function AuthenticatedApp() {
 
   return <MainApp />;
 }
-
 export default App;
