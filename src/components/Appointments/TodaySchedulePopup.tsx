@@ -15,10 +15,10 @@ interface TodaySchedulePopupProps {
 
 export function TodaySchedulePopup({
   onClose,
-  appointments,
-  doctors,
-  doctorAvailability,
-  onToggleDoctorAvailability,
+  appointments = [],
+  doctors = [],
+  doctorAvailability = {},
+  onToggleDoctorAvailability = () => {},
 }: TodaySchedulePopupProps) {
 
   // ── original logic (untouched) ──────────────────────────────────────────

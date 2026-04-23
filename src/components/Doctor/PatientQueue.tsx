@@ -67,8 +67,7 @@ const filteredPatients = queuedPatients.filter(patient => {
   return matchesSearch && matchesFilter;
 });
 
-  const waitingCount = queuedPatients.filter(p => p.status === 'waiting').length;
-  const inConsultationCount = queuedPatients.filter(p => p.status === 'in-consultation').length;
+  const waitingCount = queuedPatients.filter(p => p.status === 'waiting' || p.status === 'in-consultation' ).length;
 
   return (
     <div className="space-y-6">
@@ -82,10 +81,6 @@ const filteredPatients = queuedPatients.filter(patient => {
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-700">{waitingCount} Waiting</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-700">{inConsultationCount} In Consultation</span>
               </div>
             </div>
           </div>
@@ -187,32 +182,6 @@ const filteredPatients = queuedPatients.filter(patient => {
               </div>
             </div>
 
-            {/* Medical History */}
-            {patient.patientHistory && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200">
-                <div className="flex items-center mb-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-600 mr-2" />
-                  <span className="text-sm font-medium text-orange-800">Medical History</span>
-                </div>
-                <div className="space-y-1">
-                  {patient.patientHistory.allergies.length > 0 && (
-                    <div className="text-xs text-red-700">
-                      <strong>Allergies:</strong> {patient.patientHistory.allergies.join(', ')}
-                    </div>
-                  )}
-                  {patient.patientHistory.medicalHistory.length > 0 && (
-                    <div className="text-xs text-orange-700">
-                      <strong>Conditions:</strong> {patient.patientHistory.medicalHistory.join(', ')}
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-600">
-                    <strong>Visits:</strong> {patient.patientHistory.totalVisits} | 
-                    <strong> Last Visit:</strong> {patient.patientHistory.lastVisit ? new Date(patient.patientHistory.lastVisit).toLocaleDateString() : 'First visit'}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
               <div className="flex space-x-2">
@@ -244,17 +213,16 @@ const filteredPatients = queuedPatients.filter(patient => {
                   </span>
                 )}
               </div>
-              <div className="text-sm text-gray-500">
-                Waiting: {Math.floor((new Date().getTime() - new Date(`2024-01-15 ${patient.checkInTime}`).getTime()) / (1000 * 60))} min
-              </div>
             </div>
           </div>
         ))}
       </div>
 
       {showHistory && (
-  <ConsultationHistoryModal onClose={() => setShowHistory(false)} />
-)}
+        <ConsultationHistoryModal 
+          onClose={() => setShowHistory(false)} 
+        />
+      )}
 
       {/* Empty State */}
       {filteredPatients.length === 0 && (

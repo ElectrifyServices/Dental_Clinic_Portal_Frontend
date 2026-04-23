@@ -3,11 +3,10 @@ import { Bell, Settings, LogOut, User, ChevronDown, Calendar, Plus } from 'lucid
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
-  onQuickAppointment: () => void;
   onShowTodaySchedule: () => void;
 }
 
-export function Header({ onQuickAppointment, onShowTodaySchedule }: HeaderProps) {
+export function Header({ onShowTodaySchedule }: HeaderProps) {
   const { state, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -23,17 +22,12 @@ export function Header({ onQuickAppointment, onShowTodaySchedule }: HeaderProps)
       <div className="flex items-center justify-between">
         {/* Left side - Quick Actions */}
         <div className="flex items-center space-x-4">
-          <button
-            onClick={onQuickAppointment}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          <button 
+            onClick={onShowTodaySchedule}
+            className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 flex items-center shadow-sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Quick Appointment
-          </button>
-          
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 flex items-center">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span onClick={onShowTodaySchedule}>Today's Schedule</span>
+            <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+            <span>Today's Schedule</span>
           </button>
         </div>
 

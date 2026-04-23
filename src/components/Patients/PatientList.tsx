@@ -815,7 +815,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
               ) : (
                 <Plus className="w-4 h-4 mr-2" />
               )}
-              Add Patient
+              New Patient
             </button>
           </div>
         </div>
@@ -851,7 +851,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
             onClick={onAddPatient}
             className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            Add First Patient
+            New First Patient
           </button>
         </div>
       )}

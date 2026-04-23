@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
-import { X, Save, User, Clock, Stethoscope, FileText, Camera, Pill, Plus, Trash2, MessageSquare, AlertTriangle, CheckCircle } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  X,
+  Save,
+  User,
+  Clock,
+  Stethoscope,
+  FileText,
+  Camera,
+  Pill,
+  Plus,
+  Trash2,
+  MessageSquare,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -19,18 +33,25 @@ interface PatientConsultationProps {
   onCreateTreatment?: (treatmentData: any) => void;
 }
 
-export function PatientConsultation({ patient, onClose, onCompleteConsultation, onCreateTreatment }: PatientConsultationProps) {
-const downloadConsultationPDF = async () => {
-  const pdfContainer = document.createElement('div');
-  pdfContainer.style.cssText = `
+export function PatientConsultation({
+  patient,
+  onClose,
+  onCompleteConsultation,
+  onCreateTreatment,
+}: PatientConsultationProps) {
+  const downloadConsultationPDF = async () => {
+    const pdfContainer = document.createElement("div");
+    pdfContainer.style.cssText = `
     position: fixed; left: -9999px; top: 0;
     width: 794px; background: white; 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
 
-  const filledPrescriptions = consultationData.prescriptions.filter(p => p.medicine.trim() !== '');
+    const filledPrescriptions = consultationData.prescriptions.filter(
+      (p) => p.medicine.trim() !== "",
+    );
 
-  pdfContainer.innerHTML = `
+    pdfContainer.innerHTML = `
     <div style="width:794px; background:#fff; margin:0; padding:0;">
 
       <!-- Simple Header -->
@@ -41,8 +62,8 @@ const downloadConsultationPDF = async () => {
             <div style="font-size:11px; color:#6b7280; margin-top:4px;">Patient Consultation Report</div>
           </div>
           <div style="text-align:right; font-size:11px; color:#6b7280; line-height:1.6;">
-            <div>${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</div>
-            <div>${new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}</div>
+            <div>${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</div>
+            <div>${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</div>
             <div>Dr. Sharma</div>
           </div>
         </div>
@@ -67,13 +88,19 @@ const downloadConsultationPDF = async () => {
       </div>
 
       <!-- Medical Alerts -->
-      ${patient.patientHistory && (patient.patientHistory.allergies.length > 0 || patient.patientHistory.medicalHistory.length > 0) ? `
+      ${
+        patient.patientHistory &&
+        (patient.patientHistory.allergies.length > 0 ||
+          patient.patientHistory.medicalHistory.length > 0)
+          ? `
       <div style="margin: 20px 40px 0; background:#fef2f2; border-left: 3px solid #dc2626; padding: 12px 16px;">
         <div style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Medical Alerts</div>
-        ${patient.patientHistory.allergies.length > 0 ? `<div style="font-size:11px; color:#7f1d1d;"><strong>Allergies:</strong> ${patient.patientHistory.allergies.join(', ')}</div>` : ''}
-        ${patient.patientHistory.medicalHistory.length > 0 ? `<div style="font-size:11px; color:#7f1d1d; margin-top:4px;"><strong>History:</strong> ${patient.patientHistory.medicalHistory.join(', ')}</div>` : ''}
+        ${patient.patientHistory.allergies.length > 0 ? `<div style="font-size:11px; color:#7f1d1d;"><strong>Allergies:</strong> ${patient.patientHistory.allergies.join(", ")}</div>` : ""}
+        ${patient.patientHistory.medicalHistory.length > 0 ? `<div style="font-size:11px; color:#7f1d1d; margin-top:4px;"><strong>History:</strong> ${patient.patientHistory.medicalHistory.join(", ")}</div>` : ""}
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
       <!-- Main Content -->
       <div style="padding: 24px 40px 40px;">
@@ -103,7 +130,9 @@ const downloadConsultationPDF = async () => {
         </div>
 
         <!-- Prescriptions -->
-        ${filledPrescriptions.length > 0 ? `
+        ${
+          filledPrescriptions.length > 0
+            ? `
         <div style="margin-bottom:24px;">
           <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Prescriptions</div>
           <table style="width:100%; border-collapse:collapse; font-size:11px;">
@@ -118,20 +147,26 @@ const downloadConsultationPDF = async () => {
               </tr>
             </thead>
             <tbody>
-              ${filledPrescriptions.map((p, i) => `
+              ${filledPrescriptions
+                .map(
+                  (p, i) => `
                 <tr style="border-bottom:1px solid #f3f4f6;">
                   <td style="padding:8px 10px; color:#6b7280;">${i + 1}</td>
-                  <td style="padding:8px 10px; color:#111827; font-weight:500;">${p.medicine || '-'}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.dosage || '-'}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.frequency || '-'}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.duration || '-'}</td>
-                  <td style="padding:8px 10px; color:#6b7280;">${p.instructions || '-'}</td>
+                  <td style="padding:8px 10px; color:#111827; font-weight:500;">${p.medicine || "-"}</td>
+                  <td style="padding:8px 10px; color:#4b5563;">${p.dosage || "-"}</td>
+                  <td style="padding:8px 10px; color:#4b5563;">${p.frequency || "-"}</td>
+                  <td style="padding:8px 10px; color:#4b5563;">${p.duration || "-"}</td>
+                  <td style="padding:8px 10px; color:#6b7280;">${p.instructions || "-"}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <!-- Recommendations & Cost -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
@@ -153,54 +188,71 @@ const downloadConsultationPDF = async () => {
         <div style="margin-bottom:24px;">
           <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Follow-up</div>
           <div style="font-size:12px; color:#4b5563; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-            ${consultationData.followUpRequired 
-              ? (consultationData.followUpDate 
-                  ? new Date(consultationData.followUpDate).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })
-                  : 'To be scheduled')
-              : 'Not required'}
+            ${
+              consultationData.followUpRequired
+                ? consultationData.followUpDate
+                  ? new Date(consultationData.followUpDate).toLocaleDateString(
+                      "en-IN",
+                      { day: "2-digit", month: "long", year: "numeric" },
+                    )
+                  : "To be scheduled"
+                : "Not required"
+            }
           </div>
         </div>
 
         <!-- Treatment Planning -->
-        ${consultationData.requiresTreatment ? `
+        ${
+          consultationData.requiresTreatment
+            ? `
         <div style="margin-bottom:24px;">
           <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Treatment Planning</div>
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
             <div>
               <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Procedure</div>
-              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentProcedure || '—'}</div>
+              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentProcedure || "—"}</div>
             </div>
             <div>
               <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Tooth / Area</div>
-              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentTooth || '—'}</div>
+              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentTooth || "—"}</div>
             </div>
             <div>
               <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Sessions</div>
               <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentSessions || 1}</div>
             </div>
           </div>
-          ${consultationData.startTreatmentToday ? `
+          ${
+            consultationData.startTreatmentToday
+              ? `
           <div style="margin-top:8px; font-size:11px; color:#059669;">✓ Treatment starting today</div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <!-- Additional Notes -->
-        ${consultationData.consultationNotes ? `
+        ${
+          consultationData.consultationNotes
+            ? `
         <div style="margin-bottom:24px;">
           <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Additional Notes</div>
           <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
             ${consultationData.consultationNotes}
           </div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <!-- Footer -->
         <div style="margin-top:32px; padding-top:20px; border-top:1px solid #e5e7eb;">
           <div style="display:flex; justify-content:space-between; align-items:flex-end;">
             <div>
               <div style="font-size:9px; color:#9ca3af;">Generated by DentalCare Pro</div>
-              <div style="font-size:9px; color:#9ca3af; margin-top:2px;">${new Date().toLocaleString('en-IN')}</div>
+              <div style="font-size:9px; color:#9ca3af; margin-top:2px;">${new Date().toLocaleString("en-IN")}</div>
             </div>
             <div style="text-align:center;">
               <div style="width:140px; border-top:1px solid #d1d5db; padding-top:6px;">
@@ -214,159 +266,181 @@ const downloadConsultationPDF = async () => {
     </div>
   `;
 
-  document.body.appendChild(pdfContainer);
+    document.body.appendChild(pdfContainer);
 
-  try {
-    const canvas = await html2canvas(pdfContainer, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      width: 794,
-      windowWidth: 794
-    });
+    try {
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
+      });
 
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'px',
-      format: 'a4'
-    });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 0;
+      let heightLeft = imgHeight;
+      let position = 0;
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
-    }
 
-    pdf.save(`${patient.patientName}_consultation_${new Date().toISOString().split('T')[0]}.pdf`);
-  } finally {
-    document.body.removeChild(pdfContainer);
-  }
-};
-const [consultationData, setConsultationData] = useState({
-    diagnosis: '',
-    treatmentPlan: '',
-    observations: '',
-    recommendations: '',
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(
+        `${patient.patientName}_consultation_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+    } finally {
+      document.body.removeChild(pdfContainer);
+    }
+  };
+  const [consultationData, setConsultationData] = useState({
+    diagnosis: "",
+    treatmentPlan: "",
+    observations: "",
+    recommendations: "",
     followUpRequired: false,
-    followUpDate: '',
+    followUpDate: "",
     prescriptions: [
-      { id: '1', medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
+      {
+        id: "1",
+        medicine: "",
+        dosage: "",
+        frequency: "",
+        duration: "",
+        instructions: "",
+      },
     ],
     images: [] as string[],
-    nextAppointment: '',
-    consultationNotes: '',
+    nextAppointment: "",
+    consultationNotes: "",
     treatmentCost: 0,
     requiresTreatment: false,
-    treatmentProcedure: '',
-    treatmentTooth: '',
+    treatmentProcedure: "",
+    treatmentTooth: "",
     treatmentSessions: 1,
-    startTreatmentToday: false
+    startTreatmentToday: false,
   });
 
   const [loading, setLoading] = useState(false);
 
   const addPrescription = () => {
-    setConsultationData(prev => ({
+    setConsultationData((prev) => ({
       ...prev,
-      prescriptions: [...prev.prescriptions, {
-        id: Date.now().toString(),
-        medicine: '',
-        dosage: '',
-        frequency: '',
-        duration: '',
-        instructions: ''
-      }]
+      prescriptions: [
+        ...prev.prescriptions,
+        {
+          id: Date.now().toString(),
+          medicine: "",
+          dosage: "",
+          frequency: "",
+          duration: "",
+          instructions: "",
+        },
+      ],
     }));
   };
 
   const removePrescription = (id: string) => {
-    setConsultationData(prev => ({
+    setConsultationData((prev) => ({
       ...prev,
-      prescriptions: prev.prescriptions.filter(p => p.id !== id)
+      prescriptions: prev.prescriptions.filter((p) => p.id !== id),
     }));
   };
 
   const updatePrescription = (id: string, field: string, value: string) => {
-    setConsultationData(prev => ({
+    setConsultationData((prev) => ({
       ...prev,
-      prescriptions: prev.prescriptions.map(p => 
-        p.id === id ? { ...p, [field]: value } : p
-      )
+      prescriptions: prev.prescriptions.map((p) =>
+        p.id === id ? { ...p, [field]: value } : p,
+      ),
     }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const imageUrls = files.map(file => URL.createObjectURL(file));
-    setConsultationData(prev => ({
+    const imageUrls = files.map((file) => URL.createObjectURL(file));
+    setConsultationData((prev) => ({
       ...prev,
-      images: [...prev.images, ...imageUrls]
+      images: [...prev.images, ...imageUrls],
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Create treatment if required
     if (consultationData.requiresTreatment && onCreateTreatment) {
       const treatmentData = {
         patientName: patient.patientName,
         procedure: consultationData.treatmentProcedure,
         tooth: consultationData.treatmentTooth,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split("T")[0],
         notes: `Treatment recommended during consultation: ${consultationData.treatmentPlan}`,
         cost: consultationData.treatmentCost,
-        status: consultationData.startTreatmentToday ? 'in-progress' : 'planned',
-        doctorId: '1',
-        doctorName: 'Dr. Sharma',
-        prescriptions: consultationData.prescriptions.filter(p => p.medicine.trim() !== ''),
-        sessions: consultationData.treatmentSessions
+        status: consultationData.startTreatmentToday
+          ? "in-progress"
+          : "planned",
+        doctorId: "1",
+        doctorName: "Dr. Sharma",
+        prescriptions: consultationData.prescriptions.filter(
+          (p) => p.medicine.trim() !== "",
+        ),
+        sessions: consultationData.treatmentSessions,
       };
-      
+
       onCreateTreatment(treatmentData);
     }
-    
+
     onCompleteConsultation({
       patientId: patient.id,
       ...consultationData,
       consultationDate: new Date().toISOString(),
-      doctorId: '1', // Current doctor
-      status: 'completed'
+      doctorId: "1", // Current doctor
+      status: "completed",
     });
     await downloadConsultationPDF();
     setLoading(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    setConsultationData(prev => ({
+    setConsultationData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
-       id="consultation-form"
-      className="bg-white rounded-2xl max-w-5xl w-full max-h-screen overflow-y-auto shadow-2xl">
+      <div
+        id="consultation-form"
+        className="bg-white rounded-2xl max-w-5xl w-full max-h-screen overflow-y-auto shadow-2xl"
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -375,8 +449,12 @@ const [consultationData, setConsultationData] = useState({
                 <Stethoscope className="w-8 h-8 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Patient Consultation</h2>
-                <p className="text-gray-600">{patient.patientName} - {patient.treatmentType}</p>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Patient Consultation
+                </h2>
+                <p className="text-gray-600">
+                  {patient.patientName} - {patient.treatmentType}
+                </p>
               </div>
             </div>
             <button
@@ -397,38 +475,48 @@ const [consultationData, setConsultationData] = useState({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-blue-700 font-medium">Patient Concern:</p>
+                <p className="text-sm text-blue-700 font-medium">
+                  Patient Concern:
+                </p>
                 <p className="text-blue-800 bg-white p-3 rounded-lg border border-blue-200 mt-1">
                   {patient.patientConcern}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-blue-700 font-medium">Treatment Type:</p>
+                <p className="text-sm text-blue-700 font-medium">
+                  Treatment Type:
+                </p>
                 <p className="text-blue-800 bg-white p-3 rounded-lg border border-blue-200 mt-1">
                   {patient.treatmentType}
                 </p>
               </div>
             </div>
-            
+
             {/* Medical Alerts */}
-            {patient.patientHistory && (patient.patientHistory.allergies.length > 0 || patient.patientHistory.medicalHistory.length > 0) && (
-              <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
-                <div className="flex items-center mb-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
-                  <span className="text-sm font-medium text-red-800">Medical Alerts</span>
+            {patient.patientHistory &&
+              (patient.patientHistory.allergies.length > 0 ||
+                patient.patientHistory.medicalHistory.length > 0) && (
+                <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-center mb-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
+                    <span className="text-sm font-medium text-red-800">
+                      Medical Alerts
+                    </span>
+                  </div>
+                  {patient.patientHistory.allergies.length > 0 && (
+                    <div className="text-xs text-red-700 mb-1">
+                      <strong>Allergies:</strong>{" "}
+                      {patient.patientHistory.allergies.join(", ")}
+                    </div>
+                  )}
+                  {patient.patientHistory.medicalHistory.length > 0 && (
+                    <div className="text-xs text-red-700">
+                      <strong>Medical History:</strong>{" "}
+                      {patient.patientHistory.medicalHistory.join(", ")}
+                    </div>
+                  )}
                 </div>
-                {patient.patientHistory.allergies.length > 0 && (
-                  <div className="text-xs text-red-700 mb-1">
-                    <strong>Allergies:</strong> {patient.patientHistory.allergies.join(', ')}
-                  </div>
-                )}
-                {patient.patientHistory.medicalHistory.length > 0 && (
-                  <div className="text-xs text-red-700">
-                    <strong>Medical History:</strong> {patient.patientHistory.medicalHistory.join(', ')}
-                  </div>
-                )}
-              </div>
-            )}
+              )}
           </div>
 
           {/* Clinical Assessment */}
@@ -501,53 +589,96 @@ const [consultationData, setConsultationData] = useState({
 
             <div className="space-y-4">
               {consultationData.prescriptions.map((prescription, index) => (
-                <div key={prescription.id} className="grid grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200">
+                <div
+                  key={prescription.id}
+                  className="grid grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200"
+                >
                   <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Medicine</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Medicine
+                    </label>
                     <input
                       type="text"
                       value={prescription.medicine}
-                      onChange={(e) => updatePrescription(prescription.id, 'medicine', e.target.value)}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "medicine",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Medicine name"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dosage</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dosage
+                    </label>
                     <input
                       type="text"
                       value={prescription.dosage}
-                      onChange={(e) => updatePrescription(prescription.id, 'dosage', e.target.value)}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "dosage",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="500mg"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Frequency
+                    </label>
                     <input
                       type="text"
                       value={prescription.frequency}
-                      onChange={(e) => updatePrescription(prescription.id, 'frequency', e.target.value)}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "frequency",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="3 times daily"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Duration
+                    </label>
                     <input
                       type="text"
                       value={prescription.duration}
-                      onChange={(e) => updatePrescription(prescription.id, 'duration', e.target.value)}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "duration",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="5 days"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Instructions</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Instructions
+                    </label>
                     <input
                       type="text"
                       value={prescription.instructions}
-                      onChange={(e) => updatePrescription(prescription.id, 'instructions', e.target.value)}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "instructions",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="After meals"
                     />
@@ -608,7 +739,9 @@ const [consultationData, setConsultationData] = useState({
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm font-medium text-gray-700">Follow-up appointment required</span>
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  Follow-up appointment required
+                </span>
               </div>
 
               {consultationData.followUpRequired && (
@@ -621,7 +754,7 @@ const [consultationData, setConsultationData] = useState({
                     name="followUpDate"
                     value={consultationData.followUpDate}
                     onChange={handleChange}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
                 </div>
@@ -635,7 +768,7 @@ const [consultationData, setConsultationData] = useState({
               <Stethoscope className="w-5 h-5 mr-2" />
               Treatment Planning
             </h3>
-            
+
             <div className="flex items-center mb-4">
               <input
                 type="checkbox"
@@ -644,7 +777,9 @@ const [consultationData, setConsultationData] = useState({
                 onChange={handleChange}
                 className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
               />
-              <span className="ml-2 text-sm font-medium text-purple-700">Patient requires treatment</span>
+              <span className="ml-2 text-sm font-medium text-purple-700">
+                Patient requires treatment
+              </span>
             </div>
 
             {consultationData.requiresTreatment && (
@@ -661,15 +796,19 @@ const [consultationData, setConsultationData] = useState({
                   >
                     <option value="">Select Procedure</option>
                     <option value="Dental Filling">Dental Filling</option>
-                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                    <option value="Root Canal Treatment">
+                      Root Canal Treatment
+                    </option>
                     <option value="Crown Placement">Crown Placement</option>
                     <option value="Tooth Extraction">Tooth Extraction</option>
                     <option value="Teeth Cleaning">Teeth Cleaning</option>
-                    <option value="Orthodontic Treatment">Orthodontic Treatment</option>
+                    <option value="Orthodontic Treatment">
+                      Orthodontic Treatment
+                    </option>
                     <option value="Dental Implant">Dental Implant</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-purple-700 mb-2">
                     Tooth/Area
@@ -683,7 +822,7 @@ const [consultationData, setConsultationData] = useState({
                     placeholder="e.g., 16 (Upper Right First Molar)"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-purple-700 mb-2">
                     Estimated Sessions
@@ -697,7 +836,7 @@ const [consultationData, setConsultationData] = useState({
                     className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
-                
+
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -706,7 +845,9 @@ const [consultationData, setConsultationData] = useState({
                     onChange={handleChange}
                     className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                   />
-                  <span className="ml-2 text-sm font-medium text-purple-700">Start treatment today</span>
+                  <span className="ml-2 text-sm font-medium text-purple-700">
+                    Start treatment today
+                  </span>
                 </div>
               </div>
             )}
@@ -719,7 +860,9 @@ const [consultationData, setConsultationData] = useState({
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
               <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 mb-2">Upload clinical photos, X-rays, or other relevant images</p>
+              <p className="text-gray-600 mb-2">
+                Upload clinical photos, X-rays, or other relevant images
+              </p>
               <input
                 type="file"
                 multiple
@@ -739,7 +882,9 @@ const [consultationData, setConsultationData] = useState({
 
             {consultationData.images.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Uploaded Images:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Uploaded Images:
+                </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {consultationData.images.map((image, index) => (
                     <div key={index} className="relative">
@@ -751,8 +896,13 @@ const [consultationData, setConsultationData] = useState({
                       <button
                         type="button"
                         onClick={() => {
-                          const newImages = consultationData.images.filter((_, i) => i !== index);
-                          setConsultationData(prev => ({ ...prev, images: newImages }));
+                          const newImages = consultationData.images.filter(
+                            (_, i) => i !== index,
+                          );
+                          setConsultationData((prev) => ({
+                            ...prev,
+                            images: newImages,
+                          }));
                         }}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                       >

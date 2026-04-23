@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  X, Save, Calendar, Clock, User, Phone, FileText,
-  IndianRupee, Stethoscope, MessageSquare
-} from 'lucide-react';
-import { Appointment } from '../../types';
+  X,
+  Save,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  FileText,
+  IndianRupee,
+  Stethoscope,
+  MessageSquare,
+} from "lucide-react";
+import { Appointment } from "../../types";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -26,57 +34,61 @@ export function AppointmentForm({
   appointments = [],
   selectedDate,
 }: AppointmentFormProps) {
-
   // ── original logic (untouched) ────────────────────────────────────────────
   const formatDateLocal = (date: Date) => {
-    const year  = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day   = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
   const safeDate = selectedDate ? new Date(selectedDate) : new Date();
 
   const [formData, setFormData] = useState({
-    patientName:    appointment?.patientName    || '',
-    patientPhone:   appointment?.patientPhone   || '',
-    treatment:      appointment?.treatment      || '',
-    doctorId:       appointment?.doctorId       || '1',
-    doctorName:     appointment?.doctorName     || 'Dr. Sharma',
-    date:           appointment?.date           || formatDateLocal(safeDate),
-    time:           appointment?.time           || '09:00',
-    duration:       appointment?.duration       || 30,
-    type:           appointment?.type           || 'consultation',
-    notes:          appointment?.notes          || '',
-    fee:            appointment?.fee            || 500,
-    patientConcern: appointment?.patientConcern || '',
-    treatmentType:  appointment?.treatmentType  || '',
+    patientName: appointment?.patientName || "",
+    patientPhone: appointment?.patientPhone || "",
+    treatment: appointment?.treatment || "",
+    doctorId: appointment?.doctorId || "1",
+    doctorName: appointment?.doctorName || "Dr. Sharma",
+    date:
+      appointment?.date instanceof Date
+        ? formatDateLocal(appointment.date)
+        : appointment?.date || formatDateLocal(safeDate),
+    time: appointment?.time || "09:00",
+    duration: appointment?.duration || 30,
+    type: appointment?.type || "consultation",
+    notes: appointment?.notes || "",
+    fee: appointment?.fee || 500,
+    patientConcern: appointment?.patientConcern || "",
+    treatmentType: appointment?.treatmentType || "",
   });
 
   const getBookedSlots = () =>
     (appointments || [])
-      .filter(a => a.doctorId === formData.doctorId && a.date === formData.date)
-      .map(a => a.time);
+      .filter(
+        (a) => a.doctorId === formData.doctorId && a.date === formData.date,
+      )
+      .map((a) => a.time);
 
   const isPastTime = (time: string, date: string) => {
-    const now      = new Date();
-    const selected = new Date(date + 'T' + time);
+    const now = new Date();
+    const selected = new Date(date + "T" + time);
     return selected < now;
   };
 
   const bookedSlots = getBookedSlots();
 
   const appointmentTypes = [
-    { value: 'consultation',  label: 'General Consultation',     fee: 500   },
-    { value: 'cleaning',      label: 'Teeth Cleaning & Scaling', fee: 1500  },
-    { value: 'filling',       label: 'Dental Filling',           fee: 2000  },
-    { value: 'extraction',    label: 'Tooth Extraction',         fee: 1000  },
-    { value: 'root-canal',    label: 'Root Canal Treatment',     fee: 5000  },
-    { value: 'crown',         label: 'Crown Fitting',            fee: 8000  },
-    { value: 'orthodontics',  label: 'Orthodontic Treatment',    fee: 3000  },
-    { value: 'surgery',       label: 'Oral Surgery',             fee: 10000 },
-    { value: 'emergency',     label: 'Emergency Treatment',      fee: 1500  },
-    { value: 'other',         label: 'Other Treatment',          fee: 500   },
+    { value: "consultation", label: "General Consultation", fee: 500 },
+    { value: "cleaning", label: "Teeth Cleaning & Scaling", fee: 1500 },
+    { value: "filling", label: "Dental Filling", fee: 2000 },
+    { value: "extraction", label: "Tooth Extraction", fee: 1000 },
+    { value: "root-canal", label: "Root Canal Treatment", fee: 5000 },
+    { value: "crown", label: "Crown Fitting", fee: 8000 },
+    { value: "orthodontics", label: "Orthodontic Treatment", fee: 3000 },
+    { value: "surgery", label: "Oral Surgery", fee: 10000 },
+    { value: "emergency", label: "Emergency Treatment", fee: 1500 },
+    { value: "other", label: "Other Treatment", fee: 500 },
   ];
 
   const generateTimeSlots = () => {
@@ -84,10 +96,10 @@ export function AppointmentForm({
     for (let hour = 9; hour <= 18; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         if (hour === 18 && minute > 0) break;
-        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const time24 = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
         const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        const ampm   = hour >= 12 ? 'PM' : 'AM';
-        const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const time12 = `${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`;
         slots.push({ time24, time12 });
       }
     }
@@ -95,37 +107,45 @@ export function AppointmentForm({
   };
 
   const getAvailableTimeSlots = () => {
-    const selDoctor = doctors.find(d => d.id === formData.doctorId);
+    const selDoctor = doctors.find((d) => d.id === formData.doctorId);
     if (!selDoctor || !formData.date) return [];
 
-    const selDate    = new Date(formData.date);
-    const dayName    = selDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const selDate = new Date(formData.date);
+    const dayName = selDate
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
     const daySchedule = selDoctor.workingHours[dayName];
 
-    if (!daySchedule || !daySchedule.isWorking || !doctorAvailability[formData.doctorId]) return [];
+    if (
+      !daySchedule ||
+      !daySchedule.isWorking ||
+      !doctorAvailability[formData.doctorId]
+    )
+      return [];
 
-    const allSlots  = generateTimeSlots();
-    const startHour = parseInt(daySchedule.startTime.split(':')[0]);
-    const endHour   = parseInt(daySchedule.endTime.split(':')[0]);
-    const endMinute = parseInt(daySchedule.endTime.split(':')[1]);
+    const allSlots = generateTimeSlots();
+    const startHour = parseInt(daySchedule.startTime.split(":")[0]);
+    const endHour = parseInt(daySchedule.endTime.split(":")[0]);
+    const endMinute = parseInt(daySchedule.endTime.split(":")[1]);
 
-    return allSlots.filter(slot => {
-      const slotHour   = parseInt(slot.time24.split(':')[0]);
-      const slotMinute = parseInt(slot.time24.split(':')[1]);
+    return allSlots.filter((slot) => {
+      const slotHour = parseInt(slot.time24.split(":")[0]);
+      const slotMinute = parseInt(slot.time24.split(":")[1]);
 
       if (slotHour < startHour) return false;
-      if (slotHour > endHour)   return false;
+      if (slotHour > endHour) return false;
       if (slotHour === endHour && slotMinute > endMinute) return false;
 
       if (daySchedule.breakStart && daySchedule.breakEnd) {
-        const bsH = parseInt(daySchedule.breakStart.split(':')[0]);
-        const bsM = parseInt(daySchedule.breakStart.split(':')[1]);
-        const beH = parseInt(daySchedule.breakEnd.split(':')[0]);
-        const beM = parseInt(daySchedule.breakEnd.split(':')[1]);
+        const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
+        const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
+        const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
+        const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
         if (
           (slotHour > bsH || (slotHour === bsH && slotMinute >= bsM)) &&
           (slotHour < beH || (slotHour === beH && slotMinute < beM))
-        ) return false;
+        )
+          return false;
       }
       return true;
     });
@@ -134,60 +154,77 @@ export function AppointmentForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-  appointment?.status === "checked-in" &&
-  formData.patientPhone !== appointment.patientPhone
-) {
-  alert(" Phone number cannot be changed after consultation");
-  return;
-}
+      appointment?.status === "checked-in" &&
+      formData.patientPhone !== appointment.patientPhone
+    ) {
+      alert(" Phone number cannot be changed after consultation");
+      return;
+    }
     const conflict = (appointments || []).find(
-      a => a.doctorId === formData.doctorId && a.date === formData.date && a.time === formData.time &&  a.id !== appointment?.id
+      (a) =>
+        a.doctorId === formData.doctorId &&
+        a.date === formData.date &&
+        a.time === formData.time &&
+        a.id !== appointment?.id,
     );
-    if (conflict) { alert('❌ This slot is already booked'); return; }
+    if (conflict) {
+      alert("❌ This slot is already booked");
+      return;
+    }
     onSave({
       ...formData,
-      id:           appointment?.id           || Date.now().toString(),
-      patientId:    appointment?.patientId    || Date.now().toString(),
-      status:       appointment?.status       || 'scheduled',
+      id: appointment?.id || Date.now().toString(),
+      patientId: appointment?.patientId || Date.now().toString(),
+      status: appointment?.status || "scheduled",
       reminderSent: false,
     });
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => {
+    setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      if (name === 'treatmentType') {
-        const selType = appointmentTypes.find(t => t.value === value);
+      if (name === "treatmentType") {
+        const selType = appointmentTypes.find((t) => t.value === value);
         if (selType) updated.fee = selType.fee;
       }
-      if (name === 'doctorId') {
-        const selDoctor = doctors.find(d => d.id === value);
+      if (name === "doctorId") {
+        const selDoctor = doctors.find((d) => d.id === value);
         if (selDoctor) {
           updated.doctorName = selDoctor.name;
-          if (!updated.treatmentType) updated.fee = selDoctor.consultationFee || 500;
+          if (!updated.treatmentType)
+            updated.fee = selDoctor.consultationFee || 500;
         }
       }
-      if (name === 'doctorId' || name === 'date') updated.time = '';
+      if (name === "doctorId" || name === "date") updated.time = "";
       return updated;
     });
   };
 
   const availableTimeSlots = getAvailableTimeSlots();
-  const selectedDoctor     = doctors.find(d => d.id === formData.doctorId);
+  const selectedDoctor = doctors.find((d) => d.id === formData.doctorId);
   // ─────────────────────────────────────────────────────────────────────────
 
-  const title    = isQuickBooking ? 'Quick appointment' : appointment ? 'Edit appointment' : 'New appointment';
-  const subtitle = isQuickBooking ? 'Book an appointment instantly' : 'Schedule a new patient appointment';
+  const title = isQuickBooking
+    ? "Quick appointment"
+    : appointment && appointment.id
+      ? "Edit appointment"
+      : "New appointment";
+  const subtitle = isQuickBooking
+    ? "Book an appointment instantly"
+    : "Schedule a new patient appointment";
 
   const inputCls =
-    'w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 ' +
-    'focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none ' +
-    'transition-all placeholder-gray-400 text-gray-900';
+    "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 " +
+    "focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none " +
+    "transition-all placeholder-gray-400 text-gray-900";
 
-  const labelCls = 'flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide';
+  const labelCls =
+    "flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide";
 
   const SectionDivider = ({ title }: { title: string }) => (
     <div className="flex items-center gap-3 pt-1">
@@ -201,7 +238,6 @@ export function AppointmentForm({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 md:p-6 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-gray-100 my-4 overflow-hidden">
-
         {/* ── Header ── */}
         <div className="sticky top-0 bg-gradient-to-r from-[#2563eb] to-[#0d9488] border-b border-white/10 px-4 py-3 rounded-t-2xl flex items-center justify-between gap-4 z-10 text-white">
           <div className="flex items-center gap-3">
@@ -209,7 +245,9 @@ export function AppointmentForm({
               <Calendar className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h2 className="ttext-base font-semibold text-white leading-tight">{title}</h2>
+              <h2 className="text-base font-semibold text-white leading-tight">
+                {title}
+              </h2>
               <p className="text-xs text-white/80 mt-0.5">{subtitle}</p>
             </div>
           </div>
@@ -222,13 +260,13 @@ export function AppointmentForm({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-
           {/* ── Patient info ── */}
           <SectionDivider title="Patient info" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>
-                <User className="w-3.5 h-3.5" /> Patient name <span className="text-red-400 normal-case">*</span>
+                <User className="w-3.5 h-3.5" /> Patient name{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
               <input
                 type="text"
@@ -242,35 +280,37 @@ export function AppointmentForm({
             </div>
             <div>
               <label className={labelCls}>
-                <Phone className="w-3.5 h-3.5" /> Phone number <span className="text-red-400 normal-case">*</span>
+                <Phone className="w-3.5 h-3.5" /> Phone number{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
               <input
                 type="tel"
                 name="patientPhone"
                 value={formData.patientPhone}
-                onChange={e => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  setFormData(prev => ({ ...prev, patientPhone: value }));
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setFormData((prev) => ({ ...prev, patientPhone: value }));
                 }}
                 required
-                 disabled={appointment?.status === "checked-in"} 
+                disabled={appointment?.status === "checked-in"}
                 className={inputCls}
                 placeholder="98765 43210"
               />
               {appointment?.status === "checked-in" && (
-  <p className="text-xs text-red-500 mt-1">
-    Phone number cannot be changed after consultation
-  </p>
-)}
+                <p className="text-xs text-red-500 mt-1">
+                  Phone number cannot be changed after consultation
+                </p>
+              )}
             </div>
           </div>
 
           {/* ── Schedule ── */}
           <SectionDivider title="Schedule" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-1">
               <label className={labelCls}>
-                <Calendar className="w-3.5 h-3.5" /> Date <span className="text-red-400 normal-case">*</span>
+                <Calendar className="w-3.5 h-3.5" /> Date{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
               <input
                 type="date"
@@ -282,32 +322,53 @@ export function AppointmentForm({
                 className={inputCls}
               />
             </div>
-            <div>
+            <div className="md:col-span-1">
               <label className={labelCls}>
-                <User className="w-3.5 h-3.5" /> Assigned doctor <span className="text-red-400 normal-case">*</span>
+                <Clock className="w-3.5 h-3.5" /> Time{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
-              <select
-                name="doctorId"
-                value={formData.doctorId}
+              <input
+                type="time"
+                name="time"
+                value={formData.time}
                 onChange={handleChange}
                 required
                 className={inputCls}
-              >
-                {doctors.map(doctor => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} — {doctor.specialization}
-                  </option>
-                ))}
-              </select>
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={labelCls}>
+                <User className="w-3.5 h-3.5" /> Assigned doctor{" "}
+                <span className="text-red-400 normal-case">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  name="doctorId"
+                  value={formData.doctorId}
+                  onChange={handleChange}
+                  required
+                  className={inputCls + " appearance-none cursor-pointer pr-10"}
+                >
+                  {doctors.map((doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name} ({doctor.specialization})
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* ── Treatment ── */}
           <SectionDivider title="Treatment" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="md:col-span-2">
               <label className={labelCls}>
-                <Stethoscope className="w-3.5 h-3.5" /> Treatment <span className="text-red-400 normal-case">*</span>
+                <Stethoscope className="w-3.5 h-3.5" /> Treatment{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
               <input
                 type="text"
@@ -316,31 +377,37 @@ export function AppointmentForm({
                 onChange={handleChange}
                 required
                 className={inputCls}
-                placeholder="Treatment description"
+                placeholder="Description"
               />
             </div>
-            <div>
+            <div className="md:col-span-2">
               <label className={labelCls}>
-                <Stethoscope className="w-3.5 h-3.5" /> Treatment type <span className="text-red-400 normal-case">*</span>
+                <Stethoscope className="w-3.5 h-3.5" /> Treatment type{" "}
+                <span className="text-red-400 normal-case">*</span>
               </label>
-              <select
-                name="treatmentType"
-                value={formData.treatmentType}
-                onChange={handleChange}
-                required
-                className={inputCls}
-              >
-                <option value="">Select type</option>
-                {appointmentTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label} — ₹{type.fee.toLocaleString()}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  name="treatmentType"
+                  value={formData.treatmentType}
+                  onChange={handleChange}
+                  required
+                  className={inputCls + " appearance-none cursor-pointer pr-10"}
+                >
+                  <option value="">Select type</option>
+                  {appointmentTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label} (₹{type.fee.toLocaleString()})
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
             </div>
-            <div>
+            <div className="md:col-span-1">
               <label className={labelCls}>
-                <IndianRupee className="w-3.5 h-3.5" /> Consultation fee
+                <IndianRupee className="w-3.5 h-3.5" /> Fee
               </label>
               <input
                 type="number"
@@ -355,7 +422,8 @@ export function AppointmentForm({
 
           <div>
             <label className={labelCls}>
-              <MessageSquare className="w-3.5 h-3.5" /> Patient concern <span className="text-red-400 normal-case">*</span>
+              <MessageSquare className="w-3.5 h-3.5" /> Patient concern{" "}
+              <span className="text-red-400 normal-case">*</span>
             </label>
             <textarea
               name="patientConcern"
@@ -363,76 +431,18 @@ export function AppointmentForm({
               onChange={handleChange}
               required
               rows={3}
-              className={inputCls + ' resize-none'}
+              className={inputCls + " resize-none"}
               placeholder="Describe the patient's main concern or symptoms..."
             />
           </div>
 
-          {/* ── Time slots ── */}
-          <SectionDivider title="Available time slots" />
-
-          {/* Legend */}
-          <div className="flex items-center gap-5 -mt-1">
-            {[
-              { dot: 'bg-green-500', label: 'Available'   },
-              { dot: 'bg-blue-600',  label: 'Selected'    },
-              { dot: 'bg-gray-300',  label: 'Unavailable' },
-            ].map(l => (
-              <span key={l.label} className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span className={`w-2 h-2 rounded-full ${l.dot}`} />
-                {l.label}
-              </span>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5 max-h-52 overflow-y-auto p-3 border border-gray-200 rounded-xl bg-gray-50/60">
-            {availableTimeSlots.map(slot => {
-              const isBooked   = bookedSlots.includes(slot.time24);
-              const isPast     = isPastTime(slot.time24, formData.date);
-              const isSelected = formData.time === slot.time24;
-
-              return (
-                <button
-                  key={slot.time24}
-                  type="button"
-                  onClick={() =>
-                    !isBooked && !isPast &&
-                    setFormData(prev => ({ ...prev, time: slot.time24 }))
-                  }
-                  disabled={isBooked || isPast}
-                  className={`py-2 px-1 text-xs font-medium rounded-lg border transition-all text-center leading-tight ${
-                    isSelected
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                      : isBooked || isPast
-                      ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
-                  }`}
-                >
-                  {slot.time12}
-                  {isBooked && <div className="text-[10px] mt-0.5 opacity-70">Booked</div>}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* No slots */}
-          {formData.date && formData.doctorId && availableTimeSlots.length === 0 && (
-            <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 -mt-1">
-              <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/>
-              </svg>
-              {!doctorAvailability[formData.doctorId]
-                ? `${selectedDoctor?.name} is not available on ${new Date(formData.date).toLocaleDateString()}`
-                : `No available slots for ${selectedDoctor?.name} on ${new Date(formData.date).toLocaleDateString()}`
-              }
-            </div>
-          )}
-
           {/* Doctor info */}
           {selectedDoctor && doctorAvailability[formData.doctorId] && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700 -mt-1">
-              <span><span className="font-medium">{selectedDoctor.name}</span> · {selectedDoctor.specialization}</span>
-              <span>Base fee: <span className="font-medium">₹{selectedDoctor.consultationFee?.toLocaleString() || '500'}</span></span>
+              <span>
+                <span className="font-medium">{selectedDoctor.name}</span> ·{" "}
+                {selectedDoctor.specialization}
+              </span>
               <span>15-min slots</span>
             </div>
           )}
@@ -440,11 +450,19 @@ export function AppointmentForm({
           {/* Doctor unavailable */}
           {!doctorAvailability[formData.doctorId] && formData.doctorId && (
             <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 -mt-1">
-              <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <svg
+                className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              This doctor is marked as unavailable. Please contact reception to confirm availability.
+              This doctor is marked as unavailable. Please contact reception to
+              confirm availability.
             </div>
           )}
 
@@ -459,7 +477,7 @@ export function AppointmentForm({
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className={inputCls + ' resize-none'}
+              className={inputCls + " resize-none"}
               placeholder="Special requirements or instructions..."
             />
           </div>
@@ -478,16 +496,14 @@ export function AppointmentForm({
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               <Save className="w-4 h-4" />
-              {isQuickBooking ? 'Book now' : 'Save appointment'}
+              {isQuickBooking ? "Book now" : "Save appointment"}
             </button>
           </div>
-
         </form>
       </div>
     </div>
   );
 }
-
 
 // import React, { useState } from 'react';
 // import { X, Save, Calendar, Clock, User, Phone, FileText, IndianRupee, Stethoscope, MessageSquare } from 'lucide-react';
@@ -504,12 +520,12 @@ export function AppointmentForm({
 //    selectedDate?: Date | null
 // }
 
-// export function AppointmentForm({ 
-//   onClose, 
-//   onSave, 
-//   appointment, 
-//   isQuickBooking = false, 
-//   doctors = [], 
+// export function AppointmentForm({
+//   onClose,
+//   onSave,
+//   appointment,
+//   isQuickBooking = false,
+//   doctors = [],
 //   doctorAvailability = {},
 //   appointments = [] ,
 //    selectedDate
@@ -577,12 +593,12 @@ export function AppointmentForm({
 //     for (let hour = 9; hour <= 18; hour++) {
 //       for (let minute = 0; minute < 60; minute += 15) {
 //         if (hour === 18 && minute > 0) break; // Stop at 6:00 PM
-        
+
 //         const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 //         const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
 //         const ampm = hour >= 12 ? 'PM' : 'AM';
 //         const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
-        
+
 //         slots.push({ time24, time12 });
 //       }
 //     }
@@ -604,30 +620,30 @@ export function AppointmentForm({
 //     const startHour = parseInt(daySchedule.startTime.split(':')[0]);
 //     const endHour = parseInt(daySchedule.endTime.split(':')[0]);
 //     const endMinute = parseInt(daySchedule.endTime.split(':')[1]);
-    
+
 //     return allSlots.filter(slot => {
 //       const slotHour = parseInt(slot.time24.split(':')[0]);
 //       const slotMinute = parseInt(slot.time24.split(':')[1]);
-      
+
 //       // Check if slot is within working hours
 //       if (slotHour < startHour) return false;
 //       if (slotHour > endHour) return false;
 //       if (slotHour === endHour && slotMinute > endMinute) return false;
-      
+
 //       // Skip break time if defined
 //       if (daySchedule.breakStart && daySchedule.breakEnd) {
 //         const breakStartHour = parseInt(daySchedule.breakStart.split(':')[0]);
 //         const breakStartMinute = parseInt(daySchedule.breakStart.split(':')[1]);
 //         const breakEndHour = parseInt(daySchedule.breakEnd.split(':')[0]);
 //         const breakEndMinute = parseInt(daySchedule.breakEnd.split(':')[1]);
-        
+
 //         if (slotHour > breakStartHour || (slotHour === breakStartHour && slotMinute >= breakStartMinute)) {
 //           if (slotHour < breakEndHour || (slotHour === breakEndHour && slotMinute < breakEndMinute)) {
 //             return false;
 //           }
 //         }
 //       }
-      
+
 //       return true;
 //     });
 //   };
@@ -638,7 +654,7 @@ export function AppointmentForm({
 //   a.doctorId === formData.doctorId &&
 //   a.date === formData.date &&
 //   a.time === formData.time
-  
+
 // )
 // const today = new Date()
 // const selected = new Date(formData.date)
@@ -662,7 +678,7 @@ export function AppointmentForm({
 //     const { name, value } = e.target;
 //     setFormData(prev => {
 //       const updated = { ...prev, [name]: value };
-      
+
 //       // Auto-update fee when appointment type changes
 //       if (name === 'treatmentType') {
 //         const selectedType = appointmentTypes.find(type => type.value === value);
@@ -670,7 +686,7 @@ export function AppointmentForm({
 //           updated.fee = selectedType.fee;
 //         }
 //       }
-      
+
 //       // Auto-update fee when doctor changes
 //       if (name === 'doctorId') {
 //         const selectedDoctor = doctors.find(d => d.id === value);
@@ -682,12 +698,12 @@ export function AppointmentForm({
 //           }
 //         }
 //       }
-      
+
 //       // Reset time when doctor or date changes
 //       if (name === 'doctorId' || name === 'date') {
 //         updated.time = '';
 //       }
-      
+
 //       return updated;
 //     });
 //   };
@@ -870,7 +886,7 @@ export function AppointmentForm({
 //                 const isBooked = bookedSlots.includes(slot.time24);
 // const isPast = isPastTime(slot.time24, formData.date);
 //                 const isSelected = formData.time === slot.time24;
-                
+
 //                 return (
 //                   <button
 //                     key={slot.time24}
@@ -891,26 +907,26 @@ export function AppointmentForm({
 //                 );
 //               })}
 //             </div>
-            
+
 //             {formData.date && formData.doctorId && availableTimeSlots.length === 0 && (
 //               <p className="text-sm text-red-600 mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
-//                 {!doctorAvailability[formData.doctorId] 
+//                 {!doctorAvailability[formData.doctorId]
 //                   ? `${selectedDoctor?.name} is not available on ${new Date(formData.date).toLocaleDateString()}`
 //                   : `No available slots for ${selectedDoctor?.name} on ${new Date(formData.date).toLocaleDateString()}`
 //                 }
 //               </p>
 //             )}
-            
+
 //             {selectedDoctor && doctorAvailability[formData.doctorId] && (
 //               <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
 //                 <p className="text-sm text-blue-700">
-//                   <strong>Doctor:</strong> {selectedDoctor.name} ({selectedDoctor.specialization}) | 
-//                   <strong> Base Fee:</strong> ₹{selectedDoctor.consultationFee?.toLocaleString() || '500'} | 
+//                   <strong>Doctor:</strong> {selectedDoctor.name} ({selectedDoctor.specialization}) |
+//                   <strong> Base Fee:</strong> ₹{selectedDoctor.consultationFee?.toLocaleString() || '500'} |
 //                   <strong> Slots:</strong> 15-minute intervals
 //                 </p>
 //               </div>
 //             )}
-            
+
 //             {!doctorAvailability[formData.doctorId] && formData.doctorId && (
 //               <p className="text-sm text-orange-600 mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
 //                 ⚠️ This doctor is marked as unavailable today. Please contact reception to confirm availability.

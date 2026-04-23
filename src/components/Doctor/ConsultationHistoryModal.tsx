@@ -7,6 +7,7 @@ import { useEffect, useState, useMemo } from "react";
 
 interface Props {
   onClose: () => void;
+  patients?: any[];
 }
 
 interface Prescription {
@@ -40,7 +41,7 @@ interface ConsultationRecord {
 
 const PAGE_SIZE = 8;
 
-export default function ConsultationHistoryModal({ onClose }: Props) {
+export default function ConsultationHistoryModal({ onClose, patients = [] }: Props) {
   const [data, setData] = useState<ConsultationRecord[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<ConsultationRecord | null>(null);
@@ -156,19 +157,24 @@ export default function ConsultationHistoryModal({ onClose }: Props) {
   const hasValidPrescriptions = (p?: Prescription[]) =>
     p && p.some(x => x.medicine?.trim() !== "");
 
-  const fmt = (d: string | number | Date) => {
-    try {
-      return new Date(d).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-    } catch { return String(d); }
+  const fmt = (d: any) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "—";
+    return date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
-  const fmtShort = (d: string | number | Date) => {
-    try {
-      return new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-    } catch { return String(d); }
+  const fmtShort = (d: any) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   };
 
-  const initials = (name: string) => name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const initials = (name: string) => {
+    if (!name) return "??";
+    return name.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
   const avatarColors = ["bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700", "bg-purple-100 text-purple-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"];
   const avatarColor = (id: number) => avatarColors[id % avatarColors.length];
   const activeFilters = (filterFollowUp !== "all" ? 1 : 0) + (filterSort !== "newest" ? 1 : 0);
@@ -309,10 +315,12 @@ export default function ConsultationHistoryModal({ onClose }: Props) {
                       <td className="px-3 py-2.5 align-middle">
                         <div className="flex items-center gap-2.5">
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${avatarColor(item.id)}`}>
-                            {initials(item.patientName)}
+                            {initials(item.patientName || patients.find(p => p.id === item.patientId)?.patientName)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-800 text-sm leading-tight truncate">{item.patientName}</p>
+                            <p className="font-semibold text-gray-800 text-sm leading-tight truncate">
+                              {item.patientName || patients.find(p => p.id === item.patientId)?.patientName || "Unknown Patient"}
+                            </p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {item.patientId && <span className="text-xs text-gray-400 font-mono">{item.patientId}</span>}
                               {item.followUpRequired && (
@@ -326,7 +334,7 @@ export default function ConsultationHistoryModal({ onClose }: Props) {
                         <span className="text-xs text-gray-600 truncate block max-w-[180px]">{item.diagnosis || "—"}</span>
                       </td>
                       <td className="px-3 py-2.5 hidden sm:table-cell align-middle">
-                        <span className="text-xs text-gray-500 whitespace-nowrap">{fmtShort(item.completedAt)}</span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">{fmtShort(item.completedAt || (item as any).consultationDate)}</span>
                       </td>
                       <td className="px-3 py-2.5 text-right hidden sm:table-cell align-middle">
                         {item.treatmentCost && item.treatmentCost > 0

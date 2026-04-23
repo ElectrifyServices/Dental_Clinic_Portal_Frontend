@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud } from 'lucide-react';
 
 // Enhanced barcode generation function
 const generateBarcode = (patientId: string) => {
@@ -16,48 +16,58 @@ interface PatientFormProps {
   onSave: (patient: any) => void;
   patient?: any;
   type?: 'normal' | 'person';
+  parentId?: string;
 }
 
-export function PatientForm({ onClose, onSave, patient, type }: PatientFormProps) {
+export function PatientForm({ onClose, onSave, patient, type, parentId }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   React.useEffect(() => {
-  if (patient) {
-    setFormData({
-      ...patient,
-      patientId: patient.id,
-      medicalHistory: patient.medicalHistory?.join('\n') || '',
-      allergies: patient.allergies?.join('\n') || '',
-    });
-  } else {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      dateOfBirth: '',
-      gender: 'male',
-      address: '',
-      emergencyContact: '',
-      emergencyName: '',
-      medicalHistory: '',
-      pastDentalHistory: '',
-      allergies: '',
-      allergyOther: '',
-      allergyNotes: '',
-      patientId: generatePatientId(),
-      barcode: '',
-      bloodGroup: '',
-      relation: '',
-      customRelation: '',
-      occupation: '',
-      maritalStatus: '',
-      insuranceProvider: '',
-      insuranceNumber: '',
-      referredBy: '',
-      avatar: ''
-    });
-  }
-}, [patient]);
+    if (patient) {
+      setFormData({
+        ...patient,
+        patientId: patient.id,
+        medicalHistory: patient.medicalHistory?.join('\n') || '',
+        allergies: patient.allergies?.join('\n') || '',
+        dentalFiles: patient.dentalFiles || [],
+      });
+      setSelectedMedicalHistory(patient.medicalHistory || []);
+      setSelectedAllergies(patient.allergies || []);
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        dateOfBirth: '',
+        gender: 'male',
+        address: '',
+        emergencyContact: '',
+        emergencyName: '',
+        medicalHistory: '',
+        pastDentalHistory: '',
+        allergies: '',
+        allergyOther: '',
+        allergyNotes: '',
+        patientId: generatePatientId(),
+        barcode: '',
+        bloodGroup: '',
+        relation: '',
+        customRelation: '',
+        occupation: '',
+        maritalStatus: '',
+        insuranceProvider: '',
+        insuranceNumber: '',
+        referredBy: '',
+        avatar: '',
+        dentalFiles: []
+      });
+      setSelectedMedicalHistory([]);
+      setSelectedAllergies([]);
+    }
+    setStep(1);
+    setMedicalSearch('');
+    setAllergySearch('');
+  }, [patient]);
   const [formData, setFormData] = useState({
     name: patient?.name || '',
     email: patient?.email || '',
@@ -82,7 +92,8 @@ export function PatientForm({ onClose, onSave, patient, type }: PatientFormProps
     insuranceProvider: patient?.insuranceProvider || '',
     insuranceNumber: patient?.insuranceNumber || '',
     referredBy: patient?.referredBy || '',
-    avatar: patient?.avatar || ''
+    avatar: patient?.avatar || '',
+    dentalFiles: [] ,
   });
 
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
@@ -107,6 +118,8 @@ export function PatientForm({ onClose, onSave, patient, type }: PatientFormProps
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
     patient?.allergies || []
   );
+  const [medicalSearch, setMedicalSearch] = useState('');
+const [allergySearch, setAllergySearch] = useState('');
 
   React.useEffect(() => {
     if (!formData.barcode) {
@@ -179,6 +192,7 @@ const handleCustomRelation = (value: string) => {
       totalVisits: patient?.totalVisits || 0,
       outstandingBalance: patient?.outstandingBalance || 0,
       status: patient?.status || 'new',
+      parentId: patient?.parentId || parentId || null,
       relation: formData.relation === 'Other'
   ? formData.customRelation
   : formData.relation,
@@ -207,6 +221,20 @@ const handleCustomRelation = (value: string) => {
       reader.readAsDataURL(file);
     }
   };
+const handleDentalFilesUpload = (e) => {
+  const files = Array.from(e.target.files || []);
+
+  const mappedFiles = files.map(file => ({
+    name: file.name,
+    url: URL.createObjectURL(file),
+    type: file.type
+  }));
+
+  setFormData(prev => ({
+    ...prev,
+    dentalFiles: [...(prev.dentalFiles || []), ...mappedFiles]
+  }));
+};
 
   const printBarcode = () => {
     const printContent = `
@@ -225,7 +253,9 @@ const handleCustomRelation = (value: string) => {
               border-radius: 12px;
               padding: 20px;
               margin: 20px auto;
-              width: 300px;
+              width: 380px;
+              max-height: 90vh;
+overflow: auto;
               background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             }
             .clinic-header {
@@ -271,25 +301,74 @@ const handleCustomRelation = (value: string) => {
             
             <div class="barcode">${formData.barcode}</div>
             
-            <div class="patient-info">
-              <h3>Patient Information</h3>
-              <div class="info-row">
-                <span><strong>ID:</strong></span>
-                <span>${formData.patientId}</span>
-              </div>
-              <div class="info-row">
-                <span><strong>Name:</strong></span>
-                <span>${formData.name}</span>
-              </div>
-              <div class="info-row">
-                <span><strong>Phone:</strong></span>
-                <span>${formData.phone}</span>
-              </div>
-              <div class="info-row">
-                <span><strong>DOB:</strong></span>
-                <span>${formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : 'N/A'}</span>
-              </div>
-            </div>
+<div class="patient-info">
+  <h3>Patient Information</h3>
+
+  <div class="info-row">
+    <span><strong>ID:</strong></span>
+    <span>${formData.patientId}</span>
+  </div>
+
+  <div class="info-row">
+    <span><strong>Name:</strong></span>
+    <span>${formData.name}</span>
+  </div>
+
+  <div class="info-row">
+    <span><strong>Phone:</strong></span>
+    <span>${formData.phone}</span>
+  </div>
+
+  <div class="info-row">
+    <span><strong>DOB:</strong></span>
+    <span>${formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : 'N/A'}</span>
+  </div>
+
+  <div class="info-row">
+    <span><strong>Blood:</strong></span>
+    <span>${formData.bloodGroup || 'N/A'}</span>
+  </div>
+
+  ${
+    formData.allergies?.trim()
+      ? `
+      <div style="margin-top:12px;">
+        <strong style="color:#dc2626;">Allergies:</strong><br/>
+        <span style="font-size:13px;">
+          ${formData.allergies.split('\n').join(', ')}
+        </span>
+      </div>
+    `
+      : ''
+  }
+
+  ${
+    formData.medicalHistory?.trim()
+      ? `
+      <div style="margin-top:12px;">
+        <strong style="color:#ea580c;">Medical History:</strong><br/>
+        <span style="font-size:13px;">
+          ${formData.medicalHistory.split('\n').join(', ')}
+        </span>
+      </div>
+    `
+      : ''
+  }
+
+  ${
+    formData.pastDentalHistory?.trim()
+      ? `
+      <div style="margin-top:12px;">
+        <strong style="color:#2563eb;">Past Dental History:</strong><br/>
+        <span style="font-size:13px;">
+          ${formData.pastDentalHistory}
+        </span>
+      </div>
+    `
+      : ''
+  }
+
+</div>
           </div>
         </body>
       </html>
@@ -630,7 +709,7 @@ const handleCustomRelation = (value: string) => {
         <p className="text-gray-600">Important medical history and allergies</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Insurance Provider
@@ -643,9 +722,9 @@ const handleCustomRelation = (value: string) => {
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             placeholder="Enter insurance provider"
           />
-        </div>
+        </div> */}
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Insurance Number
           </label>
@@ -657,8 +736,8 @@ const handleCustomRelation = (value: string) => {
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             placeholder="Enter insurance number"
           />
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -680,37 +759,320 @@ const handleCustomRelation = (value: string) => {
           Medical History
         </label>
         <div className="space-y-2">
-          <select
-            multiple
-            value={selectedMedicalHistory}
-            onChange={(e) => {
-              const values = Array.from(e.target.selectedOptions, option => option.value);
-              setSelectedMedicalHistory(values);
-              setFormData(prev => ({ ...prev, medicalHistory: values.join('\n') }));
-            }}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
-          >
-            {medicalConditions.map(condition => (
-              <option key={condition} value={condition}>{condition}</option>
-            ))}
-          </select>
-          <p className="text-sm text-gray-500">Hold Ctrl/Cmd to select multiple conditions</p>
+<div className="space-y-4">
+  {/* Search Input with Icon */}
+  <div className="relative">
+    <svg 
+      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input
+      type="text"
+      placeholder="Search medical condition..."
+      value={medicalSearch}
+      onChange={(e) => setMedicalSearch(e.target.value)}
+      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
+    />
+  </div>
+
+  {/* Conditions List */}
+  <div className="max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
+    {medicalConditions
+      .filter(item =>
+        item.toLowerCase().includes(medicalSearch.toLowerCase())
+      )
+      .length === 0 ? (
+      <div className="text-center py-8">
+        <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">No medical conditions found</p>
+      </div>
+    ) : (
+      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+        {medicalConditions
+          .filter(item =>
+            item.toLowerCase().includes(medicalSearch.toLowerCase())
+          )
+          .map((condition) => (
+            <label
+              key={condition}
+              className={`
+                flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+                ${selectedMedicalHistory.includes(condition) 
+                  ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30' 
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }
+              `}
+            >
+              {/* Custom Checkbox */}
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={selectedMedicalHistory.includes(condition)}
+                  onChange={(e) => {
+                    let updated = [...selectedMedicalHistory];
+
+                    if (e.target.checked) {
+                      updated.push(condition);
+                    } else {
+                      updated = updated.filter(i => i !== condition);
+                    }
+
+                    setSelectedMedicalHistory(updated);
+
+                    setFormData(prev => ({
+                      ...prev,
+                      medicalHistory: updated.join('\n')
+                    }));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all"
+                />
+              </div>
+              
+              {/* Condition Text with Icon */}
+              <div className="flex items-center gap-2 flex-1">
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                  {condition}
+                </span>
+              </div>
+
+              {/* Selected Badge */}
+              {selectedMedicalHistory.includes(condition) && (
+                <div className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
+                  <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">Selected</span>
+                </div>
+              )}
+            </label>
+          ))}
+      </div>
+    )}
+  </div>
+
+  {/* Selected Count */}
+  {selectedMedicalHistory.length > 0 && (
+    <div className="flex items-center justify-between px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+        {selectedMedicalHistory.length} condition{selectedMedicalHistory.length !== 1 ? 's' : ''} selected
+      </span>
+      <button
+        onClick={() => {
+          setSelectedMedicalHistory([]);
+          setFormData(prev => ({
+            ...prev,
+            medicalHistory: ''
+          }));
+        }}
+        className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 font-medium transition-colors"
+      >
+        Clear all
+      </button>
+    </div>
+  )}
+</div>
         </div>
       </div>
+{/* ================= Past Dental History Premium Section ================= */}
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Past Dental History
-        </label>
-        <textarea
-          name="pastDentalHistory"
-          value={formData.pastDentalHistory}
-          onChange={handleChange}
-          rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          placeholder="Previous dental treatments, surgeries, or procedures..."
-        />
+<div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
+
+  {/* Header */}
+  <div>
+    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      <History/>
+       Past Dental History
+    </h3>
+
+    <p className="text-sm text-gray-500 mt-1">
+      Previous dental treatments, surgeries, X-rays, reports and records
+    </p>
+  </div>
+
+  {/* Notes Textarea */}
+  <div>
+    <textarea
+      name="pastDentalHistory"
+      value={formData.pastDentalHistory}
+      onChange={handleChange}
+     rows={3}
+      placeholder="Write previous treatments, root canal, braces, extraction, implants etc..."
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+    />
+  </div>
+
+  {/* Upload Box */}
+ <div
+  className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-2xl px-6 py-5 text-center hover:bg-blue-100 transition-all duration-200"
+  
+  onDragOver={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }}
+
+  onDragEnter={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }}
+
+  onDrop={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files || []);
+
+    const mappedFiles = files.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      dentalFiles: [...(prev.dentalFiles || []), ...mappedFiles]
+    }));
+  }}
+>
+
+    <input
+      type="file"
+      multiple
+      accept="image/*,.pdf,.doc,.docx"
+      onChange={handleDentalFilesUpload}
+      className="hidden"
+      id="dentalUpload"
+    />
+
+<label
+  htmlFor="dentalUpload"
+  className="cursor-pointer flex items-center justify-center gap-5"
+>
+  <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl shadow">
+    <Upload/>
+  </div>
+
+  <div className="text-left">
+    <p className="text-blue-700 font-semibold text-base">
+      Upload Reports / Photos
+    </p>
+
+    <p className="text-sm text-gray-500">
+      Drag & drop or click to browse files
+    </p>
+
+    <p className="text-xs text-gray-400 mt-1">
+      JPG, PNG, PDF, DOC
+    </p>
+  </div>
+</label>
+  </div>
+
+  {/* Uploaded Files */}
+  {formData.dentalFiles?.length > 0 && (
+    <div className="space-y-3">
+
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-gray-700">
+          Uploaded Files ({formData.dentalFiles.length})
+        </h4>
+
+        <button
+          type="button"
+          onClick={() =>
+            setFormData(prev => ({
+              ...prev,
+              dentalFiles: []
+            }))
+          }
+          className="text-xs text-red-600 hover:text-red-700 font-medium"
+        >
+          Remove All
+        </button>
       </div>
+
+      <div className="grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 gap-3">
+
+        {formData.dentalFiles.map((file, index) => {
+
+          const isImage = file.type?.startsWith("image/");
+
+          return (
+            <div
+              key={index}
+              className="border border-gray-200 rounded-xl p-3 bg-gray-50 hover:bg-white hover:shadow-sm transition-all duration-200"
+            >
+              <div className="flex items-center gap-3">
+
+                {/* Thumbnail / Icon */}
+                <div className="w-14 h-14 rounded-lg bg-white border flex items-center justify-center overflow-hidden shrink-0">
+                  {isImage ? (
+                    <img
+                      src={file.url}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl">📄</span>
+                  )}
+                </div>
+
+                {/* Name */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {file.name}
+                  </p>
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    {isImage ? "Image File" : "Document File"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between mt-3 pt-3 border-t">
+
+                <a
+                  href={file.url}
+                  target="_blank"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = formData.dentalFiles.filter(
+                      (_, i) => i !== index
+                    );
+
+                    setFormData(prev => ({
+                      ...prev,
+                      dentalFiles: updated
+                    }));
+                  }}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+      </div>
+    </div>
+  )}
+
+</div>
+
+{/* ================= End Section ================= */}
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -718,21 +1080,124 @@ const handleCustomRelation = (value: string) => {
           Allergies
         </label>
         <div className="space-y-3">
-          <select
-            multiple
-            value={selectedAllergies}
-            onChange={(e) => {
-              const values = Array.from(e.target.selectedOptions, option => option.value);
-              setSelectedAllergies(values);
-              setFormData(prev => ({ ...prev, allergies: values.join('\n') }));
-            }}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[100px]"
-          >
-            {commonAllergies.map(allergy => (
-              <option key={allergy} value={allergy}>{allergy}</option>
-            ))}
-          </select>
-          <p className="text-sm text-gray-500">Hold Ctrl/Cmd to select multiple allergies</p>
+<div className="space-y-4">
+  {/* Search Input with Icon */}
+  <div className="relative">
+    <svg 
+      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input
+      type="text"
+      placeholder="Search allergy..."
+      value={allergySearch}
+      onChange={(e) => setAllergySearch(e.target.value)}
+      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
+    />
+  </div>
+
+  {/* Allergies List */}
+  <div className="max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
+    {commonAllergies
+      .filter(item =>
+        item.toLowerCase().includes(allergySearch.toLowerCase())
+      )
+      .length === 0 ? (
+      <div className="text-center py-8">
+        <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">No allergies found</p>
+      </div>
+    ) : (
+      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+        {commonAllergies
+          .filter(item =>
+            item.toLowerCase().includes(allergySearch.toLowerCase())
+          )
+          .map((allergy) => (
+            <label
+              key={allergy}
+              className={`
+                flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+                ${selectedAllergies.includes(allergy) 
+                  ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                }
+              `}
+            >
+              {/* Custom Checkbox */}
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={selectedAllergies.includes(allergy)}
+                  onChange={(e) => {
+                    let updated = [...selectedAllergies];
+
+                    if (e.target.checked) {
+                      updated.push(allergy);
+                    } else {
+                      updated = updated.filter(i => i !== allergy);
+                    }
+
+                    setSelectedAllergies(updated);
+
+                    setFormData(prev => ({
+                      ...prev,
+                      allergies: updated.join('\n')
+                    }));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500 focus:ring-2 transition-all"
+                />
+              </div>
+              
+              {/* Allergy Text with Icon */}
+              <div className="flex items-center gap-2 flex-1">
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                  {allergy}
+                </span>
+              </div>
+
+              {/* Selected Badge */}
+              {selectedAllergies.includes(allergy) && (
+                <div className="px-2 py-0.5 bg-red-100 dark:bg-red-900/40 rounded-full">
+                  <span className="text-xs text-red-700 dark:text-red-400 font-medium">Selected</span>
+                </div>
+              )}
+            </label>
+          ))}
+      </div>
+    )}
+  </div>
+
+  {/* Selected Count */}
+  {selectedAllergies.length > 0 && (
+    <div className="flex items-center justify-between px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+      <span className="text-xs text-red-700 dark:text-red-400 font-medium">
+        {selectedAllergies.length} allerg{selectedAllergies.length !== 1 ? 'ies' : 'y'} selected
+      </span>
+      <button
+        onClick={() => {
+          setSelectedAllergies([]);
+          setFormData(prev => ({
+            ...prev,
+            allergies: ''
+          }));
+        }}
+        className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 font-medium transition-colors"
+      >
+        Clear all
+      </button>
+    </div>
+  )}
+</div>
           
           {selectedAllergies.includes('Other') && (
             <div>
@@ -868,30 +1333,66 @@ const handleCustomRelation = (value: string) => {
       </div>
 
       {/* Medical Alerts Preview */}
-      {(formData.medicalHistory.trim() || formData.allergies.trim()) && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-          <div className="flex items-center mb-3">
-            <AlertTriangle className="w-5 h-5 text-orange-600 mr-2" />
-            <h4 className="font-semibold text-orange-900">Medical Alerts Preview</h4>
-          </div>
-          {formData.allergies.trim() && (
-            <div className="mb-2">
-              <span className="text-sm font-medium text-red-700">Allergies: </span>
-              <span className="text-sm text-red-600">
-                {formData.allergies.split('\n').filter(a => a.trim()).join(', ')}
-              </span>
-            </div>
-          )}
-          {formData.medicalHistory.trim() && (
-            <div>
-              <span className="text-sm font-medium text-orange-700">Medical History: </span>
-              <span className="text-sm text-orange-600">
-                {formData.medicalHistory.split('\n').filter(h => h.trim()).join(', ')}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+{(
+  formData.medicalHistory.trim() ||
+  formData.allergies.trim() ||
+  formData.pastDentalHistory.trim()
+) && (
+  <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
+    
+    <div className="flex items-center mb-4">
+      <AlertTriangle className="w-5 h-5 text-orange-600 mr-2" />
+      <h4 className="font-semibold text-orange-900">
+        Medical Alerts & Past History
+      </h4>
+    </div>
+
+    {/* Allergies */}
+    {formData.allergies.trim() && (
+      <div className="mb-4">
+        <p className="text-sm font-semibold text-red-700 mb-1">
+          Allergies
+        </p>
+
+        <p className="text-sm text-red-600">
+          {formData.allergies
+            .split('\n')
+            .filter(a => a.trim())
+            .join(', ')}
+        </p>
+      </div>
+    )}
+
+    {/* Medical History */}
+    {formData.medicalHistory.trim() && (
+      <div className="mb-4">
+        <p className="text-sm font-semibold text-orange-700 mb-1">
+          Medical History
+        </p>
+
+        <p className="text-sm text-orange-600">
+          {formData.medicalHistory
+            .split('\n')
+            .filter(h => h.trim())
+            .join(', ')}
+        </p>
+      </div>
+    )}
+
+    {/* Past Dental History */}
+    {formData.pastDentalHistory.trim() && (
+      <div>
+        <p className="text-sm font-semibold text-blue-700 mb-1">
+          Past Dental History
+        </p>
+
+        <p className="text-sm text-blue-600 whitespace-pre-line">
+          {formData.pastDentalHistory}
+        </p>
+      </div>
+    )}
+  </div>
+)}
     </div>
   );
 

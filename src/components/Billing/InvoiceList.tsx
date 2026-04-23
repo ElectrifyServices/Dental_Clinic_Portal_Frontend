@@ -1,36 +1,28 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Download, Eye, MoreVertical, Delete, Trash2, Send } from 'lucide-react';
+import { Search, Plus, Filter, Download, Eye, MoreVertical, Trash2, Send } from 'lucide-react';
 
 interface Invoice {
   id: string;
   patientName: string;
   phone: string;
   date: string;
-  amount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  total: number;
+  amount?: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   dueDate: string;
 }
-
-// const invoices: Invoice[] = [
-//   { id: 'INV-001', patientName: 'Rajesh Kumar', date: '2024-01-15', amount: 2500, status: 'paid', dueDate: '2024-01-22' },
-//   { id: 'INV-002', patientName: 'Priya Sharma', date: '2024-01-14', amount: 1500, status: 'sent', dueDate: '2024-01-21' },
-//   { id: 'INV-003', patientName: 'Amit Singh', date: '2024-01-12', amount: 3200, status: 'overdue', dueDate: '2024-01-19' },
-//   { id: 'INV-004', patientName: 'Neha Gupta', date: '2024-01-10', amount: 1800, status: 'draft', dueDate: '2024-01-17' },
-//   { id: 'INV-005', patientName: 'Suresh Patel', date: '2024-01-08', amount: 4500, status: 'paid', dueDate: '2024-01-15' },
-// ];
 
 interface InvoiceListProps {
   onCreateInvoice: () => void;
   onViewInvoice?: (invoiceId: string) => void;
-   onDeleteInvoice?: (invoiceId: string) => void;
-   invoices: Invoice[];
-   onUpdateStatus?: (id: string, status: string) => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
+  invoices: Invoice[];
+  onUpdateStatus?: (id: string, status: string) => void;
 }
 
 export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, invoices , onUpdateStatus}: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  // const [invoiceList, setInvoiceList] = useState(invoices);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,7 +34,7 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
     }
   };
 
-const filteredInvoices = invoices.filter(invoice => {
+  const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || invoice.status === filterStatus;
@@ -122,7 +114,7 @@ const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-medium text-gray-900">
-                      ₹{invoice.amount.toLocaleString()}
+                      ₹{(invoice.total ?? invoice.amount ?? 0).toLocaleString()}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -177,30 +169,17 @@ const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
             <span className="text-gray-700">View Details</span>
           </button>
 
-          {/* <div className="border-t border-gray-100" /> */}
-
-          {/* Download */}
-          {/* <button
-            onClick={() => {
-              console.log("Download", invoice.id);
-              setOpenMenuId(null);
-            }}
-            className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
-          >
-            <Download className="w-4 h-4 text-green-500" />
-            <span className="text-gray-700">Download</span>
-          </button> */}
-
           <button
 onClick={() => {
+  const amountStr = (invoice.total ?? invoice.amount ?? 0).toLocaleString();
   const message = `Hello ${invoice.patientName},
-Your invoice (${invoice.id}) of ₹${invoice.amount} is ready.
+Your invoice (${invoice.id}) of ₹${amountStr} is ready.
 Please complete your payment.
 Thank you!`;
   const phone = invoice.phone || ''; // make sure number exists
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   window.open(url, "_blank");
-  onUpdateStatus?.(invoice.id, 'send');
+  onUpdateStatus?.(invoice.id, 'sent');
   setOpenMenuId(null);
 }}
   className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 text-blue-600"
