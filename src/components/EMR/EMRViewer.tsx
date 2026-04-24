@@ -2,34 +2,12 @@ import React from 'react';
 import { X, Download, FileText, User, Calendar, Stethoscope, Camera } from 'lucide-react';
 
 interface EMRViewerProps {
-  recordId: string;
+  record: any;
   onClose: () => void;
 }
 
-export function EMRViewer({ recordId, onClose }: EMRViewerProps) {
-  // Mock data - in real app, fetch from API
-  const record = {
-    id: recordId,
-    patientName: 'Rajesh Kumar',
-    type: 'consultation',
-    title: 'Root Canal Consultation',
-    content: `Clinical Observations: Patient presented with severe pain in upper right molar (tooth #16). Pain is sharp and throbbing, worsens with hot/cold stimuli. Clinical examination reveals deep caries with probable pulp involvement.
-
-Diagnosis: Irreversible pulpitis of tooth #16 with periapical involvement
-
-Treatment Plan: Root canal treatment recommended for tooth #16. Treatment to be completed in 2-3 sessions.
-
-Recommendations: Avoid chewing on affected side, take prescribed pain medication as directed, maintain good oral hygiene.
-
-Prescriptions:
-- Amoxicillin 500mg - 3 times daily for 5 days (Take after meals)
-- Ibuprofen 400mg - As needed for 3 days (For pain relief)
-
-Additional Notes: Patient has diabetes, monitor healing carefully. Follow-up in 1 week.`,
-    date: '2024-01-15',
-    doctorName: 'Dr. Sharma',
-    attachments: ['x-ray-001.jpg', 'clinical-photo-001.jpg']
-  };
+export function EMRViewer({ record, onClose }: EMRViewerProps) {
+  if (!record) return null;
 
   const handleDownload = () => {
     const printContent = `
@@ -114,7 +92,7 @@ Additional Notes: Patient has diabetes, monitor healing carefully. Follow-up in 
         <div className="p-6 space-y-6">
           {/* Record Information */}
           <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h3 className="text-lg font-bold text-blue-900 mb-4">Record Information</h3>
+            <h3 className="text-lg font-bold text-blue-900 mb-4">Patient Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center">
                 <User className="w-5 h-5 text-gray-400 mr-3" />
@@ -126,34 +104,45 @@ Additional Notes: Patient has diabetes, monitor healing carefully. Follow-up in 
               <div className="flex items-center">
                 <Calendar className="w-5 h-5 text-gray-400 mr-3" />
                 <div>
-                  <p className="text-sm text-gray-600">Date</p>
+                  <p className="text-sm text-gray-600">Last Activity</p>
                   <p className="font-medium text-gray-900">{new Date(record.date).toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Stethoscope className="w-5 h-5 text-gray-400 mr-3" />
                 <div>
-                  <p className="text-sm text-gray-600">Doctor</p>
-                  <p className="font-medium text-gray-900">{record.doctorName}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FileText className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">Type</p>
-                  <p className="font-medium text-gray-900 capitalize">{record.type.replace('-', ' ')}</p>
+                  <p className="text-sm text-gray-600">Total Records</p>
+                  <p className="font-medium text-gray-900">{record.timeline?.length || 1}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Record Content */}
+          {/* Timeline View */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Medical Record Content</h3>
-            <div className="prose max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed">
-                {record.content}
-              </pre>
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Medical History Timeline</h3>
+            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+              {record.timeline ? (
+                record.timeline.map((item: any, idx: number) => (
+                  <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-600 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
+                      <div className="flex items-center justify-between space-x-2 mb-1">
+                        <div className="font-bold text-slate-900">{item.title}</div>
+                        <time className="font-mono text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{new Date(item.date).toLocaleDateString()}</time>
+                      </div>
+                      <div className="text-slate-600 text-sm">{item.content}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 rounded-xl border border-slate-200 bg-white">
+                  <div className="font-bold text-slate-900 mb-2">{record.title}</div>
+                  <div className="text-slate-600 text-sm whitespace-pre-wrap">{record.content}</div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -165,7 +154,7 @@ Additional Notes: Patient has diabetes, monitor healing carefully. Follow-up in 
                 Attachments ({record.attachments.length})
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {record.attachments.map((attachment, index) => (
+                {record.attachments.map((attachment: string, index: number) => (
                   <div key={index} className="relative group">
                     <div className="w-full h-32 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center cursor-pointer hover:shadow-lg transition-all duration-200">
                       <Camera className="w-8 h-8 text-gray-400" />

@@ -5,9 +5,10 @@ interface TreatmentFormProps {
   onClose: () => void;
   onSave: (treatment: any) => void;
   treatment?: any;
+  patients: any[];
 }
 
-export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps) {
+export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients }: TreatmentFormProps) {
   const [formData, setFormData] = useState({
     patientName: treatment?.patientName || '',
     procedure: treatment?.procedure || '',
@@ -23,19 +24,13 @@ export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps
   });
 
   const [prescriptions, setPrescriptions] = useState(treatment?.prescriptions || [
-    { id: '1', medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
+    { id: '1', medicine: '', dosage: '', timing: '', frequency: '', duration: '', qty: '' }
   ]);
 
-  const [treatmentSessions, setTreatmentSessions] = useState(treatment?.sessions || []);
+  const [treatmentSessions, setTreatmentSessions] = useState(
+    Array.isArray(treatment?.sessions) ? treatment.sessions : [],
+  );
   const [showSessionPlanner, setShowSessionPlanner] = useState(true); // Always show sessions
-
-  const patients = [
-    'Rajesh Kumar',
-    'Priya Sharma', 
-    'Amit Singh',
-    'Neha Gupta',
-    'Suresh Patel'
-  ];
 
   const doctors = [
     { id: '1', name: 'Dr. Rajesh Sharma', specialization: 'General Dentistry' },
@@ -280,9 +275,10 @@ export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps
       id: Date.now().toString(),
       medicine: '',
       dosage: '',
+      timing: '',
       frequency: '',
       duration: '',
-      instructions: ''
+      qty: ''
     }]);
   };
 
@@ -291,9 +287,27 @@ export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps
   };
 
   const updatePrescription = (id: string, field: string, value: string) => {
-    setPrescriptions(prescriptions.map(p => 
-      p.id === id ? { ...p, [field]: value } : p
-    ));
+    const dosageMappings: Record<string, { timing: string; frequency: string }> = {
+      "1-0-0": { timing: "Before Food", frequency: "Once daily" },
+      "0-1-0": { timing: "After Food", frequency: "Once daily" },
+      "0-0-1": { timing: "After Food", frequency: "Once daily" },
+      "1-1-0": { timing: "After Food", frequency: "Twice daily" },
+      "1-0-1": { timing: "After Food", frequency: "Twice daily" },
+      "0-1-1": { timing: "After Food", frequency: "Twice daily" },
+      "1-1-1": { timing: "After Food", frequency: "Thrice daily" },
+    };
+
+    setPrescriptions(prescriptions.map(p => {
+      if (p.id === id) {
+        const updated = { ...p, [field]: value };
+        if (field === 'dosage' && dosageMappings[value]) {
+          updated.timing = dosageMappings[value].timing;
+          updated.frequency = dosageMappings[value].frequency;
+        }
+        return updated;
+      }
+      return p;
+    }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,9 +351,15 @@ export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Select Patient</option>
-                {patients.map(patient => (
-                  <option key={patient} value={patient}>{patient}</option>
-                ))}
+                {allPatients.map((patient, i) => {
+                  const patientName = typeof patient === 'string' ? patient : patient.name;
+                  const patientId = typeof patient === 'object' ? patient.id : patientName;
+                  return (
+                    <option key={`${patientId}-${i}`} value={patientName}>
+                      {patientName}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -718,67 +738,90 @@ export function TreatmentForm({ onClose, onSave, treatment }: TreatmentFormProps
 
             <div className="space-y-4">
               {prescriptions.map((prescription, index) => (
-                <div key={prescription.id} className="grid grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Medicine</label>
-                    <input
-                      type="text"
-                      value={prescription.medicine}
-                      onChange={(e) => updatePrescription(prescription.id, 'medicine', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Medicine name"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dosage</label>
-                    <input
-                      type="text"
-                      value={prescription.dosage}
-                      onChange={(e) => updatePrescription(prescription.id, 'dosage', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="500mg"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
-                    <input
-                      type="text"
-                      value={prescription.frequency}
-                      onChange={(e) => updatePrescription(prescription.id, 'frequency', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="3 times daily"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                    <input
-                      type="text"
-                      value={prescription.duration}
-                      onChange={(e) => updatePrescription(prescription.id, 'duration', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="5 days"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Instructions</label>
-                    <input
-                      type="text"
-                      value={prescription.instructions}
-                      onChange={(e) => updatePrescription(prescription.id, 'instructions', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="After meals"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    {prescriptions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removePrescription(prescription.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                <div key={prescription.id} className="p-4 bg-green-50/50 rounded-xl border border-green-100 relative group">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-green-800 mb-1">Medicine Name</label>
+                      <input
+                        type="text"
+                        value={prescription.medicine}
+                        onChange={(e) => updatePrescription(prescription.id, 'medicine', e.target.value)}
+                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                        placeholder="e.g. Amoxicillin"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-green-800 mb-1">Dosage</label>
+                      <select
+                        value={prescription.dosage}
+                        onChange={(e) => updatePrescription(prescription.id, 'dosage', e.target.value)}
+                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                        <option value="">Select Dosage</option>
+                        <option value="1-0-0">1 - 0 - 0 (Morning)</option>
+                        <option value="0-1-0">0 - 1 - 0 (Afternoon)</option>
+                        <option value="0-0-1">0 - 0 - 1 (Night)</option>
+                        <option value="1-1-0">1 - 1 - 0</option>
+                        <option value="1-0-1">1 - 0 - 1</option>
+                        <option value="0-1-1">0 - 1 - 1</option>
+                        <option value="1-1-1">1 - 1 - 1</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-green-800 mb-1">Timing</label>
+                      <input
+                        type="text"
+                        value={prescription.timing}
+                        onChange={(e) => updatePrescription(prescription.id, 'timing', e.target.value)}
+                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                        placeholder="After food"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-green-800 mb-1">Frequency</label>
+                      <input
+                        type="text"
+                        value={prescription.frequency}
+                        onChange={(e) => updatePrescription(prescription.id, 'frequency', e.target.value)}
+                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                        placeholder="3 times daily"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-green-800 mb-1">Duration</label>
+                      <input
+                        type="text"
+                        value={prescription.duration}
+                        onChange={(e) => updatePrescription(prescription.id, 'duration', e.target.value)}
+                        className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                        placeholder="5 days"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1">
+                        <label className="block text-xs font-semibold text-green-800 mb-1">Qty</label>
+                        <input
+                          type="text"
+                          value={prescription.qty}
+                          onChange={(e) => updatePrescription(prescription.id, 'qty', e.target.value)}
+                          className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                          placeholder="10"
+                        />
+                      </div>
+                      {prescriptions.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePrescription(prescription.id)}
+                          className="mt-5 p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200"
+                          title="Remove Medicine"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

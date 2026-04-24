@@ -185,6 +185,7 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
 }
 
 interface TreatmentListProps {
+  treatments: Treatment[];
   onAddTreatment: () => void;
   onViewTreatment: (treatmentId: string) => void;
   onEditTreatment: (treatmentId: string) => void;
@@ -192,7 +193,7 @@ interface TreatmentListProps {
   onMarkCompleted: (treatmentId: string) => void;
 }
 
-export function TreatmentList({ onAddTreatment, onViewTreatment, onEditTreatment, onManageSessions, onMarkCompleted }: TreatmentListProps) {
+export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, onViewTreatment, onEditTreatment, onManageSessions, onMarkCompleted }: TreatmentListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterProcedure, setFilterProcedure] = useState('all');
@@ -200,11 +201,11 @@ export function TreatmentList({ onAddTreatment, onViewTreatment, onEditTreatment
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  const filteredTreatments = treatments.filter(treatment => {
+  const filteredTreatments = (dynamicTreatments || treatments).filter(treatment => {
     const matchesSearch = treatment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          treatment.procedure.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          treatment.tooth.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         treatment.doctorName.toLowerCase().includes(searchTerm.toLowerCase());
+                         (treatment.doctorName || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || treatment.status === filterStatus;
     const matchesProcedure = filterProcedure === 'all' || treatment.procedure === filterProcedure;
     return matchesSearch && matchesStatus && matchesProcedure;
@@ -245,11 +246,11 @@ export function TreatmentList({ onAddTreatment, onViewTreatment, onEditTreatment
     }
   };
 
-  const uniqueProcedures = [...new Set(treatments.map(t => t.procedure))];
-  const totalTreatments = treatments.length;
-  const activeTreatments = treatments.filter(t => t.status === 'in-progress').length;
-  const completedTreatments = treatments.filter(t => t.status === 'completed').length;
-  const totalRevenue = treatments.reduce((sum, t) => sum + t.cost, 0);
+  const uniqueProcedures = [...new Set((dynamicTreatments || treatments).map(t => t.procedure))];
+  const totalTreatments = (dynamicTreatments || treatments).length;
+  const activeTreatments = (dynamicTreatments || treatments).filter(t => t.status === 'in-progress').length;
+  const completedTreatments = (dynamicTreatments || treatments).filter(t => t.status === 'completed').length;
+  const totalRevenue = (dynamicTreatments || treatments).reduce((sum, t) => sum + (t.cost || 0), 0);
 
   const renderTableView = () => (
     <div id="treatment-table-container" className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -266,8 +267,8 @@ export function TreatmentList({ onAddTreatment, onViewTreatment, onEditTreatment
             </tr>
           </thead>
           <tbody id="treatment-table-body" className="divide-y divide-gray-200">
-            {paginatedTreatments.map((treatment) => (
-              <tr key={treatment.id} id={`treatment-row-${treatment.id}`} className="hover:bg-gray-50 transition-colors duration-200">
+            {paginatedTreatments.map((treatment, index) => (
+              <tr key={`${treatment.id}-${index}`} id={`treatment-row-${treatment.id}`} className="hover:bg-gray-50 transition-colors duration-200">
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center mr-4">
@@ -362,8 +363,8 @@ export function TreatmentList({ onAddTreatment, onViewTreatment, onEditTreatment
   const renderGridView = () => (
     <div id="treatment-grid-container">
       <div id="treatment-grid" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {paginatedTreatments.map((treatment) => (
-          <div key={treatment.id} id={`treatment-card-${treatment.id}`} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200">
+        {paginatedTreatments.map((treatment, index) => (
+          <div key={`${treatment.id}-${index}`} id={`treatment-card-${treatment.id}`} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center">

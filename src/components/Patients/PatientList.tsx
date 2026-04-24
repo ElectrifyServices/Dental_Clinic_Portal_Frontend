@@ -201,9 +201,10 @@ interface PatientListProps {
   onViewPatient: (patientId: string) => void;
   onEditPatient: (patientId: string) => void;
   onDeletePatient: (patientId: string) => void;
+  onExportPatient?: (patientId: string) => void;
 }
 
-export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient }: PatientListProps) {
+export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient, onExportPatient }: PatientListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -380,7 +381,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
 
   const renderGridView = () => (
     <div id="patient-grid-container">
-      <div id="patient-grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6">
+      <div id="patient-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
         {paginatedPatients.map((patient) => (
           <div key={patient.id} id={`patient-card-${patient.id}`} className="bg-white rounded-2xl border border-gray-200 p-4 lg:p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
           {/* Patient Header */}
@@ -402,7 +403,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 </div>
               </div>
               <div className="ml-4">
-                <h3 className="font-bold text-gray-900 text-lg">{patient.name}</h3>
+                <h3 className="font-bold text-gray-900 text-lg truncate w-full" title={patient.name}>{patient.name}</h3>
                 <p className="text-sm text-gray-600 font-mono">{patient.id}</p>
                 <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(patient.status)}`}>
                   {getStatusIcon(patient.status)}
@@ -410,13 +411,22 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => printBarcode(patient)}
-              className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-200"
-              title="Print Barcode"
-            >
-              <QrCode className="w-4 h-4" />
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => onExportPatient?.(patient.id)}
+                className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200"
+                title="Export Data"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => printBarcode(patient)}
+                className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-200"
+                title="Print Barcode"
+              >
+                <QrCode className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Contact Information */}
@@ -459,22 +469,22 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
           )}
 
           {/* Visit Statistics */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
-              <div className="text-lg font-bold text-blue-600">{patient.totalVisits}</div>
-              <div className="text-xs text-blue-700">Total Visits</div>
+          <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-4">
+            <div className="text-center p-2 lg:p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex flex-col justify-center min-w-0">
+              <div className="text-lg font-bold text-blue-600">{patient.totalVisits || 0}</div>
+              <div className="text-[10px] lg:text-xs text-blue-700 font-bold uppercase tracking-wider">Visits</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+            <div className="text-center p-2 lg:p-3 bg-green-50/50 rounded-xl border border-green-100 flex flex-col justify-center min-w-0">
               <div className="text-lg font-bold text-green-600">
                 {patient.dateOfBirth ? Math.floor((new Date().getTime() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 'N/A'}
               </div>
-              <div className="text-xs text-green-700">Age</div>
+              <div className="text-[10px] lg:text-xs text-green-700 font-bold uppercase tracking-wider">Age</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-200">
+            <div className="text-center p-2 lg:p-3 bg-purple-50/50 rounded-xl border border-purple-100 flex flex-col justify-center min-w-0">
               <div className={`text-lg font-bold ${patient.outstandingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                ₹{patient.outstandingBalance.toLocaleString()}
+                ₹{patient.outstandingBalance >= 1000 ? `${(patient.outstandingBalance / 1000).toFixed(1)}k` : (patient.outstandingBalance || 0)}
               </div>
-              <div className="text-xs text-purple-700">Balance</div>
+              <div className="text-[10px] lg:text-xs text-purple-700 font-bold uppercase tracking-wider">Balance</div>
             </div>
           </div>
 
@@ -485,48 +495,50 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 <Calendar className="w-4 h-4 text-gray-500 mr-2" />
                 <span className="text-sm text-gray-700">Last Visit</span>
               </div>
-              <span className="text-sm font-medium text-gray-900">
-                {new Date(patient.lastVisit).toLocaleDateString('en-IN')}
+              <span className="text-sm font-bold text-gray-900">
+                {patient.lastVisit && patient.lastVisit !== "0001-01-01" && new Date(patient.lastVisit).getFullYear() > 1970
+                  ? new Date(patient.lastVisit).toLocaleDateString('en-IN')
+                  : 'No visits yet'}
               </span>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleAction(() => onViewPatient(patient.id), `view-${patient.id}`)}
                 disabled={actionLoading === `view-${patient.id}`}
-                className="px-3 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 font-medium text-sm transition-all duration-200 flex items-center disabled:opacity-50"
+                className="px-3 py-2 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white font-bold text-xs transition-all duration-200 flex items-center disabled:opacity-50 border border-blue-100"
               >
                 {actionLoading === `view-${patient.id}` ? (
-                  <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin mr-1" />
+                  <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
                 ) : (
-                  <Eye className="w-3 h-3 mr-1" />
+                  <Eye className="w-3.5 h-3.5 mr-1.5" />
                 )}
                 View
               </button>
               <button
                 onClick={() => handleAction(() => onEditPatient(patient.id), `edit-${patient.id}`)}
                 disabled={actionLoading === `edit-${patient.id}`}
-                className="px-3 py-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 font-medium text-sm transition-all duration-200 flex items-center disabled:opacity-50"
+                className="px-3 py-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-600 hover:text-white font-bold text-xs transition-all duration-200 flex items-center disabled:opacity-50 border border-green-100"
               >
                 {actionLoading === `edit-${patient.id}` ? (
-                  <div className="w-3 h-3 border border-green-600 border-t-transparent rounded-full animate-spin mr-1" />
+                  <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
                 ) : (
-                  <Edit className="w-3 h-3 mr-1" />
+                  <Edit className="w-3.5 h-3.5 mr-1.5" />
                 )}
                 Edit
               </button>
-     {!patient.isPerson && (
-  <button
-    onClick={() => handleAction(() => onAddPatient('person', patient.id), 'person')}
-    className="px-3 py-2 text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 font-medium text-sm flex items-center"
-  >
-    <UserPlus className="w-4 h-4 mr-1" />
-    Person
-  </button>
-)}
+              {!patient.isPerson && (
+                <button
+                  onClick={() => handleAction(() => onAddPatient('person', patient.id), 'person')}
+                  className="px-3 py-2 text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white font-bold text-xs flex items-center border border-indigo-100 transition-all"
+                >
+                  <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                  Person
+                </button>
+              )}
             </div>
             <div className="flex space-x-2">
               <button
@@ -684,6 +696,13 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                       )}
                     </button>
                     <button
+                      onClick={() => onExportPatient?.(patient.id)}
+                      className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200"
+                      title="Export Data"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => printBarcode(patient)}
                       className="p-2 text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200"
                       title="Print Barcode"
@@ -725,27 +744,27 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
     <div id="patient-list-container" className="space-y-4 lg:space-y-6">
       {/* Enhanced Header with Statistics */}
       <div id="patient-header" className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-blue-200">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
           <div>
             <h2 id="patient-title" className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Patient Management</h2>
-            <p className="text-gray-600">Comprehensive patient database with medical records and barcode system</p>
+            <p className="text-gray-600 text-sm lg:text-base">Comprehensive patient database with medical records and barcode system</p>
           </div>
           <div id="patient-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 w-full lg:w-auto">
-            <div id="stat-total" className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
+            <div id="stat-total" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
               <div className="text-xl lg:text-2xl font-bold text-blue-600">{patients.length}</div>
-              <div className="text-sm text-gray-600">Total Patients</div>
+              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Total Patients</div>
             </div>
-            <div id="stat-active" className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
+            <div id="stat-active" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
               <div className="text-xl lg:text-2xl font-bold text-green-600">{activePatients}</div>
-              <div className="text-sm text-gray-600">Active</div>
+              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Active</div>
             </div>
-            <div id="stat-new" className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
+            <div id="stat-new" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
               <div className="text-xl lg:text-2xl font-bold text-orange-600">{newPatients}</div>
-              <div className="text-sm text-gray-600">New Patients</div>
+              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">New</div>
             </div>
-            <div id="stat-balance" className="bg-white rounded-lg lg:rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
+            <div id="stat-balance" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
               <div className="text-xl lg:text-2xl font-bold text-purple-600">₹{(totalBalance / 1000).toFixed(0)}K</div>
-              <div className="text-sm text-gray-600">Outstanding</div>
+              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Balance</div>
             </div>
           </div>
         </div>
@@ -753,24 +772,24 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
 
       {/* Enhanced Controls */}
       <div id="patient-controls" className="bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
             <div className="relative flex-1">
               <Search id="search-icon" className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 id="patient-search"
                 type="text"
-                placeholder="Search by name, phone, email, or patient ID..."
+                placeholder="Search patients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 lg:py-3 border border-gray-300 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
               />
             </div>
             <select
               id="patient-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 lg:px-4 py-2 lg:py-3 border border-gray-300 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-3 lg:px-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -779,12 +798,12 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
             </select>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <div id="view-mode-toggle" className="bg-gray-100 rounded-lg lg:rounded-xl p-1 flex">
+          <div className="flex items-center gap-3">
+            <div id="view-mode-toggle" className="hidden sm:flex bg-gray-100 rounded-xl p-1">
               <button
                 id="view-mode-grid"
                 onClick={() => setViewMode('grid')}
-                className={`px-3 lg:px-4 py-1.5 lg:py-2 text-sm font-medium rounded-md lg:rounded-lg transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -795,7 +814,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
               <button
                 id="view-mode-table"
                 onClick={() => setViewMode('table')}
-                className={`px-3 lg:px-4 py-1.5 lg:py-2 text-sm font-medium rounded-md lg:rounded-lg transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                   viewMode === 'table'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -808,7 +827,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
               id="add-patient-btn"
               onClick={() => handleAction(() => onAddPatient('normal'), 'add-patient')}
               disabled={actionLoading === 'add-patient'}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              className="flex-1 lg:flex-none bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 lg:py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm font-bold"
             >
               {actionLoading === 'add-patient' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />

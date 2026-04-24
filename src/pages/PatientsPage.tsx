@@ -10,6 +10,7 @@ interface PatientsPageProps {
   setPatientFormType: (type: "normal" | "person") => void;
   setParentPatientId: (id: string) => void;
   setSelectedPatientId: (id: string) => void;
+  handleExportPatient?: (id: string) => void;
 }
 
 export const PatientsPage: React.FC<PatientsPageProps> = ({
@@ -20,7 +21,8 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
   setShowPatientForm,
   setPatientFormType,
   setParentPatientId,
-  setSelectedPatientId
+  setSelectedPatientId,
+  handleExportPatient
 }) => {
   const handleAddPatient = (type?: string, patientId?: string) => {
     if (type === "person" && patientId) {
@@ -46,6 +48,7 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
         onViewPatient={handleViewPatient}
         onEditPatient={handleEditPatient}
         onDeletePatient={handleDeletePatient}
+        onExportPatient={handleExportPatient}
       />
     </div>
   );

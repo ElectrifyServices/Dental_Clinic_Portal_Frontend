@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Calendar, User, FileText, Download, Eye, Stethoscope, Pill, Camera } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, User, FileText, Download, Eye, Stethoscope, Pill, Camera, CreditCard } from 'lucide-react';
 
 interface EMRRecord {
   id: string;
   patientId: string;
   patientName: string;
   date: string;
-  type: 'consultation' | 'prescription' | 'lab-report' | 'x-ray' | 'treatment-note';
+  type: 'consultation' | 'prescription' | 'lab-report' | 'x-ray' | 'treatment-note' | 'billing-record' | 'appointment-visit';
   title: string;
   content: string;
   attachments?: string[];
@@ -14,38 +14,14 @@ interface EMRRecord {
   doctorName: string;
 }
 
-const emrRecords: EMRRecord[] = [
-  {
-    id: '1',
-    patientId: 'PAT001',
-    patientName: 'Rajesh Kumar',
-    date: '2024-01-15',
-    type: 'consultation',
-    title: 'Root Canal Consultation',
-    content: 'Patient presented with severe pain in upper right molar. Clinical examination revealed deep caries with pulp involvement. Recommended root canal treatment.',
-    doctorId: '1',
-    doctorName: 'Dr. Sharma',
-    attachments: ['x-ray-001.jpg']
-  },
-  {
-    id: '2',
-    patientId: 'PAT002',
-    patientName: 'Priya Sharma',
-    date: '2024-01-14',
-    type: 'prescription',
-    title: 'Post-Cleaning Prescription',
-    content: 'Prescribed chlorhexidine mouthwash for 7 days following dental cleaning procedure.',
-    doctorId: '1',
-    doctorName: 'Dr. Sharma'
-  }
-];
-
 interface EMRListProps {
+  records: EMRRecord[];
   onAddRecord: () => void;
-  onViewRecord: (recordId: string) => void;
+  onViewRecord: (record: EMRRecord) => void;
+  onExportRecord: (record: EMRRecord) => void;
 }
 
-export function EMRList({ onAddRecord, onViewRecord }: EMRListProps) {
+export function EMRList({ records, onAddRecord, onViewRecord, onExportRecord }: EMRListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
@@ -56,6 +32,8 @@ export function EMRList({ onAddRecord, onViewRecord }: EMRListProps) {
       case 'lab-report': return 'bg-purple-100 text-purple-800';
       case 'x-ray': return 'bg-orange-100 text-orange-800';
       case 'treatment-note': return 'bg-yellow-100 text-yellow-800';
+      case 'billing-record': return 'bg-indigo-100 text-indigo-800';
+      case 'appointment-visit': return 'bg-pink-100 text-pink-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -67,15 +45,19 @@ export function EMRList({ onAddRecord, onViewRecord }: EMRListProps) {
       case 'lab-report': return <FileText className="w-4 h-4" />;
       case 'x-ray': return <Camera className="w-4 h-4" />;
       case 'treatment-note': return <FileText className="w-4 h-4" />;
+      case 'billing-record': return <CreditCard className="w-4 h-4" />;
+      case 'appointment-visit': return <Calendar className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
     }
   };
 
-  const filteredRecords = emrRecords.filter(record => {
+  const filteredRecords = records.filter(record => {
     const matchesSearch = record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || record.type === filterType;
+    const matchesType = filterType === 'all' || 
+                       record.type === filterType || 
+                       (record.timeline && record.timeline.some((item: any) => item.type === filterType));
     return matchesSearch && matchesType;
   });
 
@@ -109,14 +91,15 @@ export function EMRList({ onAddRecord, onViewRecord }: EMRListProps) {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 appearance-none bg-white font-medium text-gray-700"
         >
-          <option value="all">All Types</option>
+          <option value="all">All Records</option>
           <option value="consultation">Consultations</option>
+          <option value="treatment-note">Treatments</option>
+          <option value="billing-record">Billing</option>
+          <option value="appointment-visit">Appointments</option>
           <option value="prescription">Prescriptions</option>
-          <option value="lab-report">Lab Reports</option>
           <option value="x-ray">X-Rays</option>
-          <option value="treatment-note">Treatment Notes</option>
         </select>
       </div>
 
@@ -153,13 +136,16 @@ export function EMRList({ onAddRecord, onViewRecord }: EMRListProps) {
 
             <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-200">
               <button
-                onClick={() => onViewRecord(record.id)}
+                onClick={() => onViewRecord(record)}
                 className="px-3 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 font-medium text-sm flex items-center"
               >
                 <Eye className="w-4 h-4 mr-1" />
                 View
               </button>
-              <button className="px-3 py-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 font-medium text-sm flex items-center">
+              <button 
+                onClick={() => onExportRecord(record)}
+                className="px-3 py-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 font-medium text-sm flex items-center"
+              >
                 <Download className="w-4 h-4 mr-1" />
                 Export
               </button>

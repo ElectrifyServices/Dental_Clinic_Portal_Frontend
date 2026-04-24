@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Download, Eye, MoreVertical, Trash2, Send } from 'lucide-react';
+import { Search, Plus, Filter, Download, Eye, MoreVertical, Trash2, Send, DollarSign } from 'lucide-react';
+import { InvoicePaymentModal } from './InvoicePaymentModal';
 
 interface Invoice {
   id: string;
@@ -10,6 +11,7 @@ interface Invoice {
   amount?: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   dueDate: string;
+  patientId?: string;
 }
 
 interface InvoiceListProps {
@@ -42,6 +44,8 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
   });
 const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<Invoice | null>(null);
+const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -188,6 +192,20 @@ Thank you!`;
   Send Invoices
 </button>
 
+          {invoice.status !== 'paid' && (
+            <button
+              onClick={() => {
+                setSelectedInvoiceForPayment(invoice);
+                setShowPaymentModal(true);
+                setOpenMenuId(null);
+              }}
+              className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 flex items-center gap-3 transition-colors text-green-600"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span className="font-medium">Pay Invoice</span>
+            </button>
+          )}
+
           <div className="border-t border-gray-100" />
 
           {/* Delete */}
@@ -212,6 +230,22 @@ Thank you!`;
           </table>
         </div>
       </div>
+
+      {showPaymentModal && selectedInvoiceForPayment && (
+        <InvoicePaymentModal
+          invoice={selectedInvoiceForPayment}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedInvoiceForPayment(null);
+          }}
+          onConfirm={(method) => {
+            onUpdateStatus?.(selectedInvoiceForPayment.id, 'paid');
+            setShowPaymentModal(false);
+            setSelectedInvoiceForPayment(null);
+            alert(`Payment of ₹${(selectedInvoiceForPayment.total ?? selectedInvoiceForPayment.amount ?? 0).toLocaleString()} received via ${method}!`);
+          }}
+        />
+      )}
     </div>
   );
 }

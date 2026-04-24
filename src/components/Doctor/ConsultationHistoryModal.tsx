@@ -1,9 +1,12 @@
 import {
   X, Trash2, Clock, Stethoscope, FileText, Calendar,
   Image as ImageIcon, IndianRupee, Pill, AlertCircle,
-  Eye, ArrowLeft, Phone, Search, Filter, ChevronLeft, ChevronRight
+  Eye, ArrowLeft, Phone, Search, Filter, ChevronLeft, ChevronRight,
+  Printer, MoreVertical, ExternalLink
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Props {
   onClose: () => void;
@@ -14,8 +17,11 @@ interface Prescription {
   id: string;
   medicine: string;
   dosage: string;
+  timing: string;
   frequency: string;
   duration: string;
+  qty: string;
+  instructions?: string;
 }
 
 interface ConsultationRecord {
@@ -37,6 +43,14 @@ interface ConsultationRecord {
   conditions?: string;
   visits?: string;
   lastVisit?: string;
+  treatmentType?: string;
+  patientConcern?: string;
+  recommendations?: string;
+  requiresTreatment?: boolean;
+  treatmentProcedure?: string;
+  treatmentTooth?: string;
+  treatmentSessions?: number;
+  startTreatmentToday?: boolean;
 }
 
 const PAGE_SIZE = 8;
@@ -50,6 +64,7 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
   const [filterFollowUp, setFilterFollowUp] = useState<"all" | "yes" | "no">("all");
   const [filterSort, setFilterSort] = useState<"newest" | "oldest">("newest");
   const [page, setPage] = useState(1);
+  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("completedConsultations");
@@ -114,6 +129,234 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
     }
   }, []);
 
+  const downloadConsultationPDF = async (record: ConsultationRecord) => {
+    const pdfContainer = document.createElement("div");
+    pdfContainer.style.cssText = `
+    position: fixed; left: -9999px; top: 0;
+    width: 794px; background: white; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+    const filledPrescriptions = record.prescriptions?.filter(
+      (p) => p.medicine.trim() !== "",
+    ) || [];
+
+    pdfContainer.innerHTML = `
+    <div style="width:794px; background:#fff; margin:0; padding:0; color: #1f2937;">
+      <!-- Professional Medical Header -->
+      <div style="padding: 30px 50px 20px; border-bottom: 2px solid #3b82f6;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:28px; font-weight:800; color:#1e40af; letter-spacing:-0.5px;">DentalCare Pro</div>
+            <div style="font-size:12px; color:#6b7280; font-weight:500; margin-top:4px;">Advanced Dental Clinic & Implant Centre</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px; font-weight:700; color:#111827;">Dr. Rajesh Sharma</div>
+            <div style="font-size:11px; color:#6b7280; margin-top:2px;">BDS, MDS (Oral & Maxillofacial Surgery)</div>
+            <div style="font-size:11px; color:#6b7280;">Reg No: 123456/78</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Title & Date -->
+      <div style="padding: 10px 50px; background:#f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:16px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:1px;">Consultation Report</div>
+          <div style="text-align:right; font-size:11px; color:#64748b; display:flex; gap:15px;">
+          <span><strong>Date:</strong> ${new Date(record.completedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</span>
+          <span><strong>Record ID:</strong> ${record.id}</span>
+        </div>
+      </div>
+
+      <div style="padding: 20px 50px 30px;">
+        <!-- Patient Info Card -->
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient Name</div>
+            <div style="font-size:15px; font-weight:700; color:#1e293b;">${record.patientName || "—"}</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient ID</div>
+            <div style="font-size:14px; font-weight:500; color:#334155;">${record.patientId || "—"}</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Treatment Type</div>
+            <div style="font-size:14px; font-weight:500; color:#334155;">${record.treatmentType || "General Consultation"}</div>
+          </div>
+        </div>
+
+        <!-- Medical Alerts / History -->
+        ${
+          record.allergies || record.conditions
+            ? `
+        <div style="margin-bottom:20px; border:1px solid #fee2e2; border-radius:8px; overflow:hidden;">
+          <div style="background:#fef2f2; padding:8px 15px; border-bottom:1px solid #fee2e2; display:flex; align-items:center; gap:8px;">
+            <span style="color:#dc2626; font-size:14px;">⚠️</span>
+            <span style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px;">Medical Alerts & History</span>
+          </div>
+          <div style="padding:12px 15px; background:#fff;">
+            ${record.allergies ? `<div style="font-size:12px; color:#991b1b; margin-bottom:4px;"><strong>Allergies:</strong> ${record.allergies}</div>` : ""}
+            ${record.conditions ? `<div style="font-size:12px; color:#991b1b;"><strong>Medical Conditions:</strong> ${record.conditions}</div>` : ""}
+          </div>
+        </div>
+        `
+            : ""
+        }
+
+        <!-- Clinical Assessment Section -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-bottom:20px;">
+          <div style="border-left: 3px solid #3b82f6; padding-left:15px;">
+            <div style="font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Clinical Observations</div>
+            <div style="font-size:13px; line-height:1.6; color:#374151;">
+              ${record.observations || '<span style="color:#9ca3af;">No observations recorded.</span>'}
+            </div>
+          </div>
+          <div style="border-left: 3px solid #10b981; padding-left:15px;">
+            <div style="font-size:11px; font-weight:700; color:#065f46; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Diagnosis</div>
+            <div style="font-size:13px; line-height:1.6; color:#374151;">
+              ${record.diagnosis || '<span style="color:#9ca3af;">No diagnosis provided.</span>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Treatment Plan -->
+        <div style="margin-bottom:25px; background:#f1f5f9; padding:15px 20px; border-radius:8px;">
+          <div style="font-size:11px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">Treatment Plan & Procedures</div>
+          <div style="font-size:13px; line-height:1.6; color:#334155;">
+            ${record.treatmentPlan || '<span style="color:#9ca3af;">—</span>'}
+          </div>
+        </div>
+
+        <!-- Prescriptions -->
+        ${
+          filledPrescriptions.length > 0
+            ? `
+        <div style="margin-bottom:25px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <div style="width:24px; height:24px; background:#ecfdf5; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#059669; font-weight:bold;">💊</div>
+            <div style="font-size:14px; font-weight:700; color:#111827;">Prescribed Medications</div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid #e2e8f0;">
+            <thead>
+              <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">#</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Medicine</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Dosage</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Timing</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Freq</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Days</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Qty</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filledPrescriptions
+                .map(
+                  (p, i) => `
+                <tr style="border-bottom:1px solid #f1f5f9; ${i % 2 === 0 ? "" : "background:#fafafa;"}">
+                  <td style="padding:12px 15px; font-size:12px; color:#94a3b8;">${i + 1}</td>
+                  <td style="padding:12px 15px; font-size:13px; font-weight:600; color:#1e293b;">${p.medicine || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.dosage || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.timing || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.frequency || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.duration || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; font-weight:600; color:#1e293b;">${p.qty || "-"}</td>
+                </tr>
+              `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+        `
+            : ""
+        }
+
+        <!-- Recommendations & Summary -->
+        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:30px; margin-bottom:25px;">
+          <div>
+            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Advice & Recommendations</div>
+            <div style="font-size:12px; line-height:1.6; color:#334155; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+              ${record.recommendations || "Take care and follow instructions."}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Consultation Summary</div>
+            <div style="padding:15px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;">
+              <div style="font-size:10px; color:#0369a1; text-transform:uppercase; margin-bottom:4px;">Total Cost</div>
+              <div style="font-size:18px; font-weight:700; color:#0369a1;">₹${record.treatmentCost || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer / Signature Area -->
+        <div style="margin-top:40px; padding-top:20px; border-top:1px solid #e2e8f0;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <div style="font-size:10px; color:#94a3b8; font-style:italic;">This is a computer-generated report based on past clinical records.</div>
+              <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Report Generated: ${new Date().toLocaleString("en-IN")}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:180px; border-top:1px solid #1e293b; padding-top:10px;">
+                <div style="font-size:13px; font-weight:700; color:#1e293b;">Dr. Rajesh Sharma</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;">Dental Surgeon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Clinic Address Footer -->
+      <div style="background:#1e40af; padding:15px 50px; color:white; font-size:10px; display:flex; justify-content:space-between;">
+        <div>📍 123 Dental Street, Medical Hub, New Delhi - 110001</div>
+        <div>📞 +91 98765 43210 | 🌐 www.dentalcarepro.com</div>
+      </div>
+    </div>
+  `;
+
+    document.body.appendChild(pdfContainer);
+
+    try {
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(
+        `${record.patientName}_consultation_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+    } finally {
+      document.body.removeChild(pdfContainer);
+    }
+  };
+
   const filtered = useMemo(() => {
     let result = [...data];
     const q = search.trim().toLowerCase();
@@ -142,6 +385,7 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
   const handleDeleteClick = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeleteConfirmId(id);
+    setActiveMenuId(null);
   };
 
   const confirmDelete = () => {
@@ -180,10 +424,17 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
   const activeFilters = (filterFollowUp !== "all" ? 1 : 0) + (filterSort !== "newest" ? 1 : 0);
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setActiveMenuId(null)}>
       <div
         className="bg-white w-[900px] max-w-[95vw] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         style={{ height: "88vh", fontFamily: "'Inter', system-ui" }}
+        onClick={(e) => {
+          // If a menu is open, clicking anywhere inside the modal should close it
+          if (activeMenuId !== null) {
+            setActiveMenuId(null);
+          }
+          e.stopPropagation();
+        }}
       >
 
         {/* ── Header ── */}
@@ -343,19 +594,46 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                         }
                       </td>
                       <td className="px-5 py-2.5 align-middle">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end relative">
                           <button
-                            onClick={() => setSelectedRecord(item)}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(activeMenuId === item.id ? null : item.id);
+                            }}
+                            className={`p-1.5 rounded-lg transition-all ${activeMenuId === item.id ? "bg-blue-600 text-white" : "hover:bg-gray-100 text-gray-500"}`}
                           >
-                            <Eye className="w-3 h-3" /> View
+                            <MoreVertical className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={(e) => handleDeleteClick(item.id, e)}
-                            className="p-1 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+
+                          {activeMenuId === item.id && (
+                            <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-100 rounded-xl shadow-xl z-20 py-1.5 animate-in fade-in zoom-in duration-200">
+                              <button
+                                onClick={() => {
+                                  setSelectedRecord(item);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </button>
+                              <button
+                                onClick={() => {
+                                  downloadConsultationPDF(item);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors"
+                              >
+                                <Printer className="w-3.5 h-3.5" /> Print
+                              </button>
+                              <div className="h-px bg-gray-100 my-1" />
+                              <button
+                                onClick={(e) => handleDeleteClick(item.id, e)}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -383,12 +661,20 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {fmt(selectedRecord.completedAt)}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => handleDeleteClick(selectedRecord.id, e)}
-                    className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => downloadConsultationPDF(selectedRecord)}
+                      className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <Printer className="w-4 h-4" /> Print
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteClick(selectedRecord.id, e)}
+                      className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -460,8 +746,10 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                         <div key={p.id} className="bg-white border border-indigo-100 rounded-lg px-3 py-2 text-sm">
                           <span className="font-bold text-gray-800">{p.medicine}</span>
                           {p.dosage && <span className="text-gray-500 ml-2">· {p.dosage}</span>}
+                          {p.timing && <span className="text-gray-500 ml-2">· {p.timing}</span>}
                           {p.frequency && <span className="text-gray-500 ml-2">· {p.frequency}</span>}
                           {p.duration && <span className="text-gray-500 ml-2">· {p.duration}</span>}
+                          {p.qty && <span className="text-gray-500 ml-2">· Qty: {p.qty}</span>}
                         </div>
                       ) : null
                     )}

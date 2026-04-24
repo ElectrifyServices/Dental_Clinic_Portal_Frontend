@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Clock, User, Phone, MessageSquare, Stethoscope, CheckCircle, AlertTriangle, Calendar, FileText, History } from 'lucide-react';
+import { Search, Clock, User, Phone, MessageSquare, Stethoscope, CheckCircle, AlertTriangle, Calendar, FileText, History, UserPlus } from 'lucide-react';
 import ConsultationHistoryModal from './ConsultationHistoryModal';
+import { DirectConsultationPopup } from './DirectConsultationPopup';
 
 interface QueuedPatient {
   id: string;
@@ -26,12 +27,30 @@ interface PatientQueueProps {
   queuedPatients: QueuedPatient[];
   onSelectPatient: (patient: QueuedPatient) => void;
   onUpdatePatientStatus: (patientId: string, status: string) => void;
+  onDirectConsultation: (name: string, phone: string, doctorId?: string, doctorName?: string, time?: string) => void;
+  onRegisterNew: (name: string, phone: string) => void;
+  patients: any[];
+  doctors: any[];
+  appointments: any[];
+  doctorAvailability: { [key: string]: boolean };
 }
 
-export function PatientQueue({ doctorName, queuedPatients, onSelectPatient, onUpdatePatientStatus }: PatientQueueProps) {
+export function PatientQueue({ 
+  doctorName, 
+  queuedPatients, 
+  onSelectPatient, 
+  onUpdatePatientStatus, 
+  onDirectConsultation, 
+  onRegisterNew, 
+  patients,
+  doctors,
+  appointments,
+  doctorAvailability
+}: PatientQueueProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showHistory, setShowHistory] = useState(false);
+  const [showDirectPopup, setShowDirectPopup] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,7 +86,8 @@ const filteredPatients = queuedPatients.filter(patient => {
   return matchesSearch && matchesFilter;
 });
 
-  const waitingCount = queuedPatients.filter(p => p.status === 'waiting' || p.status === 'in-consultation' ).length;
+  const waitingCount = queuedPatients.filter(p => p.status === 'waiting').length;
+  const inConsultationCount = queuedPatients.filter(p => p.status === 'in-consultation').length;
 
   return (
     <div className="space-y-6">
@@ -77,10 +97,14 @@ const filteredPatients = queuedPatients.filter(patient => {
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Patient Queue</h2>
             <p className="text-gray-600 mt-1">Welcome, {doctorName} - Manage your checked-in patients</p>
-            <div className="flex items-center space-x-6 mt-3">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-3">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-700">{waitingCount} Waiting</span>
+                <span className="text-sm font-medium text-gray-700">{waitingCount} Waiting</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                <span className="text-sm font-medium text-gray-700">{inConsultationCount} In Consultation</span>
               </div>
             </div>
           </div>
@@ -124,12 +148,23 @@ const filteredPatients = queuedPatients.filter(patient => {
             <option value="completed">Completed</option>
           </select>
 <button
-  onClick={() => setShowHistory(true)}
-  className="ml-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 
-             text-white text-sm font-medium 
-             rounded-xl shadow-sm 
+  onClick={() => setShowDirectPopup(true)}
+  className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+             text-white text-sm font-bold 
+             rounded-xl shadow-md 
              transition-all duration-200 ease-in-out 
-             focus:outline-none focus:ring-2 focus:ring-blue-300
+             flex items-center gap-2 group"
+>
+  <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+  Direct Consultation
+</button>
+
+<button
+  onClick={() => setShowHistory(true)}
+  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 
+             text-gray-700 text-sm font-medium 
+             rounded-xl border border-gray-200
+             transition-all duration-200 ease-in-out 
              flex items-center gap-2"
 >
   <History className="w-4 h-4" />
@@ -218,9 +253,28 @@ const filteredPatients = queuedPatients.filter(patient => {
         ))}
       </div>
 
+      {showDirectPopup && (
+        <DirectConsultationPopup
+          onClose={() => setShowDirectPopup(false)}
+          patients={patients}
+          doctors={doctors}
+          appointments={appointments}
+          doctorAvailability={doctorAvailability}
+          onPatientFound={(p, doctorId, doctorName, time) => {
+            setShowDirectPopup(false);
+            onDirectConsultation(p.name, p.phone, doctorId, doctorName, time);
+          }}
+          onRegisterNew={(name, phone) => {
+            setShowDirectPopup(false);
+            onRegisterNew(name, phone);
+          }}
+        />
+      )}
+
       {showHistory && (
         <ConsultationHistoryModal 
-          onClose={() => setShowHistory(false)} 
+          onClose={() => setShowHistory(false)}
+          patients={patients}
         />
       )}
 

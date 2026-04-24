@@ -2,6 +2,7 @@ import React from 'react';
 import { TreatmentList } from '../components/Treatments/TreatmentList';
 
 interface TreatmentsPageProps {
+  treatments: any[];
   onAddTreatment: () => void;
   onViewTreatment: (id: string) => void;
   onEditTreatment: (id: string) => void;

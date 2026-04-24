@@ -26,134 +26,59 @@ import {
 interface PatientDetailsProps {
   patient: any;
   familyMembers: any[];
+  appointments: any[];
+  treatments: any[];
+  invoices: any[];
   onClose: () => void;
   onSendReminder: (patientId: string, amount: number) => void;
+  onExport?: (patientId: string) => void;
+}
+
+interface CustomSection {
+  id: string;
+  title: string;
+  content: string;
 }
 
 export function PatientDetails({
   patient,
   onClose,
   familyMembers = [],
+  appointments = [],
+  treatments = [],
+  invoices = [],
   onSendReminder = () => {},
+  onExport = () => {},
 }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [previewData, setPreviewData] = useState({
+    bp: "",
+    height: "",
+    weight: "",
+    bmi: "",
+    complaints: "",
+    diagnosis: "",
+    advice: "",
+    tests: "",
+    nextVisit: "",
+  });
+  const [printLanguage, setPrintLanguage] = useState<"en" | "gu">("en");
+  const [customSections, setCustomSections] = useState<CustomSection[]>([]);
 
   if (!patient) return null;
 
-  // Mock patient data - in real app, fetch from API
-  // const patient = {
-  //   id: patientId,
-  //   name: 'Rajesh Kumar',
-  //   email: 'rajesh@email.com',
-  //   phone: '+91 98765 43210',
-  //   dateOfBirth: '1985-06-15',
-  //   gender: 'male',
-  //   address: '123 MG Road, Bangalore, Karnataka 560001',
-  //   emergencyContact: '+91 98765 43211',
-  //   medicalHistory: ['Diabetes Type 2', 'Hypertension', 'Previous root canal treatment'],
-  //   allergies: ['Penicillin', 'Latex'],
-  //   bloodGroup: 'B+',
-  //   occupation: 'Software Engineer',
-  //   maritalStatus: 'married',
-  //   insuranceProvider: 'Star Health Insurance',
-  //   insuranceNumber: 'SH123456789',
-  //   referredBy: 'Dr. Ramesh Kumar',
-  //   createdAt: '2023-01-15',
-  //   lastVisit: '2024-01-10',
-  //   totalVisits: 5,
-  //   outstandingBalance: 2500,
-  //   status: 'active',
-  //   barcode: '*PAT001*',
-  //   avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-  //   documents: [
-  //     { id: '1', name: 'X-Ray Report', type: 'x-ray', date: '2024-01-15', url: 'https://images.pexels.com/photos/4269693/pexels-photo-4269693.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
-  //     { id: '2', name: 'Blood Test Report', type: 'lab-report', date: '2024-01-10', url: 'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' },
-  //     { id: '3', name: 'Previous Treatment Photos', type: 'photo', date: '2024-01-08', url: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2' }
-  //   ],
-  //   prescriptionHistory: [
-  //     {
-  //       id: '1',
-  //       date: '2024-01-15',
-  //       treatment: 'Root Canal Treatment',
-  //       prescriptions: [
-  //         { medicine: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '5 days' },
-  //         { medicine: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', duration: '3 days' }
-  //       ]
-  //     },
-  //     {
-  //       id: '2',
-  //       date: '2024-01-08',
-  //       treatment: 'Dental Cleaning',
-  //       prescriptions: [
-  //         { medicine: 'Chlorhexidine Mouthwash', dosage: '10ml', frequency: '2 times daily', duration: '7 days' }
-  //       ]
-  //     }
-  //   ]
-  // };
-
-  const appointments = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      time: "10:00 AM",
-      type: "Root Canal",
-      status: "completed",
-      doctor: "Dr. Sharma",
-    },
-    {
-      id: "2",
-      date: "2024-01-22",
-      time: "2:00 PM",
-      type: "Follow-up",
-      status: "scheduled",
-      doctor: "Dr. Sharma",
-    },
-    {
-      id: "3",
-      date: "2024-01-08",
-      time: "11:00 AM",
-      type: "Cleaning",
-      status: "completed",
-      doctor: "Dr. Sharma",
-    },
-  ];
-
-  const treatments = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      procedure: "Root Canal Treatment",
-      tooth: "16",
-      cost: 5000,
-      status: "in-progress",
-    },
-    {
-      id: "2",
-      date: "2024-01-08",
-      procedure: "Dental Cleaning",
-      tooth: "Full mouth",
-      cost: 1500,
-      status: "completed",
-    },
-  ];
-
-  const invoices = [
-    {
-      id: "INV-001",
-      date: "2024-01-15",
-      amount: 5000,
-      status: "pending",
-      dueDate: "2024-01-22",
-    },
-    {
-      id: "INV-002",
-      date: "2024-01-08",
-      amount: 1500,
-      status: "paid",
-      dueDate: "2024-01-15",
-    },
-  ];
+  // Filter real data for this patient
+  const patientAppointments = appointments.filter(
+    (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
+  );
+  const patientTreatments = treatments.filter(
+    (t) => t.patientId === patient.id,
+  );
+  const patientInvoices = invoices.filter(
+    (inv) => inv.patientId === patient.id,
+  );
 
   const handleSendReminder = async () => {
     setLoading(true);
@@ -162,171 +87,373 @@ export function PatientDetails({
     setLoading(false);
   };
 
-  const printPrescription = (record: any) => {
+  const handlePrintDocument = () => {
+    // Pre-fill with latest prescription data if available
+    const latest = patient.prescriptionHistory?.[0];
+    if (latest) {
+      setPreviewData({
+        ...previewData,
+        bp: latest.vitals?.bp === "—" ? "" : latest.vitals?.bp || "",
+        height:
+          latest.vitals?.height === "—" ? "" : latest.vitals?.height || "",
+        weight:
+          latest.vitals?.weight === "—" ? "" : latest.vitals?.weight || "",
+        bmi: latest.vitals?.bmi === "—" ? "" : latest.vitals?.bmi || "",
+        complaints: latest.observations || latest.treatment || "",
+        diagnosis: latest.diagnosis || "General Consultation",
+        advice: latest.consultationNotes || "",
+        tests: latest.tests || "",
+        nextVisit: latest.nextVisit || "",
+        age:
+          patient.age ||
+          (patient.dateOfBirth
+            ? Math.floor(
+                (Date.now() - new Date(patient.dateOfBirth).getTime()) /
+                  (365.25 * 24 * 60 * 60 * 1000),
+              )
+            : ""),
+      });
+    }
+    setCustomSections([]); // Reset custom sections on new print
+    setShowPrintPreview(true);
+  };
+
+  const translations = {
+    en: {
+      rx: "Rx",
+      medicine: "Medicine",
+      dosage: "Dosage",
+      timing: "Timing - Freq. - Duration",
+      qty: "Qty",
+      complaints: "Complaints",
+      diagnosis: "Diagnosis",
+      advice: "Advice",
+      tests: "Tests Prescribed",
+      nextVisit: "Next Visit",
+      date: "Date",
+      signature: "Signature",
+      composition: "Composition",
+      timingLabel: "Timing",
+      prescribedOn: "Prescribed on",
+    },
+    gu: {
+      rx: "Rx (દવાઓ)",
+      medicine: "દવા",
+      dosage: "માત્રા",
+      timing: "સમય - આવર્તન - સમયગાળો",
+      qty: "જથ્થો",
+      complaints: "ફરિયાદ / લક્ષણો",
+      diagnosis: "નિદાન",
+      advice: "સલાહ",
+      tests: "જરૂરી તપાસ (લેબ ટેસ્ટ)",
+      nextVisit: "આગામી મુલાકાત",
+      date: "તારીખ",
+      signature: "સહી",
+      composition: "સંયોજન",
+      timingLabel: "સમય",
+      prescribedOn: "તારીખે લખેલ",
+      yrs: "વર્ષ",
+      male: "પુરુષ",
+      female: "સ્ત્રી",
+      other: "અન્ય",
+      bpUnit: "મીમી એચજી",
+      heightUnit: "સેમી",
+      weightUnit: "કિલો",
+      bmiUnit: "કિલો/મી²",
+      months: "મહિના",
+      days: "દિવસ",
+      dentalSurgeon: "કન્સલ્ટન્ટ ડેન્ટલ સર્જન",
+      clinicName: "ડેન્ટલકેર પ્રો ક્લિનિક",
+      doctorName: "ડો. રાજેશ શર્મા",
+      clinicAddress: "#૧૦૨, સી બ્લોક, સાઉથ એક્સટેન્શન - ૧",
+      clinicCity: "નવી દિલ્હી",
+      doctorDegrees: "બી.ડી.એસ., એમ.ડી.એસ. (ઓરલ એન્ડ મેક્સિલોફેસિયલ સર્જરી)",
+      phoneLabel: "ફોન",
+      mobileLabel: "મોબાઈલ",
+      emailLabel: "ઈમેલ",
+      bpLabel: "બી.પી.",
+      heightLabel: "ઊંચાઈ",
+      weightLabel: "વજન",
+      bmiLabel: "બી.એમ.આઈ.",
+      patientNameLabel: "દર્દીનું નામ",
+      appDownload:
+        "તમારી ડિજિટલ પ્રિસ્ક્રિપ્શન જોવા અને ડોક્ટર સાથે ચેટ કરવા માટે ગૂગલ પ્લે સ્ટોર પરથી 'HealthPlix' એપ ડાઉનલોડ કરો અને QR કોડ સ્કેન કરો.",
+    },
+  };
+
+  const translateValue = async (
+    val: string,
+    targetLang: string = printLanguage,
+  ) => {
+    if (!val || targetLang === "en") return val;
+
+    try {
+      // Use the Google Translate GTX API for full dynamic translation without hardcoded maps
+      const response = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=gu&dt=t&q=${encodeURIComponent(val)}`,
+      );
+      const data = await response.json();
+      // Join all segments to ensure full sentence translation
+      return data[0].map((x: any) => x[0]).join("");
+    } catch (error) {
+      console.error("Translation error:", error);
+      return val; // Fallback to original text if API fails
+    }
+  };
+
+  const printAllPrescriptions = async () => {
+    const t = translations[printLanguage];
+
+    // Pre-translate everything if language is Gujarati
+    let localizedData = { ...previewData };
+    let localizedPatientName = patient.name;
+    let localizedGender = patient.gender;
+    let localizedClinicName = "DentalCare Pro Clinic";
+    let localizedDoctorName = "Dr. Rajesh Sharma";
+    let localizedDoctorDegrees = "BDS, MDS (Oral & Maxillofacial Surgery)";
+
+    if (printLanguage === "gu") {
+      const tasks = [
+        translateValue(patient.name).then((res) => (localizedPatientName = res)),
+        translateValue(patient.gender).then((res) => (localizedGender = res)),
+        translateValue(previewData.complaints).then(
+          (res) => (localizedData.complaints = res),
+        ),
+        translateValue(previewData.diagnosis).then(
+          (res) => (localizedData.diagnosis = res),
+        ),
+        translateValue(previewData.advice).then(
+          (res) => (localizedData.advice = res),
+        ),
+        translateValue(previewData.tests).then(
+          (res) => (localizedData.tests = res),
+        ),
+        translateValue(translations.gu.clinicName).then(
+          (res) => (localizedClinicName = res),
+        ),
+        translateValue(translations.gu.doctorName).then(
+          (res) => (localizedDoctorName = res),
+        ),
+        translateValue(translations.gu.doctorDegrees).then(
+          (res) => (localizedDoctorDegrees = res),
+        ),
+      ];
+      await Promise.all(tasks);
+    }
+
+    const allPrescriptions = (patient.prescriptionHistory || []).flatMap(
+      (record: any) =>
+        (record.prescriptions || []).map((p: any) => ({
+          ...p,
+          date: record.date,
+        })),
+    );
+
+    // Translate medicine names and details
+    const translatedPrescriptions = await Promise.all(
+      allPrescriptions.map(async (m: any) => {
+        if (printLanguage === "gu") {
+          return {
+            ...m,
+            medicine: await translateValue(m.medicine),
+            timing: await translateValue(m.timing),
+            frequency: await translateValue(m.frequency),
+            duration: await translateValue(m.duration),
+          };
+        }
+        return m;
+      }),
+    );
+
+    const historyContent = `
+      <div style="margin-top: 15px;">
+        <div style="font-size: 18px; font-weight: 800; margin: 10px 0; color: #000; border-bottom: 2px solid #000; display: inline-block; padding-right: 20px;">${t.rx}</div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background: #e2e8f0; border-top: 1px solid #94a3b8; border-bottom: 1px solid #94a3b8;">
+              <th style="padding: 10px 12px; text-align: left; font-size: 12px; color: #000; font-weight: 900; width: 45%;">${t.medicine}</th>
+              <th style="padding: 10px 12px; text-align: center; font-size: 12px; color: #000; font-weight: 900;">${t.dosage}</th>
+              <th style="padding: 10px 12px; text-align: left; font-size: 12px; color: #000; font-weight: 900;">${t.timing}</th>
+              <th style="padding: 10px 12px; text-align: center; font-size: 12px; color: #000; font-weight: 900;">${t.qty}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${translatedPrescriptions
+              .map(
+                (m: any, i: number) => `
+              <tr style="border-bottom: 1px solid #cbd5e1;">
+                <td style="padding: 12px; font-size: 13px; width: 45%;">
+                  <div style="font-weight: 800; color: #000;">${i + 1}) ${m.medicine.toUpperCase()}</div>
+                  <div style="margin-top: 6px; padding-left: 20px;">
+                    <div style="font-size: 11px; color: #475569; display: flex; gap: 10px;">
+                      <span style="font-weight: 700; min-width: 70px;">${t.timingLabel}</span>
+                      <span>: ${m.timing || "-"}</span>
+                    </div>
+                    ${
+                      m.composition
+                        ? `
+                    <div style="font-size: 11px; color: #64748b; display: flex; gap: 10px; margin-top: 2px;">
+                      <span style="font-weight: 700; min-width: 70px;">${t.composition}</span>
+                      <span>: ${m.composition}</span>
+                    </div>
+                    `
+                        : ""
+                    }
+                    <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;">${t.prescribedOn}: ${new Date(m.date).toLocaleDateString()}</div>
+                  </div>
+                </td>
+                <td style="padding: 12px; font-size: 14px; font-weight: 800; color: #000; text-align: center; letter-spacing: 2px;">
+                  ${m.dosage ? m.dosage.split("-").join("  -  ") : "-"}
+                </td>
+                <td style="padding: 12px; font-size: 12px; color: #1e293b; font-weight: 700;">
+                  ${m.timing || "-"} - ${m.frequency || "-"} - ${m.duration || "-"}
+                </td>
+                <td style="padding: 12px; font-size: 13px; font-weight: 800; color: #000; text-align: center;">
+                  ${m.qty || "-"}
+                </td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Translate custom sections
+    const translatedCustomSections = await Promise.all(
+      customSections.map(async (s) => ({
+        ...s,
+        title: printLanguage === "gu" ? await translateValue(s.title) : s.title,
+        content:
+          printLanguage === "gu" ? await translateValue(s.content) : s.content,
+      })),
+    );
+
+    const customContent = translatedCustomSections
+      .map(
+        (section) => `
+      <div style="margin-top: 15px;">
+        <div style="font-size: 13px; font-weight: 800; color: #111827; margin-top: 10px;">${section.title}:</div>
+        <div style="font-size: 13px; color: #374151;">${section.content}</div>
+      </div>
+    `,
+      )
+      .join("");
+
     const printContent = `
       <html>
         <head>
           <title>Prescription - ${patient.name}</title>
           <style>
-            @page { size: A4; margin: 0; }
-            body { 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              margin: 40px;
-              color: #333;
-              line-height: 1.5;
-            }
-            .header {
-              display: flex;
-              justify-content: space-between;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
-              margin-bottom: 20px;
-            }
-            .clinic-info h2 { color: #1e40af; margin: 0; font-size: 24px; }
-            .clinic-info p { margin: 2px 0; font-size: 12px; color: #666; }
-            .doctor-info { text-align: right; }
-            .doctor-info h3 { margin: 0; color: #1e40af; }
-            .doctor-info p { margin: 2px 0; font-size: 11px; font-weight: 500; }
+            @page { size: A4; margin: 10mm 15mm; }
+            body { font-family: 'Segoe UI', 'Arial', sans-serif; color: #1f2937; margin: 0; padding: 0; line-height: 1.5; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 15px; margin-bottom: 10px; }
+            .clinic-logo { width: 50px; height: 50px; background: #3b82f6; border-radius: 8px; margin-right: 15px; }
+            .clinic-name { font-size: 20px; font-weight: 800; color: #1e40af; margin-bottom: 2px; }
+            .clinic-info { font-size: 11px; color: #4b5563; }
+            .doctor-name { font-size: 18px; font-weight: 800; color: #1e40af; text-align: right; }
+            .degree { font-size: 11px; font-weight: 700; color: #4b5563; text-align: right; }
             
-            .patient-bar {
-              background: #f3f4f6;
-              padding: 10px 15px;
-              border-radius: 6px;
-              display: flex;
-              justify-content: space-between;
-              font-size: 13px;
-              font-weight: 600;
-              margin-bottom: 20px;
-            }
-
-            .vitals-grid {
-              display: grid;
-              grid-template-columns: repeat(4, 1fr);
-              gap: 10px;
-              font-size: 12px;
-              padding: 10px;
-              border-bottom: 1px solid #eee;
-              margin-bottom: 20px;
-            }
+            .patient-bar { border-top: 2px solid #1e40af; border-bottom: 1px solid #e5e7eb; padding: 10px 0; display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 15px; font-weight: 700; color: #111827; }
+            .vitals-grid { display: flex; gap: 30px; font-size: 13px; margin-bottom: 15px; color: #111827; }
             
-            .section-title {
-              font-size: 12px;
-              font-weight: 800;
-              text-transform: uppercase;
-              color: #444;
-              margin-bottom: 8px;
-              border-bottom: 1px solid #ddd;
-              padding-bottom: 4px;
-            }
-
-            .rx-symbol { font-size: 24px; font-weight: bold; margin: 15px 0; color: #1e40af; }
-
-            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-            th { text-align: left; background: #f9fafb; padding: 10px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
-            td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: top; }
-            .med-name { font-weight: 700; color: #111; display: block; margin-bottom: 4px; }
-            .instructions { font-size: 10px; color: #666; font-style: italic; }
-
-            .footer-sig {
-              margin-top: 100px;
-              text-align: right;
-              padding-right: 40px;
-            }
-            .sig-line { border-top: 1px solid #666; width: 200px; display: inline-block; margin-bottom: 5px; }
-            .sig-name { font-weight: bold; font-size: 14px; }
+            .section-label { font-size: 13px; font-weight: 800; color: #111827; margin-top: 10px; display: inline-block; min-width: 100px; }
+            .section-content { font-size: 13px; color: #374151; display: inline-block; font-weight: 500; }
             
-            .custom-field { margin-bottom: 15px; }
-            .custom-title { font-weight: bold; font-size: 11px; text-transform: uppercase; color: #666; }
-            .custom-text { font-size: 13px; margin-top: 2px; }
+            .footer { position: fixed; bottom: 30px; left: 0; right: 0; border-top: 1px solid #1e40af; padding-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .sig-area { text-align: right; }
+            .sig-line { border-top: 1px solid #334155; width: 160px; margin-left: auto; margin-bottom: 5px; }
+            .sig-name { font-weight: 800; font-size: 13px; color: #111827; }
+            .sig-title { font-size: 11px; color: #4b5563; font-weight: 600; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="clinic-info">
-              <h2>DentalCare Pro</h2>
-              <p>#102, C Block, South Extension - 1</p>
-              <p>New Delhi, 110049</p>
-              <p>Phone: 9204972991 / 9934004494</p>
+            <div style="display: flex; align-items: center;">
+              <div class="clinic-logo"></div>
+              <div>
+                <div class="clinic-name">${localizedClinicName}</div>
+                <div class="clinic-info">${printLanguage === "gu" ? t.clinicAddress : "#102, C Block, South Extension - 1"}</div>
+                <div class="clinic-info">${printLanguage === "gu" ? t.clinicCity : "New Delhi"} | ${printLanguage === "gu" ? t.phoneLabel : "Ph"}: 9204972991 / 9934004494</div>
+              </div>
             </div>
-            <div class="doctor-info">
-              <h3>Dr. Rajesh Sharma</h3>
-              <p>BDS, MDS (Oral Surgery)</p>
-              <p>Consultant Dental Surgeon</p>
-              <p>Email: dr.sharma@dentalcarepro.com</p>
+            <div>
+              <div class="doctor-name">${localizedDoctorName}</div>
+              <div class="degree">${localizedDoctorDegrees}</div>
+              <div class="degree">${printLanguage === "gu" ? t.dentalSurgeon : "Consultant Dental Surgeon"}</div>
+              <div class="clinic-info">${printLanguage === "gu" ? t.emailLabel : "Email"}: dr.rajesh@dentalcare.com</div>
+              <div class="clinic-info">${printLanguage === "gu" ? t.mobileLabel : "Mobile"}: 9204972991</div>
             </div>
           </div>
 
           <div class="patient-bar">
-            <span>ID: ${patient.id}</span>
-            <span>Name: ${patient.name}</span>
-            <span>Age: ${Math.floor(
-              (new Date().getTime() - new Date(patient.dateOfBirth).getTime()) /
-                (365.25 * 24 * 60 * 60 * 1000),
-            )} yrs</span>
-            <span>Date: ${new Date(record.date).toLocaleDateString()}</span>
+            <span>${patient.id} : ${localizedPatientName.toUpperCase()} (${previewData.age || "—"} ${printLanguage === "gu" ? t.yrs : "yrs"}, ${localizedGender || "—"}) - ${patient.id}</span>
+            <span>${t.date}: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
           </div>
 
           <div class="vitals-grid">
-            <span><strong>Complaints:</strong> ${record.treatment || "Routine Checkup"}</span>
-            <span><strong>Diagnosis:</strong> ${record.diagnosis || "General Dental Issue"}</span>
+            <span><strong>${printLanguage === "gu" ? t.bpLabel : "BP"}</strong> ${previewData.bp} ${printLanguage === "gu" ? t.bpUnit : "mmHg"}</span>
+            <span><strong>${printLanguage === "gu" ? t.heightLabel : "Height"}</strong> ${previewData.height} ${printLanguage === "gu" ? t.heightUnit : "cm"}</span>
+            <span><strong>${printLanguage === "gu" ? t.weightLabel : "Weight"}</strong> ${previewData.weight} ${printLanguage === "gu" ? t.weightUnit : "kg"}</span>
+            <span><strong>${printLanguage === "gu" ? t.bmiLabel : "BMI"}</strong> ${previewData.bmi} ${printLanguage === "gu" ? t.bmiUnit : "Kg/m²"}</span>
           </div>
 
-          <div class="rx-symbol">Rx</div>
+          <div style="margin-bottom: 10px;">
+            <div class="section-label">${t.complaints}:</div>
+            <div class="section-content">${localizedData.complaints}</div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <div class="section-label">${t.diagnosis}:</div>
+            <div class="section-content">${localizedData.diagnosis}</div>
+          </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th width="40%">Medicine</th>
-                <th width="20%">Dosage</th>
-                <th width="30%">Timing - Freq - Duration</th>
-                <th width="10%">Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(record.prescriptions || [])
-                .map(
-                  (m: any, i: number) => `
-                <tr>
-                  <td>
-                    <span class="med-name">${i + 1}) ${m.medicine}</span>
-                    ${m.instructions ? `<span class="instructions">Note: ${m.instructions}</span>` : ""}
-                  </td>
-                  <td>${m.dosage || "—"}</td>
-                  <td>${m.frequency || "—"} - ${m.duration || "—"}</td>
-                  <td>${m.qty || 15}</td>
-                </tr>
-              `,
-                )
-                .join("")}
-            </tbody>
-          </table>
+          ${historyContent}
+          ${customContent}
 
           ${
-            record.consultationNotes
+            localizedData.advice
               ? `
-            <div class="custom-field">
-              <div class="custom-title">Consultation Notes & Advice</div>
-              <div class="custom-text">${record.consultationNotes}</div>
+            <div style="margin-top: 15px;">
+              <div class="section-label" style="vertical-align: top;">${t.advice}:</div>
+              <div class="section-content" style="padding-top: 10px;">${localizedData.advice}</div>
             </div>
           `
               : ""
           }
 
-          ${(record.customFields || [])
-            .map(
-              (f: any) => `
-            <div class="custom-field">
-              <div class="custom-title">${f.title}</div>
-              <div class="custom-text">${f.text}</div>
+          ${
+            localizedData.tests
+              ? `
+            <div style="margin-top: 15px;">
+              <div class="section-label">${t.tests}:</div>
+              <div class="section-content" style="font-weight: 700; color: #1e40af;">${localizedData.tests.toUpperCase()}</div>
             </div>
-          `,
-            )
-            .join("")}
+          `
+              : ""
+          }
 
-          <div class="footer-sig">
-            <div class="sig-line"></div>
-            <div class="sig-name">Dr. Rajesh Sharma</div>
-            <div style="font-size: 11px;">BDS, MDS (Oral Surgery)</div>
+          <div style="margin-top: 15px; font-size: 13px; font-weight: 700;">
+            ${previewData.nextVisit ? `${t.nextVisit} : ${printLanguage === "gu" ? "૧ મહિના" : "1 months"} (${new Date(previewData.nextVisit).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })})` : ""}
+          </div>
+
+          <div class="footer">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="width: 60px; height: 60px; border: 1px solid #e5e7eb; padding: 5px; background: white;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${patient.id}" style="width: 100%; height: 100%;" />
+              </div>
+              <div style="font-size: 10px; color: #6b7280; max-width: 300px;">
+                ${printLanguage === "gu" ? t.appDownload : 'Download "HealthPlix" app from Google Play and scan the QR code to view digital prescription and chat with doctor.'}
+              </div>
+            </div>
+            <div class="sig-area">
+              <div style="font-size: 11px; font-style: italic; color: #6b7280; margin-bottom: 40px;">${t.signature}</div>
+              <div class="sig-line"></div>
+              <div class="sig-name">${localizedDoctorName}</div>
+              <div class="sig-title">${localizedDoctorDegrees}</div>
+            </div>
           </div>
         </body>
       </html>
@@ -441,13 +568,13 @@ export function PatientDetails({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-screen overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-sm">
+      <div className="bg-white sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl transition-all duration-300">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-2xl z-20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center sm:space-x-6 gap-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden shadow-xl flex-shrink-0">
                 {patient.avatar ? (
                   <img
                     src={patient.avatar}
@@ -458,88 +585,61 @@ export function PatientDetails({
                   <User className="w-10 h-10 text-blue-600" />
                 )}
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+              <div className="text-center sm:text-left min-w-0 flex-1">
+                <h2
+                  className="text-2xl sm:text-3xl font-bold text-gray-900 truncate"
+                  title={patient.name}
+                >
                   {patient.name}
                 </h2>
-                <p className="text-gray-600 font-mono text-lg">{patient.id}</p>
-                <div className="flex items-center space-x-3 mt-2">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
+                  <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    {patient.id}
+                  </span>
                   <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${
                       patient.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {patient.status.toUpperCase()}
+                    {patient.status}
                   </span>
-                  <span className="text-sm text-gray-600">
-                    Age:{" "}
-                    {Math.floor(
-                      (new Date().getTime() -
-                        new Date(patient.dateOfBirth).getTime()) /
-                        (365.25 * 24 * 60 * 60 * 1000),
-                    )}{" "}
-                    years
-                  </span>
-                  {patient.bloodGroup && (
-                    <span className="px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">
-                      {patient.bloodGroup}
-                    </span>
-                  )}
                   {patient.outstandingBalance > 0 && (
-                    <span className="ml-2 px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
                       ₹{patient.outstandingBalance.toLocaleString()} PENDING
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 sm:space-x-3">
               {patient.outstandingBalance > 0 && (
                 <button
                   onClick={handleSendReminder}
                   disabled={loading}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-xl hover:bg-orange-700 flex items-center text-sm font-medium transition-all duration-200 disabled:opacity-50"
+                  className="bg-red-600 text-white px-4 py-2 rounded-xl hover:bg-red-700 flex items-center text-sm font-medium disabled:opacity-50 transition-all duration-200"
                 >
                   {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Sending...
-                    </>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Payment Reminder
-                    </>
+                    <Send className="w-4 h-4 mr-2" />
                   )}
-                </button>
-              )}
-              <div className="relative group">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center text-sm font-medium transition-all duration-200">
-                  <Send className="w-4 h-4 mr-2" />
                   Send Reminder
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <button
-                    onClick={() => alert("Bill reminder sent!")}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    Bill Reminder
-                  </button>
-                  <button
-                    onClick={() => alert("Appointment reminder sent!")}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    Appointment Reminder
-                  </button>
-                </div>
-              </div>
+              )}
+              <button
+                onClick={() => onExport?.(patient.id)}
+                className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center text-sm font-medium transition-all duration-200"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Full Report
+              </button>
               <button
                 onClick={printBarcode}
                 className="bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 flex items-center text-sm font-medium transition-all duration-200"
               >
-                <QrCode className="w-4 h-4 mr-2" />
+                <Printer className="w-4 h-4 mr-2" />
                 Print Barcode
               </button>
               <button
@@ -552,7 +652,7 @@ export function PatientDetails({
           </div>
 
           {/* Tabs */}
-          <div className="flex space-x-1 mt-6 bg-gray-100 rounded-xl p-1">
+          <div className="flex space-x-1 mt-6 bg-gray-100 rounded-xl p-1 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -574,20 +674,21 @@ export function PatientDetails({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           {activeTab === "overview" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Personal Information */}
-              <div className="lg:col-span-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
+              <div className="xl:col-span-2 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
                   Personal Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="flex items-center">
                     <Mail className="w-5 h-5 text-gray-400 mr-3" />
                     <div>
                       <p className="text-sm text-gray-600">Email</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 break-all leading-tight">
                         {patient.email}
                       </p>
                     </div>
@@ -679,7 +780,11 @@ export function PatientDetails({
                         </span>
                       </div>
                       <span className="text-xl font-bold text-blue-600">
-                        {patient.totalVisits}
+                        {
+                          patientAppointments.filter(
+                            (a) => a.status === "completed",
+                          ).length
+                        }
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
@@ -690,7 +795,17 @@ export function PatientDetails({
                         </span>
                       </div>
                       <span className="text-sm font-medium text-green-600">
-                        {new Date(patient.lastVisit).toLocaleDateString()}
+                        {patientAppointments.filter(
+                          (a) => a.status === "completed",
+                        ).length > 0
+                          ? new Date(
+                              Math.max(
+                                ...patientAppointments
+                                  .filter((a) => a.status === "completed")
+                                  .map((a) => new Date(a.date).getTime()),
+                              ),
+                            ).toLocaleDateString()
+                          : "No visits yet"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
@@ -841,7 +956,7 @@ export function PatientDetails({
               <h3 className="text-lg font-bold text-gray-900">
                 Appointment History
               </h3>
-              {appointments.map((appointment) => (
+              {patientAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
                   className="bg-gray-50 rounded-2xl p-6 border border-gray-200"
@@ -851,14 +966,14 @@ export function PatientDetails({
                       <Calendar className="w-5 h-5 text-gray-400 mr-3" />
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {appointment.type}
+                          {appointment.treatmentType || appointment.type}
                         </p>
                         <p className="text-sm text-gray-600">
                           {new Date(appointment.date).toLocaleDateString()} at{" "}
                           {appointment.time}
                         </p>
                         <p className="text-sm text-gray-600">
-                          with {appointment.doctor}
+                          with {appointment.doctorName || appointment.doctor}
                         </p>
                       </div>
                     </div>
@@ -870,6 +985,11 @@ export function PatientDetails({
                   </div>
                 </div>
               ))}
+              {patientAppointments.length === 0 && (
+                <div className="text-center py-10 text-gray-500">
+                  No appointments found
+                </div>
+              )}
             </div>
           )}
 
@@ -878,7 +998,7 @@ export function PatientDetails({
               <h3 className="text-lg font-bold text-gray-900">
                 Treatment History
               </h3>
-              {treatments.map((treatment) => (
+              {patientTreatments.map((treatment) => (
                 <div
                   key={treatment.id}
                   className="bg-gray-50 rounded-2xl p-6 border border-gray-200"
@@ -911,6 +1031,11 @@ export function PatientDetails({
                   </div>
                 </div>
               ))}
+              {patientTreatments.length === 0 && (
+                <div className="text-center py-10 text-gray-500">
+                  No treatments found
+                </div>
+              )}
             </div>
           )}
 
@@ -942,7 +1067,7 @@ export function PatientDetails({
                   </div>
                 )}
               </div>
-              {invoices.map((invoice) => (
+              {patientInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
                   className="bg-gray-50 rounded-2xl p-6 border border-gray-200"
@@ -964,7 +1089,12 @@ export function PatientDetails({
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-gray-900">
-                        ₹{invoice.amount.toLocaleString()}
+                        ₹
+                        {(
+                          invoice.amount ||
+                          invoice.total ||
+                          0
+                        ).toLocaleString()}
                       </p>
                       <span
                         className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}
@@ -975,13 +1105,30 @@ export function PatientDetails({
                   </div>
                 </div>
               ))}
+              {patientInvoices.length === 0 && (
+                <div className="text-center py-10 text-gray-500">
+                  No invoices found
+                </div>
+              )}
             </div>
           )}
           {activeTab === "prescriptions" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                Prescription History
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Prescription History
+                </h3>
+                {patient.prescriptionHistory &&
+                  patient.prescriptionHistory.length > 0 && (
+                    <button
+                      onClick={handlePrintDocument}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-200"
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print Document
+                    </button>
+                  )}
+              </div>
 
               {patient.prescriptionHistory?.length > 0 ? (
                 patient.prescriptionHistory.map((record) => (
@@ -999,17 +1146,10 @@ export function PatientDetails({
                             {record.treatment}
                           </h4>
                           <p className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">
-                             Date: {new Date(record.date).toLocaleDateString()}
+                            Date: {new Date(record.date).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => printPrescription(record)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-xs font-bold shadow-md flex items-center group"
-                      >
-                        <Printer className="w-3.5 h-3.5 mr-2" />
-                        Print Document
-                      </button>
                     </div>
 
                     <div className="space-y-2">
@@ -1034,23 +1174,35 @@ export function PatientDetails({
                                   </span>
                                 )}
                               </div>
-                              
+
                               <div className="flex items-center gap-2">
                                 <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">Dosage</span>
-                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">{prescription.dosage}</span>
+                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">
+                                    Dosage
+                                  </span>
+                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">
+                                    {prescription.dosage}
+                                  </span>
                                 </div>
                                 <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">Freq</span>
-                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">{prescription.frequency}</span>
+                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">
+                                    Freq
+                                  </span>
+                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">
+                                    {prescription.frequency}
+                                  </span>
                                 </div>
                                 <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">Days</span>
-                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">{prescription.duration}</span>
+                                  <span className="px-2 py-1 text-[10px] bg-gray-50 text-gray-500 border-r border-gray-200 font-bold uppercase">
+                                    Days
+                                  </span>
+                                  <span className="px-2 py-1 text-[11px] text-blue-600 font-bold">
+                                    {prescription.duration}
+                                  </span>
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Mobile only instructions */}
                             {prescription.instructions && (
                               <div className="md:hidden mt-2 text-[11px] text-gray-500 italic px-2">
@@ -1066,8 +1218,12 @@ export function PatientDetails({
                       <div className="mt-3 p-3 bg-amber-50/30 rounded-xl border border-amber-100/50 flex gap-3 items-start">
                         <FileText className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-0.5">Clinical Advice</p>
-                          <p className="text-xs text-gray-700">{record.consultationNotes}</p>
+                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-0.5">
+                            Clinical Advice
+                          </p>
+                          <p className="text-xs text-gray-700">
+                            {record.consultationNotes}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -1075,9 +1231,16 @@ export function PatientDetails({
                     {(record.customFields || []).length > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-50 flex flex-wrap gap-2">
                         {record.customFields.map((field: any, idx: number) => (
-                          <div key={idx} className="bg-white px-3 py-1 rounded-lg border border-gray-100 flex items-center gap-2">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{field.title}:</span>
-                            <span className="text-xs text-gray-900 font-bold">{field.text}</span>
+                          <div
+                            key={idx}
+                            className="bg-white px-3 py-1 rounded-lg border border-gray-100 flex items-center gap-2"
+                          >
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                              {field.title}:
+                            </span>
+                            <span className="text-xs text-gray-900 font-bold">
+                              {field.text}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1263,6 +1426,315 @@ export function PatientDetails({
           )}
         </div>
       </div>
+
+      {/* Print Preview & Edit Modal */}
+      {showPrintPreview && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-blue-600 text-white">
+              <div className="flex items-center gap-3">
+                <Printer className="w-6 h-6" />
+                <div>
+                  <h3 className="text-xl font-bold">
+                    Prescription Preview & Edit
+                  </h3>
+                  <p className="text-xs text-blue-100">
+                    Review and finalize clinical details before printing
+                  </p>
+                </div>
+                <div className="flex bg-blue-700/50 p-1 rounded-xl border border-blue-400/30 ml-4">
+                  <button
+                    onClick={() => setPrintLanguage("en")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      printLanguage === "en"
+                        ? "bg-white text-blue-600 shadow-lg"
+                        : "text-blue-100 hover:text-white"
+                    }`}
+                  >
+                    ENGLISH
+                  </button>
+                  <button
+                    onClick={() => setPrintLanguage("gu")}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      printLanguage === "gu"
+                        ? "bg-white text-blue-600 shadow-lg"
+                        : "text-blue-100 hover:text-white"
+                    }`}
+                  >
+                    ગુજરાતી (GUJ)
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPrintPreview(false)}
+                className="hover:bg-white/10 p-2 rounded-full transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Vitals Form */}
+                <div className="space-y-6">
+                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2">
+                    Clinical Vitals
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        BP (mmHg)
+                      </label>
+                      <input
+                        type="text"
+                        value={previewData.bp}
+                        onChange={(e) =>
+                          setPreviewData({ ...previewData, bp: e.target.value })
+                        }
+                        placeholder="120/80"
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Weight (Kg)
+                      </label>
+                      <input
+                        type="text"
+                        value={previewData.weight}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            weight: e.target.value,
+                          })
+                        }
+                        placeholder="70"
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Height (cm)
+                      </label>
+                      <input
+                        type="text"
+                        value={previewData.height}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            height: e.target.value,
+                          })
+                        }
+                        placeholder="170"
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        BMI
+                      </label>
+                      <input
+                        type="text"
+                        value={previewData.bmi}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            bmi: e.target.value,
+                          })
+                        }
+                        placeholder="24.2"
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2 pt-4">
+                    Clinical Observations
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Complaints
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={previewData.complaints}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            complaints: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Diagnosis
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={previewData.diagnosis}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            diagnosis: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Info Form */}
+                <div className="space-y-6">
+                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2">
+                    Treatment Advice
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Advice/Notes
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={previewData.advice}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            advice: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                        placeholder="e.g., Avoid cold water, soft diet..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Tests Prescribed
+                      </label>
+                      <input
+                        type="text"
+                        value={previewData.tests}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            tests: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="e.g., X-Ray, Blood Test..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                        Next Visit Date
+                      </label>
+                      <input
+                        type="date"
+                        value={previewData.nextVisit}
+                        onChange={(e) =>
+                          setPreviewData({
+                            ...previewData,
+                            nextVisit: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2 pt-4 flex items-center justify-between">
+                    <span>Custom Sections</span>
+                    <button
+                      onClick={() =>
+                        setCustomSections([
+                          ...customSections,
+                          {
+                            id: Date.now().toString(),
+                            title: "New Section",
+                            content: "",
+                          },
+                        ])
+                      }
+                      className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-all"
+                    >
+                      + Add New
+                    </button>
+                  </h4>
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {customSections.map((section, idx) => (
+                      <div
+                        key={section.id}
+                        className="p-3 bg-gray-50 rounded-xl border border-gray-100 relative group"
+                      >
+                        <button
+                          onClick={() =>
+                            setCustomSections(
+                              customSections.filter((s) => s.id !== section.id),
+                            )
+                          }
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="text"
+                          placeholder="Section Title (e.g., Follow-up)"
+                          value={section.title}
+                          onChange={(e) => {
+                            const newSections = [...customSections];
+                            newSections[idx].title = e.target.value;
+                            setCustomSections(newSections);
+                          }}
+                          className="w-full bg-transparent text-xs font-bold text-gray-700 mb-2 border-b border-gray-200 focus:border-blue-400 outline-none pb-1"
+                        />
+                        <textarea
+                          rows={2}
+                          placeholder="Section content..."
+                          value={section.content}
+                          onChange={(e) => {
+                            const newSections = [...customSections];
+                            newSections[idx].content = e.target.value;
+                            setCustomSections(newSections);
+                          }}
+                          className="w-full bg-transparent text-xs text-gray-600 outline-none resize-none"
+                        />
+                      </div>
+                    ))}
+                    {customSections.length === 0 && (
+                      <p className="text-[10px] text-gray-400 text-center py-4 italic">
+                        No custom sections added. Click "+ Add New" to include
+                        more info like follow-up notes.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+              <button
+                onClick={() => setShowPrintPreview(false)}
+                className="px-6 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  printAllPrescriptions();
+                  setShowPrintPreview(false);
+                }}
+                className="bg-blue-600 text-white px-8 py-2.5 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all flex items-center"
+              >
+                <Printer className="w-5 h-5 mr-2" />
+                Confirm & Print
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

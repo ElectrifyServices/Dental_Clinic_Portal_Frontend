@@ -5,9 +5,10 @@ interface EMRFormProps {
   onClose: () => void;
   onSave: (record: any) => void;
   record?: any;
+  patients: any[];
 }
 
-export function EMRForm({ onClose, onSave, record }: EMRFormProps) {
+export function EMRForm({ onClose, onSave, record, patients: allPatients }: EMRFormProps) {
   const [formData, setFormData] = useState({
     patientName: record?.patientName || '',
     type: record?.type || 'consultation',
@@ -23,14 +24,6 @@ export function EMRForm({ onClose, onSave, record }: EMRFormProps) {
     { value: 'lab-report', label: 'Lab Report' },
     { value: 'x-ray', label: 'X-Ray' },
     { value: 'treatment-note', label: 'Treatment Note' }
-  ];
-
-  const patients = [
-    'Rajesh Kumar',
-    'Priya Sharma',
-    'Amit Singh',
-    'Neha Gupta',
-    'Suresh Patel'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,9 +75,15 @@ export function EMRForm({ onClose, onSave, record }: EMRFormProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Patient</option>
-                {patients.map(patient => (
-                  <option key={patient} value={patient}>{patient}</option>
-                ))}
+                {allPatients.map((patient, i) => {
+                  const patientName = typeof patient === 'string' ? patient : patient.name;
+                  const patientId = typeof patient === 'object' ? patient.id : patientName;
+                  return (
+                    <option key={`${patientId}-${i}`} value={patientName}>
+                      {patientName}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

@@ -318,8 +318,9 @@ export function AppointmentForm({
                 value={formData.date}
                 onChange={handleChange}
                 required
+                disabled={true}
                 min={formatDateLocal(new Date())}
-                className={inputCls}
+                className={inputCls + " cursor-not-allowed opacity-80 bg-gray-100"}
               />
             </div>
             <div className="md:col-span-1">
@@ -333,7 +334,8 @@ export function AppointmentForm({
                 value={formData.time}
                 onChange={handleChange}
                 required
-                className={inputCls}
+                disabled={true}
+                className={inputCls + " cursor-not-allowed opacity-80 bg-gray-100"}
               />
             </div>
             <div className="md:col-span-2">
@@ -347,7 +349,8 @@ export function AppointmentForm({
                   value={formData.doctorId}
                   onChange={handleChange}
                   required
-                  className={inputCls + " appearance-none cursor-pointer pr-10"}
+                  disabled={true}
+                  className={inputCls + " appearance-none cursor-not-allowed pr-10 bg-gray-100 opacity-80"}
                 >
                   {doctors.map((doctor) => (
                     <option key={doctor.id} value={doctor.id}>
@@ -356,7 +359,19 @@ export function AppointmentForm({
                   ))}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -401,7 +416,19 @@ export function AppointmentForm({
                   ))}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>

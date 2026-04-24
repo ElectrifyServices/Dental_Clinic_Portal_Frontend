@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, User, Mail, Phone, Stethoscope, Shield, Key, Upload, DollarSign, Calendar, Clock, Award, FileText } from 'lucide-react';
+import { X, Save, User, Mail, Phone, Stethoscope, Shield, Key, Upload, DollarSign, Calendar, Clock, Award, FileText, IndianRupee } from 'lucide-react';
 
 interface DoctorFormProps {
   onClose: () => void;
@@ -22,10 +22,10 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     documents: doctor?.documents || [],
     profitSharing: doctor?.profitSharing || false,
     profitPercentage: doctor?.profitPercentage || 0,
-    consultationFee: doctor?.consultationFee || 500,
-    experience: doctor?.experience || '',
-    qualification: doctor?.qualification || '',
     licenseNumber: doctor?.licenseNumber || '',
+    monthlySalary: doctor?.monthlySalary || '',
+    salaryPaid: doctor?.salaryPaid || '0',
+    salaryPending: doctor?.salaryPending || '0',
     isActive: doctor?.isActive !== undefined ? doctor.isActive : true
   });
 
@@ -80,6 +80,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     onSave({
       ...formData,
       id: doctor?.id || Date.now().toString(),
+      salaryPending: !doctor ? (parseFloat(formData.monthlySalary) || 0).toLocaleString('en-IN') : formData.salaryPending,
       permissions: formData.role === 'admin' ? ['all'] : formData.permissions,
       workingHours: doctor?.workingHours || {
         monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
@@ -382,6 +383,23 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               placeholder="Medical license number"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <IndianRupee className="w-4 h-4 inline mr-2 text-emerald-600" />
+              Monthly Salary (₹) *
+            </label>
+            <input
+              type="number"
+              name="monthlySalary"
+              value={formData.monthlySalary}
+              onChange={handleChange}
+              required
+              min="0"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Enter monthly salary amount"
             />
           </div>
         </div>

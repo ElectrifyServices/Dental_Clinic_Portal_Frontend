@@ -24,13 +24,15 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
   const [step, setStep] = useState(1);
   React.useEffect(() => {
     if (patient) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         ...patient,
-        patientId: patient.id,
+        patientId: patient.id || generatePatientId(),
         medicalHistory: patient.medicalHistory?.join('\n') || '',
         allergies: patient.allergies?.join('\n') || '',
         dentalFiles: patient.dentalFiles || [],
-      });
+        pastDentalHistory: patient.pastDentalHistory || '',
+      }));
       setSelectedMedicalHistory(patient.medicalHistory || []);
       setSelectedAllergies(patient.allergies || []);
     } else {
@@ -39,7 +41,7 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
         email: '',
         phone: '',
         dateOfBirth: '',
-        gender: 'male',
+        gender: '',
         address: '',
         emergencyContact: '',
         emergencyName: '',
@@ -73,7 +75,7 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
     email: patient?.email || '',
     phone: patient?.phone || '',
     dateOfBirth: patient?.dateOfBirth || '',
-    gender: patient?.gender || 'male',
+    gender: patient?.gender || '',
     address: patient?.address || '',
     emergencyContact: patient?.emergencyContact || '',
     emergencyName: patient?.emergencyName || '',
@@ -510,6 +512,7 @@ overflow: auto;
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
           >
+            <option value="">Select Gender</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
@@ -700,13 +703,13 @@ overflow: auto;
   );
 
   const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Heart className="w-10 h-10 text-red-600" />
+    <div className="space-y-4">
+      <div className="text-center mb-3">
+        <div className="w-12 h-12 bg-gradient-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+          <Heart className="w-6 h-6 text-red-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Medical Information</h3>
-        <p className="text-gray-600">Important medical history and allergies</p>
+        <h3 className="text-base font-bold text-gray-900 leading-none">Medical Information</h3>
+        <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">History & Allergies</p>
       </div>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -740,7 +743,7 @@ overflow: auto;
       {/* </div> */}
 
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">
           Referred By
         </label>
         <input
@@ -748,473 +751,174 @@ overflow: auto;
           name="referredBy"
           value={formData.referredBy}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
           placeholder="Doctor name or referral source"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          <Heart className="w-4 h-4 inline mr-2" />
-          Medical History
-        </label>
-        <div className="space-y-2">
-<div className="space-y-4">
-  {/* Search Input with Icon */}
-  <div className="relative">
-    <svg 
-      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-    <input
-      type="text"
-      placeholder="Search medical condition..."
-      value={medicalSearch}
-      onChange={(e) => setMedicalSearch(e.target.value)}
-      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
-    />
-  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Medical History */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Heart className="w-4 h-4 inline mr-2 text-red-500" />
+            Medical History
+          </label>
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search condition..."
+                value={medicalSearch}
+                onChange={(e) => setMedicalSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
 
-  {/* Conditions List */}
-  <div className="max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
-    {medicalConditions
-      .filter(item =>
-        item.toLowerCase().includes(medicalSearch.toLowerCase())
-      )
-      .length === 0 ? (
-      <div className="text-center py-8">
-        <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">No medical conditions found</p>
-      </div>
-    ) : (
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
-        {medicalConditions
-          .filter(item =>
-            item.toLowerCase().includes(medicalSearch.toLowerCase())
-          )
-          .map((condition) => (
-            <label
-              key={condition}
-              className={`
-                flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
-                ${selectedMedicalHistory.includes(condition) 
-                  ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30' 
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                }
-              `}
-            >
-              {/* Custom Checkbox */}
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={selectedMedicalHistory.includes(condition)}
-                  onChange={(e) => {
-                    let updated = [...selectedMedicalHistory];
+            <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl bg-gray-50/50">
+              {medicalConditions
+                .filter(item => item.toLowerCase().includes(medicalSearch.toLowerCase()))
+                .map((condition) => (
+                  <label key={condition} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-white transition-colors border-b border-gray-100 last:border-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedMedicalHistory.includes(condition)}
+                      onChange={(e) => {
+                        let updated = e.target.checked 
+                          ? [...selectedMedicalHistory, condition]
+                          : selectedMedicalHistory.filter(i => i !== condition);
+                        setSelectedMedicalHistory(updated);
+                        setFormData(prev => ({ ...prev, medicalHistory: updated.join('\n') }));
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">{condition}</span>
+                  </label>
+                ))}
+            </div>
+            {selectedMedicalHistory.length > 0 && (
+              <p className="text-[10px] font-bold text-blue-600 px-1 uppercase tracking-wider">
+                {selectedMedicalHistory.length} Selected
+              </p>
+            )}
+          </div>
+        </div>
 
-                    if (e.target.checked) {
-                      updated.push(condition);
-                    } else {
-                      updated = updated.filter(i => i !== condition);
-                    }
+        {/* Allergies */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <AlertTriangle className="w-4 h-4 inline mr-2 text-amber-500" />
+            Allergies
+          </label>
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search allergy..."
+                value={allergySearch}
+                onChange={(e) => setAllergySearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
 
-                    setSelectedMedicalHistory(updated);
-
-                    setFormData(prev => ({
-                      ...prev,
-                      medicalHistory: updated.join('\n')
-                    }));
-                  }}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 transition-all"
-                />
-              </div>
-              
-              {/* Condition Text with Icon */}
-              <div className="flex items-center gap-2 flex-1">
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
-                  {condition}
-                </span>
-              </div>
-
-              {/* Selected Badge */}
-              {selectedMedicalHistory.includes(condition) && (
-                <div className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
-                  <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">Selected</span>
-                </div>
-              )}
-            </label>
-          ))}
-      </div>
-    )}
-  </div>
-
-  {/* Selected Count */}
-  {selectedMedicalHistory.length > 0 && (
-    <div className="flex items-center justify-between px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-      <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">
-        {selectedMedicalHistory.length} condition{selectedMedicalHistory.length !== 1 ? 's' : ''} selected
-      </span>
-      <button
-        onClick={() => {
-          setSelectedMedicalHistory([]);
-          setFormData(prev => ({
-            ...prev,
-            medicalHistory: ''
-          }));
-        }}
-        className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 font-medium transition-colors"
-      >
-        Clear all
-      </button>
-    </div>
-  )}
-</div>
+            <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl bg-gray-50/50">
+              {commonAllergies
+                .filter(item => item.toLowerCase().includes(allergySearch.toLowerCase()))
+                .map((allergy) => (
+                  <label key={allergy} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-white transition-colors border-b border-gray-100 last:border-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedAllergies.includes(allergy)}
+                      onChange={(e) => {
+                        let updated = e.target.checked 
+                          ? [...selectedAllergies, allergy]
+                          : selectedAllergies.filter(i => i !== allergy);
+                        setSelectedAllergies(updated);
+                        setFormData(prev => ({ ...prev, allergies: updated.join('\n') }));
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-red-600"
+                    />
+                    <span className="text-sm text-gray-700">{allergy}</span>
+                  </label>
+                ))}
+            </div>
+            {selectedAllergies.length > 0 && (
+              <p className="text-[10px] font-bold text-red-600 px-1 uppercase tracking-wider">
+                {selectedAllergies.length} Selected
+              </p>
+            )}
+          </div>
         </div>
       </div>
-{/* ================= Past Dental History Premium Section ================= */}
 
-<div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
+      {/* Past Dental History - Moved here for better flow */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <History className="w-4 h-4 text-blue-600" />
+              Past Dental History
+            </h3>
+          </div>
+          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Previous records</p>
+        </div>
 
-  {/* Header */}
-  <div>
-    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-      <History/>
-       Past Dental History
-    </h3>
+        <textarea
+          name="pastDentalHistory"
+          value={formData.pastDentalHistory}
+          onChange={handleChange}
+          rows={1}
+          placeholder="Previous treatments, root canal, implants etc..."
+          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all duration-200 resize-none min-h-[42px]"
+        />
 
-    <p className="text-sm text-gray-500 mt-1">
-      Previous dental treatments, surgeries, X-rays, reports and records
-    </p>
-  </div>
-
-  {/* Notes Textarea */}
-  <div>
-    <textarea
-      name="pastDentalHistory"
-      value={formData.pastDentalHistory}
-      onChange={handleChange}
-     rows={3}
-      placeholder="Write previous treatments, root canal, braces, extraction, implants etc..."
-      className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-    />
-  </div>
-
-  {/* Upload Box */}
- <div
-  className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-2xl px-6 py-5 text-center hover:bg-blue-100 transition-all duration-200"
-  
-  onDragOver={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }}
-
-  onDragEnter={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }}
-
-  onDrop={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const files = Array.from(e.dataTransfer.files || []);
-
-    const mappedFiles = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: file.type
-    }));
-
-    setFormData(prev => ({
-      ...prev,
-      dentalFiles: [...(prev.dentalFiles || []), ...mappedFiles]
-    }));
-  }}
->
-
-    <input
-      type="file"
-      multiple
-      accept="image/*,.pdf,.doc,.docx"
-      onChange={handleDentalFilesUpload}
-      className="hidden"
-      id="dentalUpload"
-    />
-
-<label
-  htmlFor="dentalUpload"
-  className="cursor-pointer flex items-center justify-center gap-5"
->
-  <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl shadow">
-    <Upload/>
-  </div>
-
-  <div className="text-left">
-    <p className="text-blue-700 font-semibold text-base">
-      Upload Reports / Photos
-    </p>
-
-    <p className="text-sm text-gray-500">
-      Drag & drop or click to browse files
-    </p>
-
-    <p className="text-xs text-gray-400 mt-1">
-      JPG, PNG, PDF, DOC
-    </p>
-  </div>
-</label>
-  </div>
-
-  {/* Uploaded Files */}
-  {formData.dentalFiles?.length > 0 && (
-    <div className="space-y-3">
-
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-700">
-          Uploaded Files ({formData.dentalFiles.length})
-        </h4>
-
-        <button
-          type="button"
-          onClick={() =>
-            setFormData(prev => ({
-              ...prev,
-              dentalFiles: []
-            }))
-          }
-          className="text-xs text-red-600 hover:text-red-700 font-medium"
+        <div
+          className="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl px-4 py-2.5 text-center hover:bg-blue-50 transition-all duration-200 cursor-pointer"
+          onClick={() => document.getElementById('dentalUpload')?.click()}
         >
-          Remove All
-        </button>
-      </div>
+          <input
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx"
+            onChange={handleDentalFilesUpload}
+            className="hidden"
+            id="dentalUpload"
+          />
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm">
+              <Upload className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <p className="text-blue-700 font-bold text-xs">Upload Reports / Photos</p>
+              <p className="text-[10px] text-gray-500">JPG, PNG, PDF, DOC</p>
+            </div>
+          </div>
+        </div>
 
-      <div className="grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 gap-3">
-
-        {formData.dentalFiles.map((file, index) => {
-
-          const isImage = file.type?.startsWith("image/");
-
-          return (
-            <div
-              key={index}
-              className="border border-gray-200 rounded-xl p-3 bg-gray-50 hover:bg-white hover:shadow-sm transition-all duration-200"
-            >
-              <div className="flex items-center gap-3">
-
-                {/* Thumbnail / Icon */}
-                <div className="w-14 h-14 rounded-lg bg-white border flex items-center justify-center overflow-hidden shrink-0">
-                  {isImage ? (
-                    <img
-                      src={file.url}
-                      alt={file.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-2xl">📄</span>
-                  )}
-                </div>
-
-                {/* Name */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
-                    {file.name}
-                  </p>
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    {isImage ? "Image File" : "Document File"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-between mt-3 pt-3 border-t">
-
-                <a
-                  href={file.url}
-                  target="_blank"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  View
-                </a>
-
+        {formData.dentalFiles?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {formData.dentalFiles.map((file, index) => (
+              <div key={index} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                <span className="text-xs font-medium text-gray-700 truncate max-w-[150px]">{file.name}</span>
                 <button
                   type="button"
                   onClick={() => {
-                    const updated = formData.dentalFiles.filter(
-                      (_, i) => i !== index
-                    );
-
-                    setFormData(prev => ({
-                      ...prev,
-                      dentalFiles: updated
-                    }));
+                    const updated = formData.dentalFiles.filter((_, i) => i !== index);
+                    setFormData(prev => ({ ...prev, dentalFiles: updated }));
                   }}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                  className="text-red-500 hover:text-red-700"
                 >
-                  Delete
+                  <X className="w-3 h-3" />
                 </button>
               </div>
-            </div>
-          );
-        })}
-
-      </div>
-    </div>
-  )}
-
-</div>
-
-{/* ================= End Section ================= */}
-
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          <AlertTriangle className="w-4 h-4 inline mr-2" />
-          Allergies
-        </label>
-        <div className="space-y-3">
-<div className="space-y-4">
-  {/* Search Input with Icon */}
-  <div className="relative">
-    <svg 
-      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      stroke="currentColor"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-    <input
-      type="text"
-      placeholder="Search allergy..."
-      value={allergySearch}
-      onChange={(e) => setAllergySearch(e.target.value)}
-      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400"
-    />
-  </div>
-
-  {/* Allergies List */}
-  <div className="max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
-    {commonAllergies
-      .filter(item =>
-        item.toLowerCase().includes(allergySearch.toLowerCase())
-      )
-      .length === 0 ? (
-      <div className="text-center py-8">
-        <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">No allergies found</p>
-      </div>
-    ) : (
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
-        {commonAllergies
-          .filter(item =>
-            item.toLowerCase().includes(allergySearch.toLowerCase())
-          )
-          .map((allergy) => (
-            <label
-              key={allergy}
-              className={`
-                flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
-                ${selectedAllergies.includes(allergy) 
-                  ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30' 
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                }
-              `}
-            >
-              {/* Custom Checkbox */}
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={selectedAllergies.includes(allergy)}
-                  onChange={(e) => {
-                    let updated = [...selectedAllergies];
-
-                    if (e.target.checked) {
-                      updated.push(allergy);
-                    } else {
-                      updated = updated.filter(i => i !== allergy);
-                    }
-
-                    setSelectedAllergies(updated);
-
-                    setFormData(prev => ({
-                      ...prev,
-                      allergies: updated.join('\n')
-                    }));
-                  }}
-                  className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500 focus:ring-2 transition-all"
-                />
-              </div>
-              
-              {/* Allergy Text with Icon */}
-              <div className="flex items-center gap-2 flex-1">
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
-                  {allergy}
-                </span>
-              </div>
-
-              {/* Selected Badge */}
-              {selectedAllergies.includes(allergy) && (
-                <div className="px-2 py-0.5 bg-red-100 dark:bg-red-900/40 rounded-full">
-                  <span className="text-xs text-red-700 dark:text-red-400 font-medium">Selected</span>
-                </div>
-              )}
-            </label>
-          ))}
-      </div>
-    )}
-  </div>
-
-  {/* Selected Count */}
-  {selectedAllergies.length > 0 && (
-    <div className="flex items-center justify-between px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-      <span className="text-xs text-red-700 dark:text-red-400 font-medium">
-        {selectedAllergies.length} allerg{selectedAllergies.length !== 1 ? 'ies' : 'y'} selected
-      </span>
-      <button
-        onClick={() => {
-          setSelectedAllergies([]);
-          setFormData(prev => ({
-            ...prev,
-            allergies: ''
-          }));
-        }}
-        className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 font-medium transition-colors"
-      >
-        Clear all
-      </button>
-    </div>
-  )}
-</div>
-          
-          {selectedAllergies.includes('Other') && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Other Allergy Details
-              </label>
-              <textarea
-                name="allergyNotes"
-                value={formData.allergyNotes}
-                onChange={handleChange}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Describe other allergies..."
-              />
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1413,7 +1117,7 @@ overflow: auto;
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {patient ? 'Edit Patient Information' : 'Add New Patient'}
+                {(patient && patient.id) ? 'Edit Patient Information' : 'New Patient Registration'}
               </h2>
               <p className="text-gray-600 mt-1">Complete patient registration with medical history</p>
             </div>
@@ -1499,7 +1203,7 @@ overflow: auto;
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      {patient ? 'Update Patient' : 'Save Patient'}
+                      {(patient && patient.id) ? 'Update Patient' : 'Save Patient'}
                     </>
                   )}
                 </button>

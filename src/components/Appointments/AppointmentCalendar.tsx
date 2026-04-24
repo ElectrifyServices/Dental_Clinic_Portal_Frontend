@@ -1,281 +1,569 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, User } from 'lucide-react';
+import React, { useState, useMemo } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Calendar as CalendarIcon,
+  Clock,
+  User,
+  Search,
+  Filter,
+  Star,
+  MapPin,
+  Stethoscope,
+  CalendarCheck,
+  Check,
+} from "lucide-react";
+
+interface Doctor {
+  id: string;
+  name: string;
+  specialization: string;
+  experience: string;
+  qualification: string;
+  location: string;
+  image: string;
+  workingHours?: {
+    [key: string]: {
+      isWorking: boolean;
+      startTime: string;
+      endTime: string;
+      breakStart?: string;
+      breakEnd?: string;
+    };
+  };
+}
 
 interface CalendarProps {
   onNewAppointment: (date?: Date) => void;
   appointments?: any[];
+  doctors?: Doctor[];
+  onBookAppointment?: (doctorId: string, date: Date, time: string) => void;
+  onEditAppointment?: (appointment: any) => void;
 }
 
-export function AppointmentCalendar({ onNewAppointment, appointments = [] }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export function AppointmentCalendar({
+  onNewAppointment,
+  appointments = [],
+  doctors = [],
+  onBookAppointment,
+  onEditAppointment,
+}: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-const formatTime = (time: string) => {
-  if (!time) return '';
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-  if (time.includes('AM') || time.includes('PM')) return time;
-
-  const cleanTime = time.replace('.', ':');
-
-  const [hourStr, minute] = cleanTime.split(':');
-  let hour = parseInt(hourStr);
-
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  hour = hour % 12 || 12;
-
-  return `${hour.toString().padStart(2, '0')}:${minute} ${ampm}`;
-};
-  // const mockAppointments = {
-  //   '2024-01-15': [
-  //     { time: '09:00', patient: 'Rajesh Kumar', type: 'Consultation' },
-  //     { time: '10:30', patient: 'Priya Sharma', type: 'Cleaning' },
-  //     { time: '14:00', patient: 'Amit Singh', type: 'Filling' },
-  //   ],
-  //   '2024-01-16': [
-  //     { time: '09:00', patient: 'Neha Gupta', type: 'Root Canal' },
-  //     { time: '11:00', patient: 'Suresh Patel', type: 'Crown' },
-  //     { time: '15:00', patient: 'Kavya Reddy', type: 'Extraction' },
-  //     { time: '16:30', patient: 'Rohit Sharma', type: 'Consultation' },
-  //     { time: '17:30', patient: 'Anita Desai', type: 'Cleaning' },
-  //   ],
-  //   '2024-01-17': [
-  //     { time: '10:00', patient: 'Vikram Singh', type: 'Orthodontics' },
-  //     { time: '14:30', patient: 'Meera Joshi', type: 'Surgery' },
-  //   ],
-  //   '2024-01-20': [
-  //     { time: '09:30', patient: 'Arjun Patel', type: 'Consultation' },
-  //     { time: '11:00', patient: 'Deepika Rao', type: 'Filling' },
-  //     { time: '15:00', patient: 'Kiran Kumar', type: 'Cleaning' },
-  //     { time: '16:30', patient: 'Sanjay Gupta', type: 'Crown' },
-  //   ],
-  // };
-
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  const formatTime = (time: string) => {
+    if (!time) return "";
+    if (time.includes("AM") || time.includes("PM")) return time;
+    const cleanTime = time.replace(".", ":");
+    const [hourStr, minute] = cleanTime.split(":");
+    let hour = parseInt(hourStr);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour.toString().padStart(2, "0")}:${minute} ${ampm}`;
   };
 
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  };
+  const [monthOffset, setMonthOffset] = useState(0);
 
-  const isToday = (day: number) => {  
+  const generateRollingDates = () => {
+    const dates = [];
     const today = new Date();
-    return today.getDate() === day && 
-           today.getMonth() === currentDate.getMonth() && 
-           today.getFullYear() === currentDate.getFullYear();
+
+    // Calculate reference date based on offset
+    const referenceDate = new Date(
+      today.getFullYear(),
+      today.getMonth() + monthOffset,
+      1,
+    );
+
+    let startDate;
+    if (monthOffset === 0) {
+      // Current month: Start 5 days before today
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - 5);
+    } else {
+      // Other months: Start from the 1st of that month
+      startDate = new Date(referenceDate);
+    }
+
+    // Align to the start of the week (Sunday) for a clean grid
+    const dayOfWeek = startDate.getDay();
+    const calendarStart = new Date(startDate);
+    calendarStart.setDate(startDate.getDate() - dayOfWeek);
+
+    // Generate 35 days (5 weeks)
+    for (let i = 0; i < 35; i++) {
+      const d = new Date(calendarStart);
+      d.setDate(calendarStart.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
   };
-const getDayAppointments = (day: number) => {
-  return appointments.filter(a => {
-    const d = new Date(a.date)
+
+  const rollingDates = generateRollingDates();
+  const firstVisibleMonth = rollingDates[0].getMonth();
+  const lastVisibleMonth = rollingDates[rollingDates.length - 1].getMonth();
+  const firstVisibleYear = rollingDates[0].getFullYear();
+  const lastVisibleYear = rollingDates[rollingDates.length - 1].getFullYear();
+
+  const getCalendarTitle = () => {
+    if (
+      firstVisibleMonth === lastVisibleMonth &&
+      firstVisibleYear === lastVisibleYear
+    ) {
+      return `${monthNames[firstVisibleMonth]} ${firstVisibleYear}`;
+    }
+
+    if (firstVisibleYear === lastVisibleYear) {
+      return `${monthNames[firstVisibleMonth]} - ${monthNames[lastVisibleMonth]} ${firstVisibleYear}`;
+    }
+
+    return `${monthNames[firstVisibleMonth]} ${firstVisibleYear} - ${monthNames[lastVisibleMonth]} ${lastVisibleYear}`;
+  };
+
+  const getDayAppointmentsForDate = (date: Date) => {
+    return appointments.filter((a) => {
+      const d = new Date(a.date);
+      const matchesDate = d.toDateString() === date.toDateString();
+      const matchesDoctor =
+        !selectedDoctorId || a.doctorId === selectedDoctorId;
+      return matchesDate && matchesDoctor;
+    });
+  };
+
+  const getSelectedDateAppointments = () => {
+    return appointments.filter((a) => {
+      const d = new Date(a.date);
+      const matchesDate = d.toDateString() === selectedDate.toDateString();
+      const matchesDoctor =
+        !selectedDoctorId || a.doctorId === selectedDoctorId;
+      return matchesDate && matchesDoctor;
+    });
+  };
+
+  const isPastActualDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  };
+
+  const isTodayDate = (date: Date) => {
+    return new Date().toDateString() === date.toDateString();
+  };
+
+  // Doctor filtering
+  const filteredDoctors = doctors.filter((doctor) => {
     return (
-      d.getDate() === day &&
-      d.getMonth() === currentDate.getMonth() &&
-      d.getFullYear() === currentDate.getFullYear()
-    )
-  })
-}
-const getSelectedDateAppointments = () => {
-  return appointments.filter(a => {
-    const d = new Date(a.date)
-    return d.toDateString() === selectedDate.toDateString()
-  })
-}
-const isPastDate = (day: number) => {
-  const today = new Date()
-  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-  // remove time part
-  today.setHours(0,0,0,0)
-  date.setHours(0,0,0,0)
+  const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
 
-  return date < today
-}
-  // const getDayAppointments = (day: number) => {
-  //   const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  //   return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
-  // };
+  // Time slot logic
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 9; hour <= 18; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        if (hour === 18 && minute > 0) break;
+        const time24 = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+        const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const time12 = `${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`;
+        slots.push({ time24, time12 });
+      }
+    }
+    return slots;
+  };
 
-  // const getSelectedDateAppointments = () => {
-  //   const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-  //   return mockAppointments[dateKey as keyof typeof mockAppointments] || [];
-  // };
+  const isPastTime = (time24: string) => {
+    const now = new Date();
+    const [h, m] = time24.split(":");
+    const slotTime = new Date(selectedDate);
+    slotTime.setHours(parseInt(h), parseInt(m), 0, 0);
+    return slotTime < now;
+  };
+
+  const availableSlots = useMemo(() => {
+    if (!selectedDoctor || !selectedDoctor.workingHours || !selectedDate)
+      return [];
+
+    const dayName = selectedDate
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
+    const daySchedule = selectedDoctor.workingHours[dayName];
+
+    if (!daySchedule || !daySchedule.isWorking) return [];
+
+    const allSlots = generateTimeSlots();
+    const startHour = parseInt(daySchedule.startTime.split(":")[0]);
+    const endHour = parseInt(daySchedule.endTime.split(":")[0]);
+    const endMinute = parseInt(daySchedule.endTime.split(":")[1]);
+
+    const bookedSlots = appointments
+      .filter(
+        (a) =>
+          new Date(a.date).toDateString() === selectedDate.toDateString() &&
+          a.doctorId === selectedDoctorId,
+      )
+      .map((a) => a.time);
+
+    return allSlots
+      .filter((slot) => {
+        const slotHour = parseInt(slot.time24.split(":")[0]);
+        const slotMinute = parseInt(slot.time24.split(":")[1]);
+
+        if (slotHour < startHour) return false;
+        if (slotHour > endHour) return false;
+        if (slotHour === endHour && slotMinute > endMinute) return false;
+
+        if (daySchedule.breakStart && daySchedule.breakEnd) {
+          const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
+          const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
+          const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
+          const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
+          if (
+            (slotHour > bsH || (slotHour === bsH && slotMinute >= bsM)) &&
+            (slotHour < beH || (slotHour === beH && slotMinute < beM))
+          )
+            return false;
+        }
+
+        return true;
+      })
+      .map((slot) => ({
+        ...slot,
+        isBooked: bookedSlots.includes(slot.time24),
+        isPast: isPastTime(slot.time24),
+      }));
+  }, [selectedDoctor, selectedDate, appointments, selectedDoctorId]);
 
   return (
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      {/* Calendar */}
-      <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
-            <div className="hidden md:flex bg-gray-100 rounded-xl p-1">
-              {['month', 'week', 'day'].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode as any)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    viewMode === mode
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={goToPreviousMonth}
-              className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-200 border border-gray-200"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={goToNextMonth}
-              className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-200 border border-gray-200"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => onNewAppointment(selectedDate)}
-              className="ml-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Appointment
-            </button>
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-240px)] xl:overflow-hidden pb-10 xl:pb-0">
+      {/* Column 1: Doctor Selection (Left Sidebar) */}
+      <div className="xl:col-span-3 bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden h-[400px] xl:h-full">
+        <div className="p-5 border-b border-gray-50 bg-gray-50/30">
+          <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-blue-600" />
+            Select Specialist
+          </h3>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search experts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 md:gap-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-2 md:p-3 text-center text-xs md:text-sm font-semibold text-gray-500 bg-gray-50 rounded-lg">
-              {day}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          <button
+            onClick={() => setSelectedDoctorId(null)}
+            className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center gap-3 text-left
+              ${selectedDoctorId === null ? "bg-blue-50 border-blue-600 shadow-md" : "bg-white border-transparent hover:border-gray-100"}`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
+              <CalendarIcon className="w-5 h-5" />
             </div>
-          ))}
-          
-          {[...Array(firstDayOfMonth)].map((_, index) => (
-            <div key={index} className="p-3"></div>
-          ))}
-          
-          {[...Array(daysInMonth)].map((_, index) => {
-            const day = index + 1;
-            const dayAppointments = getDayAppointments(day);
-            const isSelected = selectedDate.getDate() === day && 
-                             selectedDate.getMonth() === currentDate.getMonth() && 
-                             selectedDate.getFullYear() === currentDate.getFullYear();
-            
-            return (
-              <div
-                key={day}
-className={`p-2 md:p-3 text-center rounded-xl transition-all duration-200 min-h-[60px] md:min-h-[80px] border-2 ${
-  isPastDate(day)
-    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-    : isToday(day)
-    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg border-blue-600'
-    : isSelected
-    ? 'bg-blue-50 text-blue-700 border-blue-300'
-    : 'hover:bg-gray-50 border-transparent hover:border-gray-300 bg-white cursor-pointer'
-}`}
-                // onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-onClick={() => {
-  if (isPastDate(day)) return 
+            <div>
+              <p className="text-xs font-bold text-gray-900">
+                All Appointments
+              </p>
+              <p className="text-[10px] text-gray-400">
+                View combined schedule
+              </p>
+            </div>
+          </button>
 
-  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-  setSelectedDate(date)
-}}
-  title={
-    dayAppointments.length > 0
-      ? dayAppointments
-          .map(a => `${a.time} - ${a.patientName}`)
-          .join('\n')
-      : ''
-  }
-              >
-                <div className="font-semibold text-sm md:text-lg">{day}</div>
-                {dayAppointments.length > 0 && (
-                  <div className={`text-xs mt-1 px-1 md:px-2 py-1 rounded-full ${
-                    isToday(day) 
-                      ? 'bg-white/20 text-white' 
-                      : isSelected
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-blue-100 text-blue-600'
-                  }`}>
-{dayAppointments.length}
-                  </div>
-                )}
+          {filteredDoctors.map((doctor) => (
+            <button
+              key={doctor.id}
+              onClick={() => setSelectedDoctorId(doctor.id)}
+              className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center gap-3 text-left
+                ${selectedDoctorId === doctor.id ? "bg-blue-50 border-blue-600 shadow-md" : "bg-white border-transparent hover:bg-gray-50"}`}
+            >
+              <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 flex-shrink-0">
+                <img
+                  src={doctor.image}
+                  alt={doctor.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            );
-          })}
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-900 truncate">
+                  {doctor.name}
+                </p>
+                <p className="text-[10px] text-blue-600 font-medium truncate">
+                  {doctor.specialization}
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Selected Day Appointments */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center mb-4">
-          <CalendarIcon className="w-5 h-5 text-blue-600 mr-2" />
-          <h3 className="text-lg font-bold text-gray-900">
-            {selectedDate.toLocaleDateString('en-IN', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </h3>
+      {/* Column 2: Rolling Calendar (Center) */}
+      <div className="xl:col-span-6 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              {getCalendarTitle()}
+            </h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setMonthOffset((prev) => prev - 1)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 border border-gray-100 text-gray-600"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setMonthOffset(0)}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                monthOffset === 0
+                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                  : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setMonthOffset((prev) => prev + 1)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 border border-gray-100 text-gray-600"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        
-       <div className="space-y-3 overflow-y-auto h-[500px]">
-          {getSelectedDateAppointments().length > 0 ? (
-            getSelectedDateAppointments().map((appointment, index) => (
-              <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 text-blue-600 mr-2" />
-                    <span className="font-semibold text-blue-700">{formatTime(appointment.time)}</span>
-                  </div>
-<span
-  className={`text-xs px-2 py-1 rounded-full font-medium ${
-    appointment.status === 'checked-in'
-      ? 'bg-blue-100 text-blue-700'
-      : 'bg-gray-100 text-gray-600'
-  }`}
->
-  {appointment.status === 'checked-in'
-    ? (appointment.type || appointment.treatment || 'consultation')
-    : 'Booked'}
-</span>
-                </div>
-<div className="flex items-start justify-between">
-  <div className="flex items-center">
-    <User className="w-4 h-4 text-gray-500 mr-2" />
-    <span className="text-gray-900 font-medium">
-      {appointment.patientName}
-    </span>
-  </div>
 
-  <div className="text-right">
-    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-     Treatment: {appointment.treatment || appointment.type}
-    </span>
-  </div>
-</div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No appointments scheduled</p>
-              <button
-                onClick={() => onNewAppointment(selectedDate)}
-                className="mt-3 text-blue-600 hover:text-blue-700 font-medium text-sm"
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+          <div className="grid grid-cols-7 gap-1 md:gap-2">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div
+                key={day}
+                className="p-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50 rounded-lg"
               >
-                Schedule an appointment
+                {day}
+              </div>
+            ))}
+
+            {rollingDates.map((date, index) => {
+              const dayAppointments = getDayAppointmentsForDate(date);
+              const isSelected =
+                selectedDate.toDateString() === date.toDateString();
+              const isToday = isTodayDate(date);
+              const isPast = isPastActualDate(date);
+              const isNextMonth = date.getMonth() !== new Date().getMonth();
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => {
+                    if (isPast) return;
+                    setSelectedDate(date);
+                    setSelectedTime(null);
+                  }}
+                  className={`aspect-square p-2 text-center rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative
+                    ${
+                      isToday
+                        ? "bg-blue-600 text-white shadow-lg border-blue-600"
+                        : isSelected
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : isPast
+                            ? "bg-gray-50 text-gray-300 border-transparent opacity-60 cursor-not-allowed"
+                            : "bg-white border-transparent hover:border-gray-100 cursor-pointer"
+                    }`}
+                >
+                  <span
+                    className={`text-sm md:text-base font-black ${
+                      isToday
+                        ? "text-white"
+                        : isPast
+                          ? "text-blue-900/40"
+                          : "text-blue-900"
+                    }`}
+                  >
+                    {date.getDate()}
+                  </span>
+                  {dayAppointments.length > 0 && (
+                    <div
+                      className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        isToday
+                          ? "bg-white/20 text-white"
+                          : "bg-blue-100 text-blue-600"
+                      }`}
+                    >
+                      {dayAppointments.length}
+                    </div>
+                  )}
+                  {date.getDate() === 1 && (
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-md shadow-sm uppercase tracking-tighter">
+                      {monthNames[date.getMonth()].slice(0, 3)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Column 3: Day Agenda & Booking (Right) */}
+      <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
+        {/* Day Agenda */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarIcon className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-gray-900">
+              {selectedDate.toLocaleDateString("en-IN", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+            </h3>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+            {getSelectedDateAppointments().length > 0 ? (
+              getSelectedDateAppointments().map((apt, index) => (
+                <div
+                  key={index}
+                  onClick={() => onEditAppointment?.(apt)}
+                  className="p-3 bg-gray-50 hover:bg-blue-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-blue-600 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatTime(apt.time)}
+                    </span>
+                    <span
+                      className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase ${apt.status === "checked-in" ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
+                    >
+                      {apt.status || "Booked"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center text-gray-400 group-hover:text-blue-500 border border-gray-100 group-hover:border-blue-100 transition-all">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-gray-900 truncate">
+                        {apt.patientName}
+                      </p>
+                      <p className="text-[9px] text-gray-400 truncate">
+                        {apt.treatment || "Consultation"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-40">
+                <CalendarIcon className="w-10 h-10 text-gray-300 mb-2" />
+                <p className="text-[10px] font-bold text-gray-500">
+                  No appointments
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Booking Slots (Visible only if a doctor is selected) */}
+        <div
+          className={`bg-white rounded-3xl border border-gray-100 p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[280px]" : "opacity-50 h-[100px] pointer-events-none"}`}
+        >
+          {selectedDoctorId ? (
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <CalendarCheck className="w-4 h-4 text-green-500" />
+                  Available Slots
+                </h3>
+              </div>
+
+              <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar pr-1">
+                {availableSlots.length > 0 ? (
+                  availableSlots.map((slot, idx) => {
+                    const isDisabled = slot.isBooked || slot.isPast;
+                    return (
+                      <button
+                        key={idx}
+                        disabled={isDisabled}
+                        onClick={() => setSelectedTime(slot.time24)}
+                        className={`py-2 rounded-xl text-[9px] font-bold text-center border transition-all relative
+                          ${
+                            selectedTime === slot.time24
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : isDisabled
+                                ? "bg-gray-50 text-gray-200 border-transparent cursor-not-allowed"
+                                : "bg-green-50 text-green-700 border-green-100 hover:border-green-200 hover:bg-green-100"
+                          }`}
+                      >
+                        {slot.time12}
+                        {slot.isBooked && (
+                          <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="col-span-3 py-4 text-center">
+                    <p className="text-[10px] font-semibold text-red-400">
+                      No slots available
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                disabled={!selectedTime}
+                onClick={() =>
+                  onBookAppointment?.(
+                    selectedDoctorId,
+                    selectedDate,
+                    selectedTime!,
+                  )
+                }
+                className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all
+                  ${
+                    selectedTime
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  }`}
+              >
+                Schedule Now
+                <Check className="w-4 h-4" />
               </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <Stethoscope className="w-6 h-6 text-gray-200 mb-2" />
+              <p className="text-[10px] font-bold text-gray-400">
+                Select an expert to book
+              </p>
             </div>
           )}
         </div>

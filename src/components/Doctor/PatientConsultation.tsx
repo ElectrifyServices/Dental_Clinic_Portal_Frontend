@@ -13,6 +13,9 @@ import {
   MessageSquare,
   AlertTriangle,
   CheckCircle,
+  FlaskConical,
+  File,
+  Activity,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -23,6 +26,8 @@ interface PatientConsultationProps {
     patientName: string;
     treatmentType: string;
     patientConcern: string;
+    doctorId?: string;
+    doctorName?: string;
     patientHistory?: {
       medicalHistory: string[];
       allergies: string[];
@@ -52,79 +57,89 @@ export function PatientConsultation({
     );
 
     pdfContainer.innerHTML = `
-    <div style="width:794px; background:#fff; margin:0; padding:0;">
-
-      <!-- Simple Header -->
-      <div style="padding: 32px 40px 24px; border-bottom: 2px solid #e5e7eb;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div style="width:794px; background:#fff; margin:0; padding:0; color: #1f2937;">
+      <!-- Professional Medical Header -->
+      <div style="padding: 30px 50px 20px; border-bottom: 2px solid #3b82f6;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <div style="font-size:22px; font-weight:700; color:#111827; letter-spacing:-0.3px;">DentalCare Pro</div>
-            <div style="font-size:11px; color:#6b7280; margin-top:4px;">Patient Consultation Report</div>
+            <div style="font-size:28px; font-weight:800; color:#1e40af; letter-spacing:-0.5px;">DentalCare Pro</div>
+            <div style="font-size:12px; color:#6b7280; font-weight:500; margin-top:4px;">Advanced Dental Clinic & Implant Centre</div>
           </div>
-          <div style="text-align:right; font-size:11px; color:#6b7280; line-height:1.6;">
-            <div>${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</div>
-            <div>${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</div>
-            <div>Dr. Sharma</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Patient Info -->
-      <div style="padding: 20px 40px; background:#f9fafb; border-bottom: 1px solid #e5e7eb;">
-        <div style="display:flex; gap:40px; flex-wrap:wrap;">
-          <div>
-            <div style="font-size:9px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Patient Name</div>
-            <div style="font-size:15px; font-weight:600; color:#111827; margin-top:3px;">${patient.patientName}</div>
-          </div>
-          <div>
-            <div style="font-size:9px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Treatment Type</div>
-            <div style="font-size:15px; font-weight:500; color:#374151; margin-top:3px;">${patient.treatmentType}</div>
-          </div>
-          <div>
-            <div style="font-size:9px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px;">Patient Concern</div>
-            <div style="font-size:14px; font-weight:400; color:#4b5563; margin-top:3px;">${patient.patientConcern}</div>
+          <div style="text-align:right;">
+            <div style="font-size:14px; font-weight:700; color:#111827;">${patient.doctorName || "Dr. Rajesh Sharma"}</div>
+            <div style="font-size:11px; color:#6b7280; margin-top:2px;">BDS, MDS (Oral & Maxillofacial Surgery)</div>
+            <div style="font-size:11px; color:#6b7280;">Reg No: 123456/78</div>
           </div>
         </div>
       </div>
 
-      <!-- Medical Alerts -->
-      ${
-        patient.patientHistory &&
-        (patient.patientHistory.allergies.length > 0 ||
-          patient.patientHistory.medicalHistory.length > 0)
-          ? `
-      <div style="margin: 20px 40px 0; background:#fef2f2; border-left: 3px solid #dc2626; padding: 12px 16px;">
-        <div style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Medical Alerts</div>
-        ${patient.patientHistory.allergies.length > 0 ? `<div style="font-size:11px; color:#7f1d1d;"><strong>Allergies:</strong> ${patient.patientHistory.allergies.join(", ")}</div>` : ""}
-        ${patient.patientHistory.medicalHistory.length > 0 ? `<div style="font-size:11px; color:#7f1d1d; margin-top:4px;"><strong>History:</strong> ${patient.patientHistory.medicalHistory.join(", ")}</div>` : ""}
+      <!-- Report Title & Date -->
+      <div style="padding: 10px 50px; background:#f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:16px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:1px;">Consultation Report</div>
+          <div style="text-align:right; font-size:11px; color:#64748b; display:flex; gap:15px;">
+          <span><strong>Date:</strong> ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</span>
+          <span><strong>Time:</strong> ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+        </div>
       </div>
-      `
-          : ""
-      }
 
-      <!-- Main Content -->
-      <div style="padding: 24px 40px 40px;">
-
-        <!-- Observations & Diagnosis -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+      <div style="padding: 20px 50px 30px;">
+        <!-- Patient Info Card -->
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
           <div>
-            <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Clinical Observations</div>
-            <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-              ${consultationData.observations || '<span style="color:#9ca3af;">—</span>'}
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient Name</div>
+            <div style="font-size:15px; font-weight:700; color:#1e293b;">${patient.patientName || "—"}</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient ID</div>
+            <div style="font-size:14px; font-weight:500; color:#334155;">${patient.id || "—"}</div>
+          </div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Treatment Type</div>
+            <div style="font-size:14px; font-weight:500; color:#334155;">${patient.treatmentType || "General Consultation"}</div>
+          </div>
+        </div>
+
+        <!-- Medical Alerts / History -->
+        ${
+          patient.patientHistory &&
+          (patient.patientHistory.allergies.length > 0 ||
+            patient.patientHistory.medicalHistory.length > 0)
+            ? `
+        <div style="margin-bottom:20px; border:1px solid #fee2e2; border-radius:8px; overflow:hidden;">
+          <div style="background:#fef2f2; padding:8px 15px; border-bottom:1px solid #fee2e2; display:flex; align-items:center; gap:8px;">
+            <span style="color:#dc2626; font-size:14px;">⚠️</span>
+            <span style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px;">Medical Alerts & History</span>
+          </div>
+          <div style="padding:12px 15px; background:#fff;">
+            ${patient.patientHistory.allergies.length > 0 ? `<div style="font-size:12px; color:#991b1b; margin-bottom:4px;"><strong>Allergies:</strong> ${patient.patientHistory.allergies.join(", ")}</div>` : ""}
+            ${patient.patientHistory.medicalHistory.length > 0 ? `<div style="font-size:12px; color:#991b1b;"><strong>Medical History:</strong> ${patient.patientHistory.medicalHistory.join(", ")}</div>` : ""}
+          </div>
+        </div>
+        `
+            : ""
+        }
+
+        <!-- Clinical Assessment Section -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-bottom:20px;">
+          <div style="border-left: 3px solid #3b82f6; padding-left:15px;">
+            <div style="font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Clinical Observations</div>
+            <div style="font-size:13px; line-height:1.6; color:#374151;">
+              ${consultationData.observations || '<span style="color:#9ca3af;">No observations recorded.</span>'}
             </div>
           </div>
-          <div>
-            <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Diagnosis</div>
-            <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-              ${consultationData.diagnosis || '<span style="color:#9ca3af;">—</span>'}
+          <div style="border-left: 3px solid #10b981; padding-left:15px;">
+            <div style="font-size:11px; font-weight:700; color:#065f46; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Diagnosis</div>
+            <div style="font-size:13px; line-height:1.6; color:#374151;">
+              ${consultationData.diagnosis || '<span style="color:#9ca3af;">No diagnosis provided.</span>'}
             </div>
           </div>
         </div>
 
         <!-- Treatment Plan -->
-        <div style="margin-bottom:24px;">
-          <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Treatment Plan</div>
-          <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
+        <div style="margin-bottom:25px; background:#f1f5f9; padding:15px 20px; border-radius:8px;">
+          <div style="font-size:11px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">Treatment Plan & Procedures</div>
+          <div style="font-size:13px; line-height:1.6; color:#334155;">
             ${consultationData.treatmentPlan || '<span style="color:#9ca3af;">—</span>'}
           </div>
         </div>
@@ -133,30 +148,35 @@ export function PatientConsultation({
         ${
           filledPrescriptions.length > 0
             ? `
-        <div style="margin-bottom:24px;">
-          <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Prescriptions</div>
-          <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <div style="margin-bottom:25px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <div style="width:24px; height:24px; background:#ecfdf5; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#059669; font-weight:bold;">💊</div>
+            <div style="font-size:14px; font-weight:700; color:#111827;">Prescribed Medications</div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid #e2e8f0;">
             <thead>
-              <tr style="background:#f3f4f6; border-bottom:1px solid #e5e7eb;">
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">#</th>
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">Medicine</th>
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">Dosage</th>
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">Frequency</th>
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">Duration</th>
-                <th style="padding:8px 10px; text-align:left; font-weight:600; color:#374151;">Instructions</th>
+              <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">#</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Medicine</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Dosage</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Timing</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Freq</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Days</th>
+                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Qty</th>
               </tr>
             </thead>
             <tbody>
               ${filledPrescriptions
                 .map(
                   (p, i) => `
-                <tr style="border-bottom:1px solid #f3f4f6;">
-                  <td style="padding:8px 10px; color:#6b7280;">${i + 1}</td>
-                  <td style="padding:8px 10px; color:#111827; font-weight:500;">${p.medicine || "-"}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.dosage || "-"}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.frequency || "-"}</td>
-                  <td style="padding:8px 10px; color:#4b5563;">${p.duration || "-"}</td>
-                  <td style="padding:8px 10px; color:#6b7280;">${p.instructions || "-"}</td>
+                <tr style="border-bottom:1px solid #f1f5f9; ${i % 2 === 0 ? "" : "background:#fafafa;"}">
+                  <td style="padding:12px 15px; font-size:12px; color:#94a3b8;">${i + 1}</td>
+                  <td style="padding:12px 15px; font-size:13px; font-weight:600; color:#1e293b;">${p.medicine || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.dosage || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.timing || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.frequency || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.duration || "-"}</td>
+                  <td style="padding:12px 15px; font-size:12px; font-weight:600; color:#1e293b;">${p.qty || "-"}</td>
                 </tr>
               `,
                 )
@@ -168,100 +188,61 @@ export function PatientConsultation({
             : ""
         }
 
-        <!-- Recommendations & Cost -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+        <!-- Recommendations & Notes -->
+        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:30px; margin-bottom:25px;">
           <div>
-            <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Recommendations</div>
-            <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-              ${consultationData.recommendations || '<span style="color:#9ca3af;">—</span>'}
+            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Advice & Recommendations</div>
+            <div style="font-size:12px; line-height:1.6; color:#334155; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+              ${consultationData.recommendations || consultationData.consultationNotes || "Take care and follow instructions."}
             </div>
           </div>
           <div>
-            <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Treatment Cost</div>
-            <div style="font-size:20px; font-weight:700; color:#111827; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-              ₹${consultationData.treatmentCost || 0}
-            </div>
-          </div>
-        </div>
-
-        <!-- Follow-up -->
-        <div style="margin-bottom:24px;">
-          <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Follow-up</div>
-          <div style="font-size:12px; color:#4b5563; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-            ${
-              consultationData.followUpRequired
-                ? consultationData.followUpDate
-                  ? new Date(consultationData.followUpDate).toLocaleDateString(
-                      "en-IN",
-                      { day: "2-digit", month: "long", year: "numeric" },
-                    )
-                  : "To be scheduled"
-                : "Not required"
-            }
-          </div>
-        </div>
-
-        <!-- Treatment Planning -->
-        ${
-          consultationData.requiresTreatment
-            ? `
-        <div style="margin-bottom:24px;">
-          <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Treatment Planning</div>
-          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-            <div>
-              <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Procedure</div>
-              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentProcedure || "—"}</div>
-            </div>
-            <div>
-              <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Tooth / Area</div>
-              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentTooth || "—"}</div>
-            </div>
-            <div>
-              <div style="font-size:9px; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">Sessions</div>
-              <div style="font-size:13px; font-weight:500; color:#111827;">${consultationData.treatmentSessions || 1}</div>
-            </div>
-          </div>
-          ${
-            consultationData.startTreatmentToday
-              ? `
-          <div style="margin-top:8px; font-size:11px; color:#059669;">✓ Treatment starting today</div>
-          `
-              : ""
-          }
-        </div>
-        `
-            : ""
-        }
-
-        <!-- Additional Notes -->
-        ${
-          consultationData.consultationNotes
-            ? `
-        <div style="margin-bottom:24px;">
-          <div style="font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Additional Notes</div>
-          <div style="font-size:12px; color:#4b5563; line-height:1.6; border:1px solid #e5e7eb; border-radius:6px; padding:12px;">
-            ${consultationData.consultationNotes}
-          </div>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- Footer -->
-        <div style="margin-top:32px; padding-top:20px; border-top:1px solid #e5e7eb;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-            <div>
-              <div style="font-size:9px; color:#9ca3af;">Generated by DentalCare Pro</div>
-              <div style="font-size:9px; color:#9ca3af; margin-top:2px;">${new Date().toLocaleString("en-IN")}</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="width:140px; border-top:1px solid #d1d5db; padding-top:6px;">
-                <div style="font-size:11px; font-weight:600; color:#111827;">Dr. Signature</div>
+            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Follow-up Details</div>
+            <div style="padding:15px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; display:flex; align-items:center; gap:10px;">
+              <span style="font-size:20px;">📅</span>
+              <div>
+                <div style="font-size:13px; font-weight:700; color:#0369a1;">
+                  ${
+                    consultationData.followUpRequired
+                      ? consultationData.followUpDate
+                        ? new Date(
+                            consultationData.followUpDate,
+                          ).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "To be scheduled"
+                      : "Not required"
+                  }
+                </div>
+                <div style="font-size:10px; color:#0369a1; margin-top:2px;">Scheduled Follow-up</div>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Footer / Signature Area -->
+        <div style="margin-top:40px; padding-top:20px; border-top:1px solid #e2e8f0;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <div style="font-size:10px; color:#94a3b8; font-style:italic;">This is a computer-generated report and does not require a physical signature for digital purposes.</div>
+              <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Report Generated: ${new Date().toLocaleString("en-IN")}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:180px; border-top:1px solid #1e293b; padding-top:10px;">
+                <div style="font-size:13px; font-weight:700; color:#1e293b;">${patient.doctorName || "Dr. Rajesh Sharma"}</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;">Dental Surgeon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Clinic Address Footer -->
+      <div style="background:#1e40af; padding:15px 50px; color:white; font-size:10px; display:flex; justify-content:space-between;">
+        <div>📍 123 Dental Street, Medical Hub, New Delhi - 110001</div>
+        <div>📞 +91 98765 43210 | 🌐 www.dentalcarepro.com</div>
       </div>
     </div>
   `;
@@ -321,12 +302,15 @@ export function PatientConsultation({
         id: "1",
         medicine: "",
         dosage: "",
+        timing: "",
         frequency: "",
         duration: "",
-        instructions: "",
+        qty: "",
+        // instructions: "",
       },
     ],
     images: [] as string[],
+    labFiles: [] as { name: string; url: string; type: string }[],
     nextAppointment: "",
     consultationNotes: "",
     treatmentCost: 0,
@@ -348,9 +332,11 @@ export function PatientConsultation({
           id: Date.now().toString(),
           medicine: "",
           dosage: "",
+          timing: "",
           frequency: "",
           duration: "",
-          instructions: "",
+          qty: "",
+          // instructions: "",
         },
       ],
     }));
@@ -364,11 +350,32 @@ export function PatientConsultation({
   };
 
   const updatePrescription = (id: string, field: string, value: string) => {
+    const dosageMappings: Record<
+      string,
+      { timing: string; frequency: string }
+    > = {
+      "1-0-0": { timing: "Before Food", frequency: "Once daily" },
+      "0-1-0": { timing: "After Food", frequency: "Once daily" },
+      "0-0-1": { timing: "After Food", frequency: "Once daily" },
+      "1-1-0": { timing: "After Food", frequency: "Twice daily" },
+      "1-0-1": { timing: "After Food", frequency: "Twice daily" },
+      "0-1-1": { timing: "After Food", frequency: "Twice daily" },
+      "1-1-1": { timing: "After Food", frequency: "Thrice daily" },
+    };
+
     setConsultationData((prev) => ({
       ...prev,
-      prescriptions: prev.prescriptions.map((p) =>
-        p.id === id ? { ...p, [field]: value } : p,
-      ),
+      prescriptions: prev.prescriptions.map((p) => {
+        if (p.id === id) {
+          const updated = { ...p, [field]: value };
+          if (field === "dosage" && dosageMappings[value]) {
+            updated.timing = dosageMappings[value].timing;
+            updated.frequency = dosageMappings[value].frequency;
+          }
+          return updated;
+        }
+        return p;
+      }),
     }));
   };
 
@@ -378,6 +385,19 @@ export function PatientConsultation({
     setConsultationData((prev) => ({
       ...prev,
       images: [...prev.images, ...imageUrls],
+    }));
+  };
+
+  const handleLabFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newFiles = files.map((file) => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type,
+    }));
+    setConsultationData((prev) => ({
+      ...prev,
+      labFiles: [...prev.labFiles, ...newFiles],
     }));
   };
 
@@ -391,17 +411,19 @@ export function PatientConsultation({
     // Create treatment if required
     if (consultationData.requiresTreatment && onCreateTreatment) {
       const treatmentData = {
+        id: `TR-${Date.now()}`,
+        patientId: patient.patientId || patient.id,
         patientName: patient.patientName,
         procedure: consultationData.treatmentProcedure,
         tooth: consultationData.treatmentTooth,
         date: new Date().toISOString().split("T")[0],
         notes: `Treatment recommended during consultation: ${consultationData.treatmentPlan}`,
-        cost: consultationData.treatmentCost,
+        cost: consultationData.treatmentCost || 0,
         status: consultationData.startTreatmentToday
           ? "in-progress"
           : "planned",
-        doctorId: "1",
-        doctorName: "Dr. Sharma",
+        doctorId: patient.doctorId || "1",
+        doctorName: patient.doctorName || "Dr. Sharma",
         prescriptions: consultationData.prescriptions.filter(
           (p) => p.medicine.trim() !== "",
         ),
@@ -415,7 +437,8 @@ export function PatientConsultation({
       patientId: patient.id,
       ...consultationData,
       consultationDate: new Date().toISOString(),
-      doctorId: "1", // Current doctor
+      doctorId: patient.doctorId || "1",
+      doctorName: patient.doctorName || "Dr. Sharma",
       status: "completed",
     });
     await downloadConsultationPDF();
@@ -519,6 +542,8 @@ export function PatientConsultation({
               )}
           </div>
 
+
+
           {/* Clinical Assessment */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -570,6 +595,73 @@ export function PatientConsultation({
             />
           </div>
 
+          {/* Lab Results Section */}
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <FlaskConical className="w-5 h-5 mr-2 text-blue-600" />
+                Lab Investigations
+              </h3>
+              <div className="relative">
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleLabFileUpload}
+                  className="hidden"
+                  id="lab-file-upload"
+                />
+                <label
+                  htmlFor="lab-file-upload"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 cursor-pointer flex items-center text-sm font-medium transition-all duration-200 shadow-sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Attach Lab Files
+                </label>
+              </div>
+            </div>
+
+            {consultationData.labFiles.length === 0 ? (
+              <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl text-center bg-white/50">
+                <p className="text-sm text-gray-400 italic">
+                  No lab files attached yet
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {consultationData.labFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 shadow-sm group hover:border-blue-300 transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                        <File className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 truncate max-w-[150px]">
+                        {file.name}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newList = consultationData.labFiles.filter(
+                          (_, i) => i !== index,
+                        );
+                        setConsultationData((prev) => ({
+                          ...prev,
+                          labFiles: newList,
+                        }));
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Prescriptions */}
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -593,7 +685,7 @@ export function PatientConsultation({
                   key={prescription.id}
                   className="grid grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200"
                 >
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Medicine
                     </label>
@@ -615,8 +707,7 @@ export function PatientConsultation({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Dosage
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={prescription.dosage}
                       onChange={(e) =>
                         updatePrescription(
@@ -626,7 +717,33 @@ export function PatientConsultation({
                         )
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="500mg"
+                    >
+                      <option value="">Select</option>
+                      <option value="1-0-0">1 - 0 - 0</option>
+                      <option value="0-1-0">0 - 1 - 0</option>
+                      <option value="0-0-1">0 - 0 - 1</option>
+                      <option value="1-1-0">1 - 1 - 0</option>
+                      <option value="1-0-1">1 - 0 - 1</option>
+                      <option value="0-1-1">0 - 1 - 1</option>
+                      <option value="1-1-1">1 - 1 - 1</option>
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Timing
+                    </label>
+                    <input
+                      type="text"
+                      value={prescription.timing}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "timing",
+                          e.target.value,
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="After meals"
                     />
                   </div>
                   <div className="col-span-2">
@@ -665,6 +782,25 @@ export function PatientConsultation({
                       placeholder="5 days"
                     />
                   </div>
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Qty
+                    </label>
+                    <input
+                      type="text"
+                      value={prescription.qty}
+                      onChange={(e) =>
+                        updatePrescription(
+                          prescription.id,
+                          "qty",
+                          e.target.value,
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="10"
+                    />
+                  </div>
+                  {/* 
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Instructions
@@ -680,9 +816,10 @@ export function PatientConsultation({
                         )
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="After meals"
+                      placeholder="Special notes"
                     />
                   </div>
+                  */}
                   <div className="col-span-1">
                     {consultationData.prescriptions.length > 1 && (
                       <button

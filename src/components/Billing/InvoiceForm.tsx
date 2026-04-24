@@ -103,7 +103,7 @@ export function InvoiceForm({
     onSave({
       ...formData,
       id: invoice?.id || `INV-${Date.now()}`,
-      patientId: invoice?.patientId || Date.now().toString(),
+      patientId: (formData as any).patientId || invoice?.patientId || Date.now().toString(),
       items,
       subtotal,
       discount: formData.discount,
@@ -144,16 +144,21 @@ export function InvoiceForm({
               </label>
               <select
                 value={formData.patientName}
-                onChange={(e) =>
-                  setFormData({ ...formData, patientName: e.target.value })
-                }
+                onChange={(e) => {
+                  const patient = patients.find(p => p.name === e.target.value);
+                  setFormData({ 
+                    ...formData, 
+                    patientName: e.target.value,
+                    patientId: patient?.id || '' 
+                  } as any);
+                }}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Select Patient</option>
                 {patients.map((patient) => (
                   <option key={patient.id} value={patient.name}>
-                    {patient.name}
+                    {patient.name} ({patient.id})
                   </option>
                 ))}
               </select>

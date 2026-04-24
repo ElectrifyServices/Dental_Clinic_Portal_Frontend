@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Stethoscope, Users, AlertTriangle } from 'lucide-react';
-import { DoctorBooking } from '../components/Appointments/DoctorBooking';
+import { Stethoscope, Users, AlertTriangle, Calendar } from 'lucide-react';
 import { AppointmentCalendar } from '../components/Appointments/AppointmentCalendar';
 import { AppointmentList } from '../components/Appointments/AppointmentList';
 
@@ -27,34 +26,34 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
   setSelectedAppointment,
   setShowAppointmentForm
 }) => {
-  const [viewMode, setViewMode] = useState("doctors");
+  const [viewMode, setViewMode] = useState("calendar");
   const listCount = appointments.filter((a) => a.status !== "no-show").length;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/50 p-3 mb-8 shadow-xl shadow-gray-200/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-4">
+      <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/50 p-3 mb-4 shadow-xl shadow-gray-200/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left: View Toggle */}
         <div className="flex bg-gray-100/50 p-1 rounded-2xl">
           <button
-            onClick={() => setViewMode('doctors')}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.25rem] text-xs font-bold transition-all ${
-              viewMode === 'doctors' 
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all ${
+              viewMode === 'calendar' 
                 ? 'bg-white text-blue-600 shadow-sm' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <Stethoscope className={`w-4 h-4 ${viewMode === 'doctors' ? 'text-blue-600' : 'text-gray-400'}`} />
-            Book Appointment
+            <Calendar className={`w-5 h-5 ${viewMode === 'calendar' ? 'text-blue-600' : 'text-gray-400'}`} />
+            Calendar & Booking
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-[1.25rem] text-xs font-bold transition-all ${
+            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all ${
               viewMode === 'list' 
                 ? 'bg-white text-slate-900 shadow-sm' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <Users className={`w-4 h-4 ${viewMode === 'list' ? 'text-slate-900' : 'text-gray-400'}`} />
+            <Users className={`w-5 h-5 ${viewMode === 'list' ? 'text-slate-900' : 'text-gray-400'}`} />
             List ({listCount})
           </button>
         </div>
@@ -75,27 +74,20 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
         </div>
       </div>
 
-      {viewMode === 'doctors' && (
-        <DoctorBooking 
-          doctors={doctorsWithSchedules as any} 
+      {viewMode === "calendar" && (
+        <AppointmentCalendar
+          onNewAppointment={handleNewAppointment}
+          appointments={appointments}
+          doctors={doctorsWithSchedules}
           onBookAppointment={(doctorId, date, time) => {
             const doctor = doctorsWithSchedules.find(d => d.id === doctorId);
             setSelectedAppointment({ doctorId, doctorName: doctor?.name, date, time } as any);
             setShowAppointmentForm(true);
           }}
-          onViewAppointments={() => setViewMode('list')}
-          onViewCalendar={() => setViewMode('calendar')}
           onEditAppointment={(apt) => {
             setSelectedAppointment(apt);
             setShowAppointmentForm(true);
           }}
-          appointments={appointments}
-        />
-      )}
-      {viewMode === "calendar" && (
-        <AppointmentCalendar
-          onNewAppointment={handleNewAppointment}
-          appointments={appointments}
         />
       )}
       {viewMode === "list" && (
@@ -136,3 +128,4 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
     </div>
   );
 };
+

@@ -2,55 +2,12 @@ import React from 'react';
 import { X, Download, Stethoscope, User, Calendar, DollarSign, FileText, Camera, Pill } from 'lucide-react';
 
 interface TreatmentViewerProps {
-  treatmentId: string;
+  treatment: any;
   onClose: () => void;
 }
 
-export function TreatmentViewer({ treatmentId, onClose }: TreatmentViewerProps) {
-  // Mock data - in real app, fetch from API
-  const treatment = {
-    id: treatmentId,
-    patientName: 'Rajesh Kumar',
-    procedure: 'Root Canal Treatment',
-    tooth: '16 (Upper Right First Molar)',
-    date: '2024-01-15',
-    notes: `Treatment Progress:
-
-Session 1 (15/01/2024):
-- Local anesthesia administered (2% lidocaine with epinephrine)
-- Rubber dam isolation applied
-- Access cavity prepared using high-speed handpiece
-- Pulp chamber accessed and necrotic tissue removed
-- Working length determined using apex locator
-- Canal cleaning and shaping completed using rotary NiTi files
-- Copious irrigation with 3% sodium hypochlorite and 17% EDTA
-- Temporary filling placed with IRM
-
-Next Session Plan:
-- Complete canal obturation with gutta-percha
-- Post-space preparation if needed
-- Crown preparation and impression
-- Temporary crown placement
-
-Patient Instructions:
-- Avoid chewing on treated side for 24 hours
-- Take prescribed medications as directed
-- Return if severe pain or swelling occurs
-- Follow-up appointment in 1 week`,
-    cost: 5000,
-    status: 'in-progress',
-    images: [
-      'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2',
-      'https://images.pexels.com/photos/4269693/pexels-photo-4269693.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2'
-    ],
-    nextAppointment: '2024-01-22',
-    doctorName: 'Dr. Sharma',
-    prescriptions: [
-      { id: '1', medicine: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '5 days', instructions: 'Take after meals' },
-      { id: '2', medicine: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', duration: '3 days', instructions: 'For pain relief, maximum 3 times daily' },
-      { id: '3', medicine: 'Chlorhexidine Mouthwash', dosage: '10ml', frequency: '2 times daily', duration: '7 days', instructions: 'Rinse for 30 seconds after brushing' }
-    ]
-  };
+export function TreatmentViewer({ treatment, onClose }: TreatmentViewerProps) {
+  if (!treatment) return null;
 
   const handleDownload = () => {
     const printContent = `
@@ -99,9 +56,10 @@ Patient Instructions:
               <div class="prescription-item">
                 <h4>${prescription.medicine}</h4>
                 <p><strong>Dosage:</strong> ${prescription.dosage}</p>
+                <p><strong>Timing:</strong> ${prescription.timing}</p>
                 <p><strong>Frequency:</strong> ${prescription.frequency}</p>
                 <p><strong>Duration:</strong> ${prescription.duration}</p>
-                <p><strong>Instructions:</strong> ${prescription.instructions}</p>
+                <p><strong>Qty:</strong> ${prescription.qty}</p>
               </div>
             `).join('')}
           </div>
@@ -234,9 +192,10 @@ Patient Instructions:
                     <h4 className="font-bold text-green-900 mb-2">{prescription.medicine}</h4>
                     <div className="space-y-1 text-sm">
                       <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
+                      <p><span className="font-medium">Timing:</span> {prescription.timing}</p>
                       <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
                       <p><span className="font-medium">Duration:</span> {prescription.duration}</p>
-                      <p><span className="font-medium">Instructions:</span> {prescription.instructions}</p>
+                      <p><span className="font-medium">Qty:</span> {prescription.qty}</p>
                     </div>
                   </div>
                 ))}

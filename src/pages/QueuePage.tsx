@@ -6,13 +6,25 @@ interface QueuePageProps {
   queuedPatients: any[];
   onSelectPatient: (patient: any) => void;
   onUpdatePatientStatus: (id: string, status: string) => void;
+  onDirectConsultation: (name: string, phone: string, doctorId?: string, doctorName?: string, time?: string) => void;
+  onRegisterNew: (name: string, phone: string) => void;
+  patients: any[];
+  doctors: any[];
+  appointments: any[];
+  doctorAvailability: { [key: string]: boolean };
 }
 
 export const QueuePage: React.FC<QueuePageProps> = ({
   doctorName,
   queuedPatients,
   onSelectPatient,
-  onUpdatePatientStatus
+  onUpdatePatientStatus,
+  onDirectConsultation,
+  onRegisterNew,
+  patients,
+  doctors,
+  appointments,
+  doctorAvailability
 }) => {
   return (
     <div className="space-y-6">
@@ -29,6 +41,12 @@ export const QueuePage: React.FC<QueuePageProps> = ({
         queuedPatients={queuedPatients}
         onSelectPatient={onSelectPatient}
         onUpdatePatientStatus={onUpdatePatientStatus}
+        onDirectConsultation={onDirectConsultation}
+        onRegisterNew={onRegisterNew}
+        patients={patients}
+        doctors={doctors}
+        appointments={appointments}
+        doctorAvailability={doctorAvailability}
       />
     </div>
   );

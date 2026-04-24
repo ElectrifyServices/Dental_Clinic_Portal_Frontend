@@ -1,121 +1,33 @@
-import React, { useState } from 'react';
-import { Search, Plus, User, Phone, Mail, Edit, Trash2, UserCheck, UserX, Stethoscope, Calendar, Shield, Clock, MapPin } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, User, Phone, Mail, Edit, Trash2, UserCheck, UserX, Stethoscope, Calendar, Shield, Clock, MapPin, IndianRupee } from 'lucide-react';
 import { User as UserType } from '../../types';
 
-const doctors: UserType[] = [
-  {
-    id: '1',
-    name: 'Dr. Rajesh Sharma',
-    email: 'rajesh@clinic.com',
-    role: 'admin',
-    specialization: 'General Dentistry',
-    phone: '+91 98765 43210',
-    permissions: ['all'],
-    isActive: true,
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    workingHours: {
-      monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      wednesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: true, startTime: '09:00', endTime: '14:00' },
-      sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
-    },
-    timeSlots: { duration: 30, bufferTime: 5 }
-  },
-  {
-    id: '2',
-    name: 'Dr. Priya Patel',
-    email: 'priya@clinic.com',
-    role: 'doctor',
-    specialization: 'Orthodontics',
-    phone: '+91 87654 32109',
-    permissions: ['appointments', 'patients', 'treatments', 'emr'],
-    isActive: true,
-    avatar: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    workingHours: {
-      monday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-      wednesday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-      sunday: { isWorking: false, startTime: '10:00', endTime: '16:00' }
-    },
-    timeSlots: { duration: 45, bufferTime: 10 }
-  },
-  {
-    id: '3',
-    name: 'Dr. Amit Singh',
-    email: 'amit@clinic.com',
-    role: 'doctor',
-    specialization: 'Oral Surgery',
-    phone: '+91 76543 21098',
-    permissions: ['appointments', 'patients', 'treatments', 'emr'],
-    isActive: true,
-    workingHours: {
-      monday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      tuesday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      wednesday: { isWorking: false, startTime: '14:00', endTime: '20:00' },
-      thursday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      friday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      saturday: { isWorking: true, startTime: '09:00', endTime: '15:00', breakStart: '12:00', breakEnd: '13:00' },
-      sunday: { isWorking: false, startTime: '14:00', endTime: '20:00' }
-    },
-    timeSlots: { duration: 60, bufferTime: 15 }
-  },
-  {
-    id: '4',
-    name: 'Sarah Johnson',
-    email: 'sarah@clinic.com',
-    role: 'receptionist',
-    phone: '+91 65432 10987',
-    permissions: ['appointments', 'patients'],
-    isActive: true,
-    workingHours: {
-      monday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      tuesday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      wednesday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      thursday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      friday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      saturday: { isWorking: true, startTime: '08:00', endTime: '14:00' },
-      sunday: { isWorking: false, startTime: '08:00', endTime: '17:00' }
-    }
-  },
-  {
-    id: '5',
-    name: 'Michael Chen',
-    email: 'michael@clinic.com',
-    role: 'assistant',
-    specialization: 'Dental Assistant',
-    phone: '+91 54321 09876',
-    permissions: ['appointments', 'patients', 'inventory'],
-    isActive: false,
-    workingHours: {
-      monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      wednesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: false, startTime: '09:00', endTime: '18:00' },
-      sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
-    }
-  }
-];
+// Staff data is now managed centrally via staffMembers prop
 
 interface DoctorManagementProps {
+  staffMembers: UserType[];
   onAddDoctor: () => void;
   onEditDoctor: (doctorId: string) => void;
   onDeleteDoctor: (doctorId: string) => void;
+  onUpdateStaff: (staff: any) => void;
   onManageSchedule: (doctorId: string, doctorName: string) => void;
+  onPaySalary?: (staffId: string, staffName: string) => void;
+  onViewSalaryHistory?: (staffId: string, staffName: string) => void;
 }
 
-export function DoctorManagement({ onAddDoctor, onEditDoctor, onDeleteDoctor, onManageSchedule }: DoctorManagementProps) {
+export function DoctorManagement({ 
+  staffMembers, 
+  onAddDoctor, 
+  onEditDoctor, 
+  onDeleteDoctor, 
+  onUpdateStaff, 
+  onManageSchedule,
+  onPaySalary,
+  onViewSalaryHistory
+}: DoctorManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [staffList, setStaffList] = useState(doctors);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -153,7 +65,7 @@ export function DoctorManagement({ onAddDoctor, onEditDoctor, onDeleteDoctor, on
     return `${firstWorkingDay.startTime} - ${firstWorkingDay.endTime}`;
   };
 
-  const filteredStaff = staffList.filter(staff => {
+  const filteredStaff = staffMembers.filter(staff => {
     const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (staff.specialization && staff.specialization.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -165,21 +77,21 @@ export function DoctorManagement({ onAddDoctor, onEditDoctor, onDeleteDoctor, on
   });
 
   const toggleStatus = (staffId: string) => {
-    setStaffList(prev => prev.map(staff => 
-      staff.id === staffId ? { ...staff, isActive: !staff.isActive } : staff
-    ));
+    const staff = staffMembers.find(s => s.id === staffId);
+    if (staff) {
+      onUpdateStaff({ ...staff, isActive: !staff.isActive });
+    }
   };
 
   const handleDelete = (staffId: string) => {
-    const staff = staffList.find(s => s.id === staffId);
+    const staff = staffMembers.find(s => s.id === staffId);
     if (window.confirm(`Are you sure you want to delete ${staff?.name}? This action cannot be undone.`)) {
-      setStaffList(prev => prev.filter(s => s.id !== staffId));
       onDeleteDoctor(staffId);
     }
   };
 
-  const activeStaffCount = staffList.filter(s => s.isActive).length;
-  const doctorCount = staffList.filter(s => s.role === 'doctor' || s.role === 'admin').length;
+  const activeStaffCount = staffMembers.filter(s => s.isActive).length;
+  const doctorCount = staffMembers.filter(s => s.role === 'doctor' || s.role === 'admin').length;
 
   return (
     <div className="space-y-6">
@@ -371,6 +283,40 @@ export function DoctorManagement({ onAddDoctor, onEditDoctor, onDeleteDoctor, on
                   </div>
                 </div>
               )}
+
+              {/* Salary Section */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                    <IndianRupee className="w-4 h-4 text-emerald-600" />
+                    Salary
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => onPaySalary && onPaySalary(staff.id, staff.name)}
+                      className="px-2 py-1 text-[10px] font-bold text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors uppercase tracking-wider"
+                    >
+                      Pay Salary
+                    </button>
+                    <button 
+                      onClick={() => onViewSalaryHistory && onViewSalaryHistory(staff.id, staff.name)}
+                      className="px-2 py-1 text-[10px] font-bold text-gray-600 border border-gray-400 rounded-md hover:bg-gray-50 transition-colors uppercase tracking-wider"
+                    >
+                      History
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                    <span className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Paid</span>
+                    <span className="text-sm font-bold text-emerald-600">₹{staff.salaryPaid || '0'}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                    <span className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Pending</span>
+                    <span className="text-sm font-bold text-orange-600">₹{staff.salaryPending || '0'}</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Permissions */}
               <div className="mb-4">

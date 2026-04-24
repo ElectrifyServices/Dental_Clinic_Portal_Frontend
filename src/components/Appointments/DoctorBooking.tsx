@@ -154,6 +154,19 @@ export function DoctorBooking({
     return date < today;
   };
 
+  const generateDates = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 90; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
+  };
+
+  const nextDates = generateDates();
+
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 9; hour <= 18; hour++) {
@@ -419,75 +432,91 @@ export function DoctorBooking({
                 </div>
               </div>
 
-              {/* Sub-Header: Calendar Nav */}
-              <div className="px-8 py-6 space-y-6">
+              {/* Sub-Header: Horizontal Date Picker */}
+              <div className="px-8 py-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-900">{monthNames[calendarDate.getMonth()]} {calendarDate.getFullYear()}</h4>
-                    <p className="text-[10px] font-semibold text-gray-400 mt-0.5">Select a consultation date</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-gray-900">
+                      {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </h4>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                    <p className="text-[10px] font-semibold text-gray-400">Consultation Schedule</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 items-center">
+                    <div className="relative group">
+                      <button className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500">
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        <input 
+                          type="date" 
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const newDate = new Date(e.target.value);
+                              setSelectedDate(newDate);
+                              // Calculate index and scroll
+                              const today = new Date();
+                              today.setHours(0,0,0,0);
+                              const diffTime = Math.abs(newDate.getTime() - today.getTime());
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              const el = document.getElementById('date-strip');
+                              if (el) el.scrollTo({ left: diffDays * 64, behavior: 'smooth' }); // 64px is approx width of date card
+                            }
+                          }}
+                        />
+                      </button>
+                    </div>
+                    <div className="w-px h-4 bg-gray-100 mx-0.5" />
                     <button 
-                      onClick={onViewCalendar}
-                      className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-100 transition-all border border-blue-100"
+                      onClick={() => {
+                        const el = document.getElementById('date-strip');
+                        if (el) el.scrollBy({ left: -200, behavior: 'smooth' });
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500"
                     >
-                      <CalendarIcon className="w-3.5 h-3.5" />
-                      Full Calendar
+                      <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
-                    <div className="w-px h-6 bg-gray-100 mx-1" />
                     <button 
-                      onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1))}
-                      className="p-2.5 hover:bg-white border border-gray-100 rounded-xl transition-all shadow-sm text-gray-600"
+                      onClick={() => {
+                        const el = document.getElementById('date-strip');
+                        if (el) el.scrollBy({ left: 200, behavior: 'smooth' });
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500"
                     >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1))}
-                      className="p-2.5 hover:bg-white border border-gray-100 rounded-xl transition-all shadow-sm text-gray-600"
-                    >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                {/* Calendar Grid with Logic */}
-                <div className="grid grid-cols-7 gap-2">
-                  {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
-                    <div key={idx} className="text-center text-[10px] font-bold text-gray-400 py-2">{day}</div>
-                  ))}
-                  {[...Array(firstDay)].map((_, i) => <div key={`empty-${i}`} />)}
-                  {[...Array(daysInMonth)].map((_, i) => {
-                    const day = i + 1;
-                    const dayAppointments = getAppointmentsForDay(day);
-                    const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === calendarDate.getMonth() && selectedDate.getFullYear() === calendarDate.getFullYear();
-                    const isToday = new Date().getDate() === day && new Date().getMonth() === calendarDate.getMonth() && new Date().getFullYear() === calendarDate.getFullYear();
-                    const past = isPastDate(day);
+                <div 
+                  id="date-strip"
+                  className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-2 px-2 scroll-smooth"
+                >
+                  {nextDates.map((date, idx) => {
+                    const isSelected = selectedDate.toDateString() === date.toDateString();
+                    const isToday = new Date().toDateString() === date.toDateString();
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dayNum = date.getDate();
                     
                     return (
                       <button
-                        key={day}
-                        disabled={past}
-                        onClick={() => setSelectedDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day))}
-                        className={`group relative h-14 flex flex-col items-center justify-center rounded-2xl border-2 transition-all p-1
-                          ${past ? 'bg-gray-50 text-gray-300 border-transparent cursor-not-allowed' : 
-                            isSelected ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200' : 
-                            isToday ? 'border-blue-200 bg-white text-blue-600' : 'border-transparent hover:border-blue-100 hover:bg-blue-50/50'}`}
+                        key={idx}
+                        onClick={() => setSelectedDate(date)}
+                        className={`flex-shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
+                          ${isSelected 
+                            ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-100' 
+                            : 'border-gray-100 bg-white text-gray-500 hover:border-blue-100 hover:bg-blue-50/50'}`}
                       >
-                        <span className={`text-sm font-bold ${past ? 'text-gray-300' : isSelected ? 'text-white' : 'text-gray-900'}`}>{day}</span>
-                        {!past && dayAppointments.length > 0 && (
-                           <div className={`mt-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold leading-none
-                             ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600 animate-pulse'}`}>
-                             {dayAppointments.length}
-                           </div>
-                        )}
-                        {isToday && !isSelected && <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-600 rounded-full" />}
+                        <span className={`text-[10px] font-bold uppercase ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>{dayName}</span>
+                        <span className={`text-base font-bold ${isSelected ? 'text-white' : 'text-gray-900'}`}>{dayNum}</span>
+                        {isToday && !isSelected && <div className="w-1 h-1 bg-blue-600 rounded-full mt-0.5" />}
                       </button>
                     );
                   })}
-                </div>
+                  </div>
 
-                {/* Day's Agenda (Integrated sidebar logic) */}
-                <div className="pt-6 border-t border-gray-50">
+                {/* Day's Agenda */}
+                <div className="pt-4 border-t border-gray-50">
                   <div className="flex items-center justify-between mb-4">
                     <h5 className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
                        <Clock className="w-3.5 h-3.5 text-blue-600" />
@@ -521,16 +550,15 @@ export function DoctorBooking({
                         </div>
                       ))
                     ) : (
-                      <div className="py-8 text-center bg-gray-50/50 rounded-[2rem] border-2 border-dashed border-gray-100">
-                         <CalendarIcon className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                         <p className="text-[10px] font-semibold text-gray-400">All slots available</p>
+                      <div className="py-3 text-center bg-gray-50/40 rounded-2xl border border-dashed border-gray-100">
+                         <p className="text-[10px] font-bold text-gray-400">All slots available</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Available Time Slots */}
-                <div className="pt-6 border-t border-gray-50">
+                <div className="pt-4 border-t border-gray-50">
                   <div className="flex items-center justify-between mb-4">
                     <h5 className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
                        <CalendarCheck className="w-3.5 h-3.5 text-green-500" />
