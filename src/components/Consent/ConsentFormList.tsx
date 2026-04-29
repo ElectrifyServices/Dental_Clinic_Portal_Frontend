@@ -57,8 +57,8 @@ export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredForms.map((form, index) => (
-            <div 
-              key={form.id} 
+            <div
+              key={form.id}
               style={{ animationDelay: `${index * 100}ms` }}
               className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:border-blue-100 transition-all duration-500 group animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
             >
@@ -108,9 +108,9 @@ export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: 
                   </div>
                 </div>
               </div>
-              
+
               <div className="px-8 py-5 bg-gray-50/50 rounded-b-[2.5rem] border-t border-gray-100 group-hover:bg-blue-50/50 transition-colors">
-                <button 
+                <button
                   onClick={() => onViewForm(form.id)}
                   className="w-full flex items-center justify-between text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-blue-600 transition-all"
                 >
