@@ -7,9 +7,10 @@ interface AppointmentProps {
   type: string;
   status: 'upcoming' | 'current' | 'completed';
   phone: string;
+  duration?: string | number;
 }
 
-function AppointmentCard({ time, patient, type, status, phone }: AppointmentProps) {
+function AppointmentCard({ time, patient, type, status, phone, duration }: AppointmentProps) {
   const statusColors = {
     upcoming: 'bg-blue-50 text-blue-700 border-blue-200',
     current: 'bg-green-50 text-green-700 border-green-200',
@@ -22,6 +23,7 @@ function AppointmentCard({ time, patient, type, status, phone }: AppointmentProp
         <div className="flex items-center">
           <Clock className="w-4 h-4 mr-2" />
           <span className="font-medium">{time}</span>
+          <span className="text-[10px] text-gray-500 ml-2">(Est. {duration || 15} mins)</span>
         </div>
         <span className="text-xs px-2 py-1 rounded-full bg-white/50 font-medium">
           {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -67,7 +69,8 @@ export function TodayAppointments({ appointments: propAppointments }: TodayAppoi
         patient: apt.patientName,
         type: apt.type,
         status: apt.status || 'upcoming',
-        phone: apt.patientPhone
+        phone: apt.patientPhone,
+        duration: apt.duration
       }))
     : defaultAppointments;
 

@@ -6,9 +6,10 @@ interface TreatmentFormProps {
   onSave: (treatment: any) => void;
   treatment?: any;
   patients: any[];
+  doctors: any[];
 }
 
-export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients }: TreatmentFormProps) {
+export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients, doctors }: TreatmentFormProps) {
   const [formData, setFormData] = useState({
     patientName: treatment?.patientName || '',
     procedure: treatment?.procedure || '',
@@ -32,11 +33,6 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
   );
   const [showSessionPlanner, setShowSessionPlanner] = useState(true); // Always show sessions
 
-  const doctors = [
-    { id: '1', name: 'Dr. Rajesh Sharma', specialization: 'General Dentistry' },
-    { id: '2', name: 'Dr. Priya Patel', specialization: 'Orthodontics' },
-    { id: '3', name: 'Dr. Amit Singh', specialization: 'Oral Surgery' }
-  ];
 
   const procedures = [
     'Regular Checkup',
@@ -146,7 +142,7 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
     onSave({
       ...formData,
       id: treatment?.id || Date.now().toString(),
-      patientId: Date.now().toString(),
+      patientId: allPatients.find(p => p.name === formData.patientName)?.id || Date.now().toString(),
       prescriptions: prescriptions.filter(p => p.medicine.trim() !== ''),
       cost: parseFloat(formData.cost.toString())
     });

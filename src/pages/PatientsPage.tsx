@@ -11,6 +11,7 @@ interface PatientsPageProps {
   setParentPatientId: (id: string) => void;
   setSelectedPatientId: (id: string) => void;
   handleExportPatient?: (id: string) => void;
+  handleToggleStatus?: (id: string, newStatus: 'active' | 'inactive') => void;
 }
 
 export const PatientsPage: React.FC<PatientsPageProps> = ({
@@ -22,7 +23,8 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
   setPatientFormType,
   setParentPatientId,
   setSelectedPatientId,
-  handleExportPatient
+  handleExportPatient,
+  handleToggleStatus
 }) => {
   const handleAddPatient = (type?: string, patientId?: string) => {
     if (type === "person" && patientId) {
@@ -49,6 +51,7 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
         onEditPatient={handleEditPatient}
         onDeletePatient={handleDeletePatient}
         onExportPatient={handleExportPatient}
+        onToggleStatus={handleToggleStatus}
       />
     </div>
   );

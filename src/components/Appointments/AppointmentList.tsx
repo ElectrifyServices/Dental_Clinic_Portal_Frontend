@@ -17,20 +17,20 @@ interface Appointment {
 }
 
 const appointments: Appointment[] = [
-  { id: '1', time: '09:00 AM', patient: 'Rajesh Kumar',  type: 'Regular Checkup', status: 'completed',   phone: '+91 98765 43210', duration: '30 min' },
-  { id: '2', time: '10:30 AM', patient: 'Priya Sharma',  type: 'Teeth Cleaning',  status: 'in-progress', phone: '+91 87654 32109', duration: '45 min' },
-  { id: '3', time: '12:00 PM', patient: 'Amit Singh',    type: 'Root Canal',      status: 'confirmed',   phone: '+91 76543 21098', duration: '60 min' },
-  { id: '4', time: '02:30 PM', patient: 'Neha Gupta',    type: 'Dental Filling',  status: 'scheduled',   phone: '+91 65432 10987', duration: '45 min' },
-  { id: '5', time: '04:00 PM', patient: 'Suresh Patel',  type: 'Crown Fitting',   status: 'scheduled',   phone: '+91 54321 09876', duration: '90 min' },
+  { id: '1', time: '09:00 AM', patient: 'Rajesh Kumar', type: 'Regular Checkup', status: 'completed', phone: '+91 98765 43210', duration: '30 min' },
+  { id: '2', time: '10:30 AM', patient: 'Priya Sharma', type: 'Teeth Cleaning', status: 'in-progress', phone: '+91 87654 32109', duration: '45 min' },
+  { id: '3', time: '12:00 PM', patient: 'Amit Singh', type: 'Root Canal', status: 'confirmed', phone: '+91 76543 21098', duration: '60 min' },
+  { id: '4', time: '02:30 PM', patient: 'Neha Gupta', type: 'Dental Filling', status: 'scheduled', phone: '+91 65432 10987', duration: '45 min' },
+  { id: '5', time: '04:00 PM', patient: 'Suresh Patel', type: 'Crown Fitting', status: 'scheduled', phone: '+91 54321 09876', duration: '90 min' },
 ];
 
 // ── avatar colour palette (cycles) ──────────────────────────────────────────
 const AVATAR_COLORS = [
-  { bg: 'bg-blue-100',   text: 'text-blue-700'   },
-  { bg: 'bg-teal-100',   text: 'text-teal-700'   },
+  { bg: 'bg-blue-100', text: 'text-blue-700' },
+  { bg: 'bg-teal-100', text: 'text-teal-700' },
   { bg: 'bg-violet-100', text: 'text-violet-700' },
-  { bg: 'bg-amber-100',  text: 'text-amber-700'  },
-  { bg: 'bg-rose-100',   text: 'text-rose-700'   },
+  { bg: 'bg-amber-100', text: 'text-amber-700' },
+  { bg: 'bg-rose-100', text: 'text-rose-700' },
 ];
 
 function getInitials(name: string) {
@@ -48,7 +48,7 @@ interface PaginationProps {
 
 function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }: PaginationProps) {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem   = Math.min(currentPage * itemsPerPage, totalItems);
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div
@@ -76,11 +76,10 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
             key={page}
             id={`appointment-page-${page}`}
             onClick={() => onPageChange(page)}
-            className={`w-8 h-8 text-xs font-medium rounded-lg transition-all ${
-              page === currentPage
+            className={`w-8 h-8 text-xs font-medium rounded-lg transition-all ${page === currentPage
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             {page}
           </button>
@@ -102,10 +101,10 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
 // ── AppointmentList ──────────────────────────────────────────────────────────
 interface AppointmentListProps {
   appointments?: any[];
-  onEditAppointment?:  (appointmentId: string) => void;
+  onEditAppointment?: (appointmentId: string) => void;
   onDeleteAppointment?: (appointmentId: string) => void;
-  onUpdateStatus?:     (appointmentId: string, status: string) => void;
-  onCheckInPatient?:   (appointment: any) => void;
+  onUpdateStatus?: (appointmentId: string, status: string) => void;
+  onCheckInPatient?: (appointment: any) => void;
 }
 
 export function AppointmentList({
@@ -115,11 +114,11 @@ export function AppointmentList({
   onUpdateStatus,
   onCheckInPatient,
 }: AppointmentListProps) {
-  const [currentPage, setCurrentPage]   = useState(1);
-  const [itemsPerPage]                  = useState(10);
-  const [search, setSearch]             = useState('');
-  const [filter, setFilter]             = useState('all');
-  const [openMenu, setOpenMenu]         = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   // ── original logic (untouched) ────────────────────────────────────────────
@@ -135,7 +134,7 @@ export function AppointmentList({
   //         if (dateCompare !== 0) return dateCompare;
   //         return a.time.localeCompare(b.time);
   //       });
-const displayAppointments = propAppointments ? [...propAppointments] : [];
+  const displayAppointments = propAppointments ? [...propAppointments] : [];
   const filteredAppointments = displayAppointments.filter(a => {
     const matchSearch = (a.patient || a.patientName || '')
       .toLowerCase()
@@ -147,7 +146,7 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
       return matchSearch && new Date(a.date).toDateString() === today.toDateString();
 
     if (filter === 'week') {
-      const d    = new Date(a.date);
+      const d = new Date(a.date);
       const diff = (d.getTime() - today.getTime()) / (1000 * 3600 * 24);
       return matchSearch && diff >= 0 && diff <= 7;
     }
@@ -157,44 +156,44 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
     return matchSearch;
   });
 
-  const totalItems            = filteredAppointments.length;
-  const totalPages            = Math.ceil(totalItems / itemsPerPage);
-  const startIndex            = (currentPage - 1) * itemsPerPage;
+  const totalItems = filteredAppointments.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'completed':   return { bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200',  label: 'Completed'   };
-      case 'in-progress': return { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200',   label: 'In Progress' };
-      case 'checked-in':  return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', label: 'Checked In'  };
-      case 'confirmed':   return { bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  label: 'Confirmed'   };
-      case 'scheduled':   return { bg: 'bg-gray-50',   text: 'text-gray-600',   border: 'border-gray-200',   label: 'Scheduled'   };
-      case 'cancelled':   return { bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200',    label: 'Cancelled'   };
-      case 'no-show':     return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'No Show'     };
-      default:            return { bg: 'bg-gray-50',   text: 'text-gray-600',   border: 'border-gray-200',   label: status        };
+      case 'completed': return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', label: 'Completed' };
+      case 'in-progress': return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'In Progress' };
+      case 'checked-in': return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', label: 'Checked In' };
+      case 'confirmed': return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'Confirmed' };
+      case 'scheduled': return { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', label: 'Scheduled' };
+      case 'cancelled': return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'Cancelled' };
+      case 'no-show': return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'No Show' };
+      default: return { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', label: status };
     }
   };
 
-  const handleMarkNoShow       = (id: string) => onUpdateStatus?.(id, 'no-show');
-  const handleRestoreFromNoShow = (id: string) => 
-  onUpdateStatus?.(id, 'scheduled');
-  const handleEditAppointment  = (id: string) => onEditAppointment?.(id);
+  const handleMarkNoShow = (id: string) => onUpdateStatus?.(id, 'no-show');
+  const handleRestoreFromNoShow = (id: string) =>
+    onUpdateStatus?.(id, 'scheduled');
+  const handleEditAppointment = (id: string) => onEditAppointment?.(id);
   const handleDeleteAppointment = (id: string) => {
     if (window.confirm('Are you sure you want to delete this appointment?'))
       onDeleteAppointment?.(id);
   };
   const formatTime = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  let h = parseInt(hours);
-  const ampm = h >= 12 ? 'PM' : 'AM';
+    const [hours, minutes] = time.split(':');
+    let h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
 
-  h = h % 12;
-  if (h === 0) h = 12;
+    h = h % 12;
+    if (h === 0) h = 12;
 
-  return `${h}:${minutes} ${ampm}`;
-};
+    return `${h}:${minutes} ${ampm}`;
+  };
 
   return (
     <div
@@ -252,13 +251,13 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
       {/* ── List ── */}
       <div id="appointment-list-body" className="divide-y divide-gray-50 flex-1 overflow-y-auto">
         {paginatedAppointments.map((appointment, idx) => {
-          const st  = getStatusConfig(appointment.status);
-          const av  = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+          const st = getStatusConfig(appointment.status);
+          const av = AVATAR_COLORS[idx % AVATAR_COLORS.length];
           const name = appointment.patient || appointment.patientName || '';
 
           return (
             <div
-              key={appointment.id}
+              key={`${appointment.id}-${idx}`}
               id={`appointment-item-${appointment.id}`}
               className="px-6 py-4 hover:bg-gray-50/60 transition-colors"
             >
@@ -276,7 +275,7 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                       {formatTime(appointment.time)}
                     </div>
                     <div className="text-xs text-gray-400 mt-0.5">
-                      {appointment.duration || '30 min'}
+                      {appointment.duration ? `${appointment.duration} mins` : '15 mins'}
                     </div>
                   </div>
 
@@ -323,11 +322,11 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                     <button
                       id={`checkin-btn-${appointment.id}`}
                       onClick={() =>
-  onCheckInPatient?.({
-    ...appointment,
-    status: "checked-in"
-  })
-}
+                        onCheckInPatient?.({
+                          ...appointment,
+                          status: "checked-in"
+                        })
+                      }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors"
                     >
                       <CheckCircle className="w-3.5 h-3.5" />
@@ -345,15 +344,15 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                       No Show
                     </button>
                   )}
-{appointment.status === 'no-show' && (
-  <button
-    onClick={() => handleRestoreFromNoShow(appointment.id)}
-    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-100 rounded-lg hover:bg-green-100 transition-colors"
-  >
-    <CheckCircle className="w-3.5 h-3.5" />
-    Move To List
-  </button>
-)}
+                  {appointment.status === 'no-show' && (
+                    <button
+                      onClick={() => handleRestoreFromNoShow(appointment.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-100 rounded-lg hover:bg-green-100 transition-colors"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Move To List
+                    </button>
+                  )}
                   {/* Three-dot menu */}
                   <div
                     id={`appointment-menu-${appointment.id}`}
@@ -362,47 +361,47 @@ const displayAppointments = propAppointments ? [...propAppointments] : [];
                   >
                     <button
                       id={`appointment-menu-btn-${appointment.id}`}
-onClick={(e) => {
-  const rect = e.currentTarget.getBoundingClientRect();
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
 
-  setMenuPosition({
-    top: rect.bottom + window.scrollY + 5,
-    left: rect.left + window.scrollX - 150, // adjust based on width
-  });
+                        setMenuPosition({
+                          top: rect.bottom + window.scrollY + 5,
+                          left: rect.left + window.scrollX - 150, // adjust based on width
+                        });
 
-  setOpenMenu(openMenu === appointment.id ? null : appointment.id);
-}}
+                        setOpenMenu(openMenu === appointment.id ? null : appointment.id);
+                      }}
                       className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
 
-{openMenu === appointment.id &&
-  createPortal(
-    <div
-      className="fixed z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1"
-      style={{
-        top: menuPosition.top,
-        left: menuPosition.left,
-      }}
-    >
-      <button
-        onClick={() => { handleEditAppointment(appointment.id); setOpenMenu(null); }}
-        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
-      >
-        Edit Appointment
-      </button>
+                    {openMenu === appointment.id &&
+                      createPortal(
+                        <div
+                          className="fixed z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1"
+                          style={{
+                            top: menuPosition.top,
+                            left: menuPosition.left,
+                          }}
+                        >
+                          <button
+                            onClick={() => { handleEditAppointment(appointment.id); setOpenMenu(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                          >
+                            Edit Appointment
+                          </button>
 
-      <button
-        onClick={() => { handleDeleteAppointment(appointment.id); setOpenMenu(null); }}
-        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
-      >
-        Delete Appointment
-      </button>
-    </div>,
-    document.body
-  )
-}
+                          <button
+                            onClick={() => { handleDeleteAppointment(appointment.id); setOpenMenu(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                          >
+                            Delete Appointment
+                          </button>
+                        </div>,
+                        document.body
+                      )
+                    }
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Calendar, User, FileText, Camera, MoreVertical, Stethoscope, Clock, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, User, FileText, Camera, MoreVertical, Stethoscope, Clock, DollarSign, CheckCircle, AlertCircle, Edit, MoreHorizontal, IndianRupee } from 'lucide-react';
 import { Treatment } from '../../types';
 
 const treatments: Treatment[] = [
@@ -200,6 +200,7 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const filteredTreatments = (dynamicTreatments || treatments).filter(treatment => {
     const matchesSearch = treatment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -247,13 +248,17 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
   };
 
   const uniqueProcedures = [...new Set((dynamicTreatments || treatments).map(t => t.procedure))];
-  const totalTreatments = (dynamicTreatments || treatments).length;
-  const activeTreatments = (dynamicTreatments || treatments).filter(t => t.status === 'in-progress').length;
-  const completedTreatments = (dynamicTreatments || treatments).filter(t => t.status === 'completed').length;
-  const totalRevenue = (dynamicTreatments || treatments).reduce((sum, t) => sum + (t.cost || 0), 0);
+  const totalTreatments = filteredTreatments.length;
+  const activeTreatments = filteredTreatments.filter(t => t.status === 'in-progress').length;
+  const completedTreatments = filteredTreatments.filter(t => t.status === 'completed').length;
+  const totalRevenue = filteredTreatments.reduce((sum, t) => {
+    const cost = Number(t.cost) || 0;
+    // Safety check: Ignore costs that look like timestamps (e.g., > 10 Crores might be a typo)
+    return sum + (cost < 100000000 ? cost : 0);
+  }, 0);
 
   const renderTableView = () => (
-    <div id="treatment-table-container" className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div id="treatment-table-container" className="bg-white rounded-2xl border border-gray-200 shadow-sm transition-all duration-300">
       <div className="overflow-x-auto">
         <table id="treatment-table" className="min-w-full">
           <thead id="treatment-table-header" className="bg-gradient-to-r from-gray-50 to-gray-100">
@@ -268,7 +273,12 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
           </thead>
           <tbody id="treatment-table-body" className="divide-y divide-gray-200">
             {paginatedTreatments.map((treatment, index) => (
-              <tr key={`${treatment.id}-${index}`} id={`treatment-row-${treatment.id}`} className="hover:bg-gray-50 transition-colors duration-200">
+              <tr 
+                key={`${treatment.id}-${index}`} 
+                id={`treatment-row-${treatment.id}`} 
+                className="hover:bg-gray-50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center mr-4">
@@ -296,7 +306,7 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <DollarSign className="w-4 h-4 text-gray-400 mr-1" />
+                    <IndianRupee className="w-3.5 h-3.5 text-gray-400 mr-1" />
                     <span className="font-bold text-gray-900">₹{treatment.cost.toLocaleString()}</span>
                   </div>
                 </td>
@@ -309,37 +319,54 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
                     <span className="text-sm text-gray-400">No upcoming session</span>
                   )}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
+                <td className="px-6 py-4 text-right">
+                  <div className="relative inline-block text-left">
                     <button
-                      onClick={() => onViewTreatment(treatment.id)}
-                      className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-200"
-                      title="View Details"
+                      onClick={() => setActiveMenu(activeMenu === treatment.id ? null : treatment.id)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                     >
-                      <FileText className="w-4 h-4" />
+                      <MoreHorizontal className="w-5 h-5 text-gray-500" />
                     </button>
-                    <button
-                      onClick={() => onEditTreatment(treatment.id)}
-                      className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200"
-                      title="Edit Treatment"
-                    >
-                      <Calendar className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onManageSessions(treatment.id)}
-                      className="p-2 text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200"
-                      title="Manage Sessions"
-                    >
-                      <Clock className="w-4 h-4" />
-                    </button>
-                    {treatment.status === 'in-progress' && (
-                      <button 
-                        onClick={() => onMarkCompleted(treatment.id)}
-                        className="p-2 text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-all duration-200"
-                        title="Mark Completed"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
+
+                    {activeMenu === treatment.id && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-10" 
+                          onClick={() => setActiveMenu(null)}
+                        ></div>
+                        <div className={`absolute right-0 ${index >= paginatedTreatments.length - 2 && paginatedTreatments.length > 3 ? 'bottom-full mb-2' : 'top-full mt-2'} w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-20 animate-in fade-in zoom-in slide-in-from-top-2 duration-300 origin-top-right shadow-blue-100`}>
+                          <button
+                            onClick={() => { onViewTreatment(treatment.id); setActiveMenu(null); }}
+                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          >
+                            <FileText className="w-4 h-4 mr-3" />
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => { onEditTreatment(treatment.id); setActiveMenu(null); }}
+                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
+                          >
+                            <Edit className="w-4 h-4 mr-3" />
+                            Edit Treatment
+                          </button>
+                          <button
+                            onClick={() => { onManageSessions(treatment.id); setActiveMenu(null); }}
+                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                          >
+                            <Clock className="w-4 h-4 mr-3" />
+                            Manage Sessions
+                          </button>
+                          {treatment.status === 'in-progress' && (
+                            <button
+                              onClick={() => { onMarkCompleted(treatment.id); setActiveMenu(null); }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-3" />
+                              Mark Completed
+                            </button>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 </td>
@@ -448,8 +475,8 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
       <div id="treatment-header" className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Treatment Management</h2>
-            <p className="text-gray-600">Track procedures and patient progress across all treatments</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 animate-in fade-in slide-in-from-left duration-700">Treatment Management</h2>
+            <p className="text-gray-600 animate-in fade-in slide-in-from-left duration-700 delay-100">Track procedures and patient progress across all treatments</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full lg:w-auto">
             <div className="bg-white rounded-xl p-4 text-center border border-blue-200">
@@ -464,9 +491,20 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
               <div className="text-2xl font-bold text-green-600">{completedTreatments}</div>
               <div className="text-sm text-gray-600">Completed</div>
             </div>
-            <div className="bg-white rounded-xl p-4 text-center border border-blue-200">
-              <div className="text-2xl font-bold text-purple-600">₹{(totalRevenue / 1000).toFixed(0)}K</div>
-              <div className="text-sm text-gray-600">Revenue</div>
+            <div className="bg-white rounded-xl p-4 text-center border border-blue-200 flex flex-col items-center justify-center min-w-[100px] overflow-hidden group">
+              <div 
+                className="text-xl font-bold text-purple-600 truncate w-full"
+                title={totalRevenue.toLocaleString()}
+              >
+                ₹{totalRevenue >= 10000000 
+                  ? `${(totalRevenue / 10000000).toFixed(1)}Cr`
+                  : totalRevenue >= 100000 
+                    ? `${(totalRevenue / 100000).toFixed(1)}L`
+                    : totalRevenue >= 1000 
+                      ? `${(totalRevenue / 1000).toFixed(0)}K` 
+                      : totalRevenue}
+              </div>
+              <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Revenue</div>
             </div>
           </div>
         </div>

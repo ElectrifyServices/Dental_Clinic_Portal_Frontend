@@ -188,7 +188,7 @@ export function TodaySchedulePopup({
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{appointment.time}</p>
-                            <p className="text-xs text-gray-500">{appointment.duration || 30} min</p>
+                            <p className="text-xs text-gray-500">Est. Duration: {appointment.duration || 30} min</p>
                           </div>
                         </div>
 

@@ -2,11 +2,10 @@ import {
   X, Trash2, Clock, Stethoscope, FileText, Calendar,
   Image as ImageIcon, IndianRupee, Pill, AlertCircle,
   Eye, ArrowLeft, Phone, Search, Filter, ChevronLeft, ChevronRight,
-  Printer, MoreVertical, ExternalLink
+  Printer, MoreVertical, ExternalLink, Activity
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { downloadConsultationPDF, PDFReportType } from "../../utils/pdfGenerator";
 
 interface Props {
   onClose: () => void;
@@ -51,6 +50,7 @@ interface ConsultationRecord {
   treatmentTooth?: string;
   treatmentSessions?: number;
   startTreatmentToday?: boolean;
+  toothChartState?: Record<number, string>;
 }
 
 const PAGE_SIZE = 8;
@@ -129,232 +129,19 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
     }
   }, []);
 
-  const downloadConsultationPDF = async (record: ConsultationRecord) => {
-    const pdfContainer = document.createElement("div");
-    pdfContainer.style.cssText = `
-    position: fixed; left: -9999px; top: 0;
-    width: 794px; background: white; 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  `;
-
-    const filledPrescriptions = record.prescriptions?.filter(
-      (p) => p.medicine.trim() !== "",
-    ) || [];
-
-    pdfContainer.innerHTML = `
-    <div style="width:794px; background:#fff; margin:0; padding:0; color: #1f2937;">
-      <!-- Professional Medical Header -->
-      <div style="padding: 30px 50px 20px; border-bottom: 2px solid #3b82f6;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-size:28px; font-weight:800; color:#1e40af; letter-spacing:-0.5px;">DentalCare Pro</div>
-            <div style="font-size:12px; color:#6b7280; font-weight:500; margin-top:4px;">Advanced Dental Clinic & Implant Centre</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:14px; font-weight:700; color:#111827;">Dr. Rajesh Sharma</div>
-            <div style="font-size:11px; color:#6b7280; margin-top:2px;">BDS, MDS (Oral & Maxillofacial Surgery)</div>
-            <div style="font-size:11px; color:#6b7280;">Reg No: 123456/78</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Report Title & Date -->
-      <div style="padding: 10px 50px; background:#f8fafc; border-bottom: 1px solid #e2e8f0;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:16px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:1px;">Consultation Report</div>
-          <div style="text-align:right; font-size:11px; color:#64748b; display:flex; gap:15px;">
-          <span><strong>Date:</strong> ${new Date(record.completedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</span>
-          <span><strong>Record ID:</strong> ${record.id}</span>
-        </div>
-      </div>
-
-      <div style="padding: 20px 50px 30px;">
-        <!-- Patient Info Card -->
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-          <div>
-            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient Name</div>
-            <div style="font-size:15px; font-weight:700; color:#1e293b;">${record.patientName || "—"}</div>
-          </div>
-          <div>
-            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Patient ID</div>
-            <div style="font-size:14px; font-weight:500; color:#334155;">${record.patientId || "—"}</div>
-          </div>
-          <div>
-            <div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Treatment Type</div>
-            <div style="font-size:14px; font-weight:500; color:#334155;">${record.treatmentType || "General Consultation"}</div>
-          </div>
-        </div>
-
-        <!-- Medical Alerts / History -->
-        ${
-          record.allergies || record.conditions
-            ? `
-        <div style="margin-bottom:20px; border:1px solid #fee2e2; border-radius:8px; overflow:hidden;">
-          <div style="background:#fef2f2; padding:8px 15px; border-bottom:1px solid #fee2e2; display:flex; align-items:center; gap:8px;">
-            <span style="color:#dc2626; font-size:14px;">⚠️</span>
-            <span style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px;">Medical Alerts & History</span>
-          </div>
-          <div style="padding:12px 15px; background:#fff;">
-            ${record.allergies ? `<div style="font-size:12px; color:#991b1b; margin-bottom:4px;"><strong>Allergies:</strong> ${record.allergies}</div>` : ""}
-            ${record.conditions ? `<div style="font-size:12px; color:#991b1b;"><strong>Medical Conditions:</strong> ${record.conditions}</div>` : ""}
-          </div>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- Clinical Assessment Section -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-bottom:20px;">
-          <div style="border-left: 3px solid #3b82f6; padding-left:15px;">
-            <div style="font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Clinical Observations</div>
-            <div style="font-size:13px; line-height:1.6; color:#374151;">
-              ${record.observations || '<span style="color:#9ca3af;">No observations recorded.</span>'}
-            </div>
-          </div>
-          <div style="border-left: 3px solid #10b981; padding-left:15px;">
-            <div style="font-size:11px; font-weight:700; color:#065f46; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Diagnosis</div>
-            <div style="font-size:13px; line-height:1.6; color:#374151;">
-              ${record.diagnosis || '<span style="color:#9ca3af;">No diagnosis provided.</span>'}
-            </div>
-          </div>
-        </div>
-
-        <!-- Treatment Plan -->
-        <div style="margin-bottom:25px; background:#f1f5f9; padding:15px 20px; border-radius:8px;">
-          <div style="font-size:11px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">Treatment Plan & Procedures</div>
-          <div style="font-size:13px; line-height:1.6; color:#334155;">
-            ${record.treatmentPlan || '<span style="color:#9ca3af;">—</span>'}
-          </div>
-        </div>
-
-        <!-- Prescriptions -->
-        ${
-          filledPrescriptions.length > 0
-            ? `
-        <div style="margin-bottom:25px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <div style="width:24px; height:24px; background:#ecfdf5; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#059669; font-weight:bold;">💊</div>
-            <div style="font-size:14px; font-weight:700; color:#111827;">Prescribed Medications</div>
-          </div>
-          <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid #e2e8f0;">
-            <thead>
-              <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">#</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Medicine</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Dosage</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Timing</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Freq</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Days</th>
-                <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filledPrescriptions
-                .map(
-                  (p, i) => `
-                <tr style="border-bottom:1px solid #f1f5f9; ${i % 2 === 0 ? "" : "background:#fafafa;"}">
-                  <td style="padding:12px 15px; font-size:12px; color:#94a3b8;">${i + 1}</td>
-                  <td style="padding:12px 15px; font-size:13px; font-weight:600; color:#1e293b;">${p.medicine || "-"}</td>
-                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.dosage || "-"}</td>
-                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.timing || "-"}</td>
-                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.frequency || "-"}</td>
-                  <td style="padding:12px 15px; font-size:12px; color:#475569;">${p.duration || "-"}</td>
-                  <td style="padding:12px 15px; font-size:12px; font-weight:600; color:#1e293b;">${p.qty || "-"}</td>
-                </tr>
-              `,
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- Recommendations & Summary -->
-        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:30px; margin-bottom:25px;">
-          <div>
-            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Advice & Recommendations</div>
-            <div style="font-size:12px; line-height:1.6; color:#334155; padding:15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-              ${record.recommendations || "Take care and follow instructions."}
-            </div>
-          </div>
-          <div>
-            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Consultation Summary</div>
-            <div style="padding:15px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;">
-              <div style="font-size:10px; color:#0369a1; text-transform:uppercase; margin-bottom:4px;">Total Cost</div>
-              <div style="font-size:18px; font-weight:700; color:#0369a1;">₹${record.treatmentCost || 0}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer / Signature Area -->
-        <div style="margin-top:40px; padding-top:20px; border-top:1px solid #e2e8f0;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-            <div>
-              <div style="font-size:10px; color:#94a3b8; font-style:italic;">This is a computer-generated report based on past clinical records.</div>
-              <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Report Generated: ${new Date().toLocaleString("en-IN")}</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="width:180px; border-top:1px solid #1e293b; padding-top:10px;">
-                <div style="font-size:13px; font-weight:700; color:#1e293b;">Dr. Rajesh Sharma</div>
-                <div style="font-size:10px; color:#64748b; margin-top:2px;">Dental Surgeon</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Clinic Address Footer -->
-      <div style="background:#1e40af; padding:15px 50px; color:white; font-size:10px; display:flex; justify-content:space-between;">
-        <div>📍 123 Dental Street, Medical Hub, New Delhi - 110001</div>
-        <div>📞 +91 98765 43210 | 🌐 www.dentalcarepro.com</div>
-      </div>
-    </div>
-  `;
-
-    document.body.appendChild(pdfContainer);
-
-    try {
-      const canvas = await html2canvas(pdfContainer, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        width: 794,
-        windowWidth: 794,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: "a4",
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save(
-        `${record.patientName}_consultation_${new Date().toISOString().split("T")[0]}.pdf`,
-      );
-    } finally {
-      document.body.removeChild(pdfContainer);
-    }
+  const handleDownloadPDF = async (record: ConsultationRecord, type: PDFReportType = 'FULL') => {
+    await downloadConsultationPDF({
+      type,
+      patient: {
+        id: record.patientId || '—',
+        patientName: record.patientName,
+        phone: record.patientContact,
+        doctorName: (record as any).doctorName,
+        treatmentType: record.treatmentType
+      },
+      consultationData: record,
+      toothChartState: record.toothChartState || {}
+    });
   };
 
   const filtered = useMemo(() => {
@@ -616,14 +403,31 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                               >
                                 <Eye className="w-3.5 h-3.5" /> View
                               </button>
+                              <div className="h-px bg-gray-100 my-1" />
+                              <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Download Reports</div>
                               <button
-                                onClick={() => {
-                                  downloadConsultationPDF(item);
-                                  setActiveMenuId(null);
-                                }}
+                                onClick={() => { handleDownloadPDF(item, 'CLINICAL'); setActiveMenuId(null); }}
                                 className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors"
                               >
-                                <Printer className="w-3.5 h-3.5" /> Print
+                                <Activity className="w-3.5 h-3.5" /> Clinical
+                              </button>
+                              <button
+                                onClick={() => { handleDownloadPDF(item, 'TREATMENT'); setActiveMenuId(null); }}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition-colors"
+                              >
+                                <Stethoscope className="w-3.5 h-3.5" /> Treatment
+                              </button>
+                              <button
+                                onClick={() => { handleDownloadPDF(item, 'PRESCRIPTION'); setActiveMenuId(null); }}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition-colors"
+                              >
+                                <Pill className="w-3.5 h-3.5" /> Prescription
+                              </button>
+                              <button
+                                onClick={() => { handleDownloadPDF(item, 'FULL'); setActiveMenuId(null); }}
+                                className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2 transition-colors"
+                              >
+                                <FileText className="w-3.5 h-3.5" /> Full Report
                               </button>
                               <div className="h-px bg-gray-100 my-1" />
                               <button
@@ -662,12 +466,40 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => downloadConsultationPDF(selectedRecord)}
-                      className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      <Printer className="w-4 h-4" /> Print
-                    </button>
+                    <div className="relative group/print">
+                      <button
+                        className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <Printer className="w-4 h-4" /> Download Report
+                      </button>
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-2 hidden group-hover/print:block animate-in fade-in zoom-in duration-200">
+                        <button
+                          onClick={() => handleDownloadPDF(selectedRecord, 'CLINICAL')}
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+                        >
+                          <Activity className="w-3.5 h-3.5 text-blue-600" /> Clinical Observations
+                        </button>
+                        <button
+                          onClick={() => handleDownloadPDF(selectedRecord, 'TREATMENT')}
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-gray-700 hover:bg-purple-50 flex items-center gap-2"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5 text-purple-600" /> Treatment Planning
+                        </button>
+                        <button
+                          onClick={() => handleDownloadPDF(selectedRecord, 'PRESCRIPTION')}
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-gray-700 hover:bg-emerald-50 flex items-center gap-2"
+                        >
+                          <Pill className="w-3.5 h-3.5 text-emerald-600" /> Prescription Only
+                        </button>
+                        <div className="h-px bg-gray-100 my-1" />
+                        <button
+                          onClick={() => handleDownloadPDF(selectedRecord, 'FULL')}
+                          className="w-full px-4 py-2 text-left text-xs font-medium text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-gray-600" /> Full Consultation Summary
+                        </button>
+                      </div>
+                    </div>
                     <button
                       onClick={(e) => handleDeleteClick(selectedRecord.id, e)}
                       className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"

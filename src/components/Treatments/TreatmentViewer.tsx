@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download, Stethoscope, User, Calendar, DollarSign, FileText, Camera, Pill } from 'lucide-react';
+import { X, Download, Stethoscope, User, Calendar, DollarSign, FileText, Camera, Pill, IndianRupee } from 'lucide-react';
 
 interface TreatmentViewerProps {
   treatment: any;
@@ -71,7 +71,7 @@ export function TreatmentViewer({ treatment, onClose }: TreatmentViewerProps) {
         </body>
       </html>
     `;
-    
+
     const blob = new Blob([printContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -156,7 +156,8 @@ export function TreatmentViewer({ treatment, onClose }: TreatmentViewerProps) {
 
             <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200">
               <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" />
+                {/* <DollarSign className="w-5 h-5 mr-2" /> */}
+                <IndianRupee className="w-5 h-5 mr-2" />
                 Cost
               </h3>
               <div className="space-y-2">

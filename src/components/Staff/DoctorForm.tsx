@@ -26,8 +26,22 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     monthlySalary: doctor?.monthlySalary || '',
     salaryPaid: doctor?.salaryPaid || '0',
     salaryPending: doctor?.salaryPending || '0',
-    isActive: doctor?.isActive !== undefined ? doctor.isActive : true
+    isActive: doctor?.isActive !== undefined ? doctor.isActive : true,
+    avatar: doctor?.avatar || doctor?.image || ''
   });
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatar: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const roles = [
     { value: 'admin', label: 'Admin', description: 'Full system access', icon: Shield, color: 'purple' },
@@ -114,12 +128,32 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <div className="text-center mb-6">
-        <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <User className="w-10 h-10 text-blue-600" />
+      <div className="text-center mb-8">
+        <div className="relative inline-block group">
+          <div className="w-28 h-28 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-[2rem] border-2 border-dashed border-blue-200 flex items-center justify-center mx-auto mb-4 overflow-hidden relative transition-all group-hover:border-blue-400">
+            {formData.avatar ? (
+              <img src={formData.avatar} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-12 h-12 text-blue-200" />
+            )}
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all cursor-pointer"
+            >
+              <Upload className="w-6 h-6 text-white mb-1" />
+              <span className="text-[10px] font-bold text-white uppercase tracking-wider">Change Photo</span>
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
-        <p className="text-gray-600">Basic details and contact information</p>
+        <h3 className="text-xl font-bold text-gray-900 mt-2">Personal Information</h3>
+        <p className="text-gray-500 text-sm">Basic details and contact information</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

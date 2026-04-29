@@ -220,13 +220,11 @@ export function AppointmentCalendar({
     const endHour = parseInt(daySchedule.endTime.split(":")[0]);
     const endMinute = parseInt(daySchedule.endTime.split(":")[1]);
 
-    const bookedSlots = appointments
-      .filter(
-        (a) =>
-          new Date(a.date).toDateString() === selectedDate.toDateString() &&
-          a.doctorId === selectedDoctorId,
-      )
-      .map((a) => a.time);
+    const relevantAppointments = appointments.filter(
+      (a) =>
+        new Date(a.date).toDateString() === selectedDate.toDateString() &&
+        a.doctorId === selectedDoctorId,
+    );
 
     return allSlots
       .filter((slot) => {
@@ -251,11 +249,22 @@ export function AppointmentCalendar({
 
         return true;
       })
-      .map((slot) => ({
-        ...slot,
-        isBooked: bookedSlots.includes(slot.time24),
-        isPast: isPastTime(slot.time24),
-      }));
+      .map((slot) => {
+        const slotStart = parseInt(slot.time24.split(":")[0]) * 60 + parseInt(slot.time24.split(":")[1]);
+
+        const isBooked = relevantAppointments.some(a => {
+          const aStart = parseInt(a.time.split(":")[0]) * 60 + parseInt(a.time.split(":")[1]);
+          const aDuration = a.duration ? parseInt(a.duration.toString()) : 15;
+          const aEnd = aStart + aDuration;
+          return slotStart >= aStart && slotStart < aEnd;
+        });
+
+        return {
+          ...slot,
+          isBooked,
+          isPast: isPastTime(slot.time24),
+        };
+      });
   }, [selectedDoctor, selectedDate, appointments, selectedDoctorId]);
 
   return (
@@ -307,7 +316,7 @@ export function AppointmentCalendar({
             >
               <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 flex-shrink-0">
                 <img
-                  src={doctor.image}
+                  src={doctor.avatar || doctor.image}
                   alt={doctor.name}
                   className="w-full h-full object-cover"
                 />
@@ -342,11 +351,10 @@ export function AppointmentCalendar({
             </button>
             <button
               onClick={() => setMonthOffset(0)}
-              className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
-                monthOffset === 0
+              className={`px-3 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${monthOffset === 0
                   ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                   : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-              }`}
+                }`}
             >
               Today
             </button>
@@ -387,34 +395,31 @@ export function AppointmentCalendar({
                     setSelectedTime(null);
                   }}
                   className={`aspect-square p-2 text-center rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative
-                    ${
-                      isToday
-                        ? "bg-blue-600 text-white shadow-lg border-blue-600"
-                        : isSelected
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : isPast
-                            ? "bg-gray-50 text-gray-300 border-transparent opacity-60 cursor-not-allowed"
-                            : "bg-white border-transparent hover:border-gray-100 cursor-pointer"
+                    ${isToday
+                      ? "bg-blue-600 text-white shadow-lg border-blue-600"
+                      : isSelected
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : isPast
+                          ? "bg-gray-50 text-gray-300 border-transparent opacity-60 cursor-not-allowed"
+                          : "bg-white border-transparent hover:border-gray-100 cursor-pointer"
                     }`}
                 >
                   <span
-                    className={`text-sm md:text-base font-black ${
-                      isToday
+                    className={`text-sm md:text-base font-black ${isToday
                         ? "text-white"
                         : isPast
                           ? "text-blue-900/40"
                           : "text-blue-900"
-                    }`}
+                      }`}
                   >
                     {date.getDate()}
                   </span>
                   {dayAppointments.length > 0 && (
                     <div
-                      className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isToday
+                      className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${isToday
                           ? "bg-white/20 text-white"
                           : "bg-blue-100 text-blue-600"
-                      }`}
+                        }`}
                     >
                       {dayAppointments.length}
                     </div>
@@ -476,6 +481,9 @@ export function AppointmentCalendar({
                       <p className="text-[9px] text-gray-400 truncate">
                         {apt.treatment || "Consultation"}
                       </p>
+                      <p className="text-[8px] font-bold text-blue-600/60 mt-0.5">
+                        Est. Duration: {apt.duration || 15} mins
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -514,12 +522,11 @@ export function AppointmentCalendar({
                         disabled={isDisabled}
                         onClick={() => setSelectedTime(slot.time24)}
                         className={`py-2 rounded-xl text-[9px] font-bold text-center border transition-all relative
-                          ${
-                            selectedTime === slot.time24
-                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                              : isDisabled
-                                ? "bg-gray-50 text-gray-200 border-transparent cursor-not-allowed"
-                                : "bg-green-50 text-green-700 border-green-100 hover:border-green-200 hover:bg-green-100"
+                          ${selectedTime === slot.time24
+                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                            : isDisabled
+                              ? "bg-gray-50 text-gray-200 border-transparent cursor-not-allowed"
+                              : "bg-green-50 text-green-700 border-green-100 hover:border-green-200 hover:bg-green-100"
                           }`}
                       >
                         {slot.time12}
@@ -548,10 +555,9 @@ export function AppointmentCalendar({
                   )
                 }
                 className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all
-                  ${
-                    selectedTime
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ${selectedTime
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   }`}
               >
                 Schedule Now

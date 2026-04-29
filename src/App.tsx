@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AppProvider } from "./contexts/AppContext";
 import { useAppData } from "./hooks/useAppData";
@@ -20,6 +20,9 @@ import { BillingPage } from "./pages/BillingPage";
 import { StaffPage } from "./pages/StaffPage";
 import { ProfitSharingPage } from "./pages/ProfitSharingPage";
 import { MedicalRecordsPage } from "./pages/MedicalRecordsPage";
+import { ConsentPage } from "./pages/ConsentPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { InventoryPage } from "./pages/InventoryPage";
 
 // Modals
 import { AppointmentForm } from "./components/Appointments/AppointmentForm";
@@ -38,6 +41,10 @@ import { TreatmentViewer } from "./components/Treatments/TreatmentViewer";
 import { TreatmentSessionManager } from "./components/Treatments/TreatmentSessionManager";
 import { EMRForm } from "./components/EMR/EMRForm";
 import { EMRViewer } from "./components/EMR/EMRViewer";
+import { ConsentForm } from "./components/Consent/ConsentForm";
+import { ConsentFormViewer } from "./components/Consent/ConsentFormViewer";
+import { InventoryForm } from "./components/Inventory/InventoryForm";
+import { RestockForm } from "./components/Inventory/RestockForm";
 
 // Icons & Utils
 import {
@@ -49,6 +56,9 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+import { exportPatientReport } from "./utils/exportPatient";
+import { processPatientCheckIn } from "./utils/patientCheckIn";
+
 function MainApp() {
   const {
     patients,
@@ -56,30 +66,38 @@ function MainApp() {
     appointments,
     setAppointments,
     queuedPatients,
-    setQueuedPatients,
     invoices,
-    setInvoices,
     treatments,
-    setTreatments,
+    emrRecords,
+    completedConsultations,
+    staffMembers,
+    consentForms,
+    inventory,
+    setQueuedPatients,
     handleSaveAppointment,
     handleDeleteAppointment,
     handleUpdateAppointmentStatus,
-    handleDeleteInvoice,
-    handleUpdateInvoiceStatus,
     handleSavePatient,
     handleDeletePatient,
     handleSaveInvoice,
-    handleSaveTreatment,
-    completedConsultations,
-    handleCompleteConsultation,
-    handleUpdateConsultation,
-    staffMembers,
+    handleDeleteInvoice,
+    handleUpdateInvoiceStatus,
     handleSaveStaff,
     handleDeleteStaff,
-    emrRecords,
+    handleSaveTreatment,
+    handleCompleteConsultation,
+    handleUpdateConsultation,
     handleSaveEMR,
-    handleDeleteEMR,
+    handleSaveConsentForm,
+    handleDeleteConsentForm,
+    handleSaveInventoryItem,
+    handleDeleteInventoryItem,
   } = useAppData();
+
+  const activeDoctors = useMemo(() =>
+    staffMembers.filter(s => s.role === 'doctor' || s.role === 'admin'),
+    [staffMembers]
+  );
 
   const { state } = useAuth();
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -101,14 +119,20 @@ function MainApp() {
     useState(false);
   const [showEMRForm, setShowEMRForm] = useState(false);
   const [showEMRViewer, setShowEMRViewer] = useState(false);
+  const [showConsentForm, setShowConsentForm] = useState(false);
+  const [showConsentViewer, setShowConsentViewer] = useState(false);
   const [selectedEMRId, setSelectedEMRId] = useState("");
   const [selectedEMRRecord, setSelectedEMRRecord] = useState<any>(null);
+  const [selectedConsentForm, setSelectedConsentForm] = useState<any>(null);
   const [selectedStaffForSalary, setSelectedStaffForSalary] = useState<{
     id: string;
     name: string;
   } | null>(null);
   const [showPatientNotFound, setShowPatientNotFound] = useState(false);
   const [pendingCheckInAppt, setPendingCheckInAppt] = useState<any>(null);
+  const [showInventoryForm, setShowInventoryForm] = useState(false);
+  const [showRestockForm, setShowRestockForm] = useState(false);
+  const [selectedItemForRestock, setSelectedItemForRestock] = useState<any>(null);
 
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -131,6 +155,10 @@ function MainApp() {
     ),
   );
 
+  const [bookedFollowUp, setBookedFollowUp] = useState<{ date: string; time: string } | null>(null);
+  const [draftConsultations, setDraftConsultations] = useState<Record<string, any>>({});
+  const [isFollowUpBooking, setIsFollowUpBooking] = useState(false);
+
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -144,6 +172,14 @@ function MainApp() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleDraftUpdate = React.useCallback((patientId: string, data: any) => {
+    setDraftConsultations(prev => {
+      // Only update if data actually changed to avoid unnecessary renders
+      if (JSON.stringify(prev[patientId]) === JSON.stringify(data)) return prev;
+      return { ...prev, [patientId]: data };
+    });
+  }, []);
+
   // Handlers
   const handleAddNewPatient = () => {
     setSelectedPatientId("");
@@ -152,365 +188,24 @@ function MainApp() {
   };
 
   const handleExportPatient = (patientId: string) => {
-    const patient = patients.find((p) => p.id === patientId);
-    if (!patient) return;
+    exportPatientReport(patientId, patients, appointments, treatments, invoices);
+  };
 
-    const patientAppointments = appointments.filter(
-      (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
-    );
-    const patientTreatments = treatments.filter(
-      (t) => t.patientId === patient.id,
-    );
-    const patientInvoices = invoices.filter(
-      (inv) => inv.patientId === patient.id,
-    );
-    const prescriptions = patient.prescriptionHistory || [];
-
-    const printContent = `
-      <html>
-        <head>
-          <title>Patient Full Report - ${patient.name}</title>
-          <style>
-            @page { size: A4; margin: 20mm; }
-            body { 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              color: #333;
-              line-height: 1.4;
-              margin: 0;
-              padding: 0;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px solid #2563eb;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .header h1 { color: #1e40af; margin: 0; font-size: 28px; }
-            .header p { margin: 5px 0; color: #666; font-size: 14px; }
-            
-            .section { margin-bottom: 25px; }
-            .section-title {
-              font-size: 16px;
-              font-bold: bold;
-              color: #1e40af;
-              border-bottom: 1px solid #e5e7eb;
-              padding-bottom: 5px;
-              margin-bottom: 15px;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            }
-            
-            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            .info-item { margin-bottom: 10px; }
-            .info-label { font-size: 12px; color: #666; font-weight: 600; }
-            .info-value { font-size: 14px; color: #111; font-weight: 500; }
-            
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th { text-align: left; background: #f8fafc; padding: 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #e2e8f0; color: #475569; }
-            td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-            
-            .alert-box {
-              background: #fff7ed;
-              border: 1px solid #ffedd5;
-              padding: 15px;
-              border-radius: 8px;
-              margin-bottom: 20px;
-            }
-            .alert-title { color: #9a3412; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-            .alert-text { color: #c2410c; font-size: 13px; }
-
-            .footer-sig {
-              margin-top: 60px;
-              display: flex;
-              justify-content: flex-end;
-              padding-right: 50px;
-            }
-            .sig-container { text-align: center; }
-            .sig-line { border-top: 1px solid #333; width: 200px; margin-bottom: 8px; }
-            .sig-name { font-weight: bold; font-size: 15px; color: #111; }
-            .sig-title { font-size: 12px; color: #666; }
-
-            .watermark {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(-45deg);
-              font-size: 100px;
-              color: rgba(226, 232, 240, 0.4);
-              z-index: -1;
-              pointer-events: none;
-              white-space: nowrap;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="watermark">DENTALCARE PRO</div>
-          
-          <div class="header">
-            <h1>🦷 DentalCare Pro</h1>
-            <p>Advanced Multispeciality Dental Clinic & Implant Centre</p>
-            <p>#102, C Block, South Extension, New Delhi | Ph: 9204972991</p>
-          </div>
-
-          <div class="section">
-            <div class="section-title">Personal Information</div>
-            <div class="grid">
-              <div class="info-item">
-                <div class="info-label">Patient Name</div>
-                <div class="info-value">${patient.name}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Patient ID</div>
-                <div class="info-value">${patient.id}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Phone Number</div>
-                <div class="info-value">${patient.phone}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Email Address</div>
-                <div class="info-value">${patient.email || "N/A"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Date of Birth</div>
-                <div class="info-value">${patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : "N/A"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Gender</div>
-                <div class="info-value">${patient.gender || "N/A"}</div>
-              </div>
-              <div class="info-item" style="grid-column: span 2;">
-                <div class="info-label">Residential Address</div>
-                <div class="info-value">${patient.address || "N/A"}</div>
-              </div>
-            </div>
-          </div>
-
-          ${
-            patient.medicalHistory?.length > 0 || patient.allergies?.length > 0
-              ? `
-            <div class="section">
-              <div class="section-title">Medical Alerts</div>
-              <div class="alert-box">
-                ${
-                  patient.allergies?.length > 0
-                    ? `
-                  <div class="alert-title">ALLERGIES</div>
-                  <div class="alert-text">${patient.allergies.join(", ")}</div>
-                  <div style="margin-bottom: 10px;"></div>
-                `
-                    : ""
-                }
-                ${
-                  patient.medicalHistory?.length > 0
-                    ? `
-                  <div class="alert-title">MEDICAL CONDITIONS</div>
-                  <div class="alert-text">${patient.medicalHistory.join(", ")}</div>
-                `
-                    : ""
-                }
-              </div>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            patientAppointments.length > 0
-              ? `
-            <div class="section">
-              <div class="section-title">Appointment History</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Treatment / Purpose</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${patientAppointments
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime(),
-                    )
-                    .map(
-                      (a) => `
-                    <tr>
-                      <td>${new Date(a.date).toLocaleDateString()}</td>
-                      <td>${a.time}</td>
-                      <td>${a.treatment || a.type || "General Consultation"}</td>
-                      <td>${a.status.toUpperCase()}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            patientTreatments.length > 0
-              ? `
-            <div class="section">
-              <div class="section-title">Treatment History</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Treatment Name</th>
-                    <th>Notes</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${patientTreatments
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime(),
-                    )
-                    .map(
-                      (t) => `
-                    <tr>
-                      <td>${new Date(t.date).toLocaleDateString()}</td>
-                      <td>${t.name || t.treatmentName || "N/A"}</td>
-                      <td>${t.notes || "—"}</td>
-                      <td>${(t.status || "completed").toUpperCase()}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            prescriptions.length > 0
-              ? `
-            <div class="section">
-              <div class="section-title">Prescription History</div>
-              ${prescriptions
-                .map(
-                  (p) => `
-                <div style="margin-bottom: 15px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-weight: bold; font-size: 13px;">${p.treatment}</span>
-                    <span style="color: #666; font-size: 12px;">${new Date(p.date).toLocaleDateString()}</span>
-                  </div>
-                  <table style="margin-top: 0;">
-                    <thead>
-                      <tr>
-                        <th style="padding: 5px 10px;">Medicine</th>
-                        <th style="padding: 5px 10px;">Dosage</th>
-                        <th style="padding: 5px 10px;">Frequency</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${p.prescriptions
-                        .map(
-                          (m: any) => `
-                        <tr>
-                          <td style="padding: 5px 10px;">${m.medicine}</td>
-                          <td style="padding: 5px 10px;">${m.dosage}</td>
-                          <td style="padding: 5px 10px;">${m.frequency}</td>
-                        </tr>
-                      `,
-                        )
-                        .join("")}
-                    </tbody>
-                  </table>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            patientInvoices.length > 0
-              ? `
-            <div class="section">
-              <div class="section-title">Billing Summary</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Invoice #</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${patientInvoices
-                    .map(
-                      (inv) => `
-                    <tr>
-                      <td>${inv.id}</td>
-                      <td>${new Date(inv.date).toLocaleDateString()}</td>
-                      <td>₹${inv.totalAmount.toLocaleString()}</td>
-                      <td style="color: ${inv.status === "paid" ? "#16a34a" : "#dc2626"}">${inv.status.toUpperCase()}</td>
-                    </tr>
-                  `,
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </div>
-          `
-              : ""
-          }
-
-          <div class="footer-sig">
-            <div class="sig-container">
-              <div class="sig-line"></div>
-              <div class="sig-name">Dr. Rajesh Sharma</div>
-              <div class="sig-title">BDS, MDS (Oral Surgery)</div>
-              <div class="sig-title">Reg No: 12345/A</div>
-            </div>
-          </div>
-
-          <div style="position: fixed; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 10px; color: #999;">
-            This is a computer-generated medical report. Generated on ${new Date().toLocaleString()}
-          </div>
-        </body>
-      </html>
-    `;
-
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
+  const handleTogglePatientStatus = (patientId: string, newStatus: 'active' | 'inactive') => {
+    const targetPatient = patients.find(p => p.id === patientId);
+    if (targetPatient) {
+      handleSavePatient({
+        ...targetPatient,
+        status: newStatus,
+        deactivatedAt: newStatus === 'inactive' ? new Date().toISOString() : undefined
+      });
+      showToast(`Patient marked as ${newStatus}!`);
     }
   };
 
   const handleCheckInPatient = (appointment: any) => {
-    console.log(
-      "Check-in attempt for:",
-      appointment.patientName,
-      "Phone:",
-      appointment.patientPhone || appointment.phone,
-    );
-    const searchName = (appointment.patientName || appointment.patient || "")
-      .toLowerCase()
-      .trim();
-    const searchPhone = (
-      appointment.patientPhone ||
-      appointment.phone ||
-      ""
-    ).trim();
+    const searchName = (appointment.patientName || appointment.patient || "").toLowerCase().trim();
+    const searchPhone = (appointment.patientPhone || appointment.phone || "").trim();
 
     const existingPatient = patients.find((p) => {
       const pName = (p.name || "").toLowerCase().trim();
@@ -518,32 +213,17 @@ function MainApp() {
       return pPhone === searchPhone && pName === searchName;
     });
 
-    if (!existingPatient) {
-      console.log(
-        "No matching patient found for name:",
-        searchName,
-        "and phone:",
-        searchPhone,
-      );
-      setPendingCheckInAppt(appointment);
+    setPendingCheckInAppt(appointment);
+
+    if (existingPatient) {
+      // Patient exists: Show their form for verification/edit
+      setSelectedPatientId(existingPatient.id);
+      setShowPatientForm(true);
+      alert("Please verify patient details before check-in");
+    } else {
+      // Patient not found: Show registration modal
       setShowPatientNotFound(true);
-      return;
     }
-
-    console.log("Matched existing patient:", existingPatient.name);
-
-    const queuedPatient = {
-      id: appointment.id,
-      patientId: existingPatient.id,
-      patientName: existingPatient.name, // Use the name from the database
-      patientPhone: existingPatient.phone, // Use the phone from the database
-      appointmentTime: appointment.time,
-      status: "waiting",
-      treatmentType: appointment.treatment || appointment.type,
-    };
-    setQueuedPatients((prev) => [...prev, queuedPatient]);
-    handleUpdateAppointmentStatus(appointment.id, "checked-in");
-    alert(`Patient "${existingPatient.name}" checked in successfully.`);
   };
 
   const renderPage = () => {
@@ -559,7 +239,7 @@ function MainApp() {
         return (
           <AppointmentsPage
             appointments={appointments}
-            doctorsWithSchedules={doctorsWithSchedules}
+            doctorsWithSchedules={activeDoctors}
             doctorAvailability={doctorAvailability}
             handleNewAppointment={() => {
               setSelectedAppointment(null);
@@ -590,6 +270,26 @@ function MainApp() {
             setParentPatientId={setParentPatientId}
             setSelectedPatientId={setSelectedPatientId}
             handleExportPatient={handleExportPatient}
+            handleToggleStatus={handleTogglePatientStatus}
+          />
+        );
+      case "inventory":
+        return (
+          <InventoryPage
+            inventory={inventory}
+            onAddItem={() => {
+              setSelectedItemId("");
+              setShowInventoryForm(true);
+            }}
+            onEditItem={(id) => {
+              setSelectedItemId(id);
+              setShowInventoryForm(true);
+            }}
+            onDeleteItem={handleDeleteInventoryItem}
+            onRestock={(item) => {
+              setSelectedItemForRestock(item);
+              setShowRestockForm(true);
+            }}
           />
         );
       case "patient-queue":
@@ -604,11 +304,15 @@ function MainApp() {
               );
               setSelectedPatientForDiagnose({
                 ...p,
+                phone: p.patientPhone,
                 patientHistory: backgroundPatient
                   ? {
-                      medicalHistory: backgroundPatient.medicalHistory || [],
-                      allergies: backgroundPatient.allergies || [],
-                    }
+                    medicalHistory: backgroundPatient.medicalHistory || [],
+                    allergies: backgroundPatient.allergies || [],
+                    gender: backgroundPatient.gender || "",
+                    dateOfBirth: backgroundPatient.dateOfBirth || "",
+                    bloodGroup: backgroundPatient.bloodGroup || "",
+                  }
                   : undefined,
               });
               setShowDiagnoseForm(true);
@@ -630,6 +334,9 @@ function MainApp() {
                   patientId: existingPatient.id,
                   patientName: existingPatient.name,
                   patientPhone: existingPatient.phone,
+                  phone: existingPatient.phone,
+                  treatmentType: existingPatient.treatmentType || "General Consultation",
+                  patientConcern: "",
                   status: "in-consultation",
                   doctorId: doctorId || "1",
                   doctorName: doctorName || "Dr. Rajesh Sharma",
@@ -637,6 +344,9 @@ function MainApp() {
                   patientHistory: {
                     medicalHistory: existingPatient.medicalHistory || [],
                     allergies: existingPatient.allergies || [],
+                    gender: existingPatient.gender || "",
+                    dateOfBirth: existingPatient.dateOfBirth || "",
+                    bloodGroup: existingPatient.bloodGroup || "",
                   },
                 });
                 setShowDiagnoseForm(true);
@@ -649,7 +359,7 @@ function MainApp() {
               setShowPatientForm(true);
             }}
             patients={patients}
-            doctors={doctorsWithSchedules}
+            doctors={activeDoctors}
             appointments={appointments}
             doctorAvailability={doctorAvailability}
             onUpdateConsultation={(updatedConsultation) => {
@@ -797,7 +507,31 @@ function MainApp() {
         return (
           <ProfitSharingPage
             treatments={treatments}
-            doctorsWithSchedules={doctorsWithSchedules}
+            doctorsWithSchedules={activeDoctors}
+          />
+        );
+      case "consent":
+        return (
+          <ConsentPage
+            forms={consentForms}
+            onAddForm={() => setShowConsentForm(true)}
+            onViewForm={(id) => {
+              const form = consentForms.find(f => f.id === id);
+              if (form) {
+                setSelectedConsentForm(form);
+                setShowConsentViewer(true);
+              }
+            }}
+            onDeleteForm={handleDeleteConsentForm}
+          />
+        );
+      case "reports":
+        return (
+          <ReportsPage
+            patients={patients}
+            appointments={appointments}
+            treatments={treatments}
+            invoices={invoices}
           />
         );
       default:
@@ -831,12 +565,23 @@ function MainApp() {
             handleSaveAppointment(apt);
             setShowAppointmentForm(false);
             setSelectedAppointment(null);
+            setIsFollowUpBooking(false);
+            if (showDiagnoseForm) {
+              setBookedFollowUp({ date: apt.date as string, time: apt.time as string });
+            }
             alert("Appointment saved successfully!");
           }}
+          onClose={() => {
+            setShowAppointmentForm(false);
+            setSelectedAppointment(null);
+            setIsFollowUpBooking(false);
+          }}
           appointment={selectedAppointment}
-          doctors={doctorsWithSchedules}
+          isFollowUp={isFollowUpBooking}
+          doctors={activeDoctors}
           doctorAvailability={doctorAvailability}
           appointments={appointments}
+          patients={patients}
         />
       )}
 
@@ -846,6 +591,7 @@ function MainApp() {
             setShowPatientForm(false);
             setPreFilledPatientData(null);
           }}
+          isCheckIn={!!pendingCheckInAppt}
           onSave={(patient) => {
             handleSavePatient(patient, patientFormType, parentPatientId);
             const wasDirectConsultation = !!preFilledPatientData;
@@ -866,6 +612,7 @@ function MainApp() {
                 status: "waiting",
                 treatmentType:
                   pendingCheckInAppt.treatment || pendingCheckInAppt.type,
+                patientConcern: pendingCheckInAppt.patientConcern || pendingCheckInAppt.notes || "",
               };
               setQueuedPatients((prev) => [...prev, queuedPatient]);
               handleUpdateAppointmentStatus(pendingCheckInAppt.id, "checked-in");
@@ -882,9 +629,9 @@ function MainApp() {
               ? patients.find((p) => p.id === selectedPatientId)
               : preFilledPatientData
                 ? {
-                    name: preFilledPatientData.name,
-                    phone: preFilledPatientData.phone,
-                  }
+                  name: preFilledPatientData.name,
+                  phone: preFilledPatientData.phone,
+                }
                 : undefined
           }
           type={patientFormType}
@@ -895,7 +642,23 @@ function MainApp() {
       {showDiagnoseForm && selectedPatientForDiagnose && (
         <PatientConsultation
           patient={selectedPatientForDiagnose}
-          onClose={() => setShowDiagnoseForm(false)}
+          doctors={activeDoctors}
+          doctorAvailability={doctorAvailability}
+          appointments={appointments}
+          bookedFollowUp={bookedFollowUp}
+          initialData={draftConsultations[selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id]}
+          onDraftUpdate={(data) => {
+            handleDraftUpdate(selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id, data);
+          }}
+          onScheduleFollowUp={(data) => {
+            setSelectedAppointment(data);
+            setShowAppointmentForm(true);
+            setIsFollowUpBooking(true);
+          }}
+          onClose={() => {
+            setShowDiagnoseForm(false);
+            setBookedFollowUp(null);
+          }}
           onCompleteConsultation={(data) => {
             handleCompleteConsultation({
               ...data,
@@ -954,8 +717,17 @@ function MainApp() {
             setQueuedPatients((prev) =>
               prev.filter((p) => p.id !== selectedPatientForDiagnose.id),
             );
-            setShowDiagnoseForm(false);
-            alert("Consultation completed and saved to history!");
+
+            // Clear draft after completion
+            const patientId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
+            setDraftConsultations(prev => {
+              const next = { ...prev };
+              delete next[patientId];
+              return next;
+            });
+
+            // Modal will be closed by the user from the success screen in PatientConsultation
+            console.log("Consultation completed and saved to history!");
           }}
           onCreateTreatment={(treatment) => {
             handleSaveTreatment?.(treatment);
@@ -974,7 +746,7 @@ function MainApp() {
           patients={patients}
         />
       )}
-      
+
       {showTreatmentForm && (
         <TreatmentForm
           onClose={() => {
@@ -993,6 +765,7 @@ function MainApp() {
               : null
           }
           patients={patients}
+          doctors={activeDoctors}
         />
       )}
 
@@ -1081,7 +854,7 @@ function MainApp() {
         <TodaySchedulePopup
           onClose={() => setShowTodaySchedulePopup(false)}
           appointments={appointments}
-          doctors={doctorsWithSchedules}
+          doctors={activeDoctors}
           doctorAvailability={doctorAvailability}
           patients={patients}
           onToggleDoctorAvailability={(id) =>
@@ -1204,6 +977,60 @@ function MainApp() {
         />
       )}
 
+      {showConsentForm && (
+        <ConsentForm
+          onClose={() => setShowConsentForm(false)}
+          onSave={(form) => {
+            handleSaveConsentForm(form);
+            setShowConsentForm(false);
+            showToast("Consent form generated successfully!");
+          }}
+          patients={patients}
+          doctors={activeDoctors}
+        />
+      )}
+
+      {showConsentViewer && selectedConsentForm && (
+        <ConsentFormViewer
+          form={selectedConsentForm}
+          onClose={() => {
+            setShowConsentViewer(false);
+            setSelectedConsentForm(null);
+          }}
+        />
+      )}
+
+      {showInventoryForm && (
+        <InventoryForm
+          item={inventory.find((i) => i.id === selectedItemId)}
+          onClose={() => {
+            setShowInventoryForm(false);
+            setSelectedItemId("");
+          }}
+          onSave={(item) => {
+            handleSaveInventoryItem(item);
+            setShowInventoryForm(false);
+            setSelectedItemId("");
+          }}
+        />
+      )}
+
+      {showRestockForm && selectedItemForRestock && (
+        <RestockForm
+          item={selectedItemForRestock}
+          onClose={() => {
+            setShowRestockForm(false);
+            setSelectedItemForRestock(null);
+          }}
+          onSave={(updatedItem) => {
+            handleSaveInventoryItem(updatedItem);
+            setShowRestockForm(false);
+            setSelectedItemForRestock(null);
+            showToast(`${updatedItem.name} stock updated successfully!`, "success");
+          }}
+        />
+      )}
+
       {showPatientNotFound && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl transform transition-all duration-300 scale-100">
@@ -1253,11 +1080,10 @@ function MainApp() {
           className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300`}
         >
           <div
-            className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${
-              toast.type === "success"
-                ? "bg-green-600 border-green-500"
-                : "bg-red-600 border-red-500"
-            } text-white`}
+            className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${toast.type === "success"
+              ? "bg-green-600 border-green-500"
+              : "bg-red-600 border-red-500"
+              } text-white`}
           >
             {toast.type === "success" ? (
               <CheckCircle className="w-5 h-5" />

@@ -22,6 +22,8 @@ interface AppointmentFormProps {
   doctorAvailability?: { [key: string]: boolean };
   appointments?: any[];
   selectedDate?: Date | null;
+  patients?: any[];
+  isFollowUp?: boolean;
 }
 
 export function AppointmentForm({
@@ -33,6 +35,8 @@ export function AppointmentForm({
   doctorAvailability = {},
   appointments = [],
   selectedDate,
+  patients = [],
+  isFollowUp = false,
 }: AppointmentFormProps) {
   // ── original logic (untouched) ────────────────────────────────────────────
   const formatDateLocal = (date: Date) => {
@@ -55,13 +59,15 @@ export function AppointmentForm({
         ? formatDateLocal(appointment.date)
         : appointment?.date || formatDateLocal(safeDate),
     time: appointment?.time || "09:00",
-    duration: appointment?.duration || 30,
+    duration: appointment?.duration || "",
     type: appointment?.type || "consultation",
     notes: appointment?.notes || "",
     fee: appointment?.fee || 500,
     patientConcern: appointment?.patientConcern || "",
     treatmentType: appointment?.treatmentType || "",
   });
+
+  const [suggestion, setSuggestion] = useState<{ name: string, phone: string } | null>(null);
 
   const getBookedSlots = () =>
     (appointments || [])
@@ -147,7 +153,18 @@ export function AppointmentForm({
         )
           return false;
       }
-      return true;
+      // NEW: Filter out slots that overlap with existing appointments
+      const slotStart = slotHour * 60 + slotMinute;
+      const isBooked = (appointments || []).some(a => {
+        if (a.doctorId !== formData.doctorId || a.date !== formData.date) return false;
+        const aStart = parseInt(a.time.split(':')[0]) * 60 + parseInt(a.time.split(':')[1]);
+        const aEnd = aStart + (a.duration || 15);
+
+        // A slot is unavailable if the current slot time falls within an existing appointment's duration
+        return slotStart >= aStart && slotStart < aEnd;
+      });
+
+      return !isBooked;
     });
   };
 
@@ -160,15 +177,24 @@ export function AppointmentForm({
       alert(" Phone number cannot be changed after consultation");
       return;
     }
-    const conflict = (appointments || []).find(
-      (a) =>
-        a.doctorId === formData.doctorId &&
-        a.date === formData.date &&
-        a.time === formData.time &&
-        a.id !== appointment?.id,
-    );
+    // Conflict check with duration support
+    const conflict = (appointments || []).find((a) => {
+      if (a.doctorId !== formData.doctorId || a.date !== formData.date || a.id === appointment?.id) return false;
+
+      const newStart = parseInt(formData.time.split(':')[0]) * 60 + parseInt(formData.time.split(':')[1]);
+      const newDuration = formData.duration ? parseInt(formData.duration.toString()) : 15; // Default to 15 if not specified
+      const newEnd = newStart + newDuration;
+
+      const existingStart = parseInt(a.time.split(':')[0]) * 60 + parseInt(a.time.split(':')[1]);
+      const existingDuration = a.duration ? parseInt(a.duration.toString()) : 15; // Default to 15 if not specified
+      const existingEnd = existingStart + existingDuration;
+
+      // Check for overlap: (StartA < EndB) and (EndA > StartB)
+      return (newStart < existingEnd) && (newEnd > existingStart);
+    });
+
     if (conflict) {
-      alert("❌ This slot is already booked");
+      alert(`❌ This slot conflicts with another appointment (${conflict.patientName} at ${conflict.time})`);
       return;
     }
     onSave({
@@ -201,6 +227,23 @@ export function AppointmentForm({
         }
       }
       if (name === "doctorId" || name === "date") updated.time = "";
+
+      // Phone suggestion logic
+      if (name === 'patientName') {
+        if (value.trim().length > 2) {
+          const found = patients.find(p =>
+            p.name.toLowerCase() === value.toLowerCase().trim()
+          );
+          if (found) {
+            setSuggestion({ name: found.name, phone: found.phone });
+          } else {
+            setSuggestion(null);
+          }
+        } else {
+          setSuggestion(null);
+        }
+      }
+
       return updated;
     });
   };
@@ -209,14 +252,18 @@ export function AppointmentForm({
   const selectedDoctor = doctors.find((d) => d.id === formData.doctorId);
   // ─────────────────────────────────────────────────────────────────────────
 
-  const title = isQuickBooking
-    ? "Quick appointment"
-    : appointment && appointment.id
-      ? "Edit appointment"
-      : "New appointment";
-  const subtitle = isQuickBooking
-    ? "Book an appointment instantly"
-    : "Schedule a new patient appointment";
+  const title = isFollowUp
+    ? "Follow-up Appointment"
+    : isQuickBooking
+      ? "Quick appointment"
+      : appointment && appointment.id
+        ? "Edit appointment"
+        : "New appointment";
+  const subtitle = isFollowUp
+    ? "Based on current consultation"
+    : isQuickBooking
+      ? "Book an appointment instantly"
+      : "Schedule a new patient appointment";
 
   const inputCls =
     "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 " +
@@ -236,7 +283,7 @@ export function AppointmentForm({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 md:p-6 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[150] p-4 md:p-6 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-gray-100 my-4 overflow-hidden">
         {/* ── Header ── */}
         <div className="sticky top-0 bg-gradient-to-r from-[#2563eb] to-[#0d9488] border-b border-white/10 px-4 py-3 rounded-t-2xl flex items-center justify-between gap-4 z-10 text-white">
@@ -267,6 +314,7 @@ export function AppointmentForm({
               <label className={labelCls}>
                 <User className="w-3.5 h-3.5" /> Patient name{" "}
                 <span className="text-red-400 normal-case">*</span>
+                {isFollowUp && <span className="ml-1"></span>}
               </label>
               <input
                 type="text"
@@ -274,7 +322,8 @@ export function AppointmentForm({
                 value={formData.patientName}
                 onChange={handleChange}
                 required
-                className={inputCls}
+                disabled={isFollowUp}
+                className={`${inputCls} ${isFollowUp ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 placeholder="Full name"
               />
             </div>
@@ -282,6 +331,7 @@ export function AppointmentForm({
               <label className={labelCls}>
                 <Phone className="w-3.5 h-3.5" /> Phone number{" "}
                 <span className="text-red-400 normal-case">*</span>
+                {isFollowUp && <span className="ml-1"></span>}
               </label>
               <input
                 type="tel"
@@ -292,10 +342,26 @@ export function AppointmentForm({
                   setFormData((prev) => ({ ...prev, patientPhone: value }));
                 }}
                 required
-                disabled={appointment?.status === "checked-in"}
-                className={inputCls}
+                disabled={isFollowUp || appointment?.status === "checked-in"}
+                className={`${inputCls} ${(isFollowUp || appointment?.status === "checked-in") ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 placeholder="98765 43210"
               />
+              {suggestion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, patientPhone: suggestion.phone }));
+                    setSuggestion(null);
+                  }}
+                  className="mt-2 w-full flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs hover:bg-blue-100 transition-colors group"
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="w-3 h-3 text-blue-600" />
+                    <span className="text-gray-600">Found patient: <span className="font-bold text-blue-700">{suggestion.phone}</span></span>
+                  </div>
+                  <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform">Auto-fill →</span>
+                </button>
+              )}
               {appointment?.status === "checked-in" && (
                 <p className="text-xs text-red-500 mt-1">
                   Phone number cannot be changed after consultation
@@ -359,18 +425,37 @@ export function AppointmentForm({
                   ))}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>
+                <Clock className="w-3.5 h-3.5" /> Estimated Duration (Mins)
+              </label>
+              <div className="relative">
+                <select
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  className={inputCls + " appearance-none cursor-pointer pr-10"}
+                >
+                  <option value="">Select duration (Optional)</option>
+                  <option value="15">15 Minutes</option>
+                  <option value="30">30 Minutes</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">1 Hour</option>
+                  <option value="90">1.5 Hours</option>
+                  <option value="120">2 Hours</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
@@ -382,30 +467,26 @@ export function AppointmentForm({
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
               <label className={labelCls}>
-                <Stethoscope className="w-3.5 h-3.5" /> Treatment{" "}
-                <span className="text-red-400 normal-case">*</span>
+                <Stethoscope className="w-3.5 h-3.5" /> Treatment
               </label>
               <input
                 type="text"
                 name="treatment"
                 value={formData.treatment}
                 onChange={handleChange}
-                required
                 className={inputCls}
                 placeholder="Description"
               />
             </div>
             <div className="md:col-span-2">
               <label className={labelCls}>
-                <Stethoscope className="w-3.5 h-3.5" /> Treatment type{" "}
-                <span className="text-red-400 normal-case">*</span>
+                <Stethoscope className="w-3.5 h-3.5" /> Treatment type
               </label>
               <div className="relative">
                 <select
                   name="treatmentType"
                   value={formData.treatmentType}
                   onChange={handleChange}
-                  required
                   className={inputCls + " appearance-none cursor-pointer pr-10"}
                 >
                   <option value="">Select type</option>

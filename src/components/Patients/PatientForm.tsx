@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud } from 'lucide-react';
+import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool, ShieldCheck, Lock } from 'lucide-react';
+import { SignaturePad } from '../Consent/SignaturePad';
 
 // Enhanced barcode generation function
 const generateBarcode = (patientId: string) => {
@@ -11,17 +12,34 @@ const generatePatientId = () => {
   return `PAT${timestamp}`;
 };
 
+const calculateAge = (dob: string) => {
+  if (!dob) return 0;
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 interface PatientFormProps {
   onClose: () => void;
   onSave: (patient: any) => void;
   patient?: any;
   type?: 'normal' | 'person';
   parentId?: string;
+  isCheckIn?: boolean;
 }
 
-export function PatientForm({ onClose, onSave, patient, type, parentId }: PatientFormProps) {
+export function PatientForm({ onClose, onSave, patient, type, parentId, isCheckIn }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState((isCheckIn && patient) ? 4 : 1);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
   React.useEffect(() => {
     if (patient) {
       setFormData(prev => ({
@@ -35,6 +53,7 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
       }));
       setSelectedMedicalHistory(patient.medicalHistory || []);
       setSelectedAllergies(patient.allergies || []);
+      setIsPhoneVerified(!!(patient.id || patient.patientId));
     } else {
       setFormData({
         name: '',
@@ -45,6 +64,8 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
         address: '',
         emergencyContact: '',
         emergencyName: '',
+        emergencyRelation: '',
+        customEmergencyRelation: '',
         medicalHistory: '',
         pastDentalHistory: '',
         allergies: '',
@@ -61,7 +82,24 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
         insuranceNumber: '',
         referredBy: '',
         avatar: '',
-        dentalFiles: []
+        dentalFiles: [],
+        previousDoctorName: '',
+        previousClinicName: '',
+        previousDoctorPhone: '',
+        previousClinicAddress: '',
+        previousLastVisitDate: '',
+        previousReason: '',
+        previousTreatments: [],
+        consentCorrectDetails: false,
+        consentExamination: false,
+        consentRisks: false,
+        consentStorage: false,
+        consentEmergency: false,
+        optWhatsApp: false,
+        optPhotos: false,
+        patientSignature: '',
+        guardianName: '',
+        guardianSignature: ''
       });
       setSelectedMedicalHistory([]);
       setSelectedAllergies([]);
@@ -79,6 +117,7 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
     address: patient?.address || '',
     emergencyContact: patient?.emergencyContact || '',
     emergencyName: patient?.emergencyName || '',
+    emergencyRelation: patient?.emergencyRelation || '',
     medicalHistory: patient?.medicalHistory?.join('\n') || '',
     pastDentalHistory: patient?.pastDentalHistory || '',
     allergies: patient?.allergies?.join('\n') || '',
@@ -95,7 +134,25 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
     insuranceNumber: patient?.insuranceNumber || '',
     referredBy: patient?.referredBy || '',
     avatar: patient?.avatar || '',
-    dentalFiles: [] ,
+    dentalFiles: patient?.dentalFiles || [],
+    previousDoctorName: patient?.previousDoctorName || '',
+    previousClinicName: patient?.previousClinicName || '',
+    previousDoctorPhone: patient?.previousDoctorPhone || '',
+    previousClinicAddress: patient?.previousClinicAddress || '',
+    previousLastVisitDate: patient?.previousLastVisitDate || '',
+    previousReason: patient?.previousReason || '',
+    previousTreatments: patient?.previousTreatments || [],
+    consentCorrectDetails: patient?.consentCorrectDetails || false,
+    consentExamination: patient?.consentExamination || false,
+    consentRisks: patient?.consentRisks || false,
+    consentStorage: patient?.consentStorage || false,
+    consentEmergency: patient?.consentEmergency || false,
+    optWhatsApp: patient?.optWhatsApp || false,
+    optPhotos: patient?.optPhotos || false,
+    patientSignature: patient?.patientSignature || '',
+    guardianName: patient?.guardianName || '',
+    guardianSignature: patient?.guardianSignature || '',
+    customEmergencyRelation: ''
   });
 
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
@@ -121,7 +178,8 @@ export function PatientForm({ onClose, onSave, patient, type, parentId }: Patien
     patient?.allergies || []
   );
   const [medicalSearch, setMedicalSearch] = useState('');
-const [allergySearch, setAllergySearch] = useState('');
+  const [allergySearch, setAllergySearch] = useState('');
+  const [showOtherTreatment, setShowOtherTreatment] = useState(false);
 
   React.useEffect(() => {
     if (!formData.barcode) {
@@ -136,8 +194,24 @@ const [allergySearch, setAllergySearch] = useState('');
     if (stepNumber === 1) {
       if (!formData.name.trim()) errors.name = 'Name is required';
       if (!formData.phone.trim()) errors.phone = 'Phone number is required';
+      if (!isPhoneVerified) errors.phone = 'Please verify your phone number first';
       if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         errors.email = 'Please enter a valid email address';
+      }
+    }
+    
+    if (stepNumber === 3) {
+      if (!formData.consentCorrectDetails || !formData.consentExamination || !formData.consentRisks || !formData.consentStorage || !formData.consentEmergency) {
+        errors.consent = 'All mandatory consents must be accepted';
+      }
+      const age = calculateAge(formData.dateOfBirth);
+      if (age > 0 && age < 18) {
+        if (!formData.guardianName.trim()) errors.guardianName = 'Guardian name is required';
+        if (!formData.guardianSignature) errors.guardianSignature = 'Guardian signature is required';
+      } else {
+        if (!formData.patientSignature) {
+          errors.patientSignature = 'Patient signature is required';
+        }
       }
     }
     
@@ -172,10 +246,7 @@ const handleCustomRelation = (value: string) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 3) {
-  e.preventDefault(); 
-  return;
-} 
+    if (step !== 4) return;
     setLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -206,6 +277,11 @@ const handleCustomRelation = (value: string) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Reset verification if phone changes
+    if (name === 'phone') {
+      setIsPhoneVerified(false);
+    }
     
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
@@ -441,21 +517,85 @@ overflow: auto;
           )}
         </div>
 
-        <div>
+        <div className="relative">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number *
           </label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-              validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            }`}
-            placeholder="+91 98765 43210"
-          />
+          <div className="flex gap-2">
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              disabled={isPhoneVerified}
+              className={`flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              } ${isPhoneVerified ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+              placeholder="+91 98765 43210"
+            />
+            {!isPhoneVerified && formData.phone.length >= 10 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOtpSending(true);
+                  setTimeout(() => {
+                    setOtpSending(false);
+                    setShowOtpInput(true);
+                  }, 1000);
+                }}
+                disabled={otpSending}
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center gap-2"
+              >
+                {otpSending ? 'Sending...' : 'Verify'}
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+            )}
+            {isPhoneVerified && (
+              <div className="flex items-center gap-2 text-green-600 px-3 bg-green-50 rounded-xl border border-green-100">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase">Verified</span>
+              </div>
+            )}
+          </div>
+
+          {showOtpInput && !isPhoneVerified && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5" />
+                  Enter 4-Digit OTP
+                </label>
+                <span className="text-[10px] text-blue-500 font-medium">OTP: 1234 (Dummy)</span>
+              </div>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  maxLength={4}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-32 px-4 py-2 text-center text-lg font-bold tracking-[0.5em] border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  placeholder="0000"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (otp === '1234') {
+                      setIsPhoneVerified(true);
+                      setShowOtpInput(false);
+                      setValidationErrors(prev => ({ ...prev, phone: '' }));
+                    } else {
+                      alert('Invalid OTP! Please enter 1234');
+                    }
+                  }}
+                  className="flex-1 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
+                >
+                  Verify OTP
+                </button>
+              </div>
+            </div>
+          )}
+
           {validationErrors.phone && (
             <p className="text-red-600 text-sm mt-1 flex items-center">
               <AlertTriangle className="w-4 h-4 mr-1" />
@@ -671,19 +811,87 @@ overflow: auto;
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          <Phone className="w-4 h-4 inline mr-2" />
-          Emergency Contact Name
-        </label>
-        <input
-          type="text"
-          name="emergencyName"
-          value={formData.emergencyName}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          placeholder="Emergency contact person name"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Phone className="w-4 h-4 inline mr-2" />
+            Emergency Contact Name
+          </label>
+          <input
+            type="text"
+            name="emergencyName"
+            value={formData.emergencyName}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            placeholder="Emergency contact person name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Emergency Contact Relation
+          </label>
+          <div className="space-y-3">
+            <select
+              name="emergencyRelation"
+              value={formData.emergencyRelation}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  emergencyRelation: val,
+                  customEmergencyRelation: val === 'Other' ? prev.customEmergencyRelation : ''
+                }));
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="">Select Relation</option>
+              <option value="Father">Father</option>
+              <option value="Mother">Mother</option>
+              <option value="Brother">Brother</option>
+              <option value="Sister">Sister</option>
+              <option value="Husband">Husband</option>
+              <option value="Wife">Wife</option>
+              <option value="Guardian">Guardian</option>
+              <option value="Friend">Friend</option>
+              <option value="Other">Other</option>
+              {formData.emergencyRelation && !['', 'Father', 'Mother', 'Brother', 'Sister', 'Husband', 'Wife', 'Guardian', 'Friend', 'Other'].includes(formData.emergencyRelation) && (
+                <option value={formData.emergencyRelation}>{formData.emergencyRelation}</option>
+              )}
+            </select>
+            
+            {formData.emergencyRelation === 'Other' && (
+              <div className="flex animate-in fade-in slide-in-from-top-2">
+                <input
+                  type="text"
+                  value={formData.customEmergencyRelation}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customEmergencyRelation: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (formData.customEmergencyRelation.trim()) {
+                        setFormData(prev => ({ ...prev, emergencyRelation: prev.customEmergencyRelation, customEmergencyRelation: '' }));
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-l-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  placeholder="Enter custom relation"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.customEmergencyRelation.trim()) {
+                      setFormData(prev => ({ ...prev, emergencyRelation: prev.customEmergencyRelation, customEmergencyRelation: '' }));
+                    }
+                  }}
+                  className="px-4 bg-blue-600 text-white rounded-r-xl hover:bg-blue-700 transition-colors"
+                >
+                  →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div>
@@ -921,6 +1129,183 @@ overflow: auto;
         )}
       </div>
 
+      {/* Previous Doctor Details */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <User className="w-5 h-5 text-blue-600" />
+            Previous Dentist / Doctor Details
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Previous Doctor Name</label>
+            <input
+              type="text"
+              name="previousDoctorName"
+              value={formData.previousDoctorName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              placeholder="Dr. Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Clinic Name</label>
+            <input
+              type="text"
+              name="previousClinicName"
+              value={formData.previousClinicName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              placeholder="Clinic Name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Doctor Phone</label>
+            <input
+              type="tel"
+              name="previousDoctorPhone"
+              value={formData.previousDoctorPhone}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '');
+                setFormData(prev => ({ ...prev, previousDoctorPhone: digits }));
+              }}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={15}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              placeholder="Digits only"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Last Visit Date</label>
+            <input
+              type="date"
+              name="previousLastVisitDate"
+              value={formData.previousLastVisitDate}
+              onChange={handleChange}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Clinic Address</label>
+          <textarea
+            name="previousClinicAddress"
+            value={formData.previousClinicAddress}
+            onChange={handleChange}
+            rows={2}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+            placeholder="Complete Address"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Reason for Previous Treatment</label>
+          <input
+            type="text"
+            name="previousReason"
+            value={formData.previousReason}
+            onChange={handleChange}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g. Pain, Checkup"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Previous Treatments</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {['Root Canal', 'Extraction', 'Braces', 'Implant', 'Crown', 'Filling', 'Surgery'].map((treatment) => (
+              <label key={treatment} className="flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={formData.previousTreatments.includes(treatment)}
+                  onChange={(e) => {
+                    const updated = e.target.checked
+                      ? [...formData.previousTreatments, treatment]
+                      : formData.previousTreatments.filter(t => t !== treatment);
+                    setFormData(prev => ({ ...prev, previousTreatments: updated }));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                />
+                <span className="text-xs text-gray-700">{treatment}</span>
+              </label>
+            ))}
+            {/* Other option */}
+            <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-blue-300 bg-blue-50/50 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={showOtherTreatment}
+                onChange={(e) => {
+                  setShowOtherTreatment(e.target.checked);
+                  if (!e.target.checked) {
+                    // Uncheck karne par custom entries hata do
+                    setFormData(prev => ({ ...prev, previousTreatments: prev.previousTreatments.filter(t => ['Root Canal','Extraction','Braces','Implant','Crown','Filling','Surgery'].includes(t)) }));
+                  }
+                }}
+                className="w-4 h-4 rounded border-blue-300 text-blue-600"
+              />
+              <span className="text-xs text-blue-700 font-semibold">Other</span>
+            </label>
+          </div>
+          {/* Input sirf tab dikhega jab Other checked ho */}
+          {showOtherTreatment && (
+            <div className="mt-3 flex gap-2 animate-in fade-in slide-in-from-top-2">
+              <input
+                type="text"
+                id="customTreatmentInput"
+                placeholder="Treatment name likhein aur → se add karein"
+                className="flex-1 px-4 py-2 text-sm border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val && !formData.previousTreatments.includes(val)) {
+                      setFormData(prev => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
+                    }
+                    (e.target as HTMLInputElement).value = '';
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-bold"
+                onClick={() => {
+                  const input = document.getElementById('customTreatmentInput') as HTMLInputElement;
+                  const val = input?.value.trim();
+                  if (val && !formData.previousTreatments.includes(val)) {
+                    setFormData(prev => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
+                  }
+                  if (input) input.value = '';
+                }}
+              >
+                →
+              </button>
+            </div>
+          )}
+          {/* Show custom treatment tags */}
+          {formData.previousTreatments.filter(t => !['Root Canal','Extraction','Braces','Implant','Crown','Filling','Surgery'].includes(t)).length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {formData.previousTreatments.filter(t => !['Root Canal','Extraction','Braces','Implant','Crown','Filling','Surgery'].includes(t)).map(t => (
+                <span key={t} className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                  {t}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, previousTreatments: prev.previousTreatments.filter(x => x !== t) }))}
+                    className="text-blue-500 hover:text-blue-800 ml-1"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="bg-red-50 border border-red-200 rounded-xl p-4">
         <div className="flex items-center mb-2">
           <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
@@ -934,171 +1319,316 @@ overflow: auto;
     </div>
   );
 
-  const renderStep3 = () => (
+  const renderStep3 = () => {
+    const age = calculateAge(formData.dateOfBirth);
+    const isMinor = age > 0 && age < 18;
+
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ClipboardCheck className="w-10 h-10 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Patient Consent & Declaration</h3>
+          <p className="text-gray-600">Please review and confirm the following statements</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-blue-600 mb-4">Required Consents</h4>
+          <div className="space-y-4">
+            {[
+              { id: 'consentCorrectDetails', label: 'I confirm details entered are correct' },
+              { id: 'consentExamination', label: 'I agree to dental examination' },
+              { id: 'consentRisks', label: 'I understand treatment risks explained later by doctor' },
+              { id: 'consentStorage', label: 'I allow clinic to store records securely' },
+              { id: 'consentEmergency', label: 'Emergency treatment allowed if required' }
+            ].map((consent) => (
+              <label key={consent.id} className="flex items-start gap-3 p-3 border border-gray-50 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={formData[consent.id]}
+                  onChange={(e) => setFormData(prev => ({ ...prev, [consent.id]: e.target.checked }))}
+                  className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 font-medium">{consent.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-blue-600 mt-8 mb-4">Optional Preferences</h4>
+          <div className="space-y-4">
+            {[
+              { id: 'optWhatsApp', label: 'Allow WhatsApp reminders' },
+              { id: 'optPhotos', label: 'Allow before/after photos' }
+            ].map((opt) => (
+              <label key={opt.id} className="flex items-start gap-3 p-3 border border-gray-50 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={formData[opt.id]}
+                  onChange={(e) => setFormData(prev => ({ ...prev, [opt.id]: e.target.checked }))}
+                  className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 font-medium">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+          {!isMinor ? (
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <PenTool className="w-4 h-4 text-blue-600" />
+                Patient Signature Section *
+              </h4>
+              <div className="border border-gray-100 rounded-2xl p-4">
+                <SignaturePad
+                  onSave={(dataUrl) => setFormData(prev => ({ ...prev, patientSignature: dataUrl }))}
+                  defaultValue={formData.patientSignature}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in fade-in slide-in-from-top-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-amber-900">Guardian Authorization Required</p>
+                  <p className="text-xs text-amber-700">Patient is under 18 years old ({age} years). Guardian details and signature are mandatory.</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Guardian Full Name *</label>
+                <input
+                  type="text"
+                  name="guardianName"
+                  value={formData.guardianName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter guardian name"
+                />
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <PenTool className="w-4 h-4 text-blue-600" />
+                  Guardian Signature *
+                </h4>
+                <div className="border border-gray-100 rounded-2xl p-4">
+                  <SignaturePad
+                    onSave={(dataUrl) => setFormData(prev => ({ ...prev, guardianSignature: dataUrl }))}
+                    defaultValue={formData.guardianSignature}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderStep4 = () => {
+    const age = calculateAge(formData.dateOfBirth);
+    const isMinor = age > 0 && age < 18;
+
+    return (
     <div className="space-y-6">
       <div className="text-center mb-6">
         <div className="w-20 h-20 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <QrCode className="w-10 h-10 text-green-600" />
+          <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Patient Identification</h3>
-        <p className="text-gray-600">Review and confirm patient details</p>
+        <h3 className="text-xl font-bold text-gray-900">{isCheckIn ? 'Verify & Confirm Check-in' : 'Review & Finalize'}</h3>
+        <p className="text-gray-600">{isCheckIn ? 'Review patient history and details before checking in' : 'Please review all information before saving'}</p>
       </div>
 
-      {/* Patient ID and Barcode */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-        <h4 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
-          <QrCode className="w-5 h-5 mr-2" />
-          Patient Identification System
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-blue-700 mb-2">
-              Patient ID
-            </label>
-            <input
-              type="text"
-              name="patientId"
-              value={formData.patientId}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-blue-100 border border-blue-300 rounded-lg text-blue-900 font-mono font-bold"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Patient Summary */}
+        <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600" />
+              Patient Personal Details
+            </h4>
+            <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              {formData.patientId}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-blue-700 mb-2">
-              Scannable Barcode
-            </label>
-            <div className="bg-white border border-blue-300 rounded-lg p-4 text-center">
-              <div className="font-mono text-2xl text-blue-900 tracking-wider mb-2">
-                {formData.barcode}
+          
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Full Name</span>
+              <p className="font-semibold text-gray-900">{formData.name}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</span>
+              <p className="font-semibold text-gray-900 flex items-center gap-2">
+                {formData.phone}
+                <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+              </p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</span>
+              <p className="font-semibold text-gray-900 truncate">{formData.email || 'N/A'}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gender / Age</span>
+              <p className="font-semibold text-gray-900 capitalize">{formData.gender || 'N/A'} / {calculateAge(formData.dateOfBirth)}Y</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Blood Group</span>
+              <p className="font-semibold text-gray-900">{formData.bloodGroup || 'Not provided'}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Marital Status</span>
+              <p className="font-semibold text-gray-900 capitalize">{formData.maritalStatus || 'N/A'}</p>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Occupation</span>
+              <p className="font-semibold text-gray-900">{formData.occupation || 'N/A'}</p>
+            </div>
+            <div className="col-span-2 space-y-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Residential Address</span>
+              <p className="font-semibold text-gray-900 text-sm">{formData.address || 'N/A'}</p>
+            </div>
+            <div className="col-span-2 p-3 bg-white border border-gray-100 rounded-xl">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Emergency Contact</span>
+              <p className="font-bold text-gray-900 text-sm">{formData.emergencyName} ({formData.emergencyRelation})</p>
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Phone className="w-3 h-3" /> {formData.emergencyContact}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Medical & History Summary */}
+        <div className="space-y-6">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500" />
+              Medical Status
+            </h4>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest block mb-1">Allergies</span>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.allergies.split('\n').filter(a => a.trim()).length > 0 ? (
+                      formData.allergies.split('\n').filter(a => a.trim()).map(a => (
+                        <span key={a} className="px-2 py-0.5 bg-red-100 text-red-700 rounded-md text-[10px] font-bold">{a}</span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-red-300 italic">No allergies</span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                  <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest block mb-1">Conditions</span>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.medicalHistory.split('\n').filter(h => h.trim()).length > 0 ? (
+                      formData.medicalHistory.split('\n').filter(h => h.trim()).map(h => (
+                        <span key={h} className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-md text-[10px] font-bold">{h}</span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-orange-300 italic">None reported</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={printBarcode}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition-all duration-200 flex items-center mx-auto"
-              >
-                <QrCode className="w-4 h-4 mr-2" />
-                Print Barcode
-              </button>
+              <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Past Dental History</span>
+                <p className="text-sm text-gray-700 italic">{formData.pastDentalHistory || 'No previous history provided'}</p>
+              </div>
             </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <History className="w-5 h-5 text-blue-600" />
+              Previous Dentist Info
+            </h4>
+            {formData.previousDoctorName ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Doctor / Clinic</span>
+                  <p className="font-semibold text-gray-900 text-sm">{formData.previousDoctorName}</p>
+                  <p className="text-[10px] text-gray-500">{formData.previousClinicName}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Last Visit</span>
+                  <p className="font-semibold text-gray-900 text-sm">{formData.previousLastVisitDate || 'N/A'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Previous Treatments</span>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.previousTreatments.map(t => (
+                      <span key={t} className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-bold">{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No previous dentist details provided</p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="bg-gray-50 rounded-2xl p-6">
-        <h4 className="text-lg font-bold text-gray-900 mb-4">Patient Summary</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Name:</span>
-              <span className="font-medium text-gray-900">{formData.name || 'Not provided'}</span>
+      {/* Consent & Signature Preview */}
+      <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100">
+        <h4 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <ClipboardCheck className="w-5 h-5 text-blue-600" />
+          Consent & Signature Status
+        </h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.consentCorrectDetails && formData.consentExamination && formData.consentRisks && formData.consentStorage && formData.consentEmergency ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                {formData.consentCorrectDetails && formData.consentExamination && formData.consentRisks && formData.consentStorage && formData.consentEmergency ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+              </div>
+              <span className="text-sm font-bold text-gray-700">All Mandatory Consents Accepted</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Phone:</span>
-              <span className="font-medium text-gray-900">{formData.phone || 'Not provided'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Email:</span>
-              <span className="font-medium text-gray-900">{formData.email || 'Not provided'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Age:</span>
-              <span className="font-medium text-gray-900">
-                {formData.dateOfBirth 
-                  ? Math.floor((new Date().getTime() - new Date(formData.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) + ' years'
-                  : 'Not provided'
-                }
-              </span>
+
+            <div className="space-y-2 pl-9">
+              {[
+                { id: 'optWhatsApp', label: 'WhatsApp Reminders' },
+                { id: 'optPhotos', label: 'Before/After Photos' }
+              ].map(opt => (
+                <div key={opt.id} className="flex items-center gap-2 text-sm">
+                  <span className={formData[opt.id] ? 'text-green-600 font-bold' : 'text-gray-400'}>
+                    {formData[opt.id] ? '✓' : '✗'}
+                  </span>
+                  <span className="text-gray-600">{opt.label}</span>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Gender:</span>
-              <span className="font-medium text-gray-900 capitalize">{formData.gender}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Blood Group:</span>
-              <span className="font-medium text-gray-900">{formData.bloodGroup || 'Not provided'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Medical Conditions:</span>
-              <span className="font-medium text-gray-900">
-                {formData.medicalHistory.split('\n').filter(h => h.trim()).length || 'None'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Allergies:</span>
-              <span className="font-medium text-gray-900">
-                {formData.allergies.split('\n').filter(a => a.trim()).length || 'None'}
-              </span>
-            </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {!isMinor && formData.patientSignature && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Patient Signature</span>
+                <div className="bg-white border border-gray-200 rounded-xl p-2 h-24 flex items-center justify-center">
+                  <img src={formData.patientSignature} alt="Patient Signature" className="max-h-full max-w-full object-contain" />
+                </div>
+              </div>
+            )}
+            {isMinor && formData.guardianSignature && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Guardian: {formData.guardianName}</span>
+                <div className="bg-white border border-gray-200 rounded-xl p-2 h-24 flex items-center justify-center">
+                  <img src={formData.guardianSignature} alt="Guardian Signature" className="max-h-full max-w-full object-contain" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Medical Alerts Preview */}
-{(
-  formData.medicalHistory.trim() ||
-  formData.allergies.trim() ||
-  formData.pastDentalHistory.trim()
-) && (
-  <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
-    
-    <div className="flex items-center mb-4">
-      <AlertTriangle className="w-5 h-5 text-orange-600 mr-2" />
-      <h4 className="font-semibold text-orange-900">
-        Medical Alerts & Past History
-      </h4>
-    </div>
-
-    {/* Allergies */}
-    {formData.allergies.trim() && (
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-red-700 mb-1">
-          Allergies
-        </p>
-
-        <p className="text-sm text-red-600">
-          {formData.allergies
-            .split('\n')
-            .filter(a => a.trim())
-            .join(', ')}
-        </p>
-      </div>
-    )}
-
-    {/* Medical History */}
-    {formData.medicalHistory.trim() && (
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-orange-700 mb-1">
-          Medical History
-        </p>
-
-        <p className="text-sm text-orange-600">
-          {formData.medicalHistory
-            .split('\n')
-            .filter(h => h.trim())
-            .join(', ')}
-        </p>
-      </div>
-    )}
-
-    {/* Past Dental History */}
-    {formData.pastDentalHistory.trim() && (
-      <div>
-        <p className="text-sm font-semibold text-blue-700 mb-1">
-          Past Dental History
-        </p>
-
-        <p className="text-sm text-blue-600 whitespace-pre-line">
-          {formData.pastDentalHistory}
-        </p>
-      </div>
-    )}
-  </div>
-)}
     </div>
   );
+};
 
   const getStepIndicator = (stepNumber: number) => {
     if (stepNumber < step) {
@@ -1130,24 +1660,31 @@ overflow: auto;
           </div>
 
           {/* Step Indicator */}
-          <div className="flex items-center justify-center space-x-8">
-            <div className="flex items-center">
+          <div className="flex items-center justify-center space-x-4 sm:space-x-8 overflow-x-auto py-2">
+            <div className="flex items-center shrink-0">
               {getStepIndicator(1)}
-              <span className={`ml-2 text-sm font-medium ${step >= 1 ? 'text-gray-900' : 'text-gray-500'}`}>
-                Basic Info
+              <span className={`ml-2 text-xs sm:text-sm font-medium ${step >= 1 ? 'text-gray-900' : 'text-gray-500'}`}>
+                Basic
               </span>
             </div>
-            <div className={`h-1 w-16 rounded-full ${step > 1 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <div className="flex items-center">
+            <div className={`h-1 w-8 sm:w-16 rounded-full shrink-0 ${step > 1 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className="flex items-center shrink-0">
               {getStepIndicator(2)}
-              <span className={`ml-2 text-sm font-medium ${step >= 2 ? 'text-gray-900' : 'text-gray-500'}`}>
-                Medical Info
+              <span className={`ml-2 text-xs sm:text-sm font-medium ${step >= 2 ? 'text-gray-900' : 'text-gray-500'}`}>
+                Medical
               </span>
             </div>
-            <div className={`h-1 w-16 rounded-full ${step > 2 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <div className="flex items-center">
+            <div className={`h-1 w-8 sm:w-16 rounded-full shrink-0 ${step > 2 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className="flex items-center shrink-0">
               {getStepIndicator(3)}
-              <span className={`ml-2 text-sm font-medium ${step >= 3 ? 'text-gray-900' : 'text-gray-500'}`}>
+              <span className={`ml-2 text-xs sm:text-sm font-medium ${step >= 3 ? 'text-gray-900' : 'text-gray-500'}`}>
+                Consent
+              </span>
+            </div>
+            <div className={`h-1 w-8 sm:w-16 rounded-full shrink-0 ${step > 3 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div className="flex items-center shrink-0">
+              {getStepIndicator(4)}
+              <span className={`ml-2 text-xs sm:text-sm font-medium ${step >= 4 ? 'text-gray-900' : 'text-gray-500'}`}>
                 Review
               </span>
             </div>
@@ -1158,6 +1695,14 @@ overflow: auto;
           {step === 1 && renderStep1()}
           {step === 2 && renderStep2()}
           {step === 3 && renderStep3()}
+          {step === 4 && renderStep4()}
+
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <p className="text-sm text-red-700 font-medium">Please fill all required fields before proceeding.</p>
+            </div>
+          )}
 
           <div className="flex justify-between pt-6 border-t border-gray-200 mt-6">
             <div>
@@ -1179,7 +1724,7 @@ overflow: auto;
               >
                 Cancel
               </button>
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={handleNext}
@@ -1203,7 +1748,7 @@ overflow: auto;
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      {(patient && patient.id) ? 'Update Patient' : 'Save Patient'}
+                      {isCheckIn ? 'Confirm Check-in' : (patient && patient.id) ? 'Update Patient' : 'Save Patient'}
                     </>
                   )}
                 </button>

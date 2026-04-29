@@ -16,8 +16,9 @@ interface Patient {
   medicalHistory?: string[];
   allergies?: string[];
   avatar?: string;
-  barcode?: string;
   isPerson?: boolean;
+  createdAt?: string;
+  deactivatedAt?: string;
 }
 
 // const patients: Patient[] = [
@@ -196,15 +197,16 @@ function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPe
 }
 
 interface PatientListProps {
-   patients: Patient[]; 
-   onAddPatient: (type?: string, patientId?: string) => void;
+  patients: Patient[];
+  onAddPatient: (type?: string, patientId?: string) => void;
   onViewPatient: (patientId: string) => void;
   onEditPatient: (patientId: string) => void;
   onDeletePatient: (patientId: string) => void;
   onExportPatient?: (patientId: string) => void;
+  onToggleStatus?: (patientId: string, newStatus: 'active' | 'inactive') => void;
 }
 
-export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient, onExportPatient }: PatientListProps) {
+export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient, onExportPatient, onToggleStatus }: PatientListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -212,6 +214,9 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12); // 12 items per page for grid, 10 for table
+
+  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -488,6 +493,23 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
             </div>
           </div>
 
+          {/* Registration Date */}
+          <div className={`mb-2 p-3 rounded-xl border ${patient.status === 'inactive' ? 'bg-red-50/30 border-red-50' : 'bg-blue-50/30 border-blue-50'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <UserPlus className={`w-4 h-4 mr-2 ${patient.status === 'inactive' ? 'text-red-500' : 'text-blue-500'}`} />
+                <span className="text-sm text-gray-700">Registered period</span>
+              </div>
+              <span className={`text-sm font-bold ${patient.status === 'inactive' ? 'text-red-900' : 'text-gray-900'}`}>
+                {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString('en-IN') : 'New'}
+                {patient.status === 'inactive' && patient.deactivatedAt && (
+                  <span className="ml-1 text-gray-500"> - {new Date(patient.deactivatedAt).toLocaleDateString('en-IN')}</span>
+                )}
+                {patient.status === 'active' && <span className="ml-1 text-green-500"> (Present)</span>}
+              </span>
+            </div>
+          </div>
+
           {/* Last Visit */}
           <div className="mb-4 p-3 bg-gray-50 rounded-xl">
             <div className="flex items-center justify-between">
@@ -539,6 +561,17 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                   Person
                 </button>
               )}
+              <button
+                onClick={() => onToggleStatus?.(patient.id, patient.status === 'inactive' ? 'active' : 'inactive')}
+                className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center border transition-all ${
+                  patient.status === 'inactive' 
+                    ? 'text-green-600 bg-green-50 border-green-100 hover:bg-green-600 hover:text-white' 
+                    : 'text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-600 hover:text-white'
+                }`}
+              >
+                {patient.status === 'inactive' ? <UserCheck className="w-3.5 h-3.5 mr-1.5" /> : <UserX className="w-3.5 h-3.5 mr-1.5" />}
+                {patient.status === 'inactive' ? 'Activate' : 'Deactivate'}
+              </button>
             </div>
             <div className="flex space-x-2">
               <button
@@ -549,9 +582,11 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 <Download className="w-4 h-4" />
               </button>
               <button
-                onClick={() => handleAction(() => onDeletePatient(patient.id), `delete-${patient.id}`)}
-                disabled={actionLoading === `delete-${patient.id}`}
-                className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200 disabled:opacity-50"
+                onClick={() => {
+                  setPatientToDelete(patient);
+                  setDeleteConfirmText("");
+                }}
+                className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200"
                 title="Delete Patient"
               >
                 {actionLoading === `delete-${patient.id}` ? (
@@ -710,9 +745,11 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                       <QrCode className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleAction(() => onDeletePatient(patient.id), `delete-${patient.id}`)}
-                      disabled={actionLoading === `delete-${patient.id}`}
-                      className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200 disabled:opacity-50"
+                      onClick={() => {
+                        setPatientToDelete(patient);
+                        setDeleteConfirmText("");
+                      }}
+                      className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200"
                       title="Delete Patient"
                     >
                       {actionLoading === `delete-${patient.id}` ? (
@@ -872,6 +909,68 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
           >
             New First Patient
           </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {patientToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl transform animate-in zoom-in-95 duration-300">
+            <div className="bg-red-600 p-6 text-white text-center">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
+                <Trash2 className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl font-bold">Delete Patient?</h3>
+              <p className="text-red-100 mt-2">This action cannot be undone. All patient records, visit history, and medical alerts will be permanently removed.</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <p className="text-sm text-gray-500 uppercase font-bold tracking-wider mb-1">Deleting Patient</p>
+                <p className="text-lg font-bold text-gray-900">{patientToDelete.name}</p>
+                <p className="text-sm text-gray-600 font-mono">{patientToDelete.id}</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Type <span className="font-bold text-red-600">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-gray-900"
+                  placeholder="Type DELETE"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPatientToDelete(null)}
+                  className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (deleteConfirmText === 'DELETE') {
+                      handleAction(() => onDeletePatient(patientToDelete.id), `delete-${patientToDelete.id}`);
+                      setPatientToDelete(null);
+                    }
+                  }}
+                  disabled={deleteConfirmText !== 'DELETE' || (actionLoading !== null && actionLoading.startsWith('delete-'))}
+                  className="flex-[1.5] bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-red-200"
+                >
+                  {actionLoading === `delete-${patientToDelete.id}` ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : (
+                    'Delete Permanently'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

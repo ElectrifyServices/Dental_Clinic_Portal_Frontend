@@ -11,6 +11,7 @@ export const doctorsWithSchedules = [
       consultationFee: 800,
       gender: "Male",
       isAvailableToday: true,
+      profitPercentage: 40,
       workingHours: {
         monday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
         tuesday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
@@ -34,6 +35,7 @@ export const doctorsWithSchedules = [
       consultationFee: 1200,
       gender: "Female",
       isAvailableToday: true,
+      profitPercentage: 45,
       workingHours: {
         monday: { isWorking: true, startTime: "10:00", endTime: "16:00", breakStart: "13:00", breakEnd: "14:00" },
         tuesday: { isWorking: false, startTime: "10:00", endTime: "16:00" },
@@ -57,6 +59,7 @@ export const doctorsWithSchedules = [
       consultationFee: 1500,
       gender: "Male",
       isAvailableToday: false,
+      profitPercentage: 50,
       workingHours: {
         monday: { isWorking: true, startTime: "14:00", endTime: "20:00", breakStart: "17:00", breakEnd: "18:00" },
         tuesday: { isWorking: true, startTime: "14:00", endTime: "20:00", breakStart: "17:00", breakEnd: "18:00" },

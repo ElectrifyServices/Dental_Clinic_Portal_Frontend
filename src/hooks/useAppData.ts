@@ -106,6 +106,37 @@ export const useAppData = () => {
     return stored ? JSON.parse(stored) : demoStaff;
   });
 
+  // Data Migration: Ensure all doctors have a profit percentage
+  useEffect(() => {
+    const hasMissingData = staffMembers.some(s => (s.role === 'doctor' || s.role === 'admin') && s.profitPercentage === undefined);
+    if (hasMissingData) {
+      setStaffMembers(prev => prev.map(s => {
+        if ((s.role === 'doctor' || s.role === 'admin') && s.profitPercentage === undefined) {
+          // Find original percentage from demo data if possible
+          const original = doctorsWithSchedules.find(d => d.name === s.name);
+          return { ...s, profitPercentage: original?.profitPercentage || 40 };
+        }
+        return s;
+      }));
+    }
+  }, [staffMembers]);
+
+  const [consentForms, setConsentForms] = useState<any[]>(() => {
+    const stored = localStorage.getItem("consentForms");
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [inventory, setInventory] = useState<any[]>(() => {
+    const stored = localStorage.getItem("inventory");
+    return stored ? JSON.parse(stored) : [
+      { id: '1', name: 'Dental Syringes', category: 'instruments', currentStock: 25, minStock: 10, unit: 'pieces', supplier: 'DentalCorp', lastRestocked: '2024-01-10', cost: 150 },
+      { id: '2', name: 'Composite Filling Material', category: 'materials', currentStock: 5, minStock: 8, unit: 'tubes', supplier: 'MedSupply', lastRestocked: '2024-01-05', cost: 2500 },
+      { id: '3', name: 'Dental Gloves (Nitrile)', category: 'consumables', currentStock: 200, minStock: 50, unit: 'boxes', supplier: 'SafetyFirst', lastRestocked: '2024-01-12', cost: 800 },
+      { id: '4', name: 'Local Anesthetic', category: 'medicines', currentStock: 3, minStock: 5, unit: 'vials', supplier: 'PharmaCare', lastRestocked: '2023-12-28', cost: 1200 },
+      { id: '5', name: 'Dental X-Ray Films', category: 'consumables', currentStock: 50, minStock: 20, unit: 'sheets', supplier: 'ImageTech', lastRestocked: '2024-01-08', cost: 45 },
+    ];
+  });
+
   // Helpers
   function cleanOldAppointments(appts: any[]) {
     const today = new Date();
@@ -125,7 +156,23 @@ export const useAppData = () => {
   useEffect(() => localStorage.setItem("treatments", JSON.stringify(treatments)), [treatments]);
   useEffect(() => localStorage.setItem("emrRecords", JSON.stringify(emrRecords)), [emrRecords]);
   useEffect(() => localStorage.setItem("completedConsultations", JSON.stringify(completedConsultations)), [completedConsultations]);
+  
+  // Data Cleanup: Fix astronomical treatment costs (typos)
+  useEffect(() => {
+    const hasCorruptData = treatments.some(t => Number(t.cost) > 100000000);
+    if (hasCorruptData) {
+      setTreatments(prev => prev.map(t => {
+        if (Number(t.cost) > 100000000) {
+          return { ...t, cost: 0 }; // Reset clearly wrong costs
+        }
+        return t;
+      }));
+    }
+  }, [treatments]);
+
   useEffect(() => localStorage.setItem("staffMembers", JSON.stringify(staffMembers)), [staffMembers]);
+  useEffect(() => localStorage.setItem("consentForms", JSON.stringify(consentForms)), [consentForms]);
+  useEffect(() => localStorage.setItem("inventory", JSON.stringify(inventory)), [inventory]);
 
   // Invoice Overdue Logic
   useEffect(() => {
@@ -244,6 +291,7 @@ export const useAppData = () => {
     });
   };
 
+
   const handleSaveTreatment = (treatment: any) => {
     const treatmentWithId = {
       ...treatment,
@@ -290,6 +338,34 @@ export const useAppData = () => {
     setEmrRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
+  const handleSaveConsentForm = (form: any) => {
+    setConsentForms((prev) => {
+      const existing = prev.find((f) => f.id === form.id);
+      if (existing) return prev.map((f) => (f.id === form.id ? form : f));
+      return [...prev, { ...form, id: form.id || `CONSENT-${Date.now()}` }];
+    });
+  };
+
+  const handleDeleteConsentForm = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this consent form?")) {
+      setConsentForms((prev) => prev.filter((f) => f.id !== id));
+    }
+  };
+
+  const handleSaveInventoryItem = (item: any) => {
+    setInventory((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) return prev.map((i) => (i.id === item.id ? item : i));
+      return [...prev, { ...item, id: item.id || `INV-${Date.now()}` }];
+    });
+  };
+
+  const handleDeleteInventoryItem = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      setInventory((prev) => prev.filter((i) => i.id !== id));
+    }
+  };
+
   return {
     patients, setPatients,
     appointments, setAppointments,
@@ -305,6 +381,8 @@ export const useAppData = () => {
     handleSaveInvoice, handleSaveTreatment,
     handleCompleteConsultation, handleUpdateConsultation,
     handleSaveStaff, handleDeleteStaff,
-    handleSaveEMR, handleDeleteEMR
+    handleSaveEMR, handleDeleteEMR,
+    consentForms, handleSaveConsentForm, handleDeleteConsentForm,
+    inventory, handleSaveInventoryItem, handleDeleteInventoryItem
   };
 };

@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Printer,
   Plus,
+  UserPlus,
 } from "lucide-react";
 
 interface PatientDetailsProps {
@@ -47,8 +48,8 @@ export function PatientDetails({
   appointments = [],
   treatments = [],
   invoices = [],
-  onSendReminder = () => {},
-  onExport = () => {},
+  onSendReminder = () => { },
+  onExport = () => { },
 }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
@@ -108,9 +109,9 @@ export function PatientDetails({
           patient.age ||
           (patient.dateOfBirth
             ? Math.floor(
-                (Date.now() - new Date(patient.dateOfBirth).getTime()) /
-                  (365.25 * 24 * 60 * 60 * 1000),
-              )
+              (Date.now() - new Date(patient.dateOfBirth).getTime()) /
+              (365.25 * 24 * 60 * 60 * 1000),
+            )
             : ""),
       });
     }
@@ -280,8 +281,8 @@ export function PatientDetails({
           </thead>
           <tbody>
             ${translatedPrescriptions
-              .map(
-                (m: any, i: number) => `
+        .map(
+          (m: any, i: number) => `
               <tr style="border-bottom: 1px solid #cbd5e1;">
                 <td style="padding: 12px; font-size: 13px; width: 45%;">
                   <div style="font-weight: 800; color: #000;">${i + 1}) ${m.medicine.toUpperCase()}</div>
@@ -290,16 +291,15 @@ export function PatientDetails({
                       <span style="font-weight: 700; min-width: 70px;">${t.timingLabel}</span>
                       <span>: ${m.timing || "-"}</span>
                     </div>
-                    ${
-                      m.composition
-                        ? `
+                    ${m.composition
+              ? `
                     <div style="font-size: 11px; color: #64748b; display: flex; gap: 10px; margin-top: 2px;">
                       <span style="font-weight: 700; min-width: 70px;">${t.composition}</span>
                       <span>: ${m.composition}</span>
                     </div>
                     `
-                        : ""
-                    }
+              : ""
+            }
                     <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;">${t.prescribedOn}: ${new Date(m.date).toLocaleDateString()}</div>
                   </div>
                 </td>
@@ -314,8 +314,8 @@ export function PatientDetails({
                 </td>
               </tr>
             `,
-              )
-              .join("")}
+        )
+        .join("")}
           </tbody>
         </table>
       </div>
@@ -413,27 +413,25 @@ export function PatientDetails({
           ${historyContent}
           ${customContent}
 
-          ${
-            localizedData.advice
-              ? `
+          ${localizedData.advice
+        ? `
             <div style="margin-top: 15px;">
               <div class="section-label" style="vertical-align: top;">${t.advice}:</div>
               <div class="section-content" style="padding-top: 10px;">${localizedData.advice}</div>
             </div>
           `
-              : ""
-          }
+        : ""
+      }
 
-          ${
-            localizedData.tests
-              ? `
+          ${localizedData.tests
+        ? `
             <div style="margin-top: 15px;">
               <div class="section-label">${t.tests}:</div>
               <div class="section-content" style="font-weight: 700; color: #1e40af;">${localizedData.tests.toUpperCase()}</div>
             </div>
           `
-              : ""
-          }
+        : ""
+      }
 
           <div style="margin-top: 15px; font-size: 13px; font-weight: 700;">
             ${previewData.nextVisit ? `${t.nextVisit} : ${printLanguage === "gu" ? "૧ મહિના" : "1 months"} (${new Date(previewData.nextVisit).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })})` : ""}
@@ -597,11 +595,10 @@ export function PatientDetails({
                     {patient.id}
                   </span>
                   <span
-                    className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${
-                      patient.status === "active"
+                    className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${patient.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
-                    }`}
+                      }`}
                   >
                     {patient.status}
                   </span>
@@ -659,11 +656,10 @@ export function PatientDetails({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab.id
+                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                       ? "bg-white text-blue-600 shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4 mr-2" />
                   {tab.label}
@@ -787,6 +783,17 @@ export function PatientDetails({
                         }
                       </span>
                     </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                      <div className="flex items-center">
+                        <UserPlus className="w-5 h-5 text-blue-600 mr-3" />
+                        <span className="text-sm text-gray-700">
+                          Registered on
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">
+                        {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'New Registration'}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
                       <div className="flex items-center">
                         <TrendingUp className="w-5 h-5 text-green-600 mr-3" />
@@ -799,12 +806,12 @@ export function PatientDetails({
                           (a) => a.status === "completed",
                         ).length > 0
                           ? new Date(
-                              Math.max(
-                                ...patientAppointments
-                                  .filter((a) => a.status === "completed")
-                                  .map((a) => new Date(a.date).getTime()),
-                              ),
-                            ).toLocaleDateString()
+                            Math.max(
+                              ...patientAppointments
+                                .filter((a) => a.status === "completed")
+                                .map((a) => new Date(a.date).getTime()),
+                            ),
+                          ).toLocaleDateString()
                           : "No visits yet"}
                       </span>
                     </div>
@@ -1272,13 +1279,12 @@ export function PatientDetails({
                           <div className="flex items-center">
                             <Image className="w-5 h-5 text-blue-600 mr-2" />
                             <span
-                              className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                document.type === "x-ray"
+                              className={`px-2 py-1 text-xs font-semibold rounded-full ${document.type === "x-ray"
                                   ? "bg-purple-100 text-purple-800"
                                   : document.type === "lab-report"
                                     ? "bg-orange-100 text-orange-800"
                                     : "bg-blue-100 text-blue-800"
-                              }`}
+                                }`}
                             >
                               {document.type.replace("-", " ").toUpperCase()}
                             </span>
@@ -1403,10 +1409,10 @@ export function PatientDetails({
                             <span className="ml-1 font-medium text-gray-900">
                               {member.dateOfBirth
                                 ? Math.floor(
-                                    (Date.now() -
-                                      new Date(member.dateOfBirth).getTime()) /
-                                      (365.25 * 24 * 60 * 60 * 1000),
-                                  )
+                                  (Date.now() -
+                                    new Date(member.dateOfBirth).getTime()) /
+                                  (365.25 * 24 * 60 * 60 * 1000),
+                                )
                                 : "-"}
                             </span>
                           </div>
@@ -1445,21 +1451,19 @@ export function PatientDetails({
                 <div className="flex bg-blue-700/50 p-1 rounded-xl border border-blue-400/30 ml-4">
                   <button
                     onClick={() => setPrintLanguage("en")}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      printLanguage === "en"
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${printLanguage === "en"
                         ? "bg-white text-blue-600 shadow-lg"
                         : "text-blue-100 hover:text-white"
-                    }`}
+                      }`}
                   >
                     ENGLISH
                   </button>
                   <button
                     onClick={() => setPrintLanguage("gu")}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      printLanguage === "gu"
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${printLanguage === "gu"
                         ? "bg-white text-blue-600 shadow-lg"
                         : "text-blue-100 hover:text-white"
-                    }`}
+                      }`}
                   >
                     ગુજરાતી (GUJ)
                   </button>
