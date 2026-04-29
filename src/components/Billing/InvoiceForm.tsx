@@ -408,8 +408,8 @@ export function InvoiceForm({
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
                     isComplimentary: e.target.checked,
-                    discount: e.target.checked ? 100 : prev.discount,
-                    tax: e.target.checked ? 0 : prev.tax
+                    discount: e.target.checked ? 100 : 0,
+                    tax: e.target.checked ? 0 : 18
                   }))}
                   className="sr-only peer"
                 />
