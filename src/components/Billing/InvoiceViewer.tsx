@@ -117,9 +117,10 @@ export function InvoiceViewer({
           <div class="totals">
             <p>Subtotal: ₹${invoice.subtotal.toLocaleString()}</p>
             <p>Discount: -₹${invoice.discount.toLocaleString()}</p>
-            <p>Tax (18%): ₹${invoice.tax.toLocaleString()}</p>
+            <p>Tax (${invoice.tax}%): ₹${invoice.taxAmount?.toLocaleString() || (invoice.tax * (invoice.subtotal - invoice.discount) / 100).toLocaleString()}</p>
             <hr>
             <p class="total-row">Total: ₹${invoice.total.toLocaleString()}</p>
+            ${invoice.isComplimentary ? `<p style="color: #7c3aed; font-weight: bold; margin-top: 10px;">COMPLIMENTARY - NO CHARGE (${invoice.complimentaryNote || ''})</p>` : ''}
           </div>
 
           <div class="footer">
@@ -271,12 +272,19 @@ export function InvoiceViewer({
                     className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
                       invoice.status === "paid"
                         ? "bg-green-100 text-green-800"
+                        : invoice.status === "complimentary"
+                        ? "bg-violet-100 text-violet-800"
                         : "bg-orange-100 text-orange-800"
                     }`}
                   >
-                    {invoice.status === "paid" ? "Paid" : invoice.status}
+                    {invoice.status === "paid" ? "Paid" : invoice.status.toUpperCase()}
                   </span>
                 </p>
+                {invoice.isComplimentary && invoice.complimentaryNote && (
+                  <p className="text-xs text-violet-600 font-medium bg-violet-50 p-2 rounded-lg border border-violet-100 mt-2">
+                    Note: {invoice.complimentaryNote}
+                  </p>
+                )}
               </div>
             </div>
           </div>

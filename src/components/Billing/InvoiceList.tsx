@@ -32,6 +32,7 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
       case 'sent': return 'bg-blue-100 text-blue-800';
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'complimentary': return 'bg-violet-100 text-violet-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };

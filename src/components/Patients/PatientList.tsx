@@ -408,7 +408,14 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 </div>
               </div>
               <div className="ml-4">
-                <h3 className="font-bold text-gray-900 text-lg truncate w-full" title={patient.name}>{patient.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-gray-900 text-lg truncate" title={patient.name}>{patient.name}</h3>
+                  {patient.category && patient.category !== 'regular' && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                      {patient.category}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-600 font-mono">{patient.id}</p>
                 <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(patient.status)}`}>
                   {getStatusIcon(patient.status)}
@@ -640,7 +647,14 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                       )}
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{patient.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-gray-900">{patient.name}</div>
+                        {patient.category && patient.category !== 'regular' && (
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                            {patient.category}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500 font-mono">{patient.id}</div>
                       <div className="text-xs text-gray-500">
                         {patient.dateOfBirth && `Age: ${Math.floor((new Date().getTime() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))}`}

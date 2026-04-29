@@ -518,6 +518,25 @@ export function PatientConsultation({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {patient.category && patient.category !== 'regular' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="bg-amber-100 p-3 rounded-full text-amber-600">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest">
+                  {patient.category.toUpperCase()} PATIENT DETECTED
+                </h4>
+                <p className="text-xs text-amber-700 font-medium">
+                  Eligible for {patient.defaultDiscount || 100}% discount. Please manage billing accordingly.
+                </p>
+              </div>
+              <div className="ml-auto bg-amber-200/50 px-3 py-1 rounded-lg text-[10px] font-bold text-amber-800 uppercase border border-amber-300">
+                Special Category
+              </div>
+            </div>
+          )}
+
           {/* 1. Patient Information (Simplified) */}
           <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1155,6 +1174,8 @@ export function PatientConsultation({
               </div>
             )}
           </div>
+
+
 
           {/* 10. Additional Consultation Notes */}
           <div>

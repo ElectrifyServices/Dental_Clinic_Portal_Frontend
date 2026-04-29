@@ -99,7 +99,9 @@ export function PatientForm({ onClose, onSave, patient, type, parentId, isCheckI
         optPhotos: false,
         patientSignature: '',
         guardianName: '',
-        guardianSignature: ''
+        guardianSignature: '',
+        category: 'regular',
+        defaultDiscount: 0,
       });
       setSelectedMedicalHistory([]);
       setSelectedAllergies([]);
@@ -152,7 +154,9 @@ export function PatientForm({ onClose, onSave, patient, type, parentId, isCheckI
     patientSignature: patient?.patientSignature || '',
     guardianName: patient?.guardianName || '',
     guardianSignature: patient?.guardianSignature || '',
-    customEmergencyRelation: ''
+    customEmergencyRelation: '',
+    category: patient?.category || 'regular',
+    defaultDiscount: patient?.defaultDiscount || 0,
   });
 
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
@@ -808,6 +812,47 @@ overflow: auto;
             <option value="divorced">Divorced</option>
             <option value="widowed">Widowed</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Patient Category
+          </label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFormData(prev => ({ 
+                ...prev, 
+                category: val as any,
+                defaultDiscount: (val === 'family' || val === 'staff') ? 100 : prev.defaultDiscount
+              }));
+            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+          >
+            <option value="regular">Regular</option>
+            <option value="family">Family (Doctor's House)</option>
+            <option value="staff">Clinic Staff</option>
+            <option value="vip">VIP</option>
+            <option value="complimentary">Complimentary</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Default Discount (%)
+          </label>
+          <input
+            type="number"
+            name="defaultDiscount"
+            value={formData.defaultDiscount}
+            onChange={handleChange}
+            min="0"
+            max="100"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="e.g. 100 for full free"
+          />
         </div>
       </div>
 

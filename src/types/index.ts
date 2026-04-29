@@ -39,6 +39,8 @@ export interface Patient {
   totalVisits: number;
   outstandingBalance: number;
   status: 'active' | 'inactive' | 'new';
+  category?: 'regular' | 'family' | 'staff' | 'vip' | 'complimentary';
+  defaultDiscount?: number;
   avatar?: string;
 }
 
@@ -97,7 +99,9 @@ export interface Invoice {
   tax: number;
   discount: number;
   total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'complimentary';
+  isComplimentary?: boolean;
+  complimentaryNote?: string;
   paymentMethod?: 'cash' | 'card' | 'upi' | 'razorpay' | 'bank-transfer';
   dueDate: string;
   paidDate?: string;

@@ -2,7 +2,7 @@ import {
   X, Trash2, Clock, Stethoscope, FileText, Calendar,
   Image as ImageIcon, IndianRupee, Pill, AlertCircle,
   Eye, ArrowLeft, Phone, Search, Filter, ChevronLeft, ChevronRight,
-  Printer, MoreVertical, ExternalLink, Activity
+  Printer, MoreVertical, ExternalLink, Activity, Camera
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { downloadConsultationPDF, PDFReportType } from "../../utils/pdfGenerator";
@@ -51,6 +51,7 @@ interface ConsultationRecord {
   treatmentSessions?: number;
   startTreatmentToday?: boolean;
   toothChartState?: Record<number, string>;
+  xrayFiles?: string[];
 }
 
 const PAGE_SIZE = 8;
@@ -556,6 +557,23 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                 </div>
               )}
 
+              {/* Tooth Chart Findings */}
+              {selectedRecord.toothChartState && Object.keys(selectedRecord.toothChartState).length > 0 && (
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
+                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-2 flex items-center">
+                    <Activity className="w-3 h-3 mr-1.5" /> Tooth Chart Findings
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(selectedRecord.toothChartState).map(([num, condition]) => (
+                      <div key={num} className="bg-white border border-blue-200 rounded-full px-3 py-1 text-xs flex items-center gap-2 shadow-sm">
+                        <span className="font-bold text-blue-600">#{num}</span>
+                        <span className="text-gray-600">{condition}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Treatment Plan */}
               {selectedRecord.treatmentPlan && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
@@ -618,19 +636,39 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                 )}
               </div>
 
-              {/* Images */}
+              {/* Clinical Images */}
               {selectedRecord.images && selectedRecord.images.length > 0 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1 mb-2">
-                    <ImageIcon className="w-3 h-3" /> Attached Images
+                    <ImageIcon className="w-3 h-3" /> Clinical Images
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedRecord.images.map((imgUrl, idx) => (
                       <img
                         key={idx}
                         src={imgUrl}
-                        alt={`Attachment ${idx + 1}`}
+                        alt={`Clinical ${idx + 1}`}
                         className="w-20 h-20 rounded-lg object-cover border border-gray-300 cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => window.open(imgUrl, "_blank")}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* X-Ray Files */}
+              {selectedRecord.xrayFiles && selectedRecord.xrayFiles.length > 0 && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center gap-1 mb-2">
+                    <Camera className="w-3 h-3" /> X-Ray Reports
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRecord.xrayFiles.map((imgUrl, idx) => (
+                      <img
+                        key={idx}
+                        src={imgUrl}
+                        alt={`X-Ray ${idx + 1}`}
+                        className="w-20 h-20 rounded-lg object-cover border border-blue-300 cursor-pointer hover:scale-105 transition-transform"
                         onClick={() => window.open(imgUrl, "_blank")}
                       />
                     ))}

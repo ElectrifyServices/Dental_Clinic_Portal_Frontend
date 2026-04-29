@@ -34,6 +34,8 @@ export function InvoiceForm({
         .split("T")[0],
     discount: invoice?.discount || 0,
     tax: invoice?.tax || 18,
+    isComplimentary: (invoice as any)?.isComplimentary || false,
+    complimentaryNote: (invoice as any)?.complimentaryNote || "",
   });
 
   const [items, setItems] = useState<InvoiceItem[]>(
@@ -94,9 +96,9 @@ export function InvoiceForm({
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const discountAmount = (subtotal * formData.discount) / 100;
-  const taxAmount = ((subtotal - discountAmount) * formData.tax) / 100;
-  const total = subtotal - discountAmount + taxAmount;
+  const discountAmount = formData.isComplimentary ? subtotal : (subtotal * formData.discount) / 100;
+  const taxAmount = formData.isComplimentary ? 0 : ((subtotal - discountAmount) * formData.tax) / 100;
+  const total = formData.isComplimentary ? 0 : (subtotal - discountAmount + taxAmount);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +110,10 @@ export function InvoiceForm({
       subtotal,
       discount: formData.discount,
       tax: formData.tax,
-      total,
-      status: invoice?.status || "draft",
+      total: formData.isComplimentary ? 0 : total,
+      status: formData.isComplimentary ? "complimentary" : (invoice?.status || "draft"),
+      isComplimentary: formData.isComplimentary,
+      complimentaryNote: formData.complimentaryNote,
     });
   };
 
@@ -158,10 +162,52 @@ export function InvoiceForm({
                 <option value="">Select Patient</option>
                 {patients.map((patient) => (
                   <option key={patient.id} value={patient.name}>
-                    {patient.name} ({patient.id})
+                    {patient.name} ({patient.id}) {patient.category === 'family' ? '⭐' : ''}
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="md:col-span-3">
+              {formData.patientName && (() => {
+                const p = patients.find(p => p.name === formData.patientName);
+                if (p?.category === 'family' || p?.category === 'staff' || p?.category === 'complimentary') {
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-1">
+                      <div className="bg-amber-100 p-2 rounded-full text-amber-600">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-amber-900">
+                          {p.category.toUpperCase()} PATIENT DETECTED
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          This patient usually gets a {p.defaultDiscount || 100}% discount.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const discountVal = p.defaultDiscount !== undefined ? p.defaultDiscount : 100;
+                          const isComp = discountVal === 100;
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            isComplimentary: isComp, 
+                            discount: discountVal,
+                            complimentaryNote: isComp ? `Waived - ${p.category.toUpperCase()} Benefit` : prev.complimentaryNote
+                          }));
+                        }}
+                        className="ml-auto bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-700 transition-all"
+                      >
+                        {p.defaultDiscount === 100 || p.defaultDiscount === undefined 
+                          ? 'Apply Complimentary Flow' 
+                          : `Apply ${p.defaultDiscount}% Discount`}
+                      </button>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             <div>
@@ -342,6 +388,52 @@ export function InvoiceForm({
             </div>
           </div>
 
+
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${formData.isComplimentary ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wider">Complimentary Billing</h3>
+                  <p className="text-xs text-blue-700">Mark this invoice as free/waived (₹0 Total)</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isComplimentary}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    isComplimentary: e.target.checked,
+                    discount: e.target.checked ? 100 : prev.discount,
+                    tax: e.target.checked ? 0 : prev.tax
+                  }))}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {formData.isComplimentary && (
+              <div className="space-y-4 animate-in slide-in-from-top-2">
+                <input
+                  type="text"
+                  placeholder="Complimentary Note (e.g. Doctor's Family, Staff Benefit)"
+                  value={formData.complimentaryNote}
+                  onChange={(e) => setFormData(prev => ({ ...prev, complimentaryNote: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex justify-between items-center bg-white/50 p-3 rounded-lg border border-blue-100 border-dashed">
+                  <span className="text-sm font-medium text-blue-800">Final Amount Payable:</span>
+                  <span className="text-xl font-black text-blue-900">₹0</span>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -353,14 +445,15 @@ export function InvoiceForm({
                     type="number"
                     min="0"
                     max="100"
-                    value={formData.discount}
+                    value={formData.isComplimentary ? 100 : formData.discount}
+                    disabled={formData.isComplimentary}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         discount: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${formData.isComplimentary ? 'bg-gray-100 text-gray-500 cursor-not-allowed font-bold' : ''}`}
                   />
                 </div>
                 <div>
@@ -370,19 +463,20 @@ export function InvoiceForm({
                   <input
                     type="number"
                     min="0"
-                    value={formData.tax}
+                    value={formData.isComplimentary ? 0 : formData.tax}
+                    disabled={formData.isComplimentary}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         tax: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${formData.isComplimentary ? 'bg-gray-100 text-gray-500 cursor-not-allowed font-bold' : ''}`}
                   />
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 text-right">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal:</span>
                   <span className="font-semibold text-gray-900">
@@ -390,13 +484,13 @@ export function InvoiceForm({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Discount ({formData.discount}%):</span>
+                  <span>Discount ({formData.isComplimentary ? 100 : formData.discount}%):</span>
                   <span className="font-semibold text-red-600">
                     -₹{discountAmount.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Tax ({formData.tax}%):</span>
+                  <span>Tax ({formData.isComplimentary ? 0 : formData.tax}%):</span>
                   <span className="font-semibold text-gray-900">
                     ₹{taxAmount.toLocaleString()}
                   </span>
@@ -404,7 +498,7 @@ export function InvoiceForm({
                 <div className="pt-3 border-t border-gray-200 flex justify-between text-xl font-bold">
                   <span className="text-gray-900">Total:</span>
                   <span className="text-blue-600">
-                    ₹{total.toLocaleString()}
+                    ₹{(formData.isComplimentary ? 0 : total).toLocaleString()}
                   </span>
                 </div>
               </div>
