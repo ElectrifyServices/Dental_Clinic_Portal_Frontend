@@ -19,6 +19,8 @@ interface Patient {
   isPerson?: boolean;
   createdAt?: string;
   deactivatedAt?: string;
+  category?: string;
+  barcode?: string;
 }
 
 // const patients: Patient[] = [
@@ -209,6 +211,7 @@ interface PatientListProps {
 export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatient, onDeletePatient, onExportPatient, onToggleStatus }: PatientListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -224,7 +227,8 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                          patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          patient.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || patient.status === filterStatus;
-    return matchesSearch && matchesFilter;
+    const matchesCategory = filterCategory === 'all' || patient.category === filterCategory;
+    return matchesSearch && matchesFilter && matchesCategory;
   });
 
   // Pagination logic
@@ -237,7 +241,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, viewMode]);
+  }, [searchTerm, filterStatus, filterCategory, viewMode]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -845,7 +849,20 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="new">New Patients</option>
+            </select>
+            <select
+              id="category-filter"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-3 lg:px-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+            >
+              <option value="all">All Categories</option>
+              <option value="regular">Regular</option>
+              <option value="family">Family</option>
+              <option value="staff">Clinic Staff</option>
+              <option value="corporate">Corporate</option>
+              <option value="vip">VIP</option>
+              <option value="complimentary">Complimentary</option>
             </select>
           </div>
           
@@ -911,7 +928,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            {searchTerm || filterStatus !== 'all' || currentPage > 1
+            {searchTerm || filterStatus !== 'all' || filterCategory !== 'all' || currentPage > 1
               ? 'Try adjusting your search criteria or filters.'
               : 'Start by adding your first patient to the system.'
             }

@@ -8,6 +8,7 @@ interface TreatmentsPageProps {
   onEditTreatment: (id: string) => void;
   onManageSessions: (id: string) => void;
   onMarkCompleted: (id: string) => void;
+  onStartTreatment: (id: string) => void;
 }
 
 export const TreatmentsPage: React.FC<TreatmentsPageProps> = (props) => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   X,
   Save,
@@ -7,6 +7,8 @@ import {
   User,
   Calendar,
   DollarSign,
+  ClipboardList,
+  Check
 } from "lucide-react";
 import { Invoice, InvoiceItem } from "../../types";
 
@@ -15,6 +17,9 @@ interface InvoiceFormProps {
   onSave: (invoice: Partial<Invoice>) => void;
   invoice?: Invoice;
   patients: any[];
+  treatments: any[];
+  consultations: any[];
+  corporatePlans: any[];
 }
 
 export function InvoiceForm({
@@ -22,9 +27,13 @@ export function InvoiceForm({
   onSave,
   invoice,
   patients,
+  treatments = [],
+  consultations = [],
+  corporatePlans = []
 }: InvoiceFormProps) {
   const [formData, setFormData] = useState({
     patientName: invoice?.patientName || "",
+    patientId: (invoice as any)?.patientId || "",
     doctor: (invoice as any)?.doctor || "",
     date: invoice?.date || new Date().toISOString().split("T")[0],
     dueDate:
@@ -36,6 +45,7 @@ export function InvoiceForm({
     tax: invoice?.tax || 18,
     isComplimentary: (invoice as any)?.isComplimentary || false,
     complimentaryNote: (invoice as any)?.complimentaryNote || "",
+    linkedItemIds: (invoice as any)?.linkedItemIds || [] as string[]
   });
 
   const [items, setItems] = useState<InvoiceItem[]>(
@@ -43,6 +53,75 @@ export function InvoiceForm({
       { id: "1", description: "", quantity: 1, rate: 0, amount: 0 },
     ],
   );
+
+  // Corporate Detection
+  const activeCorporatePlan = useMemo(() => {
+    if (!formData.patientName) return null;
+    const patient = patients.find(p => p.name === formData.patientName || p.id === formData.patientId);
+    if (patient?.companyId) {
+      return corporatePlans.find(cp => cp.id === patient.companyId);
+    }
+    return null;
+  }, [formData.patientName, formData.patientId, patients, corporatePlans]);
+
+  // Unified Billing: Find pending (unbilled) items for the selected patient
+  const pendingItems = useMemo(() => {
+    if (!formData.patientName) return [];
+
+    const patientTreatments = treatments.filter(t => 
+      t.patientName === formData.patientName && 
+      (t.status === 'completed' || t.status === 'in-progress') && 
+      !t.isBilled
+    );
+
+    const patientConsultations = consultations.filter(c => 
+      c.patientName === formData.patientName && 
+      !c.isBilled
+    );
+
+    const list: any[] = [];
+
+    patientConsultations.forEach(c => {
+      const isFree = activeCorporatePlan?.freeConsultation;
+      list.push({
+        id: c.id,
+        type: 'consultation',
+        description: `Consultation Fee (${new Date(c.consultationDate || c.date).toLocaleDateString('en-IN')})` + (isFree ? ' [CORPORATE FREE]' : ''),
+        rate: isFree ? 0 : 500, // Corporate plan may offer free consultations
+        date: c.consultationDate || c.date
+      });
+    });
+
+    patientTreatments.forEach(t => {
+      // Check for unbilled sessions
+      if (Array.isArray(t.sessions)) {
+        t.sessions.forEach((s: any) => {
+          if ((s.status === 'completed' || s.status === 'in-progress') && !s.isBilled) {
+            list.push({
+              id: `${t.id}-${s.id}`,
+              type: 'treatment-session',
+              description: `${t.procedure} - Session ${s.sessionNumber}`,
+              rate: s.cost || 0,
+              date: s.scheduledDate || s.date,
+              originalTreatmentId: t.id,
+              originalSessionId: s.id
+            });
+          }
+        });
+      } else if (!t.isBilled) {
+        // Fallback for treatments without sessions
+        list.push({
+          id: t.id,
+          type: 'treatment',
+          description: t.procedure,
+          rate: t.cost || 0,
+          date: t.date
+        });
+      }
+    });
+
+    return list;
+  }, [formData.patientName, treatments, consultations]);
 
   const doctors = [
     "Dr. Rajesh Sharma — General Dentistry",
@@ -72,7 +151,48 @@ export function InvoiceForm({
     setItems([...items, newItem]);
   };
 
+  const removePendingItem = (itemId: string) => {
+     setFormData(prev => ({
+       ...prev,
+       linkedItemIds: prev.linkedItemIds.filter(id => id !== itemId)
+     }));
+     // Also remove from items list if it was added
+     setItems(prev => prev.filter(item => (item as any).linkedId !== itemId));
+  };
+
+  const addPendingItemToInvoice = (pItem: any) => {
+    if (formData.linkedItemIds.includes(pItem.id)) return;
+
+    const newItem: InvoiceItem = {
+      id: `linked-${Date.now()}-${pItem.id}`,
+      description: pItem.description,
+      quantity: 1,
+      rate: pItem.rate,
+      amount: pItem.rate,
+      linkedId: pItem.id // Custom field to track linked items
+    } as any;
+
+    // Remove first empty item if it exists
+    if (items.length === 1 && !items[0].description && items[0].rate === 0) {
+      setItems([newItem]);
+    } else {
+      setItems([...items, newItem]);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      linkedItemIds: [...prev.linkedItemIds, pItem.id]
+    }));
+  };
+
   const removeItem = (id: string) => {
+    const itemToRemove = items.find(i => i.id === id);
+    if ((itemToRemove as any)?.linkedId) {
+      setFormData(prev => ({
+        ...prev,
+        linkedItemIds: prev.linkedItemIds.filter(lid => lid !== (itemToRemove as any).linkedId)
+      }));
+    }
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -105,7 +225,7 @@ export function InvoiceForm({
     onSave({
       ...formData,
       id: invoice?.id || `INV-${Date.now()}`,
-      patientId: (formData as any).patientId || invoice?.patientId || Date.now().toString(),
+      patientId: formData.patientId || Date.now().toString(),
       items,
       subtotal,
       discount: formData.discount,
@@ -124,10 +244,10 @@ export function InvoiceForm({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {invoice ? "Edit Invoice" : "Create Invoice"}
+                {invoice ? "Edit Invoice" : "Create Unified Invoice"}
               </h2>
               <p className="text-gray-600 mt-1">
-                Generate professional invoices for treatments
+                Combine consultations and treatments into one professional bill
               </p>
             </div>
             <button
@@ -150,11 +270,14 @@ export function InvoiceForm({
                 value={formData.patientName}
                 onChange={(e) => {
                   const patient = patients.find(p => p.name === e.target.value);
+                  const corpPlan = patient?.companyId ? corporatePlans.find(cp => cp.id === patient.companyId) : null;
                   setFormData({ 
                     ...formData, 
                     patientName: e.target.value,
-                    patientId: patient?.id || '' 
-                  } as any);
+                    patientId: patient?.id || '',
+                    linkedItemIds: [], // Reset linked items when patient changes
+                    discount: corpPlan ? corpPlan.discountPercent : (patient?.defaultDiscount || 0)
+                  });
                 }}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -168,6 +291,22 @@ export function InvoiceForm({
               </select>
             </div>
 
+            {/* CORPORATE DETECTION BANNER */}
+            {activeCorporatePlan && (
+              <div className="md:col-span-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
+                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-black text-indigo-900 uppercase tracking-tight">Corporate Plan: {activeCorporatePlan.name}</p>
+                  <p className="text-xs text-indigo-700 font-medium">
+                    {activeCorporatePlan.discountPercent}% Discount & {activeCorporatePlan.freeConsultation ? 'Free Consultation' : 'Standard Billing'} rules applied.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* STAFF/FAMILY DETECTION BANNER - KEEPING AS REQUESTED */}
             <div className="md:col-span-3">
               {formData.patientName && (() => {
                 const p = patients.find(p => p.name === formData.patientName);
@@ -210,6 +349,67 @@ export function InvoiceForm({
               })()}
             </div>
 
+            {/* UNBILLED ITEMS SECTION - NEW */}
+            {formData.patientName && pendingItems.length > 0 && (
+              <div className="col-span-1 md:col-span-3 bg-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-indigo-900 font-bold flex items-center">
+                    <ClipboardList className="w-5 h-5 mr-2 text-indigo-600" />
+                    Unbilled Consultations & Treatments
+                  </h3>
+                  <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    {pendingItems.length} PENDING
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {pendingItems.map((pItem) => {
+                    const isSelected = formData.linkedItemIds.includes(pItem.id);
+                    return (
+                      <div 
+                        key={pItem.id}
+                        className={`p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+                          isSelected ? 'bg-indigo-600 border-indigo-700 shadow-md' : 'bg-white border-indigo-100 hover:border-indigo-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex justify-between items-start mb-1">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                              isSelected ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-700'
+                            }`}>
+                              {pItem.type.replace('-', ' ')}
+                            </span>
+                            <span className={`text-xs font-mono ${isSelected ? 'text-indigo-100' : 'text-gray-400'}`}>
+                              {new Date(pItem.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </span>
+                          </div>
+                          <p className={`text-sm font-bold leading-tight mb-2 ${isSelected ? 'text-white' : 'text-gray-800'}`}>
+                            {pItem.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-indigo-700'}`}>
+                            ₹{pItem.rate.toLocaleString()}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => isSelected ? removePendingItem(pItem.id) : addPendingItemToInvoice(pItem)}
+                            className={`p-1.5 rounded-lg transition-all ${
+                              isSelected ? 'bg-white text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                            }`}
+                          >
+                            {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-indigo-600 mt-3 italic">
+                  * Click the plus button to add these pending records directly to today's bill.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 <Calendar className="w-4 h-4 inline mr-2" />
@@ -240,26 +440,26 @@ export function InvoiceForm({
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Doctor *
-            </label>
-            <select
-              value={formData.doctor || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, doctor: e.target.value })
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl"
-            >
-              <option value="">Select Doctor</option>
-              {doctors.map((doc) => (
-                <option key={doc} value={doc}>
-                  {doc}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Doctor *
+              </label>
+              <select
+                value={formData.doctor || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, doctor: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+              >
+                <option value="">Select Doctor</option>
+                {doctors.map((doc) => (
+                  <option key={doc} value={doc}>
+                    {doc}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
@@ -271,7 +471,7 @@ export function InvoiceForm({
                 className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center text-sm font-medium transition-all duration-200"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Item
+                Add Custom Item
               </button>
             </div>
 
@@ -279,37 +479,46 @@ export function InvoiceForm({
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="grid grid-cols-12 gap-4 items-end p-4 bg-gray-50 rounded-xl"
+                  className={`grid grid-cols-12 gap-4 items-end p-4 rounded-xl border transition-all ${
+                    (item as any).linkedId ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-100'
+                  }`}
                 >
                   <div className="col-span-5">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Service/Description
                     </label>
                     <div className="space-y-2">
-                      <select
-                        value={item.description}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const selectedService = commonServices.find(
-                            (s) => s.name === value,
-                          );
-                          const rate = selectedService
-                            ? selectedService.rate
-                            : item.rate;
-                          updateItem(item.id, "description", value);
-                          updateItem(item.id, "rate", rate);
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      >
-                        <option value="">Select Service</option>
-                        {commonServices.map((service) => (
-                          <option key={service.name} value={service.name}>
-                            {service.name}
-                          </option>
-                        ))}
-                        <option value="custom">Custom Service</option>
-                      </select>
-                      {item.description === "custom" && (
+                      {(item as any).linkedId ? (
+                         <div className="w-full px-3 py-2 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-sm flex items-center">
+                            <Check className="w-4 h-4 mr-2" />
+                            {item.description}
+                         </div>
+                      ) : (
+                        <select
+                          value={item.description}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const selectedService = commonServices.find(
+                              (s) => s.name === value,
+                            );
+                            const rate = selectedService
+                              ? selectedService.rate
+                              : item.rate;
+                            updateItem(item.id, "description", value);
+                            updateItem(item.id, "rate", rate);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Select Service</option>
+                          {commonServices.map((service) => (
+                            <option key={service.name} value={service.name}>
+                              {service.name}
+                            </option>
+                          ))}
+                          <option value="custom">Custom Service</option>
+                        </select>
+                      )}
+                      {item.description === "custom" && !(item as any).linkedId && (
                         <input
                           type="text"
                           placeholder="Enter custom service"
@@ -349,6 +558,7 @@ export function InvoiceForm({
                       type="number"
                       min="0"
                       value={item.rate}
+                      readOnly={!!(item as any).linkedId}
                       onChange={(e) =>
                         updateItem(
                           item.id,
@@ -356,7 +566,7 @@ export function InvoiceForm({
                           parseFloat(e.target.value) || 0,
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${(item as any).linkedId ? 'bg-indigo-100 cursor-not-allowed' : ''}`}
                     />
                   </div>
 
@@ -372,23 +582,25 @@ export function InvoiceForm({
                     />
                   </div>
 
-                  <div className="col-span-1">
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                  <div className="col-span-1 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               ))}
+              
+              {items.length === 0 && (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 text-gray-400">
+                   Add items from the list above or click "Add Custom Item"
+                </div>
+              )}
             </div>
           </div>
-
-
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -518,7 +730,7 @@ export function InvoiceForm({
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Invoice
+              Save & Finalize Bill
             </button>
           </div>
         </form>

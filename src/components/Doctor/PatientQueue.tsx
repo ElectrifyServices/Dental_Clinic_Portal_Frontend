@@ -63,7 +63,14 @@ function QueueCard({ patient, fullPatient, getStatusColor, getStatusIcon, onUpda
             </div>
           </div>
           <div className="ml-4">
-            <h3 className="font-bold text-gray-900 text-lg">{patient.patientName}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-gray-900 text-lg">{patient.patientName}</h3>
+              {fullPatient?.category && fullPatient.category !== 'regular' && (
+                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                  {fullPatient.category}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {/* {age !== null && <span className="text-sm text-gray-500">{age} yrs</span>} */}
               {age !== null && gender && <span className="text-gray-300"></span>}

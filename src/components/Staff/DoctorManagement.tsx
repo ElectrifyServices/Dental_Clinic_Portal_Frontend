@@ -84,10 +84,7 @@ export function DoctorManagement({
   };
 
   const handleDelete = (staffId: string) => {
-    const staff = staffMembers.find(s => s.id === staffId);
-    if (window.confirm(`Are you sure you want to delete ${staff?.name}? This action cannot be undone.`)) {
-      onDeleteDoctor(staffId);
-    }
+    onDeleteDoctor(staffId);
   };
 
   const activeStaffCount = staffMembers.filter(s => s.isActive).length;

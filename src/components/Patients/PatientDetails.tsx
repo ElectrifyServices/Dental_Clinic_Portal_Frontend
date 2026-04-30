@@ -1001,48 +1001,113 @@ export function PatientDetails({
           )}
 
           {activeTab === "treatments" && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                Treatment History
-              </h3>
-              {patientTreatments.map((treatment) => (
-                <div
-                  key={treatment.id}
-                  className="bg-gray-50 rounded-2xl p-6 border border-gray-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Stethoscope className="w-5 h-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {treatment.procedure}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Tooth: {treatment.tooth}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(treatment.date).toLocaleDateString()}
-                        </p>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Treatment Journey
+                </h3>
+              </div>
+
+              {/* In-Progress Treatments */}
+              <div>
+                <h4 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Active Treatments
+                </h4>
+                <div className="space-y-3">
+                  {patientTreatments.filter(t => t.status === 'in-progress').map((treatment) => (
+                    <div
+                      key={treatment.id}
+                      className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                            <Stethoscope className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900">{treatment.procedure}</p>
+                            <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
+                            <p className="text-[10px] text-gray-500 font-mono mt-1">{new Date(treatment.date).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-900">₹{treatment.cost.toLocaleString()}</p>
+                          <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-600 text-white uppercase">IN-PROGRESS</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">
-                        ₹{treatment.cost.toLocaleString()}
-                      </p>
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(treatment.status)}`}
-                      >
-                        {treatment.status.toUpperCase()}
-                      </span>
+                  ))}
+                  {patientTreatments.filter(t => t.status === 'in-progress').length === 0 && (
+                    <p className="text-sm text-gray-400 italic py-2 px-4 bg-gray-50 rounded-xl border border-dashed">No active treatments today</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Planned Treatments */}
+              <div>
+                <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-3 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Pending Plans (from Consultation)
+                </h4>
+                <div className="space-y-3">
+                  {patientTreatments.filter(t => t.status === 'planned').map((treatment) => (
+                    <div
+                      key={treatment.id}
+                      className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
+                            <Stethoscope className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900">{treatment.procedure}</p>
+                            <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-purple-900">₹{treatment.cost.toLocaleString()}</p>
+                          <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-purple-200 text-purple-700 uppercase">PLANNED</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                  {patientTreatments.filter(t => t.status === 'planned').length === 0 && (
+                    <p className="text-sm text-gray-400 italic py-2 px-4 bg-gray-50 rounded-xl border border-dashed">No pending plans recorded</p>
+                  )}
                 </div>
-              ))}
-              {patientTreatments.length === 0 && (
-                <div className="text-center py-10 text-gray-500">
-                  No treatments found
+              </div>
+
+              {/* Completed Treatments */}
+              <div>
+                <h4 className="text-sm font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Completed Treatments
+                </h4>
+                <div className="space-y-3">
+                  {patientTreatments.filter(t => t.status === 'completed').map((treatment) => (
+                    <div
+                      key={treatment.id}
+                      className="bg-green-50/30 rounded-2xl p-4 border border-green-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                          <div>
+                            <p className="font-semibold text-gray-700">{treatment.procedure}</p>
+                            <p className="text-xs text-gray-500">Tooth: #{treatment.tooth}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-bold text-gray-400">₹{treatment.cost.toLocaleString()}</p>
+                          <p className="text-[10px] text-green-600 font-bold uppercase">{new Date(treatment.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
 

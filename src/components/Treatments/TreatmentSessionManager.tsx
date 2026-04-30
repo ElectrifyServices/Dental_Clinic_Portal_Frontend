@@ -5,7 +5,7 @@ interface TreatmentSession {
   id: string;
   sessionNumber: number;
   date: string;
-  status: 'scheduled' | 'completed' | 'in-progress' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'in-progress' | 'cancelled' | 'planned';
   notes: string;
   appointmentId?: string;
   duration: number;
@@ -16,7 +16,9 @@ interface TreatmentSessionManagerProps {
   treatmentId: string;
   patientName: string;
   procedure: string;
+  sessions: TreatmentSession[];
   onScheduleAppointment: (sessionData: any) => void;
+  onUpdateSessions: (updatedSessions: TreatmentSession[]) => void;
   onClose: () => void;
 }
 
@@ -24,39 +26,12 @@ export function TreatmentSessionManager({
   treatmentId, 
   patientName, 
   procedure, 
+  sessions: initialSessions,
   onScheduleAppointment, 
+  onUpdateSessions,
   onClose 
 }: TreatmentSessionManagerProps) {
-  const [sessions, setSessions] = useState<TreatmentSession[]>([
-    {
-      id: '1',
-      sessionNumber: 1,
-      date: '2024-01-15',
-      status: 'completed',
-      notes: 'Initial consultation completed. Treatment plan discussed with patient.',
-      duration: 60,
-      cost: 2000
-    },
-    {
-      id: '2',
-      sessionNumber: 2,
-      date: '2024-01-22',
-      status: 'scheduled',
-      notes: 'Main treatment session scheduled. Patient confirmed availability.',
-      appointmentId: 'APT-002',
-      duration: 45,
-      cost: 2000
-    },
-    {
-      id: '3',
-      sessionNumber: 3,
-      date: '2024-01-29',
-      status: 'planned',
-      notes: 'Follow-up session for treatment completion.',
-      duration: 30,
-      cost: 1000
-    }
-  ]);
+  const [sessions, setSessions] = useState<TreatmentSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
 
   const [showNewSession, setShowNewSession] = useState(false);
   const [newSession, setNewSession] = useState({
@@ -78,7 +53,9 @@ export function TreatmentSessionManager({
       cost: newSession.cost
     };
 
-    setSessions([...sessions, session]);
+    const updatedSessions = [...sessions, session];
+    setSessions(updatedSessions);
+    onUpdateSessions(updatedSessions);
 
     // Schedule appointment for this session
     onScheduleAppointment({
@@ -95,6 +72,14 @@ export function TreatmentSessionManager({
 
     setShowNewSession(false);
     setNewSession({ date: '', time: '09:00', notes: '', duration: 45, cost: 0 });
+  };
+
+  const handleUpdateSessionStatus = (sessionId: string, newStatus: TreatmentSession['status']) => {
+    const updatedSessions = sessions.map(s => 
+      s.id === sessionId ? { ...s, status: newStatus } : s
+    );
+    setSessions(updatedSessions);
+    onUpdateSessions(updatedSessions);
   };
 
   const getStatusColor = (status: string) => {
@@ -117,14 +102,17 @@ export function TreatmentSessionManager({
     }
   };
 
-  const totalCost = sessions.reduce((sum, session) => sum + session.cost, 0);
-  const completedSessions = sessions.filter(s => s.status === 'completed').length;
+  const totalCost = Array.isArray(sessions) ? sessions.reduce((sum, session) => sum + (session.cost || 0), 0) : 0;
+  const completedSessions = Array.isArray(sessions) ? sessions.filter(s => s.status === 'completed').length : 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Treatment Session Management</h2>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Treatment Session Management</h2>
+            <p className="text-gray-600">{patientName} • {procedure}</p>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
@@ -133,10 +121,26 @@ export function TreatmentSessionManager({
           </button>
         </div>
         <div className="p-6">
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <p className="text-sm text-blue-600 font-medium">Total Sessions</p>
+              <p className="text-2xl font-bold text-blue-900">{sessions.length}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+              <p className="text-sm text-green-600 font-medium">Completed</p>
+              <p className="text-2xl font-bold text-green-900">{completedSessions}</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+              <p className="text-sm text-purple-600 font-medium">Treatment Revenue</p>
+              <p className="text-2xl font-bold text-purple-900">₹{totalCost.toLocaleString()}</p>
+            </div>
+          </div>
+
           {/* Sessions List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Treatment Sessions</h3>
+              <h3 className="text-lg font-bold text-gray-900">Session Timeline</h3>
               <button
                 onClick={() => setShowNewSession(true)}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg transition-all duration-200"
@@ -147,7 +151,7 @@ export function TreatmentSessionManager({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {sessions.map((session) => (
+              {Array.isArray(sessions) && sessions.map((session) => (
                 <div key={session.id} className={`rounded-xl p-4 border transition-all duration-200 ${
                   session.status === 'completed' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' :
                   session.status === 'in-progress' ? 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200' :
@@ -170,139 +174,114 @@ export function TreatmentSessionManager({
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full border flex items-center ${getStatusColor(session.status)}`}>
-                        {getStatusIcon(session.status)}
-                        <span className="ml-1">{session.status.toUpperCase()}</span>
-                      </span>
-                      <p className="font-bold text-gray-900 mt-1">₹{session.cost.toLocaleString()}</p>
+                      <div className="flex flex-col items-end space-y-1">
+                        <select
+                          value={session.status}
+                          onChange={(e) => handleUpdateSessionStatus(session.id, e.target.value as any)}
+                          className={`text-xs px-2 py-1 rounded-full border font-semibold focus:ring-1 focus:ring-blue-500 ${getStatusColor(session.status)}`}
+                        >
+                          <option value="planned">PLANNED</option>
+                          <option value="scheduled">SCHEDULED</option>
+                          <option value="in-progress">IN PROGRESS</option>
+                          <option value="completed">COMPLETED</option>
+                          <option value="cancelled">CANCELLED</option>
+                        </select>
+                        <p className="font-bold text-gray-900">₹{session.cost.toLocaleString()}</p>
+                      </div>
                     </div>
                   </div>
                   
                   <div className="bg-white/50 rounded-lg p-3 border border-white/50">
-                    <p className="text-gray-700 text-sm">{session.notes}</p>
+                    <p className="text-gray-700 text-sm">{session.notes || 'No notes added for this session.'}</p>
                     <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                       <span>Duration: {session.duration} min</span>
                       {session.appointmentId && (
                         <span>ID: {session.appointmentId}</span>
                       )}
                     </div>
-                    <div className="flex items-center justify-end mt-3 space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Edit session functionality
-                          console.log('Edit session:', session.id);
-                        }}
-                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
-                      >
-                        Edit Session
-                      </button>
-                      {session.status === 'scheduled' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            // Reschedule session functionality
-                            console.log('Reschedule session:', session.id);
-                          }}
-                          className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-all duration-200"
-                        >
-                          Reschedule
-                        </button>
-                      )}
-                    </div>
                   </div>
                 </div>
               ))}
+              
+              {(!Array.isArray(sessions) || sessions.length === 0) && (
+                <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No sessions recorded yet.</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Add New Session Form */}
           {showNewSession && (
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <h3 className="text-lg font-bold text-blue-900 mb-3">Schedule New Session</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <h3 className="text-lg font-bold text-blue-900 mb-4">Schedule New Session</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-medium text-blue-700 mb-1">Date</label>
+                  <label className="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">Date</label>
                   <input
                     type="date"
                     value={newSession.date}
                     onChange={(e) => setNewSession({...newSession, date: e.target.value})}
-                    className="w-full px-2 py-1 text-sm border border-blue-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-blue-700 mb-1">Time</label>
+                  <label className="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">Time</label>
                   <input
                     type="time"
                     value={newSession.time}
                     onChange={(e) => setNewSession({...newSession, time: e.target.value})}
-                    className="w-full px-2 py-1 text-sm border border-blue-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-blue-700 mb-1">Duration</label>
+                  <label className="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">Duration (min)</label>
                   <input
                     type="number"
                     value={newSession.duration}
                     onChange={(e) => setNewSession({...newSession, duration: parseInt(e.target.value)})}
-                    className="w-full px-2 py-1 text-sm border border-blue-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     min="15"
                     step="15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-blue-700 mb-1">Cost (₹)</label>
+                  <label className="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">Cost (₹)</label>
                   <input
                     type="number"
                     value={newSession.cost}
                     onChange={(e) => setNewSession({...newSession, cost: parseInt(e.target.value)})}
-                    className="w-full px-2 py-1 text-sm border border-blue-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     min="0"
                   />
                 </div>
               </div>
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-blue-700 mb-1">Session Notes</label>
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-blue-700 mb-1 uppercase tracking-wider">Session Notes</label>
                 <textarea
                   value={newSession.notes}
                   onChange={(e) => setNewSession({...newSession, notes: e.target.value})}
                   rows={2}
-                  className="w-full px-2 py-1 text-sm border border-blue-300 rounded-lg focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter notes for this session..."
+                  className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="What will be done in this session?"
                 />
               </div>
               
-              <div className="mb-3 p-2 bg-blue-100 rounded-lg border border-blue-300">
-                <h4 className="font-semibold text-blue-900 mb-2 text-sm">Scheduling Options:</h4>
-                <div className="space-y-1">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                    <span className="ml-2 text-xs text-blue-800">Allow ±3 days flexibility</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                    <span className="ml-2 text-xs text-blue-800">Send reminder 24 hours before</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                    <span className="ml-2 text-xs text-blue-800">Allow patient to reschedule online</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowNewSession(false)}
-                  className="px-3 py-2 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 text-sm"
+                  className="px-6 py-2 text-blue-700 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddSession}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                  disabled={!newSession.date}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Schedule Session
+                  Confirm & Schedule
                 </button>
               </div>
             </div>

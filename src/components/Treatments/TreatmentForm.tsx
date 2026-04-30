@@ -7,11 +7,13 @@ interface TreatmentFormProps {
   treatment?: any;
   patients: any[];
   doctors: any[];
+  treatments?: any[];
 }
 
-export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients, doctors }: TreatmentFormProps) {
+export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients, doctors, treatments: allTreatments }: TreatmentFormProps) {
   const [formData, setFormData] = useState({
     patientName: treatment?.patientName || '',
+    patientId: treatment?.patientId || '',
     procedure: treatment?.procedure || '',
     tooth: treatment?.tooth || '',
     date: treatment?.date || new Date().toISOString().split('T')[0],
@@ -31,8 +33,39 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
   const [treatmentSessions, setTreatmentSessions] = useState(
     Array.isArray(treatment?.sessions) ? treatment.sessions : [],
   );
-  const [showSessionPlanner, setShowSessionPlanner] = useState(true); // Always show sessions
+  const [showSessionPlanner, setShowSessionPlanner] = useState(true);
 
+  // Update state when treatment prop changes
+  React.useEffect(() => {
+    if (treatment) {
+      setFormData({
+        patientName: treatment.patientName || '',
+        patientId: treatment.patientId || '',
+        procedure: treatment.procedure || '',
+        tooth: treatment.tooth || '',
+        date: treatment.date || new Date().toISOString().split('T')[0],
+        notes: treatment.notes || '',
+        cost: treatment.cost || 0,
+        status: treatment.status || 'planned',
+        nextAppointment: treatment.nextAppointment || '',
+        images: treatment.images || [],
+        doctorId: treatment.doctorId || '1',
+        doctorName: treatment.doctorName || 'Dr. Rajesh Sharma'
+      });
+      setPrescriptions(treatment.prescriptions || [
+        { id: '1', medicine: '', dosage: '', timing: '', frequency: '', duration: '', qty: '' }
+      ]);
+      setTreatmentSessions(Array.isArray(treatment.sessions) ? treatment.sessions : []);
+    }
+  }, [treatment]);
+
+  // Find pending plans for the selected patient
+  const pendingPlans = React.useMemo(() => {
+    if (!formData.patientName || !allTreatments || treatment) return [];
+    return allTreatments.filter((t: any) => 
+      t.patientName === formData.patientName && t.status === 'planned'
+    );
+  }, [formData.patientName, allTreatments, treatment]);
 
   const procedures = [
     'Regular Checkup',
@@ -142,7 +175,6 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
     onSave({
       ...formData,
       id: treatment?.id || Date.now().toString(),
-      patientId: allPatients.find(p => p.name === formData.patientName)?.id || Date.now().toString(),
       prescriptions: prescriptions.filter(p => p.medicine.trim() !== ''),
       cost: parseFloat(formData.cost.toString())
     });
@@ -153,6 +185,12 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
     setFormData(prev => {
       const updated = { ...prev, [name]: value };
       
+      // Auto-set patientId when patientName changes
+      if (name === 'patientName') {
+        const patient = allPatients.find(p => (typeof p === 'string' ? p : p.name) === value);
+        updated.patientId = typeof patient === 'object' ? patient.id : (updated.patientId || '');
+      }
+
       // Auto-generate sessions when procedure changes
       if (name === 'procedure') {
         const template = treatmentTemplates[value as keyof typeof treatmentTemplates];
@@ -358,6 +396,64 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
                 })}
               </select>
             </div>
+
+            {/* Load Recommended Plan - NEW */}
+            {pendingPlans.length > 0 && !treatment && (
+              <div className="col-span-1 md:col-span-2 p-4 bg-purple-50 rounded-2xl border border-purple-200 animate-in slide-in-from-top duration-500 shadow-sm">
+                <p className="text-sm font-bold text-purple-900 mb-3 flex items-center">
+                  <Plus className="w-4 h-4 mr-1 text-purple-600" />
+                  Recommended Plans from Consultation:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pendingPlans.map((plan: any) => (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          procedure: plan.procedure,
+                          tooth: plan.tooth,
+                          cost: plan.cost,
+                          notes: plan.notes,
+                          status: 'in-progress',
+                          patientId: plan.patientId || formData.patientId
+                        });
+                        if (plan.prescriptions) {
+                          setPrescriptions(plan.prescriptions);
+                        }
+                        const template = treatmentTemplates[plan.procedure as keyof typeof treatmentTemplates];
+                        if (template) {
+                          const baseDate = new Date(formData.date);
+                          const generatedSessions = template.sessions.map((session, index) => {
+                            const sessionDate = new Date(baseDate);
+                            sessionDate.setDate(baseDate.getDate() + session.gap);
+                            return {
+                              id: `session-${index + 1}`,
+                              sessionNumber: index + 1,
+                              name: session.name,
+                              description: session.description,
+                              suggestedDate: sessionDate.toISOString().split('T')[0],
+                              scheduledDate: sessionDate.toISOString().split('T')[0],
+                              duration: session.duration,
+                              status: 'planned',
+                              isRequired: session.isRequired,
+                              cost: Math.round(template.totalCost / template.sessions.length),
+                              isModified: false,
+                              notes: ''
+                            };
+                          });
+                          setTreatmentSessions(generatedSessions);
+                        }
+                      }}
+                      className="px-3 py-2 bg-white text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors flex items-center border border-purple-200 shadow-sm"
+                    >
+                      {plan.procedure} (#{plan.tooth})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">

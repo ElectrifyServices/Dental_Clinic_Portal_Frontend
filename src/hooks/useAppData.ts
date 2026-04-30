@@ -100,10 +100,19 @@ export const useAppData = () => {
     const stored = localStorage.getItem("completedConsultations");
     return stored ? JSON.parse(stored) : [];
   });
-
   const [staffMembers, setStaffMembers] = useState<any[]>(() => {
     const stored = localStorage.getItem("staffMembers");
     return stored ? JSON.parse(stored) : demoStaff;
+  });
+
+  const [corporatePlans, setCorporatePlans] = useState<any[]>(() => {
+    const stored = localStorage.getItem("corporatePlans");
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [corporateEmployees, setCorporateEmployees] = useState<any[]>(() => {
+    const stored = localStorage.getItem("corporateEmployees");
+    return stored ? JSON.parse(stored) : [];
   });
 
   // Data Migration: Ensure all doctors have a profit percentage
@@ -173,6 +182,8 @@ export const useAppData = () => {
   useEffect(() => localStorage.setItem("staffMembers", JSON.stringify(staffMembers)), [staffMembers]);
   useEffect(() => localStorage.setItem("consentForms", JSON.stringify(consentForms)), [consentForms]);
   useEffect(() => localStorage.setItem("inventory", JSON.stringify(inventory)), [inventory]);
+  useEffect(() => localStorage.setItem("corporatePlans", JSON.stringify(corporatePlans)), [corporatePlans]);
+  useEffect(() => localStorage.setItem("corporateEmployees", JSON.stringify(corporateEmployees)), [corporateEmployees]);
 
   // Invoice Overdue Logic
   useEffect(() => {
@@ -267,6 +278,21 @@ export const useAppData = () => {
     setPatients((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleBulkSavePatients = (newEmployees: any[]) => {
+    setCorporateEmployees(prev => {
+      // Avoid duplicates based on phone/email
+      const existingEmails = new Set(prev.map(e => e.email?.toLowerCase()));
+      const existingPhones = new Set(prev.map(e => e.phone));
+      
+      const filtered = newEmployees.filter(e => 
+        !existingEmails.has(e.email?.toLowerCase()) && 
+        !existingPhones.has(e.phone)
+      );
+
+      return [...prev, ...filtered];
+    });
+  };
+
   const handleSaveInvoice = (invoice: any) => {
     setInvoices((prev) => {
       const existing = prev.find((inv) => inv.id === invoice.id);
@@ -286,6 +312,45 @@ export const useAppData = () => {
         }
         return p;
       }));
+
+      // Unified Billing: Mark linked items as billed
+      if (invoice.linkedItemIds && invoice.linkedItemIds.length > 0) {
+        // Mark Consultations as billed
+        setCompletedConsultations(prevConsults => prevConsults.map(c => {
+          if (invoice.linkedItemIds.includes(c.id)) {
+            return { ...c, isBilled: true };
+          }
+          return c;
+        }));
+
+        // Mark Treatments and their specific sessions as billed
+        setTreatments(prevTreatments => prevTreatments.map(t => {
+          let updatedTreatment = { ...t };
+          let treatmentModified = false;
+
+          // If the treatment itself was linked
+          if (invoice.linkedItemIds.includes(t.id)) {
+            updatedTreatment.isBilled = true;
+            treatmentModified = true;
+          }
+
+          // If sessions were linked
+          if (Array.isArray(t.sessions)) {
+            const updatedSessions = t.sessions.map((s: any) => {
+              if (invoice.linkedItemIds.includes(`${t.id}-${s.id}`)) {
+                treatmentModified = true;
+                return { ...s, isBilled: true };
+              }
+              return s;
+            });
+            if (treatmentModified) {
+              updatedTreatment.sessions = updatedSessions;
+            }
+          }
+
+          return treatmentModified ? updatedTreatment : t;
+        }));
+      }
       
       return [...prev, invoice];
     });
@@ -306,6 +371,32 @@ export const useAppData = () => {
 
   const handleCompleteConsultation = (consultation: any) => {
     setCompletedConsultations((prev) => [...prev, consultation]);
+
+    // Save all planned treatments from consultation
+    if (consultation.treatmentPlans && consultation.treatmentPlans.length > 0) {
+      const allPlans = consultation.treatmentPlans.map((plan: any) => ({
+        id: `TR-${consultation.id || Date.now()}-${plan.tooth}`,
+        patientId: consultation.patientId,
+        patientName: consultation.patientName,
+        procedure: plan.procedure,
+        tooth: plan.tooth,
+        date: consultation.consultationDate || new Date().toISOString().split('T')[0],
+        notes: `Planned during consultation. ${consultation.treatmentPlan || ''}`,
+        cost: plan.cost || 0,
+        status: plan.isActive ? 'in-progress' : 'planned',
+        doctorId: consultation.doctorId || '1',
+        doctorName: consultation.doctorName || 'Dr. Sharma',
+        sessions: plan.sessions || [],
+        prescriptions: consultation.prescriptions || []
+      }));
+
+      setTreatments(prev => {
+        // Filter out any existing ones with same ID to avoid duplicates
+        const planIds = allPlans.map((p: any) => p.id);
+        const filteredPrev = prev.filter(t => !planIds.includes(t.id));
+        return [...filteredPrev, ...allPlans];
+      });
+    }
   };
 
   const handleUpdateConsultation = (consultation: any) => {
@@ -366,6 +457,32 @@ export const useAppData = () => {
     }
   };
 
+  const handleSaveCorporatePlan = (plan: any) => {
+    setCorporatePlans(prev => {
+      const existing = prev.find(p => p.id === plan.id);
+      if (existing) return prev.map(p => p.id === plan.id ? plan : p);
+      return [...prev, { ...plan, id: plan.id || `CORP-${Date.now()}` }];
+    });
+  };
+
+  const handleDeleteCorporatePlan = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this corporate plan?")) {
+      setCorporatePlans(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const handleDeleteCorporateEmployee = (name: string, email: string) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      setCorporateEmployees(prev => prev.filter(e => !(e.name === name && e.email === email)));
+    }
+  };
+
+  const handleUpdateCorporateEmployee = (oldName: string, oldEmail: string, updatedEmp: any) => {
+    setCorporateEmployees(prev => prev.map(e => 
+      (e.name === oldName && e.email === oldEmail) ? { ...e, ...updatedEmp } : e
+    ));
+  };
+
   return {
     patients, setPatients,
     appointments, setAppointments,
@@ -383,6 +500,13 @@ export const useAppData = () => {
     handleSaveStaff, handleDeleteStaff,
     handleSaveEMR, handleDeleteEMR,
     consentForms, handleSaveConsentForm, handleDeleteConsentForm,
-    inventory, handleSaveInventoryItem, handleDeleteInventoryItem
+    inventory, handleSaveInventoryItem, handleDeleteInventoryItem,
+    corporatePlans,
+    corporateEmployees,
+    handleSaveCorporatePlan,
+    handleDeleteCorporatePlan,
+    handleBulkSavePatients,
+    handleDeleteCorporateEmployee,
+    handleUpdateCorporateEmployee,
   };
 };

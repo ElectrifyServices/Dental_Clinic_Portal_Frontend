@@ -31,9 +31,20 @@ interface PatientFormProps {
   type?: 'normal' | 'person';
   parentId?: string;
   isCheckIn?: boolean;
+  corporateEmployees?: any[];
+  corporatePlans?: any[];
 }
 
-export function PatientForm({ onClose, onSave, patient, type, parentId, isCheckIn }: PatientFormProps) {
+export function PatientForm({ 
+  onClose, 
+  onSave, 
+  patient, 
+  type, 
+  parentId, 
+  isCheckIn,
+  corporateEmployees = [],
+  corporatePlans = []
+}: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState((isCheckIn && patient) ? 4 : 1);
   const [showOtpInput, setShowOtpInput] = useState(false);
@@ -157,7 +168,52 @@ export function PatientForm({ onClose, onSave, patient, type, parentId, isCheckI
     customEmergencyRelation: '',
     category: patient?.category || 'regular',
     defaultDiscount: patient?.defaultDiscount || 0,
+    companyId: patient?.companyId || '',
   });
+
+  const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
+
+  // Corporate Lookup Effect
+  React.useEffect(() => {
+    if (patient) return; // Don't auto-lookup for existing patients being edited
+    
+    const searchName = formData.name.toLowerCase().trim();
+    const searchPhone = formData.phone.trim();
+    const searchEmail = formData.email.toLowerCase().trim();
+
+    if (searchName.length < 3 && !searchPhone && !searchEmail) {
+      setMatchedCorporateEmp(null);
+      return;
+    }
+
+    const match = corporateEmployees.find(emp => 
+      searchName && searchEmail && 
+      emp.name.toLowerCase() === searchName && 
+      emp.email?.toLowerCase() === searchEmail
+    );
+
+    if (match) {
+      setMatchedCorporateEmp(match);
+      const plan = corporatePlans.find(cp => cp.id === match.companyId);
+      setFormData(prev => ({
+        ...prev,
+        category: 'corporate',
+        companyId: match.companyId,
+        defaultDiscount: plan ? plan.discountPercent : 0,
+        // Auto-fill other basics if empty
+        gender: prev.gender || match.gender || ''
+      }));
+    } else {
+      setMatchedCorporateEmp(null);
+      // Reset if it was set to corporate by auto-detection
+      setFormData(prev => {
+        if (prev.category === 'corporate' && !patient) {
+          return { ...prev, category: 'regular', companyId: '', defaultDiscount: 0 };
+        }
+        return prev;
+      });
+    }
+  }, [formData.name, formData.phone, formData.email, corporateEmployees, corporatePlans, patient]);
 
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
@@ -497,6 +553,21 @@ overflow: auto;
         <p className="text-sm text-gray-500 mt-2">Upload patient photo (optional)</p>
       </div>
 
+      {matchedCorporateEmp && (
+        <div className="mx-6 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-black text-indigo-900">Corporate Employee Detected!</p>
+            <p className="text-xs text-indigo-700 font-medium">
+              Found in {corporatePlans.find(cp => cp.id === matchedCorporateEmp.companyId)?.name || 'Corporate'} list. 
+              Applying {formData.defaultDiscount}% Benefit.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -814,46 +885,50 @@ overflow: auto;
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Patient Category
-          </label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFormData(prev => ({ 
-                ...prev, 
-                category: val as any,
-                defaultDiscount: (val === 'family' || val === 'staff') ? 100 : prev.defaultDiscount
-              }));
-            }}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-          >
-            <option value="regular">Regular</option>
-            <option value="family">Family (Doctor's House)</option>
-            <option value="staff">Clinic Staff</option>
-            <option value="vip">VIP</option>
-            <option value="complimentary">Complimentary</option>
-          </select>
-        </div>
+        {!matchedCorporateEmp && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Patient Category
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    category: val as any,
+                    defaultDiscount: (val === 'family' || val === 'staff') ? 100 : prev.defaultDiscount
+                  }));
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+              >
+                <option value="regular">Regular</option>
+                <option value="family">Family (Doctor's House)</option>
+                <option value="staff">Clinic Staff</option>
+                <option value="vip">VIP</option>
+                <option value="complimentary">Complimentary</option>
+              </select>
+            </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Default Discount (%)
-          </label>
-          <input
-            type="number"
-            name="defaultDiscount"
-            value={formData.defaultDiscount}
-            onChange={handleChange}
-            min="0"
-            max="100"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-            placeholder="e.g. 100 for full free"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Default Discount (%)
+              </label>
+              <input
+                type="number"
+                name="defaultDiscount"
+                value={formData.defaultDiscount}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
+                placeholder="e.g. 100 for full free"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

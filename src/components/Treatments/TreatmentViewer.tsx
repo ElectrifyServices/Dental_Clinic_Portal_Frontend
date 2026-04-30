@@ -4,9 +4,12 @@ import { X, Download, Stethoscope, User, Calendar, DollarSign, FileText, Camera,
 interface TreatmentViewerProps {
   treatment: any;
   onClose: () => void;
+  onEditTreatment: (id: string) => void;
+  onMarkCompleted: (id: string) => void;
+  onStartTreatment: (id: string) => void;
 }
 
-export function TreatmentViewer({ treatment, onClose }: TreatmentViewerProps) {
+export function TreatmentViewer({ treatment, onClose, onEditTreatment, onMarkCompleted, onStartTreatment }: TreatmentViewerProps) {
   if (!treatment) return null;
 
   const handleDownload = () => {
@@ -233,19 +236,36 @@ export function TreatmentViewer({ treatment, onClose }: TreatmentViewerProps) {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             {treatment.status === 'planned' && (
-              <button className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold transition-all duration-200">
+              <button 
+                onClick={() => {
+                  onStartTreatment(treatment.id);
+                  onClose();
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold transition-all duration-200"
+              >
                 Start Treatment
               </button>
             )}
             {treatment.status === 'in-progress' && (
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200">
+              <button 
+                onClick={() => {
+                  onMarkCompleted(treatment.id);
+                  onClose();
+                }}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200"
+              >
                 Mark as Completed
               </button>
             )}
-            <button className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 font-semibold transition-all duration-200">
+            <button 
+              onClick={() => {
+                onEditTreatment(treatment.id);
+                onClose();
+              }}
+              className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 font-semibold transition-all duration-200"
+            >
               Edit Treatment
             </button>
           </div>

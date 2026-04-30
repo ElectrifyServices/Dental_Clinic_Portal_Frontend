@@ -191,9 +191,10 @@ interface TreatmentListProps {
   onEditTreatment: (treatmentId: string) => void;
   onManageSessions: (treatmentId: string) => void;
   onMarkCompleted: (treatmentId: string) => void;
+  onStartTreatment: (treatmentId: string) => void;
 }
 
-export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, onViewTreatment, onEditTreatment, onManageSessions, onMarkCompleted }: TreatmentListProps) {
+export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, onViewTreatment, onEditTreatment, onManageSessions, onMarkCompleted, onStartTreatment }: TreatmentListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterProcedure, setFilterProcedure] = useState('all');
@@ -356,6 +357,15 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
                             <Clock className="w-4 h-4 mr-3" />
                             Manage Sessions
                           </button>
+                          {treatment.status === 'planned' && (
+                            <button
+                              onClick={() => { onStartTreatment(treatment.id); setActiveMenu(null); }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                            >
+                              <Plus className="w-4 h-4 mr-3" />
+                              Start Treatment
+                            </button>
+                          )}
                           {treatment.status === 'in-progress' && (
                             <button
                               onClick={() => { onMarkCompleted(treatment.id); setActiveMenu(null); }}

@@ -28,6 +28,7 @@ import { InventoryPage } from "./pages/InventoryPage";
 import { AppointmentForm } from "./components/Appointments/AppointmentForm";
 import { PatientForm } from "./components/Patients/PatientForm";
 import { InvoiceForm } from "./components/Billing/InvoiceForm";
+import { CorporateManagement } from "./components/Patients/CorporateManagement";
 import { InvoiceViewer } from "./components/Billing/InvoiceViewer";
 import { TreatmentForm } from "./components/Treatments/TreatmentForm";
 import { DoctorForm } from "./components/Staff/DoctorForm";
@@ -92,6 +93,13 @@ function MainApp() {
     handleDeleteConsentForm,
     handleSaveInventoryItem,
     handleDeleteInventoryItem,
+    corporatePlans,
+    corporateEmployees,
+    handleSaveCorporatePlan,
+    handleDeleteCorporatePlan,
+    handleBulkSavePatients,
+    handleDeleteCorporateEmployee,
+    handleUpdateCorporateEmployee,
   } = useAppData();
 
   const activeDoctors = useMemo(() =>
@@ -132,6 +140,7 @@ function MainApp() {
   const [pendingCheckInAppt, setPendingCheckInAppt] = useState<any>(null);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   const [showRestockForm, setShowRestockForm] = useState(false);
+  const [showCorporateModal, setShowCorporateModal] = useState(false);
   const [selectedItemForRestock, setSelectedItemForRestock] = useState<any>(null);
 
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -271,6 +280,7 @@ function MainApp() {
             setSelectedPatientId={setSelectedPatientId}
             handleExportPatient={handleExportPatient}
             handleToggleStatus={handleTogglePatientStatus}
+            onShowCorporateManagement={() => setShowCorporateModal(true)}
           />
         );
       case "inventory":
@@ -438,6 +448,13 @@ function MainApp() {
                 showToast("Treatment marked as completed!");
               }
             }}
+            onStartTreatment={(id) => {
+              const treatment = treatments.find((t) => t.id === id);
+              if (treatment) {
+                handleSaveTreatment({ ...treatment, status: "in-progress" });
+                showToast("Treatment started!");
+              }
+            }}
           />
         );
       case "emr":
@@ -487,8 +504,17 @@ function MainApp() {
               setSelectedItemId(id);
               setShowDoctorForm(true);
             }}
-            onDeleteDoctor={(id) => handleDeleteStaff(id)}
-            onUpdateStaff={(staff) => handleSaveStaff(staff)}
+            onDeleteDoctor={(id) => {
+              const staff = staffMembers.find(s => s.id === id);
+              if (window.confirm(`Are you sure you want to delete ${staff?.name}? This action cannot be undone.`)) {
+                handleDeleteStaff(id);
+                showToast("Staff member deleted successfully!", "error");
+              }
+            }}
+            onUpdateStaff={(staff) => {
+              handleSaveStaff(staff);
+              showToast("Staff member status updated!");
+            }}
             onManageSchedule={(id) => {
               setSelectedItemId(id);
               setShowScheduleManager(true);
@@ -636,6 +662,8 @@ function MainApp() {
           }
           type={patientFormType}
           parentId={parentPatientId}
+          corporateEmployees={corporateEmployees}
+          corporatePlans={corporatePlans}
         />
       )}
 
@@ -744,9 +772,11 @@ function MainApp() {
             alert("Invoice created successfully!");
           }}
           patients={patients}
+          treatments={treatments}
+          consultations={completedConsultations}
+          corporatePlans={corporatePlans}
         />
       )}
-
       {showTreatmentForm && (
         <TreatmentForm
           onClose={() => {
@@ -766,6 +796,7 @@ function MainApp() {
           }
           patients={patients}
           doctors={activeDoctors}
+          treatments={treatments}
         />
       )}
 
@@ -794,12 +825,46 @@ function MainApp() {
         />
       )}
 
+      {showCorporateModal && (
+        <CorporateManagement
+          corporatePlans={corporatePlans}
+          corporateEmployees={corporateEmployees}
+          onSavePlan={handleSaveCorporatePlan}
+          onDeletePlan={handleDeleteCorporatePlan}
+          onBulkAddPatients={(patients) => {
+            handleBulkSavePatients(patients);
+            showToast(`Successfully registered ${patients.length} employees!`);
+          }}
+          onDeleteEmployee={handleDeleteCorporateEmployee}
+          onUpdateEmployee={handleUpdateCorporateEmployee}
+          onClose={() => setShowCorporateModal(false)}
+        />
+      )}
+
       {showTreatmentViewer && selectedItemId && (
         <TreatmentViewer
           treatment={treatments.find((t) => t.id === selectedItemId)}
           onClose={() => {
             setShowTreatmentViewer(false);
-            setSelectedItemId("");
+          }}
+          onEditTreatment={(id) => {
+            setShowTreatmentViewer(false);
+            setSelectedItemId(id);
+            setShowTreatmentForm(true);
+          }}
+          onMarkCompleted={(id) => {
+            const treatment = treatments.find((t) => t.id === id);
+            if (treatment) {
+              handleSaveTreatment({ ...treatment, status: "completed" });
+              showToast("Treatment marked as completed!");
+            }
+          }}
+          onStartTreatment={(id) => {
+            const treatment = treatments.find((t) => t.id === id);
+            if (treatment) {
+              handleSaveTreatment({ ...treatment, status: "in-progress" });
+              showToast("Treatment started!");
+            }
           }}
         />
       )}
@@ -813,6 +878,16 @@ function MainApp() {
           procedure={
             treatments.find((t) => t.id === selectedItemId)?.procedure || ""
           }
+          sessions={
+            treatments.find((t) => t.id === selectedItemId)?.sessions || []
+          }
+          onUpdateSessions={(updatedSessions) => {
+            const treatment = treatments.find((t) => t.id === selectedItemId);
+            if (treatment) {
+              handleSaveTreatment({ ...treatment, sessions: updatedSessions });
+              showToast("Treatment sessions updated!");
+            }
+          }}
           onClose={() => {
             setShowTreatmentSessionManager(false);
             setSelectedItemId("");
