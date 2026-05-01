@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, User, Phone, Calendar, MoreVertical, Edit, Trash2, QrCode, Download, Eye, UserCheck, UserX, Mail, MapPin, Heart, AlertTriangle, UserPlus } from 'lucide-react';
+import { Search, Plus, Filter, User, Phone, Calendar, MoreVertical, Edit, Trash2, QrCode, Download, Eye, UserCheck, UserX, Mail, MapPin, Heart, AlertTriangle, UserPlus, Building2 } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -412,11 +412,17 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 </div>
               </div>
               <div className="ml-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-gray-900 text-lg truncate" title={patient.name}>{patient.name}</h3>
-                  {patient.category && patient.category !== 'regular' && (
+                  {patient.category && patient.category !== 'regular' && patient.category !== 'corporate' && (
                     <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
                       {patient.category}
+                    </span>
+                  )}
+                  {(patient as any).corporatePlanId && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 rounded uppercase">
+                      <Building2 className="w-2.5 h-2.5" />
+                      {(patient as any).corporatePlanName || 'Corporate'}
                     </span>
                   )}
                 </div>

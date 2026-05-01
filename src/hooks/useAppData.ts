@@ -107,7 +107,34 @@ export const useAppData = () => {
 
   const [corporatePlans, setCorporatePlans] = useState<any[]>(() => {
     const stored = localStorage.getItem("corporatePlans");
-    return stored ? JSON.parse(stored) : [];
+    if (stored) return JSON.parse(stored);
+    // Default sample plans
+    return [
+      {
+        id: 'CORP-SAMPLE-1', name: 'TCS Gold Health Plan', companyName: 'Tata Consultancy Services',
+        code: 'TCS-GOLD', description: 'Premium dental care for TCS employees',
+        benefits: [
+          { id: 'b1', type: 'flat_discount', value: 20, description: '20% discount on all treatments' },
+          { id: 'b2', type: 'free_consultations', value: 2, description: '2 free consultations per year' },
+        ],
+        validFrom: new Date().toISOString().split('T')[0],
+        validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+        maxMembers: 500, currentMembers: 0, isActive: true,
+        createdAt: new Date().toISOString(), createdBy: 'Super Admin', color: 'blue',
+      },
+      {
+        id: 'CORP-SAMPLE-2', name: 'Infosys Silver Plan', companyName: 'Infosys Limited',
+        code: 'INFO-SILV', description: 'Standard dental coverage for Infosys employees',
+        benefits: [
+          { id: 'b3', type: 'treatment_discount', value: 15, treatmentTypes: ['root-canal', 'crown', 'surgery'], description: '15% off major procedures' },
+          { id: 'b4', type: 'capped_discount', value: 10, cap: 2000, description: '10% discount (max ₹2,000 per visit)' },
+        ],
+        validFrom: new Date().toISOString().split('T')[0],
+        validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+        currentMembers: 0, isActive: true,
+        createdAt: new Date().toISOString(), createdBy: 'Super Admin', color: 'emerald',
+      },
+    ];
   });
 
   const [corporateEmployees, setCorporateEmployees] = useState<any[]>(() => {
@@ -466,9 +493,11 @@ export const useAppData = () => {
   };
 
   const handleDeleteCorporatePlan = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this corporate plan?")) {
-      setCorporatePlans(prev => prev.filter(p => p.id !== id));
-    }
+    setCorporatePlans(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleToggleCorporatePlan = (id: string) => {
+    setCorporatePlans(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
   };
 
   const handleDeleteCorporateEmployee = (name: string, email: string) => {
@@ -505,6 +534,7 @@ export const useAppData = () => {
     corporateEmployees,
     handleSaveCorporatePlan,
     handleDeleteCorporatePlan,
+    handleToggleCorporatePlan,
     handleBulkSavePatients,
     handleDeleteCorporateEmployee,
     handleUpdateCorporateEmployee,

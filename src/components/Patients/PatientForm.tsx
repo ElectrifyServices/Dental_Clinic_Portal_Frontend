@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool, ShieldCheck, Lock } from 'lucide-react';
 import { SignaturePad } from '../Consent/SignaturePad';
+import { CorporatePlanSelector } from '../CorporatePlans/CorporatePlanSelector';
 
 // Enhanced barcode generation function
 const generateBarcode = (patientId: string) => {
@@ -113,6 +114,10 @@ export function PatientForm({
         guardianSignature: '',
         category: 'regular',
         defaultDiscount: 0,
+        companyId: '',
+        corporatePlanId: '',
+        corporatePlanName: '',
+        corporateMemberId: '',
       });
       setSelectedMedicalHistory([]);
       setSelectedAllergies([]);
@@ -169,6 +174,9 @@ export function PatientForm({
     category: patient?.category || 'regular',
     defaultDiscount: patient?.defaultDiscount || 0,
     companyId: patient?.companyId || '',
+    corporatePlanId: patient?.corporatePlanId || '',
+    corporatePlanName: patient?.corporatePlanName || '',
+    corporateMemberId: patient?.corporateMemberId || '',
   });
 
   const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
@@ -1081,6 +1089,35 @@ overflow: auto;
           onChange={handleChange}
           className="w-full px-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all duration-200"
           placeholder="Doctor name or referral source"
+        />
+      </div>
+
+      {/* ── Corporate Plan Assignment ── */}
+      <div className="border border-blue-100 bg-blue-50 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-blue-900">Corporate Plan</p>
+            <p className="text-xs text-blue-600">Assign this patient to a plan — discounts apply automatically in billing</p>
+          </div>
+        </div>
+        <CorporatePlanSelector
+          plans={corporatePlans}
+          selectedPlanId={formData.corporatePlanId}
+          memberId={formData.corporateMemberId}
+          onChange={(planId, planName, memberId) =>
+            setFormData(prev => ({
+              ...prev,
+              corporatePlanId: planId,
+              corporatePlanName: planName,
+              corporateMemberId: memberId,
+              category: planId ? 'corporate' : (prev.category === 'corporate' ? 'regular' : prev.category),
+            }))
+          }
         />
       </div>
 

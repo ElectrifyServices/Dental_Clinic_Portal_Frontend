@@ -8,9 +8,11 @@ import {
   Calendar,
   DollarSign,
   ClipboardList,
-  Check
+  Check,
+  Building2,
 } from "lucide-react";
 import { Invoice, InvoiceItem } from "../../types";
+import { computePlanDiscount } from "../../utils/corporatePlan";
 
 interface InvoiceFormProps {
   onClose: () => void;
@@ -54,15 +56,19 @@ export function InvoiceForm({
     ],
   );
 
-  // Corporate Detection
+  // Corporate Plan Detection — reads from new corporatePlanId field on patient
   const activeCorporatePlan = useMemo(() => {
-    if (!formData.patientName) return null;
-    const patient = patients.find(p => p.name === formData.patientName || p.id === formData.patientId);
+    if (!formData.patientId && !formData.patientName) return null;
+    const patient = patients.find(p => p.id === formData.patientId || p.name === formData.patientName);
+    if (patient?.corporatePlanId) {
+      return corporatePlans.find((cp: any) => cp.id === patient.corporatePlanId) || null;
+    }
+    // Legacy: support old companyId field
     if (patient?.companyId) {
-      return corporatePlans.find(cp => cp.id === patient.companyId);
+      return corporatePlans.find((cp: any) => cp.id === patient.companyId) || null;
     }
     return null;
-  }, [formData.patientName, formData.patientId, patients, corporatePlans]);
+  }, [formData.patientId, formData.patientName, patients, corporatePlans]);
 
   // Unified Billing: Find pending (unbilled) items for the selected patient
   const pendingItems = useMemo(() => {
@@ -216,9 +222,21 @@ export function InvoiceForm({
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const discountAmount = formData.isComplimentary ? subtotal : (subtotal * formData.discount) / 100;
-  const taxAmount = formData.isComplimentary ? 0 : ((subtotal - discountAmount) * formData.tax) / 100;
-  const total = formData.isComplimentary ? 0 : (subtotal - discountAmount + taxAmount);
+  const manualDiscount = formData.isComplimentary ? subtotal : (subtotal * formData.discount) / 100;
+
+  // Corporate plan discount computed from plan benefits
+  const planDiscountResult = useMemo(() => {
+    if (!activeCorporatePlan || formData.isComplimentary) return { totalDiscount: 0, applied: [] };
+    const types = items.map(i =>
+      i.description.toLowerCase().includes('consultation') ? 'consultation' : 'other'
+    );
+    return computePlanDiscount(activeCorporatePlan, subtotal - manualDiscount, types);
+  }, [activeCorporatePlan, subtotal, manualDiscount, items, formData.isComplimentary]);
+
+  const planDiscount = planDiscountResult.totalDiscount;
+  const discountAmount = manualDiscount + planDiscount;
+  const taxAmount = formData.isComplimentary ? 0 : (Math.max(0, subtotal - discountAmount) * formData.tax) / 100;
+  const total = formData.isComplimentary ? 0 : Math.max(0, subtotal - discountAmount + taxAmount);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,12 +246,16 @@ export function InvoiceForm({
       patientId: formData.patientId || Date.now().toString(),
       items,
       subtotal,
-      discount: formData.discount,
-      tax: formData.tax,
+      discount: discountAmount,
+      tax: taxAmount,
       total: formData.isComplimentary ? 0 : total,
       status: formData.isComplimentary ? "complimentary" : (invoice?.status || "draft"),
       isComplimentary: formData.isComplimentary,
       complimentaryNote: formData.complimentaryNote,
+      corporatePlanId: activeCorporatePlan?.id,
+      corporatePlanName: activeCorporatePlan?.name,
+      planDiscountApplied: planDiscount,
+      planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
     });
   };
 
@@ -291,18 +313,27 @@ export function InvoiceForm({
               </select>
             </div>
 
-            {/* CORPORATE DETECTION BANNER */}
+            {/* CORPORATE PLAN BANNER */}
             {activeCorporatePlan && (
-              <div className="md:col-span-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
-                  <ClipboardList className="w-6 h-6" />
+              <div className="md:col-span-3 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                  <Building2 className="w-4.5 h-4.5 w-[18px] h-[18px]" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-black text-indigo-900 uppercase tracking-tight">Corporate Plan: {activeCorporatePlan.name}</p>
-                  <p className="text-xs text-indigo-700 font-medium">
-                    {activeCorporatePlan.discountPercent}% Discount & {activeCorporatePlan.freeConsultation ? 'Free Consultation' : 'Standard Billing'} rules applied.
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-blue-900">{activeCorporatePlan.name} <span className="font-mono text-[11px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">{activeCorporatePlan.code || ''}</span></p>
+                  <p className="text-xs text-blue-700 mt-0.5">{activeCorporatePlan.companyName || ''}</p>
+                  <div className="flex flex-wrap gap-2 mt-1.5">
+                    {(activeCorporatePlan.benefits || []).map((b: any) => (
+                      <span key={b.id} className="text-[11px] font-medium text-blue-700 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full">{b.description}</span>
+                    ))}
+                  </div>
                 </div>
+                {planDiscount > 0 && (
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-blue-600 font-medium">Plan saves</p>
+                    <p className="text-lg font-bold text-blue-700">₹{planDiscount.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -691,21 +722,24 @@ export function InvoiceForm({
               <div className="space-y-3 text-right">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal:</span>
-                  <span className="font-semibold text-gray-900">
-                    ₹{subtotal.toLocaleString()}
-                  </span>
+                  <span className="font-semibold text-gray-900">₹{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Discount ({formData.isComplimentary ? 100 : formData.discount}%):</span>
-                  <span className="font-semibold text-red-600">
-                    -₹{discountAmount.toLocaleString()}
-                  </span>
+                  <span className="font-semibold text-red-600">-₹{manualDiscount.toLocaleString()}</span>
                 </div>
+                {planDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1.5 text-blue-700">
+                      <Building2 className="w-3.5 h-3.5" />
+                      Plan Discount ({activeCorporatePlan?.name}):
+                    </span>
+                    <span className="font-semibold text-blue-700">-₹{planDiscount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Tax ({formData.isComplimentary ? 0 : formData.tax}%):</span>
-                  <span className="font-semibold text-gray-900">
-                    ₹{taxAmount.toLocaleString()}
-                  </span>
+                  <span className="font-semibold text-gray-900">₹{taxAmount.toLocaleString()}</span>
                 </div>
                 <div className="pt-3 border-t border-gray-200 flex justify-between text-xl font-bold">
                   <span className="text-gray-900">Total:</span>

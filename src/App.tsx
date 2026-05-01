@@ -23,6 +23,7 @@ import { MedicalRecordsPage } from "./pages/MedicalRecordsPage";
 import { ConsentPage } from "./pages/ConsentPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { CorporatePlansPage } from "./pages/CorporatePlansPage";
 
 // Modals
 import { AppointmentForm } from "./components/Appointments/AppointmentForm";
@@ -97,6 +98,7 @@ function MainApp() {
     corporateEmployees,
     handleSaveCorporatePlan,
     handleDeleteCorporatePlan,
+    handleToggleCorporatePlan,
     handleBulkSavePatients,
     handleDeleteCorporateEmployee,
     handleUpdateCorporateEmployee,
@@ -560,6 +562,15 @@ function MainApp() {
             invoices={invoices}
           />
         );
+      case "corporate-plans":
+        return (
+          <CorporatePlansPage
+            plans={corporatePlans}
+            onSave={handleSaveCorporatePlan}
+            onDelete={handleDeleteCorporatePlan}
+            onToggle={handleToggleCorporatePlan}
+          />
+        );
       default:
         return (
           <DashboardPage
@@ -575,8 +586,14 @@ function MainApp() {
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
 
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <Header onShowTodaySchedule={() => setShowTodaySchedulePopup(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+        <Header
+          onShowTodaySchedule={() => setShowTodaySchedulePopup(true)}
+          onQuickAppointment={() => {
+            setSelectedAppointment(null);
+            setShowAppointmentForm(true);
+          }}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar pb-20 md:pb-6">
           <div className="w-full mx-auto px-2">{renderPage()}</div>
         </main>
       </div>

@@ -3,31 +3,27 @@ import { DashboardStats } from "../components/Dashboard/DashboardStats";
 import { TodayAppointments } from "../components/Dashboard/TodayAppointments";
 import { RecentPatients } from "../components/Dashboard/RecentPatients";
 import { UserPlus } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 interface DashboardPageProps {
   appointments: any[];
   onAddPatient: () => void;
 }
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({
-  appointments,
-  onAddPatient,
-}) => {
+export const DashboardPage: React.FC<DashboardPageProps> = ({ appointments, onAddPatient }) => {
+  const { state } = useAuth();
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Welcome back! Here's what's happening at your clinic today.
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Welcome back, {state.user?.name}. Here's your clinic overview for today.
           </p>
         </div>
-        <button
-          onClick={onAddPatient}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-        >
-          <UserPlus className="w-5 h-5" />
-          Add New Patient
+        <button onClick={onAddPatient}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors shadow-sm">
+          <UserPlus className="w-4 h-4" /> Add New Patient
         </button>
       </div>
       <DashboardStats />
