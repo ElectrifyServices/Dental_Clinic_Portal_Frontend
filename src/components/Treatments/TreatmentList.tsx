@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import {
-  Search, Plus, Edit, FileText, Clock, CheckCircle, AlertCircle,
-  Calendar, Stethoscope, MoreVertical, User, Play
-} from 'lucide-react';
+import { Search, Plus, Clock, CheckCircle, Calendar, Stethoscope } from 'lucide-react';
 import { Treatment } from '../../types';
-import { createPortal } from 'react-dom';
+import { TreatmentStats } from './TreatmentList/TreatmentStats';
+import { TreatmentTableRow } from './TreatmentList/TreatmentTableRow';
 
 interface TreatmentListProps {
   treatments: Treatment[];
@@ -17,18 +15,16 @@ interface TreatmentListProps {
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-  completed:   { label: 'Completed',   cls: 'badge badge-green',  icon: <CheckCircle className="w-3 h-3" /> },
-  'in-progress':{ label: 'In Progress', cls: 'badge badge-blue',   icon: <Clock className="w-3 h-3" /> },
-  planned:     { label: 'Planned',     cls: 'badge badge-amber',  icon: <Calendar className="w-3 h-3" /> },
+  completed:   { label: 'Completed',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-100',  icon: <CheckCircle className="w-3 h-3" /> },
+  'in-progress':{ label: 'In Progress', cls: 'bg-blue-50 text-blue-700 border-blue-100',   icon: <Clock className="w-3 h-3" /> },
+  planned:     { label: 'Planned',     cls: 'bg-amber-50 text-amber-700 border-amber-100',  icon: <Calendar className="w-3 h-3" /> },
 };
 
 export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, onViewTreatment, onEditTreatment, onManageSessions, onMarkCompleted, onStartTreatment }: TreatmentListProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const PER_PAGE = 12;
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const PER_PAGE = 10;
 
   const treatments = dynamicTreatments || [];
 
@@ -51,153 +47,137 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
     revenue: treatments.reduce((s, t) => s + (Number(t.cost) < 100000000 ? Number(t.cost) || 0 : 0), 0),
   };
 
-  const openMenu = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 4, left: rect.right - 180 });
-    setOpenMenuId(prev => prev === id ? null : id);
-  };
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Treatments</h1>
-          <p className="page-subtitle">{totals.all} total · {totals.active} active · ₹{totals.revenue.toLocaleString()} revenue</p>
+      <div className="page-header bg-gradient-to-r from-gray-50 to-blue-50/30 p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50">
+            <Stethoscope className="w-7 h-7 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Treatment Plans</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-sm font-bold text-gray-400">{totals.all} Records Total</span>
+              <span className="w-1 h-1 bg-gray-300 rounded-full" />
+              <span className="text-sm font-bold text-blue-600">₹{totals.revenue.toLocaleString()} Projected</span>
+            </div>
+          </div>
         </div>
-        <button onClick={onAddTreatment} className="btn-primary">
-          <Plus className="w-4 h-4" /> New Treatment
+        <button onClick={onAddTreatment} className="btn-primary py-3 px-6 shadow-lg shadow-blue-100">
+          <Plus className="w-4 h-4" /> New Treatment Plan
         </button>
       </div>
 
-      {/* KPI mini row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Total', value: totals.all, color: 'text-gray-900' },
-          { label: 'In Progress', value: totals.active, color: 'text-blue-600' },
-          { label: 'Completed', value: totals.completed, color: 'text-emerald-600' },
-          { label: 'Planned', value: totals.planned, color: 'text-amber-600' },
-        ].map(s => (
-          <div key={s.label} className="kpi-card text-center py-3">
-            <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-          </div>
-        ))}
-      </div>
+      <TreatmentStats totals={totals} />
 
       {/* Filters */}
-      <div className="filter-bar">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search by patient, procedure, tooth or doctor…" value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }} className="search-input" />
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-4 rounded-3xl border border-gray-200 shadow-sm">
+        <div className="relative flex-1 group">
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          <input 
+            type="text" 
+            placeholder="Search by patient, procedure, tooth or doctor…" 
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }} 
+            className="w-full pl-12 pr-4 py-3 text-sm border border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium" 
+          />
         </div>
-        <div className="filter-tabs">
+        <div className="flex items-center bg-gray-100 p-1.5 rounded-2xl border border-gray-200/50">
           {(['all', 'planned', 'in-progress', 'completed'] as const).map(s => (
-            <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }}
-              className={statusFilter === s ? 'filter-tab-active' : 'filter-tab'}>
-              {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
+            <button 
+              key={s} 
+              onClick={() => { setStatusFilter(s); setPage(1); }}
+              className={`flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
+                statusFilter === s 
+                  ? 'bg-white text-blue-600 shadow-sm border border-gray-200' 
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              {s === 'all' ? 'All Plans' : STATUS_META[s]?.label || s}
             </button>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <div className="card overflow-hidden">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Patient & Procedure</th>
-              <th>Tooth</th>
-              <th>Doctor</th>
-              <th>Date</th>
-              <th className="text-right">Cost</th>
-              <th>Status</th>
-              <th>Next Session</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.length === 0 ? (
-              <tr><td colSpan={8}><div className="empty-state"><Stethoscope className="empty-state-icon" /><p className="empty-state-title">No treatments found</p><p className="empty-state-sub">Adjust your search or create a new treatment plan.</p></div></td></tr>
-            ) : paginated.map(t => {
-              const sm = STATUS_META[t.status] || STATUS_META.planned;
-              const cost = Number(t.cost) < 100000000 ? Number(t.cost) : 0;
-              return (
-                <tr key={t.id}>
-                  <td>
-                    <div className="font-semibold text-gray-900">{t.patientName}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{t.procedure}</div>
-                  </td>
-                  <td className="text-gray-600 text-xs max-w-[100px] truncate">{t.tooth || '—'}</td>
-                  <td className="text-gray-600 whitespace-nowrap">{t.doctorName}</td>
-                  <td className="text-gray-500 whitespace-nowrap">
-                    {t.date ? new Date(t.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
-                  </td>
-                  <td className="text-right font-semibold text-gray-900">₹{cost.toLocaleString()}</td>
-                  <td><span className={`${sm.cls} flex items-center gap-1 w-fit`}>{sm.icon}{sm.label}</span></td>
-                  <td className="text-gray-500 text-xs whitespace-nowrap">
-                    {t.nextAppointment ? new Date(t.nextAppointment).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}
-                  </td>
-                  <td>
-                    <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => onViewTreatment(t.id)} className="btn-icon-blue" title="View"><FileText className="w-4 h-4" /></button>
-                      <div className="relative">
-                        <button onClick={e => openMenu(e, t.id)} className="btn-icon" title="More"><MoreVertical className="w-4 h-4" /></button>
-                        {openMenuId === t.id && createPortal(
-                          <>
-                            <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-                            <div className="fixed z-[9999] bg-white rounded-xl border border-gray-200 shadow-xl w-44 overflow-hidden"
-                              style={{ top: menuPos.top, left: menuPos.left }}>
-                              <button onClick={() => { onEditTreatment(t.id); setOpenMenuId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2.5 text-gray-700">
-                                <Edit className="w-4 h-4" /> Edit
-                              </button>
-                              <button onClick={() => { onManageSessions(t.id); setOpenMenuId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2.5 text-gray-700">
-                                <Clock className="w-4 h-4" /> Manage Sessions
-                              </button>
-                              {t.status === 'planned' && (
-                                <button onClick={() => { onStartTreatment(t.id); setOpenMenuId(null); }}
-                                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-2.5 text-blue-700">
-                                  <Play className="w-4 h-4" /> Start Treatment
-                                </button>
-                              )}
-                              {t.status === 'in-progress' && (
-                                <button onClick={() => { onMarkCompleted(t.id); setOpenMenuId(null); }}
-                                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 flex items-center gap-2.5 text-emerald-700">
-                                  <CheckCircle className="w-4 h-4" /> Mark Completed
-                                </button>
-                              )}
-                            </div>
-                          </>,
-                          document.body
-                        )}
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Patient & Procedure</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tooth</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Doctor</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Cost</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Next Session</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-20">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <Stethoscope className="w-10 h-10 text-gray-300" />
                       </div>
+                      <h3 className="text-lg font-bold text-gray-900">No treatments found</h3>
+                      <p className="text-sm font-medium text-gray-400 mt-1 max-w-xs">Adjust your search or create a new treatment plan to get started.</p>
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ) : paginated.map(t => (
+                <TreatmentTableRow 
+                  key={t.id}
+                  treatment={t}
+                  statusMeta={STATUS_META}
+                  onView={onViewTreatment}
+                  onEdit={onEditTreatment}
+                  onManageSessions={onManageSessions}
+                  onStart={onStartTreatment}
+                  onComplete={onMarkCompleted}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-50 bg-gray-50/30">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
               Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
             </p>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="btn-secondary px-2 py-1 text-xs disabled:opacity-40">Prev</button>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1}
+                className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              >
+                Prev
+              </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), page + 2).map(p => (
-                <button key={p} onClick={() => setPage(p)}
-                  className={`w-7 h-7 text-xs rounded-lg font-medium transition-colors ${p === page ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                <button 
+                  key={p} 
+                  onClick={() => setPage(p)}
+                  className={`w-8 h-8 text-xs font-bold rounded-lg transition-all ${
+                    p === page 
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+                      : 'text-gray-500 hover:bg-white hover:border-gray-200 border border-transparent'
+                  }`}
+                >
                   {p}
                 </button>
               ))}
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="btn-secondary px-2 py-1 text-xs disabled:opacity-40">Next</button>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}

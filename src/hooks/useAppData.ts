@@ -75,7 +75,14 @@ export const useAppData = () => {
   const [queuedPatients, setQueuedPatients] = useState<any[]>(() => {
     try {
       const stored = localStorage.getItem("queuedPatients");
-      return stored ? JSON.parse(stored) : [];
+      const parsed = stored ? JSON.parse(stored) : [];
+      // Deduplicate by ID
+      const uniqueIds = new Set();
+      return parsed.filter((p: any) => {
+        if (!p.id || uniqueIds.has(p.id)) return false;
+        uniqueIds.add(p.id);
+        return true;
+      });
     } catch {
       return [];
     }

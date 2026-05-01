@@ -666,7 +666,11 @@ function MainApp() {
                   pendingCheckInAppt.treatment || pendingCheckInAppt.type,
                 patientConcern: pendingCheckInAppt.patientConcern || pendingCheckInAppt.notes || "",
               };
-              setQueuedPatients((prev) => [...prev, queuedPatient]);
+              setQueuedPatients((prev) => {
+                const exists = prev.some(p => p.id === queuedPatient.id);
+                if (exists) return prev;
+                return [...prev, queuedPatient];
+              });
               handleUpdateAppointmentStatus(pendingCheckInAppt.id, "checked-in");
               setPendingCheckInAppt(null);
               showToast("Patient registered and checked-in successfully!");

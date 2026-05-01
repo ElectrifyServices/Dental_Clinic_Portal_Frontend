@@ -14,8 +14,8 @@ export function Header({ onShowTodaySchedule, onQuickAppointment }: HeaderProps)
   const roleMeta = () => {
     switch (state.user?.role) {
       case 'superadmin': return { label: 'Super Admin', cls: 'bg-violet-100 text-violet-700 border-violet-200' };
-      case 'admin':      return { label: 'Admin', cls: 'bg-blue-100 text-blue-700 border-blue-200' };
-      case 'doctor':     return { label: 'Doctor', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+      case 'admin': return { label: 'Admin', cls: 'bg-blue-100 text-blue-700 border-blue-200' };
+      case 'doctor': return { label: 'Doctor', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
       case 'receptionist': return { label: 'Receptionist', cls: 'bg-amber-100 text-amber-700 border-amber-200' };
       default: return { label: state.user?.role || '', cls: 'bg-gray-100 text-gray-600 border-gray-200' };
     }

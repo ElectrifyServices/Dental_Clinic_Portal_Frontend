@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Stethoscope, Users, AlertTriangle, Calendar } from 'lucide-react';
+import { Stethoscope, Users, AlertTriangle, Calendar, LayoutGrid, ListFilter } from 'lucide-react';
 import { AppointmentCalendar } from '../components/Appointments/AppointmentCalendar';
 import { AppointmentList } from '../components/Appointments/AppointmentList';
+import { AppointmentStats } from '../components/Appointments/AppointmentList/AppointmentStats';
+import { Button } from '@/components/ui/Button';
 
 interface AppointmentsPageProps {
   appointments: any[];
@@ -30,89 +32,73 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
   const listCount = appointments.filter((a) => a.status !== "no-show").length;
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/50 p-3 mb-4 shadow-xl shadow-gray-200/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: View Toggle */}
-        <div className="flex bg-gray-100/50 p-1 rounded-2xl">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/50 shadow-sm">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Appointments</h1>
+          <p className="text-gray-500 font-medium">Schedule and manage patient visits</p>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-2xl">
           <button
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
               viewMode === 'calendar' 
-                ? 'bg-white text-blue-600 shadow-sm' 
+                ? 'bg-white text-primary shadow-sm' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <Calendar className={`w-5 h-5 ${viewMode === 'calendar' ? 'text-blue-600' : 'text-gray-400'}`} />
-            Calendar & Booking
+            <LayoutGrid className="w-4 h-4" />
+            Calendar
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-[1.25rem] text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
               viewMode === 'list' 
-                ? 'bg-white text-slate-900 shadow-sm' 
+                ? 'bg-white text-primary shadow-sm' 
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <Users className={`w-5 h-5 ${viewMode === 'list' ? 'text-slate-900' : 'text-gray-400'}`} />
-            List ({listCount})
+            <ListFilter className="w-4 h-4" />
+            List View ({listCount})
           </button>
-        </div>
-
-        {/* Right: Urgent Filters */}
-        <div className="flex items-center gap-2 px-2">
           <button
             onClick={() => setViewMode('no-show')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-bold transition-all border ${
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
               viewMode === 'no-show' 
-                ? 'bg-red-50 border-red-200 text-red-600' 
-                : 'bg-white border-gray-100 text-gray-500 hover:border-red-100 hover:bg-red-50/50'
+                ? 'bg-red-50 text-red-600 shadow-sm' 
+                : 'text-gray-500 hover:text-red-500'
             }`}
           >
-            <AlertTriangle className={`w-3.5 h-3.5 ${viewMode === 'no-show' ? 'text-red-600' : 'text-gray-300'}`} />
-            No Show ({appointments.filter(apt => apt.status === 'no-show').length})
+            <AlertTriangle className="w-4 h-4" />
+            No Show
           </button>
         </div>
       </div>
+      
+      <AppointmentStats appointments={appointments} />
 
-      {viewMode === "calendar" && (
-        <AppointmentCalendar
-          onNewAppointment={handleNewAppointment}
-          appointments={appointments}
-          doctors={doctorsWithSchedules}
-          onBookAppointment={(doctorId, date, time) => {
-            const doctor = doctorsWithSchedules.find(d => d.id === doctorId);
-            setSelectedAppointment({ doctorId, doctorName: doctor?.name, date, time } as any);
-            setShowAppointmentForm(true);
-          }}
-          onEditAppointment={(apt) => {
-            setSelectedAppointment(apt);
-            setShowAppointmentForm(true);
-          }}
-        />
-      )}
-      {viewMode === "list" && (
-        <AppointmentList
-          appointments={appointments.filter(
-            (apt) => apt.status !== "no-show",
-          )}
-          onEditAppointment={(id) => {
-            const apt = appointments.find((a) => a.id === id);
-            setSelectedAppointment(apt);
-            setShowAppointmentForm(true);
-          }}
-          onDeleteAppointment={handleDeleteAppointment}
-          onUpdateStatus={handleUpdateAppointmentStatus}
-          onCheckInPatient={handleCheckInPatient}
-        />
-      )}
-      {viewMode === "no-show" && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">
-            No Show Appointments
-          </h3>
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+        {viewMode === "calendar" && (
+          <AppointmentCalendar
+            onNewAppointment={handleNewAppointment}
+            appointments={appointments}
+            doctors={doctorsWithSchedules}
+            onBookAppointment={(doctorId, date, time) => {
+              const doctor = doctorsWithSchedules.find(d => d.id === doctorId);
+              setSelectedAppointment({ doctorId, doctorName: doctor?.name, date, time } as any);
+              setShowAppointmentForm(true);
+            }}
+            onEditAppointment={(apt) => {
+              setSelectedAppointment(apt);
+              setShowAppointmentForm(true);
+            }}
+          />
+        )}
+        {(viewMode === "list" || viewMode === "no-show") && (
           <AppointmentList
             appointments={appointments.filter(
-              (apt) => apt.status === "no-show",
+              (apt) => viewMode === 'list' ? apt.status !== "no-show" : apt.status === "no-show",
             )}
             onEditAppointment={(id) => {
               const apt = appointments.find((a) => a.id === id);
@@ -123,9 +109,8 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
             onUpdateStatus={handleUpdateAppointmentStatus}
             onCheckInPatient={handleCheckInPatient}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
-

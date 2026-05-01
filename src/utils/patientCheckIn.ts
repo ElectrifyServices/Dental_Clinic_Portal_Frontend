@@ -52,7 +52,11 @@ export const processPatientCheckIn = (
     status: "waiting",
     treatmentType: appointment.treatment || appointment.type,
   };
-  setQueuedPatients((prev) => [...prev, queuedPatient]);
+  setQueuedPatients((prev) => {
+    const exists = prev.some(p => p.id === queuedPatient.id);
+    if (exists) return prev;
+    return [...prev, queuedPatient];
+  });
   handleUpdateAppointmentStatus(appointment.id, "checked-in");
   alert(`Patient "${existingPatient.name}" checked in successfully.`);
 };
