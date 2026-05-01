@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool, ShieldCheck, Lock } from 'lucide-react';
+import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool } from 'lucide-react';
 import { SignaturePad } from '../Consent/SignaturePad';
 import { CorporatePlanSelector } from '../CorporatePlans/CorporatePlanSelector';
 
@@ -48,10 +48,6 @@ export function PatientForm({
 }: PatientFormProps) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState((isCheckIn && patient) ? 4 : 1);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [otpSending, setOtpSending] = useState(false);
   React.useEffect(() => {
     if (patient) {
       setFormData(prev => ({
@@ -65,7 +61,6 @@ export function PatientForm({
       }));
       setSelectedMedicalHistory(patient.medicalHistory || []);
       setSelectedAllergies(patient.allergies || []);
-      setIsPhoneVerified(!!(patient.id || patient.patientId));
     } else {
       setFormData({
         name: '',
@@ -262,7 +257,6 @@ export function PatientForm({
     if (stepNumber === 1) {
       if (!formData.name.trim()) errors.name = 'Name is required';
       if (!formData.phone.trim()) errors.phone = 'Phone number is required';
-      if (!isPhoneVerified) errors.phone = 'Please verify your phone number first';
       if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         errors.email = 'Please enter a valid email address';
       }
@@ -345,11 +339,6 @@ const handleCustomRelation = (value: string) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Reset verification if phone changes
-    if (name === 'phone') {
-      setIsPhoneVerified(false);
-    }
     
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
@@ -605,79 +594,16 @@ overflow: auto;
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number *
           </label>
-          <div className="flex gap-2">
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              disabled={isPhoneVerified}
-              className={`flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              } ${isPhoneVerified ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
-              placeholder="+91 98765 43210"
-            />
-            {!isPhoneVerified && formData.phone.length >= 10 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setOtpSending(true);
-                  setTimeout(() => {
-                    setOtpSending(false);
-                    setShowOtpInput(true);
-                  }, 1000);
-                }}
-                disabled={otpSending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center gap-2"
-              >
-                {otpSending ? 'Sending...' : 'Verify'}
-                <ShieldCheck className="w-4 h-4" />
-              </button>
-            )}
-            {isPhoneVerified && (
-              <div className="flex items-center gap-2 text-green-600 px-3 bg-green-50 rounded-xl border border-green-100">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase">Verified</span>
-              </div>
-            )}
-          </div>
-
-          {showOtpInput && !isPhoneVerified && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl animate-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5" />
-                  Enter 4-Digit OTP
-                </label>
-                <span className="text-[10px] text-blue-500 font-medium">OTP: 1234 (Dummy)</span>
-              </div>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  maxLength={4}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-32 px-4 py-2 text-center text-lg font-bold tracking-[0.5em] border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                  placeholder="0000"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (otp === '1234') {
-                      setIsPhoneVerified(true);
-                      setShowOtpInput(false);
-                      setValidationErrors(prev => ({ ...prev, phone: '' }));
-                    } else {
-                      alert('Invalid OTP! Please enter 1234');
-                    }
-                  }}
-                  className="flex-1 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
-                >
-                  Verify OTP
-                </button>
-              </div>
-            </div>
-          )}
+          <input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+              validationErrors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            }`}
+            placeholder="+91 98765 43210"
+          />
 
           {validationErrors.phone && (
             <p className="text-red-600 text-sm mt-1 flex items-center">

@@ -92,7 +92,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </div>
 
       {/* User strip */}
-      {!collapsed && (
+      {!collapsed && role !== 'superadmin' && (
         <div className="px-3 py-2.5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
@@ -110,7 +110,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3 custom-scrollbar">
         {groups.map(group => (
           <div key={group}>
-            {!collapsed && (
+            {!collapsed && group !== 'superadmin' && (
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-1">
                 {GROUP_LABELS[group]}
               </p>
