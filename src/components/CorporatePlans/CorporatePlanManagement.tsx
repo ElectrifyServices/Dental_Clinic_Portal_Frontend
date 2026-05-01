@@ -282,13 +282,13 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Company Name *</label>
-                    <input type="text" value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="e.g. TCS, Infosys"
+                    <input type="text" value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="e.g. Infosys"
                       className={`w-full px-3.5 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.companyName ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
                     {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Plan Code *</label>
-                    <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="e.g. TCS-GOLD"
+                    <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="e.g. GOLD"
                       className={`w-full px-3.5 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono ${errors.code ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
                     {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code}</p>}
                   </div>

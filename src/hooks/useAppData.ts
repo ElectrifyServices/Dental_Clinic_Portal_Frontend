@@ -111,8 +111,8 @@ export const useAppData = () => {
     // Default sample plans
     return [
       {
-        id: 'CORP-SAMPLE-1', name: 'TCS Gold Health Plan', companyName: 'Tata Consultancy Services',
-        code: 'TCS-GOLD', description: 'Premium dental care for TCS employees',
+        id: 'CORP-SAMPLE-1', name: 'Electrify Gold Health Plan', companyName: 'Tata Consultancy Services',
+        code: 'Electrify-GOLD', description: 'Premium dental care for Electrify employees',
         benefits: [
           { id: 'b1', type: 'flat_discount', value: 20, description: '20% discount on all treatments' },
           { id: 'b2', type: 'free_consultations', value: 2, description: '2 free consultations per year' },
@@ -139,7 +139,19 @@ export const useAppData = () => {
 
   const [corporateEmployees, setCorporateEmployees] = useState<any[]>(() => {
     const stored = localStorage.getItem("corporateEmployees");
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    try {
+      const parsed = JSON.parse(stored);
+      // Migrate old format (companyId) to new format (corporatePlanId)
+      return parsed.map((e: any) => ({
+        ...e,
+        id: e.id || `EMP-${Date.now()}-${Math.random()}`,
+        corporatePlanId: e.corporatePlanId || e.companyId || '',
+        corporatePlanName: e.corporatePlanName || '',
+        isActive: e.isActive !== false,
+        enrolledAt: e.enrolledAt || new Date().toISOString(),
+      }));
+    } catch { return []; }
   });
 
   // Data Migration: Ensure all doctors have a profit percentage
@@ -500,14 +512,51 @@ export const useAppData = () => {
     setCorporatePlans(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
   };
 
+  // ── Employee handlers (new typed API) ──────────────────────────────────────
+  const handleSaveEmployee = (emp: any) => {
+    setCorporateEmployees(prev => {
+      const existing = prev.find(e => e.id === emp.id);
+      if (existing) return prev.map(e => e.id === emp.id ? { ...e, ...emp } : e);
+      return [...prev, emp];
+    });
+  };
+
+  const handleDeleteEmployee = (id: string) => {
+    setCorporateEmployees(prev => prev.filter(e => e.id !== id));
+    // Also clear corporatePlanId from any linked patient
+    setPatients(prev => prev.map(p =>
+      p.corporateMemberId === id ? { ...p, corporatePlanId: '', corporatePlanName: '', corporateMemberId: '' } : p
+    ));
+  };
+
+  const handleBulkSaveEmployees = (newEmps: any[]) => {
+    setCorporateEmployees(prev => {
+      const existingPhones = new Set(prev.map(e => e.phone));
+      const existingEmails = new Set(prev.map(e => e.email?.toLowerCase()));
+      const filtered = newEmps.filter(e =>
+        !existingPhones.has(e.phone) && !existingEmails.has(e.email?.toLowerCase())
+      );
+      return [...prev, ...filtered];
+    });
+  };
+
+  const handleChangeEmployeePlan = (empId: string, newPlanId: string, newPlanName: string) => {
+    setCorporateEmployees(prev => prev.map(e =>
+      e.id === empId ? { ...e, corporatePlanId: newPlanId, corporatePlanName: newPlanName } : e
+    ));
+    // Also update any linked patient
+    setPatients(prev => prev.map(p =>
+      p.corporateMemberId === empId ? { ...p, corporatePlanId: newPlanId, corporatePlanName: newPlanName } : p
+    ));
+  };
+
+  // Legacy compat
   const handleDeleteCorporateEmployee = (name: string, email: string) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      setCorporateEmployees(prev => prev.filter(e => !(e.name === name && e.email === email)));
-    }
+    setCorporateEmployees(prev => prev.filter(e => !(e.name === name && e.email === email)));
   };
 
   const handleUpdateCorporateEmployee = (oldName: string, oldEmail: string, updatedEmp: any) => {
-    setCorporateEmployees(prev => prev.map(e => 
+    setCorporateEmployees(prev => prev.map(e =>
       (e.name === oldName && e.email === oldEmail) ? { ...e, ...updatedEmp } : e
     ));
   };
@@ -535,6 +584,11 @@ export const useAppData = () => {
     handleSaveCorporatePlan,
     handleDeleteCorporatePlan,
     handleToggleCorporatePlan,
+    handleSaveEmployee,
+    handleDeleteEmployee,
+    handleBulkSaveEmployees,
+    handleChangeEmployeePlan,
+    // legacy
     handleBulkSavePatients,
     handleDeleteCorporateEmployee,
     handleUpdateCorporateEmployee,

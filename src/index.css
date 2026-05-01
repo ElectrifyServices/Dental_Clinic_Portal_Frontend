@@ -2,38 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design System ─────────────────────────────────────────────────────────
-   All screens must use ONLY these tokens. Never deviate.
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL DESIGN SYSTEM — DentalCare Pro
    
-   FONT FAMILY : Inter (system-ui fallback)
+   HOW TO THEME FOR A DIFFERENT CUSTOMER:
+   Change the CSS custom properties in :root below.
+   All components use these variables via Tailwind's arbitrary value syntax
+   OR via the utility classes defined in @layer components.
    
-   PAGE TITLE  : text-xl font-bold text-gray-900         (e.g. "Invoices")
-   PAGE SUB    : text-sm text-gray-500 mt-0.5            (e.g. "12 records")
-   SECTION HDR : text-sm font-semibold text-gray-700
-   TABLE HDR   : text-xs font-semibold text-gray-500 uppercase tracking-wide
-   BODY TEXT   : text-sm text-gray-700
-   MUTED       : text-xs text-gray-400
-   
-   PRIMARY BTN : btn-primary
-   SECONDARY   : btn-secondary
-   DANGER      : btn-danger
-   ICON BTN    : btn-icon (p-1.5 rounded-lg)
-   
-   CARD        : card  (bg-white rounded-xl border border-gray-200 shadow-sm)
-   INPUT       : form-input
-   BADGE       : badge-*
-   
-   KPI CARD    : kpi-card (used in DashboardStats)
-────────────────────────────────────────────────────────────────────────────── */
+   Example for a green-themed clinic:
+     --brand-600: 22 163 74;       (green-600)
+     --brand-700: 21 128 61;       (green-700)
+     --brand-50:  240 253 244;     (green-50)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
+  :root {
+    /* Brand palette (RGB triplets for Tailwind opacity helpers) */
+    --brand-50:  239 246 255;   /* blue-50  */
+    --brand-100: 219 234 254;   /* blue-100 */
+    --brand-200: 191 219 254;   /* blue-200 */
+    --brand-500: 59  130 246;   /* blue-500 */
+    --brand-600: 37  99  235;   /* blue-600 */
+    --brand-700: 29  78  216;   /* blue-700 */
+    --brand-800: 30  64  175;   /* blue-800 */
+
+    /* Neutral */
+    --surface:   248 250 252;   /* gray-50  */
+    --card-bg:   255 255 255;
+    --border:    226 232 240;   /* gray-200 */
+
+    /* Typography scale */
+    --fs-xs:     0.75rem;
+    --fs-sm:     0.875rem;
+    --fs-base:   1rem;
+    --fs-lg:     1.125rem;
+    --fs-xl:     1.25rem;
+
+    /* Radius scale */
+    --radius-sm: 0.5rem;        /* rounded-lg  */
+    --radius-md: 0.75rem;       /* rounded-xl  */
+    --radius-lg: 1rem;          /* rounded-2xl */
+  }
+
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
   html { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   body { @apply bg-gray-50 text-gray-900; }
 }
 
 @layer components {
-  /* ── Buttons ── */
+  /* ── Buttons ───────────────────────────────────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800
            text-white text-sm font-semibold px-4 py-2 rounded-xl
@@ -55,8 +73,7 @@
            text-sm font-medium px-3 py-2 rounded-xl transition-colors duration-150;
   }
   .btn-icon {
-    @apply p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100
-           rounded-lg transition-colors duration-150;
+    @apply p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-150;
   }
   .btn-icon-blue {
     @apply p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-150;
@@ -64,8 +81,11 @@
   .btn-icon-red {
     @apply p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-150;
   }
+  .btn-icon-green {
+    @apply p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors duration-150;
+  }
 
-  /* ── Cards ── */
+  /* ── Cards ─────────────────────────────────────────────────────────────── */
   .card {
     @apply bg-white rounded-xl border border-gray-200 shadow-sm;
   }
@@ -77,7 +97,7 @@
     @apply bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow duration-200;
   }
 
-  /* ── Form elements ── */
+  /* ── Forms ─────────────────────────────────────────────────────────────── */
   .form-input {
     @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-xl
            bg-white text-gray-900 placeholder-gray-400
@@ -88,7 +108,7 @@
     @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-xl
            bg-white text-gray-700
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-           transition-all duration-150 appearance-none;
+           transition-all duration-150;
   }
   .form-label {
     @apply block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide;
@@ -100,50 +120,33 @@
            transition-all duration-150;
   }
 
-  /* ── Page header ── */
-  .page-header {
-    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5;
-  }
-  .page-title {
-    @apply text-xl font-bold text-gray-900;
-  }
-  .page-subtitle {
-    @apply text-sm text-gray-500 mt-0.5;
-  }
+  /* ── Page layout ────────────────────────────────────────────────────────── */
+  .page-title   { @apply text-xl font-bold text-gray-900; }
+  .page-subtitle { @apply text-sm text-gray-500 mt-0.5; }
 
-  /* ── Table ── */
-  .data-table {
-    @apply w-full text-sm;
-  }
-  .data-table thead tr {
-    @apply border-b border-gray-200 bg-gray-50;
-  }
+  /* ── Tables ─────────────────────────────────────────────────────────────── */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead tr { @apply border-b border-gray-200 bg-gray-50; }
   .data-table thead th {
     @apply px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap;
   }
   .data-table tbody tr {
     @apply border-b border-gray-100 hover:bg-gray-50 transition-colors duration-100;
   }
-  .data-table tbody tr:last-child {
-    @apply border-b-0;
-  }
-  .data-table tbody td {
-    @apply px-4 py-3 text-sm text-gray-700;
-  }
+  .data-table tbody tr:last-child { @apply border-b-0; }
+  .data-table tbody td { @apply px-4 py-3 text-sm text-gray-700; }
 
-  /* ── Badges ── */
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border;
-  }
+  /* ── Badges ─────────────────────────────────────────────────────────────── */
+  .badge { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border; }
   .badge-green  { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
-  .badge-blue   { @apply bg-blue-50 text-blue-700 border-blue-200; }
-  .badge-amber  { @apply bg-amber-50 text-amber-700 border-amber-200; }
-  .badge-red    { @apply bg-red-50 text-red-700 border-red-200; }
-  .badge-gray   { @apply bg-gray-100 text-gray-600 border-gray-200; }
+  .badge-blue   { @apply bg-blue-50   text-blue-700   border-blue-200; }
+  .badge-amber  { @apply bg-amber-50  text-amber-700  border-amber-200; }
+  .badge-red    { @apply bg-red-50    text-red-700    border-red-200; }
+  .badge-gray   { @apply bg-gray-100  text-gray-600   border-gray-200; }
   .badge-violet { @apply bg-violet-50 text-violet-700 border-violet-200; }
   .badge-indigo { @apply bg-indigo-50 text-indigo-700 border-indigo-200; }
 
-  /* ── Section / Filter bar ── */
+  /* ── Filter bar ─────────────────────────────────────────────────────────── */
   .filter-bar {
     @apply flex flex-col sm:flex-row gap-3 items-stretch sm:items-center;
   }
@@ -157,39 +160,21 @@
     @apply px-3 py-2 text-xs font-semibold bg-blue-600 text-white capitalize;
   }
 
-  /* ── Modal ── */
+  /* ── Modals ─────────────────────────────────────────────────────────────── */
   .modal-overlay {
     @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto;
   }
-  .modal-box {
-    @apply bg-white rounded-2xl shadow-2xl w-full my-6;
-  }
-  .modal-header {
-    @apply flex items-center justify-between px-6 py-4 border-b border-gray-200;
-  }
-  .modal-title {
-    @apply text-base font-bold text-gray-900;
-  }
-  .modal-body {
-    @apply p-6 space-y-4;
-  }
-  .modal-footer {
-    @apply flex justify-end gap-3 px-6 py-4 border-t border-gray-200;
-  }
+  .modal-box    { @apply bg-white rounded-2xl shadow-2xl my-6; }
+  .modal-header { @apply flex items-center justify-between px-6 py-4 border-b border-gray-200; }
+  .modal-title  { @apply text-base font-bold text-gray-900; }
+  .modal-body   { @apply p-6 space-y-4; }
+  .modal-footer { @apply flex justify-end gap-3 px-6 py-4 border-t border-gray-200; }
 
-  /* ── Empty state ── */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-16 text-center;
-  }
-  .empty-state-icon {
-    @apply w-12 h-12 text-gray-300 mb-4;
-  }
-  .empty-state-title {
-    @apply text-base font-semibold text-gray-700 mb-1;
-  }
-  .empty-state-sub {
-    @apply text-sm text-gray-400 max-w-xs;
-  }
+  /* ── Empty state ────────────────────────────────────────────────────────── */
+  .empty-state       { @apply flex flex-col items-center justify-center py-12 text-center; }
+  .empty-state-icon  { @apply text-gray-300 mb-4; }
+  .empty-state-title { @apply text-base font-semibold text-gray-700 mb-1; }
+  .empty-state-sub   { @apply text-sm text-gray-400 max-w-xs; }
 }
 
 /* Scrollbar */

@@ -99,6 +99,10 @@ function MainApp() {
     handleSaveCorporatePlan,
     handleDeleteCorporatePlan,
     handleToggleCorporatePlan,
+    handleSaveEmployee,
+    handleDeleteEmployee,
+    handleBulkSaveEmployees,
+    handleChangeEmployeePlan,
     handleBulkSavePatients,
     handleDeleteCorporateEmployee,
     handleUpdateCorporateEmployee,
@@ -566,9 +570,14 @@ function MainApp() {
         return (
           <CorporatePlansPage
             plans={corporatePlans}
-            onSave={handleSaveCorporatePlan}
-            onDelete={handleDeleteCorporatePlan}
-            onToggle={handleToggleCorporatePlan}
+            employees={corporateEmployees}
+            onSavePlan={handleSaveCorporatePlan}
+            onDeletePlan={handleDeleteCorporatePlan}
+            onTogglePlan={handleToggleCorporatePlan}
+            onSaveEmployee={handleSaveEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
+            onBulkSaveEmployees={handleBulkSaveEmployees}
+            onChangePlan={handleChangeEmployeePlan}
           />
         );
       default:

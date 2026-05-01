@@ -22,6 +22,7 @@ import {
   Printer,
   Plus,
   UserPlus,
+  CheckCircle,
 } from "lucide-react";
 
 interface PatientDetailsProps {

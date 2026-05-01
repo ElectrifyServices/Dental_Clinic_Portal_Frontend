@@ -217,3 +217,22 @@ export interface Report {
   generatedAt: string;
   generatedBy: string;
 }
+
+// ─── Corporate Employee ───────────────────────────────────────────────────────
+export interface CorporateEmployee {
+  id: string;
+  employeeId: string;          // company-issued ID
+  name: string;
+  phone: string;
+  email: string;
+  gender: 'male' | 'female' | 'other';
+  dateOfBirth?: string;
+  designation?: string;
+  department?: string;
+  companyName: string;
+  corporatePlanId: string;     // which plan they are on
+  corporatePlanName: string;
+  enrolledAt: string;
+  isActive: boolean;
+  patientId?: string;          // linked patient record if registered
+}

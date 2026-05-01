@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool } from 'lucide-react';
+import { X, Save, User, Phone, Mail, Calendar, MapPin, Heart, QrCode, Upload, AlertTriangle, CheckCircle, UploadIcon, History, UploadCloud, ClipboardCheck, PenTool, ShieldCheck } from 'lucide-react';
 import { SignaturePad } from '../Consent/SignaturePad';
 import { CorporatePlanSelector } from '../CorporatePlans/CorporatePlanSelector';
 
@@ -176,47 +176,60 @@ export function PatientForm({
 
   const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
 
-  // Corporate Lookup Effect
+  // Corporate Lookup Effect — phone is the primary key
   React.useEffect(() => {
-    if (patient) return; // Don't auto-lookup for existing patients being edited
-    
-    const searchName = formData.name.toLowerCase().trim();
-    const searchPhone = formData.phone.trim();
-    const searchEmail = formData.email.toLowerCase().trim();
+    if (patient) return; // Don't auto-lookup when editing existing patient
 
-    if (searchName.length < 3 && !searchPhone && !searchEmail) {
+    const searchPhone = formData.phone.replace(/\D/g, '').trim();
+
+    if (searchPhone.length < 10) {
       setMatchedCorporateEmp(null);
       return;
     }
 
-    const match = corporateEmployees.find(emp => 
-      searchName && searchEmail && 
-      emp.name.toLowerCase() === searchName && 
-      emp.email?.toLowerCase() === searchEmail
-    );
+    // Match by phone number (primary) or email (secondary)
+    const match = corporateEmployees.find(emp => {
+      const empPhone = (emp.phone || '').replace(/\D/g, '');
+      return empPhone === searchPhone ||
+        (formData.email && emp.email?.toLowerCase() === formData.email.toLowerCase());
+    });
 
     if (match) {
       setMatchedCorporateEmp(match);
-      const plan = corporatePlans.find(cp => cp.id === match.companyId);
+      // Resolve plan using new corporatePlanId field (fall back to legacy companyId)
+      const planId = match.corporatePlanId || match.companyId;
+      const plan = corporatePlans.find((cp: any) => cp.id === planId);
       setFormData(prev => ({
         ...prev,
         category: 'corporate',
-        companyId: match.companyId,
-        defaultDiscount: plan ? plan.discountPercent : 0,
-        // Auto-fill other basics if empty
-        gender: prev.gender || match.gender || ''
+        corporatePlanId: planId || '',
+        corporatePlanName: plan?.name || match.corporatePlanName || '',
+        corporateMemberId: match.id || '',
+        companyId: planId || '',       // legacy compat
+        defaultDiscount: 0,            // no manual discount for corporate
+        // Auto-fill basics from employee record
+        name: prev.name || match.name || '',
+        email: prev.email || match.email || '',
+        gender: prev.gender || match.gender || 'male',
+        designation: prev.designation || match.designation || '',
       }));
     } else {
       setMatchedCorporateEmp(null);
-      // Reset if it was set to corporate by auto-detection
       setFormData(prev => {
-        if (prev.category === 'corporate' && !patient) {
-          return { ...prev, category: 'regular', companyId: '', defaultDiscount: 0 };
+        if (prev.category === 'corporate') {
+          return {
+            ...prev,
+            category: 'regular',
+            corporatePlanId: '',
+            corporatePlanName: '',
+            corporateMemberId: '',
+            companyId: '',
+          };
         }
         return prev;
       });
     }
-  }, [formData.name, formData.phone, formData.email, corporateEmployees, corporatePlans, patient]);
+  }, [formData.phone, formData.email, corporateEmployees, corporatePlans, patient]);
 
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
@@ -550,20 +563,50 @@ overflow: auto;
         <p className="text-sm text-gray-500 mt-2">Upload patient photo (optional)</p>
       </div>
 
-      {matchedCorporateEmp && (
-        <div className="mx-6 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-            <ShieldCheck className="w-5 h-5" />
+      {matchedCorporateEmp && (() => {
+        const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
+        const plan = corporatePlans.find((cp: any) => cp.id === planId);
+        return (
+          <div className="mx-6 border border-blue-200 bg-blue-50 rounded-xl overflow-hidden">
+            {/* Header row */}
+            <div className="flex items-center gap-3 px-4 py-3 bg-blue-600">
+              <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white">Corporate Employee Identified</p>
+                <p className="text-xs text-blue-200">{matchedCorporateEmp.companyName || plan?.companyName} · EMP: {matchedCorporateEmp.employeeId || matchedCorporateEmp.id}</p>
+              </div>
+              {plan && (
+                <span className="text-[10px] font-bold px-2 py-1 bg-white/20 text-white rounded-lg border border-white/30 flex-shrink-0">
+                  {plan.code}
+                </span>
+              )}
+            </div>
+            {/* Plan details */}
+            {plan ? (
+              <div className="px-4 py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-blue-900">{plan.name}</p>
+                  <span className="text-xs text-blue-600">Valid till {plan.validTo}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(plan.benefits || []).map((b: any) => (
+                    <span key={b.id} className="text-[11px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full border border-blue-200">
+                      {b.description}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-blue-600 font-medium">
+                  ✓ Discount will be applied automatically in billing — no manual discount needed.
+                </p>
+              </div>
+            ) : (
+              <div className="px-4 py-3">
+                <p className="text-xs text-amber-700">Employee found but no active plan assigned. Contact Super Admin.</p>
+              </div>
+            )}
           </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-bold text-indigo-900">Corporate Employee Detected!</p>
-            <p className="text-xs text-indigo-700 font-medium">
-              Found in {corporatePlans.find(cp => cp.id === matchedCorporateEmp.companyId)?.name || 'Corporate'} list. 
-              Applying {formData.defaultDiscount}% Benefit.
-            </p>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -1018,34 +1061,53 @@ overflow: auto;
         />
       </div>
 
-      {/* ── Corporate Plan Assignment ── */}
-      <div className="border border-blue-100 bg-blue-50 rounded-2xl p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      {/* ── Corporate Plan Section ── */}
+      {matchedCorporateEmp ? (
+        /* Read-only — plan is set from employee record, cannot be changed here */
+        <div className="border border-blue-100 bg-blue-50 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
+            <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Corporate Plan (Auto-assigned)</p>
           </div>
-          <div>
-            <p className="text-sm font-bold text-blue-900">Corporate Plan</p>
-            <p className="text-xs text-blue-600">Assign this patient to a plan — discounts apply automatically in billing</p>
+          <p className="text-xs text-blue-600 mb-2">
+            Plan is automatically assigned from the employee record. Changes must be made in the Employee Management section by a Super Admin.
+          </p>
+          <div className="bg-white rounded-lg px-3 py-2 border border-blue-200 text-sm text-blue-900 font-semibold">
+            {formData.corporatePlanName || 'Plan assigned — see details above'}
           </div>
         </div>
-        <CorporatePlanSelector
-          plans={corporatePlans}
-          selectedPlanId={formData.corporatePlanId}
-          memberId={formData.corporateMemberId}
-          onChange={(planId, planName, memberId) =>
-            setFormData(prev => ({
-              ...prev,
-              corporatePlanId: planId,
-              corporatePlanName: planName,
-              corporateMemberId: memberId,
-              category: planId ? 'corporate' : (prev.category === 'corporate' ? 'regular' : prev.category),
-            }))
-          }
-        />
-      </div>
+      ) : (
+        /* Manual selector — only when NOT a corporate employee */
+        <div className="border border-blue-100 bg-blue-50 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-900">Corporate Plan</p>
+              <p className="text-xs text-blue-600">Enter the mobile number above first — if this patient is a registered corporate employee, their plan will be detected automatically.</p>
+            </div>
+          </div>
+          <CorporatePlanSelector
+            plans={corporatePlans}
+            selectedPlanId={formData.corporatePlanId}
+            memberId={formData.corporateMemberId}
+            onChange={(planId, planName, memberId) =>
+              setFormData(prev => ({
+                ...prev,
+                corporatePlanId: planId,
+                corporatePlanName: planName,
+                corporateMemberId: memberId,
+                category: planId ? 'corporate' : (prev.category === 'corporate' ? 'regular' : prev.category),
+              }))
+            }
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Medical History */}

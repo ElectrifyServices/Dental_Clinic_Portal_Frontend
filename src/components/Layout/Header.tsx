@@ -35,12 +35,6 @@ export function Header({ onShowTodaySchedule, onQuickAppointment }: HeaderProps)
         </div>
         {/* Quick actions */}
         <div className="hidden sm:flex items-center gap-2">
-          {onQuickAppointment && (
-            <button onClick={onQuickAppointment}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-sm">
-              <Plus className="w-3.5 h-3.5" /> New Appointment
-            </button>
-          )}
           <button onClick={onShowTodaySchedule}
             className="flex items-center gap-1.5 bg-white border border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-xl transition-all">
             <Calendar className="w-3.5 h-3.5 text-blue-600" />
