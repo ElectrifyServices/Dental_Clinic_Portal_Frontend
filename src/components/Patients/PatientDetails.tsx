@@ -567,12 +567,12 @@ export function PatientDetails({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-sm">
-      <div className="bg-white sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl transition-all duration-300">
+      <div className="bg-white sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-2xl z-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center sm:space-x-6 gap-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden shadow-xl flex-shrink-0">
+              <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                 {patient.avatar ? (
                   <img
                     src={patient.avatar}
@@ -585,7 +585,7 @@ export function PatientDetails({
               </div>
               <div className="text-center sm:text-left min-w-0 flex-1">
                 <h2
-                  className="text-2xl sm:text-3xl font-bold text-gray-900 truncate"
+                  className="text-xl font-bold text-gray-900 truncate"
                   title={patient.name}
                 >
                   {patient.name}
@@ -674,7 +674,7 @@ export function PatientDetails({
           {activeTab === "overview" && (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Personal Information */}
-              <div className="xl:col-span-2 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 rounded-2xl p-6 border border-blue-100 shadow-sm">
+              <div className="xl:col-span-2 bg-blue-50 rounded-xl p-5 border border-blue-100">
                 <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
                   <User className="w-5 h-5 mr-2 text-blue-600" />
                   Personal Information
@@ -1033,7 +1033,7 @@ export function PatientDetails({
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-blue-900">₹{treatment.cost.toLocaleString()}</p>
-                          <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-600 text-white uppercase">IN-PROGRESS</span>
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white uppercase">IN-PROGRESS</span>
                         </div>
                       </div>
                     </div>
@@ -1068,7 +1068,7 @@ export function PatientDetails({
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-purple-900">₹{treatment.cost.toLocaleString()}</p>
-                          <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-purple-200 text-purple-700 uppercase">PLANNED</span>
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-200 text-purple-700 uppercase">PLANNED</span>
                         </div>
                       </div>
                     </div>
@@ -1501,7 +1501,7 @@ export function PatientDetails({
       {/* Print Preview & Edit Modal */}
       {showPrintPreview && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-blue-600 text-white">
               <div className="flex items-center gap-3">
                 <Printer className="w-6 h-6" />
@@ -1546,7 +1546,7 @@ export function PatientDetails({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Vitals Form */}
                 <div className="space-y-6">
-                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide border-b pb-2">
                     Clinical Vitals
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
@@ -1617,7 +1617,7 @@ export function PatientDetails({
                     </div>
                   </div>
 
-                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2 pt-4">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide border-b pb-2 pt-4">
                     Clinical Observations
                   </h4>
                   <div className="space-y-4">
@@ -1658,7 +1658,7 @@ export function PatientDetails({
 
                 {/* Additional Info Form */}
                 <div className="space-y-6">
-                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide border-b pb-2">
                     Treatment Advice
                   </h4>
                   <div className="space-y-4">
@@ -1714,7 +1714,7 @@ export function PatientDetails({
                     </div>
                   </div>
 
-                  <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest border-b pb-2 pt-4 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide border-b pb-2 pt-4 flex items-center justify-between">
                     <span>Custom Sections</span>
                     <button
                       onClick={() =>

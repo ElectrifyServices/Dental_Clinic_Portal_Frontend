@@ -78,7 +78,7 @@ export const ProfitSharingPage: React.FC<ProfitSharingPageProps> = ({ treatments
       {/* Header & Minimalist Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Profit Sharing</h2>
+          <h2 className="page-title">Profit Sharing</h2>
           <p className="text-gray-500 text-sm mt-0.5">Doctor earnings and revenue distribution</p>
         </div>
 

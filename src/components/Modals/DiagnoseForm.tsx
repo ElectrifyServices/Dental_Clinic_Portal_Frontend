@@ -23,22 +23,22 @@ export const DiagnoseForm: React.FC<DiagnoseFormProps> = ({ patient, onClose, on
 
         <div className="p-8 space-y-6">
           <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
-             <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Current Complaint</h4>
+             <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Current Complaint</h4>
              <p className="text-sm text-blue-900 font-medium">{patient.patientConcern}</p>
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); onSubmit({}); }} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="md:col-span-2">
-                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Consultation Notes</label>
+                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Consultation Notes</label>
                  <textarea rows={3} className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none" placeholder="Enter session findings..." />
                </div>
                <div>
-                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Proposed Cost (₹)</label>
+                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Proposed Cost (₹)</label>
                  <input type="number" className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none" placeholder="500" />
                </div>
                <div>
-                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Follow-up Needed?</label>
+                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Follow-up Needed?</label>
                  <select className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none">
                    <option>No</option>
                    <option>Yes (Next Week)</option>

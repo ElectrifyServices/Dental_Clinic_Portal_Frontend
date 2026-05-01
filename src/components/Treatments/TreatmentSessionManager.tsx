@@ -143,7 +143,7 @@ export function TreatmentSessionManager({
               <h3 className="text-lg font-bold text-gray-900">Session Timeline</h3>
               <button
                 onClick={() => setShowNewSession(true)}
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg transition-all duration-200"
+                className="btn-primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Session

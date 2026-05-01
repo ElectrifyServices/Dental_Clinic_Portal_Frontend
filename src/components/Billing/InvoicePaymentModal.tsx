@@ -35,7 +35,7 @@ export function InvoicePaymentModal({
           <div className="mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
               <p className="text-sm text-blue-600 font-medium mb-1">Total Amount</p>
-              <h3 className="text-3xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold text-gray-900">
                 ₹{amount.toLocaleString("en-IN")}
               </h3>
               <p className="text-xs text-gray-500 mt-1">

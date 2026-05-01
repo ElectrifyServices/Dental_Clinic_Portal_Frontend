@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Plus, Package, AlertTriangle, TrendingUp, Filter, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { Search, Plus, Package, AlertTriangle, Edit, Trash2, RefreshCw, MoreVertical } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface InventoryItem {
   id: string;
@@ -7,12 +8,13 @@ interface InventoryItem {
   category: 'instruments' | 'materials' | 'consumables' | 'medicines';
   currentStock: number;
   minStock: number;
+  maxStock?: number;
   unit: string;
   supplier: string;
   lastRestocked: string;
   cost: number;
+  expiryDate?: string;
 }
-
 
 interface InventoryListProps {
   inventory: InventoryItem[];
@@ -22,204 +24,151 @@ interface InventoryListProps {
   onRestock: (item: InventoryItem) => void;
 }
 
+const CAT_META: Record<string, { label: string; cls: string }> = {
+  instruments:  { label: 'Instruments',  cls: 'badge badge-blue' },
+  materials:    { label: 'Materials',    cls: 'badge badge-green' },
+  consumables:  { label: 'Consumables',  cls: 'badge badge-amber' },
+  medicines:    { label: 'Medicines',    cls: 'badge badge-violet' },
+};
+
+const CATEGORIES = ['all', 'instruments', 'materials', 'consumables', 'medicines'];
+
 export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, onRestock }: InventoryListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('all');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'instruments': return 'bg-blue-100 text-blue-800';
-      case 'materials': return 'bg-green-100 text-green-800';
-      case 'consumables': return 'bg-yellow-100 text-yellow-800';
-      case 'medicines': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const isLowStock = (current: number, min: number) => current <= min;
-
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.supplier.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterCategory === 'all' || item.category === filterCategory;
-    return matchesSearch && matchesFilter;
+  const filtered = inventory.filter(item => {
+    const q = search.toLowerCase();
+    return (item.name.toLowerCase().includes(q) || item.supplier.toLowerCase().includes(q))
+      && (cat === 'all' || item.category === cat);
   });
 
-  const lowStockCount = inventory.filter(item => isLowStock(item.currentStock, item.minStock)).length;
+  const lowCount = inventory.filter(i => i.currentStock <= i.minStock).length;
+
+  const openMenu = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, left: rect.right - 160 });
+    setOpenMenuId(prev => prev === id ? null : id);
+  };
+
+  const stockPct = (item: InventoryItem) => {
+    const max = item.maxStock || item.minStock * 3;
+    return Math.min(100, Math.round((item.currentStock / max) * 100));
+  };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+    <div className="space-y-5">
+      <div className="page-header">
         <div>
-          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight">Inventory Management</h2>
-          <p className="text-gray-500 mt-1 font-medium">Track and manage dental supplies</p>
+          <h1 className="page-title">Inventory</h1>
+          <p className="page-subtitle">{inventory.length} items · {lowCount > 0 ? `${lowCount} low stock` : 'All levels OK'}</p>
         </div>
-        <button
-          onClick={onAddItem}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 flex items-center transition-all active:scale-95 shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Item
+        <button onClick={onAddItem} className="btn-primary">
+          <Plus className="w-4 h-4" /> Add Item
         </button>
       </div>
 
-      {lowStockCount > 0 && (
-        <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-orange-600 mr-3" />
-            <span className="text-orange-900 font-medium">
-              {lowStockCount} item{lowStockCount > 1 ? 's' : ''} running low on stock
-            </span>
-          </div>
+      {lowCount > 0 && (
+        <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm font-medium">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          {lowCount} item{lowCount > 1 ? 's are' : ' is'} below minimum stock level — reorder needed.
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 group">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search inventory by name or supplier..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
-          />
+      <div className="filter-bar">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input type="text" placeholder="Search by name or supplier…" value={search}
+            onChange={e => setSearch(e.target.value)} className="search-input" />
         </div>
-        <div className="flex bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
-           {['all', 'instruments', 'materials', 'consumables', 'medicines'].map((cat) => (
-             <button
-               key={cat}
-               onClick={() => setFilterCategory(cat)}
-               className={`px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-                 filterCategory === cat 
-                 ? 'bg-blue-600 text-white shadow-md' 
-                 : 'text-gray-500 hover:bg-gray-50'
-               }`}
-             >
-               {cat}
-             </button>
-           ))}
+        <div className="filter-tabs">
+          {CATEGORIES.map(c => (
+            <button key={c} onClick={() => setCat(c)}
+              className={cat === c ? 'filter-tab-active' : 'filter-tab'}>
+              {c === 'all' ? 'All' : CAT_META[c]?.label || c}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
-        <div className="min-w-full inline-block align-middle">
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Item</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Supplier</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Restocked</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-50">
-              {filteredInventory.map((item, index) => {
-                const isLastRows = index >= filteredInventory.length - 2;
-                
-                return (
-                  <tr 
-                    key={item.id} 
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    className="hover:bg-gray-50/50 transition-colors group animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                          <Package className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900">{item.name}</div>
-                          {isLowStock(item.currentStock, item.minStock) && (
-                            <div className="flex items-center text-[10px] text-orange-600 mt-1 font-bold uppercase tracking-widest">
-                              <AlertTriangle className="w-3 h-3 mr-1" />
-                              Low Stock
-                            </div>
-                          )}
-                        </div>
+      <div className="card overflow-hidden">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Stock Level</th>
+              <th>Unit Cost</th>
+              <th>Supplier</th>
+              <th>Last Restocked</th>
+              <th className="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr><td colSpan={7}><div className="empty-state"><Package className="empty-state-icon" /><p className="empty-state-title">No items found</p></div></td></tr>
+            ) : filtered.map(item => {
+              const isLow = item.currentStock <= item.minStock;
+              const pct = stockPct(item);
+              return (
+                <tr key={item.id}>
+                  <td>
+                    <div className="font-semibold text-gray-900 flex items-center gap-2">
+                      {item.name}
+                      {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
+                    </div>
+                    {item.expiryDate && <div className="text-xs text-gray-400 mt-0.5">Exp: {item.expiryDate}</div>}
+                  </td>
+                  <td><span className={CAT_META[item.category]?.cls || 'badge badge-gray'}>{CAT_META[item.category]?.label || item.category}</span></td>
+                  <td>
+                    <div className="flex items-center gap-2 min-w-[120px]">
+                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                        <div className={`h-1.5 rounded-full ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${pct}%` }} />
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wider ${getCategoryColor(item.category)} shadow-sm`}>
-                        {item.category}
+                      <span className={`text-xs font-semibold whitespace-nowrap ${isLow ? 'text-red-600' : 'text-gray-700'}`}>
+                        {item.currentStock}/{item.minStock} {item.unit}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <span className={`text-base font-semibold ${isLowStock(item.currentStock, item.minStock) ? 'text-orange-600' : 'text-gray-900'}`}>
-                          {item.currentStock}
-                        </span>
-                        <span className="text-gray-400 text-xs font-medium"> / {item.minStock} min</span>
+                    </div>
+                  </td>
+                  <td className="font-medium text-gray-800">₹{item.cost.toLocaleString()}</td>
+                  <td className="text-gray-600">{item.supplier}</td>
+                  <td className="text-gray-500 whitespace-nowrap">
+                    {item.lastRestocked ? new Date(item.lastRestocked).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}
+                  </td>
+                  <td>
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => onRestock(item)} className="btn-icon-blue" title="Restock"><RefreshCw className="w-4 h-4" /></button>
+                      <div className="relative">
+                        <button onClick={e => openMenu(e, item.id)} className="btn-icon" title="More"><MoreVertical className="w-4 h-4" /></button>
+                        {openMenuId === item.id && createPortal(
+                          <>
+                            <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+                            <div className="fixed z-[9999] bg-white rounded-xl border border-gray-200 shadow-xl w-40 overflow-hidden"
+                              style={{ top: menuPos.top, left: menuPos.left }}>
+                              <button onClick={() => { onEditItem(item.id); setOpenMenuId(null); }}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2.5 text-gray-700">
+                                <Edit className="w-4 h-4" /> Edit
+                              </button>
+                              <button onClick={() => { onDeleteItem(item.id); setOpenMenuId(null); }}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-2.5 text-red-600">
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </button>
+                            </div>
+                          </>,
+                          document.body
+                        )}
                       </div>
-                      <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-tight">{item.unit}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{item.supplier}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400 font-medium">
-                      {new Date(item.lastRestocked).toLocaleDateString('en-IN')}
-                    </td>
-                    <td className="px-6 py-4 text-right relative overflow-visible">
-                      <button 
-                        onClick={() => setActiveMenu(activeMenu === item.id ? null : item.id)}
-                        className={`p-2 rounded-xl transition-all duration-300 ${
-                          activeMenu === item.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100 text-gray-400'
-                        }`}
-                      >
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
-                      
-                      {activeMenu === item.id && (
-                        <>
-                          <div 
-                            className="fixed inset-0 z-[60]" 
-                            onClick={() => setActiveMenu(null)}
-                          ></div>
-                          <div 
-                            className={`absolute right-0 ${isLastRows ? 'bottom-full mb-2' : 'top-full mt-2'} w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[70] py-2 animate-in fade-in zoom-in-95 duration-200`}
-                          >
-                            <button
-                              onClick={() => {
-                                onRestock(item);
-                                setActiveMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 flex items-center font-semibold transition-colors"
-                            >
-                              <TrendingUp className="w-4 h-4 mr-3" />
-                              Restock
-                            </button>
-                            <button
-                              onClick={() => {
-                                onEditItem(item.id);
-                                setActiveMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center font-semibold transition-colors"
-                            >
-                              <Edit className="w-4 h-4 mr-3" />
-                              Edit Item
-                            </button>
-                            <div className="h-px bg-gray-100 my-1.5 mx-2"></div>
-                            <button
-                              onClick={() => {
-                                onDeleteItem(item.id);
-                                setActiveMenu(null);
-                              }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center font-semibold transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 mr-3" />
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

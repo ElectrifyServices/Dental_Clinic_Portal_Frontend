@@ -397,7 +397,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                   </div>
                   <span className="font-bold text-gray-700 text-sm">{doc} *</span>
                 </div>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Required</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Required</span>
               </div>
               <div className="relative group">
                 <div className="w-full h-12 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center group-hover:border-blue-400 transition-all cursor-pointer bg-white">
@@ -772,7 +772,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold transition-all duration-200"
+                  className="btn-primary"
                 >
                   Next Step
                 </button>

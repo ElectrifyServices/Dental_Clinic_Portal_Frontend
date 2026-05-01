@@ -50,7 +50,7 @@ function QueueCard({ patient, fullPatient, getStatusColor, getStatusIcon, onUpda
     : [];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4 lg:p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <div className="card-hover p-4">
       {/* Patient Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
@@ -66,7 +66,7 @@ function QueueCard({ patient, fullPatient, getStatusColor, getStatusIcon, onUpda
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-gray-900 text-lg">{patient.patientName}</h3>
               {fullPatient?.category && fullPatient.category !== 'regular' && (
-                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">
                   {fullPatient.category}
                 </span>
               )}
@@ -171,7 +171,7 @@ function QueueCard({ patient, fullPatient, getStatusColor, getStatusIcon, onUpda
         {patient.status === 'waiting' && (
           <button
             onClick={() => { onUpdatePatientStatus(patient.id, 'in-consultation'); onSelectPatient(patient); }}
-            className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+            className="btn-primary w-full justify-center"
           >
             <Stethoscope className="w-4 h-4" />
             Start Consultation
@@ -284,91 +284,63 @@ export function PatientQueue({
   const inConsultationCount = queuedPatients.filter(p => p.status === 'in-consultation').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Patient Queue</h2>
-            <p className="text-gray-600 mt-1">Welcome, {doctorName} - Manage your checked-in patients</p>
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-3">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <span className="text-sm font-medium text-gray-700">{waitingCount} Waiting</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm font-medium text-gray-700">{inConsultationCount} In Consultation</span>
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-blue-600">{new Date().toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            })}</div>
-            <div className="text-sm text-gray-600">{new Date().toLocaleDateString('en-IN', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}</div>
-          </div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Consultation Queue</h1>
+          <p className="page-subtitle">
+            Dr. {doctorName} &nbsp;·&nbsp;
+            <span className="text-amber-600 font-semibold">{waitingCount} waiting</span>
+            &nbsp;·&nbsp;
+            <span className="text-blue-600 font-semibold">{inConsultationCount} in consultation</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-bold text-blue-600">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+          <div className="text-xs text-gray-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by patient name, treatment, or concern..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            />
-          </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="all">All Patients</option>
-            <option value="waiting">Waiting</option>
-            <option value="in-consultation">In Consultation</option>
-            <option value="completed">Completed</option>
-          </select>
-          <button
-            onClick={() => setShowDirectPopup(true)}
-            className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-             text-white text-sm font-bold 
-             rounded-xl shadow-md 
-             transition-all duration-200 ease-in-out 
-             flex items-center gap-2 group"
-          >
-            <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Direct Consultation
-          </button>
-
-          <button
-            onClick={() => setShowHistory(true)}
-            className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 
-             text-gray-700 text-sm font-medium 
-             rounded-xl border border-gray-200
-             transition-all duration-200 ease-in-out 
-             flex items-center gap-2"
-          >
-            <History className="w-4 h-4" />
-            History
-          </button>
+      <div className="filter-bar">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by patient name, treatment, or concern..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
         </div>
+        <div className="filter-tabs">
+          {['all', 'waiting', 'in-consultation', 'completed'].map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)}
+              className={filterStatus === s ? 'filter-tab-active' : 'filter-tab'}>
+              {s === 'all' ? 'All' : s === 'in-consultation' ? 'Consulting' : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowDirectPopup(true)}
+          className="btn-primary"
+        >
+          <UserPlus className="w-4 h-4" />
+          Direct Consultation
+        </button>
+
+        <button
+          onClick={() => setShowHistory(true)}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <History className="w-4 h-4" />
+          History
+        </button>
       </div>
 
       {/* Patient Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPatients.map((patient) => {
           const fullPatient = patients.find(
             p => p.phone === patient.patientPhone || p.name === patient.patientName
@@ -414,11 +386,11 @@ export function PatientQueue({
 
       {/* Empty State */}
       {filteredPatients.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+        <div className="card">
           <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
             <User className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients in queue</h3>
+          <h3 className="empty-state-title">No patients in queue</h3>
           <p className="text-gray-600 mb-4">
             {searchTerm || filterStatus !== 'all'
               ? 'Try adjusting your search criteria or filters.'

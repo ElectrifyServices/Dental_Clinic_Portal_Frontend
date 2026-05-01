@@ -116,7 +116,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium">Monthly Revenue</p>
-              <p className="text-2xl font-semibold text-gray-900">₹{stats.earnings.current.toLocaleString()}</p>
+              <p className="text-xl font-bold text-gray-900">₹{stats.earnings.current.toLocaleString()}</p>
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2">
@@ -133,7 +133,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium">Avg. Daily Revenue</p>
-              <p className="text-2xl font-semibold text-gray-900">₹{stats.earnings.avg.toLocaleString()}</p>
+              <p className="text-xl font-bold text-gray-900">₹{stats.earnings.avg.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -179,11 +179,11 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-blue-50 rounded-xl transition-transform hover:scale-105">
                <p className="text-sm text-blue-600 font-medium">New Patients</p>
-               <p className="text-3xl font-semibold text-blue-700 mt-1">{stats.patients.new}</p>
+               <p className="text-xl font-bold text-blue-700 mt-1">{stats.patients.new}</p>
             </div>
             <div className="p-4 bg-purple-50 rounded-xl transition-transform hover:scale-105">
                <p className="text-sm text-purple-600 font-medium">Returning</p>
-               <p className="text-3xl font-semibold text-purple-700 mt-1">{stats.patients.returning}</p>
+               <p className="text-xl font-bold text-purple-700 mt-1">{stats.patients.returning}</p>
             </div>
           </div>
         </div>
@@ -249,7 +249,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
                    
                    <div className="mt-auto">
                      <div className="flex items-baseline gap-1 mb-2">
-                       <span className="text-2xl font-semibold text-gray-900">{data.count}</span>
+                       <span className="text-xl font-bold text-gray-900">{data.count}</span>
                        <span className="text-[10px] text-gray-400 font-medium">Appts</span>
                      </div>
                      <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
@@ -313,30 +313,23 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+    <div className="space-y-6">
+      <div className="page-header">
         <div>
-          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight">Analytics</h2>
-          <p className="text-gray-500 mt-1 font-medium">Clinic performance and patient insights</p>
+          <h1 className="page-title">Analytics</h1>
+          <p className="page-subtitle">Clinic performance and patient insights</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+          <div className="filter-tabs">
             {['week', 'month', 'year'].map(period => (
-              <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedPeriod === period
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-              >
+              <button key={period} onClick={() => setSelectedPeriod(period)}
+                className={selectedPeriod === period ? 'filter-tab-active' : 'filter-tab'}>
                 {period.charAt(0).toUpperCase() + period.slice(1)}
               </button>
             ))}
           </div>
-          <button className="bg-gray-900 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-black flex items-center shadow-sm transition-all active:scale-95">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+          <button className="btn-secondary">
+            <Download className="w-4 h-4" /> Export
           </button>
         </div>
       </div>
@@ -355,7 +348,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
                   : 'border-transparent bg-white hover:border-gray-200 hover:shadow-md'
                 } hover:-translate-y-1`}
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${report.color} flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg`}>
+              <div className={`w-10 h-10 rounded-xl ${report.color} flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg`}>
                 <Icon className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">{report.title}</h3>

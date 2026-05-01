@@ -286,22 +286,17 @@ export function AppointmentForm({
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[150] p-4 md:p-6 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-gray-100 my-4 overflow-hidden">
         {/* ── Header ── */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#2563eb] to-[#0d9488] border-b border-white/10 px-4 py-3 rounded-t-2xl flex items-center justify-between gap-4 z-10 text-white">
+        <div className="modal-header rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
               <Calendar className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white leading-tight">
-                {title}
-              </h2>
-              <p className="text-xs text-white/80 mt-0.5">{subtitle}</p>
+              <h2 className="modal-title">{title}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 hover:bg-gray-50 transition-colors flex-shrink-0"
-          >
+          <button onClick={onClose} className="btn-icon">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -1067,7 +1062,7 @@ export function AppointmentForm({
 //             </button>
 //             <button
 //               type="submit"
-//               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
+//               className="btn-primary"
 //             >
 //               <Save className="w-4 h-4 mr-2" />
 //               {isQuickBooking ? 'Book Now' : 'Save Appointment'}

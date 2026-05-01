@@ -242,7 +242,7 @@ export function CorporateManagement({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50">
           <div className="flex items-center gap-4">
@@ -250,7 +250,7 @@ export function CorporateManagement({
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight">Corporate Management</h2>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Corporate Management</h2>
               <p className="text-sm text-gray-600 font-medium">Manage company plans and bulk employee registration</p>
             </div>
           </div>
@@ -306,19 +306,19 @@ export function CorporateManagement({
                             <button onClick={() => onDeletePlan(plan.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
-                        <h4 className="font-black text-gray-900 text-lg mb-1">{plan.name}</h4>
+                        <h4 className="font-bold text-gray-900 text-lg mb-1">{plan.name}</h4>
                         <div className="flex items-center gap-2 mb-4">
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-black rounded uppercase">{plan.status}</span>
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">{plan.status}</span>
                           <span className="text-xs text-gray-400 font-medium">{plan.contactPerson}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-4">
                           <div className="bg-gray-50 p-2 rounded-xl border border-gray-100">
                             <p className="text-[10px] text-gray-400 font-bold uppercase">Discount</p>
-                            <p className="text-lg font-black text-indigo-600">{plan.discountPercent}%</p>
+                            <p className="text-lg font-bold text-indigo-600">{plan.discountPercent}%</p>
                           </div>
                           <div className="bg-gray-50 p-2 rounded-xl border border-gray-100">
                             <p className="text-[10px] text-gray-400 font-bold uppercase">Consultation</p>
-                            <p className="text-lg font-black text-emerald-600">{plan.freeConsultation ? 'FREE' : 'Paid'}</p>
+                            <p className="text-lg font-bold text-emerald-600">{plan.freeConsultation ? 'FREE' : 'Paid'}</p>
                           </div>
                         </div>
                         <div className="flex items-center text-xs text-gray-500 gap-4 mb-4">
@@ -337,7 +337,7 @@ export function CorporateManagement({
                       </div>
                     ))}
                     {corporatePlans.length === 0 && (
-                      <div className="col-span-full py-12 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                      <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
                         <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 font-medium">No corporate plans created yet.</p>
                       </div>
@@ -345,9 +345,9 @@ export function CorporateManagement({
                   </div>
                 </>
               ) : (
-                <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
+                <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-black text-gray-900">{editingPlan ? 'Edit Plan' : 'New Corporate Plan'}</h3>
+                    <h3 className="text-xl font-bold text-gray-900">{editingPlan ? 'Edit Plan' : 'New Corporate Plan'}</h3>
                     <button onClick={() => setShowPlanForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
                   </div>
                   <form onSubmit={handleAddPlan} className="space-y-6">
@@ -371,7 +371,7 @@ export function CorporateManagement({
                       </div>
                     </div>
                     <div className="border-t border-gray-100 pt-6">
-                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Contact Details</h4>
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Contact Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <input name="contactPerson" defaultValue={editingPlan?.contactPerson} placeholder="Contact Person" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
                         <input name="phone" defaultValue={editingPlan?.phone} placeholder="Phone Number" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
@@ -388,10 +388,10 @@ export function CorporateManagement({
             </div>
           ) : (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                   <div>
-                    <h3 className="text-xl font-black text-gray-900">Bulk Employee Upload</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Bulk Employee Upload</h3>
                     <p className="text-sm text-gray-500">Quickly add multiple employees to a corporate plan</p>
                   </div>
                   <div className="flex gap-3">
@@ -414,7 +414,7 @@ export function CorporateManagement({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Target Corporate Plan</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Corporate Plan</label>
                   <select
                     value={selectedCompanyId}
                     onChange={(e) => setSelectedCompanyId(e.target.value)}
@@ -429,7 +429,7 @@ export function CorporateManagement({
 
                 <div className="border border-gray-100 rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                    <thead className="bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
                       <tr>
                         <th className="px-6 py-4">Full Name</th>
                         <th className="px-6 py-4">Phone</th>
@@ -529,7 +529,7 @@ export function CorporateManagement({
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
                 <div>
-                  <h3 className="text-xl font-black text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900">
                     {corporatePlans.find(p => p.id === viewingEmployeesPlanId)?.name} Employees
                   </h3>
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
@@ -556,7 +556,7 @@ export function CorporateManagement({
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2">
                     {recentSearches.length > 0 && (
                       <div className="p-4 border-b border-gray-50">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Recent Searches</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Recent Searches</p>
                         <div className="flex flex-wrap gap-2">
                           {recentSearches.map((s, i) => (
                             <button 
@@ -571,7 +571,7 @@ export function CorporateManagement({
                       </div>
                     )}
                     <div className="p-4">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Quick Suggestions</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Quick Suggestions</p>
                       <div className="flex flex-wrap gap-2">
                         {['Male', 'Female', 'Manager', '@gmail.com', 'Dev'].map((s, i) => (
                           <button 
@@ -591,7 +591,7 @@ export function CorporateManagement({
             <div className="flex-1 overflow-y-auto p-6">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
                     <th className="px-6 py-4">Name</th>
                     <th className="px-6 py-4">Phone</th>
                     <th className="px-6 py-4">Email Address</th>
@@ -614,7 +614,7 @@ export function CorporateManagement({
                         <tr key={i} className={`hover:bg-gray-50 transition-colors group ${isEditing ? 'bg-indigo-50/30' : ''}`}>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-black shadow-sm">
+                              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-bold shadow-sm">
                                 {emp.name[0]}
                               </div>
                               {isEditing ? (
@@ -625,7 +625,7 @@ export function CorporateManagement({
                                 />
                               ) : (
                                 <div>
-                                  <div className="font-black text-gray-900">{emp.name}</div>
+                                  <div className="font-bold text-gray-900">{emp.name}</div>
                                   <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: CORP-{i+100}</div>
                                 </div>
                               )}
@@ -673,7 +673,7 @@ export function CorporateManagement({
                                 <option value="other">Other</option>
                               </select>
                             ) : (
-                              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-gray-200">
+                              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-gray-200">
                                 {emp.gender}
                               </span>
                             )}

@@ -544,7 +544,7 @@ export function PatientConsultation({
                     <User className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest">
+                    <h4 className="text-sm font-bold text-amber-900 uppercase tracking-widest">
                       {patient.category.toUpperCase()} PATIENT DETECTED
                     </h4>
                     <p className="text-xs text-amber-700 font-medium">
@@ -838,7 +838,7 @@ export function PatientConsultation({
                     <div className="mt-4 p-4 bg-purple-100/50 rounded-xl border border-purple-200">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-bold text-purple-900">Total Planned Cost:</span>
-                        <span className="text-lg font-black text-purple-900">
+                        <span className="text-lg font-bold text-purple-900">
                           ₹{consultationData.treatmentPlans.reduce((sum: number, p: any) => sum + (p.cost || 0), 0).toLocaleString()}
                         </span>
                       </div>

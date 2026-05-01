@@ -12,7 +12,7 @@ export function SalaryHistoryModal({ staffName, history, onClose }: SalaryHistor
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-xl max-w-xl w-full shadow-xl overflow-hidden border border-gray-200">
         {/* Brand Gradient Header */}
-        <div className="px-6 py-4 flex items-center justify-between bg-gradient-to-r from-blue-600 to-cyan-600">
+        <div className="modal-header bg-blue-600 rounded-t-2xl">
           <div>
             <h2 className="font-bold text-white tracking-tight">Salary History</h2>
             <p className="text-xs text-white/80 font-medium">{staffName}</p>

@@ -556,7 +556,7 @@ overflow: auto;
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-sm font-black text-indigo-900">Corporate Employee Detected!</p>
+            <p className="text-sm font-bold text-indigo-900">Corporate Employee Detected!</p>
             <p className="text-xs text-indigo-700 font-medium">
               Found in {corporatePlans.find(cp => cp.id === matchedCorporateEmp.companyId)?.name || 'Corporate'} list. 
               Applying {formData.defaultDiscount}% Benefit.
@@ -1724,12 +1724,12 @@ overflow: auto;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
+    <div className="modal-overlay">
+      <div className="modal-box max-w-4xl">
         <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="modal-title text-lg">
                 {(patient && patient.id) ? 'Edit Patient Information' : 'New Patient Registration'}
               </h2>
               <p className="text-gray-600 mt-1">Complete patient registration with medical history</p>
@@ -1811,7 +1811,7 @@ overflow: auto;
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold transition-all duration-200 flex items-center"
+                  className="btn-secondary"
                 >
                   Next Step
                   <Calendar className="w-4 h-4 ml-2" />
@@ -1821,7 +1821,7 @@ overflow: auto;
                   type="submit"
                   disabled={loading}
                   onClick={(e) => handleSubmit(e as any)}
-                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   {loading ? (
                     <>

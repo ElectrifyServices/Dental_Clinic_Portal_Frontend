@@ -392,7 +392,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
     <div id="patient-grid-container">
       <div id="patient-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
         {paginatedPatients.map((patient) => (
-          <div key={patient.id} id={`patient-card-${patient.id}`} className="bg-white rounded-2xl border border-gray-200 p-4 lg:p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div key={patient.id} id={`patient-card-${patient.id}`} className="card-hover p-4 lg:p-5">
           {/* Patient Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center">
@@ -415,7 +415,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-gray-900 text-lg truncate" title={patient.name}>{patient.name}</h3>
                   {patient.category && patient.category !== 'regular' && patient.category !== 'corporate' && (
-                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">
                       {patient.category}
                     </span>
                   )}
@@ -630,10 +630,10 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
   );
 
   const renderTableView = () => (
-    <div id="patient-table-container" className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div id="patient-table-container" className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table id="patient-table" className="min-w-full">
-          <thead id="patient-table-header" className="bg-gradient-to-r from-gray-50 to-gray-100">
+          <thead id="patient-table-header" className="bg-gray-50">
             <tr>
               <th id="header-patient" className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Patient</th>
               <th id="header-contact" className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
@@ -660,7 +660,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
                       <div className="flex items-center gap-2">
                         <div className="font-semibold text-gray-900">{patient.name}</div>
                         {patient.category && patient.category !== 'regular' && (
-                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-black rounded uppercase border border-amber-200">
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">
                             {patient.category}
                           </span>
                         )}
@@ -802,121 +802,96 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
   );
 
   return (
-    <div id="patient-list-container" className="space-y-4 lg:space-y-6">
-      {/* Enhanced Header with Statistics */}
-      <div id="patient-header" className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-blue-200">
-        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-          <div>
-            <h2 id="patient-title" className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Patient Management</h2>
-            <p className="text-gray-600 text-sm lg:text-base">Comprehensive patient database with medical records and barcode system</p>
-          </div>
-          <div id="patient-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 w-full lg:w-auto">
-            <div id="stat-total" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
-              <div className="text-xl lg:text-2xl font-bold text-blue-600">{patients.length}</div>
-              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Total Patients</div>
-            </div>
-            <div id="stat-active" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
-              <div className="text-xl lg:text-2xl font-bold text-green-600">{activePatients}</div>
-              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Active</div>
-            </div>
-            <div id="stat-new" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
-              <div className="text-xl lg:text-2xl font-bold text-orange-600">{newPatients}</div>
-              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">New</div>
-            </div>
-            <div id="stat-balance" className="bg-white rounded-xl p-3 lg:p-4 text-center border border-blue-200 shadow-sm">
-              <div className="text-xl lg:text-2xl font-bold text-purple-600">₹{(totalBalance / 1000).toFixed(0)}K</div>
-              <div className="text-[10px] lg:text-sm text-gray-600 uppercase font-bold tracking-wider">Balance</div>
-            </div>
-          </div>
+    <div id="patient-list-container" className="space-y-4 lg:space-y-5">
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Patients</h1>
+          <p className="page-subtitle">
+            {patients.length} total · {activePatients} active · {newPatients} new · ₹{totalBalance.toLocaleString()} outstanding
+          </p>
         </div>
+        <button
+          id="add-patient-btn"
+          onClick={() => handleAction(() => onAddPatient('normal'), 'add-patient')}
+          disabled={actionLoading === 'add-patient'}
+          className="btn-primary"
+        >
+          {actionLoading === 'add-patient' ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          New Patient
+        </button>
       </div>
 
-      {/* Enhanced Controls */}
-      <div id="patient-controls" className="bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 flex-1">
-            <div className="relative flex-1">
-              <Search id="search-icon" className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                id="patient-search"
-                type="text"
-                placeholder="Search patients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-              />
-            </div>
-            <select
-              id="patient-filter"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 lg:px-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            <select
-              id="category-filter"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 lg:px-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
-            >
-              <option value="all">All Categories</option>
-              <option value="regular">Regular</option>
-              <option value="family">Family</option>
-              <option value="staff">Clinic Staff</option>
-              <option value="corporate">Corporate</option>
-              <option value="vip">VIP</option>
-              <option value="complimentary">Complimentary</option>
-            </select>
+      {/* KPI row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Total', value: patients.length, color: 'text-gray-900' },
+          { label: 'Active', value: activePatients, color: 'text-emerald-600' },
+          { label: 'New', value: newPatients, color: 'text-blue-600' },
+          { label: 'Outstanding', value: `₹${totalBalance >= 1000 ? `${(totalBalance/1000).toFixed(0)}K` : totalBalance}`, color: totalBalance > 0 ? 'text-red-600' : 'text-emerald-600' },
+        ].map(s => (
+          <div key={s.label} className="kpi-card text-center py-3">
+            <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
+            <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div id="view-mode-toggle" className="hidden sm:flex bg-gray-100 rounded-xl p-1">
-              <button
-                id="view-mode-grid"
-                onClick={() => setViewMode('grid')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Grid
-              </button>
-              <button
-                id="view-mode-table"
-                onClick={() => setViewMode('table')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Table
-              </button>
-            </div>
-            <button
-              id="add-patient-btn"
-              onClick={() => handleAction(() => onAddPatient('normal'), 'add-patient')}
-              disabled={actionLoading === 'add-patient'}
-              className="flex-1 lg:flex-none bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 lg:py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm font-bold"
-            >
-              {actionLoading === 'add-patient' ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              ) : (
-                <Plus className="w-4 h-4 mr-2" />
-              )}
-              New Patient
-            </button>
-          </div>
+        ))}
+      </div>
+
+      {/* Controls */}
+      <div className="filter-bar">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            id="patient-search"
+            type="text"
+            placeholder="Search by name, phone, email or ID…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="form-select w-auto"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="new">New</option>
+        </select>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="form-select w-auto"
+        >
+          <option value="all">All Categories</option>
+          <option value="regular">Regular</option>
+          <option value="family">Family</option>
+          <option value="staff">Clinic Staff</option>
+          <option value="corporate">Corporate</option>
+          <option value="vip">VIP</option>
+          <option value="complimentary">Complimentary</option>
+        </select>
+        <div className="hidden sm:flex bg-gray-100 rounded-xl p-1">
+          <button onClick={() => setViewMode('grid')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+            Grid
+          </button>
+          <button onClick={() => setViewMode('table')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${viewMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+            Table
+          </button>
         </div>
       </div>
 
       {/* Patient List */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+        <div className="card p-12 text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading patients...</p>
         </div>
@@ -928,7 +903,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
 
       {/* Empty State */}
       {paginatedPatients.length === 0 && !loading && (
-        <div id="patient-empty-state" className="text-center py-12 lg:py-16 bg-white rounded-xl lg:rounded-2xl border border-gray-200">
+        <div id="patient-empty-state" className="card">
           <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
             <User className="w-12 h-12 text-gray-400" />
           </div>
@@ -942,7 +917,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
           <button
             id="add-first-patient-btn"
             onClick={onAddPatient}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="btn-primary"
           >
             New First Patient
           </button>
@@ -952,7 +927,7 @@ export function PatientList({ patients, onAddPatient, onViewPatient, onEditPatie
       {/* Delete Confirmation Modal */}
       {patientToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl transform animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl transform animate-in zoom-in-95 duration-300">
             <div className="bg-red-600 p-6 text-white text-center">
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
                 <Trash2 className="w-10 h-10" />

@@ -156,7 +156,7 @@ export function DirectConsultationPopup({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 flex items-center justify-between">
+        <div className="bg-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <div className="flex items-center text-white">
             <Stethoscope className="w-6 h-6 mr-3" />
             <h3 className="text-xl font-bold">Direct Consultation</h3>
@@ -286,7 +286,7 @@ export function DirectConsultationPopup({
             <button
               onClick={handleProceed}
               disabled={isSearching || !selectedTime}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center disabled:opacity-50"
+              className="btn-primary w-full justify-center"
             >
               {isSearching ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -52,7 +52,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
             {/* Clinic Header */}
             <div className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-10">
               <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">DENTAL CLINIC</h1>
+                <h1 className="text-xl font-bold text-gray-900 tracking-tight">DENTAL CLINIC</h1>
                 <p className="text-blue-600 font-bold tracking-[0.2em] text-xs mt-1 uppercase">Advanced Oral Care Center</p>
                 <div className="mt-6 space-y-1 text-sm text-gray-500 font-medium">
                   <div className="flex items-center gap-2"><MapPin className="w-3 h-3 text-blue-500" /> 123 Healthcare Tower, Sector 44</div>
@@ -69,7 +69,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
 
             {/* Document Title */}
             <div className="text-center mb-12">
-              <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight underline underline-offset-8 decoration-blue-600/30">INFORMED CONSENT FOR {form.treatmentType}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-tight underline underline-offset-8 decoration-blue-600/30">INFORMED CONSENT FOR {form.treatmentType}</h2>
               <p className="text-gray-500 mt-4 text-sm max-w-2xl mx-auto leading-relaxed italic">
                 "I understand that dentistry is not an exact science and therefore reputable practitioners cannot properly guarantee results. I acknowledge that no guarantee or assurance has been made by anyone regarding the dental treatment I have requested and authorized."
               </p>
@@ -90,7 +90,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
             {/* Legal Content Sections */}
             <div className="space-y-10 mb-12">
               <section>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px]">01</span>
                   Procedure Details & Authorization
                 </h3>
@@ -100,7 +100,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
               </section>
 
               <section>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px]">02</span>
                   Disclosed Risks & Complications
                 </h3>
@@ -110,7 +110,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
               </section>
 
               <section>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px]">03</span>
                   Alternative Treatment Options
                 </h3>
@@ -120,7 +120,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
               </section>
 
               <section>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
                   <span className="w-6 h-6 bg-amber-600 text-white rounded-full flex items-center justify-center text-[10px]">04</span>
                   Post-Treatment Care Compliance
                 </h3>
@@ -172,7 +172,7 @@ export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
             <div className="mt-20 text-center">
                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full">
                  <Shield className="w-3 h-3 text-blue-600" />
-                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Electronically Verified Medical Document • {new Date().getFullYear()}</span>
+                 <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Electronically Verified Medical Document • {new Date().getFullYear()}</span>
                </div>
             </div>
 

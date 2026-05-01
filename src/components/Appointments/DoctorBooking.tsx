@@ -261,7 +261,7 @@ export function DoctorBooking({
 
             {/* Filter Dropdown Popover */}
             {showFilters && (
-              <div className="absolute right-0 top-[calc(100%+12px)] w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 p-6 animate-in fade-in zoom-in slide-in-from-top-4 duration-200">
+              <div className="absolute right-0 top-[calc(100%+12px)] w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-6 animate-in fade-in zoom-in slide-in-from-top-4 duration-200">
                 <div className="flex items-center justify-between mb-6">
                   <h4 className="text-sm font-bold text-gray-900 leading-none">Global Filters</h4>
                   <button
@@ -394,7 +394,7 @@ export function DoctorBooking({
           ))}
 
           {filteredDoctors.length === 0 && (
-            <div className="py-20 text-center bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100">
+            <div className="py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
                 <Search className="w-8 h-8 text-gray-300" />
               </div>
@@ -413,7 +413,7 @@ export function DoctorBooking({
 
       {/* ── RIGHT COLUMN: FULL-LOGIC BOOKING CALENDAR ── */}
       <div className="w-full xl:w-[420px] flex flex-col gap-6 h-full">
-        <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-2xl shadow-blue-500/5 flex flex-col overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl shadow-blue-500/5 flex flex-col overflow-hidden">
           {selectedDoctor ? (
             <div className="flex flex-col h-full">
               {/* Header: Doctor Info */}
@@ -604,7 +604,7 @@ export function DoctorBooking({
 
                   <button
                     onClick={() => onBookAppointment(selectedDoctor.id, selectedDate, selectedTime || undefined)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-[1.5rem] shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
                   >
                     Confirm & Schedule
                     <ChevronRight className="w-5 h-5 font-bold" />

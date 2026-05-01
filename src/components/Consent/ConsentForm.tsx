@@ -99,7 +99,7 @@ export function ConsentForm({ onClose, onSave, form, patients, doctors }: Consen
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4 overflow-y-auto">
-      <div className="bg-[#f8fafc] rounded-[2.5rem] max-w-5xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-500 border border-white/20">
+      <div className="bg-[#f8fafc] rounded-2xl max-w-5xl w-full my-auto shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-500 border border-white/20">
         
         {/* Header Section */}
         <div className="bg-white p-8 border-b border-gray-100 flex items-center justify-between">
@@ -108,7 +108,7 @@ export function ConsentForm({ onClose, onSave, form, patients, doctors }: Consen
               <Shield className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                 {form ? 'Verify Consent' : 'Patient Authorization'}
               </h2>
               <p className="text-blue-600 font-semibold text-sm uppercase tracking-widest mt-1">Medical Legal Document</p>
@@ -193,7 +193,7 @@ export function ConsentForm({ onClose, onSave, form, patients, doctors }: Consen
                 </div>
               </div>
               
-              <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 flex gap-4">
+              <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex gap-4">
                 <AlertCircle className="w-6 h-6 text-blue-600 shrink-0" />
                 <p className="text-sm text-blue-900 font-medium leading-relaxed">
                   Selecting a Procedure Type will automatically load the standard legal terminology and risk disclosures. You can customize these in the next step.

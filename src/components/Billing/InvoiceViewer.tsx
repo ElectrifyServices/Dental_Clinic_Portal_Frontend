@@ -208,7 +208,7 @@ export function InvoiceViewer({
         <div className="p-6">
           {/* Clinic Header */}
           <div className="text-center mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border border-blue-200">
-            <h1 className="text-3xl font-bold text-blue-900 mb-2">
+            <h1 className="text-xl font-bold text-blue-900 mb-2">
               DentalCare Pro
             </h1>
             <p className="text-blue-700">Dr. Sharma's Dental Clinic</p>

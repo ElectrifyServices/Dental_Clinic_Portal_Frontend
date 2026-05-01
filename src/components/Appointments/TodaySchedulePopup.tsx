@@ -94,15 +94,15 @@ export function TodaySchedulePopup({
         <div className="grid grid-cols-3 gap-3 px-6 py-4 border-b border-gray-100">
           <div className="bg-gray-50 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Total today</p>
-            <p className="text-2xl font-semibold text-blue-600">{todayAppointments.length}</p>
+            <p className="text-lg font-bold text-blue-600">{todayAppointments.length}</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Completed</p>
-            <p className="text-2xl font-semibold text-green-700">{completedCount}</p>
+            <p className="text-lg font-bold text-emerald-700">{completedCount}</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-3">
             <p className="text-xs text-gray-500 mb-1">Pending</p>
-            <p className="text-2xl font-semibold text-amber-700">{pendingCount}</p>
+            <p className="text-lg font-bold text-amber-700">{pendingCount}</p>
           </div>
         </div>
 

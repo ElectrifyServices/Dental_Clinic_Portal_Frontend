@@ -671,7 +671,7 @@ export function InvoiceForm({
                 />
                 <div className="flex justify-between items-center bg-white/50 p-3 rounded-lg border border-blue-100 border-dashed">
                   <span className="text-sm font-medium text-blue-800">Final Amount Payable:</span>
-                  <span className="text-xl font-black text-blue-900">₹0</span>
+                  <span className="text-xl font-bold text-blue-900">₹0</span>
                 </div>
               </div>
             )}
@@ -761,7 +761,7 @@ export function InvoiceForm({
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
+              className="btn-primary"
             >
               <Save className="w-4 h-4 mr-2" />
               Save & Finalize Bill

@@ -270,7 +270,7 @@ export function AppointmentCalendar({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-240px)] xl:overflow-hidden pb-10 xl:pb-0">
       {/* Column 1: Doctor Selection (Left Sidebar) */}
-      <div className="xl:col-span-3 bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden h-[400px] xl:h-full">
+      <div className="xl:col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col overflow-hidden h-[400px] xl:h-full">
         <div className="p-5 border-b border-gray-50 bg-gray-50/30">
           <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-blue-600" />
@@ -335,7 +335,7 @@ export function AppointmentCalendar({
       </div>
 
       {/* Column 2: Rolling Calendar (Center) */}
-      <div className="xl:col-span-6 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
+      <div className="xl:col-span-6 bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-bold text-gray-900">
@@ -405,7 +405,7 @@ export function AppointmentCalendar({
                     }`}
                 >
                   <span
-                    className={`text-sm md:text-base font-black ${isToday
+                    className={`text-sm md:text-base font-bold ${isToday
                         ? "text-white"
                         : isPast
                           ? "text-blue-900/40"
@@ -425,7 +425,7 @@ export function AppointmentCalendar({
                     </div>
                   )}
                   {date.getDate() === 1 && (
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-md shadow-sm uppercase tracking-tighter">
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-blue-600 text-white text-[8px] font-bold rounded-md shadow-sm uppercase tracking-tighter">
                       {monthNames[date.getMonth()].slice(0, 3)}
                     </div>
                   )}
@@ -439,7 +439,7 @@ export function AppointmentCalendar({
       {/* Column 3: Day Agenda & Booking (Right) */}
       <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
         {/* Day Agenda */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center gap-2 mb-4">
             <CalendarIcon className="w-4 h-4 text-blue-600" />
             <h3 className="text-sm font-bold text-gray-900">
@@ -501,7 +501,7 @@ export function AppointmentCalendar({
 
         {/* Quick Booking Slots (Visible only if a doctor is selected) */}
         <div
-          className={`bg-white rounded-3xl border border-gray-100 p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[280px]" : "opacity-50 h-[100px] pointer-events-none"}`}
+          className={`bg-white rounded-xl border border-gray-100 p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[280px]" : "opacity-50 h-[100px] pointer-events-none"}`}
         >
           {selectedDoctorId ? (
             <div className="flex flex-col h-full">
