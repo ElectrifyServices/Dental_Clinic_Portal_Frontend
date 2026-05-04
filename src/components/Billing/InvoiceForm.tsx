@@ -1,332 +1,205 @@
-import React, { useState } from 'react';
-import { X, Save, Plus, Trash2, User, Calendar, DollarSign } from 'lucide-react';
-import { Invoice, InvoiceItem } from '../../types';
+import React, { useState, useMemo } from "react";
+import { Save, Plus, User, Calendar, DollarSign, Building2, Stethoscope, ClipboardList } from "lucide-react";
+import { Invoice, InvoiceItem } from "../../types";
+import { computePlanDiscount } from "../../utils/corporatePlan";
+import { Modal, Button, Card, CardContent, FormField, Badge } from "@/components/ui";
+import { PendingItems } from "./InvoiceForm/PendingItems";
+import { InvoiceItemRow } from "./InvoiceForm/InvoiceItemRow";
+import { PlanBanner } from "./InvoiceForm/PlanBanner";
 
 interface InvoiceFormProps {
   onClose: () => void;
   onSave: (invoice: Partial<Invoice>) => void;
   invoice?: Invoice;
+  patients: any[];
+  treatments: any[];
+  consultations: any[];
+  corporatePlans: any[];
 }
 
-export function InvoiceForm({ onClose, onSave, invoice }: InvoiceFormProps) {
+export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [], consultations = [], corporatePlans = [] }: InvoiceFormProps) {
   const [formData, setFormData] = useState({
-    patientName: invoice?.patientName || '',
-    date: invoice?.date || new Date().toISOString().split('T')[0],
-    dueDate: invoice?.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    patientName: invoice?.patientName || "",
+    patientId: (invoice as any)?.patientId || "",
+    doctor: (invoice as any)?.doctor || "",
+    date: invoice?.date || new Date().toISOString().split("T")[0],
+    dueDate: invoice?.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     discount: invoice?.discount || 0,
     tax: invoice?.tax || 18,
+    isComplimentary: (invoice as any)?.isComplimentary || false,
+    complimentaryNote: (invoice as any)?.complimentaryNote || "",
+    linkedItemIds: (invoice as any)?.linkedItemIds || [] as string[]
   });
 
   const [items, setItems] = useState<InvoiceItem[]>(
-    invoice?.items || [
-      { id: '1', description: '', quantity: 1, rate: 0, amount: 0 }
-    ]
+    invoice?.items || [{ id: "1", description: "", quantity: 1, rate: 0, amount: 0 }]
   );
 
-  const patients = [
-    'Rajesh Kumar',
-    'Priya Sharma', 
-    'Amit Singh',
-    'Neha Gupta',
-    'Suresh Patel'
-  ];
+  const activeCorporatePlan = useMemo(() => {
+    const p = patients.find(p => p.id === formData.patientId || p.name === formData.patientName);
+    return corporatePlans.find(cp => cp.id === (p?.corporatePlanId || p?.companyId)) || null;
+  }, [formData.patientId, formData.patientName, patients, corporatePlans]);
 
-  const commonServices = [
-    { name: 'Consultation', rate: 500 },
-    { name: 'Teeth Cleaning', rate: 1500 },
-    { name: 'Dental Filling', rate: 2000 },
-    { name: 'Root Canal', rate: 5000 },
-    { name: 'Crown Fitting', rate: 8000 },
-    { name: 'Tooth Extraction', rate: 1000 },
-    { name: 'Orthodontic Treatment', rate: 3000 },
-    { name: 'Oral Surgery', rate: 10000 }
-  ];
-
-  const addItem = () => {
-    const newItem: InvoiceItem = {
-      id: Date.now().toString(),
-      description: '',
-      quantity: 1,
-      rate: 0,
-      amount: 0
-    };
-    setItems([...items, newItem]);
-  };
-
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
-        if (field === 'quantity' || field === 'rate') {
-          updatedItem.amount = updatedItem.quantity * updatedItem.rate;
-        }
-        return updatedItem;
+  const pendingItems = useMemo(() => {
+    if (!formData.patientName) return [];
+    const list: any[] = [];
+    consultations.filter(c => c.patientName === formData.patientName && !c.isBilled).forEach(c => {
+      const isFree = activeCorporatePlan?.freeConsultation;
+      list.push({ id: c.id, type: 'consultation', description: `Consultation Fee (${new Date(c.consultationDate || c.date).toLocaleDateString('en-IN')})${isFree ? ' [FREE]' : ''}`, rate: isFree ? 0 : 500, date: c.consultationDate || c.date });
+    });
+    treatments.filter(t => t.patientName === formData.patientName && (t.status === 'completed' || t.status === 'in-progress')).forEach(t => {
+      if (Array.isArray(t.sessions)) {
+        t.sessions.filter((s: any) => (s.status === 'completed' || s.status === 'in-progress') && !s.isBilled).forEach((s: any) => {
+          list.push({ id: `${t.id}-${s.id}`, type: 'treatment-session', description: `${t.procedure} - Session ${s.sessionNumber}`, rate: s.cost || 0, date: s.scheduledDate || s.date, originalTreatmentId: t.id, originalSessionId: s.id });
+        });
+      } else if (!t.isBilled) {
+        list.push({ id: t.id, type: 'treatment', description: t.procedure, rate: t.cost || 0, date: t.date });
       }
-      return item;
+    });
+    return list;
+  }, [formData.patientName, treatments, consultations, activeCorporatePlan]);
+
+  const doctors = ["Dr. Rajesh Sharma — General Dentistry", "Dr. Priya Patel — Orthodontics", "Dr. Amit Singh — Oral Surgery"];
+  const commonServices = [
+    { name: "Consultation", rate: 500 }, { name: "Teeth Cleaning", rate: 1500 }, { name: "Dental Filling", rate: 2000 },
+    { name: "Root Canal", rate: 5000 }, { name: "Crown Fitting", rate: 8000 }, { name: "Tooth Extraction", rate: 1000 },
+    { name: "Orthodontic Treatment", rate: 3000 }, { name: "Oral Surgery", rate: 10000 },
+  ];
+
+  const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
+    setItems(items.map(item => {
+      if (item.id !== id) return item;
+      const updated = { ...item, [field]: value };
+      if (field === "quantity" || field === "rate") updated.amount = (updated.quantity || 1) * (updated.rate || 0);
+      return updated;
     }));
   };
 
+  const addPendingItem = (pItem: any) => {
+    if (formData.linkedItemIds.includes(pItem.id)) return;
+    const newItem = { id: `linked-${Date.now()}-${pItem.id}`, description: pItem.description, quantity: 1, rate: pItem.rate, amount: pItem.rate, linkedId: pItem.id } as any;
+    setItems(items.length === 1 && !items[0].description && items[0].rate === 0 ? [newItem] : [...items, newItem]);
+    setFormData(prev => ({ ...prev, linkedItemIds: [...prev.linkedItemIds, pItem.id] }));
+  };
+
+  const removePendingItem = (linkedId: string) => {
+    setFormData(prev => ({ ...prev, linkedItemIds: prev.linkedItemIds.filter(id => id !== linkedId) }));
+    setItems(items.filter(i => (i as any).linkedId !== linkedId));
+  };
+
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const discountAmount = (subtotal * formData.discount) / 100;
-  const taxAmount = ((subtotal - discountAmount) * formData.tax) / 100;
-  const total = subtotal - discountAmount + taxAmount;
+  const manualDiscount = formData.isComplimentary ? subtotal : (subtotal * formData.discount) / 100;
+  const planDiscountResult = useMemo(() => {
+    if (!activeCorporatePlan || formData.isComplimentary) return { totalDiscount: 0, applied: [] };
+    const types = items.map(i => i.description.toLowerCase().includes('consultation') ? 'consultation' : 'other');
+    return computePlanDiscount(activeCorporatePlan, subtotal - manualDiscount, types);
+  }, [activeCorporatePlan, subtotal, manualDiscount, items, formData.isComplimentary]);
+
+  const discountAmount = manualDiscount + planDiscountResult.totalDiscount;
+  const taxAmount = formData.isComplimentary ? 0 : (Math.max(0, subtotal - discountAmount) * formData.tax) / 100;
+  const total = formData.isComplimentary ? 0 : Math.max(0, subtotal - discountAmount + taxAmount);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      ...formData,
-      id: invoice?.id || `INV-${Date.now()}`,
-      patientId: invoice?.patientId || Date.now().toString(),
-      items,
-      subtotal,
-      discount: discountAmount,
-      tax: taxAmount,
-      total,
-      status: invoice?.status || 'draft'
+      ...formData, id: invoice?.id || `INV-${Date.now()}`, items, subtotal, discount: discountAmount, tax: taxAmount,
+      total: formData.isComplimentary ? 0 : total, status: formData.isComplimentary ? "complimentary" : (invoice?.status || "draft"),
+      corporatePlanId: activeCorporatePlan?.id, corporatePlanName: activeCorporatePlan?.name,
+      planDiscountApplied: planDiscountResult.totalDiscount, planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
     });
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {invoice ? 'Edit Invoice' : 'Create Invoice'}
-              </h2>
-              <p className="text-gray-600 mt-1">Generate professional invoices for treatments</p>
+    <Modal title={invoice ? "Edit Invoice" : "Create Bill"} onClose={onClose} size="2xl" icon={<ClipboardList className="w-4 h-4" />}
+      footer={
+        <div className="flex justify-end gap-3 w-full">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} className="gap-2"><Save className="w-4 h-4" /> Save & Finalize Bill</Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField label="Patient Name *" required>
+            <select value={formData.patientName} onChange={(e) => {
+              const p = patients.find(p => p.name === e.target.value);
+              const cp = p?.corporatePlanId || p?.companyId ? corporatePlans.find(cp => cp.id === (p.corporatePlanId || p.companyId)) : null;
+              setFormData({ ...formData, patientName: e.target.value, patientId: p?.id || '', linkedItemIds: [], discount: cp ? cp.discountPercent : (p?.defaultDiscount || 0) });
+            }} required className="w-full px-4 py-2 border rounded-xl text-sm font-medium">
+              <option value="">Select Patient</option>
+              {patients.map(p => <option key={p.id} value={p.name}>{p.name} ({p.id}) {p.category === 'family' ? '⭐' : ''}</option>)}
+            </select>
+          </FormField>
+          <FormField label="Invoice Date *"><input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></FormField>
+          <FormField label="Due Date *"><input type="date" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></FormField>
+        </div>
+
+        {activeCorporatePlan && <PlanBanner plan={activeCorporatePlan} savings={planDiscountResult.totalDiscount} />}
+
+        {formData.patientName && (() => {
+          const p = patients.find(p => p.name === formData.patientName);
+          if (['family', 'staff', 'complimentary'].includes(p?.category)) return (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><User className="w-5 h-5" /></div>
+                <div><p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">{p.category} Patient Detected</p><p className="text-xs font-bold text-amber-900 mt-0.5">Special benefits available for this patient.</p></div>
+              </div>
+              <Button size="sm" onClick={() => {
+                const disc = p.defaultDiscount !== undefined ? p.defaultDiscount : 100;
+                setFormData(prev => ({ ...prev, isComplimentary: disc === 100, discount: disc, complimentaryNote: disc === 100 ? `Waived - ${p.category.toUpperCase()} Benefit` : prev.complimentaryNote }));
+              }} className="bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap">Apply {p.defaultDiscount || 100}% Discount</Button>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
-            >
-              <X className="w-6 h-6" />
-            </button>
+          );
+        })()}
+
+        <PendingItems pendingItems={pendingItems} linkedItemIds={formData.linkedItemIds} onAdd={addPendingItem} onRemove={removePendingItem} />
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Stethoscope className="w-4 h-4 text-primary" /> Billable Items</h3>
+            <Button size="sm" variant="outline" onClick={() => setItems([...items, { id: Date.now().toString(), description: "", quantity: 1, rate: 0, amount: 0 }])} className="h-8 text-xs gap-1.5"><Plus className="w-3.5 h-3.5" /> Add Item</Button>
+          </div>
+          <div className="space-y-3">
+            {items.map(item => <InvoiceItemRow key={item.id} item={item} commonServices={commonServices} onUpdate={updateItem} onRemove={(id) => {
+              const lid = (items.find(i => i.id === id) as any)?.linkedId;
+              if (lid) setFormData(prev => ({ ...prev, linkedItemIds: prev.linkedItemIds.filter(i => i !== lid) }));
+              setItems(items.filter(i => i.id !== id));
+            }} />)}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Invoice Header */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <User className="w-4 h-4 inline mr-2" />
-                Patient Name *
-              </label>
-              <select
-                value={formData.patientName}
-                onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              >
-                <option value="">Select Patient</option>
-                {patients.map(patient => (
-                  <option key={patient} value={patient}>{patient}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Invoice Date *
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Due Date *
-              </label>
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-            </div>
-          </div>
-
-          {/* Invoice Items */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Invoice Items</h3>
-              <button
-                type="button"
-                onClick={addItem}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center text-sm font-medium transition-all duration-200"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Item
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {items.map((item, index) => (
-                <div key={item.id} className="grid grid-cols-12 gap-4 items-end p-4 bg-gray-50 rounded-xl">
-                  <div className="col-span-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service/Description
-                    </label>
-                    <select
-                      value={item.description}
-                      onChange={(e) => {
-                        const selectedService = commonServices.find(s => s.name === e.target.value);
-                        updateItem(item.id, 'description', e.target.value);
-                        if (selectedService) {
-                          updateItem(item.id, 'rate', selectedService.rate);
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select Service</option>
-                      {commonServices.map(service => (
-                        <option key={service.name} value={service.name}>{service.name}</option>
-                      ))}
-                      <option value="custom">Custom Service</option>
-                    </select>
-                    {item.description === 'custom' && (
-                      <input
-                        type="text"
-                        placeholder="Enter custom service"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-2"
-                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                      />
-                    )}
-                  </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Qty</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rate (₹)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={item.rate}
-                      onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-                    <input
-                      type="text"
-                      value={item.amount.toLocaleString()}
-                      readOnly
-                      className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700"
-                    />
-                  </div>
-
-                  <div className="col-span-1">
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+          <Card className="border-border/50 shadow-none bg-muted/20">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className={`w-4 h-4 ${formData.isComplimentary ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Complimentary Bill</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Invoice Totals */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Discount (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.discount}
-                    onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tax (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.tax}
-                    onChange={(e) => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  />
-                </div>
+                <input type="checkbox" checked={formData.isComplimentary} onChange={e => setFormData(prev => ({ ...prev, isComplimentary: e.target.checked, discount: e.target.checked ? 100 : 0, tax: e.target.checked ? 0 : 18 }))} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" />
               </div>
-
+              {formData.isComplimentary && <input type="text" placeholder="Complimentary Reason..." value={formData.complimentaryNote} onChange={e => setFormData(prev => ({ ...prev, complimentaryNote: e.target.value }))} className="w-full px-3 py-2 bg-white border rounded-xl text-xs focus:ring-2 focus:ring-primary/20 outline-none" />}
               <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">₹{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Discount ({formData.discount}%):</span>
-                  <span className="font-medium text-red-600">-₹{discountAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax ({formData.tax}%):</span>
-                  <span className="font-medium">₹{taxAmount.toLocaleString()}</span>
-                </div>
-                <hr className="border-gray-300" />
-                <div className="flex justify-between text-lg font-bold">
-                  <span className="text-gray-900">Total:</span>
-                  <span className="text-blue-600">₹{total.toLocaleString()}</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Discount %"><input type="number" value={formData.isComplimentary ? 100 : formData.discount} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></FormField>
+                  <FormField label="Tax %"><input type="number" value={formData.isComplimentary ? 0 : formData.tax} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></FormField>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <div className="bg-muted/30 rounded-2xl p-4 border border-border/50 space-y-2">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase px-1"><span>Summary</span><span>Amount</span></div>
+            <div className="space-y-1.5 pt-2">
+              <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-bold">₹{subtotal.toLocaleString()}</span></div>
+              <div className="flex justify-between text-sm text-red-600"><span>Discount ({formData.isComplimentary ? 100 : formData.discount}%)</span><span className="font-bold">-₹{manualDiscount.toLocaleString()}</span></div>
+              {planDiscountResult.totalDiscount > 0 && <div className="flex justify-between text-sm text-blue-700"><span>Corporate Benefits</span><span className="font-bold">-₹{planDiscountResult.totalDiscount.toLocaleString()}</span></div>}
+              <div className="flex justify-between text-sm text-muted-foreground"><span>GST ({formData.isComplimentary ? 0 : formData.tax}%)</span><span className="font-bold">₹{taxAmount.toLocaleString()}</span></div>
+              <div className="pt-3 border-t border-dashed border-border flex justify-between items-center"><span className="text-sm font-black uppercase tracking-wider">Final Total</span><span className="text-2xl font-black text-primary">₹{(formData.isComplimentary ? 0 : total).toLocaleString()}</span></div>
             </div>
           </div>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300 font-semibold transition-all duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold flex items-center shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Invoice
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
 }

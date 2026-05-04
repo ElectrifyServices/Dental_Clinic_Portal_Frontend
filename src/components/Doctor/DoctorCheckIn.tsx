@@ -125,7 +125,7 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Doctor Check-In Dashboard</h2>
+            <h2 className="text-xl font-bold text-gray-900">Doctor Check-In Dashboard</h2>
             <p className="text-gray-600 mt-1">Welcome, {doctorName} - Manage your checked-in patients</p>
             <div className="flex items-center space-x-6 mt-3">
               <div className="flex items-center">
@@ -259,7 +259,7 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
                       updatePatientStatus(patient.id, 'in-consultation');
                       onSelectPatient(patient);
                     }}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 font-medium text-sm transition-all duration-200 flex items-center"
+                    className="btn-primary"
                   >
                     <Stethoscope className="w-4 h-4 mr-2" />
                     Start Consultation

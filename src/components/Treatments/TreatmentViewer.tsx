@@ -1,56 +1,16 @@
 import React from 'react';
-import { X, Download, Stethoscope, User, Calendar, DollarSign, FileText, Camera, Pill } from 'lucide-react';
+import { X, Download, Stethoscope, User, Calendar, FileText, Camera, Pill, IndianRupee, Clock } from 'lucide-react';
 
 interface TreatmentViewerProps {
-  treatmentId: string;
+  treatment: any;
   onClose: () => void;
+  onEditTreatment: (id: string) => void;
+  onMarkCompleted: (id: string) => void;
+  onStartTreatment: (id: string) => void;
 }
 
-export function TreatmentViewer({ treatmentId, onClose }: TreatmentViewerProps) {
-  // Mock data - in real app, fetch from API
-  const treatment = {
-    id: treatmentId,
-    patientName: 'Rajesh Kumar',
-    procedure: 'Root Canal Treatment',
-    tooth: '16 (Upper Right First Molar)',
-    date: '2024-01-15',
-    notes: `Treatment Progress:
-
-Session 1 (15/01/2024):
-- Local anesthesia administered (2% lidocaine with epinephrine)
-- Rubber dam isolation applied
-- Access cavity prepared using high-speed handpiece
-- Pulp chamber accessed and necrotic tissue removed
-- Working length determined using apex locator
-- Canal cleaning and shaping completed using rotary NiTi files
-- Copious irrigation with 3% sodium hypochlorite and 17% EDTA
-- Temporary filling placed with IRM
-
-Next Session Plan:
-- Complete canal obturation with gutta-percha
-- Post-space preparation if needed
-- Crown preparation and impression
-- Temporary crown placement
-
-Patient Instructions:
-- Avoid chewing on treated side for 24 hours
-- Take prescribed medications as directed
-- Return if severe pain or swelling occurs
-- Follow-up appointment in 1 week`,
-    cost: 5000,
-    status: 'in-progress',
-    images: [
-      'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2',
-      'https://images.pexels.com/photos/4269693/pexels-photo-4269693.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&dpr=2'
-    ],
-    nextAppointment: '2024-01-22',
-    doctorName: 'Dr. Sharma',
-    prescriptions: [
-      { id: '1', medicine: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '5 days', instructions: 'Take after meals' },
-      { id: '2', medicine: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', duration: '3 days', instructions: 'For pain relief, maximum 3 times daily' },
-      { id: '3', medicine: 'Chlorhexidine Mouthwash', dosage: '10ml', frequency: '2 times daily', duration: '7 days', instructions: 'Rinse for 30 seconds after brushing' }
-    ]
-  };
+export function TreatmentViewer({ treatment, onClose, onEditTreatment, onMarkCompleted, onStartTreatment }: TreatmentViewerProps) {
+  if (!treatment) return null;
 
   const handleDownload = () => {
     const printContent = `
@@ -58,185 +18,158 @@ Patient Instructions:
         <head>
           <title>Treatment Plan - ${treatment.patientName}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
-            .patient-info { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-            .treatment-details { margin-bottom: 30px; }
-            .prescriptions { background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-            .prescription-item { background-color: white; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #10b981; }
-            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
-            pre { white-space: pre-wrap; font-family: Arial, sans-serif; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f8f9fa; }
+            body { font-family: 'Inter', sans-serif; margin: 40px; color: #1e293b; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid #3b82f6; padding-bottom: 20px; }
+            .section { background: #f8fafc; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+            h1, h2, h3 { color: #0f172a; margin-top: 0; }
+            .prescription-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .med-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid #10b981; }
+            .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>Treatment Plan & Progress Report</h1>
-            <h2>DentalCare Pro - Dr. Sharma's Clinic</h2>
+            <h1>TREATMENT PLAN & PROGRESS</h1>
+            <p style="font-weight: bold; color: #3b82f6;">DentalCare Pro - Advanced Dental Solutions</p>
           </div>
           
-          <div class="patient-info">
-            <h3>Patient & Treatment Information</h3>
-            <p><strong>Patient Name:</strong> ${treatment.patientName}</p>
-            <p><strong>Procedure:</strong> ${treatment.procedure}</p>
-            <p><strong>Tooth:</strong> ${treatment.tooth}</p>
-            <p><strong>Date:</strong> ${new Date(treatment.date).toLocaleDateString()}</p>
-            <p><strong>Doctor:</strong> ${treatment.doctorName}</p>
-            <p><strong>Status:</strong> ${treatment.status.toUpperCase()}</p>
-            <p><strong>Cost:</strong> ₹${treatment.cost.toLocaleString()}</p>
+          <div class="section">
+            <h3>Patient Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <p><strong>Patient:</strong> ${treatment.patientName}</p>
+              <p><strong>Procedure:</strong> ${treatment.procedure}</p>
+              <p><strong>Tooth:</strong> ${treatment.tooth}</p>
+              <p><strong>Doctor:</strong> ${treatment.doctorName}</p>
+              <p><strong>Date:</strong> ${new Date(treatment.date).toLocaleDateString()}</p>
+              <p><strong>Status:</strong> ${treatment.status.toUpperCase()}</p>
+            </div>
           </div>
 
-          <div class="treatment-details">
-            <h3>Treatment Notes & Progress</h3>
-            <pre>${treatment.notes}</pre>
+          <div class="section">
+            <h3>Clinical Notes</h3>
+            <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.notes || 'No notes available.'}</p>
           </div>
 
-          <div class="prescriptions">
+          <div class="section">
             <h3>Prescribed Medications</h3>
-            ${treatment.prescriptions.map(prescription => `
-              <div class="prescription-item">
-                <h4>${prescription.medicine}</h4>
-                <p><strong>Dosage:</strong> ${prescription.dosage}</p>
-                <p><strong>Frequency:</strong> ${prescription.frequency}</p>
-                <p><strong>Duration:</strong> ${prescription.duration}</p>
-                <p><strong>Instructions:</strong> ${prescription.instructions}</p>
-              </div>
-            `).join('')}
+            <div class="prescription-grid">
+              ${(treatment.prescriptions || []).map((p: any) => `
+                <div class="med-card">
+                  <p><strong>${p.medicine}</strong></p>
+                  <p style="font-size: 13px; margin: 5px 0;">Dosage: ${p.dosage} | Timing: ${p.timing}</p>
+                  <p style="font-size: 13px; margin: 5px 0;">Freq: ${p.frequency} | Dur: ${p.duration}</p>
+                </div>
+              `).join('')}
+            </div>
           </div>
 
           <div class="footer">
-            <p>This is a confidential medical document. For questions, contact Dr. Sharma's Clinic.</p>
-            <p>Generated on ${new Date().toLocaleDateString()} from DentalCare Pro Treatment Management System</p>
+            <p>Confidential medical document. Generated on ${new Date().toLocaleDateString()}</p>
           </div>
         </body>
       </html>
     `;
-    
     const blob = new Blob([printContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `treatment-plan-${treatment.patientName}-${treatment.date}.html`;
+    a.download = `treatment-plan-${treatment.patientName}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'planned': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  const sm = {
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'in-progress': 'bg-blue-50 text-blue-700 border-blue-100',
+    planned: 'bg-amber-50 text-amber-700 border-amber-100',
+  }[treatment.status as 'completed' | 'in-progress' | 'planned'] || 'bg-gray-50 text-gray-700 border-gray-100';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-5xl w-full max-h-screen overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Stethoscope className="w-8 h-8 text-blue-600 mr-3" />
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{treatment.procedure}</h2>
-                <p className="text-gray-600">{treatment.patientName} - {treatment.tooth}</p>
-              </div>
+    <div className="modal-overlay">
+      <div className="modal-box max-w-5xl w-full">
+        <div className="modal-header bg-gradient-to-r from-blue-50 to-indigo-50/30">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-100">
+              <Stethoscope className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleDownload}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center transition-all duration-200"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </button>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
-              >
-                <X className="w-6 h-6" />
-              </button>
+            <div>
+              <h2 className="modal-title text-xl">{treatment.procedure}</h2>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">{treatment.patientName} • {treatment.tooth}</p>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={handleDownload} className="btn-secondary py-2 px-4 shadow-sm">
+              <Download className="w-4 h-4" /> Download
+            </button>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Treatment Overview */}
+        <div className="modal-body p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-              <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2" />
-                Patient Info
-              </h3>
-              <div className="space-y-2">
-                <p><span className="font-medium">Name:</span> {treatment.patientName}</p>
-                <p><span className="font-medium">Tooth:</span> {treatment.tooth}</p>
-                <p><span className="font-medium">Doctor:</span> {treatment.doctorName}</p>
+            <div className="bg-blue-50/50 rounded-3xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group">
+              <User className="absolute -right-4 -bottom-4 w-24 h-24 text-blue-100/50 group-hover:scale-110 transition-transform" />
+              <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4">Patient Overview</h3>
+              <div className="space-y-3 relative z-10">
+                <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">Name</span><span className="text-sm font-bold text-gray-900">{treatment.patientName}</span></div>
+                <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">Tooth</span><span className="text-sm font-bold text-gray-900">{treatment.tooth}</span></div>
+                <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">Doctor</span><span className="text-sm font-bold text-gray-900">{treatment.doctorName}</span></div>
               </div>
             </div>
 
-            <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-              <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center">
-                <Calendar className="w-5 h-5 mr-2" />
-                Schedule
-              </h3>
-              <div className="space-y-2">
-                <p><span className="font-medium">Started:</span> {new Date(treatment.date).toLocaleDateString()}</p>
-                {treatment.nextAppointment && (
-                  <p><span className="font-medium">Next Visit:</span> {new Date(treatment.nextAppointment).toLocaleDateString()}</p>
-                )}
-                <p>
-                  <span className="font-medium">Status:</span>
-                  <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(treatment.status)}`}>
-                    {treatment.status.replace('-', ' ').toUpperCase()}
-                  </span>
-                </p>
+            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group">
+              <Calendar className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/50 group-hover:scale-110 transition-transform" />
+              <h3 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-4">Timeline & Status</h3>
+              <div className="space-y-3 relative z-10">
+                <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">Started</span><span className="text-sm font-bold text-gray-900">{new Date(treatment.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short'})}</span></div>
+                <div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">Next Visit</span><span className="text-sm font-bold text-gray-900">{treatment.nextAppointment ? new Date(treatment.nextAppointment).toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) : '—'}</span></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-500">Current</span>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border tracking-widest ${sm}`}>{treatment.status.replace('-', ' ')}</span>
+                </div>
               </div>
             </div>
 
-            <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200">
-              <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" />
-                Cost
-              </h3>
-              <div className="space-y-2">
-                <p className="text-2xl font-bold text-purple-900">₹{treatment.cost.toLocaleString()}</p>
-                <p className="text-sm text-purple-700">Treatment Fee</p>
+            <div className="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100 shadow-sm relative overflow-hidden group">
+              <IndianRupee className="absolute -right-4 -bottom-4 w-24 h-24 text-indigo-100/50 group-hover:scale-110 transition-transform" />
+              <h3 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Financial Overview</h3>
+              <div className="space-y-1 relative z-10">
+                <p className="text-3xl font-bold text-indigo-900">₹{treatment.cost.toLocaleString()}</p>
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Projected Total Fee</p>
               </div>
             </div>
           </div>
 
-          {/* Treatment Notes */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <FileText className="w-5 h-5 mr-2" />
-              Treatment Notes & Progress
+          <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-blue-500" />
+              Clinical Notes & Progression
             </h3>
-            <div className="prose max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
-                {treatment.notes}
-              </pre>
+            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 italic text-gray-700 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+              {treatment.notes || 'No detailed clinical notes provided for this treatment plan.'}
             </div>
           </div>
 
-          {/* Prescriptions */}
-          {treatment.prescriptions && treatment.prescriptions.length > 0 && (
-            <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-              <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center">
-                <Pill className="w-5 h-5 mr-2" />
+          {treatment.prescriptions?.length > 0 && (
+            <div className="bg-emerald-50/30 rounded-3xl p-8 border border-emerald-100/50">
+              <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <Pill className="w-5 h-5 text-emerald-600" />
                 Prescribed Medications
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {treatment.prescriptions.map((prescription) => (
-                  <div key={prescription.id} className="bg-white rounded-xl p-4 border border-green-200">
-                    <h4 className="font-bold text-green-900 mb-2">{prescription.medicine}</h4>
-                    <div className="space-y-1 text-sm">
-                      <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
-                      <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
-                      <p><span className="font-medium">Duration:</span> {prescription.duration}</p>
-                      <p><span className="font-medium">Instructions:</span> {prescription.instructions}</p>
+                {treatment.prescriptions.map((p: any) => (
+                  <div key={p.id} className="bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-bold text-emerald-900 tracking-tight">{p.medicine}</h4>
+                      <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-bold border border-emerald-100">{p.dosage}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-2 text-xs font-bold text-gray-500">
+                      <div className="flex items-center gap-2"><Clock className="w-3 h-3 text-emerald-400" /> {p.timing}</div>
+                      <div className="flex items-center gap-2"><Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}</div>
+                      <div className="flex items-center gap-2"><FileText className="w-3 h-3 text-emerald-400" /> {p.frequency}</div>
+                      <div className="flex items-center gap-2"><Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units</div>
                     </div>
                   </div>
                 ))}
@@ -244,28 +177,18 @@ Patient Instructions:
             </div>
           )}
 
-          {/* Treatment Images */}
-          {treatment.images && treatment.images.length > 0 && (
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <Camera className="w-5 h-5 mr-2" />
-                Treatment Images
+          {treatment.images?.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2 px-2">
+                <Camera className="w-5 h-5 text-blue-500" />
+                Diagnostic Images & Scans
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {treatment.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Treatment image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200"
-                      onClick={() => window.open(image, '_blank')}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button className="bg-white text-gray-900 px-3 py-1 rounded-lg text-sm font-medium">
-                          View Full Size
-                        </button>
-                      </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {treatment.images.map((img: string, i: number) => (
+                  <div key={i} className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-gray-100" onClick={() => window.open(img, '_blank')}>
+                    <img src={img} alt="Diagnostic" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center">
+                      <Download className="text-white w-6 h-6" />
                     </div>
                   </div>
                 ))}
@@ -273,20 +196,19 @@ Patient Instructions:
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="modal-footer sticky bottom-0 bg-white/80 backdrop-blur-md -mx-8 -mb-8 mt-8 rounded-b-2xl border-t border-gray-100">
             {treatment.status === 'planned' && (
-              <button className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold transition-all duration-200">
-                Start Treatment
+              <button onClick={() => { onStartTreatment(treatment.id); onClose(); }} className="btn-primary py-3 px-8 shadow-lg shadow-emerald-100 bg-emerald-600 hover:bg-emerald-700 font-semibold">
+                Start Treatment Now
               </button>
             )}
             {treatment.status === 'in-progress' && (
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all duration-200">
-                Mark as Completed
+              <button onClick={() => { onMarkCompleted(treatment.id); onClose(); }} className="btn-primary py-3 px-8 shadow-lg shadow-blue-100 font-semibold">
+                Mark as Successfully Completed
               </button>
             )}
-            <button className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 font-semibold transition-all duration-200">
-              Edit Treatment
+            <button onClick={() => { onEditTreatment(treatment.id); onClose(); }} className="btn-secondary py-3 px-8 font-semibold">
+              Edit Plan
             </button>
           </div>
         </div>

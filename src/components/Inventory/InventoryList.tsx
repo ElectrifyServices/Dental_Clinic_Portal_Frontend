@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Plus, Package, AlertTriangle, TrendingUp, Filter, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Package, AlertTriangle, Edit, Trash2, RefreshCw, MoreVertical } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { 
+  Button, 
+  PageHeader, 
+  DataTable, 
+  SearchInput, 
+  FilterTabs, 
+  Badge,
+  KpiCard
+} from '@/components/ui';
 
 interface InventoryItem {
   id: string;
@@ -7,172 +17,208 @@ interface InventoryItem {
   category: 'instruments' | 'materials' | 'consumables' | 'medicines';
   currentStock: number;
   minStock: number;
+  maxStock?: number;
   unit: string;
   supplier: string;
   lastRestocked: string;
   cost: number;
+  expiryDate?: string;
 }
-
-const inventory: InventoryItem[] = [
-  { id: '1', name: 'Dental Syringes', category: 'instruments', currentStock: 25, minStock: 10, unit: 'pieces', supplier: 'DentalCorp', lastRestocked: '2024-01-10', cost: 150 },
-  { id: '2', name: 'Composite Filling Material', category: 'materials', currentStock: 5, minStock: 8, unit: 'tubes', supplier: 'MedSupply', lastRestocked: '2024-01-05', cost: 2500 },
-  { id: '3', name: 'Dental Gloves (Nitrile)', category: 'consumables', currentStock: 200, minStock: 50, unit: 'boxes', supplier: 'SafetyFirst', lastRestocked: '2024-01-12', cost: 800 },
-  { id: '4', name: 'Local Anesthetic', category: 'medicines', currentStock: 3, minStock: 5, unit: 'vials', supplier: 'PharmaCare', lastRestocked: '2023-12-28', cost: 1200 },
-  { id: '5', name: 'Dental X-Ray Films', category: 'consumables', currentStock: 50, minStock: 20, unit: 'sheets', supplier: 'ImageTech', lastRestocked: '2024-01-08', cost: 45 },
-];
 
 interface InventoryListProps {
+  inventory: InventoryItem[];
   onAddItem: () => void;
+  onEditItem: (id: string) => void;
+  onDeleteItem: (id: string) => void;
+  onRestock: (item: InventoryItem) => void;
 }
 
-export function InventoryList({ onAddItem }: InventoryListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
+const CAT_META: Record<string, { label: string; variant: 'blue' | 'green' | 'amber' | 'violet' | 'gray' }> = {
+  instruments:  { label: 'Instruments',  variant: 'blue' },
+  materials:    { label: 'Materials',    variant: 'green' },
+  consumables:  { label: 'Consumables',  variant: 'amber' },
+  medicines:    { label: 'Medicines',    variant: 'violet' },
+};
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'instruments': return 'bg-blue-100 text-blue-800';
-      case 'materials': return 'bg-green-100 text-green-800';
-      case 'consumables': return 'bg-yellow-100 text-yellow-800';
-      case 'medicines': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+const CATEGORIES = [
+  { key: 'all', label: 'All Items' },
+  { key: 'instruments', label: 'Instruments' },
+  { key: 'materials', label: 'Materials' },
+  { key: 'consumables', label: 'Consumables' },
+  { key: 'medicines', label: 'Medicines' },
+];
 
-  const isLowStock = (current: number, min: number) => current <= min;
+export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, onRestock }: InventoryListProps) {
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('all');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.supplier.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterCategory === 'all' || item.category === filterCategory;
-    return matchesSearch && matchesFilter;
+  const filtered = inventory.filter(item => {
+    const q = search.toLowerCase();
+    return (item.name.toLowerCase().includes(q) || item.supplier.toLowerCase().includes(q))
+      && (cat === 'all' || item.category === cat);
   });
 
-  const lowStockCount = inventory.filter(item => isLowStock(item.currentStock, item.minStock)).length;
+  const lowCount = inventory.filter(i => i.currentStock <= i.minStock).length;
+
+  const openMenu = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuHeight = 110; 
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      top = rect.top - menuHeight;
+      if (top < 0) top = 10;
+    }
+    
+    setMenuPos({ top, left: rect.right - 160 });
+    setOpenMenuId(prev => prev === id ? null : id);
+  };
+
+  const columns = [
+    {
+      key: 'item',
+      header: 'Item',
+      render: (item: InventoryItem) => {
+        const isLow = item.currentStock <= item.minStock;
+        return (
+          <div>
+            <div className="font-bold text-gray-900 flex items-center gap-2">
+              {item.name}
+              {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
+            </div>
+            {item.expiryDate && <div className="text-[10px] text-muted-foreground font-medium mt-0.5 uppercase tracking-wider">Exp: {item.expiryDate}</div>}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (item: InventoryItem) => {
+        const meta = CAT_META[item.category] || { label: item.category, variant: 'gray' };
+        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+      }
+    },
+    {
+      key: 'stock',
+      header: 'Stock Level',
+      render: (item: InventoryItem) => {
+        const isLow = item.currentStock <= item.minStock;
+        const max = item.maxStock || item.minStock * 3;
+        const pct = Math.min(100, Math.round((item.currentStock / max) * 100));
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <div className="flex items-center justify-between text-[10px] font-bold">
+              <span className={isLow ? 'text-red-600' : 'text-gray-500'}>{item.currentStock} {item.unit}</span>
+              <span className="text-gray-400">Min: {item.minStock}</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'cost',
+      header: 'Unit Cost',
+      render: (item: InventoryItem) => <span className="font-bold text-gray-900">₹{item.cost.toLocaleString()}</span>
+    },
+    {
+      key: 'supplier',
+      header: 'Supplier',
+      render: (item: InventoryItem) => <span className="text-gray-600 font-medium">{item.supplier}</span>
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center' as const,
+      render: (item: InventoryItem) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onRestock(item)} title="Restock">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, item.id)}>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+            {openMenuId === item.id && createPortal(
+              <>
+                <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  style={{ top: menuPos.top, left: menuPos.left }}>
+                  <div className="p-1.5 space-y-0.5">
+                    <button onClick={() => { onEditItem(item.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded-xl flex items-center gap-2.5 text-blue-700 font-medium transition-colors">
+                      <Edit className="w-4 h-4" /> Edit Item
+                    </button>
+                    <button onClick={() => { onDeleteItem(item.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded-xl flex items-center gap-2.5 text-red-600 font-medium transition-colors">
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
+          </div>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Inventory Management</h2>
-          <p className="text-gray-600 mt-1">Track and manage dental supplies</p>
-        </div>
-        <button
-          onClick={onAddItem}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Item
-        </button>
+      <PageHeader 
+        title="Inventory Management" 
+        subtitle={`${inventory.length} total stock items recorded`}
+        action={
+          <Button onClick={onAddItem} className="gap-2">
+            <Plus className="w-4 h-4" /> Add New Item
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard label="Total Items" value={inventory.length} icon={<Package className="w-5 h-5" />} />
+        <KpiCard label="Low Stock Alert" value={lowCount} color={lowCount > 0 ? 'text-red-600' : 'text-emerald-600'} icon={<AlertTriangle className="w-5 h-5" />} />
+        <KpiCard label="Total Categories" value={Object.keys(CAT_META).length} color="text-blue-600" />
       </div>
 
-      {lowStockCount > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="w-5 h-5 text-orange-600 mr-2" />
-            <span className="text-orange-800 font-medium">
-              {lowStockCount} item{lowStockCount > 1 ? 's' : ''} running low on stock
-            </span>
-          </div>
+      {lowCount > 0 && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-800 rounded-2xl px-5 py-4 text-sm font-bold animate-pulse">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <span>{lowCount} critical item{lowCount > 1 ? 's are' : ' is'} below minimum stock level. Immediate restocking required.</span>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search inventory by name or supplier..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="all">All Categories</option>
-          <option value="instruments">Instruments</option>
-          <option value="materials">Materials</option>
-          <option value="consumables">Consumables</option>
-          <option value="medicines">Medicines</option>
-        </select>
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search by item name or supplier…" 
+          className="flex-1"
+        />
+        <FilterTabs 
+          tabs={CATEGORIES} 
+          active={cat} 
+          onChange={setCat} 
+        />
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Restocked</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost per Unit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInventory.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <Package className="w-5 h-5 text-gray-400 mr-3" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                        {isLowStock(item.currentStock, item.minStock) && (
-                          <div className="flex items-center text-xs text-orange-600 mt-1">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            Low Stock
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(item.category)}`}>
-                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      <span className={`font-medium ${isLowStock(item.currentStock, item.minStock) ? 'text-orange-600' : 'text-gray-900'}`}>
-                        {item.currentStock}
-                      </span>
-                      <span className="text-gray-500"> / {item.minStock} min</span>
-                    </div>
-                    <div className="text-xs text-gray-500">{item.unit}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.supplier}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(item.lastRestocked).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    ₹{item.cost.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      Restock
-                    </button>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <button className="text-green-600 hover:text-green-700 p-1">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-700 p-1">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={filtered} 
+        rowKey={(item) => item.id}
+        emptyIcon={<Package className="w-12 h-12 text-muted-foreground/40" />}
+        emptyTitle="No inventory items found"
+        emptySubtitle="Add your first medical supply to track stock levels."
+      />
     </div>
   );
 }

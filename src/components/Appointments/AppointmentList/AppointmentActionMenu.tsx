@@ -1,0 +1,95 @@
+import React from 'react';
+import { Edit, UserX, CheckCircle, Trash2, UserCheck } from 'lucide-react';
+
+interface AppointmentActionMenuProps {
+  appointment: any;
+  onEdit?: (id: string) => void;
+  onUpdateStatus?: (id: string, status: string) => void;
+  onDelete?: (id: string) => void;
+  onCheckIn?: (appointment: any) => void;
+  onClose: () => void;
+  pos: { top: number; left: number };
+}
+
+export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
+  appointment,
+  onEdit,
+  onUpdateStatus,
+  onDelete,
+  onCheckIn,
+  onClose,
+  pos
+}) => {
+  const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(appointment.status);
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[9998]" onClick={onClose} />
+      <div 
+        className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-xl w-52 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        style={{ top: pos.top, left: pos.left }}
+      >
+        <div className="p-1.5 space-y-0.5">
+          {canCheckIn && (
+            <button 
+              onClick={() => { onCheckIn?.(appointment); onClose(); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium"
+            >
+              <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
+                <UserCheck className="w-4 h-4 text-emerald-600" /> 
+              </div>
+              Check-in Patient
+            </button>
+          )}
+
+          <button 
+            onClick={() => { onEdit?.(appointment.id); onClose(); }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-3 text-gray-700 rounded-xl transition-colors font-medium"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+              <Edit className="w-4 h-4 text-gray-400" /> 
+            </div>
+            Edit Appointment
+          </button>
+
+          {appointment.status !== 'no-show' ? (
+            <button 
+              onClick={() => { onUpdateStatus?.(appointment.id, 'no-show'); onClose(); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium"
+            >
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                <UserX className="w-4 h-4 text-amber-400" /> 
+              </div>
+              Mark No-Show
+            </button>
+          ) : (
+            <button 
+              onClick={() => { onUpdateStatus?.(appointment.id, 'scheduled'); onClose(); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-3 text-blue-700 rounded-xl transition-colors font-medium"
+            >
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-blue-400" /> 
+              </div>
+              Restore Status
+            </button>
+          )}
+
+          <div className="h-px bg-gray-100 my-1 mx-2" />
+
+          <button 
+            onClick={() => { 
+              onDelete?.(appointment.id);
+              onClose();
+            }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 rounded-xl transition-colors font-medium"
+          >
+            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+              <Trash2 className="w-4 h-4 text-red-400" /> 
+            </div>
+            Delete Record
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};

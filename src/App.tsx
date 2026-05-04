@@ -1,1263 +1,384 @@
+import React, { useState, useMemo, useCallback } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AppProvider } from "./contexts/AppContext";
+import { useAppData } from "./hooks/useAppData";
+import { doctorsWithSchedules } from "./data/doctors";
 
+// Layout
+import { Header } from "./components/Layout/Header";
+import { Sidebar } from "./components/Layout/Sidebar";
+import { MobileNav } from "./components/Layout/MobileNav";
+import { LoginForm } from "./components/Auth/LoginForm";
 
+// Pages
+import { DashboardPage } from "./pages/DashboardPage";
+import { AppointmentsPage } from "./pages/AppointmentsPage";
+import { PatientsPage } from "./pages/PatientsPage";
+import { QueuePage } from "./pages/QueuePage";
+import { TreatmentsPage } from "./pages/TreatmentsPage";
+import { BillingPage } from "./pages/BillingPage";
+import { StaffPage } from "./pages/StaffPage";
+import { ProfitSharingPage } from "./pages/ProfitSharingPage";
+import { MedicalRecordsPage } from "./pages/MedicalRecordsPage";
+import { ConsentPage } from "./pages/ConsentPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { InventoryPage } from "./pages/InventoryPage";
+import { CorporatePlansPage } from "./pages/CorporatePlansPage";
 
+// Modals
+import { AppointmentForm } from "./components/Appointments/AppointmentForm";
+import { PatientForm } from "./components/Patients/PatientForm";
+import { InvoiceForm } from "./components/Billing/InvoiceForm";
+import { CorporateManagement } from "./components/Patients/CorporateManagement";
+import { InvoiceViewer } from "./components/Billing/InvoiceViewer";
+import { TreatmentForm } from "./components/Treatments/TreatmentForm";
+import { DoctorForm } from "./components/Staff/DoctorForm";
+import { PatientConsultation } from "./components/Doctor/PatientConsultation";
+import { PatientDetails } from "./components/Patients/PatientDetails";
+import { TodaySchedulePopup } from "./components/Appointments/TodaySchedulePopup";
+import { DoctorScheduleManager } from "./components/Staff/DoctorScheduleManager";
+import { SalaryPaymentModal } from "./components/Staff/SalaryPaymentModal";
+import { SalaryHistoryModal } from "./components/Staff/SalaryHistoryModal";
+import { TreatmentViewer } from "./components/Treatments/TreatmentViewer";
+import { TreatmentSessionManager } from "./components/Treatments/TreatmentSessionManager";
+import { EMRForm } from "./components/EMR/EMRForm";
+import { EMRViewer } from "./components/EMR/EMRViewer";
+import { ConsentForm } from "./components/Consent/ConsentForm";
+import { ConsentFormViewer } from "./components/Consent/ConsentFormViewer";
+import { InventoryForm } from "./components/Inventory/InventoryForm";
+import { RestockForm } from "./components/Inventory/RestockForm";
 
-import React, { useEffect, useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
-import { LoginForm } from './components/Auth/LoginForm';
-import { Header } from './components/Layout/Header';
-import { Sidebar } from './components/Layout/Sidebar';
-import { MobileNav } from './components/Layout/MobileNav';
-import { DashboardStats } from './components/Dashboard/DashboardStats';
-import { TodayAppointments } from './components/Dashboard/TodayAppointments';
-import { RecentPatients } from './components/Dashboard/RecentPatients';
-import { AppointmentForm } from './components/Appointments/AppointmentForm';
-import { AppointmentCalendar } from './components/Appointments/AppointmentCalendar';
-import { AppointmentList } from './components/Appointments/AppointmentList';
-import { PatientList } from './components/Patients/PatientList';
-import { PatientForm } from './components/Patients/PatientForm';
-import { PatientDetails } from './components/Patients/PatientDetails';
-import { TreatmentList } from './components/Treatments/TreatmentList';
-import { TreatmentForm } from './components/Treatments/TreatmentForm';
-import { EMRList } from './components/EMR/EMRList';
-import { EMRForm } from './components/EMR/EMRForm';
-import { InvoiceList } from './components/Billing/InvoiceList';
-import { InvoiceForm } from './components/Billing/InvoiceForm';
-import { InventoryList } from './components/Inventory/InventoryList';
-import { InventoryForm } from './components/Inventory/InventoryForm';
-import { ReportsDashboard } from './components/Reports/ReportsDashboard';
-import { ConsentFormList } from './components/Consent/ConsentFormList';
-import { ConsentForm } from './components/Consent/ConsentForm';
-import { DoctorCheckIn } from './components/Doctor/DoctorCheckIn';
-import { PatientQueue } from './components/Doctor/PatientQueue';
-import { PatientConsultation } from './components/Doctor/PatientConsultation';
-import { TreatmentViewer } from './components/Treatments/TreatmentViewer';
-import { TreatmentSessionManager } from './components/Treatments/TreatmentSessionManager';
-import { DoctorManagement } from './components/Staff/DoctorManagement';
-import { DoctorForm } from './components/Staff/DoctorForm';
-import { DoctorScheduleManager } from './components/Staff/DoctorScheduleManager';
-import { TodaySchedulePopup } from './components/Appointments/TodaySchedulePopup';
-import { EMRViewer } from './components/EMR/EMRViewer';
-import { InvoiceViewer } from './components/Billing/InvoiceViewer';
-import { ConsentFormViewer } from './components/Consent/ConsentFormViewer';
-import { User, Phone, Stethoscope, MessageSquare, AlertTriangle, X, DollarSign } from 'lucide-react';
+import {
+  X, Calendar as CalendarIcon, Users, Plus, AlertTriangle, CheckCircle, Trash2
+} from "lucide-react";
+import { ConfirmModal, Modal, Button } from "./components/ui";
+import { exportPatientReport } from "./utils/exportPatient";
 
 function MainApp() {
-  const [selectedAppointment, setSelectedAppointment] = useState(null)
-  const [patients, setPatients] = useState<any[]>(() => {
-  const stored = localStorage.getItem("patients");
-  return stored ? JSON.parse(stored) : [];
-});
+  const data = useAppData();
+  const {
+    patients, appointments, queuedPatients, invoices, treatments, emrRecords,
+    completedConsultations, staffMembers, consentForms, inventory,
+    setQueuedPatients, handleSaveAppointment, handleDeleteAppointment,
+    handleUpdateAppointmentStatus, handleSavePatient, handleDeletePatient,
+    handleSaveInvoice, handleDeleteInvoice, handleUpdateInvoiceStatus,
+    handleSaveStaff, handleDeleteStaff, handleSaveTreatment,
+    handleCompleteConsultation, handleUpdateConsultation, handleSaveEMR,
+    handleSaveConsentForm, handleDeleteConsentForm, handleSaveInventoryItem,
+    handleDeleteInventoryItem, corporatePlans, corporateEmployees,
+    handleSaveCorporatePlan, handleDeleteCorporatePlan, handleToggleCorporatePlan,
+    handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees,
+    handleChangeEmployeePlan, handleBulkSavePatients, handleDeleteCorporateEmployee,
+    handleUpdateCorporateEmployee,
+  } = data;
 
   const { state } = useAuth();
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const [showPatientForm, setShowPatientForm] = useState(false);
-  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
-  const [showConsentForm, setShowConsentForm] = useState(false);
-  const [showInventoryForm, setShowInventoryForm] = useState(false);
-  const [showTreatmentForm, setShowTreatmentForm] = useState(false);
-  const [showPatientDetails, setShowPatientDetails] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [isQuickBooking, setIsQuickBooking] = useState(false);
-const [appointments, setAppointments] = useState<any[]>(() => {
-  try {
-    const stored = localStorage.getItem("appointments");
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-});
-const today = new Date()
+  const [currentPage, setCurrentPage] = useState("dashboard");
 
-const todayAppointments = appointments.filter(a => {
-  const d = new Date(a.date)
-  return d.toDateString() === today.toDateString()
-})
-// const listCount = todayAppointments.length;
-const listCount = appointments.filter(
-  a => a.status !== 'no-show'
-).length;
-
-  const [showConsentViewer, setShowConsentViewer] = useState(false);
-  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
-  const [showTreatmentViewer, setShowTreatmentViewer] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState('');
-  const [showDoctorForm, setShowDoctorForm] = useState(false);
-  const [showSessionManager, setShowSessionManager] = useState(false);
-  const [selectedTreatmentId, setSelectedTreatmentId] = useState('');
-  const [treatments, setTreatments] = useState<any[]>([]);
-
-  const [showDoctorScheduleManager, setShowDoctorScheduleManager] = useState(false);
-  const [selectedDoctorIdForSchedule, setSelectedDoctorIdForSchedule] = useState('');
-  const [selectedDoctorNameForSchedule, setSelectedDoctorNameForSchedule] = useState('');
-  const [staffMembers, setStaffMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [queuedPatients, setQueuedPatients] = useState<any[]>([]);
-  const [showPatientConsultation, setShowPatientConsultation] = useState(false);
-  const [selectedPatientForConsultation, setSelectedPatientForConsultation] = useState<any>(null);
-  const [showEMRForm, setShowEMRForm] = useState(false);
-  const [showEMRViewer, setShowEMRViewer] = useState(false);
-  const [emrRecords, setEmrRecords] = useState<any[]>([]);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [showDiagnoseForm, setShowDiagnoseForm] = useState(false);
+  // Selection & Form State
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [selectedEMRRecord, setSelectedEMRRecord] = useState<any>(null);
+  const [selectedConsentForm, setSelectedConsentForm] = useState<any>(null);
+  const [selectedStaffForSalary, setSelectedStaffForSalary] = useState<any>(null);
   const [selectedPatientForDiagnose, setSelectedPatientForDiagnose] = useState<any>(null);
-  const [viewMode, setViewMode] = useState('calendar');
-const [patientFormType, setPatientFormType] = useState<'normal' | 'person'>('normal');
-const [parentPatientId, setParentPatientId] = useState('');
-const selectedPatient = patients.find(p => p.id === selectedPatientId);
-const familyMembers = patients.filter(p => {
-  if (!selectedPatient) return false;
+  const [selectedItemForRestock, setSelectedItemForRestock] = useState<any>(null);
+  
+  const [preFilledPatientData, setPreFilledPatientData] = useState<any>(null);
+  const [patientFormType, setPatientFormType] = useState<"normal" | "person">("normal");
+  const [parentPatientId, setParentPatientId] = useState("");
+  const [pendingCheckInAppt, setPendingCheckInAppt] = useState<any>(null);
 
-  const parentId = selectedPatient.parentId || selectedPatient.id;
+  const [deleteConfig, setDeleteConfig] = useState<any>({ show: false, title: "", message: "", onConfirm: () => { } });
+  const [toast, setToast] = useState<any>(null);
+  const [bookedFollowUp, setBookedFollowUp] = useState<any>(null);
+  const [draftConsultations, setDraftConsultations] = useState<Record<string, any>>({});
+  const [isFollowUpBooking, setIsFollowUpBooking] = useState(false);
+  const [doctorAvailability, setDoctorAvailability] = useState(
+    doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
+  );
+
+  const activeDoctors = useMemo(() =>
+    staffMembers.filter(s => s.role === 'doctor' || s.role === 'admin'),
+    [staffMembers]
+  );
+
+  const showToast = useCallback((message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  const confirmDelete = (title: string, message: string, onConfirm: () => void) => {
+    setDeleteConfig({
+      show: true, title, message,
+      onConfirm: () => {
+        onConfirm();
+        setDeleteConfig((prev: any) => ({ ...prev, show: false }));
+        showToast("Record deleted successfully!", "error");
+      }
+    });
+  };
+
+  const handleDraftUpdate = useCallback((patientId: string, data: any) => {
+    setDraftConsultations(prev => {
+      if (JSON.stringify(prev[patientId]) === JSON.stringify(data)) return prev;
+      return { ...prev, [patientId]: data };
+    });
+  }, []);
+
+  // Page specific handlers
+  const handleAddNewPatient = () => { setSelectedPatientId(""); setPreFilledPatientData(null); setActiveModal('patientForm'); };
+  const handleExportPatient = (id: string) => exportPatientReport(id, patients, appointments, treatments, invoices);
+  
+  const handleTogglePatientStatus = (id: string, s: 'active' | 'inactive') => {
+    const p = patients.find(x => x.id === id);
+    if (p) {
+      handleSavePatient({ ...p, status: s, deactivatedAt: s === 'inactive' ? new Date().toISOString() : undefined });
+      showToast(`Patient marked as ${s}!`);
+    }
+  };
+
+  const handleCheckInPatient = (appt: any) => {
+    const sName = (appt.patientName || appt.patient || "").toLowerCase().trim();
+    const sPhone = (appt.patientPhone || appt.phone || "").trim();
+    const existing = patients.find(p => (p.phone || "").trim() === sPhone && (p.name || "").toLowerCase().trim() === sName);
+    setPendingCheckInAppt(appt);
+    if (existing) {
+      setSelectedPatientId(existing.id);
+      setActiveModal('patientForm');
+      alert("Please verify patient details before check-in");
+    } else {
+      setActiveModal('patientNotFound');
+    }
+  };
+
+  const renderCurrentPage = () => {
+    const commonProps = { appointments, patients, activeDoctors, doctorAvailability, confirmDelete, showToast, setActiveModal, setSelectedAppointment, setSelectedPatientId, setSelectedItemId, setPatientFormType, setParentPatientId, handleExportPatient };
+    
+    switch (currentPage) {
+      case "dashboard": return <DashboardPage appointments={appointments} onAddPatient={handleAddNewPatient} />;
+      case "appointments":
+        return <AppointmentsPage {...commonProps} doctorsWithSchedules={activeDoctors} 
+          handleNewAppointment={() => { setSelectedAppointment(null); setActiveModal('appointmentForm'); }}
+          handleDeleteAppointment={(id) => {
+            const apt = appointments.find(a => a.id === id);
+            confirmDelete("Delete Appointment", `Delete appointment for ${apt?.patientName || 'this patient'}?`, () => handleDeleteAppointment(id));
+          }}
+          handleUpdateAppointmentStatus={handleUpdateAppointmentStatus} handleCheckInPatient={handleCheckInPatient}
+        />;
+      case "patients":
+        return <PatientsPage {...commonProps}
+          handleViewPatient={(id) => { setSelectedPatientId(id); setActiveModal('patientDetails'); }}
+          handleEditPatient={(id) => { setSelectedPatientId(id); setActiveModal('patientForm'); }}
+          handleDeletePatient={(id) => {
+            const p = patients.find(x => x.id === id);
+            confirmDelete("Delete Patient", `Delete patient ${p?.name}? All history will be removed.`, () => handleDeletePatient(id));
+          }}
+          handleToggleStatus={handleTogglePatientStatus} onShowCorporateManagement={() => setActiveModal('corporateModal')}
+        />;
+      case "inventory":
+        return <InventoryPage inventory={inventory}
+          onAddItem={() => { setSelectedItemId(""); setActiveModal('inventoryForm'); }}
+          onEditItem={(id) => { setSelectedItemId(id); setActiveModal('inventoryForm'); }}
+          onDeleteItem={(id) => {
+            const item = inventory.find(i => i.id === id);
+            confirmDelete("Delete Inventory Item", `Delete ${item?.name} from inventory?`, () => handleDeleteInventoryItem(id));
+          }}
+          onRestock={(item) => { setSelectedItemForRestock(item); setActiveModal('restockForm'); }}
+        />;
+      case "patient-queue":
+      case "doctor-queue":
+        return <QueuePage {...commonProps} doctorName={state.user?.name || "Doctor"} queuedPatients={queuedPatients}
+          onSelectPatient={(p) => {
+            const bg = patients.find(bp => bp.phone === p.patientPhone);
+            setSelectedPatientForDiagnose({ ...p, phone: p.patientPhone, patientHistory: bg ? { medicalHistory: bg.medicalHistory || [], allergies: bg.allergies || [], gender: bg.gender || "", dateOfBirth: bg.dateOfBirth || "", bloodGroup: bg.bloodGroup || "" } : undefined });
+            setActiveModal('diagnoseForm');
+          }}
+          onUpdatePatientStatus={(id, s) => setQueuedPatients(prev => prev.map(p => p.id === id ? { ...p, status: s } : p))}
+          onDirectConsultation={(name, phone, dId, dName, time) => {
+            const ex = patients.find(p => p.name.toLowerCase() === name.toLowerCase().trim() && p.phone.replace(/\D/g, "") === phone.replace(/\D/g, ""));
+            if (ex) {
+              setSelectedPatientForDiagnose({ id: `WALK-${Date.now()}`, patientId: ex.id, patientName: ex.name, patientPhone: ex.phone, phone: ex.phone, treatmentType: ex.treatmentType || "General Consultation", patientConcern: "", status: "in-consultation", doctorId: dId || "1", doctorName: dName || "Dr. Rajesh Sharma", appointmentTime: time || new Date().toLocaleTimeString(), patientHistory: { medicalHistory: ex.medicalHistory || [], allergies: ex.allergies || [], gender: ex.gender || "", dateOfBirth: ex.dateOfBirth || "", bloodGroup: ex.bloodGroup || "" } });
+              setActiveModal('diagnoseForm');
+            }
+          }}
+          onRegisterNew={(name, phone) => { setPatientFormType("patient"); setSelectedPatientId(""); setPreFilledPatientData({ name, phone }); setActiveModal('patientForm'); }}
+          doctors={activeDoctors} onUpdateConsultation={handleUpdateConsultation}
+        />;
+      case "billing": return <BillingPage invoices={invoices} onCreateInvoice={() => setActiveModal('invoiceForm')} onViewInvoice={setSelectedItemId} onDeleteInvoice={(id) => confirmDelete("Delete Invoice", `Delete invoice ${id}?`, () => handleDeleteInvoice(id))} onUpdateStatus={handleUpdateInvoiceStatus} />;
+      case "treatments":
+        return <TreatmentsPage treatments={treatments}
+          onAddTreatment={() => { setSelectedItemId(""); setActiveModal('treatmentForm'); }}
+          onViewTreatment={(id) => { setSelectedItemId(id); setActiveModal('treatmentViewer'); }}
+          onEditTreatment={(id) => { setSelectedItemId(id); setActiveModal('treatmentForm'); }}
+          onManageSessions={(id) => { setSelectedItemId(id); setActiveModal('sessionManager'); }}
+          onMarkCompleted={(id) => { const t = treatments.find(x => x.id === id); if (t) { handleSaveTreatment({ ...t, status: "completed" }); showToast("Treatment completed!"); } }}
+          onStartTreatment={(id) => { const t = treatments.find(x => x.id === id); if (t) { handleSaveTreatment({ ...t, status: "in-progress" }); showToast("Treatment started!"); } }}
+        />;
+      case "emr": return <MedicalRecordsPage patients={patients} treatments={treatments} invoices={invoices} appointments={appointments} emrRecords={emrRecords} onAddRecord={() => setActiveModal('emrForm')} onViewRecord={(r) => { setSelectedEMRRecord(r); setActiveModal('emrViewer'); }} onExportRecord={(r) => showToast("Record exported successfully!")} />;
+      case "staff":
+        return <StaffPage staffMembers={staffMembers} onAddDoctor={() => setActiveModal('doctorForm')}
+          onEditDoctor={(id) => { setSelectedItemId(id); setActiveModal('doctorForm'); }}
+          onDeleteDoctor={(id) => { const s = staffMembers.find(x => x.id === id); confirmDelete("Delete Staff", `Delete ${s?.name}?`, () => handleDeleteStaff(id)); }}
+          onUpdateStaff={handleSaveStaff} onManageSchedule={(id) => { setSelectedItemId(id); setActiveModal('scheduleManager'); }}
+          onPaySalary={(id, name) => { setSelectedStaffForSalary({ id, name }); setActiveModal('salaryModal'); }}
+          onViewSalaryHistory={(id, name) => { setSelectedStaffForSalary({ id, name }); setActiveModal('salaryHistory'); }}
+        />;
+      case "profit-sharing": return <ProfitSharingPage treatments={treatments} doctorsWithSchedules={activeDoctors} />;
+      case "consent":
+        return <ConsentPage forms={consentForms} onAddForm={() => setActiveModal('consentForm')}
+          onViewForm={(id) => { const f = consentForms.find(x => x.id === id); if (f) { setSelectedConsentForm(f); setActiveModal('consentViewer'); } }}
+          onDeleteForm={(id) => confirmDelete("Delete Consent Form", "Delete this consent form?", () => handleDeleteConsentForm(id))}
+        />;
+      case "reports": return <ReportsPage patients={patients} appointments={appointments} treatments={treatments} invoices={invoices} />;
+      case "corporate-plans": return <CorporatePlansPage plans={corporatePlans} employees={corporateEmployees} onSavePlan={handleSaveCorporatePlan} onDeletePlan={(id) => confirmDelete("Delete Corporate Plan", "Delete this plan?", () => handleDeleteCorporatePlan(id))} onTogglePlan={handleToggleCorporatePlan} onSaveEmployee={handleSaveEmployee} onDeleteEmployee={(id) => confirmDelete("Delete Employee", "Delete employee?", () => handleDeleteEmployee(id))} onBulkSaveEmployees={handleBulkSaveEmployees} onChangePlan={handleChangeEmployeePlan} />;
+      default: return <DashboardPage appointments={appointments} onAddPatient={handleAddNewPatient} />;
+    }
+  };
 
   return (
-    p.id !== selectedPatient.id && ( // khud ko exclude karo
-      p.parentId === parentId ||     // siblings + children
-      p.id === parentId              // parent
-    )
-  );
-});
-useEffect(() => {
-  localStorage.setItem("patients", JSON.stringify(patients));
-}, [patients]);
-useEffect(() => {
-  localStorage.setItem("appointments", JSON.stringify(appointments));
-}, [appointments]);
-const handleSendReminder = (patientId: string, amount: number) => {
-  console.log("Reminder sent to:", patientId, "Amount:", amount);
-
-  // optional UI feedback
-  alert(`Reminder sent for ₹${amount}`);
-};
-  // Mock queued patients data
-  const mockQueuedPatients = [
-    {
-      id: '1',
-      appointmentId: 'APT-001',
-      patientName: 'Rajesh Kumar',
-      patientPhone: '+91 98765 43210',
-      appointmentTime: '10:00 AM',
-      treatmentType: 'Root Canal Treatment',
-      patientConcern: 'Severe pain in upper right molar, especially when eating hot or cold foods. Pain started 3 days ago.',
-      checkInTime: '9:55 AM',
-      status: 'waiting',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2024-01-08',
-        totalVisits: 5,
-        medicalHistory: ['Diabetes Type 2', 'Hypertension'],
-        allergies: ['Penicillin']
-      }
-    },
-    {
-      id: '2',
-      appointmentId: 'APT-002',
-      patientName: 'Priya Sharma',
-      patientPhone: '+91 87654 32109',
-      appointmentTime: '10:30 AM',
-      treatmentType: 'Teeth Cleaning',
-      patientConcern: 'Regular cleaning and checkup. Some bleeding while brushing teeth.',
-      checkInTime: '10:25 AM',
-      status: 'in-consultation',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2023-12-15',
-        totalVisits: 2,
-        medicalHistory: [],
-        allergies: ['Latex']
-      }
-    },
-    {
-      id: '3',
-      appointmentId: 'APT-003',
-      patientName: 'Amit Singh',
-      patientPhone: '+91 76543 21098',
-      appointmentTime: '11:00 AM',
-      treatmentType: 'Dental Filling',
-      patientConcern: 'Cavity in lower left molar. Mild pain when chewing.',
-      checkInTime: '10:58 AM',
-      status: 'waiting',
-      notes: '',
-      patientHistory: {
-        lastVisit: '2024-01-05',
-        totalVisits: 8,
-        medicalHistory: ['Previous root canal'],
-        allergies: []
-      }
-    }
-  ];
-
-  // Mock doctors data with schedules
-  const doctorsWithSchedules = [
-    { 
-      id: '1', 
-      name: 'Dr. Rajesh Sharma', 
-      specialization: 'General Dentistry',
-      consultationFee: 800,
-      isAvailableToday: true,
-      workingHours: {
-        monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-        tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-        wednesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-        thursday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-        friday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-        saturday: { isWorking: true, startTime: '09:00', endTime: '14:00' },
-        sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
-      },
-      timeSlots: { duration: 30, bufferTime: 5 }
-    },
-    { 
-      id: '2', 
-      name: 'Dr. Priya Patel', 
-      specialization: 'Orthodontics',
-      consultationFee: 1200,
-      isAvailableToday: true,
-      workingHours: {
-        monday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-        tuesday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-        wednesday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-        thursday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-        friday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-        saturday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-        sunday: { isWorking: false, startTime: '10:00', endTime: '16:00' }
-      },
-      timeSlots: { duration: 45, bufferTime: 10 }
-    },
-    { 
-      id: '3', 
-      name: 'Dr. Amit Singh', 
-      specialization: 'Oral Surgery',
-      consultationFee: 1500,
-      isAvailableToday: false,
-      workingHours: {
-        monday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-        tuesday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-        wednesday: { isWorking: false, startTime: '14:00', endTime: '20:00' },
-        thursday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-        friday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-        saturday: { isWorking: true, startTime: '09:00', endTime: '15:00', breakStart: '12:00', breakEnd: '13:00' },
-        sunday: { isWorking: false, startTime: '14:00', endTime: '20:00' }
-      },
-      timeSlots: { duration: 60, bufferTime: 15 }
-    }
-  ];
-
-  const [showTodaySchedulePopup, setShowTodaySchedulePopup] = useState(false);
-  const [doctorAvailability, setDoctorAvailability] = useState(
-    doctorsWithSchedules.reduce((acc, doctor) => ({
-      ...acc,
-      [doctor.id]: doctor.isAvailableToday
-    }), {})
-  );
-
-  const handleToggleDoctorAvailability = (doctorId: string) => {
-    setDoctorAvailability(prev => ({
-      ...prev,
-      [doctorId]: !prev[doctorId]
-    }));
-  };
-
-  const handleManageSchedule = (doctorId: string, doctorName: string) => {
-    setSelectedDoctorIdForSchedule(doctorId);
-    setSelectedDoctorNameForSchedule(doctorName);
-    setShowDoctorScheduleManager(true);
-  };
-
-  const handleSaveStaff = (staffData: any) => {
-    if (selectedItemId) {
-      setStaffMembers(prev => prev.map(s => s.id === selectedItemId ? staffData : s));
-    } else {
-      setStaffMembers(prev => [...prev, staffData]);
-    }
-    setShowDoctorForm(false);
-    setSelectedItemId('');
-  };
-
-  const handleDeleteStaff = (staffId: string) => {
-    setStaffMembers(prev => prev.filter(s => s.id !== staffId));
-  };
-
-  const handleQuickAppointment = () => {
-    setIsQuickBooking(true);
-    setShowAppointmentForm(true);
-  };
-const [selectedDate, setSelectedDate] = useState(null)
-
-const handleNewAppointment = (date?) => {
-  setSelectedDate(date || null)
-  setIsQuickBooking(false)
-  setShowAppointmentForm(true)
-}
-
-  const handleViewPatient = (patientId: string) => {
-    setSelectedPatientId(patientId);
-    setShowPatientDetails(true);
-  };
-
-  const handleSendPaymentReminder = (patientId: string, amount: number) => {
-    // In a real app, this would send SMS/WhatsApp/Email
-    alert(`Payment reminder sent to patient ${patientId} for ₹${amount.toLocaleString()}`);
-  };
-
-const handleSaveAppointment = (appointment: any) => {
-  setAppointments(prev => {
-    const existing = prev.find(a => a.id === appointment.id)
-
-    if (existing) {
-      return prev.map(a => a.id === appointment.id ? appointment : a)
-    }
-
-    return [...prev, appointment]
-  })
-
-  setShowAppointmentForm(false)
-  setSelectedAppointment(null)
-}
-
-  const handleViewConsentForm = (formId: string) => {
-    setSelectedItemId(formId);
-    setShowConsentViewer(true);
-  };
-
-  const handleViewInvoice = (invoiceId: string) => {
-    setSelectedItemId(invoiceId);
-    setShowInvoiceViewer(true);
-  };
-
-
-  const handleViewTreatment = (treatmentId: string) => {
-    setSelectedItemId(treatmentId);
-    setShowTreatmentViewer(true);
-  };
-
-  const handleUpdateAppointmentStatus = (appointmentId: string, status: string) => {
-    setAppointments(prev => prev.map(apt => 
-      apt.id === appointmentId ? { ...apt, status } : apt
-    ));
-  };
-
-  const handleDeleteAppointment = (appointmentId: string) => {
-    setAppointments(prev => prev.filter(apt => apt.id !== appointmentId));
-  };
-
-  const handleCheckInPatient = (appointment: any) => {
-    // Move patient from appointments to diagnosis queue
-    const queuedPatient = {
-      id: appointment.id,
-      appointmentId: appointment.id,
-      patientName: appointment.patientName || appointment.patient,
-      patientPhone: appointment.patientPhone || appointment.phone,
-      appointmentTime: appointment.time,
-      treatmentType: appointment.treatment || appointment.type,
-      patientConcern: appointment.patientConcern || 'General consultation',
-      checkInTime: new Date().toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-      }),
-      status: 'waiting',
-      notes: appointment.notes || '',
-      patientHistory: {
-        lastVisit: '2024-01-08',
-        totalVisits: 5,
-        medicalHistory: ['Diabetes Type 2'],
-        allergies: ['Penicillin']
-      }
-    };
-    
-    // Add to diagnosis queue
-    setQueuedPatients(prev => [...prev, queuedPatient]);
-    
-    // Update appointment status to checked-in
-    setAppointments(prev => prev.map(apt => 
-      apt.id === appointment.id ? { ...apt, status: 'checked-in' } : apt
-    ));
-    
-    // Show success message
-    alert(`${queuedPatient.patientName} has been checked in and added to the diagnosis queue.`);
-  };
-  const handleEditTreatment = (treatmentId: string) => {
-    setSelectedItemId(treatmentId);
-    setShowTreatmentForm(true);
-  };
-
-  const handleManageSessions = (treatmentId: string) => {
-    setSelectedTreatmentId(treatmentId);
-    setShowSessionManager(true);
-  };
-
-  const handleMarkCompleted = (treatmentId: string) => {
-    setTreatments(prev => prev.map(t => 
-      t.id === treatmentId ? { ...t, status: 'completed' } : t
-    ));
-  };
-
-  const handleSaveTreatment = (treatment: any) => {
-    if (selectedItemId) {
-      setTreatments(prev => prev.map(t => t.id === selectedItemId ? treatment : t));
-    } else {
-      setTreatments(prev => [...prev, treatment]);
-    }
-    
-    // Create appointments for each session if treatment has sessions
-    if (treatment.sessions && treatment.sessions.length > 0) {
-      const sessionAppointments = treatment.sessions
-        .filter((session: any) => session.status === 'scheduled' || session.status === 'planned')
-        .map((session: any) => ({
-          id: `apt-${treatment.id}-${session.id}`,
-          patientName: treatment.patientName,
-          patientPhone: '+91 98765 43210', // Mock phone
-          date: session.scheduledDate,
-          time: '10:00', // Default time, can be customized
-          duration: session.duration,
-          type: `${treatment.procedure} - ${session.name}`,
-          status: session.status === 'scheduled' ? 'scheduled' : 'planned',
-          notes: `Session ${session.sessionNumber}: ${session.description}${session.notes ? '\n' + session.notes : ''}`,
-          fee: session.cost,
-          doctorId: treatment.doctorId,
-          doctorName: treatment.doctorName,
-          reminderSent: false,
-          treatmentId: treatment.id,
-          sessionId: session.id
-        }));
-      
-      setAppointments(prev => [...prev, ...sessionAppointments]);
-    }
-    
-    setShowTreatmentForm(false);
-    setSelectedItemId('');
-  };
-
-const handleSavePatient = (patient) => {
-  setPatients(prev => {
-    const existing = prev.find(p => p.id === patient.id);
-
-    const updatedPatient = {
-      ...patient,
-
-      isPerson: existing
-        ? existing.isPerson
-        : patientFormType === 'person',
-
-      parentId: existing
-        ? existing.parentId
-        : (patientFormType === 'person' ? parentPatientId : null),
-      prescriptionHistory: existing?.prescriptionHistory || [],
-      documents: existing?.documents || []
-    };
-
-    if (existing) {
-      return prev.map(p => p.id === patient.id ? updatedPatient : p);
-    }
-
-    return [...prev, updatedPatient];
-  });
-
-  setShowPatientForm(false);
-};
-  const handleDeletePatient = (patientId: string) => {
-  setPatients(prev => prev.filter(p => p.id !== patientId));
-};
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back! Here's what's happening at your clinic today.</p>
-            </div>
-            <DashboardStats />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TodayAppointments appointments={appointments} />
-              <RecentPatients />
-            </div>
-          </div>
-        );
-      
-      case 'appointments':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
-                <p className="text-gray-600 mt-1">Manage patient appointments and schedules</p>
-              </div>
-              <div className="bg-gray-100 rounded-xl p-1 flex">
-                <button
-                  onClick={() => setViewMode('calendar')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    viewMode === 'calendar'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Calendar
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  List ({listCount})
-                </button>
-                <button
-                  onClick={() => setViewMode('no-show')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    viewMode === 'no-show'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  No Show ({appointments.filter(apt => apt.status === 'no-show').length})
-                </button>
-              </div>
-            </div>
-            {viewMode === 'calendar' && <AppointmentCalendar onNewAppointment={handleNewAppointment} appointments={appointments} />}
-            {viewMode === 'list' && (
-              <AppointmentList 
-                appointments={appointments.filter(apt => apt.status !== 'no-show')}
-onEditAppointment={(id) => {
-  const apt = appointments.find(a => a.id === id)
-  setSelectedAppointment(apt)
-  setShowAppointmentForm(true)
-}}
-                onDeleteAppointment={handleDeleteAppointment}
-                onUpdateStatus={handleUpdateAppointmentStatus}
-                onCheckInPatient={handleCheckInPatient}
-              />
-            )}
-            {viewMode === 'no-show' && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">No Show Appointments</h3>
-                <AppointmentList 
-                  appointments={appointments.filter(apt => apt.status === 'no-show')}
-                  onEditAppointment={(id) => {
-  const apt = appointments.find(a => a.id === id)
-  setSelectedAppointment(apt)
-  setShowAppointmentForm(true)
-}}
-                  onDeleteAppointment={handleDeleteAppointment}
-                  onUpdateStatus={handleUpdateAppointmentStatus}
-                  onCheckInPatient={handleCheckInPatient}
-                />
-              </div>
-            )}
-          </div>
-        );
-      
-      case 'profit-sharing':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Profit Sharing Report</h1>
-              <p className="text-gray-600 mt-1">Track doctor earnings and profit distribution</p>
-            </div>
-            
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100">Total Revenue</p>
-                    <p className="text-3xl font-bold">₹{treatments.reduce((sum, t) => sum + (t.cost || 0), 0).toLocaleString()}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-blue-200" />
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100">Total Treatments</p>
-                    <p className="text-3xl font-bold">{treatments.length}</p>
-                  </div>
-                  <Stethoscope className="w-8 h-8 text-green-200" />
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100">Active Doctors</p>
-                    <p className="text-3xl font-bold">{doctorsWithSchedules.length}</p>
-                  </div>
-                  <User className="w-8 h-8 text-purple-200" />
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100">Profit Share</p>
-                    <p className="text-3xl font-bold">₹{doctorsWithSchedules.reduce((sum, d) => {
-                      const doctorTreatments = treatments.filter(t => t.doctorId === d.id);
-                      const totalEarnings = doctorTreatments.reduce((sum, t) => sum + (t.cost || 0), 0);
-                      return sum + (totalEarnings * (d.profitPercentage || 0) / 100);
-                    }, 0).toLocaleString()}</p>
-                  </div>
-                  <MessageSquare className="w-8 h-8 text-orange-200" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Doctor-wise Treatment Details */}
-            <div className="space-y-6">
-              {doctorsWithSchedules.map(doctor => {
-                const doctorTreatments = treatments.filter(t => t.doctorId === doctor.id);
-                const totalEarnings = doctorTreatments.reduce((sum, t) => sum + (t.cost || 0), 0);
-                const paidTreatments = doctorTreatments.filter(t => t.paymentStatus === 'paid');
-                const pendingTreatments = doctorTreatments.filter(t => t.paymentStatus !== 'paid');
-                const paidEarnings = paidTreatments.reduce((sum, t) => sum + (t.cost || 0), 0);
-                const pendingEarnings = pendingTreatments.reduce((sum, t) => sum + (t.cost || 0), 0);
-                const profitShare = (totalEarnings * (doctor.profitPercentage || 0) / 100);
-                const paidProfitShare = (paidEarnings * (doctor.profitPercentage || 0) / 100);
-                const pendingProfitShare = (pendingEarnings * (doctor.profitPercentage || 0) / 100);
-                
-                return (
-                  <div key={doctor.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mr-4">
-                            <Stethoscope className="w-8 h-8 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900">{doctor.name}</h3>
-                            <p className="text-gray-600">{doctor.specialization}</p>
-                            <p className="text-sm text-gray-500">Profit Share: {doctor.profitPercentage || 0}%</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600">₹{paidProfitShare.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">Paid Profit Share</div>
-                          {pendingProfitShare > 0 && (
-                            <div className="text-lg font-bold text-orange-600 mt-1">₹{pendingProfitShare.toLocaleString()}</div>
-                          )}
-                          {pendingProfitShare > 0 && (
-                            <div className="text-sm text-orange-600">Pending</div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">{doctorTreatments.length}</div>
-                          <div className="text-sm text-gray-600">Total Treatments</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600">₹{totalEarnings.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">Total Revenue</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">₹{paidEarnings.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">Paid Revenue</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-orange-600">₹{pendingEarnings.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">Pending Revenue</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-indigo-600">₹{profitShare.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">Total Profit Share</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {doctorTreatments.length > 0 && (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient ID</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Treatment</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor Share</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Treatment Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {doctorTreatments.map(treatment => {
-                              const doctorShare = (treatment.cost || 0) * (doctor.profitPercentage || 0) / 100;
-                              const paymentStatus = treatment.paymentStatus || 'pending';
-                              const paymentDate = treatment.paymentDate || null;
-                              const dueDate = treatment.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                              
-                              return (
-                                <tr key={treatment.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 text-sm font-mono text-gray-900">
-                                    PAT{treatment.patientId?.slice(-3) || '001'}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <div>
-                                      <div className="font-medium text-gray-900">{treatment.procedure}</div>
-                                      <div className="text-sm text-gray-600">{treatment.tooth}</div>
-                                      {treatment.notes && (
-                                        <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">{treatment.notes}</div>
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-900">{treatment.patientName}</td>
-                                  <td className="px-6 py-4 text-sm text-gray-900">
-                                    {new Date(treatment.date).toLocaleDateString()}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                    ₹{(treatment.cost || 0).toLocaleString()}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                      paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
-                                      paymentStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-red-100 text-red-800'
-                                    }`}>
-                                      {paymentStatus.toUpperCase()}
-                                    </span>
-                                    {paymentStatus === 'pending' && (
-                                      <div className="text-xs text-gray-500 mt-1">
-                                        Due: {new Date(dueDate).toLocaleDateString()}
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-900">
-                                    {paymentDate ? new Date(paymentDate).toLocaleDateString() : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm font-bold text-green-600">
-                                    ₹{doctorShare.toLocaleString()}
-                                    {paymentStatus !== 'paid' && (
-                                      <div className="text-xs text-orange-600 mt-1">(Pending)</div>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                      treatment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                      treatment.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                                      'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                      {treatment.status.replace('-', ' ').toUpperCase()}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                    
-                    {doctorTreatments.length === 0 && (
-                      <div className="text-center py-12">
-                        <Stethoscope className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No treatments yet</h3>
-                        <p className="text-gray-600">This doctor hasn't performed any treatments yet.</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      
-      case 'reports':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-                <p className="text-gray-600 mt-1">Comprehensive clinic performance insights</p>
-              </div>
-              <button
-                onClick={() => setCurrentPage('profit-sharing')}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 flex items-center shadow-lg transition-all duration-200"
-              >
-                <DollarSign className="w-4 h-4 mr-2" />
-                Profit Sharing Report
-              </button>
-            </div>
-            <ReportsDashboard />
-          </div>
-        );
-      
-      case 'doctor-queue':
-      case 'patient-queue':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Patient Diagnosis Queue</h1>
-              <p className="text-gray-600 mt-1">Manage patients waiting for consultation</p>
-            </div>
-            <PatientQueue
-              doctorName={state.user?.name || 'Doctor'}
-              queuedPatients={queuedPatients}
-              onSelectPatient={(patient) => {
-                setSelectedPatientForConsultation(patient);
-                setShowPatientConsultation(true);
-              }}
-              onUpdatePatientStatus={(patientId, newStatus) => {
-                if (queuedPatients.length > 0) {
-                  setQueuedPatients(prev => prev.map(p => 
-                    p.id === patientId ? { ...p, status: newStatus } : p
-                  ));
-                }
-              }}
-            />
-          </div>
-        );
-      
-      case 'patients':
-        return (
-          <PatientList
-            patients={patients}  
-onAddPatient={(type, patientId) => {
-  if (type === 'person') {
-    setParentPatientId(patientId); // ✅ store parent
-  }
-
-  setSelectedPatientId(''); // ✅ RESET (IMPORTANT)
-  setPatientFormType(type === 'person' ? 'person' : 'normal');
-  setShowPatientForm(true);
-}}
-            onViewPatient={handleViewPatient}
-            onEditPatient={(patientId) => {
-              setSelectedPatientId(patientId);
-              setShowPatientForm(true);
-            }}
-onDeletePatient={(patientId) => {
-  if (confirm('Are you sure you want to delete this patient?')) {
-    handleDeletePatient(patientId); 
-  }
-}}
-          />
-        );
-      
-      case 'treatments':
-        return (
-          <TreatmentList
-            onAddTreatment={() => setShowTreatmentForm(true)}
-            onViewTreatment={handleViewTreatment}
-            onEditTreatment={handleEditTreatment}
-            onManageSessions={handleManageSessions}
-            onMarkCompleted={handleMarkCompleted}
-          />
-        );
-      
-      case 'billing':
-        return (
-          <InvoiceList 
-            onCreateInvoice={() => setShowInvoiceForm(true)}
-            onViewInvoice={handleViewInvoice}
-          />
-        );
-      
-      case 'inventory':
-        return (
-          <InventoryList onAddItem={() => setShowInventoryForm(true)} />
-        );
-      
-      case 'consent':
-        return (
-          <ConsentFormList
-            onAddForm={() => setShowConsentForm(true)}
-            onViewForm={handleViewConsentForm}
-          />
-        );
-      
-      case 'staff':
-        return (
-          <DoctorManagement
-            onAddDoctor={() => setShowDoctorForm(true)}
-            onEditDoctor={(doctorId) => {
-              setSelectedItemId(doctorId);
-              setShowDoctorForm(true);
-            }}
-            onDeleteDoctor={handleDeleteStaff}
-            onManageSchedule={handleManageSchedule}
-          />
-        );
-      
-      case 'emr':
-        return (
-          <EMRList
-            onAddRecord={() => setShowEMRForm(true)}
-            onViewRecord={(recordId) => {
-              setSelectedItemId(recordId);
-              setShowEMRViewer(true);
-            }}
-          />
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-return (
-  <div className="min-h-screen bg-gray-50">
-    <Header 
-      onQuickAppointment={handleQuickAppointment} 
-      onShowTodaySchedule={() => setShowTodaySchedulePopup(true)}
-    />
-    
-    <div className="flex">
+    <div className="min-h-screen bg-gray-50 flex">
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      
-      <div className="flex-1 min-w-0">
-        <main className="p-4 md:p-6 pb-20 md:pb-6">
-          {renderPage()}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <Header onShowTodaySchedule={() => setActiveModal('todaySchedule')} onQuickAppointment={() => { setSelectedAppointment(null); setActiveModal('appointmentForm'); }} />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar pb-20 md:pb-6">
+          <div className="w-full mx-auto px-2">{renderCurrentPage()}</div>
         </main>
       </div>
-    </div>
-      
-      {/* Diagnose Form */}
-      {showDiagnoseForm && selectedPatientForDiagnose && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Patient Diagnosis Form</h2>
-                <button
-                  onClick={() => {
-                    setShowDiagnoseForm(false);
-                    setSelectedPatientForDiagnose(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+      <MobileNav currentPage={currentPage} onPageChange={setCurrentPage} />
+
+      {/* Modal Registry */}
+      {activeModal === 'appointmentForm' && (
+        <AppointmentForm onClose={() => setActiveModal(null)} isFollowUp={isFollowUpBooking} appointment={selectedAppointment} doctors={activeDoctors} doctorAvailability={doctorAvailability} appointments={appointments} patients={patients}
+          onSave={(apt) => { handleSaveAppointment(apt); setActiveModal(null); setSelectedAppointment(null); setIsFollowUpBooking(false); if (activeModal === 'diagnoseForm') setBookedFollowUp({ date: apt.date, time: apt.time }); showToast("Appointment saved!"); }}
+        />
+      )}
+
+      {activeModal === 'patientForm' && (
+        <PatientForm onClose={() => { setActiveModal(null); setPreFilledPatientData(null); }} isCheckIn={!!pendingCheckInAppt} type={patientFormType} parentId={parentPatientId} corporateEmployees={corporateEmployees} corporatePlans={corporatePlans}
+          patient={selectedPatientId ? patients.find(p => p.id === selectedPatientId) : preFilledPatientData}
+          onSave={(p) => {
+            handleSavePatient(p, patientFormType, parentPatientId);
+            const hasCheckIn = !!pendingCheckInAppt;
+            setActiveModal(null); setSelectedPatientId(""); setParentPatientId(""); setPreFilledPatientData(null);
+            if (hasCheckIn) {
+              setQueuedPatients(prev => [...prev, { id: pendingCheckInAppt.id, patientId: p.id, patientName: p.name, patientPhone: p.phone, appointmentTime: pendingCheckInAppt.time, status: "waiting", treatmentType: pendingCheckInAppt.treatment || pendingCheckInAppt.type, patientConcern: pendingCheckInAppt.patientConcern || "" }]);
+              handleUpdateAppointmentStatus(pendingCheckInAppt.id, "checked-in");
+              setPendingCheckInAppt(null);
+              showToast("Patient checked-in successfully!");
+            } else { showToast("Patient saved successfully!"); }
+          }}
+        />
+      )}
+
+      {activeModal === 'diagnoseForm' && selectedPatientForDiagnose && (
+        <PatientConsultation patient={selectedPatientForDiagnose} doctors={activeDoctors} doctorAvailability={doctorAvailability} appointments={appointments} bookedFollowUp={bookedFollowUp} initialData={draftConsultations[selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id]}
+          onDraftUpdate={(d) => handleDraftUpdate(selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id, d)}
+          onScheduleFollowUp={(d) => { setSelectedAppointment(d); setActiveModal('appointmentForm'); setIsFollowUpBooking(true); }}
+          onClose={() => { setActiveModal(null); setBookedFollowUp(null); }}
+          onCompleteConsultation={(d) => {
+            handleCompleteConsultation({ ...d, id: Date.now(), patientName: selectedPatientForDiagnose.patientName, completedAt: d.consultationDate || new Date().toISOString(), patientId: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id, patientContact: selectedPatientForDiagnose.patientPhone });
+            const target = patients.find(p => p.id === (selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id));
+            if (target) {
+              const meds = (d.prescriptions || []).filter((pr: any) => pr.medicine?.trim());
+              if (meds.length) handleSavePatient({ ...target, prescriptionHistory: [{ id: Date.now().toString(), date: d.consultationDate || new Date().toISOString(), treatment: d.treatmentProcedure || d.diagnosis || "Consultation", observations: d.observations, diagnosis: d.diagnosis, vitals: { bp: d.bp || "", height: d.height || "", weight: d.weight || "", bmi: d.bmi || "" }, consultationNotes: d.consultationNotes, tests: d.tests, nextVisit: d.nextVisit, prescriptions: meds }, ...(target.prescriptionHistory || [])] });
+            }
+            setQueuedPatients(prev => prev.filter(p => p.id !== selectedPatientForDiagnose.id));
+            const pId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
+            setDraftConsultations(prev => { const n = { ...prev }; delete n[pId]; return n; });
+          }}
+          onCreateTreatment={handleSaveTreatment}
+        />
+      )}
+
+      {activeModal === 'invoiceForm' && <InvoiceForm onClose={() => setActiveModal(null)} onSave={(inv) => { handleSaveInvoice(inv); setActiveModal(null); showToast("Invoice created!"); }} patients={patients} treatments={treatments} consultations={completedConsultations} corporatePlans={corporatePlans} />}
+      {activeModal === 'treatmentForm' && <TreatmentForm onClose={() => { setActiveModal(null); setSelectedItemId(""); }} onSave={(t) => { handleSaveTreatment(t); setActiveModal(null); setSelectedItemId(""); showToast("Treatment saved!"); }} treatment={selectedItemId ? treatments.find(t => t.id === selectedItemId) : null} patients={patients} doctors={activeDoctors} treatments={treatments} />}
+      {selectedItemId && invoices.find(i => i.id === selectedItemId) && <InvoiceViewer invoiceId={selectedItemId} onClose={() => setSelectedItemId("")} onUpdateStatus={handleUpdateInvoiceStatus} />}
+      {activeModal === 'patientDetails' && (() => {
+        const p = patients.find(x => x.id === selectedPatientId);
+        if (!p) return null;
+        
+        // Find family members:
+        // 1. If patient is a parent: get all children (where parentId === p.id)
+        // 2. If patient is a child: get parent (id === p.parentId) AND siblings (parentId === p.parentId, excluding self)
+        let family: any[] = [];
+        if (p.parentId) {
+          const parent = patients.find(x => x.id === p.parentId);
+          const siblings = patients.filter(x => x.parentId === p.parentId && x.id !== p.id);
+          if (parent) family.push({ ...parent, relation: parent.isPerson ? (parent.relation || 'Parent') : 'Head of Family' });
+          family = [...family, ...siblings];
+        } else {
+          family = patients.filter(x => x.parentId === p.id);
+        }
+
+        return (
+          <PatientDetails 
+            patient={p} 
+            familyMembers={family} 
+            appointments={appointments} 
+            treatments={treatments} 
+            invoices={invoices} 
+            onClose={() => setActiveModal(null)} 
+            onSendReminder={(id, amt) => alert(`Reminder sent for ₹${amt}`)} 
+            onExport={handleExportPatient} 
+          />
+        );
+      })()}
+      {activeModal === 'corporateModal' && <CorporateManagement corporatePlans={corporatePlans} corporateEmployees={corporateEmployees} onSavePlan={handleSaveCorporatePlan} onDeletePlan={handleDeleteCorporatePlan} onBulkAddPatients={(ps) => { handleBulkSavePatients(ps); showToast(`Registered ${ps.length} employees!`); }} onDeleteEmployee={handleDeleteCorporateEmployee} onUpdateEmployee={handleUpdateCorporateEmployee} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'treatmentViewer' && <TreatmentViewer treatment={treatments.find(t => t.id === selectedItemId)} onClose={() => setActiveModal(null)} onEditTreatment={(id) => { setActiveModal('treatmentForm'); setSelectedItemId(id); }} onMarkCompleted={(id) => { const t = treatments.find(x => x.id === id); if (t) { handleSaveTreatment({ ...t, status: "completed" }); showToast("Treatment completed!"); } }} onStartTreatment={(id) => { const t = treatments.find(x => x.id === id); if (t) { handleSaveTreatment({ ...t, status: "in-progress" }); showToast("Treatment started!"); } }} />}
+      {activeModal === 'sessionManager' && <TreatmentSessionManager treatmentId={selectedItemId} patientName={treatments.find(t => t.id === selectedItemId)?.patientName || ""} procedure={treatments.find(t => t.id === selectedItemId)?.procedure || ""} sessions={treatments.find(t => t.id === selectedItemId)?.sessions || []} onUpdateSessions={(us) => { const t = treatments.find(x => x.id === selectedItemId); if (t) { handleSaveTreatment({ ...t, sessions: us }); showToast("Sessions updated!"); } }} onClose={() => { setActiveModal(null); setSelectedItemId(""); }} onScheduleAppointment={(sd) => { handleSaveAppointment({ ...sd, id: Date.now().toString(), status: "scheduled" }); showToast("Appointment scheduled!"); }} />}
+      {activeModal === 'emrForm' && <EMRForm onClose={() => setActiveModal(null)} onSave={(r) => { handleSaveEMR(r); setActiveModal(null); showToast("EMR saved!"); }} patients={patients} />}
+      {activeModal === 'emrViewer' && selectedEMRRecord && <EMRViewer record={selectedEMRRecord} onClose={() => { setActiveModal(null); setSelectedEMRRecord(null); }} />}
+      {activeModal === 'todaySchedule' && <TodaySchedulePopup onClose={() => setActiveModal(null)} appointments={appointments} doctors={activeDoctors} doctorAvailability={doctorAvailability} patients={patients} onToggleDoctorAvailability={(id) => setDoctorAvailability(prev => ({ ...prev, [id]: !prev[id] }))} />}
+      {activeModal === 'doctorForm' && <DoctorForm onClose={() => { setActiveModal(null); setSelectedItemId(""); }} onSave={(d) => { handleSaveStaff(d); setActiveModal(null); setSelectedItemId(""); showToast("Staff saved!"); }} doctor={selectedItemId ? staffMembers.find(s => s.id === selectedItemId) : null} />}
+      {activeModal === 'scheduleManager' && <DoctorScheduleManager doctorId={selectedItemId} doctorName={staffMembers.find(s => s.id === selectedItemId)?.name || ""} onClose={() => { setActiveModal(null); setSelectedItemId(""); }} currentSchedule={staffMembers.find(s => s.id === selectedItemId)?.workingHours} onSave={(sd) => { const s = staffMembers.find(x => x.id === selectedItemId); if (s) handleSaveStaff({ ...s, workingHours: sd.workingHours, timeSlots: sd.timeSlots }); setActiveModal(null); setSelectedItemId(""); showToast("Schedule updated!"); }} />}
+      {activeModal === 'salaryModal' && selectedStaffForSalary && <SalaryPaymentModal staffId={selectedStaffForSalary.id} staffName={selectedStaffForSalary.name} pendingAmount={parseFloat(staffMembers.find(s => s.id === selectedStaffForSalary.id)?.salaryPending?.replace(/,/g, "") || "0")} onClose={() => { setActiveModal(null); setSelectedStaffForSalary(null); }} onSave={(pd) => { const s = staffMembers.find(x => x.id === pd.staffId); if (s) { const paid = parseFloat(s.salaryPaid?.replace(/,/g, "") || "0"); const pending = parseFloat(s.salaryPending?.replace(/,/g, "") || "0"); const amt = parseFloat(pd.amount); handleSaveStaff({ ...s, salaryPaid: (paid + amt).toLocaleString("en-IN"), salaryPending: Math.max(0, pending - amt).toLocaleString("en-IN"), salaryHistory: [{ amount: amt, date: pd.date, mode: pd.mode, note: pd.note }, ...(s.salaryHistory || [])] }); } setActiveModal(null); setSelectedStaffForSalary(null); showToast("Salary paid!"); }} />}
+      {activeModal === 'salaryHistory' && selectedStaffForSalary && <SalaryHistoryModal staffName={selectedStaffForSalary.name} history={staffMembers.find(s => s.id === selectedStaffForSalary.id)?.salaryHistory || []} onClose={() => { setActiveModal(null); setSelectedStaffForSalary(null); }} />}
+      {activeModal === 'consentForm' && <ConsentForm onClose={() => setActiveModal(null)} onSave={(f) => { handleSaveConsentForm(f); setActiveModal(null); showToast("Consent generated!"); }} patients={patients} doctors={activeDoctors} />}
+      {activeModal === 'consentViewer' && selectedConsentForm && <ConsentFormViewer form={selectedConsentForm} onClose={() => { setActiveModal(null); setSelectedConsentForm(null); }} />}
+      {activeModal === 'inventoryForm' && <InventoryForm item={inventory.find(i => i.id === selectedItemId)} onClose={() => { setActiveModal(null); setSelectedItemId(""); }} onSave={(i) => { handleSaveInventoryItem(i); setActiveModal(null); setSelectedItemId(""); }} />}
+      {activeModal === 'restockForm' && selectedItemForRestock && <RestockForm item={selectedItemForRestock} onClose={() => { setActiveModal(null); setSelectedItemForRestock(null); }} onSave={(ui) => { handleSaveInventoryItem(ui); setActiveModal(null); setSelectedItemForRestock(null); showToast(`${ui.name} restocked!`); }} />}
+
+      {activeModal === 'patientNotFound' && (
+        <Modal title="Patient Not Found" onClose={() => setActiveModal(null)} size="md" icon={<AlertTriangle className="w-6 h-6 text-amber-500" />}
+          footer={
+            <div className="flex flex-col gap-2 w-full">
+              <Button onClick={() => { setPatientFormType("normal"); setSelectedPatientId(""); setPreFilledPatientData({ name: pendingCheckInAppt?.patientName || "", phone: pendingCheckInAppt?.patientPhone || pendingCheckInAppt?.phone || "" }); setActiveModal('patientForm'); }} className="w-full py-6">Register New Patient</Button>
+              <Button variant="outline" onClick={() => setActiveModal(null)} className="w-full">Cancel</Button>
             </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Patient Info */}
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                <h3 className="font-bold text-blue-900 mb-2">Patient Information</h3>
-                <p><strong>Name:</strong> {selectedPatientForDiagnose.patientName}</p>
-                <p><strong>Treatment:</strong> {selectedPatientForDiagnose.treatmentType}</p>
-                <p><strong>Concern:</strong> {selectedPatientForDiagnose.patientConcern}</p>
-              </div>
-              
-              {/* Diagnosis Form */}
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Patient Concern
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                    placeholder="Describe patient's main concern..."
-                    defaultValue={selectedPatientForDiagnose.patientConcern}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Consultation Notes
-                  </label>
-                  <textarea
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                    placeholder="What was done during consultation and diagnosis..."
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Doctor's Suggestions
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                    placeholder="Suggestions and recommendations given to patient..."
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Consultation Cost (₹)
-                    </label>
-                    <input
-                      type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter consultation fee"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Medicine Prescribed
-                    </label>
-                    <textarea
-                      rows={2}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                      placeholder="List prescribed medicines..."
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDiagnoseForm(false);
-                      setSelectedPatientForDiagnose(null);
-                    }}
-                    className="px-6 py-3 text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
-                  >
-                    Save Diagnosis
-                  </button>
-                </div>
-              </form>
-            </div>
+          }
+        >
+          <p className="text-sm text-muted-foreground text-center px-4">
+            No record found for <span className="font-bold text-foreground">{pendingCheckInAppt?.patientName}</span>. Please register the patient before checking in.
+          </p>
+        </Modal>
+      )}
+
+      {deleteConfig.show && (
+        <ConfirmModal title={deleteConfig.title} message={deleteConfig.message} onConfirm={deleteConfig.onConfirm} onCancel={() => setDeleteConfig((prev: any) => ({ ...prev, show: false }))} confirmLabel="Delete" variant="danger" />
+      )}
+
+      {/* Optimized Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4">
+          <div className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${toast.type === "success" ? "bg-emerald-600 border-emerald-500" : "bg-red-600 border-red-500"} text-white`}>
+            {toast.type === "success" ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+            <span className="font-black text-xs uppercase tracking-widest">{toast.message}</span>
           </div>
         </div>
       )}
-      
-      <MobileNav currentPage={currentPage} onPageChange={setCurrentPage} />
-      
-      {/* Modals */}
-{showPatientForm && (
-  <PatientForm
-    onClose={() => setShowPatientForm(false)}
-    onSave={handleSavePatient}
-patient={
-  patientFormType === 'person'
-    ? undefined   
-    : patients.find(p => p.id === selectedPatientId)
-}
-    type={patientFormType} 
-  />
-)}
-      
-      {showAppointmentForm && (
-        <AppointmentForm
-          onClose={() => {
-            setShowAppointmentForm(false);
-            setIsQuickBooking(false);
-          }}
-          onSave={handleSaveAppointment}
-          appointment={selectedAppointment}  
-          isQuickBooking={isQuickBooking}
-          doctors={doctorsWithSchedules}
-          doctorAvailability={doctorAvailability}
-          appointments={appointments}
-          selectedDate={selectedDate}
-        />
-      )}
-      
-      {showInvoiceForm && (
-        <InvoiceForm
-          onClose={() => setShowInvoiceForm(false)}
-          onSave={(invoice) => {
-            setInvoices(prev => [...prev, invoice]);
-            setShowInvoiceForm(false);
-          }}
-        />
-      )}
-      
-      {showConsentForm && (
-        <ConsentForm
-          onClose={() => setShowConsentForm(false)}
-          onSave={(form) => {
-            console.log('Save consent form:', form);
-            setShowConsentForm(false);
-          }}
-        />
-      )}
-      
-      {showInventoryForm && (
-        <InventoryForm
-          onClose={() => setShowInventoryForm(false)}
-          onSave={(item) => {
-            console.log('Save inventory item:', item);
-            setShowInventoryForm(false);
-          }}
-        />
-      )}
-      
-      {showTreatmentForm && (
-        <TreatmentForm
-          onClose={() => setShowTreatmentForm(false)}
-          onSave={handleSaveTreatment}
-          treatment={selectedItemId ? treatments.find(t => t.id === selectedItemId) : undefined}
-        />
-      )}
-      
-{showPatientDetails && selectedPatient && (
-<PatientDetails
-  patient={selectedPatient}
-  familyMembers={familyMembers} 
-  onClose={() => setShowPatientDetails(false)}
-  onSendReminder={handleSendReminder} 
-/>
-)}      
-      {showEMRForm && (
-        <EMRForm
-          onClose={() => setShowEMRForm(false)}
-          onSave={(record) => {
-            setEmrRecords(prev => [...prev, record]);
-            setShowEMRForm(false);
-          }}
-        />
-      )}
-      
-      {/* Viewers */}
-      {showConsentViewer && (
-        <ConsentFormViewer
-          formId={selectedItemId}
-          onClose={() => setShowConsentViewer(false)}
-        />
-      )}
-      
-      {showInvoiceViewer && (
-        <InvoiceViewer
-          invoiceId={selectedItemId}
-          onClose={() => setShowInvoiceViewer(false)}
-        />
-      )}
-      
-      {showEMRViewer && (
-        <EMRViewer
-          recordId={selectedItemId}
-          onClose={() => setShowEMRViewer(false)}
-        />
-      )}
-      
-      {showTreatmentViewer && (
-        <TreatmentViewer
-          treatmentId={selectedItemId}
-          onClose={() => setShowTreatmentViewer(false)}
-        />
-      )}
-      
-      {showDoctorForm && (
-        <DoctorForm
-          onClose={() => {
-            setShowDoctorForm(false);
-            setSelectedItemId('');
-          }}
-          onSave={handleSaveStaff}
-          doctor={selectedItemId ? staffMembers.find(s => s.id === selectedItemId) : undefined}
-        />
-      )}
-      
-      {showSessionManager && (
-        <TreatmentSessionManager
-          treatmentId={selectedTreatmentId}
-          patientName={treatments.find(t => t.id === selectedTreatmentId)?.patientName || "Patient Name"}
-          procedure={treatments.find(t => t.id === selectedTreatmentId)?.procedure || "Treatment Procedure"}
-          existingSessions={treatments.find(t => t.id === selectedTreatmentId)?.sessions || []}
-          onScheduleAppointment={(sessionData) => {
-            setAppointments(prev => [...prev, sessionData]);
-          }}
-          onClose={() => {
-            setShowSessionManager(false);
-            setSelectedTreatmentId('');
-            setSelectedItemId('');
-          }}
-        />
-      )}
-      
-      {showDoctorScheduleManager && (
-        <DoctorScheduleManager
-          doctorId={selectedDoctorIdForSchedule}
-          doctorName={selectedDoctorNameForSchedule}
-          onClose={() => {
-            setShowDoctorScheduleManager(false);
-            setSelectedDoctorIdForSchedule('');
-            setSelectedDoctorNameForSchedule('');
-          }}
-          onSave={(schedule) => {
-            console.log('Save doctor schedule:', schedule);
-            // Update the doctor's schedule in the doctors array
-            const updatedDoctors = doctorsWithSchedules.map(doctor => 
-              doctor.id === selectedDoctorIdForSchedule 
-                ? { ...doctor, workingHours: schedule.workingHours, timeSlots: schedule.timeSlots }
-                : doctor
-            );
-            // In a real app, you would save this to your backend
-            setShowDoctorScheduleManager(false);
-            setSelectedDoctorIdForSchedule('');
-            setSelectedDoctorNameForSchedule('');
-          }}
-          currentSchedule={doctorsWithSchedules.find(d => d.id === selectedDoctorIdForSchedule)?.workingHours}
-        />
-      )}
-      
-      {showTodaySchedulePopup && (
-        <TodaySchedulePopup
-          onClose={() => setShowTodaySchedulePopup(false)}
-          appointments={appointments}
-          doctors={doctorsWithSchedules}
-          doctorAvailability={doctorAvailability}
-          onToggleDoctorAvailability={handleToggleDoctorAvailability}
-        />
-      )}
-      
-      {showPatientConsultation && selectedPatientForConsultation && (
-        <PatientConsultation
-          patient={selectedPatientForConsultation}
-          onClose={() => {
-            setShowPatientConsultation(false);
-            setSelectedPatientForConsultation(null);
-          }}
-          onCompleteConsultation={(consultationData) => {
-            console.log('Consultation completed:', consultationData);
-            
-            // Save EMR record
-            if (consultationData.emrRecord) {
-              setEmrRecords(prev => [...prev, { ...consultationData.emrRecord, id: Date.now().toString() }]);
-            }
-            
-            // Save invoice
-            if (consultationData.invoice) {
-              setInvoices(prev => [...prev, { ...consultationData.invoice, id: `INV-${Date.now()}` }]);
-            }
-            
-            // Schedule follow-up appointment
-            if (consultationData.followUpAppointment) {
-              setAppointments(prev => [...prev, { ...consultationData.followUpAppointment, id: Date.now().toString() }]);
-            }
-            
-            // Send notification (simulate)
-            if (consultationData.patientNotification) {
-              alert(`Notification sent to ${consultationData.patientNotification.split('\n')[0].replace('Dear ', '').replace(',', '')}:\n\n${consultationData.patientNotification}`);
-            }
-            
-            // Update patient status to completed
-            if (queuedPatients.length > 0) {
-              setQueuedPatients(prev => prev.map(p => 
-                p.id === consultationData.patientId ? { ...p, status: 'completed' } : p
-              ));
-            }
-            
-            setShowPatientConsultation(false);
-            setSelectedPatientForConsultation(null);
-          }}
-          onCreateTreatment={(treatmentData) => {
-            setTreatments(prev => [...prev, { ...treatmentData, id: Date.now().toString() }]);
-          }}
-        />
-      )}
     </div>
   );
 }
 
-function App() {
+function AuthenticatedApp() {
+  const { state } = useAuth();
+  return state.isAuthenticated ? <MainApp /> : <LoginForm />;
+}
+
+export default function App() {
   return (
     <AuthProvider>
       <AppProvider>
@@ -1266,15 +387,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-function AuthenticatedApp() {
-  const { state } = useAuth();
-
-  if (!state.isAuthenticated) {
-    return <LoginForm />;
-  }
-
-  return <MainApp />;
-}
-
-export default App;

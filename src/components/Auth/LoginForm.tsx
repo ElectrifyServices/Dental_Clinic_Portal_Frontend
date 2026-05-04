@@ -1,125 +1,126 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Stethoscope, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Stethoscope, Building2, Shield, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+
+const DEMO = [
+  { email: 'superadmin@clinic.com', password: 'admin123', role: 'Super Admin', color: 'violet', desc: 'Manage corporate plans & full access' },
+  { email: 'admin@clinic.com',      password: 'admin123', role: 'Admin / Doctor', color: 'blue',   desc: 'Full clinic management' },
+  { email: 'doctor@clinic.com',     password: 'doctor123', role: 'Doctor',        color: 'emerald', desc: 'Consultations & treatments' },
+  { email: 'receptionist@clinic.com', password: 'recep123', role: 'Receptionist', color: 'amber',  desc: 'Appointments & registration' },
+];
+
+const BADGE: Record<string, string> = {
+  violet:  'bg-violet-100 text-violet-800 border-violet-200',
+  blue:    'bg-blue-100 text-blue-800 border-blue-200',
+  emerald: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  amber:   'bg-amber-100 text-amber-800 border-amber-200',
+};
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const { state, login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(email, password);
-  };
-
-  const demoCredentials = [
-    { email: 'admin@clinic.com', password: 'admin123', role: 'Admin/Doctor' },
-    { email: 'doctor@clinic.com', password: 'doctor123', role: 'Doctor' },
-  ];
+  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); await login(email, password); };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl mb-4 shadow-lg">
-            <Stethoscope className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left branding panel */}
+      <div className="hidden lg:flex lg:w-[44%] bg-gradient-to-br from-blue-700 to-blue-900 flex-col justify-between p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }} />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <Stethoscope className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-white font-bold text-xl">DentalCare Pro</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">DentalCare Pro</h1>
-          <p className="text-gray-600">Complete Clinic Management System</p>
+          <h2 className="text-4xl font-bold text-white leading-tight mb-4">Back-Office<br />Management Portal</h2>
+          <p className="text-blue-200 text-base leading-relaxed">
+            Complete dental clinic operations — appointments, patient records, billing, treatments, and corporate plans in one place.
+          </p>
         </div>
+        <div className="relative space-y-3">
+          {[
+            { icon: <Building2 className="w-4 h-4" />, text: 'Corporate Plan Management' },
+            { icon: <Shield className="w-4 h-4" />, text: 'Role-Based Access Control' },
+            { icon: <Users className="w-4 h-4" />, text: 'Complete Patient Lifecycle' },
+          ].map((f, i) => (
+            <div key={i} className="flex items-center gap-3 text-blue-100">
+              <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">{f.icon}</div>
+              <span className="text-sm font-medium">{f.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Right login panel */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md">
+          <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Stethoscope className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-gray-900 text-xl">DentalCare Pro</span>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+            <p className="text-gray-500 text-sm mt-1">Sign in to your account to continue</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
               <div className="relative">
-                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your email"
-                  required
-                />
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@clinic.com"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
+                  className="w-full pl-10 pr-11 py-2.5 border border-gray-300 rounded-xl text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-
             {state.error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                {state.error}
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                <span>⚠</span> {state.error}
               </div>
             )}
-
-            <button
-              type="submit"
-              disabled={state.isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center group disabled:opacity-50"
-            >
-              {state.isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+            <button type="submit" disabled={state.isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors mt-1">
+              {state.isLoading
+                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><span>Sign In</span><ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Demo Credentials:</p>
-            <div className="space-y-2">
-              {demoCredentials.map((cred, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setEmail(cred.email);
-                    setPassword(cred.password);
-                  }}
-                  className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-sm"
-                >
-                  <div className="font-medium text-gray-900">{cred.role}</div>
-                  <div className="text-gray-600">{cred.email}</div>
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">Demo Accounts</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {DEMO.map(d => (
+                <button key={d.email} onClick={() => { setEmail(d.email); setPassword(d.password); }}
+                  className="text-left p-3 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-xl transition-all group">
+                  <span className={`inline-flex text-xs font-bold px-1.5 py-0.5 rounded border mb-1 ${BADGE[d.color]}`}>{d.role}</span>
+                  <p className="text-gray-500 text-xs leading-snug">{d.desc}</p>
                 </button>
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500">
-          <p>© 2024 DentalCare Pro. All rights reserved.</p>
+          <p className="text-center text-gray-400 text-xs mt-8">© 2025 DentalCare Pro · All rights reserved</p>
         </div>
       </div>
     </div>

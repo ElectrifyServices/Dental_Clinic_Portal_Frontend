@@ -1,151 +1,221 @@
 import React, { useState } from 'react';
-import { Search, Plus, Filter, Download, Eye, MoreVertical } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText } from 'lucide-react';
+import { InvoicePaymentModal } from './InvoicePaymentModal';
+import { 
+  Button, 
+  PageHeader, 
+  DataTable, 
+  SearchInput, 
+  FilterTabs, 
+  Badge,
+  KpiCard
+} from '@/components/ui';
+import { createPortal } from 'react-dom';
 
 interface Invoice {
   id: string;
   patientName: string;
+  phone: string;
   date: string;
-  amount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  total: number;
+  amount?: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'complimentary';
   dueDate: string;
+  patientId?: string;
 }
-
-const invoices: Invoice[] = [
-  { id: 'INV-001', patientName: 'Rajesh Kumar', date: '2024-01-15', amount: 2500, status: 'paid', dueDate: '2024-01-22' },
-  { id: 'INV-002', patientName: 'Priya Sharma', date: '2024-01-14', amount: 1500, status: 'sent', dueDate: '2024-01-21' },
-  { id: 'INV-003', patientName: 'Amit Singh', date: '2024-01-12', amount: 3200, status: 'overdue', dueDate: '2024-01-19' },
-  { id: 'INV-004', patientName: 'Neha Gupta', date: '2024-01-10', amount: 1800, status: 'draft', dueDate: '2024-01-17' },
-  { id: 'INV-005', patientName: 'Suresh Patel', date: '2024-01-08', amount: 4500, status: 'paid', dueDate: '2024-01-15' },
-];
 
 interface InvoiceListProps {
   onCreateInvoice: () => void;
-  onViewInvoice?: (invoiceId: string) => void;
+  onViewInvoice?: (id: string) => void;
+  onDeleteInvoice?: (id: string) => void;
+  invoices: Invoice[];
+  onUpdateStatus?: (id: string, status: string) => void;
 }
 
-export function InvoiceList({ onCreateInvoice, onViewInvoice }: InvoiceListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [invoiceList, setInvoiceList] = useState(invoices);
+const STATUS_META: Record<string, { label: string; variant: 'green' | 'blue' | 'red' | 'gray' | 'violet' }> = {
+  paid:          { label: 'Paid',          variant: 'green' },
+  sent:          { label: 'Sent',          variant: 'blue' },
+  overdue:       { label: 'Overdue',       variant: 'red' },
+  draft:         { label: 'Draft',         variant: 'gray' },
+  complimentary: { label: 'Complimentary', variant: 'violet' },
+  cancelled:     { label: 'Cancelled',     variant: 'gray' },
+};
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'sent': return 'bg-blue-100 text-blue-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'draft', label: 'Draft' },
+  { key: 'sent', label: 'Sent' },
+  { key: 'paid', label: 'Paid' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
+
+export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, invoices, onUpdateStatus }: InvoiceListProps) {
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [payInvoice, setPayInvoice] = useState<Invoice | null>(null);
+
+  const filtered = invoices.filter(inv => {
+    const q = search.toLowerCase();
+    return (inv.patientName.toLowerCase().includes(q) || inv.id.toLowerCase().includes(q))
+      && (status === 'all' || inv.status === status);
+  });
+
+  const totalAmt = filtered.reduce((s, i) => s + (i.total || i.amount || 0), 0);
+  const pendingAmt = filtered.filter(i => ['sent', 'overdue'].includes(i.status)).reduce((s, i) => s + (i.total || i.amount || 0), 0);
+
+  const openMenu = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuHeight = 160; 
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      top = rect.top - menuHeight;
+      if (top < 0) top = 10;
     }
+    
+    setMenuPos({ top, left: rect.right - 176 });
+    setOpenMenuId(prev => prev === id ? null : id);
   };
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || invoice.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const columns = [
+    {
+      key: 'id',
+      header: 'Invoice',
+      render: (inv: Invoice) => <span className="font-mono text-xs font-bold text-gray-900">{inv.id}</span>
+    },
+    {
+      key: 'patient',
+      header: 'Patient',
+      render: (inv: Invoice) => (
+        <div>
+          <div className="font-bold text-gray-900">{inv.patientName}</div>
+          {inv.phone && <div className="text-[10px] text-muted-foreground font-medium mt-0.5">{inv.phone}</div>}
+        </div>
+      )
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (inv: Invoice) => <span className="text-gray-600">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+    },
+    {
+      key: 'dueDate',
+      header: 'Due Date',
+      render: (inv: Invoice) => <span className="text-gray-500">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right' as const,
+      render: (inv: Invoice) => <span className="font-bold text-gray-900">₹{(inv.total || inv.amount || 0).toLocaleString()}</span>
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (inv: Invoice) => {
+        const meta = STATUS_META[inv.status] || STATUS_META.draft;
+        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center' as const,
+      render: (inv: Invoice) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onViewInvoice?.(inv.id)}>
+            <Eye className="w-4 h-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, inv.id)}>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+            {openMenuId === inv.id && createPortal(
+              <>
+                <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  style={{ top: menuPos.top, left: menuPos.left }}>
+                  <div className="p-1.5 space-y-0.5">
+                    {inv.status !== 'paid' && onUpdateStatus && (
+                      <button onClick={() => { setPayInvoice(inv); setOpenMenuId(null); }}
+                        className="w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                        <IndianRupee className="w-4 h-4" /> Mark as Paid
+                      </button>
+                    )}
+                    {inv.status === 'draft' && onUpdateStatus && (
+                      <button onClick={() => { onUpdateStatus(inv.id, 'sent'); setOpenMenuId(null); }}
+                        className="w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                        <Send className="w-4 h-4" /> Send to Patient
+                      </button>
+                    )}
+                    <button onClick={() => { onDeleteInvoice?.(inv.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
+          </div>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Invoices</h2>
-          <p className="text-gray-600 mt-1">Manage billing and payments</p>
-        </div>
-        <button
-          onClick={onCreateInvoice}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Invoice
-        </button>
+      <PageHeader 
+        title="Billing & Invoices" 
+        subtitle={`${invoices.length} total invoices recorded`}
+        action={
+          <Button onClick={onCreateInvoice} className="gap-2">
+            <Plus className="w-4 h-4" /> Create Invoice
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard label="Total Billed" value={`₹${totalAmt.toLocaleString()}`} color="text-gray-900" />
+        <KpiCard label="Pending Payments" value={`₹${pendingAmt.toLocaleString()}`} color="text-amber-600" />
+        <KpiCard label="Paid Invoices" value={invoices.filter(i => i.status === 'paid').length} color="text-emerald-600" />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search invoices by patient or invoice number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="sent">Sent</option>
-          <option value="paid">Paid</option>
-          <option value="overdue">Overdue</option>
-        </select>
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search by patient name or invoice ID…" 
+          className="flex-1"
+        />
+        <FilterTabs 
+          tabs={FILTERS} 
+          active={status} 
+          onChange={setStatus} 
+        />
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{invoice.id}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{invoice.patientName}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(invoice.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(invoice.dueDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-gray-900">
-                      ₹{invoice.amount.toLocaleString()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(invoice.status)}`}>
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-700 p-1">
-                        <Eye 
-                          className="w-4 h-4" 
-                          onClick={() => onViewInvoice?.(invoice.id)}
-                        />
-                      </button>
-                      <button className="text-green-600 hover:text-green-700 p-1">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-400 hover:text-gray-600 p-1">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={filtered} 
+        rowKey={(inv) => inv.id}
+        emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
+        emptyTitle="No invoices found"
+        emptySubtitle="Create your first invoice to get started."
+      />
+
+      {payInvoice && (
+        <InvoicePaymentModal
+          invoice={payInvoice}
+          onClose={() => setPayInvoice(null)}
+          onConfirmPayment={(id, method) => { onUpdateStatus?.(id, 'paid'); setPayInvoice(null); }}
+        />
+      )}
     </div>
   );
 }

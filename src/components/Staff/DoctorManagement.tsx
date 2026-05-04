@@ -1,443 +1,315 @@
 import React, { useState } from 'react';
-import { Search, Plus, User, Phone, Mail, Edit, Trash2, UserCheck, UserX, Stethoscope, Calendar, Shield, Clock, MapPin } from 'lucide-react';
+import { 
+  Search, Plus, Edit, Trash2, UserCheck, UserX, Stethoscope, 
+  Shield, User, IndianRupee, Calendar, MoreVertical, Phone, Mail,
+  LayoutGrid, List
+} from 'lucide-react';
 import { User as UserType } from '../../types';
-
-const doctors: UserType[] = [
-  {
-    id: '1',
-    name: 'Dr. Rajesh Sharma',
-    email: 'rajesh@clinic.com',
-    role: 'admin',
-    specialization: 'General Dentistry',
-    phone: '+91 98765 43210',
-    permissions: ['all'],
-    isActive: true,
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    workingHours: {
-      monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      wednesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: true, startTime: '09:00', endTime: '14:00' },
-      sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
-    },
-    timeSlots: { duration: 30, bufferTime: 5 }
-  },
-  {
-    id: '2',
-    name: 'Dr. Priya Patel',
-    email: 'priya@clinic.com',
-    role: 'doctor',
-    specialization: 'Orthodontics',
-    phone: '+91 87654 32109',
-    permissions: ['appointments', 'patients', 'treatments', 'emr'],
-    isActive: true,
-    avatar: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    workingHours: {
-      monday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-      wednesday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '10:00', endTime: '16:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: false, startTime: '10:00', endTime: '16:00' },
-      sunday: { isWorking: false, startTime: '10:00', endTime: '16:00' }
-    },
-    timeSlots: { duration: 45, bufferTime: 10 }
-  },
-  {
-    id: '3',
-    name: 'Dr. Amit Singh',
-    email: 'amit@clinic.com',
-    role: 'doctor',
-    specialization: 'Oral Surgery',
-    phone: '+91 76543 21098',
-    permissions: ['appointments', 'patients', 'treatments', 'emr'],
-    isActive: true,
-    workingHours: {
-      monday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      tuesday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      wednesday: { isWorking: false, startTime: '14:00', endTime: '20:00' },
-      thursday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      friday: { isWorking: true, startTime: '14:00', endTime: '20:00', breakStart: '17:00', breakEnd: '18:00' },
-      saturday: { isWorking: true, startTime: '09:00', endTime: '15:00', breakStart: '12:00', breakEnd: '13:00' },
-      sunday: { isWorking: false, startTime: '14:00', endTime: '20:00' }
-    },
-    timeSlots: { duration: 60, bufferTime: 15 }
-  },
-  {
-    id: '4',
-    name: 'Sarah Johnson',
-    email: 'sarah@clinic.com',
-    role: 'receptionist',
-    phone: '+91 65432 10987',
-    permissions: ['appointments', 'patients'],
-    isActive: true,
-    workingHours: {
-      monday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      tuesday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      wednesday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      thursday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      friday: { isWorking: true, startTime: '08:00', endTime: '17:00', breakStart: '12:00', breakEnd: '13:00' },
-      saturday: { isWorking: true, startTime: '08:00', endTime: '14:00' },
-      sunday: { isWorking: false, startTime: '08:00', endTime: '17:00' }
-    }
-  },
-  {
-    id: '5',
-    name: 'Michael Chen',
-    email: 'michael@clinic.com',
-    role: 'assistant',
-    specialization: 'Dental Assistant',
-    phone: '+91 54321 09876',
-    permissions: ['appointments', 'patients', 'inventory'],
-    isActive: false,
-    workingHours: {
-      monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      wednesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      thursday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      friday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-      saturday: { isWorking: false, startTime: '09:00', endTime: '18:00' },
-      sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
-    }
-  }
-];
+import { createPortal } from 'react-dom';
+import { 
+  Button, 
+  PageHeader, 
+  DataTable, 
+  SearchInput, 
+  FilterTabs, 
+  Badge,
+  Card,
+  CardContent
+} from '@/components/ui';
 
 interface DoctorManagementProps {
+  staffMembers: UserType[];
   onAddDoctor: () => void;
-  onEditDoctor: (doctorId: string) => void;
-  onDeleteDoctor: (doctorId: string) => void;
-  onManageSchedule: (doctorId: string, doctorName: string) => void;
+  onEditDoctor: (id: string) => void;
+  onDeleteDoctor: (id: string) => void;
+  onUpdateStaff: (staff: any) => void;
+  onManageSchedule: (id: string, name: string) => void;
+  onPaySalary?: (id: string, name: string) => void;
+  onViewSalaryHistory?: (id: string, name: string) => void;
 }
 
-export function DoctorManagement({ onAddDoctor, onEditDoctor, onDeleteDoctor, onManageSchedule }: DoctorManagementProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [staffList, setStaffList] = useState(doctors);
+const ROLE_META: Record<string, { label: string; variant: 'violet' | 'indigo' | 'blue' | 'green' | 'amber' | 'gray'; icon: React.ReactNode }> = {
+  superadmin:   { label: 'Super Admin', variant: 'violet', icon: <Shield className="w-3 h-3" /> },
+  admin:        { label: 'Admin',       variant: 'indigo', icon: <Shield className="w-3 h-3" /> },
+  doctor:       { label: 'Doctor',      variant: 'blue',   icon: <Stethoscope className="w-3 h-3" /> },
+  receptionist: { label: 'Receptionist',variant: 'green',  icon: <User className="w-3 h-3" /> },
+  assistant:    { label: 'Assistant',   variant: 'amber',  icon: <User className="w-3 h-3" /> },
+};
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300';
-      case 'doctor': return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300';
-      case 'receptionist': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
-      case 'assistant': return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
-      default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
-    }
-  };
+const ROLE_FILTERS = [
+  { key: 'all', label: 'All Roles' },
+  { key: 'doctor', label: 'Doctors' },
+  { key: 'admin', label: 'Admin' },
+  { key: 'receptionist', label: 'Reception' },
+  { key: 'assistant', label: 'Assistants' }
+];
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin': return Shield;
-      case 'doctor': return Stethoscope;
-      case 'receptionist': return User;
-      case 'assistant': return User;
-      default: return User;
-    }
-  };
+export function DoctorManagement({ 
+  staffMembers, onAddDoctor, onEditDoctor, onDeleteDoctor, 
+  onUpdateStaff, onManageSchedule, onPaySalary, onViewSalaryHistory 
+}: DoctorManagementProps) {
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const getWorkingDays = (workingHours: any) => {
-    if (!workingHours) return 'Not set';
-    const workingDays = Object.entries(workingHours)
-      .filter(([_, schedule]: [string, any]) => schedule.isWorking)
-      .map(([day, _]) => day.charAt(0).toUpperCase() + day.slice(1, 3))
-      .join(', ');
-    return workingDays || 'No working days';
-  };
-
-  const getWorkingHours = (workingHours: any) => {
-    if (!workingHours) return 'Not set';
-    const firstWorkingDay = Object.values(workingHours).find((schedule: any) => schedule.isWorking) as any;
-    if (!firstWorkingDay) return 'Not set';
-    return `${firstWorkingDay.startTime} - ${firstWorkingDay.endTime}`;
-  };
-
-  const filteredStaff = staffList.filter(staff => {
-    const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (staff.specialization && staff.specialization.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesRole = filterRole === 'all' || staff.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'active' && staff.isActive) ||
-                         (filterStatus === 'inactive' && !staff.isActive);
-    return matchesSearch && matchesRole && matchesStatus;
+  const filtered = staffMembers.filter(s => {
+    const q = search.toLowerCase();
+    const matchSearch = s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.specialization || '').toLowerCase().includes(q);
+    const matchRole = roleFilter === 'all' || s.role === roleFilter;
+    const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? s.isActive : !s.isActive);
+    return matchSearch && matchRole && matchStatus;
   });
 
-  const toggleStatus = (staffId: string) => {
-    setStaffList(prev => prev.map(staff => 
-      staff.id === staffId ? { ...staff, isActive: !staff.isActive } : staff
-    ));
-  };
-
-  const handleDelete = (staffId: string) => {
-    const staff = staffList.find(s => s.id === staffId);
-    if (window.confirm(`Are you sure you want to delete ${staff?.name}? This action cannot be undone.`)) {
-      setStaffList(prev => prev.filter(s => s.id !== staffId));
-      onDeleteDoctor(staffId);
+  const openMenu = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const menuHeight = 220; 
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      top = rect.top - menuHeight;
+      if (top < 0) top = 10;
     }
+    
+    setMenuPos({ top, left: rect.right - 184 });
+    setOpenMenuId(prev => prev === id ? null : id);
   };
 
-  const activeStaffCount = staffList.filter(s => s.isActive).length;
-  const doctorCount = staffList.filter(s => s.role === 'doctor' || s.role === 'admin').length;
+  const getInitials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+  const renderStaffMenu = (staff: UserType) => (
+    <>
+      <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+      <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
+        style={{ top: menuPos.top, left: menuPos.left }}>
+        <button onClick={() => { onUpdateStaff({ ...staff, isActive: !staff.isActive }); setOpenMenuId(null); }}
+          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+          {staff.isActive ? <><UserX className="w-4 h-4 text-red-500" /> Deactivate</> : <><UserCheck className="w-4 h-4 text-emerald-500" /> Activate</>}
+        </button>
+        <button onClick={() => { onManageSchedule(staff.id, staff.name); setOpenMenuId(null); }}
+          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+          <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
+        </button>
+        {onPaySalary && (
+          <button onClick={() => { onPaySalary(staff.id, staff.name); setOpenMenuId(null); }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 text-emerald-700 font-medium transition-colors">
+            <IndianRupee className="w-4 h-4" /> Pay Salary
+          </button>
+        )}
+        {onViewSalaryHistory && (
+          <button onClick={() => { onViewSalaryHistory(staff.id, staff.name); setOpenMenuId(null); }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+            <IndianRupee className="w-4 h-4 text-amber-500" /> Salary History
+          </button>
+        )}
+        <div className="h-px bg-gray-100 my-1 mx-2" />
+        <button onClick={() => { onDeleteDoctor(staff.id); setOpenMenuId(null); }}
+          className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded-xl flex items-center gap-2.5 text-red-600 font-medium transition-colors">
+          <Trash2 className="w-4 h-4" /> Remove
+        </button>
+      </div>
+    </>
+  );
+
+  const columns = [
+    {
+      key: 'member',
+      header: 'Staff Member',
+      render: (staff: UserType) => (
+        <div className="flex items-center gap-3">
+          {staff.avatar ? (
+            <img src={staff.avatar} alt={staff.name} className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-gray-100 shadow-sm" />
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs flex-shrink-0 border border-primary/5">
+              {getInitials(staff.name)}
+            </div>
+          )}
+          <div>
+            <div className="font-bold text-foreground text-sm">{staff.name}</div>
+            {staff.specialization && <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{staff.specialization}</div>}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (staff: UserType) => {
+        const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+        return <Badge variant={rm.variant} className="gap-1.5 uppercase font-bold text-[10px]">{rm.icon}{rm.label}</Badge>;
+      }
+    },
+    {
+      key: 'contact',
+      header: 'Contact Info',
+      render: (staff: UserType) => (
+        <div className="space-y-1">
+          <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5"><Mail className="w-3 h-3" /> {staff.email}</div>
+          {staff.phone && <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5"><Phone className="w-3 h-3" /> {staff.phone}</div>}
+        </div>
+      )
+    },
+    {
+      key: 'salary',
+      header: 'Financials',
+      render: (staff: any) => (
+        <div className="text-[11px] font-bold">
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400 font-medium">Paid:</span>
+            <span className="text-emerald-600">₹{staff.salaryPaid || '0'}</span>
+          </div>
+          <div className="flex justify-between gap-4 mt-0.5">
+            <span className="text-gray-400 font-medium">Due:</span>
+            <span className="text-amber-600">₹{staff.salaryPending || '0'}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (staff: UserType) => (
+        <Badge variant={staff.isActive ? 'green' : 'gray'} className="font-bold text-[10px]">
+          {staff.isActive ? 'ACTIVE' : 'INACTIVE'}
+        </Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center' as const,
+      render: (staff: UserType) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onEditDoctor(staff.id)}>
+            <Edit className="w-4 h-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, staff.id)}>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+            {openMenuId === staff.id && createPortal(renderStaffMenu(staff), document.body)}
+          </div>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Staff Management</h2>
-            <p className="text-gray-600">Manage doctors, assistants, and clinic staff</p>
-            <div className="flex items-center space-x-6 mt-3">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-700">{activeStaffCount} Active Staff</span>
-              </div>
-              <div className="flex items-center">
-                <Stethoscope className="w-4 h-4 text-blue-600 mr-2" />
-                <span className="text-sm text-gray-700">{doctorCount} Medical Professionals</span>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={onAddDoctor}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 flex items-center shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Staff Member
-          </button>
-        </div>
-      </div>
-{/* Empty State */}
-      {filteredStaff.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
-          <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <User className="w-12 h-12 text-gray-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No staff members found</h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            {searchTerm || filterRole !== 'all' || filterStatus !== 'all' 
-              ? 'Try adjusting your search criteria or filters.'
-              : 'Start by adding doctors and staff to your clinic.'
-            }
-          </p>
-          <button
-            onClick={onAddDoctor}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            Add First Staff Member
-          </button>
-        </div>
-      )}
+      <PageHeader 
+        title="Staff Directory" 
+        subtitle={`${staffMembers.length} team members recorded`}
+        action={
+          <Button onClick={onAddDoctor} className="gap-2">
+            <Plus className="w-4 h-4" /> Add New Staff
+          </Button>
+        }
+      />
 
-      {/* Statistics Footer */}
-      {filteredStaff.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{filteredStaff.length}</div>
-              <div className="text-sm text-gray-600">Total Staff</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{filteredStaff.filter(s => s.isActive).length}</div>
-              <div className="text-sm text-gray-600">Active</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{filteredStaff.filter(s => s.role === 'doctor' || s.role === 'admin').length}</div>
-              <div className="text-sm text-gray-600">Doctors</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{filteredStaff.filter(s => s.role === 'receptionist' || s.role === 'assistant').length}</div>
-              <div className="text-sm text-gray-600">Support Staff</div>
-            </div>
+      <div className="flex flex-col xl:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search by name, email or role…" 
+          className="flex-1 w-full"
+        />
+        <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+          <FilterTabs tabs={ROLE_FILTERS} active={roleFilter} onChange={setRoleFilter} />
+          <div className="h-8 w-px bg-gray-100 hidden md:block" />
+          <div className="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-100">
+            <button onClick={() => setViewMode('grid')} 
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button onClick={() => setViewMode('list')} 
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>
+              <List className="w-4 h-4" />
+            </button>
           </div>
-        </div>
-      )}
-      {/* Filters Section */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or specialization..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            />
-          </div>
-          <select
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="all">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="doctor">Doctor</option>
-            <option value="receptionist">Receptionist</option>
-            <option value="assistant">Assistant</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
         </div>
       </div>
 
-      {/* Staff Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredStaff.map((staff) => {
-          const RoleIcon = getRoleIcon(staff.role);
-          
-          return (
-            <div key={staff.id} className={`bg-white rounded-2xl border-2 p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
-              staff.isActive ? 'border-gray-200 hover:border-blue-300' : 'border-gray-300 bg-gray-50'
-            }`}>
-              {/* Staff Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="relative">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
-                      {staff.avatar ? (
-                        <img src={staff.avatar} alt={staff.name} className="w-16 h-16 object-cover rounded-2xl" />
-                      ) : (
-                        <User className="w-8 h-8 text-blue-600" />
-                      )}
-                    </div>
-                    <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg ${
-                      staff.isActive ? 'bg-green-500' : 'bg-red-500'
-                    }`}>
-                      {staff.isActive ? <UserCheck className="w-3 h-3 text-white" /> : <UserX className="w-3 h-3 text-white" />}
+      {viewMode === 'list' ? (
+        <DataTable 
+          columns={columns} 
+          data={filtered} 
+          rowKey={(s) => s.id}
+          emptyTitle="No staff members found"
+          emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {filtered.length === 0 ? (
+            <div className="col-span-full py-20 bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
+              <User className="w-12 h-12 text-muted-foreground/30 mb-4" />
+              <p className="text-sm font-bold text-foreground uppercase tracking-wider">No matching staff members</p>
+              <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters.</p>
+            </div>
+          ) : filtered.map(staff => {
+            const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+            return (
+              <Card key={staff.id} className="group hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5">
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-start mb-4">
+                    {staff.avatar ? (
+                      <img src={staff.avatar} alt={staff.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-lg border-2 border-white shadow-md group-hover:scale-105 transition-transform">
+                        {getInitials(staff.name)}
+                      </div>
+                    )}
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditDoctor(staff.id)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <div className="relative">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, staff.id)}>
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                        {openMenuId === staff.id && createPortal(renderStaffMenu(staff), document.body)}
+                      </div>
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <h3 className="font-bold text-gray-900 text-lg">{staff.name}</h3>
-                    <div className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getRoleColor(staff.role)}`}>
-                      <RoleIcon className="w-3 h-3 mr-1" />
-                      {staff.role.toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Contact Information */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center text-sm">
-                  <Mail className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-600 truncate">{staff.email}</span>
-                </div>
-                {staff.phone && (
-                  <div className="flex items-center text-sm">
-                    <Phone className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">{staff.phone}</span>
-                  </div>
-                )}
-                {staff.specialization && (
-                  <div className="flex items-center text-sm">
-                    <Stethoscope className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">{staff.specialization}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Working Schedule */}
-              {staff.workingHours && (
-                <div className="mb-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-                  <div className="flex items-center mb-2">
-                    <Clock className="w-4 h-4 text-gray-500 mr-2" />
-                    <span className="text-sm font-medium text-gray-700">Schedule</span>
-                  </div>
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Working Days:</span>
-                      <span className="font-medium text-gray-800">{getWorkingDays(staff.workingHours)}</span>
+                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{staff.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={rm.variant} className="text-[9px] font-black uppercase px-1.5 h-4">{rm.label}</Badge>
+                      {!staff.isActive && <Badge variant="gray" className="text-[9px] font-black uppercase px-1.5 h-4">Inactive</Badge>}
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Hours:</span>
-                      <span className="font-medium text-gray-800">{getWorkingHours(staff.workingHours)}</span>
+                  </div>
+
+                  <div className="mt-4 space-y-2 border-t border-gray-50 pt-4">
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium truncate">
+                      <Mail className="w-3 h-3 flex-shrink-0 text-blue-400" /> {staff.email}
                     </div>
-                    {staff.timeSlots && (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600">Slot Duration:</span>
-                        <span className="font-medium text-gray-800">{staff.timeSlots.duration} min</span>
+                    {staff.phone && (
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                        <Phone className="w-3 h-3 flex-shrink-0 text-emerald-400" /> {staff.phone}
                       </div>
                     )}
                   </div>
-                </div>
-              )}
 
-              {/* Permissions */}
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Permissions</p>
-                <div className="flex flex-wrap gap-1">
-                  {staff.permissions.slice(0, 3).map((permission, index) => (
-                    <span key={index} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full font-medium">
-                      {permission === 'all' ? 'Full Access' : permission}
-                    </span>
-                  ))}
-                  {staff.permissions.length > 3 && (
-                    <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full font-medium">
-                      +{staff.permissions.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <div className={`text-sm font-semibold flex items-center ${staff.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                  <div className={`w-2 h-2 rounded-full mr-2 ${staff.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  {staff.isActive ? 'Active' : 'Inactive'}
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => toggleStatus(staff.id)}
-                    className={`p-2 rounded-lg transition-all duration-200 ${
-                      staff.isActive 
-                        ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' 
-                        : 'text-green-600 bg-green-50 hover:bg-green-100'
-                    }`}
-                    title={staff.isActive ? 'Deactivate' : 'Activate'}
-                  >
-                    {staff.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => onEditDoctor(staff.id)}
-                    className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-200"
-                    title="Edit Staff"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  {(staff.role === 'doctor' || staff.role === 'admin') && (
-                    <button
-                      onClick={() => onManageSchedule(staff.id, staff.name)}
-                      className="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-all duration-200"
-                      title="Manage Schedule"
-                    >
-                      <Calendar className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(staff.id)}
-                    className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-200"
-                    title="Delete Staff"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="p-2 bg-gray-50 rounded-xl">
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Salary Due</p>
+                      <p className="text-xs font-black text-amber-600 mt-0.5">₹{(staff as any).salaryPending || '0'}</p>
+                    </div>
+                    <div className="p-2 bg-emerald-50/50 rounded-xl">
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Paid</p>
+                      <p className="text-xs font-black text-emerald-600 mt-0.5">₹{(staff as any).salaryPaid || '0'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

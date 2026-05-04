@@ -1,75 +1,68 @@
 import React from 'react';
-import { User, Calendar, Phone } from 'lucide-react';
+import { User, Phone, Calendar, TrendingUp } from 'lucide-react';
 
-interface PatientProps {
-  name: string;
-  lastVisit: string;
-  nextAppointment?: string;
-  phone: string;
-  status: 'active' | 'new' | 'overdue';
-}
+export function RecentPatients() {
+  const [patients, setPatients] = React.useState<any[]>([]);
 
-function PatientCard({ name, lastVisit, nextAppointment, phone, status }: PatientProps) {
-  const statusColors = {
-    active: 'bg-green-100 text-green-800',
-    new: 'bg-blue-100 text-blue-800',
-    overdue: 'bg-red-100 text-red-800'
+  React.useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('patients') || '[]');
+      const sorted = [...stored].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setPatients(sorted.slice(0, 6));
+    } catch {}
+  }, []);
+
+  const STATUS_CLS: Record<string, string> = {
+    active: 'badge badge-green', new: 'badge badge-blue', inactive: 'badge badge-gray',
   };
 
   return (
-    <div className="p-4 border border-gray-200 rounded-lg">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-gray-600" />
+    <div className="card">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div>
+          <h2 className="text-sm font-bold text-gray-900">Recent Patients</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Recently registered</p>
+        </div>
+        <TrendingUp className="w-4 h-4 text-gray-400" />
+      </div>
+      {patients.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-blue-50/50">
+            <User className="w-8 h-8 text-blue-500" />
           </div>
-          <div className="ml-3">
-            <h4 className="font-semibold text-gray-900">{name}</h4>
-            <div className="flex items-center text-sm text-gray-500">
-              <Phone className="w-3 h-3 mr-1" />
-              {phone}
+          <h3 className="text-[15px] font-bold text-gray-900 mb-1 uppercase tracking-tight">Begin your practice</h3>
+          <p className="text-xs text-gray-500 text-center max-w-[220px] leading-relaxed">
+            Your patient directory is currently empty. Start by registering your first patient to begin tracking.
+          </p>
+          <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+            <TrendingUp className="w-3 h-3" />
+            Ready for Growth
+          </div>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-50">
+          {patients.map((p, i) => (
+            <div key={p.id || i} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs flex-shrink-0">
+                {p.name?.[0]?.toUpperCase() || 'P'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm text-gray-900 truncate">{p.name}</span>
+                  <span className={STATUS_CLS[p.status] || STATUS_CLS.new}>{p.status || 'new'}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-gray-400 flex items-center gap-1"><Phone className="w-2.5 h-2.5" />{p.phone}</span>
+                </div>
+              </div>
+              <div className="text-xs text-gray-400 flex-shrink-0 flex items-center gap-1">
+                <Calendar className="w-2.5 h-2.5" />
+                {p.totalVisits || 0} visit{p.totalVisits !== 1 ? 's' : ''}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[status]}`}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-      </div>
-      <div className="space-y-1 text-sm">
-        <div className="flex items-center text-gray-600">
-          <Calendar className="w-3 h-3 mr-2" />
-          Last visit: {lastVisit}
-        </div>
-        {nextAppointment && (
-          <div className="flex items-center text-gray-600">
-            <Calendar className="w-3 h-3 mr-2" />
-            Next: {nextAppointment}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function RecentPatients() {
-  const patients = [
-    { name: 'Rajesh Kumar', lastVisit: '2 days ago', nextAppointment: 'Tomorrow 10:00 AM', phone: '+91 98765 43210', status: 'active' as const },
-    { name: 'Priya Sharma', lastVisit: 'Today', phone: '+91 87654 32109', status: 'new' as const },
-    { name: 'Amit Singh', lastVisit: '1 week ago', nextAppointment: 'Next Monday', phone: '+91 76543 21098', status: 'active' as const },
-    { name: 'Neha Gupta', lastVisit: '2 months ago', phone: '+91 65432 10987', status: 'overdue' as const },
-  ];
-
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Patients</h3>
-      <div className="space-y-4">
-        {patients.map((patient, index) => (
-          <PatientCard key={index} {...patient} />
-        ))}
-      </div>
-      <button className="w-full mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm">
-        View All Patients
-      </button>
+      )}
     </div>
   );
 }

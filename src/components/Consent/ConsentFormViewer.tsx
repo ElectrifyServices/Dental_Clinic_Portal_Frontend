@@ -1,217 +1,181 @@
 import React from 'react';
-import { X, Download, Shield, User, Calendar, FileText } from 'lucide-react';
+import { X, Printer, Download, Shield, User, FileText, Calendar, CheckCircle2, MapPin, Phone, Globe } from 'lucide-react';
 
 interface ConsentFormViewerProps {
-  formId: string;
+  form: any;
   onClose: () => void;
 }
 
-export function ConsentFormViewer({ formId, onClose }: ConsentFormViewerProps) {
-  // Mock data - in real app, fetch from API
-  const form = {
-    id: formId,
-    patientName: 'Rajesh Kumar',
-    treatmentType: 'Root Canal Treatment',
-    content: 'I understand the risks and benefits of root canal treatment and consent to the procedure. The doctor has explained the treatment process, potential complications, and post-treatment care instructions.',
-    riskDisclosure: 'Potential risks include temporary discomfort, swelling, infection, and in rare cases, treatment failure requiring additional procedures.',
-    alternativeTreatments: 'Alternative treatments include tooth extraction followed by implant or bridge placement.',
-    postTreatmentCare: 'Avoid hard foods for 24 hours, take prescribed medications, and maintain good oral hygiene.',
-    date: '2024-01-15',
-    signature: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCI+PHBhdGggZD0iTTEwIDUwIEwxOTAgNTAiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==',
-    witnessSignature: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCI+PHBhdGggZD0iTTEwIDUwIEwxOTAgNTAiIHN0cm9rZT0iYmx1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+'
-  };
-
-  const handleDownload = () => {
-    // Create a printable version
-    const printContent = `
-      <html>
-        <head>
-          <title>Consent Form - ${form.patientName}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .section { margin-bottom: 20px; }
-            .signature-area { margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Digital Consent Form</h1>
-            <h2>${form.treatmentType}</h2>
-          </div>
-          <div class="section">
-            <strong>Patient Name:</strong> ${form.patientName}<br>
-            <strong>Date:</strong> ${new Date(form.date).toLocaleDateString()}
-          </div>
-          <div class="section">
-            <h3>Treatment Consent</h3>
-            <p>${form.content}</p>
-          </div>
-          <div class="section">
-            <h3>Risk Disclosure</h3>
-            <p>${form.riskDisclosure}</p>
-          </div>
-          <div class="section">
-            <h3>Alternative Treatments</h3>
-            <p>${form.alternativeTreatments}</p>
-          </div>
-          <div class="section">
-            <h3>Post-Treatment Care</h3>
-            <p>${form.postTreatmentCare}</p>
-          </div>
-          <div class="signature-area">
-            <p><strong>Patient Signature:</strong> [Digitally Signed]</p>
-            <p><strong>Date:</strong> ${new Date(form.date).toLocaleDateString()}</p>
-          </div>
-        </body>
-      </html>
-    `;
-    
-    const blob = new Blob([printContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `consent-form-${form.patientName}-${form.date}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+export function ConsentFormViewer({ form, onClose }: ConsentFormViewerProps) {
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Shield className="w-8 h-8 text-green-600 mr-3" />
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Digital Consent Form</h2>
-                <p className="text-gray-600">{form.treatmentType}</p>
-              </div>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 overflow-y-auto print:p-0 print:bg-white">
+      <div className="bg-white max-w-4xl w-full my-auto shadow-2xl flex flex-col animate-in zoom-in-95 duration-500 print:shadow-none print:w-full print:max-w-none rounded-[2rem] overflow-hidden print:rounded-none">
+        
+        {/* Actions - Hidden on Print */}
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
+              <Shield className="w-5 h-5 text-white" />
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleDownload}
-                className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center transition-all duration-200"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </button>
-              <button
-                onClick={() => {
-                  const printContent = document.querySelector('.consent-content')?.innerHTML;
-                  if (printContent) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <html>
-                          <head>
-                            <title>Consent Form - ${form.patientName}</title>
-                            <style>
-                              body { font-family: Arial, sans-serif; margin: 40px; }
-                              .header { text-align: center; margin-bottom: 30px; }
-                              .section { margin-bottom: 20px; }
-                            </style>
-                          </head>
-                          <body>
-                            <div class="header">
-                              <h1>Digital Consent Form</h1>
-                              <h2>${form.treatmentType}</h2>
-                            </div>
-                            ${printContent}
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center transition-all duration-200"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Print
-              </button>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+            <h2 className="text-xl font-bold text-gray-900">Document Preview</h2>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handlePrint}
+              className="p-3 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2 font-bold shadow-sm"
+            >
+              <Printer className="w-4 h-4" />
+              Print / PDF
+            </button>
+            <button
+              onClick={onClose}
+              className="p-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all shadow-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          <div className="consent-content">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center">
-                <User className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">Patient Name</p>
-                  <p className="font-semibold text-gray-900">{form.patientName}</p>
+        {/* Document Content */}
+        <div className="flex-1 overflow-y-auto p-12 bg-gray-50/30 print:p-0 print:overflow-visible custom-scrollbar">
+          <div className="bg-white mx-auto shadow-sm border border-gray-100 p-12 min-h-[1000px] relative print:border-none print:shadow-none print:p-8">
+            
+            {/* Professional Watermark (Optional) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-35deg]">
+              <Shield className="w-96 h-96" />
+            </div>
+
+            {/* Clinic Header */}
+            <div className="flex justify-between items-start border-b-2 border-blue-600 pb-8 mb-10">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 tracking-tight">DENTAL CLINIC</h1>
+                <p className="text-blue-600 font-bold tracking-[0.2em] text-xs mt-1 uppercase">Advanced Oral Care Center</p>
+                <div className="mt-6 space-y-1 text-sm text-gray-500 font-medium">
+                  <div className="flex items-center gap-2"><MapPin className="w-3 h-3 text-blue-500" /> 123 Healthcare Tower, Sector 44</div>
+                  <div className="flex items-center gap-2"><Phone className="w-3 h-3 text-blue-500" /> +91 98765 43210</div>
+                  <div className="flex items-center gap-2"><Globe className="w-3 h-3 text-blue-500" /> www.dentalclinic.com</div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">Date</p>
-                  <p className="font-semibold text-gray-900">{new Date(form.date).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-              <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                Treatment Consent
-              </h3>
-              <p className="text-blue-800">{form.content}</p>
-            </div>
-
-            <div className="bg-orange-50 rounded-2xl p-6 border border-orange-200">
-              <h3 className="text-lg font-bold text-orange-900 mb-3">Risk Disclosure</h3>
-              <p className="text-orange-800">{form.riskDisclosure}</p>
-            </div>
-
-            <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200">
-              <h3 className="text-lg font-bold text-purple-900 mb-3">Alternative Treatments</h3>
-              <p className="text-purple-800">{form.alternativeTreatments}</p>
-            </div>
-
-            <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-              <h3 className="text-lg font-bold text-green-900 mb-3">Post-Treatment Care</h3>
-              <p className="text-green-800">{form.postTreatmentCare}</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Digital Signatures</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Patient Signature</p>
-                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
-                    <p className="text-green-600 font-medium">✓ Digitally Signed</p>
-                    <p className="text-xs text-gray-500 mt-1">{new Date(form.date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                {form.witnessSignature && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Witness Signature</p>
-                    <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
-                      <p className="text-blue-600 font-medium">✓ Witnessed</p>
-                      <p className="text-xs text-gray-500 mt-1">{new Date(form.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                )}
+              <div className="text-right">
+                <div className="bg-gray-900 text-white px-4 py-2 rounded-lg inline-block font-bold text-xs uppercase tracking-widest mb-4">Official Record</div>
+                <div className="text-gray-400 text-xs uppercase font-bold tracking-widest">Document ID</div>
+                <div className="text-sm font-bold text-gray-900">{form.id}</div>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Legal Disclaimer</h4>
-              <p className="text-sm text-blue-800">
-                This digital consent form is legally binding and complies with healthcare regulations. 
-                The patient has acknowledged understanding of the treatment, risks, and alternatives.
+            {/* Document Title */}
+            <div className="text-center mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-tight underline underline-offset-8 decoration-blue-600/30">INFORMED CONSENT FOR {form.treatmentType}</h2>
+              <p className="text-gray-500 mt-4 text-sm max-w-2xl mx-auto leading-relaxed italic">
+                "I understand that dentistry is not an exact science and therefore reputable practitioners cannot properly guarantee results. I acknowledge that no guarantee or assurance has been made by anyone regarding the dental treatment I have requested and authorized."
               </p>
             </div>
+
+            {/* Patient Details */}
+            <div className="grid grid-cols-2 gap-10 bg-gray-50 p-6 rounded-2xl mb-10 border border-gray-100">
+              <div>
+                <label className="text-[10px] font-bold text-blue-600 uppercase tracking-widest block mb-1">Patient Name</label>
+                <div className="text-lg font-bold text-gray-900">{form.patientName}</div>
+              </div>
+              <div className="text-right">
+                <label className="text-[10px] font-bold text-blue-600 uppercase tracking-widest block mb-1">Date of Authorization</label>
+                <div className="text-lg font-bold text-gray-900">{new Date(form.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric'})}</div>
+              </div>
+            </div>
+
+            {/* Legal Content Sections */}
+            <div className="space-y-10 mb-12">
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px]">01</span>
+                  Procedure Details & Authorization
+                </h3>
+                <div className="pl-8 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap border-l-2 border-gray-100 ml-3">
+                  {form.content}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <span className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px]">02</span>
+                  Disclosed Risks & Complications
+                </h3>
+                <div className="pl-8 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap border-l-2 border-gray-100 ml-3">
+                  {form.riskDisclosure}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px]">03</span>
+                  Alternative Treatment Options
+                </h3>
+                <div className="pl-8 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap border-l-2 border-gray-100 ml-3">
+                  {form.alternativeTreatments}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <span className="w-6 h-6 bg-amber-600 text-white rounded-full flex items-center justify-center text-[10px]">04</span>
+                  Post-Treatment Care Compliance
+                </h3>
+                <div className="pl-8 text-gray-700 leading-relaxed text-sm whitespace-pre-wrap border-l-2 border-gray-100 ml-3">
+                  {form.postTreatmentCare}
+                </div>
+              </section>
+            </div>
+
+            {/* Final Declarations */}
+            <div className="p-6 border-2 border-gray-100 rounded-2xl mb-12 bg-gray-50/50">
+              <div className="flex gap-4">
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  I have read this form or had it read to me. I have had an opportunity to ask questions and all questions have been answered to my satisfaction. I understand the procedure and its risks and alternatives. I hereby freely give my consent to the proposed treatment.
+                </p>
+              </div>
+            </div>
+
+            {/* Signature Block */}
+            <div className="grid grid-cols-2 gap-20 pt-10 border-t border-gray-100">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="min-h-[100px] flex items-center justify-center p-4">
+                    {form.signature && (
+                      <img src={form.signature} alt="Patient Signature" className="max-h-24 object-contain contrast-125" />
+                    )}
+                  </div>
+                  <div className="h-px bg-gray-300 w-full mb-2"></div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Patient / Guardian Signature</div>
+                  <div className="text-xs font-bold text-gray-900 mt-1">{form.patientName}</div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="min-h-[100px] flex items-center justify-center p-4">
+                    {/* Placeholder for Doctor's Signature/Seal */}
+                    <div className="text-blue-100 font-serif italic text-4xl select-none">Clinic Seal</div>
+                  </div>
+                  <div className="h-px bg-gray-300 w-full mb-2"></div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Attending Dentist / Witness</div>
+                  <div className="text-xs font-bold text-gray-900 mt-1">{form.doctorName}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Seal */}
+            <div className="mt-20 text-center">
+               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full">
+                 <Shield className="w-3 h-3 text-blue-600" />
+                 <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Electronically Verified Medical Document • {new Date().getFullYear()}</span>
+               </div>
+            </div>
+
           </div>
         </div>
       </div>
