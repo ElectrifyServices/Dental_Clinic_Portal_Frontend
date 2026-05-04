@@ -14,7 +14,7 @@ interface AppointmentsPageProps {
   handleUpdateAppointmentStatus: (id: string, status: string) => void;
   handleCheckInPatient: (appointment: any) => void;
   setSelectedAppointment: (apt: any) => void;
-  setShowAppointmentForm: (show: boolean) => void;
+  setActiveModal: (modal: string | null) => void;
 }
 
 export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
@@ -26,7 +26,7 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
   handleUpdateAppointmentStatus,
   handleCheckInPatient,
   setSelectedAppointment,
-  setShowAppointmentForm
+  setActiveModal
 }) => {
   const [viewMode, setViewMode] = useState("calendar");
   const listCount = appointments.filter((a) => a.status !== "no-show").length;
@@ -87,11 +87,11 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
             onBookAppointment={(doctorId, date, time) => {
               const doctor = doctorsWithSchedules.find(d => d.id === doctorId);
               setSelectedAppointment({ doctorId, doctorName: doctor?.name, date, time } as any);
-              setShowAppointmentForm(true);
+              setActiveModal('appointmentForm');
             }}
             onEditAppointment={(apt) => {
               setSelectedAppointment(apt);
-              setShowAppointmentForm(true);
+              setActiveModal('appointmentForm');
             }}
           />
         )}
@@ -103,7 +103,7 @@ export const AppointmentsPage: React.FC<AppointmentsPageProps> = ({
             onEditAppointment={(id) => {
               const apt = appointments.find((a) => a.id === id);
               setSelectedAppointment(apt);
-              setShowAppointmentForm(true);
+              setActiveModal('appointmentForm');
             }}
             onDeleteAppointment={handleDeleteAppointment}
             onUpdateStatus={handleUpdateAppointmentStatus}

@@ -6,7 +6,7 @@ interface PatientsPageProps {
   handleViewPatient: (id: string) => void;
   handleEditPatient: (id: string) => void;
   handleDeletePatient: (id: string) => void;
-  setShowPatientForm: (show: boolean) => void;
+  setActiveModal: (modal: string | null) => void;
   setPatientFormType: (type: "normal" | "person") => void;
   setParentPatientId: (id: string) => void;
   setSelectedPatientId: (id: string) => void;
@@ -19,7 +19,7 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
   handleViewPatient,
   handleEditPatient,
   handleDeletePatient,
-  setShowPatientForm,
+  setActiveModal,
   setPatientFormType,
   setParentPatientId,
   setSelectedPatientId,
@@ -34,7 +34,7 @@ export const PatientsPage: React.FC<PatientsPageProps> = ({
       setPatientFormType("normal");
     }
     setSelectedPatientId("");
-    setShowPatientForm(true);
+    setActiveModal('patientForm');
   };
 
   return (

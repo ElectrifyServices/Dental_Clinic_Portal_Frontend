@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download, IndianRupee, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download, IndianRupee, Activity, Target } from 'lucide-react';
+import { PageHeader, FilterTabs, KpiCard, DataTable, Badge, Card, CardContent, Button } from '@/components/ui';
 
 interface ReportsDashboardProps {
   patients: any[];
@@ -13,10 +14,10 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
   const [selectedReport, setSelectedReport] = useState('earnings');
 
   const reportTypes = [
-    { id: 'earnings', title: 'Earnings Report', description: 'Revenue and growth metrics', icon: DollarSign, color: 'from-green-500 to-emerald-500' },
-    { id: 'patients', title: 'Patient Analytics', description: 'Demographics and trends', icon: Users, color: 'from-blue-500 to-cyan-500' },
-    { id: 'appointments', title: 'Appointment Stats', description: 'Booking efficiency and flow', icon: Calendar, color: 'from-purple-500 to-violet-500' },
-    { id: 'treatments', title: 'Treatment Analysis', description: 'Procedure performance', icon: BarChart3, color: 'from-orange-500 to-amber-500' },
+    { id: 'earnings', title: 'Earnings', description: 'Revenue metrics', icon: DollarSign, color: 'from-emerald-500 to-teal-600' },
+    { id: 'patients', title: 'Patients', description: 'Growth trends', icon: Users, color: 'from-blue-500 to-indigo-600' },
+    { id: 'appointments', title: 'Appointments', description: 'Efficiency stats', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+    { id: 'treatments', title: 'Treatments', description: 'Procedure analysis', icon: BarChart3, color: 'from-amber-500 to-orange-600' },
   ];
 
   const stats = useMemo(() => {
@@ -25,15 +26,6 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
     const thisYear = now.getFullYear();
     const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
     const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-    const calculateAge = (dob: string) => {
-      if (!dob) return 0;
-      const birthDate = new Date(dob);
-      let age = now.getFullYear() - birthDate.getFullYear();
-      const m = now.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) age--;
-      return age;
-    };
 
     const currentMonthInvoices = invoices.filter(inv => {
       const d = new Date(inv.date);
@@ -48,324 +40,138 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
     const prevEarnings = lastMonthInvoices.reduce((sum, inv) => sum + (inv.total || inv.amount || 0), 0);
     const growth = prevEarnings === 0 ? 100 : Math.round(((currentEarnings - prevEarnings) / prevEarnings) * 100);
 
-    const newPatients = patients.filter(p => {
-      const d = new Date(p.createdAt || Date.now());
-      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-    }).length;
+    const calculateAge = (dob: string) => {
+      if (!dob) return 0;
+      const b = new Date(dob);
+      let age = now.getFullYear() - b.getFullYear();
+      if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) age--;
+      return age;
+    };
 
     const ageGroups = [
       { range: '0-18', count: patients.filter(p => calculateAge(p.dateOfBirth) <= 18).length },
       { range: '19-35', count: patients.filter(p => { const a = calculateAge(p.dateOfBirth); return a > 18 && a <= 35; }).length },
       { range: '36-50', count: patients.filter(p => { const a = calculateAge(p.dateOfBirth); return a > 35 && a <= 50; }).length },
-      { range: '51-65', count: patients.filter(p => { const a = calculateAge(p.dateOfBirth); return a > 50 && a <= 65; }).length },
-      { range: '65+', count: patients.filter(p => calculateAge(p.dateOfBirth) > 65).length },
+      { range: '51+', count: patients.filter(p => calculateAge(p.dateOfBirth) > 50).length },
     ];
 
-    const totalAppts = appointments.length;
-    const completedAppts = appointments.filter(a => a.status === 'completed' || a.status === 'checked-in').length;
-    const pendingAppts = appointments.filter(a => a.status === 'pending' || a.status === 'confirmed' || a.status === 'scheduled').length;
-    const noShowAppts = appointments.filter(a => a.status === 'no-show').length;
-    const completionRate = totalAppts ? Math.round((completedAppts / totalAppts) * 100) : 0;
-
-    const next7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const count = appointments.filter(a => new Date(a.date).toDateString() === d.toDateString()).length;
-      return {
-        day: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        date: d.getDate(),
-        isToday: i === 0,
-        count
-      };
+    const completed = appointments.filter(a => ['completed', 'checked-in'].includes(a.status)).length;
+    const trend = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), date: d.getDate(), isToday: i === 0, count: appointments.filter(a => new Date(a.date).toDateString() === d.toDateString()).length };
     });
 
-    const treatmentCounts: Record<string, { revenue: number, count: number }> = {};
-    treatments.forEach(t => {
+    const treatmentData = Object.entries(treatments.reduce((acc: any, t) => {
       const name = t.procedure || 'General Service';
       const cost = Number(t.cost) || 0;
-      // Skip astronomical numbers in analytics too
-      if (cost < 100000000) {
-        if (!treatmentCounts[name]) treatmentCounts[name] = { revenue: 0, count: 0 };
-        treatmentCounts[name].revenue += cost;
-        treatmentCounts[name].count += 1;
+      if (cost < 1000000) {
+        if (!acc[name]) acc[name] = { revenue: 0, count: 0 };
+        acc[name].revenue += cost; acc[name].count += 1;
       }
-    });
-
-    const allTreatments = Object.entries(treatmentCounts)
-      .map(([service, data]) => ({ service, ...data }))
-      .sort((a, b) => b.revenue - a.revenue);
-
-    const topServices = allTreatments.slice(0, 5);
+      return acc;
+    }, {})).map(([service, data]: any) => ({ service, ...data })).sort((a, b) => b.revenue - a.revenue);
 
     return {
-      earnings: { current: currentEarnings, last: prevEarnings, growth, avg: Math.round(currentEarnings / 30) },
-      patients: { total: patients.length, new: newPatients, returning: patients.length - newPatients, ageGroups },
-      appointments: { total: totalAppts, completed: completedAppts, pending: pendingAppts, noShow: noShowAppts, rate: completionRate, trend: next7Days },
-      topServices,
-      allTreatments
+      earnings: { current: currentEarnings, growth, avg: Math.round(currentEarnings / 30) },
+      patients: { total: patients.length, new: patients.filter(p => new Date(p.createdAt || Date.now()).getMonth() === thisMonth).length, ageGroups },
+      appointments: { total: appointments.length, completed, rate: appointments.length ? Math.round((completed / appointments.length) * 100) : 0, trend },
+      treatments: treatmentData
     };
-  }, [patients, appointments, invoices]);
+  }, [patients, appointments, invoices, treatments]);
 
-  const renderEarningsReport = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Monthly Revenue</p>
-              <p className="text-xl font-bold text-gray-900">₹{stats.earnings.current.toLocaleString()}</p>
-            </div>
+  const renderContent = () => {
+    if (selectedReport === 'earnings') return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+        <KpiCard label="Monthly Revenue" value={`₹${stats.earnings.current.toLocaleString()}`} icon={<TrendingUp className="w-5 h-5" />} 
+          subtitle={<span className={stats.earnings.growth >= 0 ? 'text-emerald-600' : 'text-red-600'}>{stats.earnings.growth >= 0 ? '+' : ''}{stats.earnings.growth}% vs last month</span>} />
+        <KpiCard label="Avg. Daily Revenue" value={`₹${stats.earnings.avg.toLocaleString()}`} icon={<IndianRupee className="w-5 h-5" />} color="text-blue-600" />
+        <KpiCard label="Top Procedure" value={stats.treatments[0]?.service || 'N/A'} icon={<Target className="w-5 h-5" />} color="text-violet-600" />
+      </div>
+    );
+    if (selectedReport === 'patients') return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4">
+        <Card><CardContent className="p-6">
+          <h3 className="text-sm font-bold text-foreground mb-6 uppercase tracking-wider">Age Distribution</h3>
+          <div className="space-y-5">
+            {stats.patients.ageGroups.map((g, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between text-xs font-bold"><span>{g.range} Years</span><span className="text-primary">{g.count} Patients</span></div>
+                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${(g.count / (stats.patients.total || 1)) * 100}%` }} /></div>
+              </div>
+            ))}
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${stats.earnings.growth >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {stats.earnings.growth >= 0 ? '+' : ''}{stats.earnings.growth}%
-            </span>
-            <span className="text-xs text-gray-400">vs last month</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-              <IndianRupee className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Avg. Daily Revenue</p>
-              <p className="text-xl font-bold text-gray-900">₹{stats.earnings.avg.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
-              <Activity className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Top Procedure</p>
-              <p className="text-xl font-semibold text-gray-900">{stats.topServices[0]?.service || 'N/A'}</p>
-            </div>
-          </div>
+        </CardContent></Card>
+        <div className="grid grid-cols-1 gap-4">
+          <KpiCard label="Total Registered" value={stats.patients.total} color="text-primary" />
+          <KpiCard label="New This Month" value={stats.patients.new} color="text-emerald-600" />
         </div>
       </div>
-    </div>
-  );
-
-  const renderPatientsReport = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Patient Age Distribution</h3>
-          <div className="space-y-4">
-             {stats.patients.ageGroups.map((group, i) => (
-               <div key={i} className="space-y-2">
-                 <div className="flex justify-between text-sm">
-                   <span className="text-gray-600 font-medium">{group.range} years</span>
-                   <span className="text-gray-900 font-semibold">{group.count} patients</span>
-                 </div>
-                 <div className="w-full bg-gray-100 rounded-full h-2">
-                   <div 
-                     className="bg-blue-600 h-full rounded-full transition-all duration-1000"
-                     style={{ width: `${(group.count / (stats.patients.total || 1)) * 100}%` }}
-                   ></div>
-                 </div>
-               </div>
-             ))}
+    );
+    if (selectedReport === 'appointments') return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <KpiCard label="Total Bookings" value={stats.appointments.total} />
+          <KpiCard label="Completed" value={stats.appointments.completed} color="text-emerald-600" />
+          <KpiCard label="Efficiency" value={`${stats.appointments.rate}%`} color="text-primary" />
+          <KpiCard label="Upcoming" value={stats.appointments.total - stats.appointments.completed} color="text-amber-600" />
+        </div>
+        <Card><CardContent className="p-6">
+          <h3 className="text-sm font-bold text-foreground mb-6 uppercase tracking-wider flex items-center gap-2"><Calendar className="w-4 h-4 text-primary" /> 7-Day Forecast</h3>
+          <div className="grid grid-cols-7 gap-2">
+            {stats.appointments.trend.map((d, i) => (
+              <div key={i} className={`p-3 rounded-xl border text-center transition-all ${d.isToday ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card'}`}>
+                <p className={`text-[10px] font-black uppercase ${d.isToday ? 'text-primary' : 'text-muted-foreground'}`}>{d.day}</p>
+                <p className="text-lg font-black text-foreground my-1">{d.date}</p>
+                <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${d.count > 0 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>{d.count}</div>
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Growth Statistics</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-xl transition-transform hover:scale-105">
-               <p className="text-sm text-blue-600 font-medium">New Patients</p>
-               <p className="text-xl font-bold text-blue-700 mt-1">{stats.patients.new}</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-xl transition-transform hover:scale-105">
-               <p className="text-sm text-purple-600 font-medium">Returning</p>
-               <p className="text-xl font-bold text-purple-700 mt-1">{stats.patients.returning}</p>
-            </div>
-          </div>
-        </div>
+        </CardContent></Card>
       </div>
-    </div>
-  );
-
-  const renderAppointmentsReport = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-blue-600 rounded-xl p-5 text-white shadow-sm transition-all hover:scale-105">
-          <p className="text-blue-100 text-xs font-medium uppercase tracking-wider">Total Bookings</p>
-          <p className="text-2xl font-semibold mt-1">{stats.appointments.total}</p>
-        </div>
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm transition-all hover:scale-105">
-          <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">Completed</p>
-          <p className="text-2xl font-semibold text-green-600 mt-1">{stats.appointments.completed}</p>
-        </div>
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm transition-all hover:scale-105">
-          <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">Pending</p>
-          <p className="text-2xl font-semibold text-blue-600 mt-1">{stats.appointments.pending}</p>
-        </div>
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm transition-all hover:scale-105">
-          <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">No-Show</p>
-          <p className="text-2xl font-semibold text-red-600 mt-1">{stats.appointments.noShow}</p>
-        </div>
-        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm transition-all hover:scale-105">
-          <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">Efficiency</p>
-          <p className="text-2xl font-semibold text-purple-600 mt-1">{stats.appointments.rate}%</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            Daily Forecast (Next 7 Days)
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Number of appointments scheduled per day</p>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-7 gap-4">
-           {stats.appointments.trend.map((data, i) => {
-             const maxCount = Math.max(...stats.appointments.trend.map(d => d.count)) || 1;
-             const percentage = (data.count / maxCount) * 100;
-             
-             return (
-               <div 
-                key={i} 
-                style={{ animationDelay: `${i * 50}ms` }}
-                className={`p-4 rounded-xl border transition-all duration-500 animate-in fade-in slide-in-from-right-4 fill-mode-both hover:shadow-md hover:-translate-y-1 ${data.isToday ? 'border-blue-200 bg-blue-50' : 'border-gray-100 bg-white'}`}
-               >
-                 <div className="flex flex-col h-full">
-                   <div className="flex justify-between items-start mb-4">
-                     <div>
-                       <p className={`text-xs font-semibold ${data.isToday ? 'text-blue-600' : 'text-gray-500'}`}>{data.day.toUpperCase()}</p>
-                       <p className="text-xl font-semibold text-gray-900">{data.date}</p>
-                     </div>
-                     {data.isToday && (
-                       <span className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-semibold animate-pulse">TODAY</span>
-                     )}
-                   </div>
-                   
-                   <div className="mt-auto">
-                     <div className="flex items-baseline gap-1 mb-2">
-                       <span className="text-xl font-bold text-gray-900">{data.count}</span>
-                       <span className="text-[10px] text-gray-400 font-medium">Appts</span>
-                     </div>
-                     <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                       <div 
-                         className={`h-full rounded-full transition-all duration-1000 ${data.isToday ? 'bg-blue-600' : 'bg-blue-400'}`}
-                         style={{ width: `${Math.max(percentage, 5)}%` }}
-                       ></div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             );
-           })}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTreatmentReport = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Detailed Treatment Analysis</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Treatment Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Count</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Revenue</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg. Cost</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {stats.allTreatments.length > 0 ? stats.allTreatments.map((t, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{t.service}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{t.count}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">₹{t.revenue.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">₹{Math.round(t.revenue / t.count).toLocaleString()}</td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400">No treatment data found in invoices</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderReport = () => {
-    switch (selectedReport) {
-      case 'earnings': return renderEarningsReport();
-      case 'patients': return renderPatientsReport();
-      case 'appointments': return renderAppointmentsReport();
-      case 'treatments': return renderTreatmentReport();
-      default: return renderEarningsReport();
-    }
+    );
+    return (
+      <DataTable 
+        columns={[
+          { key: 'service', header: 'Treatment', render: (t: any) => <span className="font-bold text-gray-900">{t.service}</span> },
+          { key: 'count', header: 'Volume', render: (t: any) => <Badge variant="gray">{t.count} Cases</Badge> },
+          { key: 'revenue', header: 'Total Revenue', align: 'right', render: (t: any) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
+          { key: 'avg', header: 'Avg. Cost', align: 'right', render: (t: any) => <span className="text-primary font-bold">₹{Math.round(t.revenue / t.count).toLocaleString()}</span> }
+        ]} 
+        data={stats.treatments} 
+        rowKey={(t: any) => t.service} 
+      />
+    );
   };
 
   return (
     <div className="space-y-6">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Analytics</h1>
-          <p className="page-subtitle">Clinic performance and patient insights</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="filter-tabs">
-            {['week', 'month', 'year'].map(period => (
-              <button key={period} onClick={() => setSelectedPeriod(period)}
-                className={selectedPeriod === period ? 'filter-tab-active' : 'filter-tab'}>
-                {period.charAt(0).toUpperCase() + period.slice(1)}
-              </button>
-            ))}
-          </div>
-          <button className="btn-secondary">
-            <Download className="w-4 h-4" /> Export
-          </button>
-        </div>
+      <PageHeader title="Clinic Analytics" subtitle="Performance insights and patient demographics"
+        action={<Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> Export Report</Button>} />
+      
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <div className="flex-1 text-sm font-bold text-muted-foreground px-2">Select Report Category</div>
+        <FilterTabs tabs={[{key:'week', label:'Weekly'}, {key:'month', label:'Monthly'}, {key:'year', label:'Annual'}]} active={selectedPeriod} onChange={setSelectedPeriod} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {reportTypes.map((report, index) => {
-          const Icon = report.icon;
-          const isActive = selectedReport === report.id;
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {reportTypes.map((r, i) => {
+          const Icon = r.icon;
+          const isActive = selectedReport === r.id;
           return (
-            <button
-              key={report.id}
-              onClick={() => setSelectedReport(report.id)}
-              style={{ animationDelay: `${index * 100}ms` }}
-              className={`p-6 rounded-2xl border-2 transition-all duration-500 text-left relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 fill-mode-both ${isActive
-                  ? 'border-blue-600 bg-white shadow-xl shadow-blue-50'
-                  : 'border-transparent bg-white hover:border-gray-200 hover:shadow-md'
-                } hover:-translate-y-1`}
-            >
-              <div className={`w-10 h-10 rounded-xl ${report.color} flex items-center justify-center mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg`}>
-                <Icon className="w-6 h-6 text-white" />
+            <button key={r.id} onClick={() => setSelectedReport(r.id)} 
+              className={`p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${isActive ? 'border-primary bg-white shadow-xl shadow-primary/5' : 'border-transparent bg-card hover:border-border hover:shadow-md'}`}>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${r.color} flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg`}>
+                <Icon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">{report.title}</h3>
-              <p className="text-sm text-gray-500 mt-1">{report.description}</p>
-              {isActive && (
-                <div className="absolute top-4 right-4">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></div>
-                </div>
-              )}
+              <h3 className="text-sm font-black text-foreground uppercase tracking-tight">{r.title}</h3>
+              <p className="text-[11px] text-muted-foreground font-medium mt-1">{r.description}</p>
+              {isActive && <div className="absolute top-4 right-4 w-2 h-2 bg-primary rounded-full animate-pulse" />}
             </button>
           );
         })}
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
-        {renderReport()}
-      </div>
+      <div className="pt-2">{renderContent()}</div>
     </div>
   );
 }

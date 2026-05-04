@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save, User, Calendar, FileText, Camera, Upload } from 'lucide-react';
+import { Save, FileText, Camera, Upload } from 'lucide-react';
+import { Modal, FormField, Input, Button } from '@/components/ui';
 
 interface EMRFormProps {
   onClose: () => void;
@@ -48,149 +49,129 @@ export function EMRForm({ onClose, onSave, record, patients: allPatients }: EMRF
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              {record ? 'Edit EMR Record' : 'Add EMR Record'}
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+    <Modal
+      title={record ? 'Edit EMR Record' : 'Add EMR Record'}
+      onClose={onClose}
+      size="2xl"
+      icon={<FileText className="w-4 h-4" />}
+      footer={
+        <div className="flex justify-end space-x-3 w-full">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} className="gap-2">
+            <Save className="w-4 h-4" />
+            {record ? 'Update Record' : 'Save Record'}
+          </Button>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Patient Name *
-              </label>
-              <select
-                name="patientName"
-                value={formData.patientName}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Patient</option>
-                {allPatients.map((patient, i) => {
-                  const patientName = typeof patient === 'string' ? patient : patient.name;
-                  const patientId = typeof patient === 'object' ? patient.id : patientName;
-                  return (
-                    <option key={`${patientId}-${i}`} value={patientName}>
-                      {patientName}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Record Type *
-              </label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                {recordTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter record title"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date *
-              </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Content *
-            </label>
-            <textarea
-              name="content"
-              value={formData.content}
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField label="Patient Name" required>
+            <select
+              name="patientName"
+              value={formData.patientName}
               onChange={handleChange}
               required
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter detailed record content..."
-            />
-          </div>
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-all outline-none"
+            >
+              <option value="">Select Patient</option>
+              {allPatients.map((patient, i) => {
+                const patientName = typeof patient === 'string' ? patient : patient.name;
+                const patientId = typeof patient === 'object' ? patient.id : patientName;
+                return (
+                  <option key={`${patientId}-${i}`} value={patientName}>
+                    {patientName}
+                  </option>
+                );
+              })}
+            </select>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Attachments
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 mb-2">Upload images, reports, or documents</p>
-              <input
-                type="file"
-                multiple
-                accept="image/*,.pdf,.doc,.docx"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer"
-              >
-                Choose Files
-              </label>
+          <FormField label="Record Type" required>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-all outline-none"
+            >
+              {recordTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </FormField>
+
+          <FormField label="Title" required>
+            <Input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              className="rounded-xl"
+              placeholder="Enter record title"
+            />
+          </FormField>
+
+          <FormField label="Date" required>
+            <Input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              className="rounded-xl"
+            />
+          </FormField>
+        </div>
+
+        <FormField label="Content" required>
+          <textarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            required
+            rows={5}
+            className="w-full px-3 py-2 border border-input rounded-xl bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-all outline-none resize-none"
+            placeholder="Enter detailed record content..."
+          />
+        </FormField>
+
+        <div>
+          <label className="form-label">Attachments</label>
+          <div className="border-2 border-dashed border-input rounded-2xl p-8 text-center bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer relative">
+            <input
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx"
+              onChange={handleFileUpload}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              id="file-upload"
+            />
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                <Upload className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Click or drag to upload files</p>
+              <p className="text-xs text-muted-foreground mt-1">Images, reports, or documents (Max 10MB)</p>
             </div>
           </div>
-
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Record
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          
+          {formData.attachments.length > 0 && (
+            <div className="grid grid-cols-4 gap-3 mt-4">
+              {formData.attachments.map((url: string, idx: number) => (
+                <div key={idx} className="relative aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </form>
+    </Modal>
   );
-}
+}

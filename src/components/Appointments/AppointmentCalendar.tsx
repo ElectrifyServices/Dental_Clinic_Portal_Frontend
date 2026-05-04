@@ -106,8 +106,17 @@ export function AppointmentCalendar({
       const sStart = parseInt(s.time24.split(":")[0]) * 60 + parseInt(s.time24.split(":")[1]);
       const isBooked = appointments.some(a => {
         if (a.doctorId !== selectedDoctorId || new Date(a.date).toDateString() !== selectedDate.toDateString()) return false;
-        const aStart = parseInt(a.time.split(":")[0]) * 60 + parseInt(a.time.split(":")[1]);
-        return sStart >= aStart && sStart < (aStart + (a.duration || 15));
+        
+        // Robust time parsing
+        let [h, m] = a.time.split(":");
+        let hr = parseInt(h);
+        let mn = parseInt(m);
+        if (a.time.includes("PM") && hr < 12) hr += 12;
+        if (a.time.includes("AM") && hr === 12) hr = 0;
+        
+        const aStart = hr * 60 + mn;
+        const aDuration = parseInt(a.duration?.toString() || "15");
+        return sStart >= aStart && sStart < (aStart + aDuration);
       });
       const now = new Date();
       const slotTime = new Date(selectedDate);

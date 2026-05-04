@@ -1,5 +1,17 @@
-import React from "react";
-import { Heart, AlertTriangle, User, CreditCard, Calendar, Stethoscope, Activity, CheckCircle, Image, Send, Pill, FileText, Printer } from "lucide-react";
+import { Activity, AlertTriangle, Calendar, CheckCircle, CreditCard, Heart, Image as ImageIcon, Pill, Printer, Send, Stethoscope, User } from "lucide-react";
+
+// --- Reusable Empty State Component ---
+const EmptyState = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
+  <div className="flex flex-col items-center justify-center py-20 px-4 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
+    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-gray-100 ring-8 ring-gray-50/50">
+      <Icon className="w-10 h-10 text-gray-300" />
+    </div>
+    <h3 className="text-lg font-bold text-gray-900 mb-1 uppercase tracking-tight">{title}</h3>
+    <p className="text-sm text-gray-500 text-center max-w-xs leading-relaxed">
+      {description}
+    </p>
+  </div>
+);
 
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: any }) => (
@@ -102,93 +114,124 @@ export const AppointmentsTab = ({ patientAppointments, getStatusColor }: { patie
         </div>
       </div>
     ))}
-    {patientAppointments.length === 0 && <div className="text-center py-10 text-gray-500">No appointments found</div>}
+    {patientAppointments.length === 0 && (
+      <EmptyState 
+        icon={Calendar}
+        title="No appointments found"
+        description="There are no past or upcoming appointments recorded for this patient yet."
+      />
+    )}
   </div>
 );
 
 // --- Treatments Tab ---
-export const TreatmentsTab = ({ patientTreatments }: { patientTreatments: any[] }) => (
-  <div className="space-y-6">
-    <h3 className="text-lg font-bold text-gray-900">Treatment Journey</h3>
-    <div>
-      <h4 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center">
-        <Activity className="w-4 h-4 mr-2" /> Active Treatments
-      </h4>
-      <div className="space-y-3">
-        {patientTreatments.filter(t => t.status === 'in-progress').map((treatment) => (
-          <div key={treatment.id} className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                  <Stethoscope className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900">{treatment.procedure}</p>
-                  <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
-                  <p className="text-[10px] text-gray-500 font-mono mt-1">{new Date(treatment.date).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-blue-900">₹{treatment.cost.toLocaleString()}</p>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white uppercase">IN-PROGRESS</span>
-              </div>
-            </div>
-          </div>
-        ))}
+export const TreatmentsTab = ({ patientTreatments }: { patientTreatments: any[] }) => {
+  const hasInProgress = patientTreatments.some(t => t.status === 'in-progress');
+  const hasPlanned = patientTreatments.some(t => t.status === 'planned');
+  const hasCompleted = patientTreatments.some(t => t.status === 'completed');
+
+  if (patientTreatments.length === 0) {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-bold text-gray-900">Treatment Journey</h3>
+        <EmptyState 
+          icon={Stethoscope}
+          title="No treatments found"
+          description="A treatment journey hasn't been started yet. All active, planned, and completed procedures will appear here."
+        />
       </div>
-    </div>
-    <div>
-      <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-3 flex items-center">
-        <Calendar className="w-4 h-4 mr-2" /> Pending Plans
-      </h4>
-      <div className="space-y-3">
-        {patientTreatments.filter(t => t.status === 'planned').map((treatment) => (
-          <div key={treatment.id} className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
-                  <Stethoscope className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900">{treatment.procedure}</p>
-                  <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-bold text-gray-900">Treatment Journey</h3>
+      {hasInProgress && (
+        <div>
+          <h4 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center">
+            <Activity className="w-4 h-4 mr-2" /> Active Treatments
+          </h4>
+          <div className="space-y-3">
+            {patientTreatments.filter(t => t.status === 'in-progress').map((treatment) => (
+              <div key={treatment.id} className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                      <Stethoscope className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{treatment.procedure}</p>
+                      <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
+                      <p className="text-[10px] text-gray-500 font-mono mt-1">{new Date(treatment.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-blue-900">₹{treatment.cost.toLocaleString()}</p>
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-600 text-white uppercase">IN-PROGRESS</span>
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-purple-900">₹{treatment.cost.toLocaleString()}</p>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-200 text-purple-700 uppercase">PLANNED</span>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </div>
-    <div>
-      <h4 className="text-sm font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center">
-        <CheckCircle className="w-4 h-4 mr-2" /> Completed Treatments
-      </h4>
-      <div className="space-y-3">
-        {patientTreatments.filter(t => t.status === 'completed').map((treatment) => (
-          <div key={treatment.id} className="bg-green-50/30 rounded-2xl p-4 border border-green-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                <div>
-                  <p className="font-semibold text-gray-700">{treatment.procedure}</p>
-                  <p className="text-xs text-gray-500">Tooth: #{treatment.tooth}</p>
+        </div>
+      )}
+      {hasPlanned && (
+        <div>
+          <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-3 flex items-center">
+            <Calendar className="w-4 h-4 mr-2" /> Pending Plans
+          </h4>
+          <div className="space-y-3">
+            {patientTreatments.filter(t => t.status === 'planned').map((treatment) => (
+              <div key={treatment.id} className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
+                      <Stethoscope className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{treatment.procedure}</p>
+                      <p className="text-xs text-gray-600">Tooth: <span className="font-bold">#{treatment.tooth}</span></p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-purple-900">₹{treatment.cost.toLocaleString()}</p>
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-200 text-purple-700 uppercase">PLANNED</span>
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs font-bold text-gray-400">₹{treatment.cost.toLocaleString()}</p>
-                <p className="text-[10px] text-green-600 font-bold uppercase">{new Date(treatment.date).toLocaleDateString()}</p>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+      {hasCompleted && (
+        <div>
+          <h4 className="text-sm font-bold text-green-600 uppercase tracking-widest mb-3 flex items-center">
+            <CheckCircle className="w-4 h-4 mr-2" /> Completed Treatments
+          </h4>
+          <div className="space-y-3">
+            {patientTreatments.filter(t => t.status === 'completed').map((treatment) => (
+              <div key={treatment.id} className="bg-green-50/30 rounded-2xl p-4 border border-green-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <div>
+                      <p className="font-semibold text-gray-700">{treatment.procedure}</p>
+                      <p className="text-xs text-gray-500">Tooth: #{treatment.tooth}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-gray-400">₹{treatment.cost.toLocaleString()}</p>
+                    <p className="text-[10px] text-green-600 font-bold uppercase">{new Date(treatment.date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // --- Billing Tab ---
 export const BillingTab = ({ patient, patientInvoices, getStatusColor, handleSendReminder }: { patient: any, patientInvoices: any[], getStatusColor: (s: string) => string, handleSendReminder: () => void }) => (
@@ -227,7 +270,13 @@ export const BillingTab = ({ patient, patientInvoices, getStatusColor, handleSen
         </div>
       </div>
     ))}
-    {patientInvoices.length === 0 && <div className="text-center py-10 text-gray-500">No invoices found</div>}
+    {patientInvoices.length === 0 && (
+      <EmptyState 
+        icon={CreditCard}
+        title="No invoices found"
+        description="No billing records or invoices have been generated for this patient yet."
+      />
+    )}
   </div>
 );
 
@@ -279,6 +328,13 @@ export const PrescriptionsTab = ({ patient, handlePrintDocument }: { patient: an
         </div>
       </div>
     ))}
+    {(!patient.prescriptionHistory || patient.prescriptionHistory.length === 0) && (
+      <EmptyState 
+        icon={Pill}
+        title="No prescriptions found"
+        description="There are no prescriptions recorded for this patient. After a consultation, the prescription will appear here."
+      />
+    )}
   </div>
 );
 
@@ -296,29 +352,104 @@ export const DocumentsTab = ({ patient, loading }: { patient: any, loading: bool
       ))}
     </div>
     {(!patient.documents || patient.documents.length === 0) && (
-      <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
-        <Image className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No documents uploaded</h3>
-      </div>
+      <EmptyState 
+        icon={ImageIcon}
+        title="No documents uploaded"
+        description="X-rays, dental scans, and other medical documents will be visible here once uploaded."
+      />
     )}
   </div>
 );
 
 // --- Family Tab ---
-export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h3 className="text-xl font-semibold text-gray-900">Family Members</h3>
-    </div>
-    {familyMembers.map((member) => (
-      <div key={member.id} className="bg-white rounded-2xl p-5 border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-900 text-lg">{member.name}</p>
-            <p className="text-sm text-gray-500">{member.relation}</p>
-          </div>
+export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
+  const calculateAge = (dob: string) => {
+    if (!dob) return 'N/A';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">Family Members</h3>
+          <p className="text-sm text-gray-500 mt-1">Information about registered family members under this account</p>
+        </div>
+        <div className="bg-blue-50 px-4 py-2 rounded-xl text-blue-700 text-sm font-bold border border-blue-100">
+          {familyMembers.length} Linked Member{familyMembers.length !== 1 ? 's' : ''}
         </div>
       </div>
-    ))}
-  </div>
-);
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {familyMembers.map((member) => (
+          <div key={member.id} className="bg-white rounded-2xl p-5 border border-gray-200 hover:shadow-md transition-all group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 font-bold text-xl shadow-sm">
+                  {member.name?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{member.name}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black uppercase rounded tracking-wider">
+                      {member.relation || 'Relation N/A'}
+                    </span>
+                    <span className="text-xs text-gray-400 font-medium">
+                      ID: {member.id}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                {member.status || 'Active'}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4 border-t border-gray-50 pt-4">
+              <div className="bg-gray-50 rounded-xl p-2.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <User className="w-3 h-3" /> Age
+                </p>
+                <p className="font-bold text-gray-900 text-sm">{calculateAge(member.dateOfBirth)} Years</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> Last Visit
+                </p>
+                <p className="font-bold text-gray-900 text-sm">{member.lastVisit || 'No visits'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2.5 col-span-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <CreditCard className="w-3 h-3" /> Outstanding Balance
+                    </p>
+                    <p className={`font-bold text-sm ${member.outstandingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ₹{(member.outstandingBalance || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  {member.outstandingBalance > 0 && (
+                    <span className="text-[10px] font-black text-red-500 bg-red-50 px-2 py-1 rounded uppercase animate-pulse">Payment Due</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {familyMembers.length === 0 && (
+        <EmptyState 
+          icon={User}
+          title="No family members linked"
+          description="This patient is currently registered as an individual account. All linked family members will appear here."
+        />
+      )}
+    </div>
+  );
+};

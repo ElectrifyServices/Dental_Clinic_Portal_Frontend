@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save, FileText } from 'lucide-react';
+import { Save, FileText, Stethoscope } from 'lucide-react';
+import { Modal, Button } from '@/components/ui';
 import { BasicInfoSection } from './TreatmentForm/BasicInfoSection';
 import { SessionPlannerSection } from './TreatmentForm/SessionPlannerSection';
 import { PrescriptionSection } from './TreatmentForm/PrescriptionSection';
@@ -266,109 +267,98 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box max-w-5xl w-full">
-        <div className="modal-header bg-gradient-to-r from-blue-50 to-indigo-50/30">
-          <div>
-            <h2 className="modal-title text-xl font-bold">
-              {treatment ? 'Edit Treatment Plan' : 'Create Treatment Plan'}
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5 font-medium">Manage dental procedures and multi-session treatments</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
+    <Modal
+      title={treatment ? 'Edit Treatment Plan' : 'Create Treatment Plan'}
+      onClose={onClose}
+      size="5xl"
+      icon={<Stethoscope className="w-4 h-4" />}
+      footer={
+        <div className="flex justify-between items-center w-full px-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} className="gap-2 shadow-lg shadow-primary/10">
+            <Save className="w-4 h-4" /> Save Treatment Plan
+          </Button>
         </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-8 py-2">
+        <BasicInfoSection
+          formData={formData}
+          handleChange={handleChange}
+          allPatients={allPatients}
+          doctors={doctors}
+          procedures={procedures}
+          teeth={teeth}
+          pendingPlans={pendingPlans}
+          onLoadPlan={handleLoadPlan}
+          isEdit={!!treatment}
+        />
 
-        <form onSubmit={handleSubmit} className="modal-body space-y-8 p-8">
-          <BasicInfoSection
-            formData={formData}
-            handleChange={handleChange}
-            allPatients={allPatients}
-            doctors={doctors}
-            procedures={procedures}
-            teeth={teeth}
-            pendingPlans={pendingPlans}
-            onLoadPlan={handleLoadPlan}
-            isEdit={!!treatment}
-          />
+        <div className="h-px bg-border/50" />
 
-          <div className="divider-horizontal" />
+        <SessionPlannerSection
+          sessions={treatmentSessions}
+          onAddSession={() => setTreatmentSessions([...treatmentSessions, {
+            id: `session-${Date.now()}`,
+            sessionNumber: treatmentSessions.length + 1,
+            name: 'Additional Session',
+            description: 'Custom session',
+            suggestedDate: formData.date,
+            scheduledDate: formData.date,
+            duration: 45,
+            status: 'planned',
+            isFlexible: true,
+            isRequired: false,
+            isOptional: true,
+            cost: 0,
+            isModified: false,
+            notes: ''
+          }])}
+          onRemoveSession={(id) => setTreatmentSessions(prev => prev.filter(s => s.id !== id))}
+          onUpdateSession={updateSession}
+          baseDate={formData.date}
+        />
 
-          <SessionPlannerSection
-            sessions={treatmentSessions}
-            onAddSession={() => setTreatmentSessions([...treatmentSessions, {
-              id: `session-${Date.now()}`,
-              sessionNumber: treatmentSessions.length + 1,
-              name: 'Additional Session',
-              description: 'Custom session',
-              suggestedDate: formData.date,
-              scheduledDate: formData.date,
-              duration: 45,
-              status: 'planned',
-              isFlexible: true,
-              isRequired: false,
-              isOptional: true,
-              cost: 0,
-              isModified: false,
-              notes: ''
-            }])}
-            onRemoveSession={(id) => setTreatmentSessions(prev => prev.filter(s => s.id !== id))}
-            onUpdateSession={updateSession}
-            baseDate={formData.date}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-            <div className="space-y-6">
-              <PrescriptionSection
-                prescriptions={prescriptions}
-                onAddPrescription={() => setPrescriptions([...prescriptions, {
-                  id: Date.now().toString(),
-                  medicine: '', dosage: '', timing: '', frequency: '', duration: '', qty: ''
-                }])}
-                onRemovePrescription={(id) => setPrescriptions(prev => prev.filter(p => p.id !== id))}
-                onUpdatePrescription={updatePrescription}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-6">
+            <PrescriptionSection
+              prescriptions={prescriptions}
+              onAddPrescription={() => setPrescriptions([...prescriptions, {
+                id: Date.now().toString(),
+                medicine: '', dosage: '', timing: '', frequency: '', duration: '', qty: ''
+              }])}
+              onRemovePrescription={(id) => setPrescriptions(prev => prev.filter(p => p.id !== id))}
+              onUpdatePrescription={updatePrescription}
+            />
+          </div>
+          <div className="space-y-6">
+            <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
+              <label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                Clinical Case Notes
+              </label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows={6}
+                className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
+                placeholder="Enter detailed treatment observations, history, and special instructions..."
               />
             </div>
-            <div className="space-y-6">
-              <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 h-full">
-                <label className="form-label mb-3 flex items-center gap-2 text-gray-700 font-semibold">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  Additional Notes
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-medium"
-                  placeholder="Enter detailed treatment notes, observations, and instructions..."
-                />
-              </div>
-            </div>
           </div>
+        </div>
 
-          <ImageUploadSection
-            images={formData.images}
-            onUpload={(e) => {
-              const files = Array.from(e.target.files || []);
-              const urls = files.map(f => URL.createObjectURL(f));
-              setFormData({ ...formData, images: [...formData.images, ...urls] });
-            }}
-            onRemove={(index) => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) })}
-          />
-
-          <div className="modal-footer sticky bottom-0 bg-white/80 backdrop-blur-md -mx-8 -mb-8 mt-4 rounded-b-2xl border-t border-gray-100">
-            <button type="button" onClick={onClose} className="btn-secondary py-3 px-8 font-semibold">
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary py-3 px-10 shadow-lg shadow-blue-100 font-semibold">
-              <Save className="w-4 h-4 mr-2" />
-              Save Treatment Plan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <ImageUploadSection
+          images={formData.images}
+          onUpload={(e) => {
+            const files = Array.from(e.target.files || []);
+            const urls = files.map(f => URL.createObjectURL(f));
+            setFormData({ ...formData, images: [...formData.images, ...urls] });
+          }}
+          onRemove={(index) => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) })}
+        />
+      </form>
+    </Modal>
   );
 }

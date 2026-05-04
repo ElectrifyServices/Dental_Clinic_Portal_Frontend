@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Calendar, IndianRupee, CreditCard, Clock } from 'lucide-react';
+import { Calendar, IndianRupee, History } from 'lucide-react';
+import { Modal, Button, Badge } from '@/components/ui';
 
 interface SalaryHistoryModalProps {
   staffName: string;
@@ -9,67 +10,53 @@ interface SalaryHistoryModalProps {
 
 export function SalaryHistoryModal({ staffName, history, onClose }: SalaryHistoryModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-xl max-w-xl w-full shadow-xl overflow-hidden border border-gray-200">
-        {/* Brand Gradient Header */}
-        <div className="modal-header bg-blue-600 rounded-t-2xl">
-          <div>
-            <h2 className="font-bold text-white tracking-tight">Salary History</h2>
-            <p className="text-xs text-white/80 font-medium">{staffName}</p>
-          </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      title="Salary History"
+      subtitle={staffName}
+      onClose={onClose}
+      size="md"
+      icon={<History className="w-4 h-4" />}
+      footer={
+        <div className="flex justify-end w-full">
+          <Button variant="outline" onClick={onClose}>Close History</Button>
         </div>
-
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {history.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-sm italic">
-              No transactions found.
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {history.map((payment, index) => (
-                <div key={index} className="py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <IndianRupee className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-gray-900">₹{payment.amount.toLocaleString('en-IN')}</div>
-                        <div className="text-[10px] text-gray-400 flex items-center gap-1 font-bold uppercase tracking-wider">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(payment.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </div>
-                      </div>
+      }
+    >
+      <div className="space-y-4">
+        {history.length === 0 ? (
+          <div className="text-center py-12 flex flex-col items-center justify-center">
+            <History className="w-12 h-12 text-muted-foreground/20 mb-3" />
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No transactions recorded</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {history.map((payment, index) => (
+              <div key={index} className="p-4 border border-border rounded-2xl bg-card hover:bg-muted/30 transition-colors group">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary transition-colors">
+                      <IndianRupee className="w-5 h-5 text-primary group-hover:text-white" />
                     </div>
-                    <div className="text-right">
-                      <div className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-bold uppercase tracking-widest">
-                        {payment.mode}
+                    <div>
+                      <div className="text-lg font-black text-foreground">₹{payment.amount.toLocaleString('en-IN')}</div>
+                      <div className="text-[10px] text-muted-foreground flex items-center gap-1 font-bold uppercase tracking-wider mt-0.5">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(payment.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
                   </div>
-                  {payment.note && (
-                    <div className="ml-11 text-xs text-gray-500 italic mt-1">
-                      {payment.note}
-                    </div>
-                  )}
+                  <Badge variant="gray" className="text-[9px] font-black tracking-widest uppercase px-2">{payment.mode}</Badge>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t border-gray-100 flex justify-end bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-white border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 font-bold text-sm transition-all"
-          >
-            Close
-          </button>
-        </div>
+                {payment.note && (
+                  <div className="mt-3 pl-13 text-[11px] text-muted-foreground font-medium border-l-2 border-border ml-[52px] py-0.5">
+                    "{payment.note}"
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

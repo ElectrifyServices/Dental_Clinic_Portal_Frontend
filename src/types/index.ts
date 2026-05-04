@@ -4,13 +4,15 @@ export type PlanBenefitType =
   | 'treatment_discount'   // X% off specific treatments
   | 'free_consultations'   // N free consultations/year
   | 'free_treatments'      // N free specific treatments
-  | 'capped_discount';     // X% off, max ₹Y per visit
+  | 'capped_discount'      // X% off, max ₹Y per visit
+  | 'custom';              // Manually defined benefit
 
 export interface PlanBenefit {
   id: string;
   type: PlanBenefitType;
   value: number;
   cap?: number;
+  customName?: string;
   treatmentTypes?: string[];
   description: string;
 }

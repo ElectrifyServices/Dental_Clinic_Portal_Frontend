@@ -20,7 +20,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   onClose,
   pos
 }) => {
-  const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in'].includes(appointment.status);
+  const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(appointment.status);
 
   return (
     <>
@@ -78,9 +78,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
 
           <button 
             onClick={() => { 
-              if (window.confirm('Delete this appointment?')) {
-                onDelete?.(appointment.id);
-              }
+              onDelete?.(appointment.id);
               onClose();
             }}
             className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 rounded-xl transition-colors font-medium"

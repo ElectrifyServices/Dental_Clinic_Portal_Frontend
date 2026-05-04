@@ -261,3 +261,119 @@ export const downloadConsultationPDF = async ({
     document.body.removeChild(pdfContainer);
   }
 };
+
+export const generateInvoicePDF = async (invoice: any, patient: any) => {
+  const pdfContainer = document.createElement("div");
+  pdfContainer.style.cssText = `
+    position: fixed; left: -9999px; top: 0;
+    width: 794px; background: white; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  const htmlContent = `
+    <div style="width:794px; background:#fff; padding: 40px 50px; color: #1f2937;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px;">
+        <div>
+          <div style="font-size:28px; font-weight:800; color:#1e40af; letter-spacing:-0.5px;">DentalCare Pro</div>
+          <div style="font-size:12px; color:#6b7280; font-weight:500; margin-top:4px;">Advanced Dental Clinic & Implant Centre</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:24px; font-weight:800; color:#111827;">INVOICE</div>
+          <div style="font-size:14px; color:#6b7280; font-weight:700; margin-top:4px;">#${invoice.id}</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; margin-bottom:40px;">
+        <div>
+          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">Bill To</div>
+          <div style="font-size:16px; font-weight:700; color:#111827;">${invoice.patientName}</div>
+          <div style="font-size:13px; color:#4b5563; margin-top:4px;">${patient?.phone || '—'}</div>
+          <div style="font-size:13px; color:#4b5563;">Patient ID: ${invoice.patientId || '—'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">Invoice Details</div>
+          <div style="font-size:13px; color:#4b5563;"><strong>Date:</strong> ${new Date(invoice.date).toLocaleDateString('en-IN')}</div>
+          <div style="font-size:13px; color:#4b5563;"><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString('en-IN')}</div>
+          <div style="font-size:13px; color:#4b5563;"><strong>Doctor:</strong> ${invoice.doctor || 'Dr. Rajesh Sharma'}</div>
+        </div>
+      </div>
+
+      <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
+            <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Description</th>
+            <th style="padding:12px 15px; text-align:center; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Qty</th>
+            <th style="padding:12px 15px; text-align:right; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Rate</th>
+            <th style="padding:12px 15px; text-align:right; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${invoice.items.map((item: any) => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding:12px 15px; font-size:13px; font-weight:600; color:#1e293b;">${item.description}</td>
+              <td style="padding:12px 15px; font-size:13px; text-align:center; color:#475569;">${item.quantity}</td>
+              <td style="padding:12px 15px; font-size:13px; text-align:right; color:#475569;">₹${item.rate.toLocaleString()}</td>
+              <td style="padding:12px 15px; font-size:13px; text-align:right; font-weight:700; color:#111827;">₹${item.amount.toLocaleString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <div style="width:300px; space-y:10px;">
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+            <span style="font-size:13px; color:#64748b;">Subtotal</span>
+            <span style="font-size:13px; font-weight:700; color:#111827;">₹${invoice.subtotal.toLocaleString()}</span>
+          </div>
+          ${invoice.discount > 0 ? `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="font-size:13px; color:#64748b;">Discount</span>
+              <span style="font-size:13px; font-weight:700; color:#ef4444;">-₹${invoice.discount.toLocaleString()}</span>
+            </div>
+          ` : ''}
+          ${invoice.tax > 0 ? `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+              <span style="font-size:13px; color:#64748b;">Tax (GST 18%)</span>
+              <span style="font-size:13px; font-weight:700; color:#111827;">₹${invoice.tax.toLocaleString()}</span>
+            </div>
+          ` : ''}
+          <div style="display:flex; justify-content:space-between; padding:15px 0; margin-top:10px; border-top:2px solid #3b82f6;">
+            <span style="font-size:16px; font-weight:800; color:#1e40af; text-transform:uppercase;">Grand Total</span>
+            <span style="font-size:20px; font-weight:800; color:#1e40af;">₹${invoice.total.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px; border-top:1px solid #e2e8f0; padding-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="font-size:10px; color:#94a3b8; font-style:italic;">Thank you for your business.</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Payments are due within 7 days.</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:180px; border-top:1px solid #1e293b; padding-top:10px;">
+              <div style="font-size:13px; font-weight:700; color:#1e293b;">Authorized Signatory</div>
+              <div style="font-size:10px; color:#64748b;">DentalCare Pro Clinic</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  pdfContainer.innerHTML = htmlContent;
+  document.body.appendChild(pdfContainer);
+
+  try {
+    const canvas = await html2canvas(pdfContainer, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    pdf.save(`Invoice_${invoice.id}_${invoice.patientName}.pdf`);
+  } finally {
+    document.body.removeChild(pdfContainer);
+  }
+};

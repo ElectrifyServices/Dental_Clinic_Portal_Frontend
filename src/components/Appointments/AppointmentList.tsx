@@ -121,7 +121,16 @@ export function AppointmentList({
                   onOpenMenu={(e, id) => {
                     e.stopPropagation();
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    setMenuPos({ top: rect.bottom + 8, left: rect.right - 200 });
+                    const menuHeight = 240; // Estimated height for appointment menu (has more items)
+                    const windowHeight = window.innerHeight;
+                    
+                    let top = rect.bottom + 8;
+                    if (rect.bottom + menuHeight > windowHeight) {
+                      top = rect.top - menuHeight;
+                      if (top < 0) top = 10;
+                    }
+                    
+                    setMenuPos({ top, left: rect.right - 200 });
                     setOpenMenuId(id === openMenuId ? null : id);
                   }}
                 />

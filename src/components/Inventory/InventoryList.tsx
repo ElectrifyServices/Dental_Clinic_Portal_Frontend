@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { Search, Plus, Package, AlertTriangle, Edit, Trash2, RefreshCw, MoreVertical } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { 
+  Button, 
+  PageHeader, 
+  DataTable, 
+  SearchInput, 
+  FilterTabs, 
+  Badge,
+  KpiCard
+} from '@/components/ui';
 
 interface InventoryItem {
   id: string;
@@ -24,14 +33,20 @@ interface InventoryListProps {
   onRestock: (item: InventoryItem) => void;
 }
 
-const CAT_META: Record<string, { label: string; cls: string }> = {
-  instruments:  { label: 'Instruments',  cls: 'badge badge-blue' },
-  materials:    { label: 'Materials',    cls: 'badge badge-green' },
-  consumables:  { label: 'Consumables',  cls: 'badge badge-amber' },
-  medicines:    { label: 'Medicines',    cls: 'badge badge-violet' },
+const CAT_META: Record<string, { label: string; variant: 'blue' | 'green' | 'amber' | 'violet' | 'gray' }> = {
+  instruments:  { label: 'Instruments',  variant: 'blue' },
+  materials:    { label: 'Materials',    variant: 'green' },
+  consumables:  { label: 'Consumables',  variant: 'amber' },
+  medicines:    { label: 'Medicines',    variant: 'violet' },
 };
 
-const CATEGORIES = ['all', 'instruments', 'materials', 'consumables', 'medicines'];
+const CATEGORIES = [
+  { key: 'all', label: 'All Items' },
+  { key: 'instruments', label: 'Instruments' },
+  { key: 'materials', label: 'Materials' },
+  { key: 'consumables', label: 'Consumables' },
+  { key: 'medicines', label: 'Medicines' },
+];
 
 export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, onRestock }: InventoryListProps) {
   const [search, setSearch] = useState('');
@@ -50,126 +65,160 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 4, left: rect.right - 160 });
+    const menuHeight = 110; 
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      top = rect.top - menuHeight;
+      if (top < 0) top = 10;
+    }
+    
+    setMenuPos({ top, left: rect.right - 160 });
     setOpenMenuId(prev => prev === id ? null : id);
   };
 
-  const stockPct = (item: InventoryItem) => {
-    const max = item.maxStock || item.minStock * 3;
-    return Math.min(100, Math.round((item.currentStock / max) * 100));
-  };
+  const columns = [
+    {
+      key: 'item',
+      header: 'Item',
+      render: (item: InventoryItem) => {
+        const isLow = item.currentStock <= item.minStock;
+        return (
+          <div>
+            <div className="font-bold text-gray-900 flex items-center gap-2">
+              {item.name}
+              {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
+            </div>
+            {item.expiryDate && <div className="text-[10px] text-muted-foreground font-medium mt-0.5 uppercase tracking-wider">Exp: {item.expiryDate}</div>}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (item: InventoryItem) => {
+        const meta = CAT_META[item.category] || { label: item.category, variant: 'gray' };
+        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+      }
+    },
+    {
+      key: 'stock',
+      header: 'Stock Level',
+      render: (item: InventoryItem) => {
+        const isLow = item.currentStock <= item.minStock;
+        const max = item.maxStock || item.minStock * 3;
+        const pct = Math.min(100, Math.round((item.currentStock / max) * 100));
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[140px]">
+            <div className="flex items-center justify-between text-[10px] font-bold">
+              <span className={isLow ? 'text-red-600' : 'text-gray-500'}>{item.currentStock} {item.unit}</span>
+              <span className="text-gray-400">Min: {item.minStock}</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'cost',
+      header: 'Unit Cost',
+      render: (item: InventoryItem) => <span className="font-bold text-gray-900">₹{item.cost.toLocaleString()}</span>
+    },
+    {
+      key: 'supplier',
+      header: 'Supplier',
+      render: (item: InventoryItem) => <span className="text-gray-600 font-medium">{item.supplier}</span>
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center' as const,
+      render: (item: InventoryItem) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onRestock(item)} title="Restock">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, item.id)}>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+            {openMenuId === item.id && createPortal(
+              <>
+                <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  style={{ top: menuPos.top, left: menuPos.left }}>
+                  <div className="p-1.5 space-y-0.5">
+                    <button onClick={() => { onEditItem(item.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded-xl flex items-center gap-2.5 text-blue-700 font-medium transition-colors">
+                      <Edit className="w-4 h-4" /> Edit Item
+                    </button>
+                    <button onClick={() => { onDeleteItem(item.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded-xl flex items-center gap-2.5 text-red-600 font-medium transition-colors">
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
+          </div>
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div className="space-y-5">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Inventory</h1>
-          <p className="page-subtitle">{inventory.length} items · {lowCount > 0 ? `${lowCount} low stock` : 'All levels OK'}</p>
-        </div>
-        <button onClick={onAddItem} className="btn-primary">
-          <Plus className="w-4 h-4" /> Add Item
-        </button>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Inventory Management" 
+        subtitle={`${inventory.length} total stock items recorded`}
+        action={
+          <Button onClick={onAddItem} className="gap-2">
+            <Plus className="w-4 h-4" /> Add New Item
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard label="Total Items" value={inventory.length} icon={<Package className="w-5 h-5" />} />
+        <KpiCard label="Low Stock Alert" value={lowCount} color={lowCount > 0 ? 'text-red-600' : 'text-emerald-600'} icon={<AlertTriangle className="w-5 h-5" />} />
+        <KpiCard label="Total Categories" value={Object.keys(CAT_META).length} color="text-blue-600" />
       </div>
 
       {lowCount > 0 && (
-        <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm font-medium">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          {lowCount} item{lowCount > 1 ? 's are' : ' is'} below minimum stock level — reorder needed.
+        <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-800 rounded-2xl px-5 py-4 text-sm font-bold animate-pulse">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <span>{lowCount} critical item{lowCount > 1 ? 's are' : ' is'} below minimum stock level. Immediate restocking required.</span>
         </div>
       )}
 
-      <div className="filter-bar">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search by name or supplier…" value={search}
-            onChange={e => setSearch(e.target.value)} className="search-input" />
-        </div>
-        <div className="filter-tabs">
-          {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setCat(c)}
-              className={cat === c ? 'filter-tab-active' : 'filter-tab'}>
-              {c === 'all' ? 'All' : CAT_META[c]?.label || c}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search by item name or supplier…" 
+          className="flex-1"
+        />
+        <FilterTabs 
+          tabs={CATEGORIES} 
+          active={cat} 
+          onChange={setCat} 
+        />
       </div>
 
-      <div className="card overflow-hidden">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Category</th>
-              <th>Stock Level</th>
-              <th>Unit Cost</th>
-              <th>Supplier</th>
-              <th>Last Restocked</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7}><div className="empty-state"><Package className="empty-state-icon" /><p className="empty-state-title">No items found</p></div></td></tr>
-            ) : filtered.map(item => {
-              const isLow = item.currentStock <= item.minStock;
-              const pct = stockPct(item);
-              return (
-                <tr key={item.id}>
-                  <td>
-                    <div className="font-semibold text-gray-900 flex items-center gap-2">
-                      {item.name}
-                      {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
-                    </div>
-                    {item.expiryDate && <div className="text-xs text-gray-400 mt-0.5">Exp: {item.expiryDate}</div>}
-                  </td>
-                  <td><span className={CAT_META[item.category]?.cls || 'badge badge-gray'}>{CAT_META[item.category]?.label || item.category}</span></td>
-                  <td>
-                    <div className="flex items-center gap-2 min-w-[120px]">
-                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
-                        <div className={`h-1.5 rounded-full ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
-                          style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className={`text-xs font-semibold whitespace-nowrap ${isLow ? 'text-red-600' : 'text-gray-700'}`}>
-                        {item.currentStock}/{item.minStock} {item.unit}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="font-medium text-gray-800">₹{item.cost.toLocaleString()}</td>
-                  <td className="text-gray-600">{item.supplier}</td>
-                  <td className="text-gray-500 whitespace-nowrap">
-                    {item.lastRestocked ? new Date(item.lastRestocked).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}
-                  </td>
-                  <td>
-                    <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => onRestock(item)} className="btn-icon-blue" title="Restock"><RefreshCw className="w-4 h-4" /></button>
-                      <div className="relative">
-                        <button onClick={e => openMenu(e, item.id)} className="btn-icon" title="More"><MoreVertical className="w-4 h-4" /></button>
-                        {openMenuId === item.id && createPortal(
-                          <>
-                            <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-                            <div className="fixed z-[9999] bg-white rounded-xl border border-gray-200 shadow-xl w-40 overflow-hidden"
-                              style={{ top: menuPos.top, left: menuPos.left }}>
-                              <button onClick={() => { onEditItem(item.id); setOpenMenuId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2.5 text-gray-700">
-                                <Edit className="w-4 h-4" /> Edit
-                              </button>
-                              <button onClick={() => { onDeleteItem(item.id); setOpenMenuId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-2.5 text-red-600">
-                                <Trash2 className="w-4 h-4" /> Delete
-                              </button>
-                            </div>
-                          </>,
-                          document.body
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={filtered} 
+        rowKey={(item) => item.id}
+        emptyIcon={<Package className="w-12 h-12 text-muted-foreground/40" />}
+        emptyTitle="No inventory items found"
+        emptySubtitle="Add your first medical supply to track stock levels."
+      />
     </div>
   );
 }

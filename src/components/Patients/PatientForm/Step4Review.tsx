@@ -79,7 +79,7 @@ export const Step4Review: React.FC<Step4Props> = ({
               <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-1">Emergency Contact</span>
               <p className="font-bold text-gray-900 text-sm">{formData.emergencyName} ({formData.emergencyRelation})</p>
               <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                <Phone className="w-3 h-3" /> {formData.emergencyContact}
+                <Phone className="w-3 h-3" /> {formData.emergencyContact || 'Not provided'}
               </p>
             </div>
           </div>

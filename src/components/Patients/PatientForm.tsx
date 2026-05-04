@@ -46,7 +46,7 @@ export function PatientForm({
     handleDentalFilesUpload,
   } = usePatientForm(patient, corporateEmployees, onSave);
 
-  const [step, setStep] = useState((isCheckIn && patient) ? 4 : 1);
+  const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState('');
   const [allergySearch, setAllergySearch] = useState('');
   const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<string[]>(patient?.medicalHistory || []);

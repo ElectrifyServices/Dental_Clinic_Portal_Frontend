@@ -31,9 +31,18 @@ export function TodayAppointments({ appointments = [] }: TodayAppointmentsProps)
         <Calendar className="w-4 h-4 text-gray-400" />
       </div>
       {todayAppts.length === 0 ? (
-        <div className="empty-state py-10">
-          <Calendar className="empty-state-icon" />
-          <p className="empty-state-title">No appointments today</p>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-blue-50/50">
+            <Calendar className="w-8 h-8 text-blue-500" />
+          </div>
+          <h3 className="text-[15px] font-bold text-gray-900 mb-1 uppercase tracking-tight">Your schedule is clear</h3>
+          <p className="text-xs text-gray-500 text-center max-w-[220px] leading-relaxed">
+            There are no appointments scheduled for today. Take a moment to review your recent patient records.
+          </p>
+          <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            Clinic Optimized
+          </div>
         </div>
       ) : (
         <div className="divide-y divide-gray-50">
@@ -58,7 +67,7 @@ export function TodayAppointments({ appointments = [] }: TodayAppointmentsProps)
                     )}
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 flex-shrink-0">{appt.duration || 30}m</div>
+                <div className="text-xs text-gray-400 flex-shrink-0">{appt.duration || 15}m</div>
               </div>
             );
           })}

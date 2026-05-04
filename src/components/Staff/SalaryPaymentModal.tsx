@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save } from 'lucide-react';
+import { Save, IndianRupee, Calendar, ClipboardList } from 'lucide-react';
+import { Modal, Button, FormField } from '@/components/ui';
 
 interface SalaryPaymentModalProps {
   staffId: string;
@@ -27,112 +28,77 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden border border-gray-200">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-          <h2 className="text-lg font-bold text-gray-800">Pay Salary</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-200 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      title="Pay Salary"
+      onClose={onClose}
+      size="md"
+      icon={<IndianRupee className="w-4 h-4" />}
+      footer={
+        <div className="flex gap-3 w-full justify-end">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} className="gap-2">
+            <Save className="w-4 h-4" /> Save Payment
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top-2">
+          <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+            <IndianRupee className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Disbursement For</p>
+            <p className="text-lg font-black text-foreground leading-tight">{staffName}</p>
+            <p className="text-[11px] text-emerald-700 font-bold mt-0.5">Pending Dues: ₹{pendingAmount.toLocaleString('en-IN')}</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="mb-6">
-            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-100">
-              <p className="text-sm text-green-600 font-medium mb-1">Disbursement For</p>
-              <h3 className="text-xl font-bold text-gray-900">{staffName}</h3>
-              <p className="text-xs text-gray-500 mt-1">Pending: ₹{pendingAmount.toLocaleString('en-IN')}</p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Payment Amount (₹) *" required>
+              <div className="relative">
+                <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <select required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none appearance-none">
+                  <option value="">Select Amount</option>
+                  {pendingAmount > 0 && <option value={pendingAmount}>Full Due (₹{pendingAmount.toLocaleString('en-IN')})</option>}
+                  {[5000, 10000, 15000, 20000, 25000, 30000, 50000].map(amt => (
+                    <option key={amt} value={amt}>₹{amt.toLocaleString('en-IN')}</option>
+                  ))}
+                </select>
+              </div>
+            </FormField>
+            <FormField label="Payment Date *" required>
+              <div className="relative">
+                <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
+              </div>
+            </FormField>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Amount</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                  <select
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
-                  >
-                    <option value="">Select Amount</option>
-                    {pendingAmount > 0 && <option value={pendingAmount}>Full Pending (₹{pendingAmount.toLocaleString('en-IN')})</option>}
-                    {[5000, 10000, 15000, 20000, 25000, 30000, 50000].map(amt => (
-                      <option key={amt} value={amt}>₹{amt.toLocaleString('en-IN')}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                />
-              </div>
+          <FormField label="Payment Mode">
+            <div className="grid grid-cols-3 gap-3">
+              {['Cash', 'UPI', 'Bank'].map((m) => (
+                <label key={m} className={`flex items-center justify-center p-2.5 rounded-xl border-2 cursor-pointer transition-all ${formData.mode === m ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted/50 text-muted-foreground'}`}>
+                  <input type="radio" className="hidden" name="paymentMethod" value={m} checked={formData.mode === m} onChange={() => setFormData({ ...formData, mode: m })} />
+                  <span className="text-xs font-black uppercase tracking-wider">{m}</span>
+                </label>
+              ))}
             </div>
+          </FormField>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
-              <div className="grid grid-cols-3 gap-3">
-                {['Cash', 'UPI', 'Bank'].map((m) => (
-                  <label 
-                    key={m}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      formData.mode === m 
-                      ? 'border-blue-600 bg-blue-50' 
-                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <input 
-                      type="radio" 
-                      className="hidden" 
-                      name="paymentMethod" 
-                      value={m}
-                      checked={formData.mode === m}
-                      onChange={() => setFormData({ ...formData, mode: m })}
-                    />
-                    <span className={`text-sm font-bold ${formData.mode === m ? 'text-blue-600' : 'text-gray-600'}`}>{m}</span>
-                  </label>
-                ))}
-              </div>
+          <FormField label="Disbursement Note (Optional)">
+            <div className="relative">
+              <ClipboardList className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
+              <textarea value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                placeholder="Add transaction reference or specific notes..." rows={2}
+                className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none" />
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Note (Optional)</label>
-              <textarea
-                value={formData.note}
-                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                placeholder="Disbursement details..."
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="mt-8 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Save Payment
-            </button>
-          </div>
+          </FormField>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

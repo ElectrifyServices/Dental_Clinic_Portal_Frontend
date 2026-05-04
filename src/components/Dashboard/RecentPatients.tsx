@@ -26,9 +26,18 @@ export function RecentPatients() {
         <TrendingUp className="w-4 h-4 text-gray-400" />
       </div>
       {patients.length === 0 ? (
-        <div className="empty-state py-10">
-          <User className="empty-state-icon" />
-          <p className="empty-state-title">No patients yet</p>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-blue-50/50">
+            <User className="w-8 h-8 text-blue-500" />
+          </div>
+          <h3 className="text-[15px] font-bold text-gray-900 mb-1 uppercase tracking-tight">Begin your practice</h3>
+          <p className="text-xs text-gray-500 text-center max-w-[220px] leading-relaxed">
+            Your patient directory is currently empty. Start by registering your first patient to begin tracking.
+          </p>
+          <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+            <TrendingUp className="w-3 h-3" />
+            Ready for Growth
+          </div>
         </div>
       ) : (
         <div className="divide-y divide-gray-50">

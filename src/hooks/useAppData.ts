@@ -266,24 +266,22 @@ export const useAppData = () => {
   };
 
   const handleDeleteInvoice = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this invoice?")) {
-      setInvoices((prev) => {
-        const invoice = prev.find(inv => inv.id === id);
-        if (invoice && invoice.status !== 'paid') {
-          // Decrease patient outstanding balance because the debt is removed
-          setPatients(prevPatients => prevPatients.map(p => {
-            if (p.id === invoice.patientId || p.name === invoice.patientName) {
-              return {
-                ...p,
-                outstandingBalance: Math.max(0, (p.outstandingBalance || 0) - (invoice.total || invoice.amount || 0))
-              };
-            }
-            return p;
-          }));
-        }
-        return prev.filter((inv) => inv.id !== id);
-      });
-    }
+    setInvoices((prev) => {
+      const invoice = prev.find(inv => inv.id === id);
+      if (invoice && invoice.status !== 'paid') {
+        // Decrease patient outstanding balance because the debt is removed
+        setPatients(prevPatients => prevPatients.map(p => {
+          if (p.id === invoice.patientId || p.name === invoice.patientName) {
+            return {
+              ...p,
+              outstandingBalance: Math.max(0, (p.outstandingBalance || 0) - (invoice.total || invoice.amount || 0))
+            };
+          }
+          return p;
+        }));
+      }
+      return prev.filter((inv) => inv.id !== id);
+    });
   };
 
   const handleUpdateInvoiceStatus = (id: string, status: string) => {
@@ -484,9 +482,7 @@ export const useAppData = () => {
   };
 
   const handleDeleteConsentForm = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this consent form?")) {
-      setConsentForms((prev) => prev.filter((f) => f.id !== id));
-    }
+    setConsentForms((prev) => prev.filter((f) => f.id !== id));
   };
 
   const handleSaveInventoryItem = (item: any) => {
@@ -498,9 +494,7 @@ export const useAppData = () => {
   };
 
   const handleDeleteInventoryItem = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      setInventory((prev) => prev.filter((i) => i.id !== id));
-    }
+    setInventory((prev) => prev.filter((i) => i.id !== id));
   };
 
   const handleSaveCorporatePlan = (plan: any) => {

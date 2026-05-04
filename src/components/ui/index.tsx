@@ -5,6 +5,10 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, X, AlertTriangle, Search, Upload } from 'lucide-react';
 
+export * from './Button';
+export * from './Input';
+export * from './Card';
+
 // ─── PageHeader ───────────────────────────────────────────────────────────────
 interface PageHeaderProps {
   title: string;
@@ -58,24 +62,28 @@ export function Badge({ variant = 'gray', children, className = '' }: BadgeProps
 // ─── Modal ────────────────────────────────────────────────────────────────────
 interface ModalProps {
   title: string;
+  subtitle?: string;
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '5xl';
   icon?: React.ReactNode;
 }
-const MODAL_SIZES = { sm:'max-w-sm', md:'max-w-md', lg:'max-w-lg', xl:'max-w-xl', '2xl':'max-w-2xl' };
+const MODAL_SIZES = { sm:'max-w-sm', md:'max-w-md', lg:'max-w-lg', xl:'max-w-xl', '2xl':'max-w-2xl', '5xl': 'max-w-5xl' };
 
-export function Modal({ title, onClose, children, footer, size = 'lg', icon }: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = 'lg', icon }: ModalProps) {
   return (
     <div className="modal-overlay">
-      <div className={`modal-box ${MODAL_SIZES[size]} w-full`}>
-        <div className="modal-header">
+      <div className={`modal-box ${MODAL_SIZES[size]} w-full max-h-[90vh] overflow-y-auto`}>
+        <div className="modal-header sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100/50">
           <div className="flex items-center gap-2">
-            {icon && <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">{icon}</div>}
-            <h2 className="modal-title">{title}</h2>
+            {icon && <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold shadow-sm">{icon}</div>}
+            <div>
+              <h2 className="modal-title text-lg font-semibold tracking-tight leading-tight">{title}</h2>
+              {subtitle && <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{subtitle}</p>}
+            </div>
           </div>
-          <button onClick={onClose} className="btn-icon"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="btn-icon bg-muted/50 hover:bg-muted hover:rotate-90 transition-all"><X className="w-4 h-4" /></button>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
@@ -154,16 +162,19 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
                   </div>
                 </td>
               </tr>
-            ) : data.map((row, idx) => (
-              <tr key={rowKey(row)}>
-                {columns.map(col => (
-                  <td key={col.key} style={{ textAlign: col.align || 'left' }}
-                    className={col.className}>
-                    {col.render(row, idx)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            ) : data.map((row, idx) => {
+              const key = rowKey(row) || `row-${idx}`;
+              return (
+                <tr key={key}>
+                  {columns.map(col => (
+                    <td key={col.key} style={{ textAlign: col.align || 'left' }}
+                      className={col.className}>
+                      {col.render(row, idx)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

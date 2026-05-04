@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Save, Clock, Calendar, User, Plus, Trash2 } from 'lucide-react';
+import { Save, Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Modal, Button, FormField, Badge } from '@/components/ui';
 
 interface DoctorScheduleManagerProps {
   doctorId: string;
@@ -9,13 +10,17 @@ interface DoctorScheduleManagerProps {
   currentSchedule?: any;
 }
 
-export function DoctorScheduleManager({ 
-  doctorId, 
-  doctorName, 
-  onClose, 
-  onSave, 
-  currentSchedule 
-}: DoctorScheduleManagerProps) {
+const DAYS = [
+  { key: 'monday', label: 'Monday' },
+  { key: 'tuesday', label: 'Tuesday' },
+  { key: 'wednesday', label: 'Wednesday' },
+  { key: 'thursday', label: 'Thursday' },
+  { key: 'friday', label: 'Friday' },
+  { key: 'saturday', label: 'Saturday' },
+  { key: 'sunday', label: 'Sunday' }
+];
+
+export function DoctorScheduleManager({ doctorId, doctorName, onClose, onSave, currentSchedule }: DoctorScheduleManagerProps) {
   const [schedule, setSchedule] = useState(currentSchedule || {
     monday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
     tuesday: { isWorking: true, startTime: '09:00', endTime: '18:00', breakStart: '13:00', breakEnd: '14:00' },
@@ -26,241 +31,115 @@ export function DoctorScheduleManager({
     sunday: { isWorking: false, startTime: '09:00', endTime: '18:00' }
   });
 
-  const [timeSlotSettings, setTimeSlotSettings] = useState({
-    duration: 30, // 30 minutes per slot
-    bufferTime: 5 // 5 minutes buffer between appointments
-  });
-
-  const daysOfWeek = [
-    { key: 'monday', label: 'Monday' },
-    { key: 'tuesday', label: 'Tuesday' },
-    { key: 'wednesday', label: 'Wednesday' },
-    { key: 'thursday', label: 'Thursday' },
-    { key: 'friday', label: 'Friday' },
-    { key: 'saturday', label: 'Saturday' },
-    { key: 'sunday', label: 'Sunday' }
-  ];
+  const [settings, setSettings] = useState({ duration: 30, bufferTime: 5 });
 
   const handleDayChange = (day: string, field: string, value: any) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value
-      }
-    }));
+    setSchedule(prev => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      doctorId,
-      workingHours: schedule,
-      timeSlots: timeSlotSettings
-    });
-  };
-
-  const generateTimeSlots = (startTime: string, endTime: string, breakStart?: string, breakEnd?: string) => {
+  const generateTimeSlots = (dayKey: string) => {
+    const day = schedule[dayKey];
+    if (!day.isWorking) return [];
     const slots = [];
-    const start = new Date(`2024-01-01 ${startTime}`);
-    const end = new Date(`2024-01-01 ${endTime}`);
-    const breakStartTime = breakStart ? new Date(`2024-01-01 ${breakStart}`) : null;
-    const breakEndTime = breakEnd ? new Date(`2024-01-01 ${breakEnd}`) : null;
+    const start = new Date(`2024-01-01 ${day.startTime}`);
+    const end = new Date(`2024-01-01 ${day.endTime}`);
+    const breakS = day.breakStart ? new Date(`2024-01-01 ${day.breakStart}`) : null;
+    const breakE = day.breakEnd ? new Date(`2024-01-01 ${day.breakEnd}`) : null;
 
     let current = new Date(start);
     while (current < end) {
-      const timeString = current.toTimeString().slice(0, 5);
-      
-      // Skip break time
-      if (breakStartTime && breakEndTime && current >= breakStartTime && current < breakEndTime) {
-        current = new Date(breakEndTime);
-        continue;
+      if (breakS && breakE && current >= breakS && current < breakE) {
+        current = new Date(breakE); continue;
       }
-      
-      slots.push(timeString);
-      current.setMinutes(current.getMinutes() + timeSlotSettings.duration + timeSlotSettings.bufferTime);
+      slots.push(current.toTimeString().slice(0, 5));
+      current.setMinutes(current.getMinutes() + settings.duration + settings.bufferTime);
     }
-    
     return slots;
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Doctor Schedule Management</h2>
-              <p className="text-gray-600 mt-1">{doctorName} - Working Hours & Time Slots</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
-            >
-              <X className="w-6 h-6" />
-            </button>
+    <Modal
+      title="Staff Schedule Manager"
+      subtitle={doctorName}
+      onClose={onClose}
+      size="2xl"
+      icon={<Clock className="w-4 h-4" />}
+      footer={
+        <div className="flex gap-3 w-full justify-end">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onSave({ doctorId, workingHours: schedule, timeSlots: settings })} className="gap-2">
+            <Save className="w-4 h-4" /> Save Schedule
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="p-5 bg-primary/5 border border-primary/10 rounded-2xl">
+          <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4" /> Appointment Slot Configuration
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Slot Duration (Mins)">
+              <select value={settings.duration} onChange={(e) => setSettings(p => ({ ...p, duration: Number(e.target.value) }))}
+                className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none">
+                {[15, 30, 45, 60].map(v => <option key={v} value={v}>{v} Minutes</option>)}
+              </select>
+            </FormField>
+            <FormField label="Buffer Time (Mins)">
+              <select value={settings.bufferTime} onChange={(e) => setSettings(p => ({ ...p, bufferTime: Number(e.target.value) }))}
+                className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none">
+                {[0, 5, 10, 15].map(v => <option key={v} value={v}>{v === 0 ? 'No Buffer' : `${v} Minutes`}</option>)}
+              </select>
+            </FormField>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Time Slot Settings */}
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
-              <Clock className="w-5 h-5 mr-2" />
-              Time Slot Configuration
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-blue-700 mb-2">
-                  Appointment Duration (minutes)
-                </label>
-                <select
-                  value={timeSlotSettings.duration}
-                  onChange={(e) => setTimeSlotSettings(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>60 minutes</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-blue-700 mb-2">
-                  Buffer Time (minutes)
-                </label>
-                <select
-                  value={timeSlotSettings.bufferTime}
-                  onChange={(e) => setTimeSlotSettings(prev => ({ ...prev, bufferTime: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={0}>No buffer</option>
-                  <option value={5}>5 minutes</option>
-                  <option value={10}>10 minutes</option>
-                  <option value={15}>15 minutes</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Weekly Schedule */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Weekly Working Hours
-            </h3>
-            
-            {daysOfWeek.map((day) => (
-              <div key={day.key} className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-bold text-gray-900">{day.label}</h4>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={schedule[day.key]?.isWorking || false}
-                      onChange={(e) => handleDayChange(day.key, 'isWorking', e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Working Day</span>
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2 px-1">
+            <Calendar className="w-4 h-4" /> Weekly Operating Hours
+          </h3>
+          <div className="space-y-3">
+            {DAYS.map((day) => {
+              const isWorking = schedule[day.key]?.isWorking;
+              const slots = generateTimeSlots(day.key);
+              return (
+                <div key={day.key} className={`p-4 border rounded-2xl transition-all ${isWorking ? 'border-primary/20 bg-card' : 'border-border bg-muted/20 opacity-60'}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] uppercase transition-colors ${isWorking ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+                        {day.label.slice(0, 3)}
+                      </div>
+                      <h4 className="font-bold text-sm text-foreground">{day.label}</h4>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={isWorking} onChange={(e) => handleDayChange(day.key, 'isWorking', e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary" />
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Working Day</span>
+                    </label>
                   </div>
+
+                  {isWorking && (
+                    <div className="space-y-4 animate-in fade-in duration-300">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <FormField label="Start Time"><input type="time" value={schedule[day.key]?.startTime} onChange={(e) => handleDayChange(day.key, 'startTime', e.target.value)} className="w-full px-3 py-1.5 border rounded-xl text-xs font-bold" /></FormField>
+                        <FormField label="End Time"><input type="time" value={schedule[day.key]?.endTime} onChange={(e) => handleDayChange(day.key, 'endTime', e.target.value)} className="w-full px-3 py-1.5 border rounded-xl text-xs font-bold" /></FormField>
+                        <FormField label="Break Start"><input type="time" value={schedule[day.key]?.breakStart} onChange={(e) => handleDayChange(day.key, 'breakStart', e.target.value)} className="w-full px-3 py-1.5 border rounded-xl text-xs font-medium text-muted-foreground bg-muted/30" /></FormField>
+                        <FormField label="Break End"><input type="time" value={schedule[day.key]?.breakEnd} onChange={(e) => handleDayChange(day.key, 'breakEnd', e.target.value)} className="w-full px-3 py-1.5 border rounded-xl text-xs font-medium text-muted-foreground bg-muted/30" /></FormField>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1.5 items-center bg-muted/30 p-3 rounded-xl">
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mr-2">Sample Slots:</span>
+                        {slots.slice(0, 8).map((s, i) => <Badge key={i} variant="blue" className="text-[9px] font-bold px-1.5 h-4">{s}</Badge>)}
+                        {slots.length > 8 && <span className="text-[9px] font-bold text-muted-foreground">+{slots.length - 8} more</span>}
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {schedule[day.key]?.isWorking && (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
-                      <input
-                        type="time"
-                        value={schedule[day.key]?.startTime || '09:00'}
-                        onChange={(e) => handleDayChange(day.key, 'startTime', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
-                      <input
-                        type="time"
-                        value={schedule[day.key]?.endTime || '18:00'}
-                        onChange={(e) => handleDayChange(day.key, 'endTime', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Break Start</label>
-                      <input
-                        type="time"
-                        value={schedule[day.key]?.breakStart || ''}
-                        onChange={(e) => handleDayChange(day.key, 'breakStart', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Break End</label>
-                      <input
-                        type="time"
-                        value={schedule[day.key]?.breakEnd || ''}
-                        onChange={(e) => handleDayChange(day.key, 'breakEnd', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Preview Time Slots */}
-                {schedule[day.key]?.isWorking && (
-                  <div className="mt-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Available Time Slots:</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {generateTimeSlots(
-                        schedule[day.key]?.startTime || '09:00',
-                        schedule[day.key]?.endTime || '18:00',
-                        schedule[day.key]?.breakStart,
-                        schedule[day.key]?.breakEnd
-                      ).slice(0, 10).map((slot, index) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs">
-                          {slot}
-                        </span>
-                      ))}
-                      {generateTimeSlots(
-                        schedule[day.key]?.startTime || '09:00',
-                        schedule[day.key]?.endTime || '18:00',
-                        schedule[day.key]?.breakStart,
-                        schedule[day.key]?.breakEnd
-                      ).length > 10 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
-                          +{generateTimeSlots(
-                            schedule[day.key]?.startTime || '09:00',
-                            schedule[day.key]?.endTime || '18:00',
-                            schedule[day.key]?.breakStart,
-                            schedule[day.key]?.breakEnd
-                          ).length - 10} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300 font-semibold transition-all duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Schedule
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

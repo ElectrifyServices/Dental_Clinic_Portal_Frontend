@@ -83,7 +83,7 @@ export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: 
                       <button onClick={() => onViewForm(form.id)} className="btn-icon-blue" title="View">
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button onClick={() => { if (window.confirm('Delete this consent form?')) onDeleteForm(form.id); }}
+                      <button onClick={() => onDeleteForm(form.id)}
                         className="btn-icon-red" title="Delete">
                         <Trash2 className="w-4 h-4" />
                       </button>

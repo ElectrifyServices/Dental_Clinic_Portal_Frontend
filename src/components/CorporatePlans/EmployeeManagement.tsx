@@ -8,7 +8,8 @@ import * as XLSX from 'xlsx';
 import { CorporateEmployee, CorporatePlan } from '../../types';
 import {
   PageHeader, Modal, DataTable, Pagination, SearchInput,
-  FilterTabs, FormField, FileUploadZone, Badge, PlanBadge, ConfirmModal
+  FilterTabs, FormField, FileUploadZone, Badge, PlanBadge, ConfirmModal,
+  Button
 } from '../ui';
 
 interface EmployeeManagementProps {
@@ -474,66 +475,75 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           size="2xl"
           icon={<User className="w-4 h-4" />}
           footer={
-            <>
-              <button onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
-              <button onClick={handleSave} className="btn-primary">
-                <CheckCircle className="w-4 h-4" /> {editEmp ? 'Update' : 'Add Employee'}
-              </button>
-            </>
+            <div className="flex justify-end gap-3 w-full">
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10">
+                <CheckCircle className="w-4 h-4" /> {editEmp ? 'Update Details' : 'Register Employee'}
+              </Button>
+            </div>
           }
         >
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label="Full Name" required error={formErrors.name}>
-              <input type="text" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="form-input" placeholder="e.g. Rajesh Kumar" />
-            </FormField>
-            <FormField label="Employee ID">
-              <input type="text" value={form.employeeId || ''} onChange={e => setForm(f => ({ ...f, employeeId: e.target.value }))}
-                className="form-input" placeholder="Company EMP ID" />
-            </FormField>
-            <FormField label="Phone" required error={formErrors.phone}>
-              <input type="tel" value={form.phone || ''} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                className="form-input" placeholder="+91 98765 43210" />
-            </FormField>
-            <FormField label="Email">
-              <input type="email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="form-input" placeholder="employee@company.com" />
-            </FormField>
-            <FormField label="Gender">
-              <select value={form.gender || 'male'} onChange={e => setForm(f => ({ ...f, gender: e.target.value as any }))}
-                className="form-select">
-                {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
-              </select>
-            </FormField>
-            <FormField label="Date of Birth">
-              <input type="date" value={form.dateOfBirth || ''} onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
-                className="form-input" />
-            </FormField>
-            <FormField label="Company Name" required error={formErrors.companyName}>
-              <input type="text" value={form.companyName || ''} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))}
-                className="form-input" placeholder="e.g. Electrify, Infosys" />
-            </FormField>
-            <FormField label="Designation">
-              <input type="text" value={form.designation || ''} onChange={e => setForm(f => ({ ...f, designation: e.target.value }))}
-                className="form-input" placeholder="e.g. Software Engineer" />
-            </FormField>
-            <FormField label="Department">
-              <input type="text" value={form.department || ''} onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                className="form-input" placeholder="e.g. IT, HR, Finance" />
-            </FormField>
-            <FormField label="Corporate Plan" required error={formErrors.corporatePlanId}>
-              <select value={form.corporatePlanId || ''} onChange={e => setForm(f => ({ ...f, corporatePlanId: e.target.value }))}
-                className="form-select">
-                <option value="">Select a plan…</option>
-                {plans.filter(p => p.isActive).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.companyName})</option>
-                ))}
-              </select>
-            </FormField>
-            <div className="col-span-2 flex items-center gap-2 pt-1">
-              <input type="checkbox" id="empActive" checked={form.isActive !== false}
-                onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="accent-blue-600" />
-              <label htmlFor="empActive" className="text-sm font-medium text-gray-700">Active employee</label>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <FormField label="Full Name *" error={formErrors.name}>
+                <input type="text" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Rajesh Kumar" />
+              </FormField>
+              <FormField label="Employee ID">
+                <input type="text" value={form.employeeId || ''} onChange={e => setForm(f => ({ ...f, employeeId: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Company EMP ID" />
+              </FormField>
+              <FormField label="Phone Number *" error={formErrors.phone}>
+                <input type="tel" value={form.phone || ''} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" placeholder="+91 98765 43210" />
+              </FormField>
+              <FormField label="Email Address">
+                <input type="email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" placeholder="employee@company.com" />
+              </FormField>
+              <FormField label="Gender">
+                <select value={form.gender || 'male'} onChange={e => setForm(f => ({ ...f, gender: e.target.value as any }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none bg-white">
+                  {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Date of Birth">
+                <input type="date" value={form.dateOfBirth || ''} onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
+              </FormField>
+              <FormField label="Company Name *" error={formErrors.companyName}>
+                <input type="text" value={form.companyName || ''} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Electrify, Infosys" />
+              </FormField>
+              <FormField label="Designation / Role">
+                <input type="text" value={form.designation || ''} onChange={e => setForm(f => ({ ...f, designation: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Software Engineer" />
+              </FormField>
+              <FormField label="Department">
+                <input type="text" value={form.department || ''} onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. IT, HR, Finance" />
+              </FormField>
+              <FormField label="Corporate Health Plan *" error={formErrors.corporatePlanId}>
+                <select value={form.corporatePlanId || ''} onChange={e => setForm(f => ({ ...f, corporatePlanId: e.target.value }))}
+                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none bg-white">
+                  <option value="">Select a plan…</option>
+                  {plans.filter(p => p.isActive).map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.companyName})</option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+            
+            <div className="p-4 bg-muted/30 rounded-2xl border border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
+                <label htmlFor="empActive" className="text-xs font-black uppercase tracking-widest text-foreground cursor-pointer">Active Status</label>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
+                  onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
+                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
           </div>
         </Modal>
@@ -541,38 +551,71 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
 
       {/* Change plan modal */}
       {changePlanEmp && (
-        <Modal title="Change Corporate Plan" onClose={() => setChangePlanEmp(null)} size="md"
+        <Modal 
+          title="Update Corporate Health Plan" 
+          onClose={() => setChangePlanEmp(null)} 
+          size="md"
           icon={<RefreshCw className="w-4 h-4" />}
           footer={
-            <>
-              <button onClick={() => setChangePlanEmp(null)} className="btn-secondary">Cancel</button>
-              <button onClick={handleChangePlan} className="btn-primary" disabled={!newPlanId || newPlanId === changePlanEmp.corporatePlanId}>
-                Update Plan
-              </button>
-            </>
+            <div className="flex justify-end gap-3 w-full">
+              <Button variant="outline" onClick={() => setChangePlanEmp(null)}>Cancel</Button>
+              <Button 
+                onClick={handleChangePlan} 
+                disabled={!newPlanId || newPlanId === changePlanEmp.corporatePlanId}
+                className="gap-2 shadow-lg shadow-primary/10"
+              >
+                <CheckCircle className="w-4 h-4" /> Confirm Plan Update
+              </Button>
+            </div>
           }
         >
-          <div className="space-y-4">
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 mb-0.5">Employee</p>
-              <p className="font-semibold text-gray-900">{changePlanEmp.name}</p>
-              <p className="text-xs text-gray-500">{changePlanEmp.phone} · {changePlanEmp.companyName}</p>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+                {changePlanEmp.name[0]?.toUpperCase()}
+              </div>
+              <div>
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Employee Information</p>
+                <p className="text-sm font-bold text-foreground">{changePlanEmp.name}</p>
+                <p className="text-[11px] text-muted-foreground font-medium">{changePlanEmp.phone} · {changePlanEmp.companyName}</p>
+              </div>
             </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-              <p className="text-xs text-blue-600 mb-0.5">Current Plan</p>
-              <p className="font-semibold text-blue-900">{changePlanEmp.corporatePlanName || '—'}</p>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Current Active Plan</span>
+                  <Badge variant="blue" className="text-[8px]">ACTIVE</Badge>
+                </div>
+                <p className="text-sm font-black text-blue-900">{changePlanEmp.corporatePlanName || 'No Plan Assigned'}</p>
+              </div>
+
+              <div className="flex justify-center -my-2 relative z-10">
+                <div className="w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center shadow-sm">
+                  <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
+                </div>
+              </div>
+
+              <FormField label="Target Health Plan Selection" required>
+                <select 
+                  value={newPlanId} 
+                  onChange={e => setNewPlanId(e.target.value)} 
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm appearance-none"
+                >
+                  <option value="">Select a new plan…</option>
+                  {plans.filter(p => p.isActive).map(p => (
+                    <option key={p.id} value={p.id}>{p.name} — {p.companyName} ({p.code})</option>
+                  ))}
+                </select>
+              </FormField>
             </div>
-            <FormField label="New Plan" required>
-              <select value={newPlanId} onChange={e => setNewPlanId(e.target.value)} className="form-select">
-                <option value="">Select…</option>
-                {plans.filter(p => p.isActive).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} — {p.companyName} ({p.code})</option>
-                ))}
-              </select>
-            </FormField>
-            <p className="text-xs text-gray-500">
-              This will update the plan for this employee only. Their patient record will automatically reflect the new plan on next visit.
-            </p>
+
+            <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+              <p className="text-[11px] text-amber-900/80 font-bold leading-relaxed">
+                This change is immediate. The employee's clinical records and future invoices will automatically reflect the benefits and discounts associated with the new plan.
+              </p>
+            </div>
           </div>
         </Modal>
       )}

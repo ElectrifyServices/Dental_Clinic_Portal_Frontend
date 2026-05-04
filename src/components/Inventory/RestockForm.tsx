@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Package, DollarSign, User, FileText, Calendar, Save } from 'lucide-react';
+import { Package, DollarSign, User, FileText, Calendar, RefreshCw } from 'lucide-react';
+import { Modal, Button, FormField } from '@/components/ui';
 
 interface RestockFormProps {
   item: any;
@@ -23,121 +24,86 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
       currentStock: item.currentStock + Number(formData.quantity),
       lastRestocked: formData.date,
       supplier: formData.supplier,
-      cost: Number(formData.purchasePrice) // Update cost if price changed
+      cost: Number(formData.purchasePrice)
     });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-              <Package className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Restock Item</h2>
-              <p className="text-sm text-gray-500">{item.name}</p>
-            </div>
+    <Modal
+      title="Restock Inventory"
+      onClose={onClose}
+      size="md"
+      icon={<RefreshCw className="w-4 h-4" />}
+      footer={
+        <div className="flex gap-3 w-full justify-end">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} className="gap-2">
+            <RefreshCw className="w-4 h-4" /> Update Stock
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center gap-4">
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <Package className="w-6 h-6" />
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
+          <div>
+            <p className="text-xs font-bold text-primary uppercase tracking-widest">Active Item</p>
+            <p className="text-lg font-black text-foreground leading-tight">{item.name}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Current Stock: <span className="font-bold text-foreground">{item.currentStock} {item.unit}</span></p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Add Quantity</label>
+            <FormField label="Restock Qty *">
               <div className="relative">
-                <Package className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={formData.quantity}
+                <Package className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="number" required min="1" value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                />
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Purchase Price (₹)</label>
+            </FormField>
+            <FormField label="Purchase Rate (₹) *">
               <div className="relative">
-                <DollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={formData.purchasePrice}
+                <DollarSign className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="number" required min="0" value={formData.purchasePrice}
                   onChange={(e) => setFormData({ ...formData, purchasePrice: Number(e.target.value) })}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                />
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none text-right" />
               </div>
-            </div>
+            </FormField>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-gray-700">Supplier</label>
+          <FormField label="Supplier *">
             <div className="relative">
-              <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                required
-                value={formData.supplier}
+              <User className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input type="text" required value={formData.supplier}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-              />
+                className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" />
             </div>
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Invoice No.</label>
+            <FormField label="Invoice No. *">
               <div className="relative">
-                <FileText className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  required
-                  value={formData.invoiceNo}
+                <FileText className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="text" required value={formData.invoiceNo}
                   onChange={(e) => setFormData({ ...formData, invoiceNo: e.target.value })}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                />
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-mono font-bold focus:ring-2 focus:ring-primary/20 outline-none" placeholder="INV-00X" />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Date</label>
+            </FormField>
+            <FormField label="Restock Date *">
               <div className="relative">
-                <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="date"
-                  required
-                  value={formData.date}
+                <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="date" required value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                />
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
-            </div>
-          </div>
-
-          <div className="pt-4 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all active:scale-95"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Update Stock
-            </button>
+            </FormField>
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

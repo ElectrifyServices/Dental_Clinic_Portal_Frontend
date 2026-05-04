@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Plus, Eye, Trash2, MoreVertical, Download, IndianRupee, Send } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText } from 'lucide-react';
 import { InvoicePaymentModal } from './InvoicePaymentModal';
+import { 
+  Button, 
+  PageHeader, 
+  DataTable, 
+  SearchInput, 
+  FilterTabs, 
+  Badge,
+  KpiCard
+} from '@/components/ui';
 import { createPortal } from 'react-dom';
 
 interface Invoice {
@@ -23,16 +32,23 @@ interface InvoiceListProps {
   onUpdateStatus?: (id: string, status: string) => void;
 }
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  paid:          { label: 'Paid',          cls: 'badge badge-green' },
-  sent:          { label: 'Sent',          cls: 'badge badge-blue' },
-  overdue:       { label: 'Overdue',       cls: 'badge badge-red' },
-  draft:         { label: 'Draft',         cls: 'badge badge-gray' },
-  complimentary: { label: 'Complimentary', cls: 'badge badge-violet' },
-  cancelled:     { label: 'Cancelled',     cls: 'badge badge-gray' },
+const STATUS_META: Record<string, { label: string; variant: 'green' | 'blue' | 'red' | 'gray' | 'violet' }> = {
+  paid:          { label: 'Paid',          variant: 'green' },
+  sent:          { label: 'Sent',          variant: 'blue' },
+  overdue:       { label: 'Overdue',       variant: 'red' },
+  draft:         { label: 'Draft',         variant: 'gray' },
+  complimentary: { label: 'Complimentary', variant: 'violet' },
+  cancelled:     { label: 'Cancelled',     variant: 'gray' },
 };
 
-const FILTERS = ['all', 'draft', 'sent', 'paid', 'overdue', 'cancelled'];
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'draft', label: 'Draft' },
+  { key: 'sent', label: 'Sent' },
+  { key: 'paid', label: 'Paid' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
 
 export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, invoices, onUpdateStatus }: InvoiceListProps) {
   const [search, setSearch] = useState('');
@@ -53,112 +69,145 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 4, left: rect.right - 176 });
+    const menuHeight = 160; 
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      top = rect.top - menuHeight;
+      if (top < 0) top = 10;
+    }
+    
+    setMenuPos({ top, left: rect.right - 176 });
     setOpenMenuId(prev => prev === id ? null : id);
   };
 
-  return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="page-header">
+  const columns = [
+    {
+      key: 'id',
+      header: 'Invoice',
+      render: (inv: Invoice) => <span className="font-mono text-xs font-bold text-gray-900">{inv.id}</span>
+    },
+    {
+      key: 'patient',
+      header: 'Patient',
+      render: (inv: Invoice) => (
         <div>
-          <h1 className="page-title">Billing & Invoices</h1>
-          <p className="page-subtitle">{invoices.length} invoices · ₹{totalAmt.toLocaleString()} total · ₹{pendingAmt.toLocaleString()} pending</p>
+          <div className="font-bold text-gray-900">{inv.patientName}</div>
+          {inv.phone && <div className="text-[10px] text-muted-foreground font-medium mt-0.5">{inv.phone}</div>}
         </div>
-        <button onClick={onCreateInvoice} className="btn-primary">
-          <Plus className="w-4 h-4" /> Create Invoice
-        </button>
+      )
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (inv: Invoice) => <span className="text-gray-600">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+    },
+    {
+      key: 'dueDate',
+      header: 'Due Date',
+      render: (inv: Invoice) => <span className="text-gray-500">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right' as const,
+      render: (inv: Invoice) => <span className="font-bold text-gray-900">₹{(inv.total || inv.amount || 0).toLocaleString()}</span>
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (inv: Invoice) => {
+        const meta = STATUS_META[inv.status] || STATUS_META.draft;
+        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center' as const,
+      render: (inv: Invoice) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onViewInvoice?.(inv.id)}>
+            <Eye className="w-4 h-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, inv.id)}>
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+            {openMenuId === inv.id && createPortal(
+              <>
+                <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
+                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  style={{ top: menuPos.top, left: menuPos.left }}>
+                  <div className="p-1.5 space-y-0.5">
+                    {inv.status !== 'paid' && onUpdateStatus && (
+                      <button onClick={() => { setPayInvoice(inv); setOpenMenuId(null); }}
+                        className="w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                        <IndianRupee className="w-4 h-4" /> Mark as Paid
+                      </button>
+                    )}
+                    {inv.status === 'draft' && onUpdateStatus && (
+                      <button onClick={() => { onUpdateStatus(inv.id, 'sent'); setOpenMenuId(null); }}
+                        className="w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                        <Send className="w-4 h-4" /> Send to Patient
+                      </button>
+                    )}
+                    <button onClick={() => { onDeleteInvoice?.(inv.id); setOpenMenuId(null); }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </>,
+              document.body
+            )}
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader 
+        title="Billing & Invoices" 
+        subtitle={`${invoices.length} total invoices recorded`}
+        action={
+          <Button onClick={onCreateInvoice} className="gap-2">
+            <Plus className="w-4 h-4" /> Create Invoice
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard label="Total Billed" value={`₹${totalAmt.toLocaleString()}`} color="text-gray-900" />
+        <KpiCard label="Pending Payments" value={`₹${pendingAmt.toLocaleString()}`} color="text-amber-600" />
+        <KpiCard label="Paid Invoices" value={invoices.filter(i => i.status === 'paid').length} color="text-emerald-600" />
       </div>
 
-      {/* Filters */}
-      <div className="filter-bar">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search by patient name or invoice ID…" value={search}
-            onChange={e => setSearch(e.target.value)} className="search-input" />
-        </div>
-        <div className="filter-tabs">
-          {FILTERS.map(f => (
-            <button key={f} onClick={() => setStatus(f)}
-              className={status === f ? 'filter-tab-active' : 'filter-tab'}>
-              {f === 'all' ? 'All' : STATUS_META[f]?.label || f}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search by patient name or invoice ID…" 
+          className="flex-1"
+        />
+        <FilterTabs 
+          tabs={FILTERS} 
+          active={status} 
+          onChange={setStatus} 
+        />
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Invoice</th>
-                <th>Patient</th>
-                <th>Date</th>
-                <th>Due Date</th>
-                <th className="text-right">Amount</th>
-                <th>Status</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7}><div className="empty-state"><p className="empty-state-title">No invoices found</p><p className="empty-state-sub">Create your first invoice to get started.</p></div></td></tr>
-              ) : filtered.map(inv => {
-                const sm = STATUS_META[inv.status] || STATUS_META.draft;
-                const amt = inv.total || inv.amount || 0;
-                return (
-                  <tr key={inv.id}>
-                    <td><span className="font-mono text-xs font-semibold text-gray-800">{inv.id}</span></td>
-                    <td>
-                      <div className="font-semibold text-gray-900">{inv.patientName}</div>
-                      {inv.phone && <div className="text-xs text-gray-400 mt-0.5">{inv.phone}</div>}
-                    </td>
-                    <td className="text-gray-600">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}</td>
-                    <td className="text-gray-600">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}</td>
-                    <td className="text-right"><span className="font-semibold text-gray-900">₹{amt.toLocaleString()}</span></td>
-                    <td><span className={sm.cls}>{sm.label}</span></td>
-                    <td>
-                      <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => onViewInvoice?.(inv.id)} className="btn-icon-blue" title="View"><Eye className="w-4 h-4" /></button>
-                        <div className="relative">
-                          <button onClick={e => openMenu(e, inv.id)} className="btn-icon" title="More"><MoreVertical className="w-4 h-4" /></button>
-                          {openMenuId === inv.id && createPortal(
-                            <>
-                              <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-                              <div className="fixed z-[9999] bg-white rounded-xl border border-gray-200 shadow-xl w-44 overflow-hidden"
-                                style={{ top: menuPos.top, left: menuPos.left }}>
-                                {inv.status !== 'paid' && onUpdateStatus && (
-                                  <button onClick={() => { setPayInvoice(inv); setOpenMenuId(null); }}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2.5">
-                                    <IndianRupee className="w-4 h-4" /> Mark as Paid
-                                  </button>
-                                )}
-                                {inv.status === 'draft' && onUpdateStatus && (
-                                  <button onClick={() => { onUpdateStatus(inv.id, 'sent'); setOpenMenuId(null); }}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-blue-700 hover:bg-blue-50 flex items-center gap-2.5">
-                                    <Send className="w-4 h-4" /> Send to Patient
-                                  </button>
-                                )}
-                                <button onClick={() => { onDeleteInvoice?.(inv.id); setOpenMenuId(null); }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5">
-                                  <Trash2 className="w-4 h-4" /> Delete
-                                </button>
-                              </div>
-                            </>,
-                            document.body
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={filtered} 
+        rowKey={(inv) => inv.id}
+        emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
+        emptyTitle="No invoices found"
+        emptySubtitle="Create your first invoice to get started."
+      />
 
       {payInvoice && (
         <InvoicePaymentModal

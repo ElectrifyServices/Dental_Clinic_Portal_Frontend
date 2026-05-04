@@ -27,7 +27,18 @@ export function TreatmentTableRow({
   const openMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPos({ top: rect.bottom + 4, left: rect.right - 180 });
+    const menuHeight = 200; // Estimated max height of the menu
+    const windowHeight = window.innerHeight;
+    
+    let top = rect.bottom + 4;
+    if (rect.bottom + menuHeight > windowHeight) {
+      // Open upwards if not enough space below
+      top = rect.top - menuHeight;
+      // Ensure it doesn't go above the screen either
+      if (top < 0) top = 10; 
+    }
+    
+    setMenuPos({ top, left: rect.right - 180 });
     setShowMenu(!showMenu);
   };
 

@@ -108,7 +108,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="text"
             name="name"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={handleChange}
             className={validationErrors.name ? 'border-destructive bg-destructive/5' : ''}
             placeholder="Enter patient's full name"
@@ -129,7 +129,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="tel"
             name="phone"
-            value={formData.phone}
+            value={formData.phone || ''}
             onChange={handleChange}
             className={validationErrors.phone ? 'border-destructive bg-destructive/5' : ''}
             placeholder="+91 98765 43210"
@@ -150,7 +150,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="email"
             name="email"
-            value={formData.email}
+            value={formData.email || ''}
             onChange={handleChange}
             className={validationErrors.email ? 'border-destructive bg-destructive/5' : ''}
             placeholder="Enter email address"
@@ -171,7 +171,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="date"
             name="dateOfBirth"
-            value={formData.dateOfBirth}
+            value={formData.dateOfBirth || ''}
             onChange={handleChange}
             max={new Date().toISOString().split('T')[0]}
             className="focus:ring-primary"
@@ -184,7 +184,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="gender"
-            value={formData.gender}
+            value={formData.gender || ''}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
           >
@@ -201,7 +201,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="bloodGroup"
-            value={formData.bloodGroup}
+            value={formData.bloodGroup || ''}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
           >
@@ -224,7 +224,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             </label>
             <select
               name="relation"
-              value={formData.relation}
+              value={formData.relation || ''}
               onChange={(e) => {
                 const value = e.target.value;
                 setFormData((prev: any) => ({
@@ -252,7 +252,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <div className="flex mt-3">
                 <Input
                   type="text"
-                  value={formData.customRelation}
+                  value={formData.customRelation || ''}
                   onChange={(e) => handleCustomRelation(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -283,7 +283,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </label>
         <textarea
           name="address"
-          value={formData.address}
+          value={formData.address || ''}
           onChange={handleChange}
           rows={3}
           className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
@@ -299,7 +299,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="text"
             name="occupation"
-            value={formData.occupation}
+            value={formData.occupation || ''}
             onChange={handleChange}
             placeholder="Enter occupation"
           />
@@ -311,7 +311,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="maritalStatus"
-            value={formData.maritalStatus}
+            value={formData.maritalStatus || ''}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
           >
@@ -331,7 +331,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </label>
               <select
                 name="category"
-                value={formData.category}
+                value={formData.category || 'regular'}
                 onChange={(e) => {
                   const val = e.target.value;
                   setFormData((prev: any) => ({
@@ -343,6 +343,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
               >
                 <option value="regular">Regular</option>
+                <option value="corporate">Corporate</option>
                 <option value="family">Family (Doctor's House)</option>
                 <option value="staff">Clinic Staff</option>
                 <option value="vip">VIP</option>
@@ -356,7 +357,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <Input
                 type="number"
                 name="defaultDiscount"
-                value={formData.defaultDiscount}
+                value={formData.defaultDiscount || 0}
                 onChange={handleChange}
                 min="0"
                 max="100"
@@ -370,25 +371,26 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            <Phone className="w-4 h-4 inline mr-2" />
+            <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Name
           </label>
           <Input
             type="text"
             name="emergencyName"
-            value={formData.emergencyName}
+            value={formData.emergencyName || ''}
             onChange={handleChange}
             placeholder="Emergency contact person name"
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Relation
           </label>
           <div className="space-y-3">
             <select
               name="emergencyRelation"
-              value={formData.emergencyRelation}
+              value={formData.emergencyRelation || ''}
               onChange={(e) => {
                 const val = e.target.value;
                 setFormData((prev: any) => ({
@@ -417,12 +419,12 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <div className="flex animate-in fade-in slide-in-from-top-2">
                 <Input
                   type="text"
-                  value={formData.customEmergencyRelation}
+                  value={formData.customEmergencyRelation || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, customEmergencyRelation: e.target.value }))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      if (formData.customEmergencyRelation.trim()) {
+                      if (formData.customEmergencyRelation?.trim()) {
                         setFormData((prev: any) => ({ ...prev, emergencyRelation: prev.customEmergencyRelation, customEmergencyRelation: '' }));
                       }
                     }
@@ -444,6 +446,20 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </div>
             )}
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Phone className="w-4 h-4 inline mr-2" />
+            Emergency Contact Number
+          </label>
+          <Input
+            type="tel"
+            name="emergencyContact"
+            value={formData.emergencyContact || ''}
+            onChange={handleChange}
+            placeholder="Emergency contact phone number"
+          />
         </div>
       </div>
     </div>

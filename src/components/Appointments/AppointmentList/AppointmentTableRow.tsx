@@ -51,7 +51,7 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
           </div>
           <div className="flex items-center gap-2 text-[10px] text-gray-500">
             <Clock className="w-3.5 h-3.5 text-gray-300" />
-            {formatTime(a.time)} <span className="text-gray-300 mx-1">•</span> {a.duration || 30} min
+            {formatTime(a.time)} <span className="text-gray-300 mx-1">•</span> {a.duration || 15} min
           </div>
         </div>
       </td>

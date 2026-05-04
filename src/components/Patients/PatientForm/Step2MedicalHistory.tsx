@@ -66,49 +66,52 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         />
       </div>
 
-      {matchedCorporateEmp ? (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              <p className="text-xs font-bold text-primary uppercase tracking-wide">Corporate Plan (Auto-assigned)</p>
-            </div>
-            <p className="text-xs text-primary/70 mb-2 font-medium">
-              Plan is automatically assigned from the employee record.
-            </p>
-            <div className="bg-white rounded-lg px-3 py-2 border border-primary/10 text-sm text-primary font-bold">
-              {formData.corporatePlanName || 'Plan assigned — see details above'}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-secondary bg-secondary/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-primary">Corporate Plan</p>
-                <p className="text-xs text-primary/70">Plan will be detected automatically based on the phone number.</p>
-              </div>
-            </div>
-            <CorporatePlanSelector
-              plans={corporatePlans}
-              selectedPlanId={formData.corporatePlanId}
-              memberId={formData.corporateMemberId}
-              onChange={(planId, planName, memberId) =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  corporatePlanId: planId,
-                  corporatePlanName: planName,
-                  corporateMemberId: memberId,
-                  category: planId ? 'corporate' : (prev.category === 'corporate' ? 'regular' : prev.category),
-                }))
-              }
-            />
-          </CardContent>
-        </Card>
+      {(matchedCorporateEmp || formData.category === 'corporate') && (
+        <>
+          {matchedCorporateEmp ? (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Corporate Plan (Auto-assigned)</p>
+                </div>
+                <p className="text-xs text-primary/70 mb-2 font-medium">
+                  Plan is automatically assigned from the employee record.
+                </p>
+                <div className="bg-white rounded-lg px-3 py-2 border border-primary/10 text-sm text-primary font-bold">
+                  {formData.corporatePlanName || 'Plan assigned — see details above'}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-secondary bg-secondary/30">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-primary">Corporate Plan</p>
+                    <p className="text-xs text-primary/70">Manually assign a corporate plan to this patient.</p>
+                  </div>
+                </div>
+                <CorporatePlanSelector
+                  plans={corporatePlans}
+                  selectedPlanId={formData.corporatePlanId}
+                  memberId={formData.corporateMemberId}
+                  onChange={(planId, planName, memberId) =>
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      corporatePlanId: planId,
+                      corporatePlanName: planName,
+                      corporateMemberId: memberId,
+                    }))
+                  }
+                />
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -330,7 +333,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Previous Treatments</label>
           <div className="flex flex-wrap gap-2">
-            {['Root Canal', 'Extraction', 'Braces', 'Implant', 'Crown', 'Filling', 'Surgery'].map((treatment) => (
+            {Array.from(new Set(['Root Canal', 'Extraction', 'Braces', 'Implant', 'Crown', 'Filling', 'Surgery', ...(formData.previousTreatments || [])])).map((treatment) => (
               <Badge
                 key={treatment}
                 onClick={() => {
@@ -375,12 +378,31 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               <button
                 type="button"
                 className="px-2 bg-primary text-white rounded-r-md text-[10px] font-bold"
-                onClick={() => setShowOtherTreatment(false)}
+                onClick={() => {
+                  const input = (document.activeElement as HTMLInputElement);
+                  const val = input?.value?.trim();
+                  if (val && !formData.previousTreatments.includes(val)) {
+                    setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
+                    input.value = '';
+                    setShowOtherTreatment(false);
+                  }
+                }}
               >
                 ADD
               </button>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+        <div>
+          <h4 className="text-sm font-bold text-amber-900 mb-1">Important Medical Notice</h4>
+          <p className="text-xs text-amber-800 leading-relaxed">
+            Please ensure all medical conditions and allergies are accurately recorded.
+            This information is critical for safe treatment planning and emergency situations.
+          </p>
         </div>
       </div>
     </div>

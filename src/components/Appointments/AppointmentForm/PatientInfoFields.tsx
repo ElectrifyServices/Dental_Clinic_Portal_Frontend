@@ -41,7 +41,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
             value={patientName}
             onChange={onChange}
             required
-            disabled={isFollowUp}
+            disabled={isFollowUp || isConsulted}
             placeholder="Search or enter name"
             className="h-11 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white"
           />
@@ -70,6 +70,12 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
           />
         </div>
       </div>
+      {isConsulted && (
+        <p className="text-[10px] text-amber-600 font-medium ml-1 mt-1 flex items-center gap-1.5 bg-amber-50 p-2 rounded-lg border border-amber-100">
+          <span className="bg-amber-600 text-white w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold">!</span>
+          Note: Patient name and phone number cannot be modified after check-in has been completed.
+        </p>
+      )}
     </section>
   );
 };
