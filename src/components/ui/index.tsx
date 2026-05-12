@@ -8,6 +8,8 @@ import { ChevronLeft, ChevronRight, X, AlertTriangle, Search, Upload } from 'luc
 export * from './Button';
 export * from './Input';
 export * from './Card';
+export { FormRenderer, SectionRenderer } from './FormRenderer';
+export type { FormRendererProps, SectionRendererProps } from './FormRenderer';
 
 // ─── PageHeader ───────────────────────────────────────────────────────────────
 interface PageHeaderProps {

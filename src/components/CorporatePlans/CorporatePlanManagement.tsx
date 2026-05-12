@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   Plus, Edit2, Trash2, Building2, Users, Calendar,
-  CheckCircle, XCircle, ChevronDown, ChevronUp, Gift,
+  CheckCircle, ChevronDown, ChevronUp, Gift,
   Percent, Star, Tag, Search, ToggleLeft, ToggleRight, Info,
   Settings2
 } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, PlanBenefitType } from '../../types';
 import { PLAN_COLORS, TREATMENT_LABELS, COLOR_MAP, getPlanStatus } from '../../utils/corporatePlan';
-import { Modal, Button, FormField } from '../ui';
+import { Modal, Button, FormField, SectionRenderer } from '../ui';
+import { useFormConfig } from '../../hooks/useFormConfig';
 
 interface Props {
   plans: CorporatePlan[];
@@ -15,15 +16,6 @@ interface Props {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
 }
-
-const BENEFIT_LABELS: Record<PlanBenefitType, string> = {
-  flat_discount: 'Flat % Discount (All Services)',
-  treatment_discount: 'Treatment-Specific % Discount',
-  free_consultations: 'Free Consultations (per year)',
-  free_treatments: 'Free Specific Treatments',
-  capped_discount: 'Capped % Discount (max ₹)',
-  custom: 'Custom Defined Benefit',
-};
 
 const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
   flat_discount: <Percent className="w-3.5 h-3.5" />,
@@ -43,11 +35,6 @@ const STATUS_BADGE: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Active', expiring: 'Expiring Soon', expired: 'Expired', inactive: 'Inactive',
-};
-
-const DOT: Record<string, string> = {
-  blue: 'bg-blue-500', violet: 'bg-violet-500', emerald: 'bg-emerald-500', rose: 'bg-rose-500',
-  amber: 'bg-amber-500', cyan: 'bg-cyan-500', indigo: 'bg-indigo-500', teal: 'bg-teal-500',
 };
 
 const mkBenefit = (): PlanBenefit => ({
@@ -77,6 +64,18 @@ function autoDesc(b: PlanBenefit): string {
 }
 
 export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: Props) {
+  const cfg = useFormConfig('corporate');
+  const cfgAny = cfg as any;
+  const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
+    (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
+  );
+  const planColorDots: Record<string, string> = Object.fromEntries(
+    (cfgAny.planColors ?? []).map((c: any) => [c.value, c.dot])
+  );
+  const allFields = [...(cfg.sections?.flatMap(s => s.fields) ?? [])];
+  const fieldMap = Object.fromEntries(allFields.map(f => [f.name, f]));
+  const fl = (name: string, fallback = name) => fieldMap[name]?.label ?? fallback;
+  const coreIdentitySection = cfg.sections?.find(s => s.id === 'coreIdentity');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<CorporatePlan | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -115,7 +114,16 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
   };
 
   const openNew = () => { setEditing(null); setForm(mkForm()); setErrors({}); setShowForm(true); };
-  const openEdit = (p: CorporatePlan) => { setEditing(p); setForm({ ...p }); setErrors({}); setShowForm(true); };
+  const openEdit = (p: CorporatePlan) => { setEditing(p); setForm({ name: p.name, companyName: p.companyName, code: p.code, description: p.description, benefits: p.benefits, validFrom: p.validFrom, validTo: p.validTo, maxMembers: p.maxMembers, isActive: p.isActive, color: p.color }); setErrors({}); setShowForm(true); };
+
+  // Unified handler for SectionRenderer
+  const handleFormChange = (name: string, value: any) => {
+    setForm(prev => {
+      if (name === 'code') return { ...prev, code: String(value).toUpperCase() };
+      if (name === 'maxMembers') return { ...prev, maxMembers: value ? parseInt(value) : undefined };
+      return { ...prev, [name]: value };
+    });
+  };
 
   const updateBenefit = (idx: number, field: keyof PlanBenefit, val: any) => {
     const updated = form.benefits.map((b, i) => {
@@ -188,7 +196,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                 <div className="p-6 md:p-8">
                   <div className="flex items-start justify-between gap-6">
                     <div className="flex items-start gap-4 min-w-0">
-                      <div className={`w-14 h-14 rounded-2xl ${c.iconBg} flex items-center justify-center flex-shrink-0 shadow-lg ${c.shadow}`}>
+                      <div className={`w-14 h-14 rounded-2xl ${c.iconBg} flex items-center justify-center flex-shrink-0 shadow-lg`}>
                         <Building2 className="w-7 h-7 text-white" />
                       </div>
                       <div className="min-w-0 pt-1">
@@ -242,7 +250,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {plan.benefits.map(b => (
                         <div key={b.id} className="flex items-start gap-4 bg-white rounded-2xl p-5 border border-border shadow-sm group-hover:shadow-md transition-all">
-                          <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center text-white flex-shrink-0 shadow-md ${c.shadow}`}>
+                          <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center text-white flex-shrink-0 shadow-md`}>
                             {BENEFIT_ICONS[b.type]}
                           </div>
                           <div className="pt-0.5">
@@ -271,7 +279,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       {/* Create / Edit Modal */}
       {showForm && (
         <Modal
-          title={editing ? 'Update Corporate Plan' : 'Corporate Plan Design'}
+          title={editing ? (cfgAny.title?.edit ?? 'Update Corporate Plan') : (cfgAny.title?.create ?? 'Corporate Plan Design')}
           subtitle={editing ? `Editing configuration for ${form.companyName}` : 'Configure new health benefits and enrollment caps'}
           onClose={() => setShowForm(false)}
           size="5xl"
@@ -280,54 +288,37 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
             <div className="flex justify-end gap-3 w-full">
               <Button variant="outline" onClick={() => setShowForm(false)}>Discard Changes</Button>
               <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10">
-                <CheckCircle className="w-4 h-4" /> {editing ? 'Apply Plan Updates' : 'Launch New Plan'}
+                <CheckCircle className="w-4 h-4" /> {editing ? (cfgAny.submitLabel?.edit ?? 'Apply Plan Updates') : (cfgAny.submitLabel?.create ?? 'Launch New Plan')}
               </Button>
             </div>
           }
         >
           <div className="space-y-8 py-2">
             <section className="space-y-4">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Core Identity</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-                <FormField label="Official Plan Name *" error={errors.name}>
-                  <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Gold Executive Plan"
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-inner" />
-                </FormField>
-                <FormField label="Target Organization *" error={errors.companyName}>
-                  <input type="text" value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} placeholder="e.g. Google India Pvt Ltd"
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-inner" />
-                </FormField>
-                <FormField label="Unique Plan Code *" error={errors.code}>
-                  <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="e.g. GOOG-PREM-2024"
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-mono font-black tracking-wider bg-background shadow-inner" />
-                </FormField>
-                <FormField label="Launch Date *">
-                  <input type="date" value={form.validFrom} onChange={e => setForm({ ...form, validFrom: e.target.value })}
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-inner" />
-                </FormField>
-                <FormField label="Expiry Date *" error={errors.validTo}>
-                  <input type="date" value={form.validTo} onChange={e => setForm({ ...form, validTo: e.target.value })}
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-inner" />
-                </FormField>
-                <FormField label="Enrollment Cap (Optional)">
-                  <input type="number" min="0" value={form.maxMembers ?? ''} onChange={e => setForm({ ...form, maxMembers: e.target.value ? parseInt(e.target.value) : undefined })} placeholder="No limit set"
-                    className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-inner" />
-                </FormField>
-                <div className="md:col-span-2 lg:col-span-3">
-                  <FormField label="Internal Description / Scope Summary">
-                    <textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detailed summary of coverage and eligibility criteria…"
-                      className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none bg-background shadow-inner leading-relaxed" />
-                  </FormField>
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                {coreIdentitySection?.title ?? 'Core Identity'}
+              </label>
+
+              {/* Standard fields from JSON config */}
+              {coreIdentitySection && (
+                <SectionRenderer
+                  section={{ ...coreIdentitySection, fields: coreIdentitySection.fields.filter(f => f.name !== 'color') }}
+                  values={form}
+                  onChange={handleFormChange}
+                  errors={errors}
+                  cols={3}
+                />
+              )}
+
+              {/* Color swatch — kept custom (visual picker, not a standard select) */}
+              <FormField label={fl('color', 'Visual Branding Theme')}>
+                <div className="flex gap-2 flex-wrap pt-1">
+                  {PLAN_COLORS.map(c => (
+                    <button key={c} type="button" onClick={() => setForm({ ...form, color: c })}
+                      className={`w-9 h-9 rounded-xl ${planColorDots[c] ?? 'bg-gray-400'} transition-all shadow-md ${form.color === c ? 'ring-2 ring-offset-4 ring-primary scale-110' : 'opacity-30 hover:opacity-100'}`} />
+                  ))}
                 </div>
-                <FormField label="Visual Branding Theme">
-                  <div className="flex gap-2 flex-wrap pt-1">
-                    {PLAN_COLORS.map(c => (
-                      <button key={c} type="button" onClick={() => setForm({ ...form, color: c })}
-                        className={`w-9 h-9 rounded-xl ${DOT[c]} transition-all shadow-md ${form.color === c ? 'ring-2 ring-offset-4 ring-primary scale-110' : 'opacity-30 hover:opacity-100'}`} />
-                    ))}
-                  </div>
-                </FormField>
-              </div>
+              </FormField>
             </section>
 
             <div className="h-px bg-border/50" />
@@ -335,7 +326,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Plan Benefit Logic</label>
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{cfg.sections?.find(s => s.id === 'benefitLogic')?.title ?? 'Plan Benefit Logic'}</label>
                   <div className="bg-primary/10 text-primary text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Automatic Calculations</div>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setForm({ ...form, benefits: [...form.benefits, mkBenefit()] })} className="h-9 gap-2 shadow-sm">
@@ -378,13 +369,13 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       </div>
 
                       {b.type === 'custom' ? (
-                        <FormField label="Benefit Label (Manual Entry)">
+                        <FormField label={fl('customName', 'Benefit Label (Manual Entry)')}>
                           <input type="text" value={b.customName || ''} onChange={e => updateBenefit(idx, 'customName', e.target.value)}
                             placeholder="e.g. Lab Charges, X-Ray"
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
                         </FormField>
                       ) : (
-                        <FormField label={['free_consultations', 'free_treatments'].includes(b.type) ? 'Allocation Count' : 'Discount Rate (%)'}>
+                        <FormField label={['free_consultations', 'free_treatments'].includes(b.type) ? fl('allocationCount', 'Allocation Count') : fl('value', 'Discount Rate (%)')}>
                           <input type="number" min="0" max={b.type.includes('discount') ? 100 : 999} value={b.value}
                             onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
@@ -392,7 +383,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       )}
 
                       {b.type === 'custom' && (
-                        <FormField label="Discount Rate (%)">
+                        <FormField label={fl('value', 'Discount Rate (%)')}>
                           <input type="number" min="0" max={100} value={b.value}
                             onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
@@ -400,7 +391,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       )}
 
                       {b.type === 'capped_discount' && (
-                        <FormField label="Maximum Cap (₹)">
+                        <FormField label={fl('cap', 'Maximum Cap (₹)')}>
                           <input type="number" min="0" value={b.cap ?? ''}
                             onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
@@ -409,7 +400,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
 
                       {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
                         <div className="md:col-span-3">
-                          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block ml-1">Target Clinical Procedures</label>
+                          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block ml-1">{fl('treatmentTypes', 'Target Clinical Procedures')}</label>
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
                               <label key={key} className={`flex items-center gap-2 px-4 py-2 rounded-2xl border cursor-pointer transition-all select-none ${b.treatmentTypes?.includes(key) ? 'bg-primary/10 border-primary text-primary font-bold shadow-sm' : 'bg-background border-border text-muted-foreground hover:border-primary/40'}`}>
@@ -426,7 +417,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       )}
 
                       <div className="md:col-span-3">
-                        <FormField label="Auto-Generated Display Description" error={errors[`b_${idx}`]}>
+                        <FormField label={fl('description', 'Auto-Generated Display Description')} error={errors[`b_${idx}`]}>
                           <input type="text" value={b.description} onChange={e => updateBenefit(idx, 'description', e.target.value)}
                             placeholder="Patient-facing benefit description"
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium bg-muted/30 shadow-inner" />

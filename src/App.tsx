@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AppProvider } from "./contexts/AppContext";
+import { TenantProvider } from "./contexts/TenantContext";
 import { useAppData } from "./hooks/useAppData";
 import { doctorsWithSchedules } from "./data/doctors";
 
@@ -380,10 +381,12 @@ function AuthenticatedApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppProvider>
-        <AuthenticatedApp />
-      </AppProvider>
-    </AuthProvider>
+    <TenantProvider>
+      <AuthProvider>
+        <AppProvider>
+          <AuthenticatedApp />
+        </AppProvider>
+      </AuthProvider>
+    </TenantProvider>
   );
 }

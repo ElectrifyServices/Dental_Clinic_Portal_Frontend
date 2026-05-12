@@ -5,6 +5,7 @@ import { Step1Personal } from './StaffForm/Step1Personal';
 import { Step2Role } from './StaffForm/Step2Role';
 import { Step3Documentation } from './StaffForm/Step3Documentation';
 import { Step4Professional } from './StaffForm/Step4Professional';
+import { useFormConfig, useFormTitle, useSubmitLabel } from '../../hooks/useFormConfig';
 
 interface DoctorFormProps {
   onClose: () => void;
@@ -12,14 +13,14 @@ interface DoctorFormProps {
   doctor?: any;
 }
 
-const STEPS = [
-  { number: 1, title: 'Personal', icon: User },
-  { number: 2, title: 'Access', icon: Shield },
-  { number: 3, title: 'Legal', icon: FileText },
-  { number: 4, title: 'Clinical', icon: Stethoscope }
-];
-
 export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
+  const staffFormCfg = useFormConfig('staff');
+  const formTitle    = useFormTitle('staff', doctor ? 'edit' : 'create');
+  const submitLabel  = useSubmitLabel('staff', doctor ? 'edit' : 'create');
+  // Derive step metadata from JSON config
+  const STEPS = (staffFormCfg.steps ?? []).map(s => ({
+    number: s.number, title: s.title, icon: [User, Shield, FileText, Stethoscope][s.number - 1] ?? User
+  }));
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: doctor?.name || '',
@@ -132,7 +133,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
   return (
     <Modal
-      title={doctor ? 'Update Staff Member' : 'Staff Onboarding'}
+      title={formTitle}
       onClose={onClose}
       size="2xl"
       icon={<User className="w-4 h-4" />}
@@ -143,7 +144,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           </Button>
           <div className="flex gap-3">
             <Button onClick={handleSubmit} className="gap-2">
-              {currentStep < 4 ? <><ChevronRight className="w-4 h-4" /> Next Step</> : <><Save className="w-4 h-4" /> {doctor ? 'Save Changes' : 'Register Member'}</>}
+              {currentStep < 4 ? <><ChevronRight className="w-4 h-4" /> Next Step</> : <><Save className="w-4 h-4" /> {submitLabel}</>}
             </Button>
           </div>
         </div>

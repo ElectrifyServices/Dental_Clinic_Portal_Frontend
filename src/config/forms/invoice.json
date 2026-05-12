@@ -1,0 +1,91 @@
+{
+  "formId": "invoice",
+  "version": "1.0.0",
+  "title": {
+    "create": "Create Bill",
+    "edit": "Edit Invoice"
+  },
+  "submitLabel": { "create": "Save & Finalize Bill", "edit": "Save & Finalize Bill" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "invoiceHeader",
+      "title": "Invoice Details",
+      "icon": "ClipboardList",
+      "fields": [
+        {
+          "name": "patientName",
+          "label": "Patient Name",
+          "type": "select",
+          "required": true,
+          "placeholder": "Select patient",
+          "colSpan": 4,
+          "options": []
+        },
+        {
+          "name": "date",
+          "label": "Invoice Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 4
+        },
+        {
+          "name": "dueDate",
+          "label": "Due Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 4
+        }
+      ]
+    },
+    {
+      "id": "paymentSettings",
+      "title": "Payment Settings",
+      "icon": "DollarSign",
+      "fields": [
+        {
+          "name": "discount",
+          "label": "Discount %",
+          "type": "number",
+          "defaultValue": 0,
+          "validation": { "min": 0, "max": 100 },
+          "colSpan": 6
+        },
+        {
+          "name": "tax",
+          "label": "Tax % (GST)",
+          "type": "number",
+          "defaultValue": 18,
+          "validation": { "min": 0, "max": 100 },
+          "colSpan": 6
+        },
+        {
+          "name": "isComplimentary",
+          "label": "Complimentary Bill (Waive full amount)",
+          "type": "checkbox",
+          "defaultValue": false,
+          "colSpan": 12
+        },
+        {
+          "name": "complimentaryNote",
+          "label": "Complimentary Reason",
+          "type": "text",
+          "placeholder": "e.g. Staff benefit / VIP patient / Management approval",
+          "colSpan": 12
+        }
+      ]
+    }
+  ],
+  "commonServices": [
+    { "value": "Consultation",           "label": "Consultation",           "rate": 500 },
+    { "value": "Teeth Cleaning",         "label": "Teeth Cleaning",         "rate": 1500 },
+    { "value": "Dental Filling",         "label": "Dental Filling",         "rate": 2000 },
+    { "value": "Root Canal",             "label": "Root Canal",             "rate": 5000 },
+    { "value": "Crown Fitting",          "label": "Crown Fitting",          "rate": 8000 },
+    { "value": "Tooth Extraction",       "label": "Tooth Extraction",       "rate": 1000 },
+    { "value": "Orthodontic Treatment",  "label": "Orthodontic Treatment",  "rate": 3000 },
+    { "value": "Oral Surgery",           "label": "Oral Surgery",           "rate": 10000 },
+    { "value": "Teeth Whitening",        "label": "Teeth Whitening",        "rate": 4000 },
+    { "value": "Dental X-Ray",           "label": "Dental X-Ray",           "rate": 800 }
+  ]
+}

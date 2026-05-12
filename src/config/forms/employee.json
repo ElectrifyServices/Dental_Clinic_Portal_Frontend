@@ -1,0 +1,42 @@
+{
+  "formId": "employee",
+  "version": "1.0.0",
+  "title": {
+    "create": "Enroll New Employee",
+    "edit": "Edit Employee Details"
+  },
+  "submitLabel": {
+    "create": "Enroll Employee",
+    "edit": "Save Changes"
+  },
+  "sections": [
+    {
+      "id": "personal",
+      "title": "Personal Details",
+      "fields": [
+        { "name": "name",           "label": "Full Name",           "type": "text",   "required": true,  "placeholder": "Employee full name" },
+        { "name": "employeeId",     "label": "Employee ID",         "type": "text",   "required": false, "placeholder": "e.g. EMP-001" },
+        { "name": "phone",          "label": "Phone Number",        "type": "phone",  "required": true,  "placeholder": "10-digit mobile number" },
+        { "name": "email",          "label": "Email Address",       "type": "email",  "required": false, "placeholder": "work@company.com" },
+        { "name": "gender",         "label": "Gender",              "type": "select", "required": false,
+          "options": [
+            { "value": "male",   "label": "Male" },
+            { "value": "female", "label": "Female" },
+            { "value": "other",  "label": "Other" }
+          ]
+        },
+        { "name": "dateOfBirth",    "label": "Date of Birth",       "type": "date",   "required": false }
+      ]
+    },
+    {
+      "id": "employment",
+      "title": "Employment Details",
+      "fields": [
+        { "name": "companyName",        "label": "Company Name",        "type": "text",   "required": true,  "placeholder": "Employer organization name" },
+        { "name": "designation",        "label": "Designation / Role",  "type": "text",   "required": false, "placeholder": "e.g. Software Engineer" },
+        { "name": "department",         "label": "Department",          "type": "text",   "required": false, "placeholder": "e.g. Engineering, HR" },
+        { "name": "corporatePlanId",    "label": "Corporate Health Plan","type": "select", "required": true }
+      ]
+    }
+  ]
+}

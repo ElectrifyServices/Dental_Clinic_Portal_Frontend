@@ -1,0 +1,82 @@
+{
+  "formId": "emr",
+  "version": "1.0.0",
+  "title": {
+    "create": "Add EMR Record",
+    "edit": "Edit EMR Record"
+  },
+  "submitLabel": { "create": "Save Record", "edit": "Update Record" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "recordInfo",
+      "title": "Record Details",
+      "icon": "FileText",
+      "fields": [
+        {
+          "name": "patientName",
+          "label": "Patient Name",
+          "type": "select",
+          "required": true,
+          "placeholder": "Select patient",
+          "colSpan": 6,
+          "options": []
+        },
+        {
+          "name": "type",
+          "label": "Record Type",
+          "type": "select",
+          "required": true,
+          "colSpan": 6,
+          "options": [
+            { "value": "consultation",    "label": "Consultation" },
+            { "value": "prescription",    "label": "Prescription" },
+            { "value": "lab-report",      "label": "Lab Report" },
+            { "value": "x-ray",           "label": "X-Ray / Imaging" },
+            { "value": "treatment-note",  "label": "Treatment Note" },
+            { "value": "progress-note",   "label": "Progress Note" },
+            { "value": "discharge",       "label": "Discharge Summary" }
+          ]
+        },
+        {
+          "name": "title",
+          "label": "Record Title",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. Post Root Canal Progress Note",
+          "colSpan": 6
+        },
+        {
+          "name": "date",
+          "label": "Record Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 6
+        },
+        {
+          "name": "content",
+          "label": "Record Content",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "Enter detailed clinical notes, observations, findings...",
+          "rows": 6,
+          "colSpan": 12
+        }
+      ]
+    },
+    {
+      "id": "attachments",
+      "title": "Attachments",
+      "icon": "Upload",
+      "fields": [
+        {
+          "name": "attachments",
+          "label": "Upload Files",
+          "type": "file",
+          "hint": "Images, reports, or documents (Max 10MB each). Accepted: JPG, PNG, PDF, DOC",
+          "colSpan": 12
+        }
+      ]
+    }
+  ]
+}

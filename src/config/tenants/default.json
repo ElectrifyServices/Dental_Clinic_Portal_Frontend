@@ -1,0 +1,153 @@
+{
+  "tenantId": "default",
+  "version": "1.0.0",
+  "branding": {
+    "clinicName": "DentalCare Pro",
+    "tagline": "Your Smile, Our Priority",
+    "primaryColor": "blue",
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "timezone": "Asia/Kolkata",
+    "dateFormat": "DD/MM/YYYY",
+    "country": "India"
+  },
+  "screens": {
+    "dashboard": {
+      "enabled": true,
+      "label": "Dashboard",
+      "features": {
+        "showStats": true,
+        "showRecentPatients": true,
+        "showTodayAppointments": true,
+        "showQuickActions": true
+      }
+    },
+    "appointments": {
+      "enabled": true,
+      "label": "Appointments",
+      "features": {
+        "enableCalendarView": true,
+        "enableListView": true,
+        "enableDoctorBooking": true,
+        "defaultView": "calendar"
+      }
+    },
+    "patients": {
+      "enabled": true,
+      "label": "Patients",
+      "features": {
+        "enableFamilyMembers": true,
+        "enableCorporatePatients": true,
+        "enableExport": true,
+        "enableBulkImport": true,
+        "showOutstandingBalance": true
+      }
+    },
+    "patient-queue": {
+      "enabled": true,
+      "label": "Consultation",
+      "features": {
+        "enableDirectConsultation": true,
+        "enableToothChart": true,
+        "enablePrescriptions": true,
+        "enableLabTests": true,
+        "enableClinicalImages": true
+      }
+    },
+    "treatments": {
+      "enabled": true,
+      "label": "Treatments",
+      "features": {
+        "enableSessions": true
+      }
+    },
+    "emr": {
+      "enabled": true,
+      "label": "Medical Records",
+      "features": {}
+    },
+    "consent": {
+      "enabled": true,
+      "label": "Consent Forms",
+      "features": {
+        "enableDigitalSignature": true
+      }
+    },
+    "billing": {
+      "enabled": true,
+      "label": "Billing",
+      "features": {
+        "enableCorporateDiscounts": true,
+        "enablePartialPayments": true,
+        "enableGST": true,
+        "gstRate": 18
+      }
+    },
+    "inventory": {
+      "enabled": true,
+      "label": "Inventory",
+      "features": {
+        "enableRestocking": true,
+        "lowStockAlertThreshold": 10
+      }
+    },
+    "reports": {
+      "enabled": true,
+      "label": "Analytics",
+      "features": {
+        "enableRevenueReport": true,
+        "enablePatientReport": true,
+        "enableAppointmentReport": true
+      }
+    },
+    "staff": {
+      "enabled": true,
+      "label": "Staff",
+      "features": {
+        "enableSalaryManagement": true,
+        "enableScheduleManagement": true
+      }
+    },
+    "profit-sharing": {
+      "enabled": true,
+      "label": "Profit Sharing",
+      "features": {
+        "defaultSharePercent": 30
+      }
+    },
+    "corporate-plans": {
+      "enabled": true,
+      "label": "Corporate Plans",
+      "features": {}
+    }
+  },
+  "sidebar": {
+    "groups": [
+      {
+        "id": "main",
+        "label": "Overview",
+        "items": ["dashboard", "appointments", "patients"]
+      },
+      {
+        "id": "clinical",
+        "label": "Clinical",
+        "items": ["patient-queue", "treatments", "emr", "consent"]
+      },
+      {
+        "id": "admin",
+        "label": "Administration",
+        "items": ["billing", "inventory", "reports", "staff", "profit-sharing"]
+      },
+      {
+        "id": "superadmin",
+        "label": "Super Admin",
+        "items": ["corporate-plans"]
+      }
+    ]
+  },
+  "support": {
+    "email": "support@dentalcarepro.com",
+    "phone": "+91-1800-DENTAL",
+    "website": "https://dentalcarepro.com"
+  }
+}

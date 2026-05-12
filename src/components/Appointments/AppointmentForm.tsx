@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { PatientInfoFields } from "./AppointmentForm/PatientInfoFields";
 import { ScheduleFields } from "./AppointmentForm/ScheduleFields";
 import { TreatmentFields } from "./AppointmentForm/TreatmentFields";
+import { useFormConfig, useFormFieldOptions, useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -19,20 +20,12 @@ interface AppointmentFormProps {
   isFollowUp?: boolean;
 }
 
-const APPOINTMENT_TYPES = [
-  { value: "consultation", label: "General Consultation", fee: 500 },
-  { value: "cleaning", label: "Teeth Cleaning & Scaling", fee: 1500 },
-  { value: "filling", label: "Dental Filling", fee: 2000 },
-  { value: "extraction", label: "Tooth Extraction", fee: 1000 },
-  { value: "root-canal", label: "Root Canal Treatment", fee: 5000 },
-  { value: "crown", label: "Crown Fitting", fee: 8000 },
-  { value: "orthodontics", label: "Orthodontic Treatment", fee: 3000 },
-  { value: "surgery", label: "Oral Surgery", fee: 10000 },
-  { value: "emergency", label: "Emergency Treatment", fee: 1500 },
-  { value: "other", label: "Other Treatment", fee: 500 },
-];
-
 export function AppointmentForm({ onClose, onSave, appointment, doctors = [], appointments = [], selectedDate, patients = [], isFollowUp = false }: AppointmentFormProps) {
+  const appointmentTypes = useFormFieldOptions('appointment', 'treatmentType');
+  const durationOptions  = useFormFieldOptions('appointment', 'duration');
+  const formTitle        = useFormTitle('appointment', isFollowUp ? 'followUp' : appointment?.id ? 'edit' : 'create');
+  const submitLabel      = useSubmitLabel('appointment', appointment?.id ? 'edit' : 'create');
+
   const formatDateLocal = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const safeDate = selectedDate ? new Date(selectedDate) : new Date();
 
@@ -96,7 +89,7 @@ export function AppointmentForm({ onClose, onSave, appointment, doctors = [], ap
               </div>
               <div>
                 <h2 className="modal-title text-lg">
-                  {isFollowUp ? "Follow-up Appointment" : appointment?.id ? "Edit Appointment" : "New Patient Appointment"}
+                  {formTitle}
                 </h2>
                 <p className="text-gray-500 text-xs mt-0.5">
                   {isFollowUp ? "Schedule next visit" : "Complete booking details"}
@@ -139,7 +132,7 @@ export function AppointmentForm({ onClose, onSave, appointment, doctors = [], ap
               fee={formData.fee}
               patientConcern={formData.patientConcern}
               notes={formData.notes}
-              appointmentTypes={APPOINTMENT_TYPES}
+              appointmentTypes={appointmentTypes}
               onChange={handleChange}
             />
           </form>
@@ -155,7 +148,7 @@ export function AppointmentForm({ onClose, onSave, appointment, doctors = [], ap
             className="px-10 shadow-lg"
           >
             <Save className="w-4 h-4 mr-2" />
-            {appointment?.id ? "Update Appointment" : "Confirm Booking"}
+            {submitLabel}
           </Button>
         </div>
       </div>

@@ -1,0 +1,139 @@
+{
+  "formId": "appointment",
+  "version": "1.0.0",
+  "title": {
+    "create": "New Patient Appointment",
+    "edit": "Edit Appointment",
+    "followUp": "Follow-up Appointment"
+  },
+  "submitLabel": { "create": "Confirm Booking", "edit": "Update Appointment" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "patientInfo",
+      "title": "Patient Information",
+      "icon": "User",
+      "fields": [
+        {
+          "name": "patientName",
+          "label": "Patient Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "Search or enter patient name",
+          "colSpan": 6
+        },
+        {
+          "name": "patientPhone",
+          "label": "Phone Number",
+          "type": "phone",
+          "required": true,
+          "placeholder": "98765 43210",
+          "colSpan": 6
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "title": "Schedule Details",
+      "icon": "Calendar",
+      "fields": [
+        {
+          "name": "date",
+          "label": "Appointment Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 4
+        },
+        {
+          "name": "time",
+          "label": "Appointment Time",
+          "type": "time",
+          "required": true,
+          "colSpan": 4
+        },
+        {
+          "name": "duration",
+          "label": "Duration (minutes)",
+          "type": "select",
+          "placeholder": "Auto",
+          "colSpan": 4,
+          "options": [
+            { "value": "15",  "label": "15 min" },
+            { "value": "30",  "label": "30 min" },
+            { "value": "45",  "label": "45 min" },
+            { "value": "60",  "label": "1 hour" },
+            { "value": "90",  "label": "1.5 hours" },
+            { "value": "120", "label": "2 hours" }
+          ]
+        },
+        {
+          "name": "doctorId",
+          "label": "Assigned Doctor",
+          "type": "select",
+          "required": true,
+          "placeholder": "Select doctor",
+          "colSpan": 12,
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "treatment",
+      "title": "Treatment Details",
+      "icon": "Stethoscope",
+      "fields": [
+        {
+          "name": "treatmentType",
+          "label": "Treatment Type",
+          "type": "select",
+          "placeholder": "General Consultation",
+          "colSpan": 5,
+          "options": [
+            { "value": "consultation",  "label": "General Consultation",      "fee": 500 },
+            { "value": "cleaning",      "label": "Teeth Cleaning & Scaling",  "fee": 1500 },
+            { "value": "filling",       "label": "Dental Filling",            "fee": 2000 },
+            { "value": "extraction",    "label": "Tooth Extraction",          "fee": 1000 },
+            { "value": "root-canal",    "label": "Root Canal Treatment",      "fee": 5000 },
+            { "value": "crown",         "label": "Crown Fitting",             "fee": 8000 },
+            { "value": "orthodontics",  "label": "Orthodontic Treatment",     "fee": 3000 },
+            { "value": "surgery",       "label": "Oral Surgery",              "fee": 10000 },
+            { "value": "emergency",     "label": "Emergency Treatment",       "fee": 1500 },
+            { "value": "other",         "label": "Other Treatment",           "fee": 500 }
+          ]
+        },
+        {
+          "name": "treatment",
+          "label": "Specific Treatment",
+          "type": "text",
+          "placeholder": "e.g. Tooth scaling, cavity in upper molar",
+          "colSpan": 5
+        },
+        {
+          "name": "fee",
+          "label": "Fee (₹)",
+          "type": "number",
+          "defaultValue": 500,
+          "validation": { "min": 0 },
+          "colSpan": 2
+        },
+        {
+          "name": "patientConcern",
+          "label": "Patient Concern",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "Main concern or symptoms described by the patient...",
+          "rows": 3,
+          "colSpan": 6
+        },
+        {
+          "name": "notes",
+          "label": "Additional Notes",
+          "type": "textarea",
+          "placeholder": "Any special instructions, allergies, or pre-visit notes...",
+          "rows": 3,
+          "colSpan": 6
+        }
+      ]
+    }
+  ]
+}

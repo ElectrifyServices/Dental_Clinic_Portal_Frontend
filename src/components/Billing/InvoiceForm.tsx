@@ -2,10 +2,11 @@ import React, { useState, useMemo } from "react";
 import { Save, Plus, User, Calendar, DollarSign, Building2, Stethoscope, ClipboardList } from "lucide-react";
 import { Invoice, InvoiceItem } from "../../types";
 import { computePlanDiscount } from "../../utils/corporatePlan";
-import { Modal, Button, Card, CardContent, FormField, Badge } from "@/components/ui";
+import { Modal, Button, Card, CardContent, FormField, Badge, SectionRenderer } from "@/components/ui";
 import { PendingItems } from "./InvoiceForm/PendingItems";
 import { InvoiceItemRow } from "./InvoiceForm/InvoiceItemRow";
 import { PlanBanner } from "./InvoiceForm/PlanBanner";
+import { useFormConfig } from "../../hooks/useFormConfig";
 
 interface InvoiceFormProps {
   onClose: () => void;
@@ -59,12 +60,9 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
     return list;
   }, [formData.patientName, treatments, consultations, activeCorporatePlan]);
 
+  const invoiceCfg = useFormConfig('invoice');
+  const commonServices: Array<{ name: string; rate: number }> = (invoiceCfg as any).commonServices ?? [];
   const doctors = ["Dr. Rajesh Sharma — General Dentistry", "Dr. Priya Patel — Orthodontics", "Dr. Amit Singh — Oral Surgery"];
-  const commonServices = [
-    { name: "Consultation", rate: 500 }, { name: "Teeth Cleaning", rate: 1500 }, { name: "Dental Filling", rate: 2000 },
-    { name: "Root Canal", rate: 5000 }, { name: "Crown Fitting", rate: 8000 }, { name: "Tooth Extraction", rate: 1000 },
-    { name: "Orthodontic Treatment", rate: 3000 }, { name: "Oral Surgery", rate: 10000 },
-  ];
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
     setItems(items.map(item => {

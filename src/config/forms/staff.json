@@ -1,0 +1,209 @@
+{
+  "formId": "staff",
+  "version": "1.0.0",
+  "title": {
+    "create": "Staff Onboarding",
+    "edit": "Update Staff Member"
+  },
+  "submitLabel": { "create": "Register Member", "edit": "Save Changes" },
+  "cancelLabel": "Cancel",
+  "steps": [
+    {
+      "number": 1,
+      "title": "Personal",
+      "icon": "User",
+      "sections": [
+        {
+          "id": "personalInfo",
+          "title": "Personal Details",
+          "icon": "User",
+          "fields": [
+            {
+              "name": "name",
+              "label": "Full Name",
+              "type": "text",
+              "required": true,
+              "placeholder": "e.g. Dr. Priya Patel",
+              "colSpan": 6
+            },
+            {
+              "name": "phone",
+              "label": "Phone Number",
+              "type": "phone",
+              "required": true,
+              "placeholder": "98765 43210",
+              "colSpan": 6
+            },
+            {
+              "name": "email",
+              "label": "Email Address",
+              "type": "email",
+              "required": true,
+              "placeholder": "doctor@clinic.com",
+              "colSpan": 6
+            },
+            {
+              "name": "password",
+              "label": "Login Password",
+              "type": "password",
+              "required": true,
+              "placeholder": "Min 8 characters",
+              "colSpan": 6,
+              "hint": "Only required for new staff accounts"
+            },
+            {
+              "name": "confirmPassword",
+              "label": "Confirm Password",
+              "type": "password",
+              "required": true,
+              "placeholder": "Re-enter password",
+              "colSpan": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Access",
+      "icon": "Shield",
+      "sections": [
+        {
+          "id": "accessControl",
+          "title": "Role & Permissions",
+          "icon": "Shield",
+          "fields": [
+            {
+              "name": "role",
+              "label": "Staff Role",
+              "type": "select",
+              "required": true,
+              "defaultValue": "doctor",
+              "colSpan": 12,
+              "options": [
+                { "value": "admin",        "label": "Admin — Full access to all modules" },
+                { "value": "doctor",       "label": "Doctor — Clinical modules + patient management" },
+                { "value": "receptionist", "label": "Receptionist — Front desk, appointments & billing" },
+                { "value": "assistant",    "label": "Assistant — Limited clinical support access" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Legal",
+      "icon": "FileText",
+      "sections": [
+        {
+          "id": "documentation",
+          "title": "Documents & ID Proof",
+          "icon": "FileText",
+          "fields": [
+            {
+              "name": "licenseNumber",
+              "label": "Medical License Number",
+              "type": "text",
+              "placeholder": "MCI/State council license no.",
+              "colSpan": 6
+            },
+            {
+              "name": "uniqueId",
+              "label": "Staff Unique ID",
+              "type": "text",
+              "required": true,
+              "colSpan": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Clinical",
+      "icon": "Stethoscope",
+      "sections": [
+        {
+          "id": "professionalInfo",
+          "title": "Professional Details",
+          "icon": "Stethoscope",
+          "fields": [
+            {
+              "name": "specialization",
+              "label": "Specialization",
+              "type": "select",
+              "placeholder": "Select specialization",
+              "colSpan": 6,
+              "options": [
+                { "value": "General Dentistry",    "label": "General Dentistry" },
+                { "value": "Orthodontics",         "label": "Orthodontics" },
+                { "value": "Oral Surgery",         "label": "Oral Surgery" },
+                { "value": "Endodontics",          "label": "Endodontics (Root Canal)" },
+                { "value": "Periodontics",         "label": "Periodontics (Gum Care)" },
+                { "value": "Prosthodontics",       "label": "Prosthodontics (Dentures)" },
+                { "value": "Pedodontics",          "label": "Pedodontics (Children)" },
+                { "value": "Oral Medicine",        "label": "Oral Medicine & Radiology" },
+                { "value": "Cosmetic Dentistry",   "label": "Cosmetic Dentistry" },
+                { "value": "Implantology",         "label": "Implantology" }
+              ]
+            },
+            {
+              "name": "qualification",
+              "label": "Qualification",
+              "type": "text",
+              "placeholder": "e.g. BDS, MDS",
+              "colSpan": 6
+            },
+            {
+              "name": "experience",
+              "label": "Years of Experience",
+              "type": "number",
+              "placeholder": "e.g. 5",
+              "validation": { "min": 0, "max": 60 },
+              "colSpan": 4
+            },
+            {
+              "name": "department",
+              "label": "Department",
+              "type": "text",
+              "placeholder": "e.g. Orthodontics Dept.",
+              "colSpan": 4
+            },
+            {
+              "name": "designation",
+              "label": "Designation",
+              "type": "text",
+              "placeholder": "e.g. Senior Consultant",
+              "colSpan": 4
+            },
+            {
+              "name": "consultationFee",
+              "label": "Consultation Fee (₹)",
+              "type": "number",
+              "placeholder": "500",
+              "validation": { "min": 0 },
+              "colSpan": 4
+            },
+            {
+              "name": "monthlySalary",
+              "label": "Monthly Salary (₹)",
+              "type": "number",
+              "placeholder": "0",
+              "validation": { "min": 0 },
+              "colSpan": 4
+            },
+            {
+              "name": "profitPercentage",
+              "label": "Profit Share %",
+              "type": "number",
+              "defaultValue": 0,
+              "validation": { "min": 0, "max": 100 },
+              "colSpan": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

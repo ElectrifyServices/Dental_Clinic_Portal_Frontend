@@ -6,40 +6,51 @@ import {
   Building2, LogOut
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 interface SidebarProps {
   currentPage: string;
   onPageChange: (page: string) => void;
 }
 
-const ALL_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, group: 'main' },
-  { id: 'appointments', label: 'Appointments', icon: Calendar, group: 'main' },
-  { id: 'patients', label: 'Patients', icon: Users, group: 'main' },
-  { id: 'patient-queue', label: 'Consultation', icon: Activity, group: 'clinical' },
-  { id: 'treatments', label: 'Treatments', icon: Stethoscope, group: 'clinical' },
-  { id: 'emr', label: 'Medical Records', icon: FileText, group: 'clinical' },
-  { id: 'consent', label: 'Consent Forms', icon: Shield, group: 'clinical' },
-  { id: 'billing', label: 'Billing', icon: CreditCard, group: 'admin' },
-  { id: 'inventory', label: 'Inventory', icon: Package, group: 'admin' },
-  { id: 'reports', label: 'Analytics', icon: BarChart3, group: 'admin' },
-  { id: 'staff', label: 'Staff', icon: UserCheck, group: 'admin' },
-  { id: 'profit-sharing', label: 'Profit Sharing', icon: DollarSign, group: 'admin' },
-  { id: 'corporate-plans', label: 'Corporate Plans', icon: Building2, group: 'superadmin' },
-];
-
-const GROUP_LABELS: Record<string, string> = {
-  main: 'Overview', clinical: 'Clinical', admin: 'Administration', superadmin: 'Super Admin',
+/** Maps screen IDs to their Lucide icon component. */
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  'dashboard':      Home,
+  'appointments':   Calendar,
+  'patients':       Users,
+  'patient-queue':  Activity,
+  'treatments':     Stethoscope,
+  'emr':            FileText,
+  'consent':        Shield,
+  'billing':        CreditCard,
+  'inventory':      Package,
+  'reports':        BarChart3,
+  'staff':          UserCheck,
+  'profit-sharing': DollarSign,
+  'corporate-plans': Building2,
 };
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { state, logout } = useAuth();
+  const { tenant } = useTenant();
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
   const hasAll = perms.includes('all');
 
-  const canAccess = (item: typeof ALL_ITEMS[0]) => {
+  // Build flat item list from tenant sidebar config, filtering disabled screens
+  const allItems = tenant.sidebar.groups.flatMap(group =>
+    group.items
+      .filter(id => tenant.screens[id]?.enabled !== false)
+      .map(id => ({
+        id,
+        label: tenant.screens[id]?.label ?? id,
+        icon: ICON_MAP[id] ?? Home,
+        group: group.id,
+      }))
+  );
+
+  const canAccess = (item: typeof allItems[0]) => {
     if (item.group === 'superadmin') return role === 'superadmin';
     if (item.id === 'patient-queue') return role === 'doctor' || hasAll;
     if (item.group === 'admin') {
@@ -50,8 +61,11 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     return true;
   };
 
-  const visible = ALL_ITEMS.filter(canAccess);
-  const groups = ['main', 'clinical', 'admin', 'superadmin'].filter(g => visible.some(i => i.group === g));
+  const visible = allItems.filter(canAccess);
+  // Only render groups that have at least one visible item
+  const visibleGroups = tenant.sidebar.groups.filter(g =>
+    visible.some(i => i.group === g.id)
+  );
 
   const roleLabel = () => {
     switch (role) {
@@ -65,7 +79,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const rl = roleLabel();
 
   // Determine active group color
-  const activeItem = ALL_ITEMS.find(i => i.id === currentPage);
+  const activeItem = allItems.find(i => i.id === currentPage);
   const activeGroup = activeItem?.group || 'main';
 
   const getThemeColor = (group: string) => {
@@ -73,7 +87,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       case 'clinical': return 'emerald';
       case 'admin': return 'amber';
       case 'superadmin': return 'violet';
-      default: return 'blue';
+      default: return tenant.branding.primaryColor || 'blue';
     }
   };
 
@@ -110,36 +124,36 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-gray-900 text-[14px] block leading-none tracking-tight">DentalCare Pro</span>
+              <span className="font-bold text-gray-900 text-[14px] block leading-none tracking-tight">{tenant.branding.clinicName}</span>
               <span className={`text-[8px] font-bold uppercase tracking-widest mt-1 block transition-colors duration-500 ${themeClasses.split(' ')[1]}`}>
-                {activeGroup === 'main' ? 'Overview' : activeGroup.toUpperCase()}
+                {visibleGroups.find(g => g.id === activeGroup)?.label ?? activeGroup}
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Nav - Strict No Scroll */}
-      <nav className="flex-1 flex flex-col py-4 px-2 space-y-4 overflow-hidden">
-        {groups.map(group => (
-          <div key={group} className="space-y-1">
+      {/* Nav - Scrollable */}
+      <nav className="flex-1 flex flex-col py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+        {visibleGroups.map(group => (
+          <div key={group.id} className="space-y-1">
             {!collapsed && (
               <p className={`text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-1 transition-colors duration-500
-                ${activeGroup === group 
-                  ? group === 'clinical' ? 'text-emerald-600' : group === 'admin' ? 'text-amber-500' : group === 'superadmin' ? 'text-violet-600' : 'text-blue-600'
+                ${activeGroup === group.id
+                  ? group.id === 'clinical' ? 'text-emerald-600' : group.id === 'admin' ? 'text-amber-500' : group.id === 'superadmin' ? 'text-violet-600' : 'text-blue-600'
                   : 'text-gray-400'
                 }
               `}>
-                {GROUP_LABELS[group]}
+                {group.label}
               </p>
             )}
             <div className="space-y-0.5">
-              {visible.filter(i => i.group === group).map(item => {
+              {visible.filter(i => i.group === group.id).map(item => {
                 const Icon = item.icon;
                 const active = currentPage === item.id;
 
                 const getActiveStyle = () => {
-                  switch (group) {
+                  switch (group.id) {
                     case 'clinical': return active ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700';
                     case 'admin': return active ? 'bg-amber-500 text-white shadow-lg' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-700';
                     case 'superadmin': return active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-500 hover:bg-violet-50 hover:text-violet-700';

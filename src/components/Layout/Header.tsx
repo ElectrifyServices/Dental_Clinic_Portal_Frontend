@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, LogOut, Calendar, Plus, ChevronDown, Stethoscope } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 interface HeaderProps {
   onShowTodaySchedule: () => void;
@@ -9,6 +10,7 @@ interface HeaderProps {
 
 export function Header({ onShowTodaySchedule, onQuickAppointment }: HeaderProps) {
   const { state, logout } = useAuth();
+  const { tenant } = useTenant();
   const [showMenu, setShowMenu] = useState(false);
 
   const roleMeta = () => {
@@ -31,7 +33,7 @@ export function Header({ onShowTodaySchedule, onQuickAppointment }: HeaderProps)
           <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
             <Stethoscope className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-[15px]">DentalCare Pro</span>
+          <span className="font-bold text-gray-900 text-[15px]">{tenant.branding.clinicName}</span>
         </div>
         {/* Quick actions */}
         <div className="hidden sm:flex items-center gap-2">

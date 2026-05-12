@@ -1,0 +1,158 @@
+{
+  "formId": "inventory",
+  "version": "1.0.0",
+  "title": {
+    "create": "Add New Item",
+    "edit": "Edit Inventory Item"
+  },
+  "submitLabel": { "create": "Add Item", "edit": "Update Item" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "basicInfo",
+      "title": "Item Information",
+      "icon": "Package",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Item Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. Dental Mirror No. 4",
+          "colSpan": 6
+        },
+        {
+          "name": "category",
+          "label": "Category",
+          "type": "select",
+          "required": true,
+          "defaultValue": "instruments",
+          "colSpan": 6,
+          "options": [
+            { "value": "instruments",  "label": "Instruments" },
+            { "value": "materials",    "label": "Materials" },
+            { "value": "consumables",  "label": "Consumables" },
+            { "value": "medicines",    "label": "Medicines" },
+            { "value": "equipment",    "label": "Equipment" },
+            { "value": "ppe",          "label": "PPE & Safety" }
+          ]
+        },
+        {
+          "name": "description",
+          "label": "Item Description",
+          "type": "textarea",
+          "placeholder": "Technical details, usage notes, or storage instructions...",
+          "rows": 2,
+          "colSpan": 12
+        }
+      ]
+    },
+    {
+      "id": "stockInfo",
+      "title": "Stock Levels",
+      "icon": "BarChart3",
+      "fields": [
+        {
+          "name": "currentStock",
+          "label": "Current Stock",
+          "type": "number",
+          "required": true,
+          "defaultValue": 0,
+          "validation": { "min": 0 },
+          "colSpan": 4
+        },
+        {
+          "name": "minStock",
+          "label": "Min Stock Alert",
+          "type": "number",
+          "required": true,
+          "defaultValue": 0,
+          "validation": { "min": 0 },
+          "hint": "Alert is triggered when stock falls to or below this level",
+          "colSpan": 4
+        },
+        {
+          "name": "maxStock",
+          "label": "Maximum Capacity",
+          "type": "number",
+          "defaultValue": 100,
+          "validation": { "min": 0 },
+          "colSpan": 4
+        },
+        {
+          "name": "unit",
+          "label": "Unit Type",
+          "type": "select",
+          "required": true,
+          "defaultValue": "pieces",
+          "colSpan": 6,
+          "options": [
+            { "value": "pieces",  "label": "Pieces" },
+            { "value": "boxes",   "label": "Boxes" },
+            { "value": "tubes",   "label": "Tubes" },
+            { "value": "vials",   "label": "Vials" },
+            { "value": "bottles", "label": "Bottles" },
+            { "value": "packets", "label": "Packets" },
+            { "value": "kg",      "label": "Kilograms (kg)" },
+            { "value": "grams",   "label": "Grams (g)" },
+            { "value": "liters",  "label": "Liters (L)" },
+            { "value": "ml",      "label": "Milliliters (ml)" },
+            { "value": "rolls",   "label": "Rolls" },
+            { "value": "pairs",   "label": "Pairs" }
+          ]
+        },
+        {
+          "name": "warranty",
+          "label": "Warranty / Guarantee",
+          "type": "text",
+          "placeholder": "e.g. 1 Year Manufacturer Warranty",
+          "colSpan": 6
+        }
+      ]
+    },
+    {
+      "id": "purchaseInfo",
+      "title": "Purchase & Supplier",
+      "icon": "DollarSign",
+      "fields": [
+        {
+          "name": "supplier",
+          "label": "Supplier",
+          "type": "select",
+          "placeholder": "Select supplier",
+          "colSpan": 6,
+          "options": [
+            { "value": "DentalCorp India",         "label": "DentalCorp India" },
+            { "value": "MedSupply Solutions",       "label": "MedSupply Solutions" },
+            { "value": "SafetyFirst Medical",       "label": "SafetyFirst Medical" },
+            { "value": "PharmaCare Dental",         "label": "PharmaCare Dental" },
+            { "value": "ImageTech Supplies",        "label": "ImageTech Supplies" },
+            { "value": "Precision Instruments",     "label": "Precision Instruments" },
+            { "value": "BioMed Supplies",           "label": "BioMed Supplies" }
+          ]
+        },
+        {
+          "name": "cost",
+          "label": "Unit Cost (₹)",
+          "type": "number",
+          "defaultValue": 0,
+          "validation": { "min": 0, "step": 0.01 },
+          "colSpan": 3
+        },
+        {
+          "name": "expiryDate",
+          "label": "Expiry Date",
+          "type": "date",
+          "colSpan": 3
+        },
+        {
+          "name": "batchNumber",
+          "label": "Batch / Lot Number",
+          "type": "text",
+          "placeholder": "e.g. BT-001",
+          "colSpan": 6
+        }
+      ]
+    }
+  ]
+}
