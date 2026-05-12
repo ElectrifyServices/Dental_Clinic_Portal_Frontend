@@ -4,7 +4,7 @@ import {
   Home, Calendar, Users, FileText, CreditCard,
   Package, BarChart3, Stethoscope, Activity, Shield,
   DollarSign, UserCheck, ChevronLeft, ChevronRight,
-  Building2, LogOut
+  Building2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
@@ -27,7 +27,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function Sidebar() {
-  const { state, logout } = useAuth();
+  const { state } = useAuth();
   const { tenant } = useTenant();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -182,29 +182,6 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-
-      {/* Footer - Compact */}
-      <div className="mt-auto border-t border-border p-3 bg-muted/20 flex-shrink-0">
-        {!collapsed && (
-          <div className="flex items-center gap-2.5 px-2 mb-3 bg-card p-2 rounded-xl border border-border shadow-sm">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-md transition-colors duration-500 ${themeClasses.split(' ')[0]}`}>
-              {state.user?.name?.[0]}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-foreground truncate leading-tight uppercase">{state.user?.name}</p>
-              <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">{rl.label}</p>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={logout}
-          title={collapsed ? 'Sign Out' : undefined}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all uppercase tracking-wide"
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-      </div>
     </aside>
   );
 }
