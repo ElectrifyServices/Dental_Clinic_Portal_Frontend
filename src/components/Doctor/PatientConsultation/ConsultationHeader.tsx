@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { X, Stethoscope, User } from "lucide-react";
 
 interface Patient {
@@ -36,24 +36,24 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
   return (
     <>
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl z-20">
+      <div className="sticky top-0 bg-card border-b border-border p-6 rounded-t-2xl z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mr-4">
-              <Stethoscope className="w-8 h-8 text-blue-600" />
+              <Stethoscope className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-foreground">
                 Patient Consultation
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 {patient.patientName} - {patient.treatmentType}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
+            className="text-muted-foreground/60 hover:text-muted-foreground p-2 hover:bg-muted rounded-xl transition-all duration-200"
           >
             <X className="w-6 h-6" />
           </button>
@@ -81,11 +81,11 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
         )}
 
         {/* Patient Information Summary */}
-        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+        <div className="bg-primary/10 rounded-2xl p-6 border border-primary/30">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Basic Info */}
             <div>
-              <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-1">Patient Name</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Patient Name</p>
               <p className="text-lg font-bold text-blue-900">{patient.patientName}</p>
               <div className="flex gap-4 mt-2">
                 <div>
@@ -104,27 +104,27 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
             {/* Treatment & Concern */}
             <div>
               <div className="mb-3">
-                <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-1">Treatment Type</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Treatment Type</p>
                 <p className="text-sm font-bold text-blue-900">{patient.treatmentType || "General Consultation"}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-1">Patient Concern</p>
-                <p className="text-sm font-medium text-blue-800 italic leading-tight">"{patient.patientConcern || "No concern recorded"}"</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Patient Concern</p>
+                <p className="text-sm font-medium text-primary italic leading-tight">"{patient.patientConcern || "No concern recorded"}"</p>
               </div>
             </div>
 
             {/* Medical Alerts */}
             <div className="md:col-span-2 lg:col-span-1">
-              <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-2">Medical Alerts & History</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Medical Alerts & History</p>
               {patient.patientHistory && (patient.patientHistory.allergies.length > 0 || patient.patientHistory.medicalHistory.length > 0) ? (
-                <div className="bg-red-50 p-3 rounded-xl border border-red-100 space-y-1">
+                <div className="bg-destructive/10 p-3 rounded-xl border border-destructive/20 space-y-1">
                   {patient.patientHistory.allergies.length > 0 && (
-                    <div className="text-[11px] text-red-700">
+                    <div className="text-[11px] text-destructive">
                       <strong className="uppercase text-[9px] mr-1">Allergies:</strong> {patient.patientHistory.allergies.join(", ")}
                     </div>
                   )}
                   {patient.patientHistory.medicalHistory.length > 0 && (
-                    <div className="text-[11px] text-red-700">
+                    <div className="text-[11px] text-destructive">
                       <strong className="uppercase text-[9px] mr-1">History:</strong> {patient.patientHistory.medicalHistory.join(", ")}
                     </div>
                   )}

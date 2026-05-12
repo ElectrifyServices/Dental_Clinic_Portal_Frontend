@@ -1,4 +1,4 @@
-/**
+﻿/**
  * FormRenderer — Generic field renderer driven by JSON FormField config.
  *
  * Usage:
@@ -39,7 +39,7 @@ const INPUT_BASE =
   'bg-background text-foreground ' +
   'focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all';
 
-const INPUT_ERROR = 'border-red-400 bg-red-50/30 focus:ring-red-200 focus:border-red-400';
+const INPUT_ERROR = 'border-destructive bg-destructive/10 focus:ring-destructive/20 focus:border-destructive';
 const INPUT_DISABLED = 'opacity-60 cursor-not-allowed bg-muted/50';
 
 // ─── Props ────────────────────────────────────────────────────────────────────

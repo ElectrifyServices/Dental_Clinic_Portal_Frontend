@@ -153,7 +153,7 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setActiveMenuId(null)}>
       <div
-        className="bg-white w-[900px] max-w-[95vw] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="bg-card w-[900px] max-w-[95vw] rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         style={{ height: "88vh", fontFamily: "'Inter', system-ui" }}
         onClick={(e) => {
           if (activeMenuId !== null) setActiveMenuId(null);
@@ -161,25 +161,25 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
         }}
       >
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 px-5 py-3 flex justify-between items-center bg-white">
+        <div className="flex-shrink-0 border-b border-border px-5 py-3 flex justify-between items-center bg-card">
           <div className="flex items-center gap-2">
             {selectedRecord && (
-              <button onClick={() => setSelectedRecord(null)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeft className="w-4 h-4 text-gray-600" />
+              <button onClick={() => setSelectedRecord(null)} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
-            <FileText className="w-4 h-4 text-blue-600" />
+            <FileText className="w-4 h-4 text-primary" />
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 leading-tight">
+              <h2 className="text-2xl font-bold text-foreground leading-tight">
                 {selectedRecord ? "Consultation Detail" : "Consultation History"}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground/60">
                 {selectedRecord ? selectedRecord.patientName : `${filtered.length} record${filtered.length !== 1 ? "s" : ""}`}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-4 h-4 text-gray-600" />
+          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-full transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -228,15 +228,15 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
 
         {/* Pagination */}
         {!selectedRecord && filtered.length > PAGE_SIZE && (
-          <div className="flex-shrink-0 border-t border-gray-200 px-5 py-2.5 flex items-center justify-between bg-white">
-            <span className="text-xs text-gray-500">
+          <div className="flex-shrink-0 border-t border-border px-5 py-2.5 flex items-center justify-between bg-card">
+            <span className="text-xs text-muted-foreground">
               Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={safePage === 1}
-                className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -244,7 +244,7 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${safePage === p ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100 border border-gray-200"}`}
+                  className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${safePage === p ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted border border-border"}`}
                 >
                   {p}
                 </button>
@@ -252,7 +252,7 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={safePage === totalPages}
-                className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -269,4 +269,4 @@ export default function ConsultationHistoryModal({ onClose, patients = [] }: Pro
       )}
     </div>
   );
-}
+}

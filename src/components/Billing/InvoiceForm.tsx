@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo } from "react";
 import { Save, Plus, User, Calendar, DollarSign, Building2, Stethoscope, ClipboardList } from "lucide-react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Invoice, InvoiceItem } from "../../types";
 import { computePlanDiscount } from "../../utils/corporatePlan";
-import { Modal, Button, Card, CardContent, FormField, Badge, SectionRenderer } from "@/components/ui";
+import { Modal, Button, Card, CardContent, LabeledField, Badge, SectionRenderer } from "@/components/ui";
 import { PendingItems } from "./InvoiceForm/PendingItems";
 import { InvoiceItemRow } from "./InvoiceForm/InvoiceItemRow";
 import { PlanBanner } from "./InvoiceForm/PlanBanner";
 import { useFormConfig } from "../../hooks/useFormConfig";
+import { invoiceSchema, type InvoiceFormData } from "@/lib/schemas/billing.schema";
 
 interface InvoiceFormProps {
   onClose: () => void;
@@ -19,22 +22,34 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [], consultations = [], corporatePlans = [] }: InvoiceFormProps) {
-  const [formData, setFormData] = useState({
-    patientName: invoice?.patientName || "",
-    patientId: (invoice as any)?.patientId || "",
-    doctor: (invoice as any)?.doctor || "",
-    date: invoice?.date || new Date().toISOString().split("T")[0],
-    dueDate: invoice?.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    discount: invoice?.discount || 0,
-    tax: invoice?.tax || 18,
-    isComplimentary: (invoice as any)?.isComplimentary || false,
-    complimentaryNote: (invoice as any)?.complimentaryNote || "",
-    linkedItemIds: (invoice as any)?.linkedItemIds || [] as string[]
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: {
+      patientName: invoice?.patientName ?? "",
+      patientId: (invoice as any)?.patientId ?? "",
+      doctor: (invoice as any)?.doctor ?? "",
+      date: invoice?.date ?? new Date().toISOString().split("T")[0],
+      dueDate: invoice?.dueDate ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      discount: invoice?.discount ?? 0,
+      tax: invoice?.tax ?? 18,
+      isComplimentary: (invoice as any)?.isComplimentary ?? false,
+      complimentaryNote: (invoice as any)?.complimentaryNote ?? "",
+      linkedItemIds: (invoice as any)?.linkedItemIds ?? [],
+      items: invoice?.items?.map(i => ({ ...i, quantity: i.quantity ?? 1, rate: i.rate ?? 0, amount: i.amount ?? 0 })) ?? [
+        { id: "1", description: "", quantity: 1, rate: 0, amount: 0 }
+      ],
+    },
   });
 
-  const [items, setItems] = useState<InvoiceItem[]>(
-    invoice?.items || [{ id: "1", description: "", quantity: 1, rate: 0, amount: 0 }]
-  );
+  const formData = form.watch();
+  const setFormData = (updater: any) => {
+    const current = form.getValues();
+    const updated = typeof updater === 'function' ? updater(current) : updater;
+    Object.entries(updated).forEach(([k, v]) => form.setValue(k as keyof InvoiceFormData, v as any));
+  };
+
+  const items = (formData.items ?? []) as InvoiceItem[];
+  const setItems = (newItems: InvoiceItem[]) => form.setValue('items', newItems as any);
 
   const activeCorporatePlan = useMemo(() => {
     const p = patients.find(p => p.id === formData.patientId || p.name === formData.patientName);
@@ -97,14 +112,13 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
   const taxAmount = formData.isComplimentary ? 0 : (Math.max(0, subtotal - discountAmount) * formData.tax) / 100;
   const total = formData.isComplimentary ? 0 : Math.max(0, subtotal - discountAmount + taxAmount);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: InvoiceFormData) => {
     onSave({
-      ...formData, id: invoice?.id || `INV-${Date.now()}`, items, subtotal, discount: discountAmount, tax: taxAmount,
-      total: formData.isComplimentary ? 0 : total, status: formData.isComplimentary ? "complimentary" : (invoice?.status || "draft"),
+      ...data, id: invoice?.id || `INV-${Date.now()}`, items, subtotal, discount: discountAmount, tax: taxAmount,
+      total: data.isComplimentary ? 0 : total, status: data.isComplimentary ? "complimentary" : (invoice?.status || "draft"),
       corporatePlanId: activeCorporatePlan?.id, corporatePlanName: activeCorporatePlan?.name,
       planDiscountApplied: planDiscountResult.totalDiscount, planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
-    });
+    } as any);
   };
 
   return (
@@ -112,13 +126,13 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
       footer={
         <div className="flex justify-end gap-3 w-full">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="gap-2"><Save className="w-4 h-4" /> Save & Finalize Bill</Button>
+          <Button onClick={form.handleSubmit(handleSubmit)} className="gap-2"><Save className="w-4 h-4" /> Save & Finalize Bill</Button>
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField label="Patient Name *" required>
+          <LabeledField label="Patient Name *" required>
             <select value={formData.patientName} onChange={(e) => {
               const p = patients.find(p => p.name === e.target.value);
               const cp = p?.corporatePlanId || p?.companyId ? corporatePlans.find(cp => cp.id === (p.corporatePlanId || p.companyId)) : null;
@@ -127,9 +141,9 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
               <option value="">Select Patient</option>
               {patients.map(p => <option key={p.id} value={p.name}>{p.name} ({p.id}) {p.category === 'family' ? '⭐' : ''}</option>)}
             </select>
-          </FormField>
-          <FormField label="Invoice Date *"><input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></FormField>
-          <FormField label="Due Date *"><input type="date" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></FormField>
+          </LabeledField>
+          <LabeledField label="Invoice Date *"><input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></LabeledField>
+          <LabeledField label="Due Date *"><input type="date" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} required className="w-full px-4 py-2 border rounded-xl text-sm"/></LabeledField>
         </div>
 
         {activeCorporatePlan && <PlanBanner plan={activeCorporatePlan} savings={planDiscountResult.totalDiscount} />}
@@ -174,13 +188,13 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
                   <DollarSign className={`w-4 h-4 ${formData.isComplimentary ? 'text-primary' : 'text-muted-foreground'}`} />
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Complimentary Bill</span>
                 </div>
-                <input type="checkbox" checked={formData.isComplimentary} onChange={e => setFormData(prev => ({ ...prev, isComplimentary: e.target.checked, discount: e.target.checked ? 100 : 0, tax: e.target.checked ? 0 : 18 }))} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                <input type="checkbox" checked={formData.isComplimentary} onChange={e => setFormData(prev => ({ ...prev, isComplimentary: e.target.checked, discount: e.target.checked ? 100 : 0, tax: e.target.checked ? 0 : 18 }))} className="w-4 h-4 rounded border-border text-primary focus:ring-primary" />
               </div>
-              {formData.isComplimentary && <input type="text" placeholder="Complimentary Reason..." value={formData.complimentaryNote} onChange={e => setFormData(prev => ({ ...prev, complimentaryNote: e.target.value }))} className="w-full px-3 py-2 bg-white border rounded-xl text-xs focus:ring-2 focus:ring-primary/20 outline-none" />}
+              {formData.isComplimentary && <input type="text" placeholder="Complimentary Reason..." value={formData.complimentaryNote} onChange={e => setFormData(prev => ({ ...prev, complimentaryNote: e.target.value }))} className="w-full px-3 py-2 bg-card border rounded-xl text-xs focus:ring-2 focus:ring-primary/20 outline-none" />}
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Discount %"><input type="number" value={formData.isComplimentary ? 100 : formData.discount} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></FormField>
-                  <FormField label="Tax %"><input type="number" value={formData.isComplimentary ? 0 : formData.tax} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></FormField>
+                  <LabeledField label="Discount %"><input type="number" value={formData.isComplimentary ? 100 : formData.discount} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></LabeledField>
+                  <LabeledField label="Tax %"><input type="number" value={formData.isComplimentary ? 0 : formData.tax} disabled={formData.isComplimentary} onChange={e => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"/></LabeledField>
                 </div>
               </div>
             </CardContent>
@@ -190,8 +204,8 @@ export function InvoiceForm({ onClose, onSave, invoice, patients, treatments = [
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase px-1"><span>Summary</span><span>Amount</span></div>
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-bold">₹{subtotal.toLocaleString()}</span></div>
-              <div className="flex justify-between text-sm text-red-600"><span>Discount ({formData.isComplimentary ? 100 : formData.discount}%)</span><span className="font-bold">-₹{manualDiscount.toLocaleString()}</span></div>
-              {planDiscountResult.totalDiscount > 0 && <div className="flex justify-between text-sm text-blue-700"><span>Corporate Benefits</span><span className="font-bold">-₹{planDiscountResult.totalDiscount.toLocaleString()}</span></div>}
+              <div className="flex justify-between text-sm text-destructive"><span>Discount ({formData.isComplimentary ? 100 : formData.discount}%)</span><span className="font-bold">-₹{manualDiscount.toLocaleString()}</span></div>
+              {planDiscountResult.totalDiscount > 0 && <div className="flex justify-between text-sm text-primary"><span>Corporate Benefits</span><span className="font-bold">-₹{planDiscountResult.totalDiscount.toLocaleString()}</span></div>}
               <div className="flex justify-between text-sm text-muted-foreground"><span>GST ({formData.isComplimentary ? 0 : formData.tax}%)</span><span className="font-bold">₹{taxAmount.toLocaleString()}</span></div>
               <div className="pt-3 border-t border-dashed border-border flex justify-between items-center"><span className="text-sm font-black uppercase tracking-wider">Final Total</span><span className="text-2xl font-black text-primary">₹{(formData.isComplimentary ? 0 : total).toLocaleString()}</span></div>
             </div>

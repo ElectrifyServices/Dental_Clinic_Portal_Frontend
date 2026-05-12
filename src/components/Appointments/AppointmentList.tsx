@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
@@ -69,21 +69,21 @@ export function AppointmentList({
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
           <Input 
             placeholder="Search patient, treatment or doctor..." 
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }} 
-            className="pl-10 h-10 rounded-2xl bg-white border-gray-100" 
+            className="pl-10 h-10 rounded-2xl bg-card border-border" 
           />
         </div>
-        <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100 self-start">
+        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start">
           {TYPE_FILTERS.map(f => (
             <button 
               key={f.id} 
               onClick={() => { setFilter(f.id); setPage(1); }}
               className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${
-                filter === f.id ? 'bg-white text-primary shadow-sm ring-1 ring-black/5' : 'text-gray-400 hover:text-primary'
+                filter === f.id ? 'bg-card text-primary shadow-sm ring-1 ring-black/5' : 'text-muted-foreground/60 hover:text-primary'
               }`}
             >
               {f.label}
@@ -92,13 +92,13 @@ export function AppointmentList({
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
+              <tr className="bg-muted/50 border-b border-border">
                 {['Patient Details', 'Treatment', 'Schedule', 'Total Fee', 'Current Status', 'Actions'].map((h, i) => (
-                  <th key={h} className={`px-6 py-5 font-semibold text-gray-400 uppercase tracking-widest text-[10px] ${i === 3 ? 'text-right' : i === 5 ? 'text-center' : ''}`}>
+                  <th key={h} className={`px-6 py-5 font-semibold text-muted-foreground/60 uppercase tracking-widest text-[10px] ${i === 3 ? 'text-right' : i === 5 ? 'text-center' : ''}`}>
                     {h}
                   </th>
                 ))}
@@ -108,8 +108,8 @@ export function AppointmentList({
               {paginated.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-24 text-center">
-                    <Clock className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-                    <p className="text-gray-400 font-semibold uppercase tracking-widest text-[10px]">No records found</p>
+                    <Clock className="w-12 h-12 text-muted-foreground/10 mx-auto mb-4" />
+                    <p className="text-muted-foreground/60 font-semibold uppercase tracking-widest text-[10px]">No records found</p>
                   </td>
                 </tr>
               ) : paginated.map(a => (
@@ -140,23 +140,23 @@ export function AppointmentList({
         </div>
         
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-8 py-5 bg-gray-50/30 border-t border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+          <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border">
+            <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
               Showing {(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE, filtered.length)} of {filtered.length} entries
             </p>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl border-gray-200" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>
-                <ChevronLeft className="w-4 h-4 text-gray-500" />
+              <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl border-border" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
               </Button>
               <div className="flex gap-1">
                 {Array.from({length: totalPages}, (_, i) => i+1).map(p => (
-                  <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p===page ? 'bg-primary text-white shadow-md' : 'text-gray-400 hover:bg-gray-100'}`}>
+                  <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p===page ? 'bg-primary text-white shadow-md' : 'text-muted-foreground/60 hover:bg-muted'}`}>
                     {p}
                   </button>
                 ))}
               </div>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl border-gray-200" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page===totalPages}>
-                <ChevronRight className="w-4 h-4 text-gray-500" />
+              <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl border-border" onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page===totalPages}>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </Button>
             </div>
           </div>

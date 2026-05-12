@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { CalendarCheck, Stethoscope, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -18,12 +18,12 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
   onBookAppointment,
 }) => {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[300px]" : "opacity-50 h-[120px] pointer-events-none"}`}>
+    <div className={`bg-card rounded-2xl border border-border p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[300px]" : "opacity-50 h-[120px] pointer-events-none"}`}>
       {selectedDoctorId ? (
         <div className="flex flex-col h-full">
           <div className="flex items-center gap-2 mb-4">
             <CalendarCheck className="w-4 h-4 text-emerald-500" />
-            <h3 className="text-sm font-bold text-gray-900 tracking-tight">Available Slots</h3>
+            <h3 className="text-sm font-bold text-foreground tracking-tight">Available Slots</h3>
           </div>
 
           <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar pr-1">
@@ -37,7 +37,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
                     onClick={() => setSelectedTime(slot.time24)}
                     className={`py-2 rounded-xl text-[9px] font-bold text-center border transition-all relative
                       ${selectedTime === slot.time24 ? "bg-primary border-primary text-white shadow-md scale-[0.98]" : 
-                        isDisabled ? "bg-gray-50 text-gray-200 border-transparent cursor-not-allowed" : 
+                        isDisabled ? "bg-muted text-muted-foreground/20 border-transparent cursor-not-allowed" : 
                         "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200 hover:bg-emerald-100"}`}
                   >
                     {slot.time12}
@@ -65,8 +65,8 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full text-center py-6 opacity-30">
-          <Stethoscope className="w-8 h-8 text-gray-300 mb-2" />
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select specialist first</p>
+          <Stethoscope className="w-8 h-8 text-muted-foreground/40 mb-2" />
+          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Select specialist first</p>
         </div>
       )}
     </div>

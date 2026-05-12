@@ -1,20 +1,29 @@
-import React from 'react';
-import { TreatmentList } from '../components/Treatments/TreatmentList';
+﻿import React from "react";
+import { useAppData } from "../hooks/useAppData";
+import { useModal } from "../contexts/ModalContext";
+import { TreatmentList } from "../components/Treatments/TreatmentList";
 
-interface TreatmentsPageProps {
-  treatments: any[];
-  onAddTreatment: () => void;
-  onViewTreatment: (id: string) => void;
-  onEditTreatment: (id: string) => void;
-  onManageSessions: (id: string) => void;
-  onMarkCompleted: (id: string) => void;
-  onStartTreatment: (id: string) => void;
-}
+export const TreatmentsPage: React.FC = () => {
+  const { treatments, handleSaveTreatment } = useAppData();
+  const { setActiveModal, setSelectedItemId, showToast } = useModal();
 
-export const TreatmentsPage: React.FC<TreatmentsPageProps> = (props) => {
   return (
     <div className="space-y-6">
-      <TreatmentList {...props} />
+      <TreatmentList
+        treatments={treatments}
+        onAddTreatment={() => { setSelectedItemId(""); setActiveModal("treatmentForm"); }}
+        onViewTreatment={(id: string) => { setSelectedItemId(id); setActiveModal("treatmentViewer"); }}
+        onEditTreatment={(id: string) => { setSelectedItemId(id); setActiveModal("treatmentForm"); }}
+        onManageSessions={(id: string) => { setSelectedItemId(id); setActiveModal("sessionManager"); }}
+        onMarkCompleted={(id: string) => {
+          const t = treatments.find((x: any) => x.id === id);
+          if (t) { handleSaveTreatment({ ...t, status: "completed" }); showToast("Treatment completed!"); }
+        }}
+        onStartTreatment={(id: string) => {
+          const t = treatments.find((x: any) => x.id === id);
+          if (t) { handleSaveTreatment({ ...t, status: "in-progress" }); showToast("Treatment started!"); }
+        }}
+      />
     </div>
   );
 };

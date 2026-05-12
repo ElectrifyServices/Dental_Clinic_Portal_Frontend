@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Layout } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { DoctorAvailability } from './TodaySchedule/DoctorAvailability';
@@ -47,7 +47,7 @@ export function TodaySchedulePopup({
           {[
             { label: 'Total Booked', val: todayAppointments.length, bg: 'bg-primary/5', border: 'border-primary/10', text: 'text-primary' },
             { label: 'Completed', val: completedCount, bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700' },
-            { label: 'Pending Slots', val: pendingCount, bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' }
+            { label: 'Pending Slots', val: pendingCount, bg: 'bg-primary/10', border: 'border-primary/20', text: 'text-primary' }
           ].map((s, i) => (
             <div key={i} className={`${s.bg} p-5 rounded-2xl border ${s.border} shadow-sm transition-all hover:shadow-md`}>
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">{s.label}</p>

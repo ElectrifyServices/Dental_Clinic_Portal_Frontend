@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Search, Plus, Edit, Trash2, UserCheck, UserX, Stethoscope, 
   Shield, User, IndianRupee, Calendar, MoreVertical, Phone, Mail,
@@ -84,14 +84,14 @@ export function DoctorManagement({
   const renderStaffMenu = (staff: UserType) => (
     <>
       <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-      <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
+      <div className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
         style={{ top: menuPos.top, left: menuPos.left }}>
         <button onClick={() => { onUpdateStaff({ ...staff, isActive: !staff.isActive }); setOpenMenuId(null); }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+          className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors">
           {staff.isActive ? <><UserX className="w-4 h-4 text-red-500" /> Deactivate</> : <><UserCheck className="w-4 h-4 text-emerald-500" /> Activate</>}
         </button>
         <button onClick={() => { onManageSchedule(staff.id, staff.name); setOpenMenuId(null); }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+          className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors">
           <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
         </button>
         {onPaySalary && (
@@ -102,13 +102,13 @@ export function DoctorManagement({
         )}
         {onViewSalaryHistory && (
           <button onClick={() => { onViewSalaryHistory(staff.id, staff.name); setOpenMenuId(null); }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-xl flex items-center gap-2.5 text-gray-700 font-medium transition-colors">
+            className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors">
             <IndianRupee className="w-4 h-4 text-amber-500" /> Salary History
           </button>
         )}
-        <div className="h-px bg-gray-100 my-1 mx-2" />
+        <div className="h-px bg-muted my-1 mx-2" />
         <button onClick={() => { onDeleteDoctor(staff.id); setOpenMenuId(null); }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded-xl flex items-center gap-2.5 text-red-600 font-medium transition-colors">
+          className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors">
           <Trash2 className="w-4 h-4" /> Remove
         </button>
       </div>
@@ -122,7 +122,7 @@ export function DoctorManagement({
       render: (staff: UserType) => (
         <div className="flex items-center gap-3">
           {staff.avatar ? (
-            <img src={staff.avatar} alt={staff.name} className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-gray-100 shadow-sm" />
+            <img src={staff.avatar} alt={staff.name} className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-border shadow-sm" />
           ) : (
             <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs flex-shrink-0 border border-primary/5">
               {getInitials(staff.name)}
@@ -159,11 +159,11 @@ export function DoctorManagement({
       render: (staff: any) => (
         <div className="text-[11px] font-bold">
           <div className="flex justify-between gap-4">
-            <span className="text-gray-400 font-medium">Paid:</span>
+            <span className="text-muted-foreground/60 font-medium">Paid:</span>
             <span className="text-emerald-600">₹{staff.salaryPaid || '0'}</span>
           </div>
           <div className="flex justify-between gap-4 mt-0.5">
-            <span className="text-gray-400 font-medium">Due:</span>
+            <span className="text-muted-foreground/60 font-medium">Due:</span>
             <span className="text-amber-600">₹{staff.salaryPending || '0'}</span>
           </div>
         </div>
@@ -184,11 +184,11 @@ export function DoctorManagement({
       align: 'center' as const,
       render: (staff: UserType) => (
         <div className="flex items-center justify-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onEditDoctor(staff.id)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onEditDoctor(staff.id)}>
             <Edit className="w-4 h-4" />
           </Button>
           <div className="relative">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, staff.id)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60" onClick={e => openMenu(e, staff.id)}>
               <MoreVertical className="w-4 h-4" />
             </Button>
             {openMenuId === staff.id && createPortal(renderStaffMenu(staff), document.body)}
@@ -219,14 +219,14 @@ export function DoctorManagement({
         />
         <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
           <FilterTabs tabs={ROLE_FILTERS} active={roleFilter} onChange={setRoleFilter} />
-          <div className="h-8 w-px bg-gray-100 hidden md:block" />
-          <div className="flex items-center bg-gray-50 p-1 rounded-xl border border-gray-100">
+          <div className="h-8 w-px bg-muted hidden md:block" />
+          <div className="flex items-center bg-muted p-1 rounded-xl border border-border">
             <button onClick={() => setViewMode('grid')} 
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-card shadow-sm text-primary' : 'text-muted-foreground/60 hover:text-muted-foreground'}`}>
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button onClick={() => setViewMode('list')} 
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'}`}>
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-card shadow-sm text-primary' : 'text-muted-foreground/60 hover:text-muted-foreground'}`}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -263,11 +263,11 @@ export function DoctorManagement({
                       </div>
                     )}
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditDoctor(staff.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditDoctor(staff.id)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <div className="relative">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, staff.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60" onClick={e => openMenu(e, staff.id)}>
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                         {openMenuId === staff.id && createPortal(renderStaffMenu(staff), document.body)}
@@ -283,7 +283,7 @@ export function DoctorManagement({
                     </div>
                   </div>
 
-                  <div className="mt-4 space-y-2 border-t border-gray-50 pt-4">
+                  <div className="mt-4 space-y-2 border-t border-border pt-4">
                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium truncate">
                       <Mail className="w-3 h-3 flex-shrink-0 text-blue-400" /> {staff.email}
                     </div>
@@ -295,12 +295,12 @@ export function DoctorManagement({
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="p-2 bg-gray-50 rounded-xl">
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Salary Due</p>
+                    <div className="p-2 bg-muted rounded-xl">
+                      <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-wider">Salary Due</p>
                       <p className="text-xs font-black text-amber-600 mt-0.5">₹{(staff as any).salaryPending || '0'}</p>
                     </div>
                     <div className="p-2 bg-emerald-50/50 rounded-xl">
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Paid</p>
+                      <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-wider">Total Paid</p>
                       <p className="text-xs font-black text-emerald-600 mt-0.5">₹{(staff as any).salaryPaid || '0'}</p>
                     </div>
                   </div>

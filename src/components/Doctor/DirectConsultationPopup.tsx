@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, User, Phone, Search, AlertCircle, UserPlus, Stethoscope, Calendar } from 'lucide-react';
 import { TimeSlotGrid } from './DirectConsultation/TimeSlotGrid';
 
@@ -156,8 +156,8 @@ export function DirectConsultationPopup({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="bg-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <div className="bg-card rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <div className="flex items-center text-white">
             <Stethoscope className="w-6 h-6 mr-3" />
             <h3 className="text-xl font-bold">Direct Consultation</h3>
@@ -170,28 +170,28 @@ export function DirectConsultationPopup({
         <div className="p-6 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1.5">Patient Name</label>
+              <label className="block text-sm font-bold text-muted-foreground mb-1.5">Patient Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 w-5 h-5" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   placeholder="Enter patient name"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1.5">Phone Number</label>
+              <label className="block text-sm font-bold text-muted-foreground mb-1.5">Phone Number</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 w-5 h-5" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   placeholder="Enter phone number"
                 />
               </div>
@@ -200,8 +200,8 @@ export function DirectConsultationPopup({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
-                <Stethoscope className="w-4 h-4 mr-2 text-blue-600" />
+              <label className="block text-sm font-bold text-muted-foreground mb-2 flex items-center">
+                <Stethoscope className="w-4 h-4 mr-2 text-primary" />
                 Assigned Doctor
               </label>
               <div className="relative">
@@ -211,7 +211,7 @@ export function DirectConsultationPopup({
                     setSelectedDoctorId(e.target.value);
                     setSelectedTime('');
                   }}
-                  className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white cursor-pointer font-medium"
+                  className="w-full pl-4 pr-10 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-card cursor-pointer font-medium"
                 >
                   <option value="" disabled>Choose a doctor</option>
                   {doctors.map((doc) => (
@@ -220,7 +220,7 @@ export function DirectConsultationPopup({
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/60">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -229,7 +229,7 @@ export function DirectConsultationPopup({
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center">
+              <label className="block text-sm font-bold text-foreground mb-3 flex items-center">
                 <Calendar className="w-5 h-5 mr-2 text-green-600" />
                 Available Slots
               </label>
@@ -243,17 +243,17 @@ export function DirectConsultationPopup({
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex flex-col gap-3">
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex flex-col gap-3">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-red-800">{error}</p>
-                  <p className="text-xs text-red-600 mt-0.5">Please check the details or register as a new patient.</p>
+                  <p className="text-sm font-bold text-destructive">{error}</p>
+                  <p className="text-xs text-destructive mt-0.5">Please check the details or register as a new patient.</p>
                 </div>
               </div>
               <button
                 onClick={() => onRegisterNew(name, phone)}
-                className="w-full py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold text-sm flex items-center justify-center transition-all shadow-md"
+                className="w-full py-2.5 bg-destructive text-white rounded-lg hover:bg-destructive font-bold text-sm flex items-center justify-center transition-all shadow-md"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Register New Patient

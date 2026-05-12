@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FileText, MoreVertical, Edit, Clock, Play, CheckCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -46,26 +46,26 @@ export function TreatmentTableRow({
   const cost = Number(treatment.cost) < 100000000 ? Number(treatment.cost) : 0;
 
   return (
-    <tr className="group hover:bg-gray-50/50 transition-colors">
+    <tr className="group hover:bg-muted/50 transition-colors">
       <td className="py-4 px-6">
-        <div className="font-bold text-gray-900">{treatment.patientName}</div>
-        <div className="text-[11px] font-bold text-blue-600 mt-0.5 uppercase tracking-wider">{treatment.procedure}</div>
+        <div className="font-bold text-foreground">{treatment.patientName}</div>
+        <div className="text-[11px] font-bold text-primary mt-0.5 uppercase tracking-wider">{treatment.procedure}</div>
       </td>
       <td className="py-4 px-6">
-        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold border border-gray-200">
+        <span className="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-bold border border-border">
           {treatment.tooth || '—'}
         </span>
       </td>
       <td className="py-4 px-6">
-        <div className="text-sm font-semibold text-gray-700">{treatment.doctorName}</div>
+        <div className="text-sm font-semibold text-muted-foreground">{treatment.doctorName}</div>
       </td>
       <td className="py-4 px-6">
-        <div className="text-sm font-medium text-gray-500">
+        <div className="text-sm font-medium text-muted-foreground">
           {treatment.date ? new Date(treatment.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
         </div>
       </td>
       <td className="py-4 px-6 text-right">
-        <div className="text-sm font-bold text-gray-900">₹{cost.toLocaleString()}</div>
+        <div className="text-sm font-bold text-foreground">₹{cost.toLocaleString()}</div>
       </td>
       <td className="py-4 px-6">
         <span className={`${sm.cls} flex items-center gap-1.5 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border`}>
@@ -74,7 +74,7 @@ export function TreatmentTableRow({
         </span>
       </td>
       <td className="py-4 px-6">
-        <div className="text-xs font-bold text-gray-400">
+        <div className="text-xs font-bold text-muted-foreground/60">
           {treatment.nextAppointment ? new Date(treatment.nextAppointment).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}
         </div>
       </td>
@@ -82,7 +82,7 @@ export function TreatmentTableRow({
         <div className="flex items-center justify-center gap-2">
           <button 
             onClick={() => onView(treatment.id)} 
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+            className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
             title="View Details"
           >
             <FileText className="w-4 h-4" />
@@ -91,7 +91,7 @@ export function TreatmentTableRow({
           <div className="relative">
             <button 
               onClick={openMenu} 
-              className={`p-2 rounded-xl transition-all ${showMenu ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}
+              className={`p-2 rounded-xl transition-all ${showMenu ? 'bg-muted text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-muted'}`}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -100,28 +100,28 @@ export function TreatmentTableRow({
               <>
                 <div className="fixed inset-0 z-[9998]" onClick={() => setShowMenu(false)} />
                 <div 
-                  className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-48 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+                  className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
                   style={{ top: menuPos.top, left: menuPos.left }}
                 >
                   <div className="p-1.5">
                     <button onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-gray-50 rounded-xl flex items-center gap-3 text-gray-700 transition-colors">
-                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
                         <Edit className="w-4 h-4" />
                       </div>
                       Edit Plan
                     </button>
                     <button onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-gray-50 rounded-xl flex items-center gap-3 text-gray-700 transition-colors">
-                      <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
+                      <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
                         <Clock className="w-4 h-4" />
                       </div>
                       Sessions
                     </button>
                     {treatment.status === 'planned' && (
                       <button onClick={() => { onStart(treatment.id); setShowMenu(false); }}
-                        className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-blue-50 rounded-xl flex items-center gap-3 text-blue-700 transition-colors">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-primary/10 rounded-xl flex items-center gap-3 text-primary transition-colors">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                           <Play className="w-4 h-4" />
                         </div>
                         Start Now

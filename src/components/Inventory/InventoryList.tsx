@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, Plus, Package, AlertTriangle, Edit, Trash2, RefreshCw, MoreVertical } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { 
@@ -7,7 +7,7 @@ import {
   DataTable, 
   SearchInput, 
   FilterTabs, 
-  Badge,
+  StatusBadge,
   KpiCard
 } from '@/components/ui';
 
@@ -86,7 +86,7 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
         const isLow = item.currentStock <= item.minStock;
         return (
           <div>
-            <div className="font-bold text-gray-900 flex items-center gap-2">
+            <div className="font-bold text-foreground flex items-center gap-2">
               {item.name}
               {isLow && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
             </div>
@@ -100,7 +100,7 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
       header: 'Category',
       render: (item: InventoryItem) => {
         const meta = CAT_META[item.category] || { label: item.category, variant: 'gray' };
-        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+        return <StatusBadge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</StatusBadge>;
       }
     },
     {
@@ -113,11 +113,11 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
         return (
           <div className="flex flex-col gap-1.5 min-w-[140px]">
             <div className="flex items-center justify-between text-[10px] font-bold">
-              <span className={isLow ? 'text-red-600' : 'text-gray-500'}>{item.currentStock} {item.unit}</span>
-              <span className="text-gray-400">Min: {item.minStock}</span>
+              <span className={isLow ? 'text-destructive' : 'text-muted-foreground'}>{item.currentStock} {item.unit}</span>
+              <span className="text-muted-foreground/60">Min: {item.minStock}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+              <div className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? 'bg-emerald-500' : pct > 25 ? 'bg-amber-500' : 'bg-destructive/100'}`}
                 style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -127,12 +127,12 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
     {
       key: 'cost',
       header: 'Unit Cost',
-      render: (item: InventoryItem) => <span className="font-bold text-gray-900">₹{item.cost.toLocaleString()}</span>
+      render: (item: InventoryItem) => <span className="font-bold text-foreground">₹{item.cost.toLocaleString()}</span>
     },
     {
       key: 'supplier',
       header: 'Supplier',
-      render: (item: InventoryItem) => <span className="text-gray-600 font-medium">{item.supplier}</span>
+      render: (item: InventoryItem) => <span className="text-muted-foreground font-medium">{item.supplier}</span>
     },
     {
       key: 'actions',
@@ -140,25 +140,25 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
       align: 'center' as const,
       render: (item: InventoryItem) => (
         <div className="flex items-center justify-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onRestock(item)} title="Restock">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onRestock(item)} title="Restock">
             <RefreshCw className="w-4 h-4" />
           </Button>
           <div className="relative">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, item.id)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={e => openMenu(e, item.id)}>
               <MoreVertical className="w-4 h-4" />
             </Button>
             {openMenuId === item.id && createPortal(
               <>
                 <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                <div className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   style={{ top: menuPos.top, left: menuPos.left }}>
                   <div className="p-1.5 space-y-0.5">
                     <button onClick={() => { onEditItem(item.id); setOpenMenuId(null); }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded-xl flex items-center gap-2.5 text-blue-700 font-medium transition-colors">
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors">
                       <Edit className="w-4 h-4" /> Edit Item
                     </button>
                     <button onClick={() => { onDeleteItem(item.id); setOpenMenuId(null); }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded-xl flex items-center gap-2.5 text-red-600 font-medium transition-colors">
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors">
                       <Trash2 className="w-4 h-4" /> Delete
                     </button>
                   </div>
@@ -186,12 +186,12 @@ export function InventoryList({ inventory, onAddItem, onEditItem, onDeleteItem, 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KpiCard label="Total Items" value={inventory.length} icon={<Package className="w-5 h-5" />} />
-        <KpiCard label="Low Stock Alert" value={lowCount} color={lowCount > 0 ? 'text-red-600' : 'text-emerald-600'} icon={<AlertTriangle className="w-5 h-5" />} />
-        <KpiCard label="Total Categories" value={Object.keys(CAT_META).length} color="text-blue-600" />
+        <KpiCard label="Low Stock Alert" value={lowCount} colorClass={lowCount > 0 ? 'text-destructive' : 'text-emerald-600'} icon={<AlertTriangle className="w-5 h-5" />} />
+        <KpiCard label="Total Categories" value={Object.keys(CAT_META).length} colorClass="text-primary" />
       </div>
 
       {lowCount > 0 && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-800 rounded-2xl px-5 py-4 text-sm font-bold animate-pulse">
+        <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl px-5 py-4 text-sm font-bold">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <span>{lowCount} critical item{lowCount > 1 ? 's are' : ' is'} below minimum stock level. Immediate restocking required.</span>
         </div>

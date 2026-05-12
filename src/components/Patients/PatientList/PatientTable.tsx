@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Eye, Edit, Trash2, MoreVertical, QrCode, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -42,36 +42,36 @@ export const PatientTable: React.FC<PatientTableProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px]">Patient</th>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px]">Contact</th>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px]">Status</th>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px]">Last Visit</th>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px]">Balance</th>
-              <th className="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[10px] text-right">Actions</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Patient</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Contact</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Status</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Last Visit</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Balance</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {patients.map((patient) => (
-              <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors">
+              <tr key={patient.id} className="hover:bg-muted/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-secondary rounded-lg flex items-center justify-center text-primary font-bold">
                       {patient.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900">{patient.name}</div>
-                      <div className="text-[10px] text-gray-500 font-mono">{patient.id}</div>
+                      <div className="font-bold text-foreground">{patient.name}</div>
+                      <div className="text-[10px] text-muted-foreground font-mono">{patient.id}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-gray-700">{patient.phone}</div>
-                  <div className="text-xs text-gray-500">{patient.email}</div>
+                  <div className="text-muted-foreground">{patient.phone}</div>
+                  <div className="text-xs text-muted-foreground">{patient.email}</div>
                 </td>
                 <td className="px-6 py-4">
                   <Badge variant={getStatusVariant(patient.status)} className="text-[10px] uppercase">
@@ -79,8 +79,8 @@ export const PatientTable: React.FC<PatientTableProps> = ({
                   </Badge>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-gray-700">{patient.lastVisit || 'N/A'}</div>
-                  <div className="text-xs text-gray-500">{patient.totalVisits || 0} visits</div>
+                  <div className="text-muted-foreground">{patient.lastVisit || 'N/A'}</div>
+                  <div className="text-xs text-muted-foreground">{patient.totalVisits || 0} visits</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className={`font-bold ${patient.outstandingBalance ? 'text-amber-600' : 'text-emerald-600'}`}>
@@ -89,7 +89,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onView(patient.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onView(patient.id)}>
                       <Eye className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600" onClick={() => onEdit(patient.id)}>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+﻿import React, { useState, useRef, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, Upload, Download, Building2,
   Users, Phone, Mail, User, CheckCircle, AlertTriangle,
@@ -248,12 +248,12 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     {
       key: 'employee', header: 'Employee', render: (e: CorporateEmployee) => (
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
             {e.name[0]?.toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900 text-sm">{e.name}</div>
-            {e.employeeId && <div className="text-xs text-gray-400 font-mono">{e.employeeId}</div>}
+            <div className="font-semibold text-foreground text-sm">{e.name}</div>
+            {e.employeeId && <div className="text-xs text-muted-foreground/60 font-mono">{e.employeeId}</div>}
           </div>
         </div>
       ),
@@ -261,16 +261,16 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     {
       key: 'contact', header: 'Contact', render: (e: CorporateEmployee) => (
         <div>
-          <div className="text-sm text-gray-700 flex items-center gap-1"><Phone className="w-3 h-3 text-gray-400" />{e.phone}</div>
-          {e.email && <div className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><Mail className="w-3 h-3" />{e.email}</div>}
+          <div className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3 text-muted-foreground/60" />{e.phone}</div>
+          {e.email && <div className="text-xs text-muted-foreground/60 flex items-center gap-1 mt-0.5"><Mail className="w-3 h-3" />{e.email}</div>}
         </div>
       ),
     },
     {
       key: 'company', header: 'Company / Role', render: (e: CorporateEmployee) => (
         <div>
-          <div className="text-sm font-medium text-gray-800">{e.companyName}</div>
-          {e.designation && <div className="text-xs text-gray-400">{e.designation}{e.department ? ` · ${e.department}` : ''}</div>}
+          <div className="text-sm font-medium text-foreground">{e.companyName}</div>
+          {e.designation && <div className="text-xs text-muted-foreground/60">{e.designation}{e.department ? ` · ${e.department}` : ''}</div>}
         </div>
       ),
     },
@@ -279,7 +279,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         const plan = plans.find(p => p.id === e.corporatePlanId);
         return plan
           ? <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-          : <span className="text-xs text-gray-400">No plan</span>;
+          : <span className="text-xs text-muted-foreground/60">No plan</span>;
       },
     },
     {
@@ -333,8 +333,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         {plans.filter(p => p.isActive).slice(0, 4).map(plan => (
           <div key={plan.id} className="kpi-card">
             <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-            <p className="text-xl font-bold text-gray-900 mt-2">{byPlan[plan.id] || 0}</p>
-            <p className="text-xs text-gray-400">{plan.companyName}</p>
+            <p className="text-xl font-bold text-foreground mt-2">{byPlan[plan.id] || 0}</p>
+            <p className="text-xs text-muted-foreground/60">{plan.companyName}</p>
           </div>
         ))}
       </div>
@@ -350,7 +350,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
             )}
             <button 
               onClick={() => { setViewMode(viewMode === 'employees' ? 'companies' : 'employees'); setSelectedCompany(null); setPage(1); }}
-              className={`btn-secondary px-3 py-2 whitespace-nowrap ${viewMode === 'companies' ? 'bg-blue-100 text-blue-700 border-blue-300' : ''}`}
+              className={`btn-secondary px-3 py-2 whitespace-nowrap ${viewMode === 'companies' ? 'bg-primary/10 text-primary border-primary/50' : ''}`}
               title={viewMode === 'employees' ? 'Switch to companies view' : 'Switch to employees view'}
             >
               <Building2 className="w-4 h-4" /> {viewMode === 'employees' ? 'Companies' : 'Employees'}
@@ -361,7 +361,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           {viewMode === 'employees' ? (
             <>
               {selectedCompany && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg p-3">
                   <span className="text-sm font-semibold text-blue-900">Showing: {selectedCompany}</span>
                   <button onClick={() => setSelectedCompany(null)} className="btn-secondary text-xs ml-auto">
                     <X className="w-3 h-3" /> Clear Filter
@@ -372,7 +372,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 columns={columns}
                 data={paginated}
                 rowKey={e => e.id}
-                emptyIcon={<Users className="w-10 h-10 text-gray-300" />}
+                emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
                 emptyTitle="No employees found"
                 emptySubtitle="Add employees individually or import from Excel"
                 footer={
@@ -389,21 +389,21 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 .map(company => (
                   <div key={company.name} 
                     onClick={() => { setSelectedCompany(company.name); setViewMode('employees'); setPage(1); }}
-                    className="card p-5 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all group">
+                    className="card p-5 cursor-pointer hover:shadow-md hover:border-primary/50 transition-all group">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-1">Company</p>
-                        <p className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{company.name}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-1">Company</p>
+                        <p className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{company.name}</p>
                       </div>
                       <Building2 className="w-5 h-5 text-blue-400 flex-shrink-0" />
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 pt-4 border-t border-border">
                       <div className="flex items-end justify-between">
                         <div>
-                          <p className="text-xs text-gray-500 mb-0.5">Total Employees</p>
-                          <p className="text-2xl font-bold text-blue-600">{company.count}</p>
+                          <p className="text-xs text-muted-foreground mb-0.5">Total Employees</p>
+                          <p className="text-2xl font-bold text-primary">{company.count}</p>
                         </div>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-semibold">
                           View details →
                         </span>
                       </div>
@@ -417,15 +417,15 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         /* Import tab */
         <div className="space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-gray-900">Bulk Import Employees</h2>
+            <h2 className="text-sm font-bold text-foreground">Bulk Import Employees</h2>
             <button onClick={() => setTab('list')} className="btn-secondary"><X className="w-4 h-4" /> Cancel</button>
           </div>
 
           <div className="card p-5 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-gray-800 mb-1">Upload Excel / CSV file</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-semibold text-foreground mb-1">Upload Excel / CSV file</p>
+                <p className="text-xs text-muted-foreground">
                   Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB
                 </p>
               </div>
@@ -438,8 +438,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           </div>
 
           {importing && (
-            <div className="flex items-center gap-2 text-blue-600 text-sm">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 text-primary text-sm">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               Parsing file…
             </div>
           )}
@@ -456,7 +456,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           {importRows.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
+                <p className="text-sm font-semibold text-foreground">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
                 <button onClick={handleImportConfirm} className="btn-primary">
                   <CheckCircle className="w-4 h-4" /> Import {importRows.filter(r => r.name && r.phone).length} Employees
                 </button>
@@ -464,8 +464,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               <DataTable
                 columns={[
                   { key: 'name', header: 'Name', render: r => <span className="font-medium text-sm">{r.name}</span> },
-                  { key: 'phone', header: 'Phone', render: r => <span className="text-sm text-gray-600">{r.phone}</span> },
-                  { key: 'email', header: 'Email', render: r => <span className="text-xs text-gray-500">{r.email}</span> },
+                  { key: 'phone', header: 'Phone', render: r => <span className="text-sm text-muted-foreground">{r.phone}</span> },
+                  { key: 'email', header: 'Email', render: r => <span className="text-xs text-muted-foreground">{r.email}</span> },
                   { key: 'company', header: 'Company', render: r => <span className="text-sm">{r.companyName}</span> },
                   { key: 'plan', header: 'Plan', render: r => {
                     const p = plans.find(pl => pl.id === r.corporatePlanId);
@@ -531,7 +531,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
                   onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
-                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
           </div>
@@ -571,9 +571,9 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Current Active Plan</span>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">Current Active Plan</span>
                   <Badge variant="blue" className="text-[8px]">ACTIVE</Badge>
                 </div>
                 <p className="text-sm font-black text-blue-900">{changePlanEmp.corporatePlanName || 'No Plan Assigned'}</p>

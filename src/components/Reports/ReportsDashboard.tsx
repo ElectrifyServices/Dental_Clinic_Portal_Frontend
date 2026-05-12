@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download, IndianRupee, Activity, Target } from 'lucide-react';
 import { PageHeader, FilterTabs, KpiCard, DataTable, Badge, Card, CardContent, Button } from '@/components/ui';
 
@@ -15,7 +15,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
 
   const reportTypes = [
     { id: 'earnings', title: 'Earnings', description: 'Revenue metrics', icon: DollarSign, color: 'from-emerald-500 to-teal-600' },
-    { id: 'patients', title: 'Patients', description: 'Growth trends', icon: Users, color: 'from-blue-500 to-indigo-600' },
+    { id: 'patients', title: 'Patients', description: 'Growth trends', icon: Users, color: 'from-primary/100 to-indigo-600' },
     { id: 'appointments', title: 'Appointments', description: 'Efficiency stats', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     { id: 'treatments', title: 'Treatments', description: 'Procedure analysis', icon: BarChart3, color: 'from-amber-500 to-orange-600' },
   ];
@@ -83,8 +83,8 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
     if (selectedReport === 'earnings') return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
         <KpiCard label="Monthly Revenue" value={`₹${stats.earnings.current.toLocaleString()}`} icon={<TrendingUp className="w-5 h-5" />} 
-          subtitle={<span className={stats.earnings.growth >= 0 ? 'text-emerald-600' : 'text-red-600'}>{stats.earnings.growth >= 0 ? '+' : ''}{stats.earnings.growth}% vs last month</span>} />
-        <KpiCard label="Avg. Daily Revenue" value={`₹${stats.earnings.avg.toLocaleString()}`} icon={<IndianRupee className="w-5 h-5" />} color="text-blue-600" />
+          subtitle={<span className={stats.earnings.growth >= 0 ? 'text-emerald-600' : 'text-destructive'}>{stats.earnings.growth >= 0 ? '+' : ''}{stats.earnings.growth}% vs last month</span>} />
+        <KpiCard label="Avg. Daily Revenue" value={`₹${stats.earnings.avg.toLocaleString()}`} icon={<IndianRupee className="w-5 h-5" />} color="text-primary" />
         <KpiCard label="Top Procedure" value={stats.treatments[0]?.service || 'N/A'} icon={<Target className="w-5 h-5" />} color="text-violet-600" />
       </div>
     );
@@ -132,7 +132,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
     return (
       <DataTable 
         columns={[
-          { key: 'service', header: 'Treatment', render: (t: any) => <span className="font-bold text-gray-900">{t.service}</span> },
+          { key: 'service', header: 'Treatment', render: (t: any) => <span className="font-bold text-foreground">{t.service}</span> },
           { key: 'count', header: 'Volume', render: (t: any) => <Badge variant="gray">{t.count} Cases</Badge> },
           { key: 'revenue', header: 'Total Revenue', align: 'right', render: (t: any) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
           { key: 'avg', header: 'Avg. Cost', align: 'right', render: (t: any) => <span className="text-primary font-bold">₹{Math.round(t.revenue / t.count).toLocaleString()}</span> }
@@ -159,7 +159,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
           const isActive = selectedReport === r.id;
           return (
             <button key={r.id} onClick={() => setSelectedReport(r.id)} 
-              className={`p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${isActive ? 'border-primary bg-white shadow-xl shadow-primary/5' : 'border-transparent bg-card hover:border-border hover:shadow-md'}`}>
+              className={`p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${isActive ? 'border-primary bg-card shadow-xl shadow-primary/5' : 'border-transparent bg-card hover:border-border hover:shadow-md'}`}>
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${r.color} flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { QrCode, Download, UserCheck, UserX, User, Building2, Plus, Search, Filter, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui';
 import { PatientStats } from './PatientList/PatientStats';
@@ -134,10 +134,10 @@ export function PatientList({
       />
 
       {filteredPatients.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-300 py-20 text-center">
-          <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-gray-900">No patients found</h3>
-          <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+        <div className="bg-card rounded-2xl border border-dashed border-border py-20 text-center">
+          <User className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-foreground">No patients found</h3>
+          <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

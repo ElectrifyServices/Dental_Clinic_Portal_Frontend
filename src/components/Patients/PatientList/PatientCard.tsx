@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, UserCheck, UserX, Download, QrCode, Phone, Mail, MapPin, AlertTriangle, Building2, Edit, Trash2, Calendar, CreditCard, Eye, UserPlus, PowerOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -77,33 +77,33 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   const age = calculateAge(patient.dateOfBirth);
 
   return (
-    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
       <CardContent className="p-4 sm:p-5">
         {/* Header Section - More compact */}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
           <div className="flex gap-3">
             <div className="relative shrink-0">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
                 {patient.avatar ? (
                   <img src={patient.avatar} alt={patient.name} className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                 <User className="w-2.5 h-2.5 text-white" />
               </div>
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-tight truncate">{(patient.name || 'Unknown').toLowerCase()}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate">{(patient.name || 'Unknown').toLowerCase()}</h3>
                 {patient.category && (
                   <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap">
                     {patient.category.toUpperCase()}
                   </Badge>
                 )}
               </div>
-              <p className="text-[10px] text-gray-400 font-bold mt-0.5 uppercase tracking-tight truncate">{patient.id}</p>
+              <p className="text-[10px] text-muted-foreground/60 font-bold mt-0.5 uppercase tracking-tight truncate">{patient.id}</p>
               <Badge variant={getStatusVariant(patient.status || 'active')} className="mt-1.5 text-[9px] font-black px-2 py-0">
                 <span className="flex items-center gap-1">
                   {getStatusIcon(patient.status || 'active')}
@@ -116,7 +116,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <Button variant="ghost" size="icon" className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100" onClick={() => onExport(patient.id)}>
               <Download className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 bg-blue-50 text-blue-600 hover:bg-blue-100" onClick={() => onPrintBarcode(patient)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/10" onClick={() => onPrintBarcode(patient)}>
               <QrCode className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -124,16 +124,16 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
         {/* Contact Info - Compact Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-500 min-w-0">
-            <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0">
+            <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
             <span className="font-bold truncate">{patient.phone}</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-500 min-w-0">
-            <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0">
+            <Mail className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
             <span className="font-bold truncate">{patient.email}</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-500 min-w-0 sm:col-span-2">
-            <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 sm:col-span-2">
+            <MapPin className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
             <span className="font-bold truncate">{patient.address || 'N/A'}</span>
           </div>
         </div>
@@ -156,9 +156,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
         {/* Stats Grid - Compact */}
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="bg-blue-50/30 border border-blue-50 rounded-xl p-2 text-center">
-            <p className="text-sm sm:text-base font-black text-blue-600 leading-none mb-0.5">{patient.totalVisits || 0}</p>
-            <p className="text-[8px] font-black text-blue-800 uppercase tracking-wider">Visits</p>
+          <div className="bg-primary/30 border border-primary/10 rounded-xl p-2 text-center">
+            <p className="text-sm sm:text-base font-black text-primary leading-none mb-0.5">{patient.totalVisits || 0}</p>
+            <p className="text-[8px] font-black text-primary uppercase tracking-wider">Visits</p>
           </div>
           <div className="bg-emerald-50/30 border border-emerald-50 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-emerald-600 leading-none mb-0.5">{age}</p>
@@ -172,28 +172,28 @@ export const PatientCard: React.FC<PatientCardProps> = ({
 
         {/* Timeline Rows - Slimmer */}
         <div className="space-y-1.5 mb-4">
-          <div className="flex items-center justify-between p-2 bg-blue-50/10 border border-blue-50 rounded-lg">
-            <div className="flex items-center gap-1.5 text-blue-700">
+          <div className="flex items-center justify-between p-2 bg-primary/10 border border-primary/10 rounded-lg">
+            <div className="flex items-center gap-1.5 text-primary">
               <UserPlus className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold">Registered</span>
             </div>
-            <span className="text-[10px] font-black text-gray-900">{patient.registeredDate || '1/5/2026'}</span>
+            <span className="text-[10px] font-black text-foreground">{patient.registeredDate || '1/5/2026'}</span>
           </div>
-          <div className="flex items-center justify-between p-2 bg-gray-50/50 border border-gray-100 rounded-lg">
-            <div className="flex items-center gap-1.5 text-gray-500">
+          <div className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded-lg">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Calendar className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold">Last Visit</span>
             </div>
-            <span className="text-[10px] font-black text-gray-900 truncate ml-2 text-right">{patient.lastVisit || 'No visits yet'}</span>
+            <span className="text-[10px] font-black text-foreground truncate ml-2 text-right">{patient.lastVisit || 'No visits yet'}</span>
           </div>
         </div>
 
-        <div className="h-px bg-gray-100 mb-4" />
+        <div className="h-px bg-muted mb-4" />
 
         {/* Action Footer - Responsive Wrapping */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5 grow">
-            <Button variant="ghost" className="h-8 px-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-black text-[10px] gap-1.5" onClick={() => onView(patient.id)}>
+            <Button variant="ghost" className="h-8 px-2.5 bg-primary/10 text-primary hover:bg-primary/10 font-black text-[10px] gap-1.5" onClick={() => onView(patient.id)}>
               <Eye className="w-3.5 h-3.5" /> VIEW
             </Button>
             <Button variant="ghost" className="h-8 px-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-black text-[10px] gap-1.5" onClick={() => onEdit(patient.id)}>
@@ -207,7 +207,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <Button variant="ghost" size="icon" className="h-8 w-8 bg-purple-50 text-purple-600 hover:bg-purple-100" onClick={() => onExport(patient.id)}>
               <Download className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 bg-red-50 text-red-600 hover:bg-red-100" onClick={() => onDelete(patient.id)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 bg-destructive/10 text-destructive hover:bg-destructive/10" onClick={() => onDelete(patient.id)}>
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>

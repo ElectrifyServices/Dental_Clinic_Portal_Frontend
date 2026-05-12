@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ClipboardCheck, PenTool, AlertTriangle } from 'lucide-react';
 import { SignaturePad } from '../../Consent/SignaturePad';
 import { calculateAge } from './utils';
@@ -26,11 +26,11 @@ export const Step3Consent: React.FC<Step3Props> = ({
         <div className="w-20 h-20 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-4">
           <ClipboardCheck className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Patient Consent & Declaration</h3>
-        <p className="text-sm text-gray-500">Please review and confirm the following statements</p>
+        <h3 className="text-xl font-bold text-foreground">Patient Consent & Declaration</h3>
+        <p className="text-sm text-muted-foreground">Please review and confirm the following statements</p>
       </div>
 
-      <Card className="border-secondary bg-white overflow-hidden">
+      <Card className="border-secondary bg-card overflow-hidden">
         <CardContent className="p-6 space-y-4">
           <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-4">Required Consents</h4>
           <div className="space-y-4">
@@ -41,14 +41,14 @@ export const Step3Consent: React.FC<Step3Props> = ({
               { id: 'consentStorage', label: 'I allow clinic to store records securely' },
               { id: 'consentEmergency', label: 'Emergency treatment allowed if required' }
             ].map((consent) => (
-              <label key={consent.id} className="flex items-start gap-3 p-3 border border-gray-50 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+              <label key={consent.id} className="flex items-start gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
                 <input
                   type="checkbox"
                   checked={formData[consent.id] || false}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, [consent.id]: e.target.checked }))}
                   className="w-5 h-5 mt-0.5 rounded border-input text-primary focus:ring-primary"
                 />
-                <span className="text-sm text-gray-700 font-medium">{consent.label}</span>
+                <span className="text-sm text-muted-foreground font-medium">{consent.label}</span>
               </label>
             ))}
           </div>
@@ -59,29 +59,29 @@ export const Step3Consent: React.FC<Step3Props> = ({
               { id: 'optWhatsApp', label: 'Allow WhatsApp reminders' },
               { id: 'optPhotos', label: 'Allow before/after photos' }
             ].map((opt) => (
-              <label key={opt.id} className="flex items-start gap-3 p-3 border border-gray-50 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+              <label key={opt.id} className="flex items-start gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted transition-colors">
                 <input
                   type="checkbox"
                   checked={formData[opt.id] || false}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, [opt.id]: e.target.checked }))}
                   className="w-5 h-5 mt-0.5 rounded border-input text-primary focus:ring-primary"
                 />
-                <span className="text-sm text-gray-700 font-medium">{opt.label}</span>
+                <span className="text-sm text-muted-foreground font-medium">{opt.label}</span>
               </label>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-secondary bg-white">
+      <Card className="border-secondary bg-card">
         <CardContent className="p-6 space-y-6">
           {!isMinor ? (
             <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h4 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                 <PenTool className="w-4 h-4 text-primary" />
                 Patient Signature Section *
               </h4>
-              <div className="border border-gray-100 rounded-2xl p-4">
+              <div className="border border-border rounded-2xl p-4">
                 <SignaturePad
                   onSave={(dataUrl) => setFormData((prev: any) => ({ ...prev, patientSignature: dataUrl }))}
                   defaultValue={formData.patientSignature}
@@ -99,7 +99,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Guardian Full Name *</label>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">Guardian Full Name *</label>
                 <Input
                   type="text"
                   name="guardianName"
@@ -110,11 +110,11 @@ export const Step3Consent: React.FC<Step3Props> = ({
               </div>
 
               <div>
-                <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                   <PenTool className="w-4 h-4 text-primary" />
                   Guardian Signature *
                 </h4>
-                <div className="border border-gray-100 rounded-2xl p-4">
+                <div className="border border-border rounded-2xl p-4">
                   <SignaturePad
                     onSave={(dataUrl) => setFormData((prev: any) => ({ ...prev, guardianSignature: dataUrl }))}
                     defaultValue={formData.guardianSignature}

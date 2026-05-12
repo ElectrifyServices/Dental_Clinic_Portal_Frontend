@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Camera, Plus, X } from "lucide-react";
 
 interface ClinicalImagesProps {
@@ -22,13 +22,13 @@ export function ClinicalImages({
     <div className="px-6 space-y-6">
       {/* Clinical Images */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-muted-foreground mb-2">
           <Camera className="w-4 h-4 inline mr-2" />
           Clinical Images
         </label>
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
-          <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600 mb-2">
+        <div className="border-2 border-dashed border-border rounded-xl p-6 text-center bg-muted">
+          <Camera className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+          <p className="text-muted-foreground mb-2">
             Upload clinical photos, X-rays, or other relevant images
           </p>
           <input
@@ -41,7 +41,7 @@ export function ClinicalImages({
           />
           <label
             htmlFor="image-upload"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer inline-flex items-center shadow-md"
+            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary cursor-pointer inline-flex items-center shadow-md"
           >
             <Camera className="w-4 h-4 mr-2" />
             Upload Images
@@ -50,7 +50,7 @@ export function ClinicalImages({
 
         {images.length > 0 && (
           <div className="mt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
               Uploaded Images:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -59,12 +59,12 @@ export function ClinicalImages({
                   <img
                     src={image}
                     alt={`Clinical ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-xl border border-gray-200 shadow-sm"
+                    className="w-full h-24 object-cover rounded-xl border border-border shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => onRemoveImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 bg-destructive/100 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
                   </button>
@@ -76,13 +76,13 @@ export function ClinicalImages({
       </div>
 
       {/* X-Ray Files Section */}
-      <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 space-y-4">
+      <div className="bg-muted rounded-2xl p-6 border border-border space-y-4">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center">
-            <Camera className="w-4 h-4 mr-2 text-blue-600" />
+          <label className="block text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center">
+            <Camera className="w-4 h-4 mr-2 text-primary" />
             Add File X-Ray
           </label>
-          <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-md">
+          <label className="cursor-pointer bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary transition-all flex items-center gap-2 shadow-md">
             <Plus className="w-3 h-3" /> Upload X-Ray
             <input
               type="file"
@@ -102,7 +102,7 @@ export function ClinicalImages({
                 <button
                   type="button"
                   onClick={() => onRemoveXray(idx)}
-                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                  className="absolute top-1 right-1 p-1 bg-destructive/100 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -110,7 +110,7 @@ export function ClinicalImages({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">No X-ray files uploaded</p>
+          <p className="text-xs text-muted-foreground/60 italic">No X-ray files uploaded</p>
         )}
       </div>
     </div>

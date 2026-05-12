@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Shield, Stethoscope, User, Calendar, FileText, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui';
 
@@ -10,7 +10,7 @@ interface Step2Props {
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full system control & financials', icon: Shield, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { value: 'doctor', label: 'Doctor', description: 'Clinical care & treatments', icon: Stethoscope, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { value: 'doctor', label: 'Doctor', description: 'Clinical care & treatments', icon: Stethoscope, color: 'text-primary', bg: 'bg-primary/10' },
   { value: 'receptionist', label: 'Receptionist', description: 'Front desk & bookings', icon: User, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { value: 'assistant', label: 'Assistant', description: 'Clinical support & lab', icon: User, color: 'text-amber-600', bg: 'bg-amber-50' }
 ];
@@ -39,7 +39,7 @@ export function Step2Role({ formData, onChange, onPermissionChange }: Step2Props
           const isActive = formData.role === role.value;
           return (
             <button key={role.value} type="button" onClick={() => onChange(role.value)}
-              className={`p-4 border-2 rounded-2xl text-left transition-all relative overflow-hidden group ${isActive ? 'border-primary bg-white shadow-xl shadow-primary/5' : 'border-border bg-card hover:border-muted-foreground/20'}`}>
+              className={`p-4 border-2 rounded-2xl text-left transition-all relative overflow-hidden group ${isActive ? 'border-primary bg-card shadow-xl shadow-primary/5' : 'border-border bg-card hover:border-muted-foreground/20'}`}>
               <div className="flex items-center gap-3 mb-2">
                 <div className={`w-10 h-10 rounded-xl ${role.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
                   <Icon className={`w-5 h-5 ${role.color}`} />
@@ -63,7 +63,7 @@ export function Step2Role({ formData, onChange, onPermissionChange }: Step2Props
             {PERMISSIONS.map(p => (
               <label key={p.id} className={`flex items-start gap-3 p-3 border rounded-2xl cursor-pointer transition-colors ${formData.permissions.includes(p.id) ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/30 hover:bg-muted/50'}`}>
                 <input type="checkbox" checked={formData.permissions.includes(p.id)} onChange={(e) => onPermissionChange(p.id, e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/20" />
+                  className="w-4 h-4 mt-0.5 rounded border-border text-primary focus:ring-primary/20" />
                 <div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-bold text-foreground">{p.label}</p>

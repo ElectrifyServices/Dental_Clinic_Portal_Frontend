@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Mail, Phone, Upload } from 'lucide-react';
-import { FormField } from '@/components/ui';
+import { LabeledField } from '@/components/ui';
 
 interface Step1Props {
   formData: any;
@@ -40,51 +40,51 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Full Name *" required>
+        <LabeledField label="Full Name *" required>
           <div className="relative">
             <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="text" name="name" value={formData.name} onChange={onChange} required
               className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="e.g. Dr. Sameer Khan" />
           </div>
-        </FormField>
+        </LabeledField>
 
-        <FormField label="Email Address *" required>
+        <LabeledField label="Email Address *" required>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="email" name="email" value={formData.email} onChange={onChange} required
               className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="sameer@clinic.com" />
           </div>
-        </FormField>
+        </LabeledField>
 
-        <FormField label="Phone Number">
+        <LabeledField label="Phone Number">
           <div className="relative">
             <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="tel" name="phone" value={formData.phone} onChange={onChange}
               className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="+91 98765 43210" />
           </div>
-        </FormField>
+        </LabeledField>
 
-        <FormField label="Staff ID (Unique)">
+        <LabeledField label="Staff ID (Unique)">
           <input type="text" name="uniqueId" value={formData.uniqueId} readOnly
             className="w-full px-4 py-2.5 border rounded-xl text-sm font-mono font-bold bg-muted/50 cursor-not-allowed" />
-        </FormField>
+        </LabeledField>
       </div>
 
       {!isEdit && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
-          <FormField label="Secure Password *" required>
+          <LabeledField label="Secure Password *" required>
             <input type="password" name="password" value={formData.password} onChange={onChange} required
               className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="••••••••" />
-          </FormField>
-          <FormField label="Confirm Password *" required>
+          </LabeledField>
+          <LabeledField label="Confirm Password *" required>
             <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={onChange} required
               className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
               placeholder="••••••••" />
-          </FormField>
+          </LabeledField>
         </div>
       )}
     </div>

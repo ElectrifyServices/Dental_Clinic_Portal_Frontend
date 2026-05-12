@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   Building2,
   Users,
@@ -242,28 +242,28 @@ export function CorporateManagement({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-card rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50">
+        <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Corporate Management</h2>
-              <p className="text-sm text-gray-600 font-medium">Manage company plans and bulk employee registration</p>
+              <h2 className="text-2xl font-bold text-foreground tracking-tight">Corporate Management</h2>
+              <p className="text-sm text-muted-foreground font-medium">Manage company plans and bulk employee registration</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition-all text-gray-400 hover:text-gray-600 shadow-sm border border-transparent hover:border-gray-200">
+          <button onClick={onClose} className="p-2 hover:bg-card rounded-xl transition-all text-muted-foreground/60 hover:text-muted-foreground shadow-sm border border-transparent hover:border-border">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 px-6 bg-white">
+        <div className="flex border-b border-border px-6 bg-card">
           <button
             onClick={() => setActiveTab('plans')}
-            className={`px-6 py-4 text-sm font-bold transition-all border-b-2 relative ${activeTab === 'plans' ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-transparent hover:text-gray-600'
+            className={`px-6 py-4 text-sm font-bold transition-all border-b-2 relative ${activeTab === 'plans' ? 'text-indigo-600 border-indigo-600' : 'text-muted-foreground/60 border-transparent hover:text-muted-foreground'
               }`}
           >
             Corporate Plans
@@ -271,7 +271,7 @@ export function CorporateManagement({
           </button>
           <button
             onClick={() => setActiveTab('bulk')}
-            className={`px-6 py-4 text-sm font-bold transition-all border-b-2 relative ${activeTab === 'bulk' ? 'text-indigo-600 border-indigo-600' : 'text-gray-400 border-transparent hover:text-gray-600'
+            className={`px-6 py-4 text-sm font-bold transition-all border-b-2 relative ${activeTab === 'bulk' ? 'text-indigo-600 border-indigo-600' : 'text-muted-foreground/60 border-transparent hover:text-muted-foreground'
               }`}
           >
             Bulk Employee Registration
@@ -279,13 +279,13 @@ export function CorporateManagement({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+        <div className="flex-1 overflow-y-auto p-6 bg-muted/50">
           {activeTab === 'plans' ? (
             <div className="space-y-6">
               {!showPlanForm ? (
                 <>
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900">Active Corporate Plans</h3>
+                    <h3 className="text-lg font-bold text-foreground">Active Corporate Plans</h3>
                     <button
                       onClick={() => { setEditingPlan(null); setShowPlanForm(true); }}
                       className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center shadow-lg shadow-indigo-100"
@@ -296,32 +296,32 @@ export function CorporateManagement({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {corporatePlans.map(plan => (
-                      <div key={plan.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all group">
+                      <div key={plan.id} className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex justify-between items-start mb-4">
                           <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                             <Building2 className="w-5 h-5" />
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => { setEditingPlan(plan); setShowPlanForm(true); }} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Plus className="w-4 h-4" /></button>
-                            <button onClick={() => onDeletePlan(plan.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                            <button onClick={() => { setEditingPlan(plan); setShowPlanForm(true); }} className="p-2 text-primary hover:bg-primary/10 rounded-lg"><Plus className="w-4 h-4" /></button>
+                            <button onClick={() => onDeletePlan(plan.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
-                        <h4 className="font-bold text-gray-900 text-lg mb-1">{plan.name}</h4>
+                        <h4 className="font-bold text-foreground text-lg mb-1">{plan.name}</h4>
                         <div className="flex items-center gap-2 mb-4">
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">{plan.status}</span>
-                          <span className="text-xs text-gray-400 font-medium">{plan.contactPerson}</span>
+                          <span className="text-xs text-muted-foreground/60 font-medium">{plan.contactPerson}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-4">
-                          <div className="bg-gray-50 p-2 rounded-xl border border-gray-100">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Discount</p>
+                          <div className="bg-muted p-2 rounded-xl border border-border">
+                            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase">Discount</p>
                             <p className="text-lg font-bold text-indigo-600">{plan.discountPercent}%</p>
                           </div>
-                          <div className="bg-gray-50 p-2 rounded-xl border border-gray-100">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Consultation</p>
+                          <div className="bg-muted p-2 rounded-xl border border-border">
+                            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase">Consultation</p>
                             <p className="text-lg font-bold text-emerald-600">{plan.freeConsultation ? 'FREE' : 'Paid'}</p>
                           </div>
                         </div>
-                        <div className="flex items-center text-xs text-gray-500 gap-4 mb-4">
+                        <div className="flex items-center text-xs text-muted-foreground gap-4 mb-4">
                           <span className="flex items-center"><CreditCard className="w-3 h-3 mr-1" /> ₹{plan.creditLimit.toLocaleString()} Limit</span>
                           <span className="flex items-center">
                             <Users className="w-3 h-3 mr-1" /> 
@@ -337,49 +337,49 @@ export function CorporateManagement({
                       </div>
                     ))}
                     {corporatePlans.length === 0 && (
-                      <div className="col-span-full py-12 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
-                        <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 font-medium">No corporate plans created yet.</p>
+                      <div className="col-span-full py-12 text-center bg-card rounded-2xl border-2 border-dashed border-border">
+                        <Building2 className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+                        <p className="text-muted-foreground font-medium">No corporate plans created yet.</p>
                       </div>
                     )}
                   </div>
                 </>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
+                <div className="bg-card rounded-2xl border border-border p-8 shadow-sm max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-bold text-gray-900">{editingPlan ? 'Edit Plan' : 'New Corporate Plan'}</h3>
-                    <button onClick={() => setShowPlanForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                    <h3 className="text-xl font-bold text-foreground">{editingPlan ? 'Edit Plan' : 'New Corporate Plan'}</h3>
+                    <button onClick={() => setShowPlanForm(false)} className="text-muted-foreground/60 hover:text-muted-foreground"><X className="w-5 h-5" /></button>
                   </div>
                   <form onSubmit={handleAddPlan} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Company Name</label>
-                        <input name="name" defaultValue={editingPlan?.name} required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. Google India" />
+                        <label className="block text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">Company Name</label>
+                        <input name="name" defaultValue={editingPlan?.name} required className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. Google India" />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Discount Percent (%)</label>
-                        <input name="discount" type="number" defaultValue={editingPlan?.discountPercent} required className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 20" />
+                        <label className="block text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">Discount Percent (%)</label>
+                        <input name="discount" type="number" defaultValue={editingPlan?.discountPercent} required className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 20" />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">Credit Limit (₹)</label>
-                        <input name="creditLimit" type="number" defaultValue={editingPlan?.creditLimit} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="0 for no credit" />
+                        <label className="block text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">Credit Limit (₹)</label>
+                        <input name="creditLimit" type="number" defaultValue={editingPlan?.creditLimit} className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="0 for no credit" />
                       </div>
                       <div className="md:col-span-2 flex items-center p-4 bg-indigo-50 rounded-xl">
-                        <input name="freeConsultation" type="checkbox" defaultChecked={editingPlan?.freeConsultation} className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                        <input name="freeConsultation" type="checkbox" defaultChecked={editingPlan?.freeConsultation} className="w-5 h-5 rounded border-border text-indigo-600 focus:ring-indigo-500" />
                         <label className="ml-3 text-sm font-bold text-indigo-900">Enable Free Consultation for all employees</label>
                         <Gift className="w-5 h-5 ml-auto text-indigo-400" />
                       </div>
                     </div>
-                    <div className="border-t border-gray-100 pt-6">
-                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Contact Details</h4>
+                    <div className="border-t border-border pt-6">
+                      <h4 className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mb-4">Contact Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input name="contactPerson" defaultValue={editingPlan?.contactPerson} placeholder="Contact Person" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
-                        <input name="phone" defaultValue={editingPlan?.phone} placeholder="Phone Number" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
-                        <input name="email" type="email" defaultValue={editingPlan?.email} placeholder="Email Address" className="w-full md:col-span-2 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
+                        <input name="contactPerson" defaultValue={editingPlan?.contactPerson} placeholder="Contact Person" className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
+                        <input name="phone" defaultValue={editingPlan?.phone} placeholder="Phone Number" className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
+                        <input name="email" type="email" defaultValue={editingPlan?.email} placeholder="Email Address" className="w-full md:col-span-2 px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-indigo-600" />
                       </div>
                     </div>
                     <div className="flex gap-4 pt-6">
-                      <button type="button" onClick={() => setShowPlanForm(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50">Cancel</button>
+                      <button type="button" onClick={() => setShowPlanForm(false)} className="flex-1 py-3 border border-border rounded-xl font-bold hover:bg-muted">Cancel</button>
                       <button type="submit" className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100">Save Plan</button>
                     </div>
                   </form>
@@ -388,16 +388,16 @@ export function CorporateManagement({
             </div>
           ) : (
             <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Bulk Employee Upload</h3>
-                    <p className="text-sm text-gray-500">Quickly add multiple employees to a corporate plan</p>
+                    <h3 className="text-xl font-bold text-foreground">Bulk Employee Upload</h3>
+                    <p className="text-sm text-muted-foreground">Quickly add multiple employees to a corporate plan</p>
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={downloadSampleCsv}
-                      className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold hover:bg-gray-50 flex items-center"
+                      className="px-4 py-2 border border-border rounded-xl text-sm font-bold hover:bg-muted flex items-center"
                     >
                       <Download className="w-4 h-4 mr-2 text-indigo-600" />
                       Sample CSV
@@ -414,7 +414,7 @@ export function CorporateManagement({
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Target Corporate Plan</label>
+                  <label className="block text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">Target Corporate Plan</label>
                   <select
                     value={selectedCompanyId}
                     onChange={(e) => setSelectedCompanyId(e.target.value)}
@@ -427,9 +427,9 @@ export function CorporateManagement({
                   </select>
                 </div>
 
-                <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                <div className="border border-border rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                    <thead className="bg-muted text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest border-b border-border">
                       <tr>
                         <th className="px-6 py-4">Full Name</th>
                         <th className="px-6 py-4">Phone</th>
@@ -442,17 +442,17 @@ export function CorporateManagement({
                       {bulkPatients.map((p, idx) => {
                         const isDup = checkDuplicate(p);
                         return (
-                          <tr key={idx} className={`group transition-colors ${isDup ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
+                          <tr key={idx} className={`group transition-colors ${isDup ? 'bg-destructive/10' : 'hover:bg-muted'}`}>
                             <td className="px-6 py-3">
                               <div className="relative">
                                 <input
                                   value={p.name}
                                   onChange={(e) => handleBulkChange(idx, 'name', e.target.value)}
                                   placeholder="Name"
-                                  className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-red-700' : 'text-gray-800'}`}
+                                  className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-destructive' : 'text-foreground'}`}
                                 />
                                 {isDup && (
-                                  <div className="absolute -top-8 left-0 bg-red-600 text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap animate-bounce">
+                                  <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap animate-bounce">
                                     Already Registered!
                                   </div>
                                 )}
@@ -463,7 +463,7 @@ export function CorporateManagement({
                                 value={p.phone}
                                 onChange={(e) => handleBulkChange(idx, 'phone', e.target.value)}
                                 placeholder="Phone"
-                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-red-600' : 'text-gray-800'}`}
+                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-destructive' : 'text-foreground'}`}
                               />
                             </td>
                             <td className="px-6 py-3">
@@ -471,14 +471,14 @@ export function CorporateManagement({
                                 value={p.email}
                                 onChange={(e) => handleBulkChange(idx, 'email', e.target.value)}
                                 placeholder="Email"
-                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-red-600' : 'text-gray-800'}`}
+                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-indigo-600 pb-1 ${isDup ? 'text-destructive' : 'text-foreground'}`}
                               />
                             </td>
                             <td className="px-6 py-3">
                               <select
                                 value={p.gender}
                                 onChange={(e) => handleBulkChange(idx, 'gender', e.target.value)}
-                                className="bg-transparent text-sm font-bold text-gray-800 outline-none"
+                                className="bg-transparent text-sm font-bold text-foreground outline-none"
                               >
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
@@ -486,7 +486,7 @@ export function CorporateManagement({
                               </select>
                             </td>
                             <td className="px-6 py-3">
-                              <button onClick={() => handleRemoveBulkRow(idx)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                              <button onClick={() => handleRemoveBulkRow(idx)} className="p-2 text-red-400 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </td>
@@ -499,7 +499,7 @@ export function CorporateManagement({
 
                 <button
                   onClick={handleBulkAddRow}
-                  className="mt-6 w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
+                  className="mt-6 w-full py-4 border-2 border-dashed border-border rounded-2xl text-muted-foreground/60 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Add Another Row
@@ -507,7 +507,7 @@ export function CorporateManagement({
               </div>
 
               <div className="flex justify-end gap-4">
-                <button onClick={onClose} className="px-8 py-3 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all">Cancel</button>
+                <button onClick={onClose} className="px-8 py-3 bg-card border border-border rounded-xl font-bold hover:bg-muted transition-all">Cancel</button>
                 <button
                   onClick={handleFinalBulkSubmit}
                   disabled={!selectedCompanyId}
@@ -522,17 +522,17 @@ export function CorporateManagement({
 
         {/* Employee List View Modal Overlay */}
         {viewingEmployeesPlanId && (
-          <div className="absolute inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-indigo-50/50">
+          <div className="absolute inset-0 bg-card z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-indigo-50/50">
               <div className="flex items-center gap-4">
-                <button onClick={() => setViewingEmployeesPlanId(null)} className="p-2 hover:bg-white rounded-lg transition-all text-indigo-600">
+                <button onClick={() => setViewingEmployeesPlanId(null)} className="p-2 hover:bg-card rounded-lg transition-all text-indigo-600">
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-foreground">
                     {corporatePlans.find(p => p.id === viewingEmployeesPlanId)?.name} Employees
                   </h3>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
                     Total {corporateEmployees.filter(e => e.companyId === viewingEmployeesPlanId).length} Employees Registered
                   </p>
                 </div>
@@ -548,21 +548,21 @@ export function CorporateManagement({
                       setShowSearchSuggestions(true);
                     }}
                     onFocus={() => setShowSearchSuggestions(true)}
-                    className="pl-12 pr-6 py-3 bg-white border-2 border-indigo-50 rounded-2xl text-base font-medium outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 min-w-[450px] shadow-sm transition-all" 
+                    className="pl-12 pr-6 py-3 bg-card border-2 border-indigo-50 rounded-2xl text-base font-medium outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 min-w-[450px] shadow-sm transition-all" 
                   />
                 </form>
 
                 {showSearchSuggestions && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-2xl border border-border z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2">
                     {recentSearches.length > 0 && (
-                      <div className="p-4 border-b border-gray-50">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Recent Searches</p>
+                      <div className="p-4 border-b border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">Recent Searches</p>
                         <div className="flex flex-wrap gap-2">
                           {recentSearches.map((s, i) => (
                             <button 
                               key={i} 
                               onClick={() => { setEmployeeSearchQuery(s); setShowSearchSuggestions(false); }}
-                              className="px-3 py-1 bg-gray-50 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600 rounded-lg text-xs font-bold transition-all"
+                              className="px-3 py-1 bg-muted hover:bg-indigo-50 text-muted-foreground hover:text-indigo-600 rounded-lg text-xs font-bold transition-all"
                             >
                               {s}
                             </button>
@@ -571,7 +571,7 @@ export function CorporateManagement({
                       </div>
                     )}
                     <div className="p-4">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Quick Suggestions</p>
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">Quick Suggestions</p>
                       <div className="flex flex-wrap gap-2">
                         {['Male', 'Female', 'Manager', '@gmail.com', 'Dev'].map((s, i) => (
                           <button 
@@ -591,7 +591,7 @@ export function CorporateManagement({
             <div className="flex-1 overflow-y-auto p-6">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <tr className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest border-b border-border">
                     <th className="px-6 py-4">Name</th>
                     <th className="px-6 py-4">Phone</th>
                     <th className="px-6 py-4">Email Address</th>
@@ -611,7 +611,7 @@ export function CorporateManagement({
                       const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
                       
                       return (
-                        <tr key={i} className={`hover:bg-gray-50 transition-colors group ${isEditing ? 'bg-indigo-50/30' : ''}`}>
+                        <tr key={i} className={`hover:bg-muted transition-colors group ${isEditing ? 'bg-indigo-50/30' : ''}`}>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-bold shadow-sm">
@@ -625,13 +625,13 @@ export function CorporateManagement({
                                 />
                               ) : (
                                 <div>
-                                  <div className="font-bold text-gray-900">{emp.name}</div>
-                                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: CORP-{i+100}</div>
+                                  <div className="font-bold text-foreground">{emp.name}</div>
+                                  <div className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wider">ID: CORP-{i+100}</div>
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                          <td className="px-6 py-4 text-sm font-bold text-foreground">
                             {isEditing ? (
                               <input 
                                 value={tempEmpData.phone}
@@ -655,7 +655,7 @@ export function CorporateManagement({
                                   placeholder="Email"
                                 />
                             ) : (
-                                <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[11px] font-bold w-fit border border-blue-100">
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-lg text-[11px] font-bold w-fit border border-primary/20">
                                   <FileText className="w-3.5 h-3.5" />
                                   {emp.email}
                                 </div>
@@ -673,7 +673,7 @@ export function CorporateManagement({
                                 <option value="other">Other</option>
                               </select>
                             ) : (
-                              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-gray-200">
+                              <span className="px-3 py-1 bg-muted text-muted-foreground text-[10px] font-bold rounded-lg uppercase tracking-wider border border-border">
                                 {emp.gender}
                               </span>
                             )}
@@ -693,7 +693,7 @@ export function CorporateManagement({
                                   </button>
                                   <button 
                                     onClick={() => setEditingEmployee(null)}
-                                    className="p-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300"
+                                    className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted"
                                   >
                                     <X className="w-4 h-4" />
                                   </button>
@@ -712,7 +712,7 @@ export function CorporateManagement({
                                   </button>
                                   <button 
                                     onClick={() => onDeleteEmployee(emp.name, emp.email)}
-                                    className="p-2 text-red-500 hover:bg-red-600 hover:text-white rounded-lg transition-all bg-red-50 border border-red-100"
+                                    className="p-2 text-red-500 hover:bg-destructive hover:text-white rounded-lg transition-all bg-destructive/10 border border-destructive/20"
                                     title="Delete Employee"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -727,8 +727,8 @@ export function CorporateManagement({
                   {corporateEmployees.filter(e => e.companyId === viewingEmployeesPlanId).length === 0 && (
                     <tr>
                       <td colSpan={4} className="py-20 text-center">
-                        <Users className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                        <p className="text-gray-400 font-bold">No employees registered yet.</p>
+                        <Users className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                        <p className="text-muted-foreground/60 font-bold">No employees registered yet.</p>
                       </td>
                     </tr>
                   )}
@@ -738,7 +738,7 @@ export function CorporateManagement({
                      e.email?.toLowerCase().includes(employeeSearchQuery.toLowerCase()))
                    ).length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-20 text-center text-gray-400 font-medium">
+                      <td colSpan={4} className="py-20 text-center text-muted-foreground/60 font-medium">
                         No employees matching your search.
                       </td>
                     </tr>

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, PlanBenefitType } from '../../types';
 import { PLAN_COLORS, TREATMENT_LABELS, COLOR_MAP, getPlanStatus } from '../../utils/corporatePlan';
-import { Modal, Button, FormField, SectionRenderer } from '../ui';
+import { Modal, Button, LabeledField, SectionRenderer } from '../ui';
 import { useFormConfig } from '../../hooks/useFormConfig';
 
 interface Props {
@@ -29,8 +29,8 @@ const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
 const STATUS_BADGE: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   expiring: 'bg-amber-100 text-amber-700 border-amber-200',
-  expired: 'bg-red-100 text-red-700 border-red-200',
-  inactive: 'bg-gray-100 text-gray-600 border-gray-200',
+  expired: 'bg-destructive/10 text-destructive border-destructive/20',
+  inactive: 'bg-muted text-muted-foreground border-border',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -57,7 +57,7 @@ function autoDesc(b: PlanBenefit): string {
     case 'treatment_discount': return `${b.value}% discount on ${(b.treatmentTypes || []).map(t => TREATMENT_LABELS[t] || t).join(', ') || 'selected treatments'}`;
     case 'free_consultations': return `${b.value} free consultation${b.value > 1 ? 's' : ''} per year`;
     case 'free_treatments': return `${b.value} free ${(b.treatmentTypes || []).map(t => TREATMENT_LABELS[t] || t).join(', ') || 'treatment'}`;
-    case 'capped_discount': return `${b.value}% discount (max â‚¹${b.cap?.toLocaleString() || '...'} per visit)`;
+    case 'capped_discount': return `${b.value}% discount (max ?${b.cap?.toLocaleString() || '...'} per visit)`;
     case 'custom': return `${b.value}% off on ${b.customName || 'Custom Benefit'}`;
     default: return '';
   }
@@ -143,9 +143,9 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-none">Corporate Plans</h1>
-          <p className="text-gray-500 text-sm mt-1.5 font-medium">
-            {activePlans} active plan{activePlans !== 1 ? 's' : ''} Â· {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
+          <h1 className="text-2xl font-bold text-foreground leading-none">Corporate Plans</h1>
+          <p className="text-muted-foreground text-sm mt-1.5 font-medium">
+            {activePlans} active plan{activePlans !== 1 ? 's' : ''} · {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
           </p>
         </div>
         <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
@@ -157,7 +157,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex items-start gap-3 bg-primary/5 border border-primary/10 rounded-2xl px-5 py-4">
         <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm text-primary/80 font-medium leading-relaxed">
-          Plans created here are available company-wide. When registering a patient, staff can map them to a plan â€” discounts and benefits apply automatically in the billing engine.
+          Plans created here are available company-wide. When registering a patient, staff can map them to a plan — discounts and benefits apply automatically in the billing engine.
         </p>
       </div>
 
@@ -165,13 +165,13 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex gap-4 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" placeholder="Search plans, companiesâ€¦" value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" />
+          <input type="text" placeholder="Search plans, companies…" value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" />
         </div>
         <div className="flex p-1 bg-muted rounded-xl border border-border">
           {(['all', 'active', 'inactive'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${filter === f ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${filter === f ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               {f}
             </button>
           ))}
@@ -192,7 +192,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
             const status = getPlanStatus(plan);
             const expanded = expandedId === plan.id;
             return (
-              <div key={plan.id} className="bg-white rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl transition-all overflow-hidden group">
+              <div key={plan.id} className="bg-card rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl transition-all overflow-hidden group">
                 <div className="p-6 md:p-8">
                   <div className="flex items-start justify-between gap-6">
                     <div className="flex items-start gap-4 min-w-0">
@@ -209,7 +209,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                         {plan.description && <p className="text-xs text-muted-foreground/60 mt-1.5 font-medium leading-relaxed max-w-2xl">{plan.description}</p>}
                         <div className="flex gap-6 mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                           <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Users className="w-3.5 h-3.5" />{plan.currentMembers}{plan.maxMembers ? ` / ${plan.maxMembers}` : ''} Enrollments</span>
-                          <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Calendar className="w-3.5 h-3.5" />{plan.validFrom} â€” {plan.validTo}</span>
+                          <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Calendar className="w-3.5 h-3.5" />{plan.validFrom} — {plan.validTo}</span>
                         </div>
                       </div>
                     </div>
@@ -222,7 +222,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                         <Edit2 className="w-5 h-5" />
                       </button>
                       <button onClick={() => onDelete(plan.id)}
-                        className="p-2.5 hover:bg-red-50 rounded-2xl transition-all text-red-500">
+                        className="p-2.5 hover:bg-destructive/10 rounded-2xl transition-all text-red-500">
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
@@ -249,7 +249,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                   <div className={`px-8 pb-8 pt-2 border-t border-border bg-muted/10`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {plan.benefits.map(b => (
-                        <div key={b.id} className="flex items-start gap-4 bg-white rounded-2xl p-5 border border-border shadow-sm group-hover:shadow-md transition-all">
+                        <div key={b.id} className="flex items-start gap-4 bg-card rounded-2xl p-5 border border-border shadow-sm group-hover:shadow-md transition-all">
                           <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center text-white flex-shrink-0 shadow-md`}>
                             {BENEFIT_ICONS[b.type]}
                           </div>
@@ -263,7 +263,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                                 ))}
                               </div>
                             ) : null}
-                            {b.cap ? <p className="text-[10px] font-black text-primary mt-3 uppercase tracking-widest">Cap: â‚¹{b.cap.toLocaleString()} Per Visit</p> : null}
+                            {b.cap ? <p className="text-[10px] font-black text-primary mt-3 uppercase tracking-widest">Cap: ?{b.cap.toLocaleString()} Per Visit</p> : null}
                           </div>
                         </div>
                       ))}
@@ -310,15 +310,15 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                 />
               )}
 
-              {/* Color swatch â€” kept custom (visual picker, not a standard select) */}
-              <FormField label={fl('color', 'Visual Branding Theme')}>
+              {/* Color swatch — kept custom (visual picker, not a standard select) */}
+              <LabeledField label={fl('color', 'Visual Branding Theme')}>
                 <div className="flex gap-2 flex-wrap pt-1">
                   {PLAN_COLORS.map(c => (
                     <button key={c} type="button" onClick={() => setForm({ ...form, color: c })}
                       className={`w-9 h-9 rounded-xl ${planColorDots[c] ?? 'bg-gray-400'} transition-all shadow-md ${form.color === c ? 'ring-2 ring-offset-4 ring-primary scale-110' : 'opacity-30 hover:opacity-100'}`} />
                   ))}
                 </div>
-              </FormField>
+              </LabeledField>
             </section>
 
             <div className="h-px bg-border/50" />
@@ -334,18 +334,18 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                 </Button>
               </div>
 
-              {errors.benefits && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest px-2 bg-red-50 py-2 rounded-xl border border-red-100">{errors.benefits}</p>}
+              {errors.benefits && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest px-2 bg-destructive/10 py-2 rounded-xl border border-destructive/20">{errors.benefits}</p>}
 
               <div className="grid grid-cols-1 gap-6">
                 {form.benefits.map((b, idx) => (
                   <div key={b.id} className="group relative border border-border rounded-[2rem] p-8 bg-muted/10 hover:bg-muted/20 transition-all shadow-inner">
-                    <div className="absolute -top-3 left-6 px-4 py-1 bg-white border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest shadow-sm">
+                    <div className="absolute -top-3 left-6 px-4 py-1 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest shadow-sm">
                       Coverage Node #{idx + 1}
                     </div>
 
                     {form.benefits.length > 1 && (
                       <button type="button" onClick={() => setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) })}
-                        className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all">
+                        className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-red-500 hover:bg-destructive/10 rounded-2xl transition-all">
                         <Trash2 className="w-5 h-5" />
                       </button>
                     )}
@@ -369,33 +369,33 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       </div>
 
                       {b.type === 'custom' ? (
-                        <FormField label={fl('customName', 'Benefit Label (Manual Entry)')}>
+                        <LabeledField label={fl('customName', 'Benefit Label (Manual Entry)')}>
                           <input type="text" value={b.customName || ''} onChange={e => updateBenefit(idx, 'customName', e.target.value)}
                             placeholder="e.g. Lab Charges, X-Ray"
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
-                        </FormField>
+                        </LabeledField>
                       ) : (
-                        <FormField label={['free_consultations', 'free_treatments'].includes(b.type) ? fl('allocationCount', 'Allocation Count') : fl('value', 'Discount Rate (%)')}>
+                        <LabeledField label={['free_consultations', 'free_treatments'].includes(b.type) ? fl('allocationCount', 'Allocation Count') : fl('value', 'Discount Rate (%)')}>
                           <input type="number" min="0" max={b.type.includes('discount') ? 100 : 999} value={b.value}
                             onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
-                        </FormField>
+                        </LabeledField>
                       )}
 
                       {b.type === 'custom' && (
-                        <FormField label={fl('value', 'Discount Rate (%)')}>
+                        <LabeledField label={fl('value', 'Discount Rate (%)')}>
                           <input type="number" min="0" max={100} value={b.value}
                             onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
-                        </FormField>
+                        </LabeledField>
                       )}
 
                       {b.type === 'capped_discount' && (
-                        <FormField label={fl('cap', 'Maximum Cap (â‚¹)')}>
+                        <LabeledField label={fl('cap', 'Maximum Cap (?)')}>
                           <input type="number" min="0" value={b.cap ?? ''}
                             onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
-                        </FormField>
+                        </LabeledField>
                       )}
 
                       {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
@@ -417,11 +417,11 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                       )}
 
                       <div className="md:col-span-3">
-                        <FormField label={fl('description', 'Auto-Generated Display Description')} error={errors[`b_${idx}`]}>
+                        <LabeledField label={fl('description', 'Auto-Generated Display Description')} error={errors[`b_${idx}`]}>
                           <input type="text" value={b.description} onChange={e => updateBenefit(idx, 'description', e.target.value)}
                             placeholder="Patient-facing benefit description"
                             className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium bg-muted/30 shadow-inner" />
-                        </FormField>
+                        </LabeledField>
                       </div>
                     </div>
                   </div>

@@ -1,18 +1,23 @@
-import React from 'react';
-import { InvoiceList } from '../components/Billing/InvoiceList';
+﻿import React from "react";
+import { useAppData } from "../hooks/useAppData";
+import { useModal } from "../contexts/ModalContext";
+import { InvoiceList } from "../components/Billing/InvoiceList";
 
-interface BillingPageProps {
-  invoices: any[];
-  onCreateInvoice: () => void;
-  onViewInvoice: (id: string) => void;
-  onDeleteInvoice: (id: string) => void;
-  onUpdateStatus: (id: string, status: string) => void;
-}
+export const BillingPage: React.FC = () => {
+  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus } = useAppData();
+  const { setActiveModal, setSelectedItemId, confirmDelete } = useModal();
 
-export const BillingPage: React.FC<BillingPageProps> = (props) => {
   return (
     <div className="space-y-6">
-      <InvoiceList {...props} />
+      <InvoiceList
+        invoices={invoices}
+        onCreateInvoice={() => setActiveModal("invoiceForm")}
+        onViewInvoice={(id: string) => setSelectedItemId(id)}
+        onDeleteInvoice={(id: string) =>
+          confirmDelete("Delete Invoice", `Delete invoice ${id}?`, () => handleDeleteInvoice(id))
+        }
+        onUpdateStatus={handleUpdateInvoiceStatus}
+      />
     </div>
   );
 };

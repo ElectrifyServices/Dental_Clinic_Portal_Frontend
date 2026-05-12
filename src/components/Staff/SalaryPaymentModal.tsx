@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Save, IndianRupee, Calendar, ClipboardList } from 'lucide-react';
-import { Modal, Button, FormField } from '@/components/ui';
+import { Modal, Button, LabeledField } from '@/components/ui';
 
 interface SalaryPaymentModalProps {
   staffId: string;
@@ -56,7 +56,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Payment Amount (₹) *" required>
+            <LabeledField label="Payment Amount (₹) *" required>
               <div className="relative">
                 <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <select required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -68,17 +68,17 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
                   ))}
                 </select>
               </div>
-            </FormField>
-            <FormField label="Payment Date *" required>
+            </LabeledField>
+            <LabeledField label="Payment Date *" required>
               <div className="relative">
                 <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
-            </FormField>
+            </LabeledField>
           </div>
 
-          <FormField label="Payment Mode">
+          <LabeledField label="Payment Mode">
             <div className="grid grid-cols-3 gap-3">
               {['Cash', 'UPI', 'Bank'].map((m) => (
                 <label key={m} className={`flex items-center justify-center p-2.5 rounded-xl border-2 cursor-pointer transition-all ${formData.mode === m ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted/50 text-muted-foreground'}`}>
@@ -87,16 +87,16 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
                 </label>
               ))}
             </div>
-          </FormField>
+          </LabeledField>
 
-          <FormField label="Disbursement Note (Optional)">
+          <LabeledField label="Disbursement Note (Optional)">
             <div className="relative">
               <ClipboardList className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
               <textarea value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 placeholder="Add transaction reference or specific notes..." rows={2}
                 className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none" />
             </div>
-          </FormField>
+          </LabeledField>
         </form>
       </div>
     </Modal>

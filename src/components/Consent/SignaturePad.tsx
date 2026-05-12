@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+﻿import React, { useRef, useState, useEffect } from 'react';
 import { RotateCcw, Upload, MousePointer2 } from 'lucide-react';
 
 interface SignaturePadProps {
@@ -120,12 +120,12 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex bg-muted p-1 rounded-xl w-fit">
         <button
           type="button"
           onClick={() => setMode('draw')}
           className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'draw' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            mode === 'draw' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           <MousePointer2 className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           type="button"
           onClick={() => setMode('upload')}
           className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'upload' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            mode === 'upload' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           <Upload className="w-3.5 h-3.5" />
@@ -155,8 +155,8 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className={`w-full h-40 bg-white border-2 border-dashed border-gray-200 rounded-[2rem] transition-all ${
-            mode === 'draw' ? 'cursor-crosshair active:border-blue-300' : 'cursor-default opacity-50'
+          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-[2rem] transition-all ${
+            mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
           }`}
         />
         
@@ -165,17 +165,17 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2"
+              className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-primary transition-all flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
               Select Signature File
             </button>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>
+            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>
           </div>
         )}
 
         {!hasSigned && mode === 'draw' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-300">
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-muted-foreground/40">
             <span className="text-sm font-bold uppercase tracking-widest">Sign here with mouse/touch</span>
           </div>
         )}
@@ -184,7 +184,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           <button
             type="button"
             onClick={clearCanvas}
-            className="absolute top-4 right-4 p-2.5 bg-white rounded-xl shadow-lg text-gray-400 hover:text-red-500 transition-all border border-gray-100"
+            className="absolute top-4 right-4 p-2.5 bg-card rounded-xl shadow-lg text-muted-foreground/60 hover:text-red-500 transition-all border border-border"
             title="Clear Signature"
           >
             <RotateCcw className="w-5 h-5" />

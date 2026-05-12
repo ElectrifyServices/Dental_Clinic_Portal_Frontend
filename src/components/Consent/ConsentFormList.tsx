@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, Plus, FileText, Eye, Trash2, Shield, CheckCircle, Clock } from 'lucide-react';
 
 interface ConsentFormListProps {
@@ -29,7 +29,7 @@ export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: 
       </div>
 
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
         <input type="text" placeholder="Search by patient or treatment type…" value={search}
           onChange={e => setSearch(e.target.value)} className="search-input" />
       </div>
@@ -58,13 +58,13 @@ export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: 
               {filtered.map(form => (
                 <tr key={form.id}>
                   <td>
-                    <div className="font-semibold text-gray-900">{form.patientName}</div>
-                    {form.patientId && <div className="text-xs text-gray-400 font-mono mt-0.5">{form.patientId}</div>}
+                    <div className="font-semibold text-foreground">{form.patientName}</div>
+                    {form.patientId && <div className="text-xs text-muted-foreground/60 font-mono mt-0.5">{form.patientId}</div>}
                   </td>
                   <td>
-                    <div className="font-medium text-gray-800">{form.treatmentType}</div>
+                    <div className="font-medium text-foreground">{form.treatmentType}</div>
                   </td>
-                  <td className="text-gray-600 whitespace-nowrap">
+                  <td className="text-muted-foreground whitespace-nowrap">
                     {form.date ? new Date(form.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
                   </td>
                   <td>

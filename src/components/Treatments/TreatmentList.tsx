@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, Plus, Clock, CheckCircle, Calendar, Stethoscope } from 'lucide-react';
 import { Treatment } from '../../types';
 import { TreatmentStats } from './TreatmentList/TreatmentStats';
@@ -16,7 +16,7 @@ interface TreatmentListProps {
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
   completed:   { label: 'Completed',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-100',  icon: <CheckCircle className="w-3 h-3" /> },
-  'in-progress':{ label: 'In Progress', cls: 'bg-blue-50 text-blue-700 border-blue-100',   icon: <Clock className="w-3 h-3" /> },
+  'in-progress':{ label: 'In Progress', cls: 'bg-primary/10 text-primary border-primary/20',   icon: <Clock className="w-3 h-3" /> },
   planned:     { label: 'Planned',     cls: 'bg-amber-50 text-amber-700 border-amber-100',  icon: <Calendar className="w-3 h-3" /> },
 };
 
@@ -50,17 +50,17 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header bg-gradient-to-r from-gray-50 to-blue-50/30 p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="page-header bg-gradient-to-r from-gray-50 to-blue-50/30 p-6 rounded-3xl border border-border shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50">
-            <Stethoscope className="w-7 h-7 text-blue-600" />
+          <div className="w-14 h-14 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/10">
+            <Stethoscope className="w-7 h-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Treatment Plans</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Treatment Plans</h1>
             <div className="flex items-center gap-3 mt-1">
-              <span className="text-sm font-bold text-gray-400">{totals.all} Records Total</span>
-              <span className="w-1 h-1 bg-gray-300 rounded-full" />
-              <span className="text-sm font-bold text-blue-600">₹{totals.revenue.toLocaleString()} Projected</span>
+              <span className="text-sm font-bold text-muted-foreground/60">{totals.all} Records Total</span>
+              <span className="w-1 h-1 bg-muted rounded-full" />
+              <span className="text-sm font-bold text-primary">₹{totals.revenue.toLocaleString()} Projected</span>
             </div>
           </div>
         </div>
@@ -72,26 +72,26 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
       <TreatmentStats totals={totals} />
 
       {/* Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-4 rounded-3xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card p-4 rounded-3xl border border-border shadow-sm">
         <div className="relative flex-1 group">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-blue-500 transition-colors" />
           <input 
             type="text" 
             placeholder="Search by patient, procedure, tooth or doctor…" 
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }} 
-            className="w-full pl-12 pr-4 py-3 text-sm border border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium" 
+            className="w-full pl-12 pr-4 py-3 text-sm border border-border rounded-2xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium" 
           />
         </div>
-        <div className="flex items-center bg-gray-100 p-1.5 rounded-2xl border border-gray-200/50">
+        <div className="flex items-center bg-muted p-1.5 rounded-2xl border border-border/50">
           {(['all', 'planned', 'in-progress', 'completed'] as const).map(s => (
             <button 
               key={s} 
               onClick={() => { setStatusFilter(s); setPage(1); }}
               className={`flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
                 statusFilter === s 
-                  ? 'bg-white text-blue-600 shadow-sm border border-gray-200' 
-                  : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-card text-primary shadow-sm border border-border' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {s === 'all' ? 'All Plans' : STATUS_META[s]?.label || s}
@@ -101,19 +101,19 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Patient & Procedure</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tooth</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Doctor</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Cost</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Next Session</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Actions</th>
+              <tr className="bg-muted/50 border-b border-border">
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Patient & Procedure</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Tooth</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Doctor</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Cost</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Next Session</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -121,11 +121,11 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
                 <tr>
                   <td colSpan={8} className="py-20">
                     <div className="flex flex-col items-center justify-center text-center">
-                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                        <Stethoscope className="w-10 h-10 text-gray-300" />
+                      <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
+                        <Stethoscope className="w-10 h-10 text-muted-foreground/40" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">No treatments found</h3>
-                      <p className="text-sm font-medium text-gray-400 mt-1 max-w-xs">Adjust your search or create a new treatment plan to get started.</p>
+                      <h3 className="text-lg font-bold text-foreground">No treatments found</h3>
+                      <p className="text-sm font-medium text-muted-foreground/60 mt-1 max-w-xs">Adjust your search or create a new treatment plan to get started.</p>
                     </div>
                   </td>
                 </tr>
@@ -146,15 +146,15 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-50 bg-gray-50/30">
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
+            <p className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider">
               Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
             </p>
             <div className="flex items-center gap-1.5">
               <button 
                 onClick={() => setPage(p => Math.max(1, p - 1))} 
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-muted-foreground bg-card border border-border rounded-lg disabled:opacity-40 hover:bg-muted transition-colors"
               >
                 Prev
               </button>
@@ -164,8 +164,8 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
                   onClick={() => setPage(p)}
                   className={`w-8 h-8 text-xs font-bold rounded-lg transition-all ${
                     p === page 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
-                      : 'text-gray-500 hover:bg-white hover:border-gray-200 border border-transparent'
+                      ? 'bg-primary text-white shadow-md shadow-blue-100' 
+                      : 'text-muted-foreground hover:bg-card hover:border-border border border-transparent'
                   }`}
                 >
                   {p}
@@ -174,7 +174,7 @@ export function TreatmentList({ treatments: dynamicTreatments, onAddTreatment, o
               <button 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
                 disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-bold text-muted-foreground bg-card border border-border rounded-lg disabled:opacity-40 hover:bg-muted transition-colors"
               >
                 Next
               </button>

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Stethoscope } from "lucide-react";
 
 interface TreatmentPlan {
@@ -52,7 +52,7 @@ export function TreatmentPlanning({
             name="requiresTreatment"
             checked={requiresTreatment}
             onChange={onRequiresTreatmentChange}
-            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+            className="w-4 h-4 text-purple-600 border-border rounded focus:ring-purple-500 cursor-pointer"
           />
           <span className="ml-2 text-sm font-medium text-purple-700">
             Patient requires treatment
@@ -62,7 +62,7 @@ export function TreatmentPlanning({
         {requiresTreatment && (
           <div className="mt-4 animate-in fade-in slide-in-from-top-2">
             <div className="overflow-x-auto rounded-xl border border-purple-100">
-              <table className="w-full text-left border-collapse bg-white">
+              <table className="w-full text-left border-collapse bg-card">
                 <thead>
                   <tr className="bg-purple-100/50">
                     <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider">Tooth</th>
@@ -82,7 +82,7 @@ export function TreatmentPlanning({
                         <select
                           value={plan.procedure}
                           onChange={(e) => onUpdatePlan(index, "procedure", e.target.value)}
-                          className="w-full px-3 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white"
+                          className="w-full px-3 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-card"
                         >
                           <option value="">Select Procedure</option>
                           <option value="Dental Filling">Dental Filling</option>
@@ -147,7 +147,7 @@ export function TreatmentPlanning({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Treatment Plan Description *
           </label>
           <textarea
@@ -156,13 +156,13 @@ export function TreatmentPlanning({
             onChange={onTreatmentPlanTextChange}
             required
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
             placeholder="Outline the recommended treatment plan and procedures..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Total Estimated Cost (₹)
           </label>
           <input
@@ -173,10 +173,10 @@ export function TreatmentPlanning({
             onFocus={onTreatmentCostFocus}
             onBlur={(e) => onTreatmentCostBlur(e.target.value)}
             min="0"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
             placeholder="Enter overall treatment cost"
           />
-          <p className="mt-2 text-xs text-gray-500 italic">
+          <p className="mt-2 text-xs text-muted-foreground italic">
             This is the total cost for the entire consultation/treatment.
           </p>
         </div>

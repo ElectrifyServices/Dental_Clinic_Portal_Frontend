@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { X, User, CreditCard, Calendar, Stethoscope, Activity, Download, QrCode, Printer, Pill, FileText, Heart, Send } from "lucide-react";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
 import { MedicalInfoTab, AppointmentsTab, TreatmentsTab, BillingTab, PrescriptionsTab, DocumentsTab, FamilyTab } from "./PatientDetails/TabComponents";
@@ -46,8 +46,8 @@ export function PatientDetails({
     switch (status) {
       case "completed": case "paid": return "bg-green-100 text-green-800";
       case "pending": case "scheduled": return "bg-yellow-100 text-yellow-800";
-      case "in-progress": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "in-progress": return "bg-primary/10 text-primary";
+      default: return "bg-muted text-foreground";
     }
   };
 
@@ -120,37 +120,37 @@ export function PatientDetails({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-sm">
-      <div className="bg-white sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+      <div className="bg-card sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl sm:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-2xl z-20">
+        <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-6 rounded-t-2xl z-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+              <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-white">
                 {patient.avatar ? <img src={patient.avatar} className="w-full h-full object-cover rounded-xl" /> : <User className="w-10 h-10" />}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{patient.name}</h2>
+                <h2 className="text-xl font-bold text-foreground">{patient.name}</h2>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded font-mono">{patient.id}</span>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${patient.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{patient.status}</span>
+                  <span className="text-xs bg-muted px-2 py-0.5 rounded font-mono">{patient.id}</span>
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${patient.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-muted text-foreground'}`}>{patient.status}</span>
                 </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => onExport?.(patient.id)} className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center"><Download className="w-4 h-4 mr-2" /> Export</button>
               <button onClick={handlePrintBarcode} className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center"><Printer className="w-4 h-4 mr-2" /> Barcode</button>
-              <button onClick={onClose} className="text-gray-400 p-2 hover:bg-gray-100 rounded-xl"><X className="w-6 h-6" /></button>
+              <button onClick={onClose} className="text-muted-foreground/60 p-2 hover:bg-muted rounded-xl"><X className="w-6 h-6" /></button>
             </div>
           </div>
 
-          <div className="flex space-x-1 mt-6 bg-gray-100 rounded-xl p-1 overflow-x-auto scrollbar-hide">
+          <div className="flex space-x-1 mt-6 bg-muted rounded-xl p-1 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? "bg-white text-blue-600 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Icon className="w-4 h-4 mr-2" /> {tab.label}
                 </button>

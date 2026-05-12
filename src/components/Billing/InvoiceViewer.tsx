@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Download, Printer, Send, FileText, User, Calendar, Building2, CreditCard, Stethoscope } from 'lucide-react';
 import { Modal, Button, Badge, Card, CardContent } from '@/components/ui';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
@@ -66,21 +66,21 @@ export function InvoiceViewer({ invoiceId, onClose, onUpdateStatus }: InvoiceVie
         {/* Status Banner */}
         <div className={`p-4 rounded-2xl flex items-center justify-between border ${
           invoice.status === 'paid' ? 'bg-emerald-50 border-emerald-100' : 
-          invoice.status === 'overdue' ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'
+          invoice.status === 'overdue' ? 'bg-destructive/10 border-destructive/20' : 'bg-primary/10 border-primary/20'
         }`}>
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl ${
               invoice.status === 'paid' ? 'bg-emerald-500 text-white' : 
-              invoice.status === 'overdue' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+              invoice.status === 'overdue' ? 'bg-destructive/100 text-white' : 'bg-primary/100 text-white'
             }`}>
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
               <p className={`text-xs font-bold uppercase tracking-wider ${
                 invoice.status === 'paid' ? 'text-emerald-700' : 
-                invoice.status === 'overdue' ? 'text-red-700' : 'text-blue-700'
+                invoice.status === 'overdue' ? 'text-destructive' : 'text-primary'
               }`}>Invoice Status</p>
-              <p className="text-sm font-bold text-gray-900 capitalize">{invoice.status.replace('-', ' ')}</p>
+              <p className="text-sm font-bold text-foreground capitalize">{invoice.status.replace('-', ' ')}</p>
             </div>
           </div>
           <Badge variant={statusColors[invoice.status] || 'gray'} className="text-[10px] uppercase px-4 py-1">
@@ -93,23 +93,23 @@ export function InvoiceViewer({ invoiceId, onClose, onUpdateStatus }: InvoiceVie
           <Card className="border-border/50 shadow-none bg-muted/20">
             <CardContent className="p-4 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-border shadow-sm">
+                <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border shadow-sm">
                   <User className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bill To</p>
-                  <p className="text-base font-bold text-gray-900">{invoice.patientName}</p>
+                  <p className="text-base font-bold text-foreground">{invoice.patientName}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{invoice.phone || 'No phone recorded'}</p>
                 </div>
               </div>
               {corporatePlan && (
                 <div className="flex items-start gap-3 pt-2 border-t border-border/50">
-                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 shadow-sm">
-                    <Building2 className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 shadow-sm">
+                    <Building2 className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Corporate Plan</p>
-                    <p className="text-sm font-bold text-gray-800">{corporatePlan.name}</p>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Corporate Plan</p>
+                    <p className="text-sm font-bold text-foreground">{corporatePlan.name}</p>
                     <p className="text-[10px] text-blue-500 font-medium">Benefits Applied</p>
                   </div>
                 </div>
@@ -120,12 +120,12 @@ export function InvoiceViewer({ invoiceId, onClose, onUpdateStatus }: InvoiceVie
           <Card className="border-border/50 shadow-none bg-muted/20">
             <CardContent className="p-4 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-border shadow-sm">
+                <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border shadow-sm">
                   <Calendar className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Date & Doctor</p>
-                  <p className="text-sm font-bold text-gray-900">{new Date(invoice.date).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p>
+                  <p className="text-sm font-bold text-foreground">{new Date(invoice.date).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Stethoscope className="w-3 h-3 text-muted-foreground" />
                     <p className="text-xs text-muted-foreground font-medium">{invoice.doctor || 'General Dentist'}</p>
@@ -138,7 +138,7 @@ export function InvoiceViewer({ invoiceId, onClose, onUpdateStatus }: InvoiceVie
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Due Date</p>
-                  <p className="text-sm font-bold text-gray-800">{new Date(invoice.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p>
+                  <p className="text-sm font-bold text-foreground">{new Date(invoice.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p>
                 </div>
               </div>
             </CardContent>
@@ -159,28 +159,28 @@ export function InvoiceViewer({ invoiceId, onClose, onUpdateStatus }: InvoiceVie
             <tbody className="divide-y divide-border">
               {invoice.items.map((item: any, idx: number) => (
                 <tr key={idx} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{item.description}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">₹{item.rate.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right font-bold text-gray-900">₹{item.amount.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">{item.description}</td>
+                  <td className="px-4 py-3 text-center text-muted-foreground">{item.quantity}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">₹{item.rate.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right font-bold text-foreground">₹{item.amount.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot className="bg-muted/30 font-medium">
               <tr>
                 <td colSpan={3} className="px-4 py-2 text-right text-muted-foreground">Subtotal</td>
-                <td className="px-4 py-2 text-right text-gray-900">₹{invoice.subtotal.toLocaleString()}</td>
+                <td className="px-4 py-2 text-right text-foreground">₹{invoice.subtotal.toLocaleString()}</td>
               </tr>
               {invoice.discount > 0 && (
                 <tr>
-                  <td colSpan={3} className="px-4 py-2 text-right text-red-600">Total Discount</td>
-                  <td className="px-4 py-2 text-right text-red-600">-₹{invoice.discount.toLocaleString()}</td>
+                  <td colSpan={3} className="px-4 py-2 text-right text-destructive">Total Discount</td>
+                  <td className="px-4 py-2 text-right text-destructive">-₹{invoice.discount.toLocaleString()}</td>
                 </tr>
               )}
               {invoice.tax > 0 && (
                 <tr>
                   <td colSpan={3} className="px-4 py-2 text-right text-muted-foreground">GST (18%)</td>
-                  <td className="px-4 py-2 text-right text-gray-900">₹{invoice.tax.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right text-foreground">₹{invoice.tax.toLocaleString()}</td>
                 </tr>
               )}
               <tr className="bg-primary/5 text-lg font-black">

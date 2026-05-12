@@ -354,7 +354,7 @@ export function PatientConsultation({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div id="consultation-form" className="bg-white rounded-2xl max-w-5xl w-full max-h-screen overflow-y-auto shadow-2xl relative custom-scrollbar">
+      <div id="consultation-form" className="bg-card rounded-2xl max-w-5xl w-full max-h-screen overflow-y-auto shadow-2xl relative custom-scrollbar">
         {isCompleted ? (
           <CompletionView onDownloadPDF={handleDownloadPDF} onClose={onClose} />
         ) : (
@@ -428,11 +428,11 @@ export function PatientConsultation({
               />
 
               {/* Action Buttons */}
-              <div className="sticky bottom-0 bg-white/90 backdrop-blur-md flex justify-end space-x-4 p-6 border-t border-gray-100 rounded-b-2xl z-30 -mx-6 -mb-6 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.1)]">
+              <div className="sticky bottom-0 bg-card/90 backdrop-blur-md flex justify-end space-x-4 p-6 border-t border-border rounded-b-2xl z-30 -mx-6 -mb-6 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.1)]">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-8 py-3.5 text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 font-bold transition-all active:scale-95"
+                  className="px-8 py-3.5 text-muted-foreground bg-muted rounded-2xl hover:bg-muted font-bold transition-all active:scale-95"
                 >
                   Cancel
                 </button>

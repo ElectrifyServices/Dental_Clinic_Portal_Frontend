@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Package, RefreshCw } from 'lucide-react';
-import { Modal, Button, SectionRenderer } from '@/components/ui';
-import { useFormConfig, useFormTitle, useSubmitLabel } from '../../hooks/useFormConfig';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Modal, Button, Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui';
+import { Input } from '@/components/ui/Input';
+import { useFormTitle, useSubmitLabel } from '../../hooks/useFormConfig';
+import { restockSchema, type RestockFormData } from '@/lib/schemas/inventory.schema';
 
 interface RestockFormProps {
   item: any;
@@ -10,34 +14,29 @@ interface RestockFormProps {
 }
 
 export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
-  const cfg         = useFormConfig('restock');
   const formTitle   = useFormTitle('restock', 'create');
   const submitLabel = useSubmitLabel('restock', 'create');
 
-  const [formData, setFormData] = useState({
-    quantity: 1,
-    purchasePrice: item.cost || 0,
-    supplier: item.supplier || '',
-    invoiceNo: '',
-    date: new Date().toISOString().split('T')[0],
+  const form = useForm<RestockFormData>({
+    resolver: zodResolver(restockSchema),
+    defaultValues: {
+      quantity: 1,
+      purchasePrice: item.cost ?? 0,
+      supplier: item.supplier ?? '',
+      invoiceNo: '',
+      date: new Date().toISOString().split('T')[0],
+    },
   });
 
-  const handleChange = (name: string, value: any) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: RestockFormData) => {
     onSave({
       ...item,
-      currentStock: item.currentStock + Number(formData.quantity),
-      lastRestocked: formData.date,
-      supplier: formData.supplier,
-      cost: Number(formData.purchasePrice),
+      currentStock: item.currentStock + data.quantity,
+      lastRestocked: data.date,
+      supplier: data.supplier,
+      cost: data.purchasePrice,
     });
   };
-
-  const restockSection = cfg.sections?.find(s => s.id === 'restockDetails');
 
   return (
     <Modal
@@ -48,7 +47,7 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
       footer={
         <div className="flex gap-3 w-full justify-end">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="gap-2">
+          <Button onClick={form.handleSubmit(onSubmit)} className="gap-2">
             <RefreshCw className="w-4 h-4" /> {submitLabel}
           </Button>
         </div>
@@ -69,18 +68,67 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
           </div>
         </div>
 
-        {/* All restock fields from JSON config */}
-        <form onSubmit={handleSubmit}>
-          {restockSection && (
-            <SectionRenderer
-              section={restockSection}
-              values={formData}
-              onChange={handleChange}
-              cols={2}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity to Add <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input {...field} type="number" min={1} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          )}
-        </form>
+            <FormField
+              control={form.control}
+              name="purchasePrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Purchase Price (₹)</FormLabel>
+                  <FormControl><Input {...field} type="number" min={0} step="0.01" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="supplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <FormControl><Input {...field} placeholder="Supplier name" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="invoiceNo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Invoice No.</FormLabel>
+                  <FormControl><Input {...field} placeholder="e.g. INV-2025-001" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>Restock Date <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input {...field} type="date" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
       </div>
     </Modal>
   );
 }
+

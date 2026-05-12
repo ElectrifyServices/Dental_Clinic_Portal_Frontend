@@ -7,7 +7,7 @@ import {
   DataTable, 
   SearchInput, 
   FilterTabs, 
-  Badge,
+  StatusBadge,
   KpiCard
 } from '@/components/ui';
 import { createPortal } from 'react-dom';
@@ -86,14 +86,14 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
     {
       key: 'id',
       header: 'Invoice',
-      render: (inv: Invoice) => <span className="font-mono text-xs font-bold text-gray-900">{inv.id}</span>
+      render: (inv: Invoice) => <span className="font-mono text-xs font-bold text-foreground">{inv.id}</span>
     },
     {
       key: 'patient',
       header: 'Patient',
       render: (inv: Invoice) => (
         <div>
-          <div className="font-bold text-gray-900">{inv.patientName}</div>
+          <div className="font-bold text-foreground">{inv.patientName}</div>
           {inv.phone && <div className="text-[10px] text-muted-foreground font-medium mt-0.5">{inv.phone}</div>}
         </div>
       )
@@ -101,25 +101,25 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
     {
       key: 'date',
       header: 'Date',
-      render: (inv: Invoice) => <span className="text-gray-600">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+      render: (inv: Invoice) => <span className="text-muted-foreground">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
     },
     {
       key: 'dueDate',
       header: 'Due Date',
-      render: (inv: Invoice) => <span className="text-gray-500">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
+      render: (inv: Invoice) => <span className="text-muted-foreground">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}</span>
     },
     {
       key: 'amount',
       header: 'Amount',
       align: 'right' as const,
-      render: (inv: Invoice) => <span className="font-bold text-gray-900">₹{(inv.total || inv.amount || 0).toLocaleString()}</span>
+      render: (inv: Invoice) => <span className="font-bold text-foreground">₹{(inv.total || inv.amount || 0).toLocaleString()}</span>
     },
     {
       key: 'status',
       header: 'Status',
       render: (inv: Invoice) => {
         const meta = STATUS_META[inv.status] || STATUS_META.draft;
-        return <Badge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</Badge>;
+        return <StatusBadge variant={meta.variant} className="text-[10px] uppercase font-bold">{meta.label}</StatusBadge>;
       }
     },
     {
@@ -128,17 +128,17 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
       align: 'center' as const,
       render: (inv: Invoice) => (
         <div className="flex items-center justify-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => onViewInvoice?.(inv.id)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onViewInvoice?.(inv.id)}>
             <Eye className="w-4 h-4" />
           </Button>
           <div className="relative">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={e => openMenu(e, inv.id)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={e => openMenu(e, inv.id)}>
               <MoreVertical className="w-4 h-4" />
             </Button>
             {openMenuId === inv.id && createPortal(
               <>
                 <div className="fixed inset-0 z-[9998]" onClick={() => setOpenMenuId(null)} />
-                <div className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                <div className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   style={{ top: menuPos.top, left: menuPos.left }}>
                   <div className="p-1.5 space-y-0.5">
                     {inv.status !== 'paid' && onUpdateStatus && (
@@ -149,12 +149,12 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
                     )}
                     {inv.status === 'draft' && onUpdateStatus && (
                       <button onClick={() => { onUpdateStatus(inv.id, 'sent'); setOpenMenuId(null); }}
-                        className="w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                        className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
                         <Send className="w-4 h-4" /> Send to Patient
                       </button>
                     )}
                     <button onClick={() => { onDeleteInvoice?.(inv.id); setOpenMenuId(null); }}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
+                      className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors">
                       <Trash2 className="w-4 h-4" /> Delete
                     </button>
                   </div>
@@ -181,9 +181,9 @@ export function InvoiceList({ onCreateInvoice, onDeleteInvoice, onViewInvoice, i
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard label="Total Billed" value={`₹${totalAmt.toLocaleString()}`} color="text-gray-900" />
-        <KpiCard label="Pending Payments" value={`₹${pendingAmt.toLocaleString()}`} color="text-amber-600" />
-        <KpiCard label="Paid Invoices" value={invoices.filter(i => i.status === 'paid').length} color="text-emerald-600" />
+        <KpiCard label="Total Billed" value={`₹${totalAmt.toLocaleString()}`} />
+        <KpiCard label="Pending Payments" value={`₹${pendingAmt.toLocaleString()}`} colorClass="text-amber-600" />
+        <KpiCard label="Paid Invoices" value={invoices.filter(i => i.status === 'paid').length} colorClass="text-emerald-600" />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">

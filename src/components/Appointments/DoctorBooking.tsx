@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -242,31 +242,31 @@ export function DoctorBooking({
         {/* Search & Filter Header */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
             <input
               type="text"
               placeholder="Search by name or department..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-100 outline-none text-sm font-medium"
+              className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-2xl shadow-sm focus:ring-2 focus:ring-primary outline-none text-sm font-medium"
             />
           </div>
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-3 rounded-2xl transition-all shadow-sm border ${showFilters ? 'bg-blue-600 text-white border-blue-600 shadow-blue-100' : 'bg-white text-gray-500 border-gray-200 hover:text-blue-600'}`}
+              className={`p-3 rounded-2xl transition-all shadow-sm border ${showFilters ? 'bg-primary text-white border-primary shadow-blue-100' : 'bg-card text-muted-foreground border-border hover:text-primary'}`}
             >
               <Filter className="w-5 h-5" />
             </button>
 
             {/* Filter Dropdown Popover */}
             {showFilters && (
-              <div className="absolute right-0 top-[calc(100%+12px)] w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-6 animate-in fade-in zoom-in slide-in-from-top-4 duration-200">
+              <div className="absolute right-0 top-[calc(100%+12px)] w-80 bg-card rounded-2xl shadow-2xl border border-border z-50 p-6 animate-in fade-in zoom-in slide-in-from-top-4 duration-200">
                 <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-sm font-bold text-gray-900 leading-none">Global Filters</h4>
+                  <h4 className="text-sm font-bold text-foreground leading-none">Global Filters</h4>
                   <button
                     onClick={() => { setSelectedSpecialty([]); setSelectedCity([]); setSelectedGender([]); }}
-                    className="text-[10px] font-bold text-blue-600 hover:underline uppercase"
+                    className="text-[10px] font-bold text-primary hover:underline uppercase"
                   >
                     Reset
                   </button>
@@ -275,13 +275,13 @@ export function DoctorBooking({
                 <div className="space-y-6">
                   {/* Specialty */}
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Specialty</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">Specialty</p>
                     <div className="flex flex-wrap gap-2">
                       {specialties.slice(0, 4).map(s => (
                         <button
                           key={s}
                           onClick={() => toggleFilter(selectedSpecialty, setSelectedSpecialty, s)}
-                          className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all ${selectedSpecialty.includes(s) ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-transparent text-gray-500'}`}
+                          className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all ${selectedSpecialty.includes(s) ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted border-transparent text-muted-foreground'}`}
                         >
                           {s}
                         </button>
@@ -291,13 +291,13 @@ export function DoctorBooking({
 
                   {/* Gender */}
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Gender Preference</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">Gender Preference</p>
                     <div className="flex gap-2">
                       {["Male", "Female"].map(g => (
                         <button
                           key={g}
                           onClick={() => toggleFilter(selectedGender, setSelectedGender, g)}
-                          className={`flex-1 py-2 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-2 ${selectedGender.includes(g) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-gray-50 border-transparent text-gray-500'}`}
+                          className={`flex-1 py-2 rounded-xl text-[10px] font-bold border transition-all flex items-center justify-center gap-2 ${selectedGender.includes(g) ? 'bg-primary border-primary text-white shadow-md' : 'bg-muted border-transparent text-muted-foreground'}`}
                         >
                           {selectedGender.includes(g) && <Check className="w-3 h-3" />}
                           {g}
@@ -308,7 +308,7 @@ export function DoctorBooking({
 
                   {/* City */}
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">City / Location</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-3">City / Location</p>
                     <div className="grid grid-cols-2 gap-2">
                       {cities.map(c => (
                         <label key={c} className="flex items-center gap-2 cursor-pointer group">
@@ -316,9 +316,9 @@ export function DoctorBooking({
                             type="checkbox"
                             checked={selectedCity.includes(c)}
                             onChange={() => toggleFilter(selectedCity, setSelectedCity, c)}
-                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                           />
-                          <span className="text-[10px] font-bold text-gray-500 group-hover:text-gray-900">{c}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground group-hover:text-foreground">{c}</span>
                         </label>
                       ))}
                     </div>
@@ -333,7 +333,7 @@ export function DoctorBooking({
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => setSelectedSpecialty([])}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-200'}`}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? 'bg-slate-900 border-slate-900 text-white' : 'bg-card border-border text-muted-foreground hover:border-border'}`}
           >
             All Departments
           </button>
@@ -341,7 +341,7 @@ export function DoctorBooking({
             <button
               key={s}
               onClick={() => toggleFilter(selectedSpecialty, setSelectedSpecialty, s)}
-              className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-200'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? 'bg-primary border-primary text-white' : 'bg-card border-border text-muted-foreground hover:border-border'}`}
             >
               {s}
             </button>
@@ -355,7 +355,7 @@ export function DoctorBooking({
               key={doctor.id}
               onClick={() => setSelectedDoctorId(doctor.id)}
               className={`group relative p-3 rounded-[1.75rem] border-2 transition-all cursor-pointer flex items-center gap-4
-                ${selectedDoctorId === doctor.id ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-100/50' : 'bg-white border-gray-100 hover:border-blue-200 shadow-sm'}`}
+                ${selectedDoctorId === doctor.id ? 'bg-primary/10 border-primary shadow-lg shadow-blue-100/50' : 'bg-card border-border hover:border-primary/30 shadow-sm'}`}
             >
               <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden flex-shrink-0 shadow-inner ring-4 ring-gray-50 group-hover:ring-blue-100 transition-all">
                 <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -363,8 +363,8 @@ export function DoctorBooking({
               <div className="flex-1 py-0.5">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">{doctor.name}</h3>
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded-full mt-0.5">
+                    <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug">{doctor.name}</h3>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-bold rounded-full mt-0.5">
                       {doctor.specialization}
                     </div>
                   </div>
@@ -374,19 +374,19 @@ export function DoctorBooking({
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center gap-4 text-[9px] font-semibold text-gray-400">
+                <div className="mt-2 flex items-center gap-4 text-[9px] font-semibold text-muted-foreground/60">
                   <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-gray-300" />
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
                     {doctor.experience}
                   </div>
                   <div className="flex items-center gap-1.5 truncate">
-                    <MapPin className="w-3.5 h-3.5 text-gray-300" />
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground/40" />
                     {doctor.location}
                   </div>
                 </div>
               </div>
               {selectedDoctorId === doctor.id && (
-                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md shadow-blue-200 animate-in fade-in zoom-in slide-in-from-right-4 transition-all">
+                <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md shadow-blue-200 animate-in fade-in zoom-in slide-in-from-right-4 transition-all">
                   <ChevronRight className="w-5 h-5" />
                 </div>
               )}
@@ -394,15 +394,15 @@ export function DoctorBooking({
           ))}
 
           {filteredDoctors.length === 0 && (
-            <div className="py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                <Search className="w-8 h-8 text-gray-300" />
+            <div className="py-20 text-center bg-muted rounded-2xl border-2 border-dashed border-border">
+              <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-4 border border-border">
+                <Search className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <p className="text-sm font-bold text-gray-900">No Experts Found</p>
-              <p className="text-[10px] font-semibold text-gray-400 mt-1">Try adjusting your filters or department selection</p>
+              <p className="text-sm font-bold text-foreground">No Experts Found</p>
+              <p className="text-[10px] font-semibold text-muted-foreground/60 mt-1">Try adjusting your filters or department selection</p>
               <button
                 onClick={() => { setSelectedSpecialty([]); setSelectedCity([]); setSelectedGender([]); setSearchTerm(''); }}
-                className="mt-6 text-blue-600 font-bold text-[10px] uppercase hover:underline"
+                className="mt-6 text-primary font-bold text-[10px] uppercase hover:underline"
               >
                 Clear all filters
               </button>
@@ -413,18 +413,18 @@ export function DoctorBooking({
 
       {/* ── RIGHT COLUMN: FULL-LOGIC BOOKING CALENDAR ── */}
       <div className="w-full xl:w-[420px] flex flex-col gap-6 h-full">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl shadow-blue-500/5 flex flex-col overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border shadow-2xl shadow-blue-500/5 flex flex-col overflow-hidden">
           {selectedDoctor ? (
             <div className="flex flex-col h-full">
               {/* Header: Doctor Info */}
-              <div className="p-8 border-b border-gray-50 bg-gradient-to-br from-white to-gray-50/50">
+              <div className="p-8 border-b border-border bg-gradient-to-br from-white to-gray-50/50">
                 <div className="flex items-center gap-5">
                   <div className="w-20 h-20 rounded-[1.75rem] overflow-hidden shadow-xl ring-4 ring-blue-50 flex-shrink-0">
                     <img src={selectedDoctor.image} alt={selectedDoctor.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-gray-900">{selectedDoctor.name}</h3>
-                    <p className="text-xs font-semibold text-blue-600 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-foreground">{selectedDoctor.name}</h3>
+                    <p className="text-xs font-semibold text-primary flex items-center gap-2">
                       <Award className="w-4 h-4" />
                       Experience: {selectedDoctor.experience}
                     </p>
@@ -436,15 +436,15 @@ export function DoctorBooking({
               <div className="px-8 py-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold text-gray-900">
+                    <h4 className="text-sm font-bold text-foreground">
                       {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </h4>
-                    <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                    <p className="text-[10px] font-semibold text-gray-400">Consultation Schedule</p>
+                    <div className="w-1 h-1 bg-muted rounded-full" />
+                    <p className="text-[10px] font-semibold text-muted-foreground/60">Consultation Schedule</p>
                   </div>
                   <div className="flex gap-1.5 items-center">
                     <div className="relative group">
-                      <button className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500">
+                      <button className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground">
                         <CalendarIcon className="w-3.5 h-3.5" />
                         <input
                           type="date"
@@ -466,13 +466,13 @@ export function DoctorBooking({
                         />
                       </button>
                     </div>
-                    <div className="w-px h-4 bg-gray-100 mx-0.5" />
+                    <div className="w-px h-4 bg-muted mx-0.5" />
                     <button
                       onClick={() => {
                         const el = document.getElementById('date-strip');
                         if (el) el.scrollBy({ left: -200, behavior: 'smooth' });
                       }}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500"
+                      className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
@@ -481,7 +481,7 @@ export function DoctorBooking({
                         const el = document.getElementById('date-strip');
                         if (el) el.scrollBy({ left: 200, behavior: 'smooth' });
                       }}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg border border-gray-100 transition-all text-gray-500"
+                      className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground"
                     >
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -504,26 +504,26 @@ export function DoctorBooking({
                         onClick={() => setSelectedDate(date)}
                         className={`flex-shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
                           ${isSelected
-                            ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-100'
-                            : 'border-gray-100 bg-white text-gray-500 hover:border-blue-100 hover:bg-blue-50/50'}`}
+                            ? 'border-primary bg-primary text-white shadow-lg shadow-blue-100'
+                            : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-primary/50'}`}
                       >
-                        <span className={`text-[10px] font-bold uppercase ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>{dayName}</span>
-                        <span className={`text-base font-bold ${isSelected ? 'text-white' : 'text-gray-900'}`}>{dayNum}</span>
-                        {isToday && !isSelected && <div className="w-1 h-1 bg-blue-600 rounded-full mt-0.5" />}
+                        <span className={`text-[10px] font-bold uppercase ${isSelected ? 'text-blue-100' : 'text-muted-foreground/60'}`}>{dayName}</span>
+                        <span className={`text-base font-bold ${isSelected ? 'text-white' : 'text-foreground'}`}>{dayNum}</span>
+                        {isToday && !isSelected && <div className="w-1 h-1 bg-primary rounded-full mt-0.5" />}
                       </button>
                     );
                   })}
                 </div>
 
                 {/* Day's Agenda */}
-                <div className="pt-4 border-t border-gray-50">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h5 className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-blue-600" />
+                    <h5 className="text-[10px] font-bold text-muted-foreground/60 flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-primary" />
                       Agenda • {selectedDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                     </h5>
                     {getSelectedDayAppointments().length > 0 && (
-                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                         {getSelectedDayAppointments().length} Scheduled
                       </span>
                     )}
@@ -535,33 +535,33 @@ export function DoctorBooking({
                         <div
                           key={idx}
                           onClick={() => onEditAppointment(apt)}
-                          className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between group hover:bg-white hover:border-blue-200 transition-all cursor-pointer"
+                          className="p-3 bg-muted rounded-2xl border border-border flex items-center justify-between group hover:bg-card hover:border-primary/30 transition-all cursor-pointer"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-blue-600 border border-gray-100 group-hover:border-blue-200">
+                            <div className="w-8 h-8 rounded-lg bg-card flex items-center justify-center text-primary border border-border group-hover:border-primary/30">
                               <User className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{apt.patientName}</p>
-                              <p className="text-[9px] font-semibold text-gray-400">{formatTime(apt.time)} • {apt.treatment || 'Consultation'}</p>
-                              <p className="text-[8px] font-bold text-blue-600/60 mt-0.5">Est. Duration: {apt.duration || 15} mins</p>
+                              <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{apt.patientName}</p>
+                              <p className="text-[9px] font-semibold text-muted-foreground/60">{formatTime(apt.time)} • {apt.treatment || 'Consultation'}</p>
+                              <p className="text-[8px] font-bold text-primary/60 mt-0.5">Est. Duration: {apt.duration || 15} mins</p>
                             </div>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-gray-200 group-hover:text-blue-400 translate-x-0 group-hover:translate-x-1 transition-all" />
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-blue-400 translate-x-0 group-hover:translate-x-1 transition-all" />
                         </div>
                       ))
                     ) : (
-                      <div className="py-3 text-center bg-gray-50/40 rounded-2xl border border-dashed border-gray-100">
-                        <p className="text-[10px] font-bold text-gray-400">All slots available</p>
+                      <div className="py-3 text-center bg-muted/40 rounded-2xl border border-dashed border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground/60">All slots available</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Available Time Slots */}
-                <div className="pt-4 border-t border-gray-50">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h5 className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
+                    <h5 className="text-[10px] font-bold text-muted-foreground/60 flex items-center gap-2">
                       <CalendarCheck className="w-3.5 h-3.5 text-green-500" />
                       Available Slots
                     </h5>
@@ -579,9 +579,9 @@ export function DoctorBooking({
                             onClick={() => setSelectedTime(slot.time24)}
                             className={`px-2 py-2 rounded-xl text-[10px] font-bold text-center border transition-all relative
                               ${selectedTime === slot.time24
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                ? 'bg-primary border-primary text-white shadow-md'
                                 : isDisabled
-                                  ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                  ? 'bg-muted text-muted-foreground/40 border-border cursor-not-allowed'
                                   : 'bg-green-50 text-green-700 border-green-100 hover:border-green-200 hover:bg-green-100'}`}
                           >
                             {slot.time12}
@@ -592,7 +592,7 @@ export function DoctorBooking({
                         );
                       })
                     ) : (
-                      <div className="col-span-4 py-4 text-center bg-red-50/50 rounded-2xl border border-dashed border-red-100">
+                      <div className="col-span-4 py-4 text-center bg-destructive/50 rounded-2xl border border-dashed border-destructive/20">
                         <p className="text-[10px] font-semibold text-red-400">No slots available for this day</p>
                       </div>
                     )}
@@ -614,11 +614,11 @@ export function DoctorBooking({
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center py-40 px-10 text-center animate-in fade-in zoom-in duration-700">
-              <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <Stethoscope className="w-12 h-12 text-blue-300" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Select Your Expert</h3>
-              <p className="text-sm font-semibold text-gray-400 mt-4 max-w-xs">Pick a specialist from the left to access their real-time clinical calendar and schedule.</p>
+              <h3 className="text-2xl font-bold text-foreground">Select Your Expert</h3>
+              <p className="text-sm font-semibold text-muted-foreground/60 mt-4 max-w-xs">Pick a specialist from the left to access their real-time clinical calendar and schedule.</p>
             </div>
           )}
         </div>

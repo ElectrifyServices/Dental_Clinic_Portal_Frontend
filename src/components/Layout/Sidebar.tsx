@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home, Calendar, Users, FileText, CreditCard,
   Package, BarChart3, Stethoscope, Activity, Shield,
@@ -7,11 +8,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
-
-interface SidebarProps {
-  currentPage: string;
-  onPageChange: (page: string) => void;
-}
 
 /** Maps screen IDs to their Lucide icon component. */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -30,9 +26,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   'corporate-plans': Building2,
 };
 
-export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
+export function Sidebar() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
@@ -70,16 +67,17 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const roleLabel = () => {
     switch (role) {
       case 'superadmin': return { label: 'Super Admin', cls: 'bg-violet-100 text-violet-700 border-violet-200' };
-      case 'admin': return { label: 'Admin', cls: 'bg-blue-100 text-blue-700 border-blue-200' };
+      case 'admin': return { label: 'Admin', cls: 'bg-primary/10 text-primary border-primary/30' };
       case 'doctor': return { label: 'Doctor', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
       case 'receptionist': return { label: 'Receptionist', cls: 'bg-amber-100 text-amber-700 border-amber-200' };
-      default: return { label: role || '', cls: 'bg-gray-100 text-gray-600 border-gray-200' };
+      default: return { label: role || '', cls: 'bg-muted text-muted-foreground border-border' };
     }
   };
   const rl = roleLabel();
 
-  // Determine active group color
-  const activeItem = allItems.find(i => i.id === currentPage);
+  // Determine active group color from current URL
+  const currentId = location.pathname.replace(/^\//, '') || 'dashboard';
+  const activeItem = allItems.find(i => i.id === currentId);
   const activeGroup = activeItem?.group || 'main';
 
   const getThemeColor = (group: string) => {
@@ -93,7 +91,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
   const themeColor = getThemeColor(activeGroup);
   const themeClasses = {
-    blue: 'bg-blue-600 text-blue-600',
+    blue: 'bg-primary text-primary',
     emerald: 'bg-emerald-600 text-emerald-600',
     amber: 'bg-amber-500 text-amber-500',
     violet: 'bg-violet-600 text-violet-600'
@@ -103,28 +101,28 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     <aside className={`
       relative hidden md:flex md:flex-col flex-shrink-0
       ${collapsed ? 'md:w-[60px]' : 'md:w-[240px]'}
-      bg-white border-r border-gray-100 h-screen sticky top-0
+      bg-card border-r border-border h-screen sticky top-0
       transition-all duration-300 overflow-visible
     `}>
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-[68px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center bg-white border border-gray-100 rounded-full shadow-md hover:bg-gray-50 transition-all group"
+        className="absolute top-[68px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center bg-card border border-border rounded-full shadow-md hover:bg-muted transition-all group"
       >
         {collapsed
-          ? <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
-          : <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />}
+          ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          : <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />}
       </button>
 
       {/* Logo - Compact */}
-      <div className="flex items-center h-16 px-4 border-b border-gray-50 flex-shrink-0">
+        <div className="flex items-center h-16 px-4 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md transition-colors duration-500 ${themeClasses.split(' ')[0]}`}>
             <Stethoscope className="w-4.5 h-4.5 text-white" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-gray-900 text-[14px] block leading-none tracking-tight">{tenant.branding.clinicName}</span>
+              <span className="font-bold text-foreground text-[14px] block leading-none tracking-tight">{tenant.branding.clinicName}</span>
               <span className={`text-[8px] font-bold uppercase tracking-widest mt-1 block transition-colors duration-500 ${themeClasses.split(' ')[1]}`}>
                 {visibleGroups.find(g => g.id === activeGroup)?.label ?? activeGroup}
               </span>
@@ -134,14 +132,14 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </div>
 
       {/* Nav - Scrollable */}
-      <nav className="flex-1 flex flex-col py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+        <nav className="flex-1 flex flex-col py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {visibleGroups.map(group => (
           <div key={group.id} className="space-y-1">
             {!collapsed && (
               <p className={`text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-1 transition-colors duration-500
                 ${activeGroup === group.id
-                  ? group.id === 'clinical' ? 'text-emerald-600' : group.id === 'admin' ? 'text-amber-500' : group.id === 'superadmin' ? 'text-violet-600' : 'text-blue-600'
-                  : 'text-gray-400'
+                  ? group.id === 'clinical' ? 'text-emerald-600' : group.id === 'admin' ? 'text-amber-500' : group.id === 'superadmin' ? 'text-violet-600' : 'text-primary'
+                  : 'text-muted-foreground'
                 }
               `}>
                 {group.label}
@@ -150,32 +148,34 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             <div className="space-y-0.5">
               {visible.filter(i => i.group === group.id).map(item => {
                 const Icon = item.icon;
-                const active = currentPage === item.id;
 
-                const getActiveStyle = () => {
+                const getActiveStyle = (isActive: boolean) => {
                   switch (group.id) {
-                    case 'clinical': return active ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700';
-                    case 'admin': return active ? 'bg-amber-500 text-white shadow-lg' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-700';
-                    case 'superadmin': return active ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-500 hover:bg-violet-50 hover:text-violet-700';
-                    default: return active ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700';
+                    case 'clinical': return isActive ? 'bg-emerald-600 text-white shadow-lg scale-[1.02]' : 'text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 hover:scale-[1.02]';
+                    case 'admin': return isActive ? 'bg-amber-500 text-white shadow-lg scale-[1.02]' : 'text-muted-foreground hover:bg-amber-50 hover:text-amber-700 hover:scale-[1.02]';
+                    case 'superadmin': return isActive ? 'bg-violet-600 text-white shadow-lg scale-[1.02]' : 'text-muted-foreground hover:bg-violet-50 hover:text-violet-700 hover:scale-[1.02]';
+                    default: return isActive ? 'bg-primary text-primary-foreground shadow-lg scale-[1.02]' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary hover:scale-[1.02]';
                   }
                 };
 
                 return (
-                  <button
+                  <NavLink
                     key={item.id}
-                    onClick={() => onPageChange(item.id)}
+                    to={`/${item.id}`}
                     title={collapsed ? item.label : undefined}
-                    className={`
-                      w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold
+                    className={({ isActive }) =>
+                      `w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold
                       transition-all duration-200 group border border-transparent
-                      ${getActiveStyle()}
-                      ${active ? 'scale-[1.02]' : 'hover:scale-[1.02]'}
-                    `}
+                      ${getActiveStyle(isActive)}`
+                    }
                   >
-                    <Icon className={`w-4 h-4 flex-shrink-0 transition-transform ${active ? 'scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-110'}`} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </button>
+                    {({ isActive }) => (
+                      <>
+                        <Icon className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive ? 'scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-110'}`} />
+                        {!collapsed && <span className="truncate">{item.label}</span>}
+                      </>
+                    )}
+                  </NavLink>
                 );
               })}
             </div>
@@ -184,22 +184,22 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </nav>
 
       {/* Footer - Compact */}
-      <div className="mt-auto border-t border-gray-100 p-3 bg-gray-50/30 flex-shrink-0">
+      <div className="mt-auto border-t border-border p-3 bg-muted/20 flex-shrink-0">
         {!collapsed && (
-          <div className="flex items-center gap-2.5 px-2 mb-3 bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2.5 px-2 mb-3 bg-card p-2 rounded-xl border border-border shadow-sm">
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-md transition-colors duration-500 ${themeClasses.split(' ')[0]}`}>
               {state.user?.name?.[0]}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold text-gray-900 truncate leading-tight uppercase">{state.user?.name}</p>
-              <p className="text-[9px] text-gray-500 font-medium uppercase tracking-tighter">{rl.label}</p>
+              <p className="text-[11px] font-bold text-foreground truncate leading-tight uppercase">{state.user?.name}</p>
+              <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">{rl.label}</p>
             </div>
           </div>
         )}
         <button
           onClick={logout}
           title={collapsed ? 'Sign Out' : undefined}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all uppercase tracking-wide"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all uppercase tracking-wide"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Sign Out</span>}

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 
@@ -67,7 +67,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
               </div>
 
               {uploadedFile ? (
-                <div className="flex items-center justify-between bg-white/60 p-2 rounded-xl border border-emerald-100 animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between bg-card/60 p-2 rounded-xl border border-emerald-100 animate-in zoom-in-95 duration-300">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <FileText className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                     <span className="text-[10px] font-bold text-emerald-800 truncate max-w-[120px]">{uploadedFile.name}</span>
@@ -94,7 +94,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className="h-7 w-7 text-red-500 hover:bg-red-50" 
+                      className="h-7 w-7 text-red-500 hover:bg-destructive/10" 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -130,13 +130,13 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
         })}
       </div>
 
-      <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl flex gap-4 shadow-sm">
-        <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
+      <div className="p-5 bg-primary/50 border border-primary/20 rounded-2xl flex gap-4 shadow-sm">
+        <div className="w-12 h-12 bg-primary/100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
           <Shield className="w-6 h-6 text-white" />
         </div>
         <div className="space-y-1">
           <h4 className="text-sm font-black text-blue-900 uppercase tracking-tight">Verification Compliance</h4>
-          <p className="text-[11px] text-blue-700/80 font-medium leading-relaxed">
+          <p className="text-[11px] text-primary/80 font-medium leading-relaxed">
             Ensure all documents are high-resolution scans. We accept <span className="font-bold">PDF, JPG, and PNG</span> formats under <span className="font-black text-blue-900">5MB</span>.
             Missing or illegible documents will delay the onboarding process.
           </p>

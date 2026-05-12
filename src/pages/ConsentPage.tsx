@@ -1,22 +1,24 @@
-import React from 'react';
-import { ConsentFormList } from '../components/Consent/ConsentFormList';
-import { ConsentForm } from '../types';
+﻿import React from "react";
+import { useAppData } from "../hooks/useAppData";
+import { useModal } from "../contexts/ModalContext";
+import { ConsentFormList } from "../components/Consent/ConsentFormList";
 
-interface ConsentPageProps {
-  forms: ConsentForm[];
-  onAddForm: () => void;
-  onViewForm: (id: string) => void;
-  onDeleteForm: (id: string) => void;
-}
+export function ConsentPage() {
+  const { consentForms, handleDeleteConsentForm } = useAppData();
+  const { setActiveModal, setSelectedConsentForm, confirmDelete } = useModal();
 
-export function ConsentPage({ forms, onAddForm, onViewForm, onDeleteForm }: ConsentPageProps) {
   return (
     <div className="container mx-auto">
-      <ConsentFormList 
-        forms={forms}
-        onAddForm={onAddForm}
-        onViewForm={onViewForm}
-        onDeleteForm={onDeleteForm}
+      <ConsentFormList
+        forms={consentForms}
+        onAddForm={() => setActiveModal("consentForm")}
+        onViewForm={(id: string) => {
+          const f = consentForms.find((x: any) => x.id === id);
+          if (f) { setSelectedConsentForm(f); setActiveModal("consentViewer"); }
+        }}
+        onDeleteForm={(id: string) =>
+          confirmDelete("Delete Consent Form", "Delete this consent form?", () => handleDeleteConsentForm(id))
+        }
       />
     </div>
   );

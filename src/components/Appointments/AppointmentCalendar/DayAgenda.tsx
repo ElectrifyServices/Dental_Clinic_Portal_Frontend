@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Calendar as CalendarIcon, Clock, User, Stethoscope } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
@@ -16,10 +16,10 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
   formatTime,
 }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
         <CalendarIcon className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-bold text-gray-900">
+        <h3 className="text-sm font-bold text-foreground">
           {selectedDate.toLocaleDateString("en-IN", {
             weekday: "short",
             month: "short",
@@ -34,7 +34,7 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
             <div
               key={index}
               onClick={() => onEditAppointment?.(apt)}
-              className="p-4 bg-gray-50/50 hover:bg-secondary/50 rounded-2xl border border-gray-100 hover:border-primary/20 transition-all cursor-pointer group"
+              className="p-4 bg-muted/50 hover:bg-secondary/50 rounded-2xl border border-border hover:border-primary/20 transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-bold text-primary flex items-center gap-1">
@@ -46,12 +46,12 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                 </Badge>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 font-bold text-xs group-hover:text-primary transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground/60 font-bold text-xs group-hover:text-primary transition-colors">
                   {(apt.patientName || "?").charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-gray-900 truncate tracking-tight">{apt.patientName}</p>
-                  <div className="flex items-center gap-1 text-[9px] text-gray-400 font-medium">
+                  <p className="text-[11px] font-bold text-foreground truncate tracking-tight">{apt.patientName}</p>
+                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-medium">
                     <Stethoscope className="w-2.5 h-2.5" />
                     <span className="truncate">{apt.treatment || "Consultation"}</span>
                   </div>
@@ -64,8 +64,8 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
           ))
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-30">
-            <CalendarIcon className="w-10 h-10 text-gray-200 mb-2" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No entries</p>
+            <CalendarIcon className="w-10 h-10 text-muted-foreground/20 mb-2" />
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">No entries</p>
           </div>
         )}
       </div>

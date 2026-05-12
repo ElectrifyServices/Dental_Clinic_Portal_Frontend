@@ -1,17 +1,47 @@
-/**
+﻿/**
  * Generic UI primitives — reusable across the entire application.
  * Import from '@/components/ui' in any component.
  */
 import React from 'react';
 import { ChevronLeft, ChevronRight, X, AlertTriangle, Search, Upload } from 'lucide-react';
+import { Button } from './Button';
+import { cn } from '@/lib/utils';
 
 export * from './Button';
 export * from './Input';
 export * from './Card';
+export * from './Badge';
+export * from './Label';
+export * from './Textarea';
+export * from './Select';
+export * from './Checkbox';
+export * from './Separator';
+export * from './Tooltip';
+export * from './Dialog';
+export * from './Tabs';
+export * from './DropdownMenu';
 export { FormRenderer, SectionRenderer } from './FormRenderer';
 export type { FormRendererProps, SectionRendererProps } from './FormRenderer';
+export {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  useFormField,
+} from './Form';
+export {
+  FormInput,
+  FormTextarea,
+  FormSelect,
+  FormCheckbox,
+  FormDateInput,
+  FormPhoneInput,
+} from './form/index';
 
-// ─── PageHeader ───────────────────────────────────────────────────────────────
+// ─── PageHeader ──────────────────────────────────────────────────────────────
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
@@ -35,33 +65,41 @@ export function PageHeader({ title, subtitle, action, children }: PageHeaderProp
 interface KpiCardProps {
   label: string;
   value: string | number;
-  color?: string;   // tailwind text color e.g. 'text-blue-600'
+  /** Optional Tailwind text-color class for the value; defaults to text-foreground */
+  colorClass?: string;
   icon?: React.ReactNode;
+  sub?: string;
+  subPositive?: boolean;
 }
-export function KpiCard({ label, value, color = 'text-gray-900', icon }: KpiCardProps) {
+export function KpiCard({ label, value, colorClass = 'text-foreground', icon, sub, subPositive }: KpiCardProps) {
   return (
-    <div className="kpi-card flex items-center justify-between">
-      <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-        <p className={`text-2xl font-bold ${color}`}>{value}</p>
+    <div className="kpi-card flex items-start justify-between">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
+        <p className={cn('text-2xl font-bold', colorClass)}>{value}</p>
+        {sub && (
+          <p className={cn('text-xs mt-1 font-medium', subPositive !== false ? 'text-emerald-600' : 'text-destructive')}>
+            {sub}
+          </p>
+        )}
       </div>
-      {icon && <div className="text-gray-300">{icon}</div>}
+      {icon && <div className="text-muted-foreground/40 flex-shrink-0 ml-3">{icon}</div>}
     </div>
   );
 }
 
-// ─── Badge ───────────────────────────────────────────────────────────────────
-type BadgeVariant = 'green' | 'blue' | 'amber' | 'red' | 'gray' | 'violet' | 'indigo';
-interface BadgeProps {
-  variant?: BadgeVariant;
+// ─── StatusBadge ─────────────────────────────────────────────────────────────
+type StatusBadgeVariant = 'green' | 'blue' | 'amber' | 'red' | 'gray' | 'violet' | 'indigo';
+interface StatusBadgeProps {
+  variant?: StatusBadgeVariant;
   children: React.ReactNode;
   className?: string;
 }
-export function Badge({ variant = 'gray', children, className = '' }: BadgeProps) {
-  return <span className={`badge badge-${variant} ${className}`}>{children}</span>;
+export function StatusBadge({ variant = 'gray', children, className = '' }: StatusBadgeProps) {
+  return <span className={cn('badge badge-${variant}', className)}>{children}</span>;
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
+// ─── Modal ───────────────────────────────────────────────────────────────────
 interface ModalProps {
   title: string;
   subtitle?: string;
@@ -71,21 +109,34 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '5xl';
   icon?: React.ReactNode;
 }
-const MODAL_SIZES = { sm:'max-w-sm', md:'max-w-md', lg:'max-w-lg', xl:'max-w-xl', '2xl':'max-w-2xl', '5xl': 'max-w-5xl' };
+const MODAL_SIZES: Record<string, string> = {
+  sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg',
+  xl: 'max-w-xl', '2xl': 'max-w-2xl', '5xl': 'max-w-5xl',
+};
 
 export function Modal({ title, subtitle, onClose, children, footer, size = 'lg', icon }: ModalProps) {
   return (
     <div className="modal-overlay">
-      <div className={`modal-box ${MODAL_SIZES[size]} w-full max-h-[90vh] overflow-y-auto`}>
-        <div className="modal-header sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100/50">
+      <div className={cn('modal-box w-full max-h-[90vh] overflow-y-auto', MODAL_SIZES[size])}>
+        <div className="modal-header sticky top-0 z-20 bg-card/95 backdrop-blur-md border-b border-border/50">
           <div className="flex items-center gap-2">
-            {icon && <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold shadow-sm">{icon}</div>}
+            {icon && (
+              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm">
+                {icon}
+              </div>
+            )}
             <div>
               <h2 className="modal-title text-lg font-semibold tracking-tight leading-tight">{title}</h2>
-              {subtitle && <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{subtitle}</p>}
+              {subtitle && (
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">
+                  {subtitle}
+                </p>
+              )}
             </div>
           </div>
-          <button onClick={onClose} className="btn-icon bg-muted/50 hover:bg-muted hover:rotate-90 transition-all"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="btn-icon hover:rotate-90 transition-transform">
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
@@ -105,18 +156,21 @@ interface ConfirmModalProps {
 }
 export function ConfirmModal({ title, message, confirmLabel = 'Confirm', variant = 'danger', onConfirm, onCancel }: ConfirmModalProps) {
   return (
-    <Modal title={title} onClose={onCancel} size="sm"
+    <Modal
+      title={title}
+      onClose={onCancel}
+      size="sm"
       icon={<AlertTriangle className="w-4 h-4" />}
       footer={
         <>
-          <button onClick={onCancel} className="btn-secondary">Cancel</button>
-          <button onClick={onConfirm} className={variant === 'danger' ? 'btn-danger' : 'btn-primary'}>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button variant={variant === 'danger' ? 'destructive' : 'default'} onClick={onConfirm}>
             {confirmLabel}
-          </button>
+          </Button>
         </>
       }
     >
-      <p className="text-sm text-gray-600">{message}</p>
+      <p className="text-sm text-muted-foreground">{message}</p>
     </Modal>
   );
 }
@@ -146,8 +200,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
           <thead>
             <tr>
               {columns.map(col => (
-                <th key={col.key} className={col.className}
-                  style={{ textAlign: col.align || 'left' }}>
+                <th key={col.key} className={col.className} style={{ textAlign: col.align || 'left' }}>
                   {col.header}
                 </th>
               ))}
@@ -157,20 +210,19 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length}>
-                  <div className="empty-state py-10">
-                    {emptyIcon && <div className="empty-state-icon">{emptyIcon}</div>}
-                    {emptyTitle && <p className="empty-state-title">{emptyTitle}</p>}
-                    {emptySubtitle && <p className="empty-state-sub">{emptySubtitle}</p>}
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
+                    {emptyIcon && <div className="text-muted-foreground/40">{emptyIcon}</div>}
+                    {emptyTitle && <p className="text-sm font-semibold text-foreground">{emptyTitle}</p>}
+                    {emptySubtitle && <p className="text-xs text-muted-foreground">{emptySubtitle}</p>}
                   </div>
                 </td>
               </tr>
             ) : data.map((row, idx) => {
-              const key = rowKey(row) || `row-${idx}`;
+              const key = rowKey(row) || 'row-${idx}';
               return (
                 <tr key={key}>
                   {columns.map(col => (
-                    <td key={col.key} style={{ textAlign: col.align || 'left' }}
-                      className={col.className}>
+                    <td key={col.key} style={{ textAlign: col.align || 'left' }} className={col.className}>
                       {col.render(row, idx)}
                     </td>
                   ))}
@@ -180,7 +232,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
           </tbody>
         </table>
       </div>
-      {footer && <div className="border-t border-gray-100 bg-gray-50">{footer}</div>}
+      {footer && <div className="border-t border-border bg-muted/30">{footer}</div>}
     </div>
   );
 }
@@ -201,26 +253,37 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
     .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2);
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-xs text-gray-500">Showing {start}–{end} of {totalItems}</p>
+      <p className="text-xs text-muted-foreground">Showing {start}–{end} of {totalItems}</p>
       <div className="flex items-center gap-1">
-        <button onClick={() => onPageChange(page - 1)} disabled={page === 1}
-          className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
+          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted disabled:opacity-40"
+        >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
         {pages.map((p, i) => {
           const prev = pages[i - 1];
           return (
             <React.Fragment key={p}>
-              {prev && p - prev > 1 && <span className="text-xs text-gray-400 px-1">…</span>}
-              <button onClick={() => onPageChange(p)}
-                className={`w-7 h-7 text-xs rounded-lg font-medium transition-colors ${p === page ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+              {prev && p - prev > 1 && <span className="text-xs text-muted-foreground px-1">…</span>}
+              <button
+                onClick={() => onPageChange(p)}
+                className={cn(
+                  'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
+                  p === page ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                )}
+              >
                 {p}
               </button>
             </React.Fragment>
           );
         })}
-        <button onClick={() => onPageChange(page + 1)} disabled={page === totalPages}
-          className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40">
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page === totalPages}
+          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted disabled:opacity-40"
+        >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -237,10 +300,15 @@ interface SearchInputProps {
 }
 export function SearchInput({ value, onChange, placeholder = 'Search…', className = '' }: SearchInputProps) {
   return (
-    <div className={`relative ${className}`}>
-      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="search-input" />
+    <div className={cn('relative', className)}>
+      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="search-input"
+      />
     </div>
   );
 }
@@ -256,8 +324,11 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
   return (
     <div className="filter-tabs">
       {tabs.map(t => (
-        <button key={t.key} onClick={() => onChange(t.key)}
-          className={active === t.key ? 'filter-tab-active' : 'filter-tab'}>
+        <button
+          key={t.key}
+          onClick={() => onChange(t.key)}
+          className={active === t.key ? 'filter-tab-active' : 'filter-tab'}
+        >
           {t.label}
         </button>
       ))}
@@ -265,19 +336,22 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
   );
 }
 
-// ─── FormField ────────────────────────────────────────────────────────────────
-interface FormFieldProps {
+// ─── LabeledField (legacy label-wrapper, kept for non-RHF contexts) ─────────
+interface LabeledFieldProps {
   label: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
 }
-export function FormField({ label, required, error, children }: FormFieldProps) {
+export function LabeledField({ label, required, error, children }: LabeledFieldProps) {
   return (
     <div>
-      <label className="form-label">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <label className="form-label">
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
       {children}
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-destructive text-xs mt-1">{error}</p>}
     </div>
   );
 }
@@ -299,15 +373,24 @@ export function FileUploadZone({ onFile, accept = '.xlsx,.xls,.csv', label = 'Cl
     const file = e.dataTransfer.files[0];
     if (file) onFile(file);
   };
+
   return (
-    <div onDrop={handleDrop} onDragOver={e => e.preventDefault()}
+    <div
+      onDrop={handleDrop}
+      onDragOver={e => e.preventDefault()}
       onClick={() => ref.current?.click()}
-      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all">
-      <input ref={ref} type="file" accept={accept} className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }} />
-      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-      <p className="text-sm font-medium text-gray-700">{label}</p>
-      {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+      className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+    >
+      <input
+        ref={ref}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }}
+      />
+      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
   );
 }
@@ -315,23 +398,29 @@ export function FileUploadZone({ onFile, accept = '.xlsx,.xls,.csv', label = 'Cl
 // ─── StatusDot ────────────────────────────────────────────────────────────────
 export function StatusDot({ active }: { active: boolean }) {
   return (
-    <span className={`inline-block w-2 h-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+    <span className={cn('inline-block w-2 h-2 rounded-full', active ? 'bg-emerald-500' : 'bg-muted-foreground/30')} />
   );
 }
 
 // ─── PlanBadge ────────────────────────────────────────────────────────────────
 interface PlanBadgeProps { name: string; code: string; color?: string; }
-const CC: Record<string, string> = {
-  blue:'bg-blue-100 text-blue-800 border-blue-200', violet:'bg-violet-100 text-violet-800 border-violet-200',
-  emerald:'bg-emerald-100 text-emerald-800 border-emerald-200', rose:'bg-rose-100 text-rose-800 border-rose-200',
-  amber:'bg-amber-100 text-amber-800 border-amber-200', cyan:'bg-cyan-100 text-cyan-800 border-cyan-200',
-  indigo:'bg-indigo-100 text-indigo-800 border-indigo-200', teal:'bg-teal-100 text-teal-800 border-teal-200',
+const PLAN_COLOR_CLASSES: Record<string, string> = {
+  blue: 'bg-primary/10 text-primary border-primary/30',
+  violet: 'bg-violet-100 text-violet-800 border-violet-200',
+  emerald: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  rose: 'bg-rose-100 text-rose-800 border-rose-200',
+  amber: 'bg-amber-100 text-amber-800 border-amber-200',
+  cyan: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  indigo: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  teal: 'bg-teal-100 text-teal-800 border-teal-200',
 };
 export function PlanBadge({ name, code, color = 'blue' }: PlanBadgeProps) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-sm font-semibold text-gray-900">{name}</span>
-      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${CC[color] || CC.blue}`}>{code}</span>
+      <span className="text-sm font-semibold text-foreground">{name}</span>
+      <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
+        {code}
+      </span>
     </div>
   );
 }

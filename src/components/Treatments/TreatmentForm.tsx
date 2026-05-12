@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Save, FileText, Stethoscope } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal, Button } from '@/components/ui';
 import { BasicInfoSection } from './TreatmentForm/BasicInfoSection';
 import { SessionPlannerSection } from './TreatmentForm/SessionPlannerSection';
 import { PrescriptionSection } from './TreatmentForm/PrescriptionSection';
 import { ImageUploadSection } from './TreatmentForm/ImageUploadSection';
+import { treatmentSchema, type TreatmentFormData } from '@/lib/schemas/treatment.schema';
 
 interface TreatmentFormProps {
   onClose: () => void;
@@ -16,20 +19,27 @@ interface TreatmentFormProps {
 }
 
 export function TreatmentForm({ onClose, onSave, treatment, patients: allPatients, doctors, treatments: allTreatments }: TreatmentFormProps) {
-  const [formData, setFormData] = useState({
-    patientName: treatment?.patientName || '',
-    patientId: treatment?.patientId || '',
-    procedure: treatment?.procedure || '',
-    tooth: treatment?.tooth || '',
-    date: treatment?.date || new Date().toISOString().split('T')[0],
-    notes: treatment?.notes || '',
-    cost: treatment?.cost || 0,
-    status: treatment?.status || 'planned',
-    nextAppointment: treatment?.nextAppointment || '',
-    images: treatment?.images || [],
-    doctorId: treatment?.doctorId || '1',
-    doctorName: treatment?.doctorName || 'Dr. Rajesh Sharma'
+  const form = useForm<TreatmentFormData>({
+    resolver: zodResolver(treatmentSchema),
+    defaultValues: {
+      patientName: treatment?.patientName ?? '',
+      patientId: treatment?.patientId ?? '',
+      procedure: treatment?.procedure ?? '',
+      tooth: treatment?.tooth ?? '',
+      date: treatment?.date ?? new Date().toISOString().split('T')[0],
+      notes: treatment?.notes ?? '',
+      cost: treatment?.cost ?? 0,
+      status: treatment?.status ?? 'planned',
+      nextAppointment: treatment?.nextAppointment ?? '',
+      images: treatment?.images ?? [],
+      doctorId: treatment?.doctorId ?? '1',
+      doctorName: treatment?.doctorName ?? 'Dr. Rajesh Sharma',
+      prescriptions: [],
+      sessions: [],
+    },
   });
+
+  const formData = form.watch();
 
   const [prescriptions, setPrescriptions] = useState(treatment?.prescriptions || [
     { id: '1', medicine: '', dosage: '', timing: '', frequency: '', duration: '', qty: '' }
@@ -135,76 +145,69 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => {
-      const updated = { ...prev, [name]: value };
-      if (name === 'patientName') {
-        const patient = allPatients.find(p => (typeof p === 'string' ? p : p.name) === value);
-        updated.patientId = typeof patient === 'object' ? patient.id : (updated.patientId || '');
-      }
-      if (name === 'procedure') {
-        const template = treatmentTemplates[value as keyof typeof treatmentTemplates];
-        if (template) {
-          updated.cost = template.totalCost;
-          const baseDate = new Date(updated.date);
-          const generatedSessions = template.sessions.map((session, index) => {
-            const sessionDate = new Date(baseDate);
-            sessionDate.setDate(baseDate.getDate() + session.gap);
-            return {
-              id: `session-${Date.now()}-${index}`,
-              sessionNumber: index + 1,
-              name: session.name,
-              description: session.description,
-              suggestedDate: sessionDate.toISOString().split('T')[0],
-              scheduledDate: sessionDate.toISOString().split('T')[0],
-              duration: session.duration,
-              status: 'planned',
-              isFlexible: !session.isRequired,
-              isRequired: session.isRequired,
-              isOptional: !session.isRequired,
-              cost: Math.round(template.totalCost / template.sessions.length),
-              isModified: false,
-              notes: ''
-            };
-          });
-          setTreatmentSessions(generatedSessions);
-        } else {
-          setTreatmentSessions([{
-            id: `session-${Date.now()}-1`,
-            sessionNumber: 1,
-            name: value || 'Treatment Session',
-            description: 'Single session treatment',
-            suggestedDate: updated.date,
-            scheduledDate: updated.date,
-            duration: 45,
-            status: 'scheduled',
-            isFlexible: true,
-            isRequired: true,
-            isOptional: false,
-            cost: updated.cost || 0,
+    form.setValue(name as keyof TreatmentFormData, value as any, { shouldValidate: true });
+    if (name === 'patientName') {
+      const patient = allPatients.find(p => (typeof p === 'string' ? p : p.name) === value);
+      form.setValue('patientId', typeof patient === 'object' ? patient.id : (form.getValues('patientId') || ''));
+    }
+    if (name === 'procedure') {
+      const template = treatmentTemplates[value as keyof typeof treatmentTemplates];
+      if (template) {
+        form.setValue('cost', template.totalCost);
+        const baseDate = new Date(form.getValues('date') || new Date());
+        setTreatmentSessions(template.sessions.map((session, index) => {
+          const sessionDate = new Date(baseDate);
+          sessionDate.setDate(baseDate.getDate() + session.gap);
+          return {
+            id: `session-${Date.now()}-${index}`,
+            sessionNumber: index + 1,
+            name: session.name,
+            description: session.description,
+            suggestedDate: sessionDate.toISOString().split('T')[0],
+            scheduledDate: sessionDate.toISOString().split('T')[0],
+            duration: session.duration,
+            status: 'planned',
+            isFlexible: !session.isRequired,
+            isRequired: session.isRequired,
+            isOptional: !session.isRequired,
+            cost: Math.round(template.totalCost / template.sessions.length),
             isModified: false,
             notes: ''
-          }]);
-        }
+          };
+        }));
+      } else {
+        setTreatmentSessions([{
+          id: `session-${Date.now()}-1`,
+          sessionNumber: 1,
+          name: value || 'Treatment Session',
+          description: 'Single session treatment',
+          suggestedDate: form.getValues('date'),
+          scheduledDate: form.getValues('date'),
+          duration: 45,
+          status: 'scheduled',
+          isFlexible: true,
+          isRequired: true,
+          isOptional: false,
+          cost: form.getValues('cost') || 0,
+          isModified: false,
+          notes: ''
+        }]);
       }
-      return updated;
-    });
+    }
   };
 
   const handleLoadPlan = (plan: any) => {
-    setFormData({
-      ...formData,
-      procedure: plan.procedure,
-      tooth: plan.tooth,
-      cost: plan.cost,
-      notes: plan.notes,
-      status: 'in-progress',
-      patientId: plan.patientId || formData.patientId
-    });
+    form.setValue('procedure', plan.procedure);
+    form.setValue('tooth', plan.tooth);
+    form.setValue('cost', plan.cost);
+    form.setValue('notes', plan.notes);
+    form.setValue('status', 'in-progress');
+    if (plan.patientId) form.setValue('patientId', plan.patientId);
     if (plan.prescriptions) setPrescriptions(plan.prescriptions);
     const template = treatmentTemplates[plan.procedure as keyof typeof treatmentTemplates];
     if (template) {
-      const baseDate = new Date(formData.date);
-      const generatedSessions = template.sessions.map((session, index) => {
+      const baseDate = new Date(form.getValues('date'));
+      setTreatmentSessions(template.sessions.map((session, index) => {
         const sessionDate = new Date(baseDate);
         sessionDate.setDate(baseDate.getDate() + session.gap);
         return {
@@ -223,8 +226,7 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
           isModified: false,
           notes: ''
         };
-      });
-      setTreatmentSessions(generatedSessions);
+      }));
     }
   };
 
@@ -255,14 +257,13 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: TreatmentFormData) => {
     onSave({
-      ...formData,
+      ...data,
       id: treatment?.id || Date.now().toString(),
-      prescriptions: prescriptions.filter(p => p.medicine.trim() !== ''),
+      prescriptions: prescriptions.filter((p: any) => p.medicine?.trim() !== ''),
       sessions: treatmentSessions,
-      cost: parseFloat(formData.cost.toString())
+      cost: parseFloat(String(data.cost)),
     });
   };
 
@@ -275,13 +276,13 @@ export function TreatmentForm({ onClose, onSave, treatment, patients: allPatient
       footer={
         <div className="flex justify-between items-center w-full px-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="gap-2 shadow-lg shadow-primary/10">
+          <Button onClick={form.handleSubmit(handleSubmit)} className="gap-2 shadow-lg shadow-primary/10">
             <Save className="w-4 h-4" /> Save Treatment Plan
           </Button>
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-8 py-2">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 py-2">
         <BasicInfoSection
           formData={formData}
           handleChange={handleChange}

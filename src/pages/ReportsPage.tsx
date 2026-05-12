@@ -1,17 +1,17 @@
-import React from 'react';
-import { ReportsDashboard } from '../components/Reports/ReportsDashboard';
+﻿import React from "react";
+import { useAppData } from "../hooks/useAppData";
+import { ReportsDashboard } from "../components/Reports/ReportsDashboard";
 
-interface ReportsPageProps {
-  patients: any[];
-  appointments: any[];
-  treatments: any[];
-  invoices: any[];
-}
-
-export const ReportsPage: React.FC<ReportsPageProps> = (props) => {
+export const ReportsPage: React.FC = () => {
+  const { patients, appointments, treatments, invoices } = useAppData();
   return (
     <div className="space-y-6">
-      <ReportsDashboard {...props} />
+      <ReportsDashboard
+        patients={patients}
+        appointments={appointments}
+        treatments={treatments}
+        invoices={invoices}
+      />
     </div>
   );
 };

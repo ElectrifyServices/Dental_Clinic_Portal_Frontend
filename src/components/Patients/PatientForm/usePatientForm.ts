@@ -1,43 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { patientSchema, type PatientFormData } from '@/lib/schemas/patient.schema';
 import { generatePatientId, generateBarcode, calculateAge } from './utils';
 
 export const usePatientForm = (patient: any, corporateEmployees: any[], onSave: (patient: any) => void) => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    address: '',
-    emergencyContact: '',
-    emergencyName: '',
-    emergencyRelation: '',
-    customEmergencyRelation: '',
-    medicalHistory: '',
-    pastDentalHistory: '',
-    allergies: '',
-    allergyOther: '',
-    allergyNotes: '',
-    patientId: generatePatientId(),
-    barcode: '',
-    bloodGroup: '',
-    relation: '',
-    customRelation: '',
-    occupation: '',
-    maritalStatus: '',
-    insuranceProvider: '',
-    insuranceNumber: '',
-    referredBy: '',
-    avatar: '',
-    dentalFiles: [] as any[],
-    previousDoctorName: '',
-    previousClinicName: '',
-    previousDoctorPhone: '',
-    previousClinicAddress: '',
-    previousLastVisitDate: '',
-    previousReason: '',
-    previousTreatments: [] as string[],
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [lastAutoFilledEmpId, setLastAutoFilledEmpId] = useState<string | null>(null);
+  const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
+
+  // Extra non-schema fields needed by the form
+  const [extraData, setExtraData] = useState({
     consentCorrectDetails: false,
     consentExamination: false,
     consentRisks: false,
@@ -55,51 +29,115 @@ export const usePatientForm = (patient: any, corporateEmployees: any[], onSave: 
     corporateMemberId: '',
   });
 
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
-  const [lastAutoFilledEmpId, setLastAutoFilledEmpId] = useState<string | null>(null);
-  const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
+  const form = useForm<PatientFormData>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: '',
+      address: '',
+      emergencyContact: '',
+      emergencyName: '',
+      emergencyRelation: '',
+      customEmergencyRelation: '',
+      medicalHistory: '',
+      pastDentalHistory: '',
+      allergies: '',
+      allergyOther: '',
+      allergyNotes: '',
+      patientId: generatePatientId(),
+      barcode: '',
+      bloodGroup: '',
+      relation: '',
+      customRelation: '',
+      occupation: '',
+      maritalStatus: '',
+      insuranceProvider: '',
+      insuranceNumber: '',
+      referredBy: '',
+      avatar: '',
+      dentalFiles: [],
+      previousDoctorName: '',
+      previousClinicName: '',
+      previousDoctorPhone: '',
+      previousClinicAddress: '',
+      previousLastVisitDate: '',
+      previousReason: '',
+      previousTreatments: [],
+    },
+  });
+
+  // Provide a formData-compatible object for all sub-components
+  const formData = { ...form.watch(), ...extraData } as any;
+  const setFormData = (updater: any) => {
+    const current = form.getValues();
+    const updated = typeof updater === 'function' ? updater({ ...current, ...extraData }) : updater;
+    // Split schema fields vs extra fields
+    const schemaKeys = Object.keys(patientSchema.shape);
+    const schemaUpdates: Partial<PatientFormData> = {};
+    const extraUpdates: Partial<typeof extraData> = {};
+    for (const [k, v] of Object.entries(updated)) {
+      if (schemaKeys.includes(k)) (schemaUpdates as any)[k] = v;
+      else (extraUpdates as any)[k] = v;
+    }
+    if (Object.keys(schemaUpdates).length) {
+      Object.entries(schemaUpdates).forEach(([k, v]) => form.setValue(k as keyof PatientFormData, v as any));
+    }
+    if (Object.keys(extraUpdates).length) {
+      setExtraData(prev => ({ ...prev, ...extraUpdates }));
+    }
+  };
 
   useEffect(() => {
     if (patient) {
-      setFormData(prev => ({
-        ...prev,
+      const schemaKeys = Object.keys(patientSchema.shape);
+      const schemaUpdates: Partial<PatientFormData> = {};
+      const extraUpdates: Partial<typeof extraData> = {};
+      const merged = {
         ...patient,
         patientId: patient.id || generatePatientId(),
-        medicalHistory: patient.medicalHistory?.join('\n') || '',
-        allergies: patient.allergies?.join('\n') || '',
-        dentalFiles: patient.dentalFiles || [],
-        pastDentalHistory: patient.pastDentalHistory || '',
-        previousTreatments: patient.previousTreatments || [],
-      }));
+        medicalHistory: patient.medicalHistory?.join('\n') ?? '',
+        allergies: patient.allergies?.join('\n') ?? '',
+        dentalFiles: patient.dentalFiles ?? [],
+        pastDentalHistory: patient.pastDentalHistory ?? '',
+        previousTreatments: patient.previousTreatments ?? [],
+      };
+      for (const [k, v] of Object.entries(merged)) {
+        if (schemaKeys.includes(k)) (schemaUpdates as any)[k] = v;
+        else (extraUpdates as any)[k] = v;
+      }
+      Object.entries(schemaUpdates).forEach(([k, v]) => form.setValue(k as keyof PatientFormData, v as any));
+      if (Object.keys(extraUpdates).length) setExtraData(prev => ({ ...prev, ...extraUpdates }));
     }
   }, [patient]);
 
   useEffect(() => {
-    if (!formData.barcode && formData.patientId) {
-      setFormData(prev => ({ ...prev, barcode: generateBarcode(prev.patientId) }));
+    const patientId = form.watch('patientId');
+    if (!form.getValues('barcode') && patientId) {
+      form.setValue('barcode', generateBarcode(patientId));
     }
-  }, [formData.patientId]);
+  }, [form.watch('patientId')]);
 
   // Corporate Lookup logic
   useEffect(() => {
-    const searchPhone = formData.phone?.trim();
-    const searchEmail = formData.email?.trim().toLowerCase();
-
+    const searchPhone = form.getValues('phone')?.trim();
+    const searchEmail = form.getValues('email')?.trim().toLowerCase();
     if ((searchPhone && searchPhone.length >= 10) || (searchEmail && searchEmail.includes('@'))) {
-      const emp = corporateEmployees.find(e => 
-        (searchPhone && e.phone === searchPhone) || 
+      const emp = corporateEmployees.find(e =>
+        (searchPhone && e.phone === searchPhone) ||
         (searchEmail && e.email?.toLowerCase() === searchEmail)
       );
-
       if (emp) {
         setMatchedCorporateEmp(emp);
         if (lastAutoFilledEmpId !== emp.id) {
-          setFormData(prev => ({
+          if (!form.getValues('name')) form.setValue('name', emp.name);
+          if (!form.getValues('gender')) form.setValue('gender', emp.gender?.toLowerCase());
+          if (!form.getValues('dateOfBirth')) form.setValue('dateOfBirth', emp.dateOfBirth);
+          if (!form.getValues('occupation')) form.setValue('occupation', emp.designation);
+          setExtraData(prev => ({
             ...prev,
-            name: prev.name || emp.name,
-            gender: prev.gender || emp.gender?.toLowerCase(),
-            dateOfBirth: prev.dateOfBirth || emp.dateOfBirth,
-            occupation: prev.occupation || emp.designation,
             category: 'corporate',
             corporatePlanId: emp.corporatePlanId || emp.companyId,
             corporatePlanName: emp.companyName,
@@ -115,46 +153,39 @@ export const usePatientForm = (patient: any, corporateEmployees: any[], onSave: 
       setMatchedCorporateEmp(null);
       setLastAutoFilledEmpId(null);
     }
-  }, [formData.phone, formData.email, corporateEmployees]);
+  }, [form.watch('phone'), form.watch('email'), corporateEmployees]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    const schemaKeys = Object.keys(patientSchema.shape);
+    if (schemaKeys.includes(name)) {
+      form.setValue(name as keyof PatientFormData, val as any, { shouldValidate: true });
+    } else {
+      setExtraData(prev => ({ ...prev, [name]: val }));
+    }
     if (validationErrors[name]) {
-      setValidationErrors(prev => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
+      setValidationErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
     }
   };
 
   const validateStep = (stepNumber: number) => {
     const errors: {[key: string]: string} = {};
-    
     if (stepNumber === 1) {
-      if (!formData.name.trim()) errors.name = 'Name is required';
-      if (!formData.phone.trim()) errors.phone = 'Phone number is required';
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        errors.email = 'Please enter a valid email address';
-      }
+      if (!form.getValues('name')?.trim()) errors.name = 'Name is required';
+      if (!form.getValues('phone')?.trim()) errors.phone = 'Phone number is required';
+      const email = form.getValues('email');
+      if (email && !/\S+@\S+\.\S+/.test(email)) errors.email = 'Please enter a valid email address';
     }
-    
     if (stepNumber === 3) {
-      const age = calculateAge(formData.dateOfBirth);
+      const age = calculateAge(form.getValues('dateOfBirth') ?? '');
       if (age > 0 && age < 18) {
-        if (!formData.guardianName.trim()) errors.guardianName = 'Guardian name is required';
-        if (!formData.guardianSignature) errors.guardianSignature = 'Guardian signature is required';
+        if (!extraData.guardianName?.trim()) errors.guardianName = 'Guardian name is required';
+        if (!extraData.guardianSignature) errors.guardianSignature = 'Guardian signature is required';
       } else {
-        if (!formData.patientSignature) {
-          errors.patientSignature = 'Patient signature is required';
-        }
+        if (!extraData.patientSignature) errors.patientSignature = 'Patient signature is required';
       }
     }
-    
     return errors;
   };
 
@@ -171,29 +202,22 @@ export const usePatientForm = (patient: any, corporateEmployees: any[], onSave: 
   };
 
   const applyCustomRelation = () => {
-    if (formData.customRelation.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        relation: prev.customRelation,
-        customRelation: ''
-      }));
+    const customRelation = form.getValues('customRelation') ?? '';
+    if (customRelation.trim()) {
+      form.setValue('relation', customRelation);
+      form.setValue('customRelation', '');
     }
   };
 
   const handleCustomRelation = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      customRelation: value
-    }));
+    form.setValue('customRelation', value);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatar: reader.result as string }));
-      };
+      reader.onloadend = () => { form.setValue('avatar', reader.result as string); };
       reader.readAsDataURL(file);
     }
   };
@@ -203,10 +227,8 @@ export const usePatientForm = (patient: any, corporateEmployees: any[], onSave: 
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          dentalFiles: [...(prev.dentalFiles || []), { name: file.name, type: file.type, data: reader.result }]
-        }));
+        const current = form.getValues('dentalFiles') ?? [];
+        form.setValue('dentalFiles', [...current, { name: file.name, type: file.type, data: reader.result }]);
       };
       reader.readAsDataURL(file);
     });

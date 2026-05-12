@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { User, Clock, Phone, Stethoscope, MessageSquare, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
 
 // Calculate age from DOB
@@ -66,15 +66,15 @@ export function QueueCard({
         <div className="flex items-center">
           <div className="relative">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
-              <User className="w-8 h-8 text-blue-600" />
+              <User className="w-8 h-8 text-primary" />
             </div>
-            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-md text-white ${patient.status === 'waiting' ? 'bg-yellow-500' : patient.status === 'in-consultation' ? 'bg-blue-500' : 'bg-green-500'}`}>
+            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-md text-white ${patient.status === 'waiting' ? 'bg-yellow-500' : patient.status === 'in-consultation' ? 'bg-primary/100' : 'bg-green-500'}`}>
               {getStatusIcon(patient.status)}
             </div>
           </div>
           <div className="ml-4">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-gray-900 text-lg">{patient.patientName}</h3>
+              <h3 className="font-bold text-foreground text-lg">{patient.patientName}</h3>
               {fullPatient?.category && fullPatient.category !== 'regular' && (
                 <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">
                   {fullPatient.category}
@@ -82,9 +82,9 @@ export function QueueCard({
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {age !== null && gender && <span className="text-gray-300"></span>}
+              {age !== null && gender && <span className="text-muted-foreground/40"></span>}
               {gender && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   Gender: <span className="capitalize">{gender}</span>
                 </span>
               )}
@@ -97,8 +97,8 @@ export function QueueCard({
         </div>
         {/* Appointment time */}
         <div className="text-right flex-shrink-0">
-          <div className="text-lg font-bold text-blue-600">{patient.appointmentTime}</div>
-          <div className="text-xs text-gray-400 mt-0.5">Check-in: {patient.checkInTime}</div>
+          <div className="text-lg font-bold text-primary">{patient.appointmentTime}</div>
+          <div className="text-xs text-muted-foreground/60 mt-0.5">Check-in: {patient.checkInTime}</div>
           {patient.status === 'waiting' && waitingTime && (
             <div className="flex items-center justify-end gap-1 mt-1">
               <Clock className="w-3 h-3 text-amber-500" />
@@ -111,18 +111,18 @@ export function QueueCard({
       {/* Contact & Concern */}
       <div className="space-y-3 mb-4">
         <div className="flex items-start text-sm">
-          <Phone className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+          <Phone className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs text-gray-500">Phone</p>
-            <p className="text-gray-700">{patient.patientPhone}</p>
+            <p className="text-xs text-muted-foreground">Phone</p>
+            <p className="text-muted-foreground">{patient.patientPhone}</p>
           </div>
         </div>
 
         <div className="flex items-start text-sm">
-          <Stethoscope className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+          <Stethoscope className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs text-gray-500">Treatment Type</p>
-            <p className="font-medium text-gray-900">
+            <p className="text-xs text-muted-foreground">Treatment Type</p>
+            <p className="font-medium text-foreground">
               {patient.treatmentType || '—'}
             </p>
           </div>
@@ -130,10 +130,10 @@ export function QueueCard({
 
         {patient.patientConcern && (
           <div className="flex items-start text-sm">
-            <MessageSquare className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+            <MessageSquare className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs text-gray-500">Patient Concern</p>
-              <p className="text-gray-600 line-clamp-2">
+              <p className="text-xs text-muted-foreground">Patient Concern</p>
+              <p className="text-muted-foreground line-clamp-2">
                 {patient.patientConcern}
               </p>
             </div>
@@ -149,7 +149,7 @@ export function QueueCard({
             <span className="text-sm font-medium text-orange-800">Medical Alerts</span>
           </div>
           {allergies.length > 0 && (
-            <div className="text-xs text-red-700 mb-1">
+            <div className="text-xs text-destructive mb-1">
               <strong>Allergies:</strong> {allergies.slice(0, 3).join(', ')}{allergies.length > 3 && ` +${allergies.length - 3} more`}
             </div>
           )}
@@ -163,9 +163,9 @@ export function QueueCard({
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="text-center p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-          <div className="text-lg font-bold text-blue-600">{fullPatient?.totalVisits ?? 0}</div>
-          <div className="text-xs text-blue-700 font-bold uppercase tracking-wider">Visits</div>
+        <div className="text-center p-3 bg-primary/50 rounded-xl border border-primary/20">
+          <div className="text-lg font-bold text-primary">{fullPatient?.totalVisits ?? 0}</div>
+          <div className="text-xs text-primary font-bold uppercase tracking-wider">Visits</div>
         </div>
         <div className="text-center p-3 bg-green-50/50 rounded-xl border border-green-100">
           <div className="text-lg font-bold text-green-600">{age ?? 'N/A'}</div>
@@ -174,7 +174,7 @@ export function QueueCard({
       </div>
 
       {/* Action Button */}
-      <div className="pt-4 border-t border-gray-200">
+      <div className="pt-4 border-t border-border">
         {patient.status === 'waiting' && (
           <button
             onClick={() => { onUpdatePatientStatus(patient.id, 'in-consultation'); onSelectPatient(patient); }}

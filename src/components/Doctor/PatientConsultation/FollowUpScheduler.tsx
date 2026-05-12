@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 
 interface FollowUpSchedulerProps {
@@ -57,27 +57,27 @@ export function FollowUpScheduler({
           name="followUpRequired"
           checked={followUpRequired}
           onChange={onFollowUpRequiredChange}
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+          className="w-4 h-4 text-primary border-border rounded focus:ring-primary cursor-pointer"
         />
-        <span className="ml-2 text-sm font-medium text-gray-700">
+        <span className="ml-2 text-sm font-medium text-muted-foreground">
           Follow-up appointment required
         </span>
       </div>
 
       {followUpRequired && (
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 space-y-6 animate-in fade-in slide-in-from-top-2 shadow-sm">
+        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 space-y-6 animate-in fade-in slide-in-from-top-2 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h4 className="text-sm font-bold text-blue-900 flex items-center uppercase tracking-wider">
               <Clock className="w-4 h-4 mr-2" />
               Follow-up Booking
             </h4>
             {bookedFollowUp ? (
-              <div className="flex items-center text-emerald-600 font-bold text-sm bg-white px-4 py-1.5 rounded-full border border-emerald-100 shadow-sm">
+              <div className="flex items-center text-emerald-600 font-bold text-sm bg-card px-4 py-1.5 rounded-full border border-emerald-100 shadow-sm">
                 <CheckCircle className="w-4 h-4 mr-1.5" />
                 Follow-up booked: {formatFollowUpDate(bookedFollowUp.date)}, {formatSlotTime(bookedFollowUp.time)}
               </div>
             ) : (
-              <div className="text-xs font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-lg">
+              <div className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-lg">
                 Select a slot to schedule
               </div>
             )}
@@ -85,14 +85,14 @@ export function FollowUpScheduler({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-bold text-blue-700 mb-2 uppercase tracking-widest">
+              <label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Assign Doctor
               </label>
               <select
                 value={followUpDoctorId}
                 onChange={(e) => onDoctorChange(e.target.value)}
                 disabled={!!bookedFollowUp}
-                className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               >
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -103,7 +103,7 @@ export function FollowUpScheduler({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-blue-700 mb-2 uppercase tracking-widest">
+              <label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Preferred Date
               </label>
               <input
@@ -112,26 +112,26 @@ export function FollowUpScheduler({
                 onChange={(e) => onDateChange(e.target.value)}
                 disabled={!!bookedFollowUp}
                 min={new Date().toISOString().split("T")[0]}
-                className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               />
             </div>
           </div>
 
           {!bookedFollowUp && (
             <div className="space-y-4">
-              <label className="block text-[10px] font-bold text-blue-700 uppercase tracking-widest">
+              <label className="block text-[10px] font-bold text-primary uppercase tracking-widest">
                 Available Slots
               </label>
               {availableSlots.length > 0 ? (
-                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-blue-100 rounded-xl bg-white/50 custom-scrollbar">
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-primary/20 rounded-xl bg-card/50 custom-scrollbar">
                   {availableSlots.map((slot) => (
                     <button
                       key={slot.time24}
                       type="button"
                       onClick={() => onSlotSelect(slot.time24)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSlot === slot.time24
-                        ? "bg-blue-600 text-white shadow-lg scale-105"
-                        : "bg-white text-blue-700 border border-blue-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-sm"
+                        ? "bg-primary text-white shadow-lg scale-105"
+                        : "bg-card text-primary border border-primary/30 hover:border-primary hover:bg-primary/10 hover:shadow-sm"
                         }`}
                     >
                       {slot.time12}
@@ -139,8 +139,8 @@ export function FollowUpScheduler({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 bg-white/50 border border-dashed border-blue-200 rounded-2xl">
-                  <p className="text-sm text-gray-400 italic">No slots available for this doctor on this date.</p>
+                <div className="text-center py-8 bg-card/50 border border-dashed border-primary/30 rounded-2xl">
+                  <p className="text-sm text-muted-foreground/60 italic">No slots available for this doctor on this date.</p>
                 </div>
               )}
 

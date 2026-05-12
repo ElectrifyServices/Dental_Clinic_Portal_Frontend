@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 
@@ -29,13 +29,13 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <User className="w-4 h-4 text-primary" />
         </div>
-        <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-widest">Patient Information</h4>
-        <div className="flex-1 h-px bg-gray-100 ml-2" />
+        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest">Patient Information</h4>
+        <div className="flex-1 h-px bg-muted ml-2" />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Patient Name</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Patient Name</label>
           <Input
             name="patientName"
             value={patientName}
@@ -43,22 +43,22 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
             required
             disabled={isFollowUp || isConsulted}
             placeholder="Search or enter name"
-            className="h-11 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white"
+            className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
           />
           {suggestion && (
             <div 
-              className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2 cursor-pointer hover:bg-blue-100 transition-colors"
+              className="mt-2 p-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2 cursor-pointer hover:bg-primary/10 transition-colors"
               onClick={onAcceptSuggestion}
             >
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-blue-700">{suggestion.phone}</span>
+                <span className="text-[10px] font-bold text-primary">{suggestion.phone}</span>
               </div>
               <span className="text-[10px] font-bold text-blue-500 uppercase">Auto-fill</span>
             </div>
           )}
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Phone Number</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Phone Number</label>
           <Input
             name="patientPhone"
             value={patientPhone}
@@ -66,7 +66,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
             required
             disabled={isFollowUp || isConsulted}
             placeholder="98765 43210"
-            className="h-11 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white"
+            className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
           />
         </div>
       </div>

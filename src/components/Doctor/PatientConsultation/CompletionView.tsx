@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { CheckCircle, Activity, Stethoscope, Pill, FileText, File } from "lucide-react";
 import { PDFReportType } from "../../../utils/pdfGenerator";
 
@@ -15,22 +15,22 @@ export function CompletionView({ onDownloadPDF, onClose }: CompletionViewProps) 
       </div>
 
       <div>
-        <h2 className="text-3xl font-extrabold text-gray-900">Consultation Completed!</h2>
-        <p className="text-gray-500 mt-2 text-lg">All clinical data has been saved to patient history.</p>
+        <h2 className="text-3xl font-extrabold text-foreground">Consultation Completed!</h2>
+        <p className="text-muted-foreground mt-2 text-lg">All clinical data has been saved to patient history.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
         <button
           onClick={() => onDownloadPDF('CLINICAL')}
-          className="flex items-center justify-between p-5 bg-blue-50 border border-blue-200 rounded-2xl hover:bg-blue-100 hover:shadow-md transition-all group"
+          className="flex items-center justify-between p-5 bg-primary/10 border border-primary/30 rounded-2xl hover:bg-primary/10 hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
-              <Activity className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-card rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+              <Activity className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
               <div className="font-bold text-blue-900">Clinical Report</div>
-              <div className="text-xs text-blue-600 font-medium">Observations & Tooth Chart</div>
+              <div className="text-xs text-primary font-medium">Observations & Tooth Chart</div>
             </div>
           </div>
           <File className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
@@ -41,7 +41,7 @@ export function CompletionView({ onDownloadPDF, onClose }: CompletionViewProps) 
           className="flex items-center justify-between p-5 bg-purple-50 border border-purple-200 rounded-2xl hover:bg-purple-100 hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+            <div className="p-3 bg-card rounded-xl shadow-sm group-hover:scale-110 transition-transform">
               <Stethoscope className="w-6 h-6 text-purple-600" />
             </div>
             <div className="text-left">
@@ -57,7 +57,7 @@ export function CompletionView({ onDownloadPDF, onClose }: CompletionViewProps) 
           className="flex items-center justify-between p-5 bg-emerald-50 border border-emerald-200 rounded-2xl hover:bg-emerald-100 hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+            <div className="p-3 bg-card rounded-xl shadow-sm group-hover:scale-110 transition-transform">
               <Pill className="w-6 h-6 text-emerald-600" />
             </div>
             <div className="text-left">
@@ -70,22 +70,22 @@ export function CompletionView({ onDownloadPDF, onClose }: CompletionViewProps) 
 
         <button
           onClick={() => onDownloadPDF('FULL')}
-          className="flex items-center justify-between p-5 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 hover:shadow-md transition-all group"
+          className="flex items-center justify-between p-5 bg-muted border border-border rounded-2xl hover:bg-muted hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
-              <FileText className="w-6 h-6 text-gray-600" />
+            <div className="p-3 bg-card rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-muted-foreground" />
             </div>
             <div className="text-left">
-              <div className="font-bold text-gray-900">Full Report</div>
-              <div className="text-xs text-gray-600 font-medium">Complete Consultation File</div>
+              <div className="font-bold text-foreground">Full Report</div>
+              <div className="text-xs text-muted-foreground font-medium">Complete Consultation File</div>
             </div>
           </div>
-          <File className="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
+          <File className="w-5 h-5 text-muted-foreground/60 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
 
-      <div className="pt-10 border-t border-gray-100">
+      <div className="pt-10 border-t border-border">
         <button
           onClick={onClose}
           className="px-12 py-4 bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-black hover:shadow-2xl active:scale-95 transition-all shadow-xl"

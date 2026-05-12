@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface Prescription {
@@ -27,7 +27,7 @@ export function PrescriptionSection({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900">Prescriptions</h3>
+        <h3 className="text-lg font-bold text-foreground">Prescriptions</h3>
         <button
           type="button"
           onClick={onAddPrescription}
@@ -48,7 +48,7 @@ export function PrescriptionSection({
                   type="text"
                   value={prescription.medicine}
                   onChange={(e) => onUpdatePrescription(prescription.id, 'medicine', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="e.g. Amoxicillin"
                 />
               </div>
@@ -57,7 +57,7 @@ export function PrescriptionSection({
                 <select
                   value={prescription.dosage}
                   onChange={(e) => onUpdatePrescription(prescription.id, 'dosage', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                 >
                   <option value="">Select Dosage</option>
                   <option value="1-0-0">1 - 0 - 0 (Morning)</option>
@@ -78,7 +78,7 @@ export function PrescriptionSection({
                   type="text"
                   value={prescription.timing}
                   onChange={(e) => onUpdatePrescription(prescription.id, 'timing', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="After food"
                 />
               </div>
@@ -88,7 +88,7 @@ export function PrescriptionSection({
                   type="text"
                   value={prescription.frequency}
                   onChange={(e) => onUpdatePrescription(prescription.id, 'frequency', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="3 times daily"
                 />
               </div>
@@ -98,7 +98,7 @@ export function PrescriptionSection({
                   type="text"
                   value={prescription.duration}
                   onChange={(e) => onUpdatePrescription(prescription.id, 'duration', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="5 days"
                 />
               </div>
@@ -109,7 +109,7 @@ export function PrescriptionSection({
                     type="text"
                     value={prescription.qty}
                     onChange={(e) => onUpdatePrescription(prescription.id, 'qty', e.target.value)}
-                    className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white outline-none text-sm font-semibold"
+                    className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                     placeholder="10"
                   />
                 </div>
@@ -117,7 +117,7 @@ export function PrescriptionSection({
                   <button
                     type="button"
                     onClick={() => onRemovePrescription(prescription.id)}
-                    className="p-2.5 text-red-500 hover:bg-red-100 rounded-xl transition-all"
+                    className="p-2.5 text-red-500 hover:bg-destructive/10 rounded-xl transition-all"
                     title="Remove Medicine"
                   >
                     <Trash2 className="w-5 h-5" />

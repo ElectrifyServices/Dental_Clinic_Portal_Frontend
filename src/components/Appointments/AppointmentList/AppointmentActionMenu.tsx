@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Edit, UserX, CheckCircle, Trash2, UserCheck } from 'lucide-react';
 
 interface AppointmentActionMenuProps {
@@ -26,7 +26,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
       <div 
-        className="fixed z-[9999] bg-white rounded-2xl border border-gray-100 shadow-xl w-52 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-xl w-52 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{ top: pos.top, left: pos.left }}
       >
         <div className="p-1.5 space-y-0.5">
@@ -44,10 +44,10 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
 
           <button 
             onClick={() => { onEdit?.(appointment.id); onClose(); }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-3 text-gray-700 rounded-xl transition-colors font-medium"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-3 text-muted-foreground rounded-xl transition-colors font-medium"
           >
-            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-              <Edit className="w-4 h-4 text-gray-400" /> 
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <Edit className="w-4 h-4 text-muted-foreground/60" /> 
             </div>
             Edit Appointment
           </button>
@@ -65,25 +65,25 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
           ) : (
             <button 
               onClick={() => { onUpdateStatus?.(appointment.id, 'scheduled'); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-3 text-blue-700 rounded-xl transition-colors font-medium"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 flex items-center gap-3 text-primary rounded-xl transition-colors font-medium"
             >
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <CheckCircle className="w-4 h-4 text-blue-400" /> 
               </div>
               Restore Status
             </button>
           )}
 
-          <div className="h-px bg-gray-100 my-1 mx-2" />
+          <div className="h-px bg-muted my-1 mx-2" />
 
           <button 
             onClick={() => { 
               onDelete?.(appointment.id);
               onClose();
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 rounded-xl transition-colors font-medium"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 flex items-center gap-3 text-destructive rounded-xl transition-colors font-medium"
           >
-            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
               <Trash2 className="w-4 h-4 text-red-400" /> 
             </div>
             Delete Record

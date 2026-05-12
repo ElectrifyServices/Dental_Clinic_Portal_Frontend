@@ -1,27 +1,15 @@
 import React from 'react';
+import { useAppData } from '../hooks/useAppData';
+import { useModal } from '../contexts/ModalContext';
 import { EMRList } from '../components/EMR/EMRList';
 
-interface MedicalRecordsPageProps {
-  patients: any[];
-  treatments: any[];
-  invoices: any[];
-  appointments: any[];
-  emrRecords: any[];
-  onAddRecord: () => void;
-  onViewRecord: (record: any) => void;
-  onExportRecord: (record: any) => void;
-}
+export function MedicalRecordsPage() {
+  const { patients, treatments, invoices, appointments, emrRecords } = useAppData();
+  const { setActiveModal, setSelectedEMRRecord, showToast } = useModal();
 
-export function MedicalRecordsPage({ 
-  patients,
-  treatments, 
-  invoices,
-  appointments,
-  emrRecords, 
-  onAddRecord, 
-  onViewRecord,
-  onExportRecord 
-}: MedicalRecordsPageProps) {
+  const onAddRecord = () => setActiveModal('emrForm');
+  const onViewRecord = (r: any) => { setSelectedEMRRecord(r); setActiveModal('emrViewer'); };
+  const onExportRecord = (_r: any) => showToast('Record exported successfully!');
   // Group all records by Patient to create a patient-centric view
   const patientGroups = patients.map(patient => {
     const patientTreatments = treatments.filter(t => 

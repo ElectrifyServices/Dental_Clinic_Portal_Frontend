@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Stethoscope, IndianRupee, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 
@@ -27,18 +27,18 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <Stethoscope className="w-4 h-4 text-primary" />
         </div>
-        <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-widest">Treatment Details</h4>
-        <div className="flex-1 h-px bg-gray-100 ml-2" />
+        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest">Treatment Details</h4>
+        <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Treatment Type</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Treatment Type</label>
           <select
             name="treatmentType"
             value={treatmentType}
             onChange={onChange}
-            className="w-full h-11 px-3 text-sm border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+            className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium"
           >
             <option value="">General Consultation</option>
             {appointmentTypes.map(t => (
@@ -47,33 +47,33 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           </select>
         </div>
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Specific Treatment</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Specific Treatment</label>
           <Input
             name="treatment"
             value={treatment}
             onChange={onChange}
             placeholder="e.g. Tooth scaling"
-            className="h-11 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white font-medium"
+            className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card font-medium"
           />
         </div>
         <div className="md:col-span-1 space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Fee (₹)</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Fee (₹)</label>
           <div className="relative">
             <Input
               type="number"
               name="fee"
               value={fee}
               onChange={onChange}
-              className="h-11 pl-8 rounded-xl bg-gray-50/50 border-gray-100 focus:bg-white font-bold"
+              className="h-11 pl-8 rounded-xl bg-muted/50 border-border focus:bg-card font-bold"
             />
-            <IndianRupee className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <IndianRupee className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Patient Concern</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Patient Concern</label>
           <textarea
             name="patientConcern"
             value={patientConcern}
@@ -81,18 +81,18 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
             required
             rows={3}
             placeholder="Main concern or symptoms..."
-            className="w-full p-4 text-sm border border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all font-medium"
+            className="w-full p-4 text-sm border border-border rounded-2xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all font-medium"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Additional Notes</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Additional Notes</label>
           <textarea
             name="notes"
             value={notes}
             onChange={onChange}
             rows={3}
             placeholder="Any special instructions..."
-            className="w-full p-4 text-sm border border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all font-medium"
+            className="w-full p-4 text-sm border border-border rounded-2xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none resize-none transition-all font-medium"
           />
         </div>
       </div>

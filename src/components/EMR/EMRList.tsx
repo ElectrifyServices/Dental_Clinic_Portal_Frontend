@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText } from 'lucide-react';
-import { PageHeader, SearchInput, FilterTabs, DataTable, Badge, Button } from '@/components/ui';
+import { PageHeader, SearchInput, FilterTabs, DataTable, StatusBadge, Button } from '@/components/ui';
 
 interface EMRRecord {
   id: string;
@@ -77,10 +77,10 @@ export function EMRList({ records, onAddRecord, onViewRecord, onExportRecord }: 
       render: (r: EMRRecord) => {
         const tm = TYPE_META[r.type] || TYPE_META.consultation;
         return (
-          <Badge variant={tm.variant} className="flex items-center gap-1 w-fit">
+          <StatusBadge variant={tm.variant} className="flex items-center gap-1 w-fit">
             {tm.icon}
             {tm.label}
-          </Badge>
+          </StatusBadge>
         );
       }
     },

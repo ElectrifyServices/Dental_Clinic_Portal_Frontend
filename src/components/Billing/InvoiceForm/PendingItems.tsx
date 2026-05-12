@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ClipboardList, Check, Plus } from 'lucide-react';
 
 interface PendingItemsProps {
@@ -34,7 +34,7 @@ export const PendingItems: React.FC<PendingItemsProps> = ({
             <div 
               key={pItem.id}
               className={`p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
-                isSelected ? 'bg-indigo-600 border-indigo-700 shadow-md' : 'bg-white border-indigo-100 hover:border-indigo-300'
+                isSelected ? 'bg-indigo-600 border-indigo-700 shadow-md' : 'bg-card border-indigo-100 hover:border-indigo-300'
               }`}
             >
               <div>
@@ -44,11 +44,11 @@ export const PendingItems: React.FC<PendingItemsProps> = ({
                   }`}>
                     {pItem.type.replace('-', ' ')}
                   </span>
-                  <span className={`text-[10px] font-mono ${isSelected ? 'text-indigo-100' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-mono ${isSelected ? 'text-indigo-100' : 'text-muted-foreground/60'}`}>
                     {new Date(pItem.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                   </span>
                 </div>
-                <p className={`text-xs font-bold leading-tight mb-2 ${isSelected ? 'text-white' : 'text-gray-800'}`}>
+                <p className={`text-xs font-bold leading-tight mb-2 ${isSelected ? 'text-white' : 'text-foreground'}`}>
                   {pItem.description}
                 </p>
               </div>
@@ -60,7 +60,7 @@ export const PendingItems: React.FC<PendingItemsProps> = ({
                   type="button"
                   onClick={() => isSelected ? onRemove(pItem.id) : onAdd(pItem)}
                   className={`p-1.5 rounded-lg transition-all ${
-                    isSelected ? 'bg-white text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
+                    isSelected ? 'bg-card text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
                   }`}
                 >
                   {isSelected ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}

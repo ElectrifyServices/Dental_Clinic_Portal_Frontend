@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, Save, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
 import { usePatientForm } from './PatientForm/usePatientForm';
 import { Step1BasicInfo } from './PatientForm/Step1BasicInfo';
@@ -88,17 +88,17 @@ export function PatientForm({
   return (
     <div className="modal-overlay">
       <div className="modal-box max-w-4xl">
-        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="sticky top-0 z-50 bg-card border-b border-border p-6 rounded-t-2xl">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="modal-title text-lg">
                 {(patient && patient.id) ? 'Edit Patient Information' : 'New Patient Registration'}
               </h2>
-              <p className="text-gray-600 mt-1">Complete patient registration</p>
+              <p className="text-muted-foreground mt-1">Complete patient registration</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
+              className="text-muted-foreground/60 hover:text-muted-foreground p-2 hover:bg-muted rounded-xl transition-all duration-200"
             >
               <X className="w-6 h-6" />
             </button>
@@ -113,11 +113,11 @@ export function PatientForm({
             ].map(s => (
               <div key={s.num} className="flex items-center gap-3 relative">
                 {getStepIndicator(s.num)}
-                <span className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? 'text-primary' : 'text-gray-400'}`}>
+                <span className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? 'text-primary' : 'text-muted-foreground/60'}`}>
                   {s.label}
                 </span>
                 {s.num < 4 && (
-                  <div className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? 'bg-primary' : 'bg-gray-200'}`} />
+                  <div className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? 'bg-primary' : 'bg-muted'}`} />
                 )}
               </div>
             ))}
@@ -176,19 +176,19 @@ export function PatientForm({
           </form>
 
           {Object.keys(validationErrors).length > 0 && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <p className="text-sm text-red-700 font-medium">Please fill all required fields before proceeding.</p>
+            <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <p className="text-sm text-destructive font-medium">Please fill all required fields before proceeding.</p>
             </div>
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-gray-50/80 backdrop-blur-sm border-t border-gray-200 p-6 flex justify-between items-center rounded-b-2xl">
+        <div className="sticky bottom-0 bg-muted/80 backdrop-blur-sm border-t border-border p-6 flex justify-between items-center rounded-b-2xl">
           <Button
             type="button"
             variant="ghost"
             onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
-            className="text-gray-500"
+            className="text-muted-foreground"
           >
             {step === 1 ? 'Cancel' : 'Previous Step'}
           </Button>

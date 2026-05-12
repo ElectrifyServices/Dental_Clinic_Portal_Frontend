@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Calendar, DollarSign, Plus } from 'lucide-react';
 
 interface BasicInfoSectionProps {
@@ -27,8 +27,8 @@ export function BasicInfoSection({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <label className="form-label text-gray-700">
-          <User className="w-4 h-4 inline mr-2 text-blue-600" />
+        <label className="form-label text-muted-foreground">
+          <User className="w-4 h-4 inline mr-2 text-primary" />
           Patient Name *
         </label>
         <select
@@ -64,7 +64,7 @@ export function BasicInfoSection({
                 key={plan.id}
                 type="button"
                 onClick={() => onLoadPlan(plan)}
-                className="px-3 py-2 bg-white text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors flex items-center border border-purple-200 shadow-sm"
+                className="px-3 py-2 bg-card text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors flex items-center border border-purple-200 shadow-sm"
               >
                 {plan.procedure} (#{plan.tooth})
               </button>
@@ -74,7 +74,7 @@ export function BasicInfoSection({
       )}
 
       <div>
-        <label className="form-label text-gray-700 mb-2">Procedure *</label>
+        <label className="form-label text-muted-foreground mb-2">Procedure *</label>
         <select
           name="procedure"
           value={formData.procedure}
@@ -90,7 +90,7 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">Tooth/Area *</label>
+        <label className="form-label text-muted-foreground mb-2">Tooth/Area *</label>
         <select
           name="tooth"
           value={formData.tooth}
@@ -106,7 +106,7 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">Assigned Doctor *</label>
+        <label className="form-label text-muted-foreground mb-2">Assigned Doctor *</label>
         <select
           name="doctorId"
           value={formData.doctorId}
@@ -123,8 +123,8 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">
-          <Calendar className="w-4 h-4 inline mr-2 text-blue-600" />
+        <label className="form-label text-muted-foreground mb-2">
+          <Calendar className="w-4 h-4 inline mr-2 text-primary" />
           Treatment Date *
         </label>
         <input
@@ -138,8 +138,8 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">
-          <DollarSign className="w-4 h-4 inline mr-2 text-blue-600" />
+        <label className="form-label text-muted-foreground mb-2">
+          <DollarSign className="w-4 h-4 inline mr-2 text-primary" />
           Treatment Cost (₹)
         </label>
         <input
@@ -154,7 +154,7 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">Treatment Status</label>
+        <label className="form-label text-muted-foreground mb-2">Treatment Status</label>
         <select
           name="status"
           value={formData.status}
@@ -168,7 +168,7 @@ export function BasicInfoSection({
       </div>
 
       <div>
-        <label className="form-label text-gray-700 mb-2">Next Appointment</label>
+        <label className="form-label text-muted-foreground mb-2">Next Appointment</label>
         <input
           type="date"
           name="nextAppointment"

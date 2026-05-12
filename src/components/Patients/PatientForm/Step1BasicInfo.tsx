@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
 import { calculateAge } from './utils';
 import { Input } from '@/components/ui/Input';
@@ -53,7 +53,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             />
           </label>
         </div>
-        <p className="text-sm text-gray-500 mt-2">Upload patient photo (optional)</p>
+        <p className="text-sm text-muted-foreground mt-2">Upload patient photo (optional)</p>
       </div>
 
       {matchedCorporateEmp && (() => {
@@ -68,7 +68,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 <p className="text-xs text-primary-foreground/80">{matchedCorporateEmp.companyName || plan?.companyName} · EMP: {matchedCorporateEmp.employeeId || matchedCorporateEmp.id}</p>
               </div>
               {plan && (
-                <Badge variant="outline" className="bg-white/20 text-white border-white/30">
+                <Badge variant="outline" className="bg-card/20 text-white border-white/30">
                   {plan.code}
                 </Badge>
               )}
@@ -81,7 +81,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {(plan.benefits || []).map((b: any) => (
-                    <Badge key={b.id} variant="secondary" className="bg-white text-primary border-primary/10">
+                    <Badge key={b.id} variant="secondary" className="bg-card text-primary border-primary/10">
                       {b.description}
                     </Badge>
                   ))}
@@ -101,7 +101,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Full Name *
           </label>
@@ -122,7 +122,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div className="relative">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number *
           </label>
@@ -143,7 +143,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Mail className="w-4 h-4 inline mr-2" />
             Email Address
           </label>
@@ -164,7 +164,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
           </label>
@@ -179,14 +179,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Gender
           </label>
           <select
             name="gender"
             value={formData.gender || ''}
             onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
             <option value="">Select Gender</option>
             <option value="male">Male</option>
@@ -196,14 +196,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Blood Group
           </label>
           <select
             name="bloodGroup"
             value={formData.bloodGroup || ''}
             onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
             <option value="">Select Blood Group</option>
             <option value="A+">A+</option>
@@ -219,7 +219,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
         {type === 'person' && (
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-muted-foreground mb-2">
               Relation
             </label>
             <select
@@ -233,7 +233,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   customRelation: value === 'Other' ? prev.customRelation : ''
                 }));
               }}
-              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
             >
               <option value="">Select Relation</option>
               <option value="Father">Father</option>
@@ -277,7 +277,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-muted-foreground mb-2">
           <MapPin className="w-4 h-4 inline mr-2" />
           Address
         </label>
@@ -286,14 +286,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           value={formData.address || ''}
           onChange={handleChange}
           rows={3}
-          className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+          className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Enter complete address"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Occupation
           </label>
           <Input
@@ -306,14 +306,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             Marital Status
           </label>
           <select
             name="maritalStatus"
             value={formData.maritalStatus || ''}
             onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
             <option value="">Select Status</option>
             <option value="single">Single</option>
@@ -326,7 +326,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         {!matchedCorporateEmp && (
           <>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">
                 Patient Category
               </label>
               <select
@@ -340,7 +340,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     defaultDiscount: (val === 'family' || val === 'staff') ? 100 : prev.defaultDiscount
                   }));
                 }}
-                className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+                className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
               >
                 <option value="regular">Regular</option>
                 <option value="corporate">Corporate</option>
@@ -351,7 +351,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">
                 Default Discount (%)
               </label>
               <Input
@@ -370,7 +370,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Name
           </label>
@@ -383,7 +383,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Relation
           </label>
@@ -399,7 +399,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   customEmergencyRelation: val === 'Other' ? prev.customEmergencyRelation : ''
                 }));
               }}
-              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-white text-sm"
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
             >
               <option value="">Select Relation</option>
               <option value="Father">Father</option>
@@ -449,7 +449,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
           </label>

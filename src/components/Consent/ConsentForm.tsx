@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Save, User, FileText, Shield, PenTool, AlertCircle, ChevronRight, BookOpen, Clock } from 'lucide-react';
 import { Patient } from '../../types';
 import { SignaturePad } from './SignaturePad';
@@ -213,9 +213,9 @@ export function ConsentForm({ onClose, onSave, form, patients, doctors }: Consen
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-red-600 uppercase tracking-widest ml-1">Clinical Risks & Disclosures</label>
+                  <label className="text-[10px] font-black text-destructive uppercase tracking-widest ml-1">Clinical Risks & Disclosures</label>
                   <textarea value={formData.riskDisclosure} onChange={(e) => setFormData({...formData, riskDisclosure: e.target.value})} rows={4}
-                    className="w-full px-4 py-3 bg-red-50/30 border border-red-100 rounded-xl focus:ring-2 focus:ring-red-500/10 outline-none text-sm font-medium leading-relaxed" />
+                    className="w-full px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl focus:ring-2 focus:ring-red-500/10 outline-none text-sm font-medium leading-relaxed" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-1">Alternatives & Refusal Risks</label>

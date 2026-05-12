@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Search, Clock, Stethoscope, CheckCircle, AlertTriangle, History, UserPlus, Users } from 'lucide-react';
 import ConsultationHistoryModal from './ConsultationHistoryModal';
 import { DirectConsultationPopup } from './DirectConsultationPopup';
@@ -56,9 +56,9 @@ export function PatientQueue({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'waiting': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in-consultation': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'in-consultation': return 'bg-primary/10 text-primary border-primary/30';
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -89,36 +89,36 @@ export function PatientQueue({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header bg-gradient-to-r from-blue-50 to-indigo-50/30 p-6 rounded-3xl border border-blue-100/50 shadow-sm">
+      <div className="page-header bg-gradient-to-r from-primary/10 to-indigo-50/30 p-6 rounded-3xl border border-primary/10 shadow-sm">
         <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-100">
-            <Stethoscope className="w-8 h-8 text-blue-600" />
+          <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/20">
+            <Stethoscope className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Consultation Queue</h1>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Consultation Queue</h1>
             <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-sm font-medium text-gray-500">Dr. {doctorName}</span>
-              <span className="w-1 h-1 bg-gray-300 rounded-full" />
+              <span className="text-sm font-medium text-muted-foreground">Dr. {doctorName}</span>
+              <span className="w-1 h-1 bg-muted rounded-full" />
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
                   <span className="text-sm font-bold text-amber-600">{waitingCount} Waiting</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-blue-600">{inConsultationCount} Consulting</span>
+                  <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
+                  <span className="text-sm font-bold text-primary">{inConsultationCount} Consulting</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-sm">
+        <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-sm">
           <Clock className="w-5 h-5 text-blue-500" />
           <div className="text-right">
-            <div className="text-lg font-black text-gray-900 leading-none">
+            <div className="text-lg font-black text-foreground leading-none">
               {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
             </div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+            <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
               {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}
             </div>
           </div>
@@ -126,20 +126,20 @@ export function PatientQueue({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
         <div className="relative flex-1 group">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             placeholder="Search by patient name, treatment, or concern..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+            className="w-full pl-11 pr-4 py-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
           />
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-gray-100/80 p-1.5 rounded-xl border border-gray-200/60">
+          <div className="flex items-center bg-muted/80 p-1.5 rounded-xl border border-border/60">
             {[
               { id: 'all', label: 'All', icon: <Users className="w-3.5 h-3.5" /> },
               { id: 'waiting', label: 'Waiting', icon: <Clock className="w-3.5 h-3.5" /> },
@@ -151,8 +151,8 @@ export function PatientQueue({
                 onClick={() => setFilterStatus(s.id)}
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                   filterStatus === s.id 
-                    ? 'bg-white text-blue-600 shadow-sm border border-gray-200' 
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                    ? 'bg-card text-primary shadow-sm border border-border' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 {s.icon}
@@ -164,7 +164,7 @@ export function PatientQueue({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowDirectPopup(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm"
             >
               <UserPlus className="w-4 h-4" />
               <span>Direct</span>
@@ -172,7 +172,7 @@ export function PatientQueue({
 
             <button
               onClick={() => setShowHistory(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 active:scale-95 transition-all shadow-sm font-bold text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted active:scale-95 transition-all shadow-sm font-bold text-sm"
             >
               <History className="w-4 h-4 text-blue-500" />
               <span>History</span>
@@ -230,10 +230,10 @@ export function PatientQueue({
       {filteredPatients.length === 0 && (
         <div className="card text-center py-12">
           <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Search className="w-12 h-12 text-gray-400" />
+            <Search className="w-12 h-12 text-muted-foreground/60" />
           </div>
           <h3 className="empty-state-title">No patients found</h3>
-          <p className="text-gray-600 mb-4 px-6">
+          <p className="text-muted-foreground mb-4 px-6">
             {searchTerm || filterStatus !== 'all'
               ? 'Try adjusting your search criteria or filters.'
               : 'Patients will appear here once they check in for their appointments.'
