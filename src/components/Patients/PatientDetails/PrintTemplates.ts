@@ -1,5 +1,15 @@
 export const getPrescriptionHTML = (data: any) => {
-  const { t, localizedClinicName, localizedDoctorName, localizedDoctorDegrees, localizedPatientName, previewData, localizedGender, localizedData, historyContent, customContent, printLanguage, patientId } = data;
+  const {
+    t,
+    localizedClinicName,
+    localizedDoctorName,
+    localizedDoctorDegrees,
+    localizedPatientName,
+    historyContent,
+    customContent,
+    printLanguage,
+    patientId,
+  } = data;
   return `
     <html>
       <head>

@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { Calendar as CalendarIcon, Clock, User, Stethoscope } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Stethoscope } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 interface DayAgendaProps {
@@ -41,7 +41,10 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                   <Clock className="w-3 h-3" />
                   {formatTime(apt.time)}
                 </span>
-                <Badge variant={apt.status === "checked-in" ? "green" : "blue"} className="text-[8px] uppercase tracking-wider">
+                <Badge
+                  variant={apt.status === "checked-in" ? "green" : "blue"}
+                  className="text-[8px] uppercase tracking-wider"
+                >
                   {apt.status || "Booked"}
                 </Badge>
               </div>
@@ -50,10 +53,14 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                   {(apt.patientName || "?").charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-foreground truncate tracking-tight">{apt.patientName}</p>
+                  <p className="text-[11px] font-bold text-foreground truncate tracking-tight">
+                    {apt.patientName}
+                  </p>
                   <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-medium">
                     <Stethoscope className="w-2.5 h-2.5" />
-                    <span className="truncate">{apt.treatment || "Consultation"}</span>
+                    <span className="truncate">
+                      {apt.treatment || "Consultation"}
+                    </span>
                   </div>
                   <p className="text-[8px] font-bold text-primary/60 mt-1 uppercase tracking-tighter">
                     {apt.duration || 15} mins duration
@@ -65,7 +72,9 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-30">
             <CalendarIcon className="w-10 h-10 text-muted-foreground/20 mb-2" />
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">No entries</p>
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              No entries
+            </p>
           </div>
         )}
       </div>

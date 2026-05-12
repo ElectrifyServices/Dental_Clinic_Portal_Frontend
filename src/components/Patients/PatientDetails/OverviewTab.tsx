@@ -1,12 +1,24 @@
 ﻿import React from "react";
-import { User, Mail, Phone, Calendar, Heart, MapPin, Activity, UserPlus, TrendingUp } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Heart,
+  MapPin,
+  Activity,
+  UserPlus,
+} from "lucide-react";
 
 interface OverviewTabProps {
   patient: any;
   patientAppointments: any[];
 }
 
-export const OverviewTab: React.FC<OverviewTabProps> = ({ patient, patientAppointments }) => {
+export const OverviewTab: React.FC<OverviewTabProps> = ({
+  patient,
+  patientAppointments,
+}) => {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Personal Information */}
@@ -29,9 +41,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ patient, patientAppoin
             <Phone className="w-5 h-5 text-muted-foreground/60 mr-3" />
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">
-                {patient.phone}
-              </p>
+              <p className="font-medium text-foreground">{patient.phone}</p>
             </div>
           </div>
           <div className="flex items-center">
@@ -78,9 +88,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ patient, patientAppoin
             <MapPin className="w-5 h-5 text-muted-foreground/60 mr-3 mt-1" />
             <div>
               <p className="text-sm text-muted-foreground">Address</p>
-              <p className="font-medium text-foreground">
-                {patient.address}
-              </p>
+              <p className="font-medium text-foreground">{patient.address}</p>
             </div>
           </div>
           <div className="flex items-center">
@@ -106,19 +114,28 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ patient, patientAppoin
             <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
               <div className="flex items-center">
                 <Calendar className="w-5 h-5 text-primary mr-3" />
-                <span className="text-sm text-muted-foreground">Total Visits</span>
+                <span className="text-sm text-muted-foreground">
+                  Total Visits
+                </span>
               </div>
               <span className="text-xl font-bold text-primary">
-                {patientAppointments.filter((a) => a.status === "completed").length}
+                {
+                  patientAppointments.filter((a) => a.status === "completed")
+                    .length
+                }
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
               <div className="flex items-center">
                 <UserPlus className="w-5 h-5 text-primary mr-3" />
-                <span className="text-sm text-muted-foreground">Registered on</span>
+                <span className="text-sm text-muted-foreground">
+                  Registered on
+                </span>
               </div>
               <span className="text-sm font-bold text-primary">
-                {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'New Registration'}
+                {patient.createdAt
+                  ? new Date(patient.createdAt).toLocaleDateString()
+                  : "New Registration"}
               </span>
             </div>
           </div>

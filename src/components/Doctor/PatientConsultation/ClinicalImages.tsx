@@ -16,7 +16,7 @@ export function ClinicalImages({
   onImageUpload,
   onXrayUpload,
   onRemoveImage,
-  onRemoveXray
+  onRemoveXray,
 }: ClinicalImagesProps) {
   return (
     <div className="px-6 space-y-6">
@@ -78,7 +78,7 @@ export function ClinicalImages({
       {/* X-Ray Files Section */}
       <div className="bg-muted rounded-2xl p-6 border border-border space-y-4">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center">
+          <label className="block text-sm font-bold text-muted-foreground uppercase tracking-wider items-center">
             <Camera className="w-4 h-4 mr-2 text-primary" />
             Add File X-Ray
           </label>
@@ -97,8 +97,15 @@ export function ClinicalImages({
         {xrayFiles.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
             {xrayFiles.map((url, idx) => (
-              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-white shadow-md">
-                <img src={url} alt={`X-Ray ${idx + 1}`} className="w-full h-full object-cover" />
+              <div
+                key={idx}
+                className="relative group aspect-square rounded-xl overflow-hidden border-2 border-white shadow-md"
+              >
+                <img
+                  src={url}
+                  alt={`X-Ray ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => onRemoveXray(idx)}
@@ -110,7 +117,9 @@ export function ClinicalImages({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground/60 italic">No X-ray files uploaded</p>
+          <p className="text-xs text-muted-foreground/60 italic">
+            No X-ray files uploaded
+          </p>
         )}
       </div>
     </div>

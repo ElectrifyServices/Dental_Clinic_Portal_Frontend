@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
@@ -8,23 +8,33 @@ import { AppointmentStats } from "../components/Appointments/AppointmentList/App
 
 export const AppointmentsPage: React.FC = () => {
   const {
-    appointments, staffMembers, patients,
-    handleDeleteAppointment, handleUpdateAppointmentStatus,
+    appointments,
+    staffMembers,
+    patients,
+    handleDeleteAppointment,
+    handleUpdateAppointmentStatus,
   } = useAppData();
   const {
-    setActiveModal, setSelectedAppointment, confirmDelete,
-    setPendingCheckInAppt, setSelectedPatientId,
-    doctorAvailability,
+    setActiveModal,
+    setSelectedAppointment,
+    confirmDelete,
+    setPendingCheckInAppt,
+    setSelectedPatientId,
   } = useModal();
 
   const [viewMode, setViewMode] = useState("calendar");
 
   const activeDoctors = useMemo(
-    () => staffMembers.filter((s: any) => s.role === "doctor" || s.role === "admin"),
-    [staffMembers]
+    () =>
+      staffMembers.filter(
+        (s: any) => s.role === "doctor" || s.role === "admin",
+      ),
+    [staffMembers],
   );
 
-  const listCount = appointments.filter((a: any) => a.status !== "no-show").length;
+  const listCount = appointments.filter(
+    (a: any) => a.status !== "no-show",
+  ).length;
 
   const handleNewAppointment = (date?: any) => {
     setSelectedAppointment(date ? { date } : null);
@@ -36,7 +46,7 @@ export const AppointmentsPage: React.FC = () => {
     confirmDelete(
       "Delete Appointment",
       `Delete appointment for ${apt?.patientName || "this patient"}?`,
-      () => handleDeleteAppointment(id)
+      () => handleDeleteAppointment(id),
     );
   };
 
@@ -46,7 +56,7 @@ export const AppointmentsPage: React.FC = () => {
     const existing = patients.find(
       (p: any) =>
         (p.phone || "").trim() === sPhone &&
-        (p.name || "").toLowerCase().trim() === sName
+        (p.name || "").toLowerCase().trim() === sName,
     );
     setPendingCheckInAppt(appt);
     if (existing) {
@@ -62,8 +72,12 @@ export const AppointmentsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/50 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground font-medium">Schedule and manage patient visits</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            Appointments
+          </h1>
+          <p className="text-muted-foreground font-medium">
+            Schedule and manage patient visits
+          </p>
         </div>
         <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
           <button
@@ -98,9 +112,18 @@ export const AppointmentsPage: React.FC = () => {
             onNewAppointment={handleNewAppointment}
             appointments={appointments}
             doctors={activeDoctors}
-            onBookAppointment={(doctorId: string, date: string, time: string) => {
+            onBookAppointment={(
+              doctorId: string,
+              date: Date,
+              time: string,
+            ) => {
               const doctor = activeDoctors.find((d: any) => d.id === doctorId);
-              setSelectedAppointment({ doctorId, doctorName: doctor?.name, date, time });
+              setSelectedAppointment({
+                doctorId,
+                doctorName: doctor?.name,
+                date: date.toISOString().split("T")[0],
+                time,
+              });
               setActiveModal("appointmentForm");
             }}
             onEditAppointment={(apt: any) => {
@@ -112,7 +135,9 @@ export const AppointmentsPage: React.FC = () => {
         {(viewMode === "list" || viewMode === "no-show") && (
           <AppointmentList
             appointments={appointments.filter((apt: any) =>
-              viewMode === "list" ? apt.status !== "no-show" : apt.status === "no-show"
+              viewMode === "list"
+                ? apt.status !== "no-show"
+                : apt.status === "no-show",
             )}
             onEditAppointment={(id: string) => {
               const apt = appointments.find((a: any) => a.id === id);

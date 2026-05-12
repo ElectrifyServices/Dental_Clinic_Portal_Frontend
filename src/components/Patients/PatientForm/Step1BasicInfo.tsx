@@ -1,14 +1,25 @@
-﻿import React from 'react';
-import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
-import { calculateAge } from './utils';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent } from '@/components/ui/Card';
-import { AlertTriangle, Calendar, Mail, MapPin, Phone, ShieldCheck, Upload, User } from 'lucide-react';
+﻿import React from "react";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
+import {
+  AlertTriangle,
+  Calendar,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Upload,
+  User,
+} from "lucide-react";
 
 interface Step1Props {
   formData: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  handleChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => void;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   validationErrors: { [key: string]: string };
   matchedCorporateEmp: any;
@@ -29,7 +40,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   type,
   handleCustomRelation,
   applyCustomRelation,
-  handleImageUpload
+  handleImageUpload,
 }) => {
   return (
     <div className="space-y-6">
@@ -38,7 +49,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         <div className="relative inline-block">
           <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
             {formData.avatar ? (
-              <img src={formData.avatar} alt="Avatar" className="w-24 h-24 object-cover rounded-full" />
+              <img
+                src={formData.avatar}
+                alt="Avatar"
+                className="w-24 h-24 object-cover rounded-full"
+              />
             ) : (
               <User className="w-12 h-12 text-primary" />
             )}
@@ -53,51 +68,75 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             />
           </label>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">Upload patient photo (optional)</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Upload patient photo (optional)
+        </p>
       </div>
 
-      {matchedCorporateEmp && (() => {
-        const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
-        const plan = corporatePlans.find((cp: any) => cp.id === planId);
-        return (
-          <Card className="mx-6 overflow-hidden border-secondary bg-secondary/30">
-            <div className="flex items-center gap-3 px-4 py-3 bg-primary">
-              <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white">Corporate Employee Identified</p>
-                <p className="text-xs text-primary-foreground/80">{matchedCorporateEmp.companyName || plan?.companyName} · EMP: {matchedCorporateEmp.employeeId || matchedCorporateEmp.id}</p>
+      {matchedCorporateEmp &&
+        (() => {
+          const planId =
+            matchedCorporateEmp.corporatePlanId ||
+            matchedCorporateEmp.companyId;
+          const plan = corporatePlans.find((cp: any) => cp.id === planId);
+          return (
+            <Card className="mx-6 overflow-hidden border-secondary bg-secondary/30">
+              <div className="flex items-center gap-3 px-4 py-3 bg-primary">
+                <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white">
+                    Corporate Employee Identified
+                  </p>
+                  <p className="text-xs text-primary-foreground/80">
+                    {matchedCorporateEmp.companyName || plan?.companyName} ·
+                    EMP:{" "}
+                    {matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
+                  </p>
+                </div>
+                {plan && (
+                  <Badge
+                    variant="outline"
+                    className="bg-card/20 text-white border-white/30"
+                  >
+                    {plan.code}
+                  </Badge>
+                )}
               </div>
-              {plan && (
-                <Badge variant="outline" className="bg-card/20 text-white border-white/30">
-                  {plan.code}
-                </Badge>
+              {plan ? (
+                <CardContent className="px-4 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-primary">
+                      {plan.name}
+                    </p>
+                    <span className="text-xs text-ternary font-medium">
+                      Valid till {plan.validTo}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(plan.benefits || []).map((b: any) => (
+                      <Badge
+                        key={b.id}
+                        variant="secondary"
+                        className="bg-card text-primary border-primary/10"
+                      >
+                        {b.description}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-primary/70 font-medium italic">
+                    ✓ Discount will be applied automatically in billing.
+                  </p>
+                </CardContent>
+              ) : (
+                <CardContent className="px-4 py-3">
+                  <p className="text-xs text-amber-700 font-medium">
+                    Employee found but no active plan assigned.
+                  </p>
+                </CardContent>
               )}
-            </div>
-            {plan ? (
-              <CardContent className="px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-primary">{plan.name}</p>
-                  <span className="text-xs text-ternary font-medium">Valid till {plan.validTo}</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {(plan.benefits || []).map((b: any) => (
-                    <Badge key={b.id} variant="secondary" className="bg-card text-primary border-primary/10">
-                      {b.description}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-primary/70 font-medium italic">
-                  ✓ Discount will be applied automatically in billing.
-                </p>
-              </CardContent>
-            ) : (
-              <CardContent className="px-4 py-3">
-                <p className="text-xs text-amber-700 font-medium">Employee found but no active plan assigned.</p>
-              </CardContent>
-            )}
-          </Card>
-        );
-      })()}
+            </Card>
+          );
+        })()}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -108,9 +147,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="text"
             name="name"
-            value={formData.name || ''}
+            value={formData.name || ""}
             onChange={handleChange}
-            className={validationErrors.name ? 'border-destructive bg-destructive/5' : ''}
+            className={
+              validationErrors.name ? "border-destructive bg-destructive/5" : ""
+            }
             placeholder="Enter patient's full name"
           />
           {validationErrors.name && (
@@ -129,9 +170,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="tel"
             name="phone"
-            value={formData.phone || ''}
+            value={formData.phone || ""}
             onChange={handleChange}
-            className={validationErrors.phone ? 'border-destructive bg-destructive/5' : ''}
+            className={
+              validationErrors.phone
+                ? "border-destructive bg-destructive/5"
+                : ""
+            }
             placeholder="+91 98765 43210"
           />
           {validationErrors.phone && (
@@ -150,9 +195,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="email"
             name="email"
-            value={formData.email || ''}
+            value={formData.email || ""}
             onChange={handleChange}
-            className={validationErrors.email ? 'border-destructive bg-destructive/5' : ''}
+            className={
+              validationErrors.email
+                ? "border-destructive bg-destructive/5"
+                : ""
+            }
             placeholder="Enter email address"
           />
           {validationErrors.email && (
@@ -171,9 +220,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="date"
             name="dateOfBirth"
-            value={formData.dateOfBirth || ''}
+            value={formData.dateOfBirth || ""}
             onChange={handleChange}
-            max={new Date().toISOString().split('T')[0]}
+            max={new Date().toISOString().split("T")[0]}
             className="focus:ring-primary"
           />
         </div>
@@ -184,7 +233,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="gender"
-            value={formData.gender || ''}
+            value={formData.gender || ""}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
@@ -201,7 +250,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="bloodGroup"
-            value={formData.bloodGroup || ''}
+            value={formData.bloodGroup || ""}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
@@ -217,20 +266,20 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </select>
         </div>
 
-        {type === 'person' && (
+        {type === "person" && (
           <div>
             <label className="block text-sm font-semibold text-muted-foreground mb-2">
               Relation
             </label>
             <select
               name="relation"
-              value={formData.relation || ''}
+              value={formData.relation || ""}
               onChange={(e) => {
                 const value = e.target.value;
                 setFormData((prev: any) => ({
                   ...prev,
                   relation: value,
-                  customRelation: value === 'Other' ? prev.customRelation : ''
+                  customRelation: value === "Other" ? prev.customRelation : "",
                 }));
               }}
               className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
@@ -244,18 +293,29 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <option value="Husband">Husband</option>
               <option value="Friend">Friend</option>
               <option value="Other">Other</option>
-              {formData.relation && !['', 'Father', 'Mother', 'Brother', 'Sister', 'Wife', 'Husband', 'Friend', 'Other'].includes(formData.relation) && (
-                <option value={formData.relation}>{formData.relation}</option>
-              )}
+              {formData.relation &&
+                ![
+                  "",
+                  "Father",
+                  "Mother",
+                  "Brother",
+                  "Sister",
+                  "Wife",
+                  "Husband",
+                  "Friend",
+                  "Other",
+                ].includes(formData.relation) && (
+                  <option value={formData.relation}>{formData.relation}</option>
+                )}
             </select>
-            {formData.relation === 'Other' && (
+            {formData.relation === "Other" && (
               <div className="flex mt-3">
                 <Input
                   type="text"
-                  value={formData.customRelation || ''}
+                  value={formData.customRelation || ""}
                   onChange={(e) => handleCustomRelation(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       applyCustomRelation();
                     }
@@ -283,7 +343,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </label>
         <textarea
           name="address"
-          value={formData.address || ''}
+          value={formData.address || ""}
           onChange={handleChange}
           rows={3}
           className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
@@ -299,7 +359,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="text"
             name="occupation"
-            value={formData.occupation || ''}
+            value={formData.occupation || ""}
             onChange={handleChange}
             placeholder="Enter occupation"
           />
@@ -311,7 +371,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </label>
           <select
             name="maritalStatus"
-            value={formData.maritalStatus || ''}
+            value={formData.maritalStatus || ""}
             onChange={handleChange}
             className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           >
@@ -331,13 +391,16 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </label>
               <select
                 name="category"
-                value={formData.category || 'regular'}
+                value={formData.category || "regular"}
                 onChange={(e) => {
                   const val = e.target.value;
                   setFormData((prev: any) => ({
                     ...prev,
                     category: val as any,
-                    defaultDiscount: (val === 'family' || val === 'staff') ? 100 : prev.defaultDiscount
+                    defaultDiscount:
+                      val === "family" || val === "staff"
+                        ? 100
+                        : prev.defaultDiscount,
                   }));
                 }}
                 className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
@@ -377,7 +440,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="text"
             name="emergencyName"
-            value={formData.emergencyName || ''}
+            value={formData.emergencyName || ""}
             onChange={handleChange}
             placeholder="Emergency contact person name"
           />
@@ -390,13 +453,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <div className="space-y-3">
             <select
               name="emergencyRelation"
-              value={formData.emergencyRelation || ''}
+              value={formData.emergencyRelation || ""}
               onChange={(e) => {
                 const val = e.target.value;
                 setFormData((prev: any) => ({
                   ...prev,
                   emergencyRelation: val,
-                  customEmergencyRelation: val === 'Other' ? prev.customEmergencyRelation : ''
+                  customEmergencyRelation:
+                    val === "Other" ? prev.customEmergencyRelation : "",
                 }));
               }}
               className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
@@ -411,21 +475,44 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <option value="Guardian">Guardian</option>
               <option value="Friend">Friend</option>
               <option value="Other">Other</option>
-              {formData.emergencyRelation && !['', 'Father', 'Mother', 'Brother', 'Sister', 'Husband', 'Wife', 'Guardian', 'Friend', 'Other'].includes(formData.emergencyRelation) && (
-                <option value={formData.emergencyRelation}>{formData.emergencyRelation}</option>
-              )}
+              {formData.emergencyRelation &&
+                ![
+                  "",
+                  "Father",
+                  "Mother",
+                  "Brother",
+                  "Sister",
+                  "Husband",
+                  "Wife",
+                  "Guardian",
+                  "Friend",
+                  "Other",
+                ].includes(formData.emergencyRelation) && (
+                  <option value={formData.emergencyRelation}>
+                    {formData.emergencyRelation}
+                  </option>
+                )}
             </select>
-            {formData.emergencyRelation === 'Other' && (
+            {formData.emergencyRelation === "Other" && (
               <div className="flex animate-in fade-in slide-in-from-top-2">
                 <Input
                   type="text"
-                  value={formData.customEmergencyRelation || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, customEmergencyRelation: e.target.value }))}
+                  value={formData.customEmergencyRelation || ""}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      customEmergencyRelation: e.target.value,
+                    }))
+                  }
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       if (formData.customEmergencyRelation?.trim()) {
-                        setFormData((prev: any) => ({ ...prev, emergencyRelation: prev.customEmergencyRelation, customEmergencyRelation: '' }));
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          emergencyRelation: prev.customEmergencyRelation,
+                          customEmergencyRelation: "",
+                        }));
                       }
                     }
                   }}
@@ -436,7 +523,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   type="button"
                   onClick={() => {
                     if (formData.customEmergencyRelation.trim()) {
-                      setFormData((prev: any) => ({ ...prev, emergencyRelation: prev.customEmergencyRelation, customEmergencyRelation: '' }));
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        emergencyRelation: prev.customEmergencyRelation,
+                        customEmergencyRelation: "",
+                      }));
                     }
                   }}
                   className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
@@ -456,7 +547,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="tel"
             name="emergencyContact"
-            value={formData.emergencyContact || ''}
+            value={formData.emergencyContact || ""}
             onChange={handleChange}
             placeholder="Emergency contact phone number"
           />

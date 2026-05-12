@@ -1,6 +1,6 @@
-﻿import React from 'react';
-import { Stethoscope, IndianRupee, FileText } from 'lucide-react';
-import { Input } from '@/components/ui/Input';
+﻿import React from "react";
+import { Stethoscope, IndianRupee } from "lucide-react";
+import { Input } from "@/components/ui/Input";
 
 interface TreatmentFieldsProps {
   treatment: string;
@@ -9,7 +9,11 @@ interface TreatmentFieldsProps {
   patientConcern: string;
   notes: string;
   appointmentTypes: any[];
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => void;
 }
 
 export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
@@ -27,13 +31,17 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <Stethoscope className="w-4 h-4 text-primary" />
         </div>
-        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest">Treatment Details</h4>
+        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+          Treatment Details
+        </h4>
         <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Treatment Type</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+            Treatment Type
+          </label>
           <select
             name="treatmentType"
             value={treatmentType}
@@ -41,13 +49,17 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
             className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium"
           >
             <option value="">General Consultation</option>
-            {appointmentTypes.map(t => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            {appointmentTypes.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
         </div>
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Specific Treatment</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+            Specific Treatment
+          </label>
           <Input
             name="treatment"
             value={treatment}
@@ -57,7 +69,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="md:col-span-1 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Fee (₹)</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+            Fee (₹)
+          </label>
           <div className="relative">
             <Input
               type="number"
@@ -73,7 +87,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Patient Concern</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+            Patient Concern
+          </label>
           <textarea
             name="patientConcern"
             value={patientConcern}
@@ -85,7 +101,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">Additional Notes</label>
+          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+            Additional Notes
+          </label>
           <textarea
             name="notes"
             value={notes}

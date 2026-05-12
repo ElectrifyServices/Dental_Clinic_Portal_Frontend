@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, TrendingUp, Users, AlertTriangle, CreditCard, Building2 } from 'lucide-react';
-import { KpiCard } from '@/components/ui';
+import { MetricCard } from '@/components/ui';
 
 interface StatsState {
   todayAppts: number;
@@ -38,47 +38,41 @@ export function DashboardStats() {
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      <KpiCard
+      <MetricCard
         label="Today's Appointments"
         value={stats.todayAppts}
-        icon={<Calendar className="w-6 h-6" />}
-        sub="View schedule →"
+        icon={<Calendar className="w-5 h-5" />}
+        variant="gray"
       />
-      <KpiCard
+      <MetricCard
         label="Today's Revenue"
         value={`₹${stats.todayRevenue.toLocaleString()}`}
-        colorClass="text-emerald-600"
-        icon={<TrendingUp className="w-6 h-6" />}
-        sub="From completed visits"
-        subPositive
+        variant="emerald"
+        icon={<TrendingUp className="w-5 h-5" />}
       />
-      <KpiCard
+      <MetricCard
         label="Total Patients"
         value={stats.totalPatients}
-        icon={<Users className="w-6 h-6" />}
-        sub="Registered in system"
+        variant="primary"
+        icon={<Users className="w-5 h-5" />}
       />
-      <KpiCard
+      <MetricCard
         label="Pending Invoices"
         value={stats.pendingInvoices}
-        colorClass={stats.pendingInvoices > 0 ? 'text-amber-600' : 'text-foreground'}
-        icon={<CreditCard className="w-6 h-6" />}
-        sub={stats.pendingInvoices > 0 ? `${stats.pendingInvoices} need attention` : 'All clear'}
-        subPositive={stats.pendingInvoices === 0}
+        variant={stats.pendingInvoices > 0 ? "amber" : "gray"}
+        icon={<CreditCard className="w-5 h-5" />}
       />
-      <KpiCard
+      <MetricCard
         label="Low Stock Items"
         value={stats.lowStock}
-        colorClass={stats.lowStock > 0 ? 'text-destructive' : 'text-foreground'}
-        icon={<AlertTriangle className="w-6 h-6" />}
-        sub={stats.lowStock > 0 ? 'Reorder needed' : 'Levels OK'}
-        subPositive={stats.lowStock === 0}
+        variant={stats.lowStock > 0 ? "rose" : "gray"}
+        icon={<AlertTriangle className="w-5 h-5" />}
       />
-      <KpiCard
+      <MetricCard
         label="Corporate Members"
         value={stats.corpMembers}
-        icon={<Building2 className="w-6 h-6" />}
-        sub="On active plans"
+        variant="indigo"
+        icon={<Building2 className="w-5 h-5" />}
       />
     </div>
   );

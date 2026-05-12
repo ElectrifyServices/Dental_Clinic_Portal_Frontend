@@ -1,25 +1,44 @@
-﻿import React, { useState } from 'react';
-import { Bell, LogOut, Calendar, Plus, ChevronDown, Stethoscope } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTenant } from '../../contexts/TenantContext';
-import { useModal } from '../../contexts/ModalContext';
+﻿import { useState } from "react";
+import { Bell, LogOut, Calendar, ChevronDown, Stethoscope } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTenant } from "../../contexts/TenantContext";
+import { useModal } from "../../contexts/ModalContext";
 
 export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
-  const { setActiveModal, setSelectedAppointment } = useModal();
+  const { setActiveModal } = useModal();
   const [showMenu, setShowMenu] = useState(false);
 
-  const onShowTodaySchedule = () => setActiveModal('todaySchedule');
-  const onQuickAppointment = () => { setSelectedAppointment(null); setActiveModal('appointmentForm'); };
+  const onShowTodaySchedule = () => setActiveModal("todaySchedule");
 
   const roleMeta = () => {
     switch (state.user?.role) {
-      case 'superadmin': return { label: 'Super Admin', cls: 'bg-violet-100 text-violet-700 border-violet-200' };
-      case 'admin': return { label: 'Admin', cls: 'bg-primary/10 text-primary border-primary/30' };
-      case 'doctor': return { label: 'Doctor', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
-      case 'receptionist': return { label: 'Receptionist', cls: 'bg-amber-100 text-amber-700 border-amber-200' };
-      default: return { label: state.user?.role || '', cls: 'bg-muted text-muted-foreground border-border' };
+      case "superadmin":
+        return {
+          label: "Super Admin",
+          cls: "bg-violet-100 text-violet-700 border-violet-200",
+        };
+      case "admin":
+        return {
+          label: "Admin",
+          cls: "bg-primary/10 text-primary border-primary/30",
+        };
+      case "doctor":
+        return {
+          label: "Doctor",
+          cls: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        };
+      case "receptionist":
+        return {
+          label: "Receptionist",
+          cls: "bg-amber-100 text-amber-700 border-amber-200",
+        };
+      default:
+        return {
+          label: state.user?.role || "",
+          cls: "bg-muted text-muted-foreground border-border",
+        };
     }
   };
   const rm = roleMeta();
@@ -33,12 +52,16 @@ export function Header() {
           <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
             <Stethoscope className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-foreground text-[15px]">{tenant.branding.clinicName}</span>
+          <span className="font-bold text-foreground text-[15px]">
+            {tenant.branding.clinicName}
+          </span>
         </div>
         {/* Quick actions */}
         <div className="hidden sm:flex items-center gap-2">
-          <button onClick={onShowTodaySchedule}
-            className="flex items-center gap-1.5 bg-background border border-border hover:border-primary hover:bg-primary/10 text-foreground text-sm font-medium px-4 py-2 rounded-xl transition-all">
+          <button
+            onClick={onShowTodaySchedule}
+            className="flex items-center gap-1.5 bg-background border border-border hover:border-primary hover:bg-primary/10 text-foreground text-sm font-medium px-4 py-2 rounded-xl transition-all"
+          >
             <Calendar className="w-3.5 h-3.5 text-primary" />
             <span>Today's Schedule</span>
           </button>
@@ -53,14 +76,22 @@ export function Header() {
         </button>
 
         <div className="relative">
-          <button onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted rounded-xl transition-colors">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted rounded-xl transition-colors"
+          >
             <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xs flex-shrink-0">
-              {state.user?.name?.[0] ?? 'U'}
+              {state.user?.name?.[0] ?? "U"}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-[13px] font-semibold text-foreground leading-tight">{state.user?.name}</p>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${rm.cls}`}>{rm.label}</span>
+              <p className="text-[13px] font-semibold text-foreground leading-tight">
+                {state.user?.name}
+              </p>
+              <span
+                className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${rm.cls}`}
+              >
+                {rm.label}
+              </span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 hidden sm:block" />
           </button>
@@ -68,11 +99,20 @@ export function Header() {
           {showMenu && (
             <div className="absolute right-0 mt-1.5 w-52 bg-card rounded-xl shadow-xl border border-border py-1.5 z-50">
               <div className="px-4 py-2.5 border-b border-border">
-                <p className="text-sm font-semibold text-foreground">{state.user?.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{state.user?.email}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {state.user?.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {state.user?.email}
+                </p>
               </div>
-              <button onClick={() => { logout(); setShowMenu(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
+              <button
+                onClick={() => {
+                  logout();
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              >
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
             </div>

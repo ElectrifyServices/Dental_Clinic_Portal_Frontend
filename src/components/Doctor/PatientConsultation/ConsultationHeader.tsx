@@ -1,5 +1,4 @@
-﻿import React from "react";
-import { X, Stethoscope, User } from "lucide-react";
+﻿import { X, Stethoscope, User } from "lucide-react";
 
 interface Patient {
   id: string;
@@ -22,7 +21,10 @@ interface ConsultationHeaderProps {
   onClose: () => void;
 }
 
-export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps) {
+export function ConsultationHeader({
+  patient,
+  onClose,
+}: ConsultationHeaderProps) {
   const calculateAge = (dob: string): string => {
     if (!dob) return "?";
     const today = new Date();
@@ -61,7 +63,7 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
       </div>
 
       <div className="px-6 pt-6 space-y-6">
-        {patient.category && patient.category !== 'regular' && (
+        {patient.category && patient.category !== "regular" && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
             <div className="bg-amber-100 p-3 rounded-full text-amber-600">
               <User className="w-6 h-6" />
@@ -71,7 +73,8 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
                 {patient.category.toUpperCase()} PATIENT DETECTED
               </h4>
               <p className="text-xs text-amber-700 font-medium">
-                Eligible for {patient.defaultDiscount || 100}% discount. Please manage billing accordingly.
+                Eligible for {patient.defaultDiscount || 100}% discount. Please
+                manage billing accordingly.
               </p>
             </div>
             <div className="ml-auto bg-amber-200/50 px-3 py-1 rounded-lg text-[10px] font-bold text-amber-800 uppercase border border-amber-300">
@@ -85,18 +88,31 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Basic Info */}
             <div>
-              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Patient Name</p>
-              <p className="text-lg font-bold text-blue-900">{patient.patientName}</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                Patient Name
+              </p>
+              <p className="text-lg font-bold text-blue-900">
+                {patient.patientName}
+              </p>
               <div className="flex gap-4 mt-2">
                 <div>
-                  <p className="text-[10px] font-bold text-blue-400 uppercase">Age / Gender</p>
+                  <p className="text-[10px] font-bold text-blue-400 uppercase">
+                    Age / Gender
+                  </p>
                   <p className="text-sm font-bold text-blue-900">
-                    {patient.patientHistory?.dateOfBirth ? calculateAge(patient.patientHistory.dateOfBirth) : "?"}Y / {patient.patientHistory?.gender || "N/A"}
+                    {patient.patientHistory?.dateOfBirth
+                      ? calculateAge(patient.patientHistory.dateOfBirth)
+                      : "?"}
+                    Y / {patient.patientHistory?.gender || "N/A"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-blue-400 uppercase">Phone</p>
-                  <p className="text-sm font-bold text-blue-900">{patient.phone || "N/A"}</p>
+                  <p className="text-[10px] font-bold text-blue-400 uppercase">
+                    Phone
+                  </p>
+                  <p className="text-sm font-bold text-blue-900">
+                    {patient.phone || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -104,33 +120,53 @@ export function ConsultationHeader({ patient, onClose }: ConsultationHeaderProps
             {/* Treatment & Concern */}
             <div>
               <div className="mb-3">
-                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Treatment Type</p>
-                <p className="text-sm font-bold text-blue-900">{patient.treatmentType || "General Consultation"}</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                  Treatment Type
+                </p>
+                <p className="text-sm font-bold text-blue-900">
+                  {patient.treatmentType || "General Consultation"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Patient Concern</p>
-                <p className="text-sm font-medium text-primary italic leading-tight">"{patient.patientConcern || "No concern recorded"}"</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                  Patient Concern
+                </p>
+                <p className="text-sm font-medium text-primary italic leading-tight">
+                  "{patient.patientConcern || "No concern recorded"}"
+                </p>
               </div>
             </div>
 
             {/* Medical Alerts */}
             <div className="md:col-span-2 lg:col-span-1">
-              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Medical Alerts & History</p>
-              {patient.patientHistory && (patient.patientHistory.allergies.length > 0 || patient.patientHistory.medicalHistory.length > 0) ? (
+              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
+                Medical Alerts & History
+              </p>
+              {patient.patientHistory &&
+              (patient.patientHistory.allergies.length > 0 ||
+                patient.patientHistory.medicalHistory.length > 0) ? (
                 <div className="bg-destructive/10 p-3 rounded-xl border border-destructive/20 space-y-1">
                   {patient.patientHistory.allergies.length > 0 && (
                     <div className="text-[11px] text-destructive">
-                      <strong className="uppercase text-[9px] mr-1">Allergies:</strong> {patient.patientHistory.allergies.join(", ")}
+                      <strong className="uppercase text-[9px] mr-1">
+                        Allergies:
+                      </strong>{" "}
+                      {patient.patientHistory.allergies.join(", ")}
                     </div>
                   )}
                   {patient.patientHistory.medicalHistory.length > 0 && (
                     <div className="text-[11px] text-destructive">
-                      <strong className="uppercase text-[9px] mr-1">History:</strong> {patient.patientHistory.medicalHistory.join(", ")}
+                      <strong className="uppercase text-[9px] mr-1">
+                        History:
+                      </strong>{" "}
+                      {patient.patientHistory.medicalHistory.join(", ")}
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm font-medium text-blue-400 italic">No medical history recorded</p>
+                <p className="text-sm font-medium text-blue-400 italic">
+                  No medical history recorded
+                </p>
               )}
             </div>
           </div>

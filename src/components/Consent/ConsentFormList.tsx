@@ -1,5 +1,5 @@
-﻿import React, { useState } from 'react';
-import { Search, Plus, FileText, Eye, Trash2, Shield, CheckCircle, Clock } from 'lucide-react';
+import { useState } from "react";
+import { Plus, Eye, Trash2, Shield, CheckCircle, Clock } from "lucide-react";
 
 interface ConsentFormListProps {
   forms: any[];
@@ -8,92 +8,157 @@ interface ConsentFormListProps {
   onDeleteForm: (id: string) => void;
 }
 
-export function ConsentFormList({ forms, onAddForm, onViewForm, onDeleteForm }: ConsentFormListProps) {
-  const [search, setSearch] = useState('');
+import {
+  PageHeader,
+  Button,
+  SearchInput,
+  ContentCard,
+  Badge,
+} from "@/components/ui";
 
-  const filtered = forms.filter(f =>
-    f.patientName?.toLowerCase().includes(search.toLowerCase()) ||
-    f.treatmentType?.toLowerCase().includes(search.toLowerCase())
+export function ConsentFormList({
+  forms,
+  onAddForm,
+  onViewForm,
+  onDeleteForm,
+}: ConsentFormListProps) {
+  const [search, setSearch] = useState("");
+
+  const filtered = forms.filter(
+    (f) =>
+      f.patientName?.toLowerCase().includes(search.toLowerCase()) ||
+      f.treatmentType?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
-    <div className="space-y-5">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Consent Forms</h1>
-          <p className="page-subtitle">{forms.length} authorized consent{forms.length !== 1 ? 's' : ''} on record</p>
-        </div>
-        <button onClick={onAddForm} className="btn-primary">
-          <Plus className="w-4 h-4" /> New Consent Form
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Consent Forms"
+        subtitle={`${forms.length} authorized consent documents on record`}
+        action={
+          <Button onClick={onAddForm} className="gap-2">
+            <Plus className="w-4 h-4" /> New Consent Form
+          </Button>
+        }
+      />
 
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
-        <input type="text" placeholder="Search by patient or treatment type…" value={search}
-          onChange={e => setSearch(e.target.value)} className="search-input" />
-      </div>
+      <SearchInput
+        placeholder="Search by patient or treatment type…"
+        value={search}
+        onChange={setSearch}
+      />
 
       {filtered.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <Shield className="empty-state-icon" />
-            <p className="empty-state-title">No consent forms found</p>
-            <p className="empty-state-sub">Create a consent form for a patient procedure to get started.</p>
-          </div>
+        <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
+          <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
+          <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
+            No consent forms found
+          </h3>
+          <p className="text-xs text-muted-foreground mt-2 font-medium">
+            Authorized forms will appear here once created.
+          </p>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Treatment Type</th>
-                <th>Date Signed</th>
-                <th>Signature</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(form => (
-                <tr key={form.id}>
-                  <td>
-                    <div className="font-semibold text-foreground">{form.patientName}</div>
-                    {form.patientId && <div className="text-xs text-muted-foreground/60 font-mono mt-0.5">{form.patientId}</div>}
-                  </td>
-                  <td>
-                    <div className="font-medium text-foreground">{form.treatmentType}</div>
-                  </td>
-                  <td className="text-muted-foreground whitespace-nowrap">
-                    {form.date ? new Date(form.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
-                  </td>
-                  <td>
-                    {form.signature ? (
-                      <span className="badge badge-green flex items-center gap-1 w-fit">
-                        <CheckCircle className="w-3 h-3" /> Signed
-                      </span>
-                    ) : (
-                      <span className="badge badge-amber flex items-center gap-1 w-fit">
-                        <Clock className="w-3 h-3" /> Pending
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => onViewForm(form.id)} className="btn-icon-blue" title="View">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => onDeleteForm(form.id)}
-                        className="btn-icon-red" title="Delete">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+        <ContentCard
+          bodyClassName="p-0 overflow-hidden"
+          className="rounded-3xl border-border/50"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                    Patient
+                  </th>
+                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                    Treatment Type
+                  </th>
+                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                    Date Signed
+                  </th>
+                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest text-right">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {filtered.map((form) => (
+                  <tr
+                    key={form.id}
+                    className="hover:bg-muted/50 transition-colors group"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-foreground text-sm">
+                        {form.patientName}
+                      </div>
+                      {form.patientId && (
+                        <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
+                          #{form.patientId.slice(-6)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-foreground text-sm uppercase tracking-tight">
+                        {form.treatmentType}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-muted-foreground">
+                        {form.date
+                          ? new Date(form.date).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "Pending"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {form.signature ? (
+                        <Badge
+                          // variant="green"
+                          className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10"
+                        >
+                          <CheckCircle className="w-3 h-3" /> Signed
+                        </Badge>
+                      ) : (
+                        <Badge
+                          // variant="amber"
+                          className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10"
+                        >
+                          <Clock className="w-3 h-3" /> Pending
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:bg-primary/10"
+                          onClick={() => onViewForm(form.id)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => onDeleteForm(form.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ContentCard>
       )}
     </div>
   );

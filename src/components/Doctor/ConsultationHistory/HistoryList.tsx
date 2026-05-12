@@ -1,5 +1,16 @@
-﻿import React from "react";
-import { Search, Filter, X, MoreVertical, Eye, Activity, Stethoscope, Pill, FileText, Trash2 } from "lucide-react";
+import React from "react";
+import {
+  Search,
+  Filter,
+  X,
+  MoreVertical,
+  Eye,
+  Activity,
+  Stethoscope,
+  Pill,
+  FileText,
+  Trash2,
+} from "lucide-react";
 
 interface HistoryListProps {
   data: any[];
@@ -9,10 +20,10 @@ interface HistoryListProps {
   onSearchChange: (val: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
-  filterFollowUp: string;
-  onFilterFollowUp: (val: string) => void;
-  filterSort: string;
-  onFilterSort: (val: string) => void;
+  filterFollowUp: "all" | "yes" | "no";
+  onFilterFollowUp: (val: "all" | "yes" | "no") => void;
+  filterSort: "newest" | "oldest";
+  onFilterSort: (val: "newest" | "oldest") => void;
   activeFilters: number;
   activeMenuId: number | null;
   onSetActiveMenuId: (id: number | null) => void;
@@ -24,7 +35,6 @@ interface HistoryListProps {
 }
 
 export function HistoryList({
-  data,
   pageData,
   patients,
   search,
@@ -42,21 +52,37 @@ export function HistoryList({
   onDownloadPDF,
   onDeleteClick,
   safePage,
-  PAGE_SIZE
+  PAGE_SIZE,
 }: HistoryListProps) {
   const initials = (name: string) => {
     if (!name) return "??";
-    return name.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const avatarColors = ["bg-primary/10 text-primary", "bg-emerald-100 text-emerald-700", "bg-purple-100 text-purple-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"];
+  const avatarColors = [
+    "bg-primary/10 text-primary",
+    "bg-emerald-100 text-emerald-700",
+    "bg-purple-100 text-purple-700",
+    "bg-amber-100 text-amber-700",
+    "bg-rose-100 text-rose-700",
+  ];
   const avatarColor = (id: number) => avatarColors[id % avatarColors.length];
 
   const fmtShort = (d: any) => {
     if (!d) return "—";
     const date = new Date(d);
     if (isNaN(date.getTime())) return "—";
-    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -69,11 +95,14 @@ export function HistoryList({
               type="text"
               placeholder="Search by name, ID, diagnosis, contact..."
               value={search}
-              onChange={e => onSearchChange(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-8 pr-8 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-muted-foreground/60"
             />
             {search && (
-              <button onClick={() => onSearchChange("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground">
+              <button
+                onClick={() => onSearchChange("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -95,20 +124,28 @@ export function HistoryList({
         {showFilters && (
           <div className="flex flex-wrap items-center gap-4 pt-0.5 animate-in slide-in-from-top-1 duration-200">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Follow-up:</span>
-              {(["all", "yes", "no"] as const).map(v => (
+              <span className="text-xs font-medium text-muted-foreground">
+                Follow-up:
+              </span>
+              {(["all", "yes", "no"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => onFilterFollowUp(v)}
                   className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors font-medium ${filterFollowUp === v ? "bg-primary text-white border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
                 >
-                  {v === "all" ? "All" : v === "yes" ? "Required" : "Not Required"}
+                  {v === "all"
+                    ? "All"
+                    : v === "yes"
+                      ? "Required"
+                      : "Not Required"}
                 </button>
               ))}
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Sort:</span>
-              {(["newest", "oldest"] as const).map(v => (
+              <span className="text-xs font-medium text-muted-foreground">
+                Sort:
+              </span>
+              {(["newest", "oldest"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => onFilterSort(v)}
@@ -128,63 +165,108 @@ export function HistoryList({
             <div className="bg-muted rounded-full p-4 mb-3">
               <Search className="w-8 h-8 text-muted-foreground/60" />
             </div>
-            <h3 className="text-sm font-medium text-muted-foreground">No results found</h3>
-            <p className="text-xs text-muted-foreground/60 mt-1">Try a different search term or clear filters</p>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              No results found
+            </h3>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Try a different search term or clear filters
+            </p>
           </div>
         ) : (
           <table className="w-full text-sm border-collapse">
             <thead className="sticky top-0 bg-muted z-10">
               <tr className="border-b border-border">
-                <th className="text-left px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-8">#</th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Patient</th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Diagnosis</th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Date</th>
-                <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Cost</th>
-                <th className="text-right px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
+                <th className="text-left px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-8">
+                  #
+                </th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Patient
+                </th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+                  Diagnosis
+                </th>
+                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+                  Date
+                </th>
+                <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+                  Cost
+                </th>
+                <th className="text-right px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {pageData.map((item, idx) => (
-                <tr key={item.id} className="border-b border-border hover:bg-primary/40 transition-colors">
+                <tr
+                  key={item.id}
+                  className="border-b border-border hover:bg-primary/40 transition-colors"
+                >
                   <td className="px-5 py-2.5 text-xs text-muted-foreground/60 tabular-nums align-middle">
                     {(safePage - 1) * PAGE_SIZE + idx + 1}
                   </td>
                   <td className="px-3 py-2.5 align-middle">
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${avatarColor(item.id)}`}>
-                        {initials(item.patientName || patients.find(p => p.id === item.patientId)?.patientName)}
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${avatarColor(item.id)}`}
+                      >
+                        {initials(
+                          item.patientName ||
+                            patients.find((p) => p.id === item.patientId)
+                              ?.patientName,
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-foreground text-sm leading-tight truncate">
-                          {item.patientName || patients.find(p => p.id === item.patientId)?.patientName || "Unknown Patient"}
+                          {item.patientName ||
+                            patients.find((p) => p.id === item.patientId)
+                              ?.patientName ||
+                            "Unknown Patient"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          {item.patientId && <span className="text-xs text-muted-foreground/60 font-mono">{item.patientId}</span>}
+                          {item.patientId && (
+                            <span className="text-xs text-muted-foreground/60 font-mono">
+                              {item.patientId}
+                            </span>
+                          )}
                           {item.followUpRequired && (
-                            <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full font-medium leading-tight">Follow-up</span>
+                            <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full font-medium leading-tight">
+                              Follow-up
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-3 py-2.5 hidden md:table-cell align-middle">
-                    <span className="text-xs text-muted-foreground truncate block max-w-[180px]">{item.diagnosis || "—"}</span>
+                    <span className="text-xs text-muted-foreground truncate block max-w-[180px]">
+                      {item.diagnosis || "—"}
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 hidden sm:table-cell align-middle">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{fmtShort(item.completedAt || item.consultationDate)}</span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {fmtShort(item.completedAt || item.consultationDate)}
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 text-right hidden sm:table-cell align-middle">
-                    {item.treatmentCost && item.treatmentCost > 0
-                      ? <span className="text-xs font-semibold text-muted-foreground">₹{item.treatmentCost}</span>
-                      : <span className="text-xs text-muted-foreground/40">—</span>
-                    }
+                    {item.treatmentCost && item.treatmentCost > 0 ? (
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        ₹{item.treatmentCost}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/40">
+                        —
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-2.5 align-middle">
                     <div className="flex items-center justify-end relative">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSetActiveMenuId(activeMenuId === item.id ? null : item.id);
+                          onSetActiveMenuId(
+                            activeMenuId === item.id ? null : item.id,
+                          );
                         }}
                         className={`p-1.5 rounded-lg transition-all ${activeMenuId === item.id ? "bg-primary text-white" : "hover:bg-muted text-muted-foreground"}`}
                       >
@@ -203,27 +285,41 @@ export function HistoryList({
                             <Eye className="w-3.5 h-3.5" /> View
                           </button>
                           <div className="h-px bg-muted my-1" />
-                          <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Download Reports</div>
+                          <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                            Download Reports
+                          </div>
                           <button
-                            onClick={() => { onDownloadPDF(item, 'CLINICAL'); onSetActiveMenuId(null); }}
+                            onClick={() => {
+                              onDownloadPDF(item, "CLINICAL");
+                              onSetActiveMenuId(null);
+                            }}
                             className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center gap-2 transition-colors"
                           >
                             <Activity className="w-3.5 h-3.5" /> Clinical
                           </button>
                           <button
-                            onClick={() => { onDownloadPDF(item, 'TREATMENT'); onSetActiveMenuId(null); }}
+                            onClick={() => {
+                              onDownloadPDF(item, "TREATMENT");
+                              onSetActiveMenuId(null);
+                            }}
                             className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition-colors"
                           >
                             <Stethoscope className="w-3.5 h-3.5" /> Treatment
                           </button>
                           <button
-                            onClick={() => { onDownloadPDF(item, 'PRESCRIPTION'); onSetActiveMenuId(null); }}
+                            onClick={() => {
+                              onDownloadPDF(item, "PRESCRIPTION");
+                              onSetActiveMenuId(null);
+                            }}
                             className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition-colors"
                           >
                             <Pill className="w-3.5 h-3.5" /> Prescription
                           </button>
                           <button
-                            onClick={() => { onDownloadPDF(item, 'FULL'); onSetActiveMenuId(null); }}
+                            onClick={() => {
+                              onDownloadPDF(item, "FULL");
+                              onSetActiveMenuId(null);
+                            }}
                             className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 transition-colors"
                           >
                             <FileText className="w-3.5 h-3.5" /> Full Report

@@ -83,6 +83,9 @@ export interface Patient {
   planEnrolledAt?: string;
   // Legacy field kept for compatibility
   companyId?: string;
+  barcode?: string;
+  isPerson?: boolean;
+  registeredDate?: string;
 }
 
 export interface Appointment {
@@ -95,6 +98,7 @@ export interface Appointment {
   duration: number;
   type: 'consultation' | 'cleaning' | 'filling' | 'extraction' | 'root-canal' | 'crown' | 'orthodontics' | 'surgery' | 'emergency' | 'other';
   status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'checked-in';
+  treatment?: string;
   notes?: string;
   fee: number;
   patientConcern: string;

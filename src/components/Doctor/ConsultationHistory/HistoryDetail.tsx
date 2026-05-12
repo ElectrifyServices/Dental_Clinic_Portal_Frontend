@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { 
   Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText, Trash2, 
   AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera 
@@ -143,12 +143,17 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
             <Activity className="w-3 h-3 mr-1.5" /> Tooth Chart Findings
           </p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(record.toothChartState).map(([num, condition]) => (
-              <div key={num} className="bg-card border border-primary/30 rounded-full px-3 py-1 text-xs flex items-center gap-2 shadow-sm">
-                <span className="font-bold text-primary">#{num}</span>
-                <span className="text-muted-foreground">{condition}</span>
-              </div>
-            ))}
+            {Object.entries(record.toothChartState as Record<string, string>).map(
+              ([num, condition]) => (
+                <div
+                  key={num}
+                  className="bg-card border border-primary/30 rounded-full px-3 py-1 text-xs flex items-center gap-2 shadow-sm"
+                >
+                  <span className="font-bold text-primary">#{num}</span>
+                  <span className="text-muted-foreground">{condition}</span>
+                </div>
+              ),
+            )}
           </div>
         </div>
       )}

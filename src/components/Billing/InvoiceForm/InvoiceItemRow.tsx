@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Trash2, Check } from 'lucide-react';
 import { InvoiceItem } from '../../../types';
 
@@ -45,7 +45,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
               className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
             >
               <option value="">Select Service</option>
-              {commonServices.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+              {commonServices.map(s => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
               <option value="custom">Custom Service...</option>
             </select>
             {(!commonServices.some(s => s.name === item.description) && !isLinked) && (

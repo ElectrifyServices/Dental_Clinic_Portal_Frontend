@@ -1,11 +1,12 @@
-﻿import React, { useState } from 'react';
-import { Calendar, Clock, Plus, CheckCircle, AlertCircle, X, IndianRupee } from 'lucide-react';
+import { useState } from "react";
+import { Calendar, Clock, Plus } from "lucide-react";
+import { Modal, Button, ContentCard } from "@/components/ui";
 
 interface TreatmentSession {
   id: string;
   sessionNumber: number;
   date: string;
-  status: 'scheduled' | 'completed' | 'in-progress' | 'cancelled' | 'planned';
+  status: "scheduled" | "completed" | "in-progress" | "cancelled" | "planned";
   notes: string;
   appointmentId?: string;
   duration: number;
@@ -22,23 +23,25 @@ interface TreatmentSessionManagerProps {
   onClose: () => void;
 }
 
-export function TreatmentSessionManager({ 
-  treatmentId, 
-  patientName, 
-  procedure, 
+export function TreatmentSessionManager({
+  treatmentId,
+  patientName,
+  procedure,
   sessions: initialSessions,
-  onScheduleAppointment, 
+  onScheduleAppointment,
   onUpdateSessions,
-  onClose 
+  onClose,
 }: TreatmentSessionManagerProps) {
-  const [sessions, setSessions] = useState<TreatmentSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
+  const [sessions, setSessions] = useState<TreatmentSession[]>(
+    Array.isArray(initialSessions) ? initialSessions : [],
+  );
   const [showNewSession, setShowNewSession] = useState(false);
   const [newSession, setNewSession] = useState({
-    date: '',
-    time: '09:00',
-    notes: '',
+    date: "",
+    time: "09:00",
+    notes: "",
     duration: 45,
-    cost: 0
+    cost: 0,
   });
 
   const handleAddSession = () => {
@@ -46,10 +49,10 @@ export function TreatmentSessionManager({
       id: Date.now().toString(),
       sessionNumber: sessions.length + 1,
       date: newSession.date,
-      status: 'scheduled',
+      status: "scheduled",
       notes: newSession.notes,
       duration: newSession.duration,
-      cost: newSession.cost
+      cost: newSession.cost,
     };
     const updatedSessions = [...sessions, session];
     setSessions(updatedSessions);
@@ -63,164 +66,284 @@ export function TreatmentSessionManager({
       fee: newSession.cost,
       notes: `Treatment Session ${session.sessionNumber}: ${newSession.notes}`,
       treatmentId,
-      sessionId: session.id
+      sessionId: session.id,
     });
     setShowNewSession(false);
-    setNewSession({ date: '', time: '09:00', notes: '', duration: 45, cost: 0 });
+    setNewSession({
+      date: "",
+      time: "09:00",
+      notes: "",
+      duration: 45,
+      cost: 0,
+    });
   };
 
-  const handleUpdateSessionStatus = (sessionId: string, newStatus: TreatmentSession['status']) => {
-    const updatedSessions = sessions.map(s => s.id === sessionId ? { ...s, status: newStatus } : s);
+  const handleUpdateSessionStatus = (
+    sessionId: string,
+    newStatus: TreatmentSession["status"],
+  ) => {
+    const updatedSessions = sessions.map((s) =>
+      s.id === sessionId ? { ...s, status: newStatus } : s,
+    );
     setSessions(updatedSessions);
     onUpdateSessions(updatedSessions);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-      case 'in-progress': return 'bg-primary/10 text-primary border-primary/20';
-      case 'scheduled': return 'bg-amber-50 text-amber-700 border-amber-100';
-      case 'cancelled': return 'bg-destructive/10 text-destructive border-destructive/20';
-      default: return 'bg-muted text-muted-foreground border-border';
-    }
-  };
-
   const totalCost = sessions.reduce((sum, s) => sum + (s.cost || 0), 0);
-  const completedSessions = sessions.filter(s => s.status === 'completed').length;
+  const completedSessions = sessions.filter(
+    (s) => s.status === "completed",
+  ).length;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box max-w-5xl w-full">
-        <div className="modal-header bg-gradient-to-r from-primary/10 to-indigo-50/30">
-          <div>
-            <h2 className="modal-title text-xl">Session Management</h2>
-            <p className="text-xs text-muted-foreground mt-0.5 font-medium">{patientName} • {procedure}</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
-            <X className="w-5 h-5 text-muted-foreground/60" />
-          </button>
+    <Modal
+      title="Session Management"
+      subtitle={`${patientName} • ${procedure}`}
+      onClose={onClose}
+      size="5xl"
+      icon={<Clock className="w-5 h-5" />}
+      footer={
+        <div className="flex justify-end w-full">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="font-black uppercase tracking-widest text-[10px]"
+          >
+            Close Manager
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ContentCard className="bg-primary/5 border-primary/10">
+            <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
+              Total Sessions
+            </p>
+            <p className="text-3xl font-black text-primary tracking-tighter">
+              {sessions.length}
+            </p>
+          </ContentCard>
+          <ContentCard className="bg-emerald-50/50 border-emerald-100">
+            <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1">
+              Completed
+            </p>
+            <p className="text-3xl font-black text-emerald-600 tracking-tighter">
+              {completedSessions}
+            </p>
+          </ContentCard>
+          <ContentCard className="bg-indigo-50/50 border-indigo-100">
+            <p className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest mb-1">
+              Projected Revenue
+            </p>
+            <p className="text-3xl font-black text-indigo-600 tracking-tighter">
+              ₹{totalCost.toLocaleString()}
+            </p>
+          </ContentCard>
         </div>
 
-        <div className="modal-body p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-primary/50 p-6 rounded-3xl border border-primary/20 shadow-sm">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Total Sessions</p>
-              <p className="text-3xl font-bold text-blue-900">{sessions.length}</p>
+        <div className="flex items-center justify-between px-2">
+          <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-primary" />
             </div>
-            <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100 shadow-sm">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Completed</p>
-              <p className="text-3xl font-bold text-emerald-900">{completedSessions}</p>
-            </div>
-            <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 shadow-sm">
-              <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1">Projected Revenue</p>
-              <p className="text-3xl font-bold text-indigo-900">₹{totalCost.toLocaleString()}</p>
-            </div>
-          </div>
+            Session Timeline
+          </h3>
+          <Button
+            onClick={() => setShowNewSession(true)}
+            className="shadow-lg shadow-primary/20"
+          >
+            <Plus className="w-4 h-4" /> Add Next Session
+          </Button>
+        </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Session Timeline
-            </h3>
-            <button onClick={() => setShowNewSession(true)} className="btn-primary py-2.5 shadow-lg shadow-blue-100">
-              <Plus className="w-4 h-4" /> Add Session
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sessions.map((session) => (
-              <div key={session.id} className={`rounded-2xl p-5 border transition-all ${getStatusColor(session.status)} shadow-sm hover:shadow-md`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-card flex items-center justify-center font-bold text-sm shadow-sm border border-inherit">
-                      {session.sessionNumber}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-foreground text-sm tracking-tight">Session {session.sessionNumber}</h4>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{new Date(session.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}</p>
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {sessions.map((session) => (
+            <ContentCard
+              key={session.id}
+              className={`border-border/50 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5`}
+              bodyClassName="p-6"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center font-black text-sm text-foreground">
+                    {session.sessionNumber}
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <select
-                      value={session.status}
-                      onChange={(e) => handleUpdateSessionStatus(session.id, e.target.value as any)}
-                      className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border-transparent focus:ring-2 focus:ring-primary/20 bg-card/80 backdrop-blur-sm cursor-pointer outline-none"
-                    >
-                      <option value="planned">PLANNED</option>
-                      <option value="scheduled">SCHEDULED</option>
-                      <option value="in-progress">IN PROGRESS</option>
-                      <option value="completed">COMPLETED</option>
-                      <option value="cancelled">CANCELLED</option>
-                    </select>
-                    <div className="text-sm font-bold text-foreground mt-1">₹{session.cost.toLocaleString()}</div>
+                  <div>
+                    <h4 className="font-black text-foreground text-sm uppercase tracking-tight">
+                      Session {session.sessionNumber}
+                    </h4>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-0.5">
+                      {new Date(session.date).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="bg-card/40 backdrop-blur-sm rounded-xl p-4 border border-white/60">
-                  <p className="text-xs font-semibold text-muted-foreground leading-relaxed italic">{session.notes || 'No specific clinical notes added for this session.'}</p>
-                  <div className="flex items-center justify-between mt-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest border-t border-border pt-3">
-                    <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {session.duration} min</span>
-                    {session.appointmentId && <span>Ref: {session.appointmentId}</span>}
+                <div className="flex flex-col items-end gap-2">
+                  <select
+                    value={session.status}
+                    onChange={(e) =>
+                      handleUpdateSessionStatus(
+                        session.id,
+                        e.target.value as any,
+                      )
+                    }
+                    className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-border/50 bg-muted/20 cursor-pointer outline-none hover:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all"
+                  >
+                    <option value="planned">PLANNED</option>
+                    <option value="scheduled">SCHEDULED</option>
+                    <option value="in-progress">IN PROGRESS</option>
+                    <option value="completed">COMPLETED</option>
+                    <option value="cancelled">CANCELLED</option>
+                  </select>
+                  <div className="text-sm font-black text-foreground tracking-tighter">
+                    ₹{session.cost.toLocaleString()}
                   </div>
                 </div>
               </div>
-            ))}
-            
-            {sessions.length === 0 && (
-              <div className="col-span-full text-center py-20 bg-muted/50 rounded-3xl border-2 border-dashed border-border">
-                <Calendar className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                <p className="text-sm font-bold text-muted-foreground/60">No treatment sessions scheduled yet.</p>
-              </div>
-            )}
-          </div>
 
-          {showNewSession && (
-            <div className="mt-8 bg-primary/50 rounded-3xl p-8 border border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-blue-900 tracking-tight">Schedule New Session</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div>
-                  <label className="form-label text-primary">Date</label>
-                  <input type="date" value={newSession.date} onChange={(e) => setNewSession({...newSession, date: e.target.value})}
-                    className="form-input bg-card border-primary/20" min={new Date().toISOString().split('T')[0]} />
-                </div>
-                <div>
-                  <label className="form-label text-primary">Time</label>
-                  <input type="time" value={newSession.time} onChange={(e) => setNewSession({...newSession, time: e.target.value})}
-                    className="form-input bg-card border-primary/20" />
-                </div>
-                <div>
-                  <label className="form-label text-primary">Duration (min)</label>
-                  <input type="number" value={newSession.duration} onChange={(e) => setNewSession({...newSession, duration: parseInt(e.target.value)})}
-                    className="form-input bg-card border-primary/20" min="15" step="15" />
-                </div>
-                <div>
-                  <label className="form-label text-primary">Cost (₹)</label>
-                  <input type="number" value={newSession.cost} onChange={(e) => setNewSession({...newSession, cost: parseInt(e.target.value)})}
-                    className="form-input bg-card border-primary/20" min="0" />
+              <div className="bg-muted/30 rounded-2xl p-4 border border-border/50">
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
+                  {session.notes || "No clinical objectives specified."}
+                </p>
+                <div className="flex items-center justify-between mt-4 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest border-t border-border/50 pt-3">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" /> {session.duration} MIN
+                  </span>
+                  {session.appointmentId && (
+                    <span className="text-primary/60">
+                      ID: {session.appointmentId.slice(-6).toUpperCase()}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="mb-6">
-                <label className="form-label text-primary">Session Notes</label>
-                <textarea value={newSession.notes} onChange={(e) => setNewSession({...newSession, notes: e.target.value})}
-                  rows={2} className="form-input bg-card border-primary/20" placeholder="Clinical objectives for this session..." />
-              </div>
-              
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setShowNewSession(false)} className="btn-secondary py-2.5 px-6">Cancel</button>
-                <button onClick={handleAddSession} disabled={!newSession.date} className="btn-primary py-2.5 px-8 shadow-lg shadow-blue-100">
-                  Confirm & Schedule
-                </button>
-              </div>
+            </ContentCard>
+          ))}
+
+          {sessions.length === 0 && (
+            <div className="col-span-full text-center py-24 bg-muted/20 rounded-[3rem] border-2 border-dashed border-border/50">
+              <Calendar className="w-16 h-16 text-muted-foreground/10 mx-auto mb-6" />
+              <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">
+                No sessions found
+              </h3>
+              <p className="text-xs text-muted-foreground/60 mt-2 font-medium">
+                Click "Add Next Session" to begin treatment planning.
+              </p>
             </div>
           )}
         </div>
+
+        {showNewSession && (
+          <div className="mt-8 p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-sm font-black text-primary uppercase tracking-[0.2em]">
+                Plan New Session
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                  Target Date
+                </label>
+                <input
+                  type="date"
+                  value={newSession.date}
+                  onChange={(e) =>
+                    setNewSession({ ...newSession, date: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                  Start Time
+                </label>
+                <input
+                  type="time"
+                  value={newSession.time}
+                  onChange={(e) =>
+                    setNewSession({ ...newSession, time: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                  Duration (min)
+                </label>
+                <input
+                  type="number"
+                  value={newSession.duration}
+                  onChange={(e) =>
+                    setNewSession({
+                      ...newSession,
+                      duration: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  min="15"
+                  step="15"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                  Session Fee (₹)
+                </label>
+                <input
+                  type="number"
+                  value={newSession.cost}
+                  onChange={(e) =>
+                    setNewSession({
+                      ...newSession,
+                      cost: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  min="0"
+                />
+              </div>
+            </div>
+            <div className="mb-8 space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                Session Clinical Objectives
+              </label>
+              <textarea
+                value={newSession.notes}
+                onChange={(e) =>
+                  setNewSession({ ...newSession, notes: e.target.value })
+                }
+                rows={2}
+                className="w-full px-4 py-3 bg-white border border-primary/10 rounded-xl text-sm font-medium text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none"
+                placeholder="Enter clinical goals for this session..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowNewSession(false)}
+                className="font-black uppercase tracking-widest text-[10px]"
+              >
+                Discard
+              </Button>
+              <Button
+                onClick={handleAddSession}
+                disabled={!newSession.date}
+                className="px-10 shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+              >
+                Confirm & Schedule Session
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

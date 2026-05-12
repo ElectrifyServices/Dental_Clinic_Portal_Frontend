@@ -1,8 +1,17 @@
-﻿import React, { useState } from 'react';
-import { Search, Clock, Stethoscope, CheckCircle, AlertTriangle, History, UserPlus, Users } from 'lucide-react';
-import ConsultationHistoryModal from './ConsultationHistoryModal';
-import { DirectConsultationPopup } from './DirectConsultationPopup';
-import { QueueCard } from './PatientQueue/QueueCard';
+import { useState } from "react";
+import {
+  Search,
+  Clock,
+  Stethoscope,
+  CheckCircle,
+  AlertTriangle,
+  History,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import ConsultationHistoryModal from "./ConsultationHistoryModal";
+import { DirectConsultationPopup } from "./DirectConsultationPopup";
+import { QueueCard } from "./PatientQueue/QueueCard";
 
 interface QueuedPatient {
   id: string;
@@ -13,7 +22,7 @@ interface QueuedPatient {
   treatmentType: string;
   patientConcern: string;
   checkInTime: string;
-  status: 'waiting' | 'in-consultation' | 'completed';
+  status: "waiting" | "in-consultation" | "completed";
   notes?: string;
   patientHistory?: {
     lastVisit?: string;
@@ -28,8 +37,15 @@ interface PatientQueueProps {
   queuedPatients: QueuedPatient[];
   onSelectPatient: (patient: QueuedPatient) => void;
   onUpdatePatientStatus: (patientId: string, status: string) => void;
-  onDirectConsultation: (name: string, phone: string, doctorId?: string, doctorName?: string, time?: string) => void;
+  onDirectConsultation: (
+    name: string,
+    phone: string,
+    doctorId?: string,
+    doctorName?: string,
+    time?: string,
+  ) => void;
   onRegisterNew: (name: string, phone: string) => void;
+  onUpdateConsultation: (id: string, updates: any) => void;
   patients: any[];
   doctors: any[];
   appointments: any[];
@@ -46,45 +62,58 @@ export function PatientQueue({
   patients,
   doctors,
   appointments,
-  doctorAvailability
+  doctorAvailability,
 }: PatientQueueProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [showHistory, setShowHistory] = useState(false);
   const [showDirectPopup, setShowDirectPopup] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in-consultation': return 'bg-primary/10 text-primary border-primary/30';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-muted text-foreground border-border';
+      case "waiting":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "in-consultation":
+        return "bg-primary/10 text-primary border-primary/30";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-muted text-foreground border-border";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'waiting': return <Clock className="w-4 h-4" />;
-      case 'in-consultation': return <Stethoscope className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      default: return <AlertTriangle className="w-4 h-4" />;
+      case "waiting":
+        return <Clock className="w-4 h-4" />;
+      case "in-consultation":
+        return <Stethoscope className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <AlertTriangle className="w-4 h-4" />;
     }
   };
 
-  const safe = (val: any) => (val || '').toString().toLowerCase();
+  const safe = (val: any) => (val || "").toString().toLowerCase();
 
-  const filteredPatients = queuedPatients.filter(patient => {
+  const filteredPatients = queuedPatients.filter((patient) => {
     const search = searchTerm.toLowerCase();
     const matchesSearch =
       safe(patient.patientName).includes(search) ||
       safe(patient.treatmentType).includes(search) ||
       safe(patient.patientConcern).includes(search);
-    const matchesFilter = filterStatus === 'all' || patient.status === filterStatus;
+    const matchesFilter =
+      filterStatus === "all" || patient.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
-  const waitingCount = queuedPatients.filter(p => p.status === 'waiting').length;
-  const inConsultationCount = queuedPatients.filter(p => p.status === 'in-consultation').length;
+  const waitingCount = queuedPatients.filter(
+    (p) => p.status === "waiting",
+  ).length;
+  const inConsultationCount = queuedPatients.filter(
+    (p) => p.status === "in-consultation",
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -95,18 +124,26 @@ export function PatientQueue({
             <Stethoscope className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">Consultation Queue</h1>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">
+              Consultation Queue
+            </h1>
             <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-sm font-medium text-muted-foreground">Dr. {doctorName}</span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Dr. {doctorName}
+              </span>
               <span className="w-1 h-1 bg-muted rounded-full" />
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-amber-600">{waitingCount} Waiting</span>
+                  <span className="text-sm font-bold text-amber-600">
+                    {waitingCount} Waiting
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-primary">{inConsultationCount} Consulting</span>
+                  <span className="text-sm font-bold text-primary">
+                    {inConsultationCount} Consulting
+                  </span>
                 </div>
               </div>
             </div>
@@ -116,10 +153,18 @@ export function PatientQueue({
           <Clock className="w-5 h-5 text-blue-500" />
           <div className="text-right">
             <div className="text-lg font-black text-foreground leading-none">
-              {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              {new Date().toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })}
             </div>
             <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
-              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+              })}
             </div>
           </div>
         </div>
@@ -137,22 +182,38 @@ export function PatientQueue({
             className="w-full pl-11 pr-4 py-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
           />
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center bg-muted/80 p-1.5 rounded-xl border border-border/60">
             {[
-              { id: 'all', label: 'All', icon: <Users className="w-3.5 h-3.5" /> },
-              { id: 'waiting', label: 'Waiting', icon: <Clock className="w-3.5 h-3.5" /> },
-              { id: 'in-consultation', label: 'Consulting', icon: <Stethoscope className="w-3.5 h-3.5" /> },
-              { id: 'completed', label: 'Done', icon: <CheckCircle className="w-3.5 h-3.5" /> }
-            ].map(s => (
-              <button 
-                key={s.id} 
+              {
+                id: "all",
+                label: "All",
+                icon: <Users className="w-3.5 h-3.5" />,
+              },
+              {
+                id: "waiting",
+                label: "Waiting",
+                icon: <Clock className="w-3.5 h-3.5" />,
+              },
+              {
+                id: "in-consultation",
+                label: "Consulting",
+                icon: <Stethoscope className="w-3.5 h-3.5" />,
+              },
+              {
+                id: "completed",
+                label: "Done",
+                icon: <CheckCircle className="w-3.5 h-3.5" />,
+              },
+            ].map((s) => (
+              <button
+                key={s.id}
                 onClick={() => setFilterStatus(s.id)}
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                  filterStatus === s.id 
-                    ? 'bg-card text-primary shadow-sm border border-border' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  filterStatus === s.id
+                    ? "bg-card text-primary shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 {s.icon}
@@ -185,7 +246,9 @@ export function PatientQueue({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPatients.map((patient) => {
           const fullPatient = patients.find(
-            p => p.phone === patient.patientPhone || p.name === patient.patientName
+            (p) =>
+              p.phone === patient.patientPhone ||
+              p.name === patient.patientName,
           );
           return (
             <QueueCard
@@ -234,14 +297,12 @@ export function PatientQueue({
           </div>
           <h3 className="empty-state-title">No patients found</h3>
           <p className="text-muted-foreground mb-4 px-6">
-            {searchTerm || filterStatus !== 'all'
-              ? 'Try adjusting your search criteria or filters.'
-              : 'Patients will appear here once they check in for their appointments.'
-            }
+            {searchTerm || filterStatus !== "all"
+              ? "Try adjusting your search criteria or filters."
+              : "Patients will appear here once they check in for their appointments."}
           </p>
         </div>
       )}
     </div>
   );
 }
-

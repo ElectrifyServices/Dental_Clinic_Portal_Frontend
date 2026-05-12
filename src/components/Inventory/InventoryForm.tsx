@@ -1,12 +1,23 @@
-import React from 'react';
-import { Save, Package, AlertTriangle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal, Button, Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui';
-import { Input } from '@/components/ui/Input';
-import { useFormTitle, useSubmitLabel } from '../../hooks/useFormConfig';
-import { inventorySchema, type InventoryFormData } from '@/lib/schemas/inventory.schema';
-import styles from './inventory.module.css';
+import { Save, Package, AlertTriangle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Modal,
+  Button,
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui";
+import { Input } from "@/components/ui/Input";
+import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
+import {
+  inventorySchema,
+  type InventoryFormData,
+} from "@/lib/schemas/inventory.schema";
+import styles from "./inventory.module.css";
 
 interface InventoryFormProps {
   onClose: () => void;
@@ -15,51 +26,64 @@ interface InventoryFormProps {
 }
 
 const CATEGORY_OPTIONS = [
-  { value: 'instruments', label: 'Instruments' },
-  { value: 'materials', label: 'Materials' },
-  { value: 'medicines', label: 'Medicines' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'consumables', label: 'Consumables' },
-  { value: 'other', label: 'Other' },
+  { value: "instruments", label: "Instruments" },
+  { value: "materials", label: "Materials" },
+  { value: "medicines", label: "Medicines" },
+  { value: "equipment", label: "Equipment" },
+  { value: "consumables", label: "Consumables" },
+  { value: "other", label: "Other" },
 ] as const;
 
-const UNIT_OPTIONS = ['pieces', 'boxes', 'bottles', 'packs', 'ml', 'gm', 'kg', 'liters', 'rolls', 'pairs', 'sets'];
+const UNIT_OPTIONS = [
+  "pieces",
+  "boxes",
+  "bottles",
+  "packs",
+  "ml",
+  "gm",
+  "kg",
+  "liters",
+  "rolls",
+  "pairs",
+  "sets",
+];
 
 export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
-  const formTitle   = useFormTitle('inventory', item ? 'edit' : 'create');
-  const submitLabel = useSubmitLabel('inventory', item ? 'edit' : 'create');
+  const formTitle = useFormTitle("inventory", item ? "edit" : "create");
+  const submitLabel = useSubmitLabel("inventory", item ? "edit" : "create");
 
   const form = useForm<InventoryFormData>({
-    resolver: zodResolver(inventorySchema),
+    resolver: zodResolver(inventorySchema) as any,
     defaultValues: {
-      name: item?.name ?? '',
-      category: item?.category ?? 'instruments',
-      description: item?.description ?? '',
+      name: item?.name ?? "",
+      category: item?.category ?? "instruments",
+      description: item?.description ?? "",
       currentStock: item?.currentStock ?? 0,
       minStock: item?.minStock ?? 0,
       maxStock: item?.maxStock ?? 100,
-      unit: item?.unit ?? 'pieces',
-      warranty: item?.warranty ?? '',
-      supplier: item?.supplier ?? '',
+      unit: item?.unit ?? "pieces",
+      warranty: item?.warranty ?? "",
+      supplier: item?.supplier ?? "",
       cost: item?.cost ?? 0,
-      expiryDate: item?.expiryDate ?? '',
-      batchNumber: item?.batchNumber ?? '',
+      expiryDate: item?.expiryDate ?? "",
+      batchNumber: item?.batchNumber ?? "",
     },
   });
 
-  const currentStock = form.watch('currentStock');
-  const minStock = form.watch('minStock');
+  const currentStock = form.watch("currentStock");
+  const minStock = form.watch("minStock");
 
   const onSubmit = (data: InventoryFormData) => {
     onSave({
       ...data,
       id: item?.id || Date.now().toString(),
-      lastRestocked: item?.lastRestocked || new Date().toISOString().split('T')[0],
+      lastRestocked:
+        item?.lastRestocked || new Date().toISOString().split("T")[0],
     });
   };
 
   const selectCls =
-    'form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all';
+    "form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all";
 
   return (
     <Modal
@@ -69,7 +93,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
       icon={<Package className="w-4 h-4" />}
       footer={
         <div className="flex justify-end gap-3 w-full">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={form.handleSubmit(onSubmit)} className="gap-2">
             <Save className="w-4 h-4" /> {submitLabel}
           </Button>
@@ -78,7 +104,6 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
           {/* ── Basic Info ─────────────────────────────────────────── */}
           <p className={styles.sectionHeading}>Basic Information</p>
           <div className="grid grid-cols-2 gap-4">
@@ -87,8 +112,12 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Item Name <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. Dental Mirror" /></FormControl>
+                  <FormLabel>
+                    Item Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Dental Mirror" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -98,10 +127,16 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Category <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <select {...field} className={selectCls}>
-                      {CATEGORY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      {CATEGORY_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
                     </select>
                   </FormControl>
                   <FormMessage />
@@ -114,7 +149,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem className="col-span-2">
                   <FormLabel>Description</FormLabel>
-                  <FormControl><Input {...field} placeholder="Optional description" /></FormControl>
+                  <FormControl>
+                    <Input {...field} placeholder="Optional description" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -129,8 +166,12 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="currentStock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Stock <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input {...field} type="number" min={0} /></FormControl>
+                  <FormLabel>
+                    Current Stock <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" min={0} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -140,8 +181,12 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="minStock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Min Stock <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input {...field} type="number" min={0} /></FormControl>
+                  <FormLabel>
+                    Min Stock <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" min={0} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -151,8 +196,12 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="maxStock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Max Stock <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input {...field} type="number" min={1} /></FormControl>
+                  <FormLabel>
+                    Max Stock <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} type="number" min={1} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -162,10 +211,16 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               name="unit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Unit <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>
+                    Unit <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <select {...field} className={selectCls}>
-                      {UNIT_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                      {UNIT_OPTIONS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
                     </select>
                   </FormControl>
                   <FormMessage />
@@ -178,7 +233,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Batch Number</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. BATCH-001" /></FormControl>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. BATCH-001" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -189,7 +246,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expiry Date</FormLabel>
-                  <FormControl><Input {...field} type="date" /></FormControl>
+                  <FormControl>
+                    <Input {...field} type="date" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -197,14 +256,15 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
           </div>
 
           {/* Low-stock warning — intentional amber status colors */}
-          {Number(currentStock) <= Number(minStock) && Number(currentStock) > 0 && (
-            <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">
-                Warning: Item will reach critical level soon
-              </p>
-            </div>
-          )}
+          {Number(currentStock) <= Number(minStock) &&
+            Number(currentStock) > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">
+                  Warning: Item will reach critical level soon
+                </p>
+              </div>
+            )}
 
           {/* ── Purchase Info ───────────────────────────────────────── */}
           <p className={styles.sectionHeading}>Purchase Information</p>
@@ -215,7 +275,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unit Cost (₹)</FormLabel>
-                  <FormControl><Input {...field} type="number" min={0} step="0.01" /></FormControl>
+                  <FormControl>
+                    <Input {...field} type="number" min={0} step="0.01" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -226,7 +288,9 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Supplier</FormLabel>
-                  <FormControl><Input {...field} placeholder="Supplier name" /></FormControl>
+                  <FormControl>
+                    <Input {...field} placeholder="Supplier name" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -237,13 +301,14 @@ export function InventoryForm({ onClose, onSave, item }: InventoryFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Warranty</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. 1 year" /></FormControl>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. 1 year" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-
         </form>
       </Form>
     </Modal>

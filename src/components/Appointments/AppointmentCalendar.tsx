@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { DoctorSidebar } from "./AppointmentCalendar/DoctorSidebar";
 import { CalendarGrid } from "./AppointmentCalendar/CalendarGrid";
 import { DayAgenda } from "./AppointmentCalendar/DayAgenda";
@@ -43,7 +43,20 @@ export function AppointmentCalendar({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [monthOffset, setMonthOffset] = useState(0);
 
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
   const formatTime = (time: string) => {
     if (!time || time.includes("AM") || time.includes("PM")) return time || "—";
@@ -57,8 +70,13 @@ export function AppointmentCalendar({
   const rollingDates = useMemo(() => {
     const dates = [];
     const today = new Date();
-    const referenceDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
-    const startDate = monthOffset === 0 ? new Date(today) : new Date(referenceDate);
+    const referenceDate = new Date(
+      today.getFullYear(),
+      today.getMonth() + monthOffset,
+      1,
+    );
+    const startDate =
+      monthOffset === 0 ? new Date(today) : new Date(referenceDate);
     if (monthOffset === 0) startDate.setDate(today.getDate() - 5);
     const calendarStart = new Date(startDate);
     calendarStart.setDate(startDate.getDate() - startDate.getDay());
@@ -73,7 +91,12 @@ export function AppointmentCalendar({
   const availableSlots = useMemo(() => {
     const selDoctor = doctors.find((d) => d.id === selectedDoctorId);
     if (!selDoctor?.workingHours || !selectedDate) return [];
-    const daySchedule = selDoctor.workingHours[selectedDate.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase()];
+    const daySchedule =
+      selDoctor.workingHours[
+        selectedDate
+          .toLocaleDateString("en-US", { weekday: "long" })
+          .toLowerCase()
+      ];
     if (!daySchedule?.isWorking) return [];
 
     const slots = [];
@@ -82,7 +105,10 @@ export function AppointmentCalendar({
         if (h === 18 && m > 0) break;
         const t24 = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
         const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
-        slots.push({ time24: t24, time12: `${h12}:${m.toString().padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}` });
+        slots.push({
+          time24: t24,
+          time12: `${h12}:${m.toString().padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`,
+        });
       }
     }
 
@@ -90,39 +116,57 @@ export function AppointmentCalendar({
     const endH = parseInt(daySchedule.endTime.split(":")[0]);
     const endM = parseInt(daySchedule.endTime.split(":")[1]);
 
-    return slots.filter(s => {
-      const sh = parseInt(s.time24.split(":")[0]);
-      const sm = parseInt(s.time24.split(":")[1]);
-      if (sh < startH || sh > endH || (sh === endH && sm > endM)) return false;
-      if (daySchedule.breakStart && daySchedule.breakEnd) {
-        const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
-        const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
-        const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
-        const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
-        if ((sh > bsH || (sh === bsH && sm >= bsM)) && (sh < beH || (sh === beH && sm < beM))) return false;
-      }
-      return true;
-    }).map(s => {
-      const sStart = parseInt(s.time24.split(":")[0]) * 60 + parseInt(s.time24.split(":")[1]);
-      const isBooked = appointments.some(a => {
-        if (a.doctorId !== selectedDoctorId || new Date(a.date).toDateString() !== selectedDate.toDateString()) return false;
-        
-        // Robust time parsing
-        let [h, m] = a.time.split(":");
-        let hr = parseInt(h);
-        let mn = parseInt(m);
-        if (a.time.includes("PM") && hr < 12) hr += 12;
-        if (a.time.includes("AM") && hr === 12) hr = 0;
-        
-        const aStart = hr * 60 + mn;
-        const aDuration = parseInt(a.duration?.toString() || "15");
-        return sStart >= aStart && sStart < (aStart + aDuration);
+    return slots
+      .filter((s) => {
+        const sh = parseInt(s.time24.split(":")[0]);
+        const sm = parseInt(s.time24.split(":")[1]);
+        if (sh < startH || sh > endH || (sh === endH && sm > endM))
+          return false;
+        if (daySchedule.breakStart && daySchedule.breakEnd) {
+          const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
+          const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
+          const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
+          const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
+          if (
+            (sh > bsH || (sh === bsH && sm >= bsM)) &&
+            (sh < beH || (sh === beH && sm < beM))
+          )
+            return false;
+        }
+        return true;
+      })
+      .map((s) => {
+        const sStart =
+          parseInt(s.time24.split(":")[0]) * 60 +
+          parseInt(s.time24.split(":")[1]);
+        const isBooked = appointments.some((a) => {
+          if (
+            a.doctorId !== selectedDoctorId ||
+            new Date(a.date).toDateString() !== selectedDate.toDateString()
+          )
+            return false;
+
+          // Robust time parsing
+          let [h, m] = a.time.split(":");
+          let hr = parseInt(h);
+          let mn = parseInt(m);
+          if (a.time.includes("PM") && hr < 12) hr += 12;
+          if (a.time.includes("AM") && hr === 12) hr = 0;
+
+          const aStart = hr * 60 + mn;
+          const aDuration = parseInt(a.duration?.toString() || "15");
+          return sStart >= aStart && sStart < aStart + aDuration;
+        });
+        const now = new Date();
+        const slotTime = new Date(selectedDate);
+        slotTime.setHours(
+          parseInt(s.time24.split(":")[0]),
+          parseInt(s.time24.split(":")[1]),
+          0,
+          0,
+        );
+        return { ...s, isBooked, isPast: slotTime < now };
       });
-      const now = new Date();
-      const slotTime = new Date(selectedDate);
-      slotTime.setHours(parseInt(s.time24.split(":")[0]), parseInt(s.time24.split(":")[1]), 0, 0);
-      return { ...s, isBooked, isPast: slotTime < now };
-    });
   }, [selectedDoctorId, selectedDate, appointments, doctors]);
 
   return (
@@ -141,14 +185,24 @@ export function AppointmentCalendar({
         rollingDates={rollingDates}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
-        getDayAppointmentsForDate={(date) => appointments.filter(a => new Date(a.date).toDateString() === date.toDateString() && (!selectedDoctorId || a.doctorId === selectedDoctorId))}
+        getDayAppointmentsForDate={(date) =>
+          appointments.filter(
+            (a) =>
+              new Date(a.date).toDateString() === date.toDateString() &&
+              (!selectedDoctorId || a.doctorId === selectedDoctorId),
+          )
+        }
         monthNames={monthNames}
       />
 
       <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
         <DayAgenda
           selectedDate={selectedDate}
-          appointments={appointments.filter(a => new Date(a.date).toDateString() === selectedDate.toDateString() && (!selectedDoctorId || a.doctorId === selectedDoctorId))}
+          appointments={appointments.filter(
+            (a) =>
+              new Date(a.date).toDateString() === selectedDate.toDateString() &&
+              (!selectedDoctorId || a.doctorId === selectedDoctorId),
+          )}
           onEditAppointment={onEditAppointment}
           formatTime={formatTime}
         />
@@ -157,7 +211,9 @@ export function AppointmentCalendar({
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           availableSlots={availableSlots}
-          onBookAppointment={(doctorId, time) => onBookAppointment?.(doctorId, selectedDate, time)}
+          onBookAppointment={(doctorId, time) =>
+            onBookAppointment?.(doctorId, selectedDate, time)
+          }
         />
       </div>
     </div>

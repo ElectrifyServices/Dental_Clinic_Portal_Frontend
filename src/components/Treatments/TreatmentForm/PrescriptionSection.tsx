@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+﻿import { Plus, Trash2 } from "lucide-react";
 
 interface Prescription {
   id: string;
@@ -22,7 +21,7 @@ export function PrescriptionSection({
   prescriptions,
   onAddPrescription,
   onRemovePrescription,
-  onUpdatePrescription
+  onUpdatePrescription,
 }: PrescriptionSectionProps) {
   return (
     <div>
@@ -40,23 +39,42 @@ export function PrescriptionSection({
 
       <div className="space-y-4">
         {prescriptions.map((prescription) => (
-          <div key={prescription.id} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 relative group transition-all hover:shadow-md">
+          <div
+            key={prescription.id}
+            className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 relative group transition-all hover:shadow-md"
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="md:col-span-2">
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Medicine Name</label>
+                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                  Medicine Name
+                </label>
                 <input
                   type="text"
                   value={prescription.medicine}
-                  onChange={(e) => onUpdatePrescription(prescription.id, 'medicine', e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "medicine",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="e.g. Amoxicillin"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Dosage</label>
+                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                  Dosage
+                </label>
                 <select
                   value={prescription.dosage}
-                  onChange={(e) => onUpdatePrescription(prescription.id, 'dosage', e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "dosage",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                 >
                   <option value="">Select Dosage</option>
@@ -73,42 +91,74 @@ export function PrescriptionSection({
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Timing</label>
+                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                  Timing
+                </label>
                 <input
                   type="text"
                   value={prescription.timing}
-                  onChange={(e) => onUpdatePrescription(prescription.id, 'timing', e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "timing",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="After food"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Frequency</label>
+                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                  Frequency
+                </label>
                 <input
                   type="text"
                   value={prescription.frequency}
-                  onChange={(e) => onUpdatePrescription(prescription.id, 'frequency', e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "frequency",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="3 times daily"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Duration</label>
+                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                  Duration
+                </label>
                 <input
                   type="text"
                   value={prescription.duration}
-                  onChange={(e) => onUpdatePrescription(prescription.id, 'duration', e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "duration",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                   placeholder="5 days"
                 />
               </div>
               <div className="flex items-end gap-2">
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">Qty</label>
+                  <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
+                    Qty
+                  </label>
                   <input
                     type="text"
                     value={prescription.qty}
-                    onChange={(e) => onUpdatePrescription(prescription.id, 'qty', e.target.value)}
+                    onChange={(e) =>
+                      onUpdatePrescription(
+                        prescription.id,
+                        "qty",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
                     placeholder="10"
                   />

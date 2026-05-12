@@ -1,7 +1,12 @@
-﻿import React from 'react';
-import { Clock, MoreVertical, Calendar as CalendarIcon, Stethoscope, Wallet } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+﻿import React from "react";
+import {
+  Clock,
+  MoreVertical,
+  Calendar as CalendarIcon,
+  Stethoscope,
+} from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 interface AppointmentTableRowProps {
   appointment: any;
@@ -22,11 +27,15 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-primary font-bold shadow-sm">
-            {(a.patientName || a.patient || '?').charAt(0)}
+            {(a.patientName || a.patient || "?").charAt(0)}
           </div>
           <div>
-            <div className="font-semibold text-foreground leading-tight mb-0.5">{a.patientName || a.patient}</div>
-            <div className="text-[10px] text-muted-foreground font-medium">{a.patientPhone || a.phone || 'No Phone'}</div>
+            <div className="font-semibold text-foreground leading-tight mb-0.5">
+              {a.patientName || a.patient}
+            </div>
+            <div className="text-[10px] text-muted-foreground font-medium">
+              {a.patientPhone || a.phone || "No Phone"}
+            </div>
           </div>
         </div>
       </td>
@@ -39,7 +48,9 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
             <div className="font-medium text-muted-foreground text-xs">
               {a.treatmentType || a.type}
             </div>
-            <div className="text-[10px] text-muted-foreground/60 mt-0.5">Dr. {a.doctorName || '—'}</div>
+            <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+              Dr. {a.doctorName || "—"}
+            </div>
           </div>
         </div>
       </td>
@@ -47,11 +58,18 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
             <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
-            {a.date ? new Date(a.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) : '—'}
+            {a.date
+              ? new Date(a.date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                })
+              : "—"}
           </div>
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
             <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
-            {formatTime(a.time)} <span className="text-muted-foreground/40 mx-1">•</span> {a.duration || 15} min
+            {formatTime(a.time)}{" "}
+            <span className="text-muted-foreground/40 mx-1">•</span>{" "}
+            {a.duration || 15} min
           </div>
         </div>
       </td>
@@ -61,16 +79,19 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
         </div>
       </td>
       <td className="px-6 py-4">
-        <Badge variant={statusVariants[a.status] || 'gray'} className="text-[10px] px-3 py-0.5 font-medium">
-          {a.status.replace('-', ' ')}
+        <Badge
+          variant={statusVariants[a.status] || "gray"}
+          className="text-[10px] px-3 py-0.5 font-medium"
+        >
+          {a.status.replace("-", " ")}
         </Badge>
       </td>
       <td className="px-6 py-4 text-center">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
-          onClick={e => onOpenMenu(e, a.id)}
+          onClick={(e) => onOpenMenu(e, a.id)}
         >
           <MoreVertical className="w-4 h-4" />
         </Button>

@@ -1,5 +1,15 @@
-﻿import React from 'react';
-import { X, Download, Stethoscope, User, Calendar, FileText, Camera, Pill, IndianRupee, Clock } from 'lucide-react';
+import {
+  Download,
+  Stethoscope,
+  User,
+  Calendar,
+  FileText,
+  Camera,
+  Pill,
+  IndianRupee,
+  Clock,
+} from "lucide-react";
+import { Modal, Button, ContentCard, Badge } from "@/components/ui";
 
 interface TreatmentViewerProps {
   treatment: any;
@@ -9,7 +19,13 @@ interface TreatmentViewerProps {
   onStartTreatment: (id: string) => void;
 }
 
-export function TreatmentViewer({ treatment, onClose, onEditTreatment, onMarkCompleted, onStartTreatment }: TreatmentViewerProps) {
+export function TreatmentViewer({
+  treatment,
+  onClose,
+  onEditTreatment,
+  onMarkCompleted,
+  onStartTreatment,
+}: TreatmentViewerProps) {
   if (!treatment) return null;
 
   const handleDownload = () => {
@@ -47,19 +63,23 @@ export function TreatmentViewer({ treatment, onClose, onEditTreatment, onMarkCom
 
           <div class="section">
             <h3>Clinical Notes</h3>
-            <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.notes || 'No notes available.'}</p>
+            <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.notes || "No notes available."}</p>
           </div>
 
           <div class="section">
             <h3>Prescribed Medications</h3>
             <div class="prescription-grid">
-              ${(treatment.prescriptions || []).map((p: any) => `
+              ${(treatment.prescriptions || [])
+                .map(
+                  (p: any) => `
                 <div class="med-card">
                   <p><strong>${p.medicine}</strong></p>
                   <p style="font-size: 13px; margin: 5px 0;">Dosage: ${p.dosage} | Timing: ${p.timing}</p>
                   <p style="font-size: 13px; margin: 5px 0;">Freq: ${p.frequency} | Dur: ${p.duration}</p>
                 </div>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </div>
           </div>
 
@@ -69,150 +89,188 @@ export function TreatmentViewer({ treatment, onClose, onEditTreatment, onMarkCom
         </body>
       </html>
     `;
-    const blob = new Blob([printContent], { type: 'text/html' });
+    const blob = new Blob([printContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `treatment-plan-${treatment.patientName}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const sm = {
-    completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    'in-progress': 'bg-primary/10 text-primary border-primary/20',
-    planned: 'bg-amber-50 text-amber-700 border-amber-100',
-  }[treatment.status as 'completed' | 'in-progress' | 'planned'] || 'bg-muted text-muted-foreground border-border';
+  const statusVariant = (treatment.status === 'completed' ? 'green' : treatment.status === 'in-progress' ? 'blue' : 'amber') as any;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box max-w-5xl w-full">
-        <div className="modal-header bg-gradient-to-r from-primary/10 to-indigo-50/30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/20">
-              <Stethoscope className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="modal-title text-xl">{treatment.procedure}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5 font-medium">{treatment.patientName} • {treatment.tooth}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={handleDownload} className="btn-secondary py-2 px-4 shadow-sm">
-              <Download className="w-4 h-4" /> Download
-            </button>
-            <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
-              <X className="w-5 h-5 text-muted-foreground/60" />
-            </button>
-          </div>
-        </div>
-
-        <div className="modal-body p-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-primary/50 rounded-3xl p-6 border border-primary/20 shadow-sm relative overflow-hidden group">
-              <User className="absolute -right-4 -bottom-4 w-24 h-24 text-blue-100/50 group-hover:scale-110 transition-transform" />
-              <h3 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">Patient Overview</h3>
-              <div className="space-y-3 relative z-10">
-                <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Name</span><span className="text-sm font-bold text-foreground">{treatment.patientName}</span></div>
-                <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Tooth</span><span className="text-sm font-bold text-foreground">{treatment.tooth}</span></div>
-                <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Doctor</span><span className="text-sm font-bold text-foreground">{treatment.doctorName}</span></div>
-              </div>
-            </div>
-
-            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group">
-              <Calendar className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/50 group-hover:scale-110 transition-transform" />
-              <h3 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-4">Timeline & Status</h3>
-              <div className="space-y-3 relative z-10">
-                <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Started</span><span className="text-sm font-bold text-foreground">{new Date(treatment.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short'})}</span></div>
-                <div className="flex justify-between items-center"><span className="text-xs font-bold text-muted-foreground">Next Visit</span><span className="text-sm font-bold text-foreground">{treatment.nextAppointment ? new Date(treatment.nextAppointment).toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) : '—'}</span></div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-muted-foreground">Current</span>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border tracking-widest ${sm}`}>{treatment.status.replace('-', ' ')}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100 shadow-sm relative overflow-hidden group">
-              <IndianRupee className="absolute -right-4 -bottom-4 w-24 h-24 text-indigo-100/50 group-hover:scale-110 transition-transform" />
-              <h3 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Financial Overview</h3>
-              <div className="space-y-1 relative z-10">
-                <p className="text-3xl font-bold text-indigo-900">₹{treatment.cost.toLocaleString()}</p>
-                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Projected Total Fee</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-3xl border border-border p-8 shadow-sm">
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-500" />
-              Clinical Notes & Progression
-            </h3>
-            <div className="bg-muted/50 rounded-2xl p-6 border border-border italic text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap font-medium">
-              {treatment.notes || 'No detailed clinical notes provided for this treatment plan.'}
-            </div>
-          </div>
-
-          {treatment.prescriptions?.length > 0 && (
-            <div className="bg-emerald-50/30 rounded-3xl p-8 border border-emerald-100/50">
-              <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Pill className="w-5 h-5 text-emerald-600" />
-                Prescribed Medications
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {treatment.prescriptions.map((p: any) => (
-                  <div key={p.id} className="bg-card rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-bold text-emerald-900 tracking-tight">{p.medicine}</h4>
-                      <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-bold border border-emerald-100">{p.dosage}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-y-2 text-xs font-bold text-muted-foreground">
-                      <div className="flex items-center gap-2"><Clock className="w-3 h-3 text-emerald-400" /> {p.timing}</div>
-                      <div className="flex items-center gap-2"><Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}</div>
-                      <div className="flex items-center gap-2"><FileText className="w-3 h-3 text-emerald-400" /> {p.frequency}</div>
-                      <div className="flex items-center gap-2"><Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {treatment.images?.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-widest mb-6 flex items-center gap-2 px-2">
-                <Camera className="w-5 h-5 text-blue-500" />
-                Diagnostic Images & Scans
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {treatment.images.map((img: string, i: number) => (
-                  <div key={i} className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-border" onClick={() => window.open(img, '_blank')}>
-                    <img src={img} alt="Diagnostic" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center">
-                      <Download className="text-white w-6 h-6" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="modal-footer sticky bottom-0 bg-card/80 backdrop-blur-md -mx-8 -mb-8 mt-8 rounded-b-2xl border-t border-border">
-            {treatment.status === 'planned' && (
-              <button onClick={() => { onStartTreatment(treatment.id); onClose(); }} className="btn-primary py-3 px-8 shadow-lg shadow-emerald-100 bg-emerald-600 hover:bg-emerald-700 font-semibold">
-                Start Treatment Now
-              </button>
+    <Modal
+      title={treatment.procedure}
+      subtitle={`${treatment.patientName} • Tooth ${treatment.tooth}`}
+      onClose={onClose}
+      size="5xl"
+      icon={<Stethoscope className="w-5 h-5" />}
+      footer={
+        <div className="flex justify-between items-center w-full">
+          <div className="flex gap-2">
+            {treatment.status === "planned" && (
+              <Button
+                onClick={() => {
+                  onStartTreatment(treatment.id);
+                  onClose();
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 shadow-lg"
+              >
+                Start Treatment
+              </Button>
             )}
-            {treatment.status === 'in-progress' && (
-              <button onClick={() => { onMarkCompleted(treatment.id); onClose(); }} className="btn-primary py-3 px-8 shadow-lg shadow-blue-100 font-semibold">
-                Mark as Successfully Completed
-              </button>
+            {treatment.status === "in-progress" && (
+              <Button
+                onClick={() => {
+                  onMarkCompleted(treatment.id);
+                  onClose();
+                }}
+                className="shadow-lg"
+              >
+                Complete Procedure
+              </Button>
             )}
-            <button onClick={() => { onEditTreatment(treatment.id); onClose(); }} className="btn-secondary py-3 px-8 font-semibold">
+            <Button
+              variant="outline"
+              onClick={() => {
+                onEditTreatment(treatment.id);
+                onClose();
+              }}
+            >
               Edit Plan
-            </button>
+            </Button>
           </div>
+          <Button variant="ghost" onClick={handleDownload} className="gap-2 text-muted-foreground hover:text-foreground">
+            <Download className="w-4 h-4" /> Download Report
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ContentCard 
+            title="Patient Overview" 
+            icon={<User className="w-5 h-5" />}
+            className="bg-primary/5 border-primary/10"
+          >
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Name</span>
+                <span className="text-sm font-black text-foreground">{treatment.patientName}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Tooth</span>
+                <span className="text-sm font-black text-foreground">#{treatment.tooth}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Doctor</span>
+                <span className="text-sm font-black text-foreground">{treatment.doctorName}</span>
+              </div>
+            </div>
+          </ContentCard>
+
+          <ContentCard 
+            title="Timeline & Status" 
+            icon={<Calendar className="w-5 h-5" />}
+            className="bg-emerald-50/50 border-emerald-100"
+          >
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Started</span>
+                <span className="text-sm font-black text-foreground">{new Date(treatment.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Next Visit</span>
+                <span className="text-sm font-black text-foreground">{treatment.nextAppointment ? new Date(treatment.nextAppointment).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Status</span>
+                <Badge variant={statusVariant} className="font-black text-[9px] uppercase tracking-widest px-2.5 h-5">{treatment.status}</Badge>
+              </div>
+            </div>
+          </ContentCard>
+
+          <ContentCard 
+            title="Financial Status" 
+            icon={<IndianRupee className="w-5 h-5" />}
+            className="bg-indigo-50/50 border-indigo-100"
+          >
+            <div className="mt-2">
+              <p className="text-3xl font-black text-indigo-900 tracking-tighter">₹{treatment.cost.toLocaleString()}</p>
+              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-1">Total Procedure Fee</p>
+            </div>
+          </ContentCard>
+        </div>
+
+        <ContentCard 
+          title="Clinical Notes & Progression" 
+          icon={<FileText className="w-5 h-5 text-primary" />}
+          className="border-border/50"
+        >
+          <div className="bg-muted/30 rounded-2xl p-6 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
+            {treatment.notes || "No detailed clinical notes provided for this treatment plan."}
+          </div>
+        </ContentCard>
+
+        {treatment.prescriptions?.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+              <Pill className="w-4 h-4 text-emerald-500" /> Prescribed Medications
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {treatment.prescriptions.map((p: any) => (
+                <ContentCard 
+                  key={p.id}
+                  title={p.medicine}
+                  subtitle={p.dosage}
+                  className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
+                >
+                  <div className="grid grid-cols-2 gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-3 h-3 text-emerald-400" /> {p.frequency}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units
+                    </div>
+                  </div>
+                </ContentCard>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {treatment.images?.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+              <Camera className="w-4 h-4 text-blue-500" /> Diagnostic Media
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {treatment.images.map((img: string, i: number) => (
+                <div
+                  key={i}
+                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-xl"
+                  onClick={() => window.open(img, "_blank")}
+                >
+                  <img src={img} alt="Diagnostic" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center text-primary transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                      <Download className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,5 +1,4 @@
-﻿import React from "react";
-import { Pill, Plus, Trash2 } from "lucide-react";
+﻿import { Pill, Plus, Trash2 } from "lucide-react";
 
 interface Prescription {
   id: string;
@@ -23,7 +22,7 @@ export function PrescriptionForm({
   prescriptions,
   onAddPrescription,
   onRemovePrescription,
-  onUpdatePrescription
+  onUpdatePrescription,
 }: PrescriptionFormProps) {
   return (
     <div className="px-6">
@@ -55,7 +54,13 @@ export function PrescriptionForm({
               <input
                 type="text"
                 value={prescription.medicine}
-                onChange={(e) => onUpdatePrescription(prescription.id, "medicine", e.target.value)}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "medicine",
+                    e.target.value,
+                  )
+                }
                 className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                 placeholder="e.g. Paracetamol"
               />
@@ -66,7 +71,13 @@ export function PrescriptionForm({
               </label>
               <select
                 value={prescription.dosage}
-                onChange={(e) => onUpdatePrescription(prescription.id, "dosage", e.target.value)}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "dosage",
+                    e.target.value,
+                  )
+                }
                 className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
               >
                 <option value="">Select</option>
@@ -86,7 +97,13 @@ export function PrescriptionForm({
               <input
                 type="text"
                 value={prescription.timing}
-                onChange={(e) => onUpdatePrescription(prescription.id, "timing", e.target.value)}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "timing",
+                    e.target.value,
+                  )
+                }
                 className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                 placeholder="After meals"
               />
@@ -98,7 +115,13 @@ export function PrescriptionForm({
               <input
                 type="text"
                 value={prescription.frequency}
-                onChange={(e) => onUpdatePrescription(prescription.id, "frequency", e.target.value)}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "frequency",
+                    e.target.value,
+                  )
+                }
                 className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                 placeholder="3 times daily"
               />
@@ -111,14 +134,26 @@ export function PrescriptionForm({
                 <input
                   type="number"
                   value={prescription.duration}
-                  onChange={(e) => onUpdatePrescription(prescription.id, "duration", e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "duration",
+                      e.target.value,
+                    )
+                  }
                   min="1"
                   className="w-16 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-center"
                   placeholder="5"
                 />
                 <select
-                  value={prescription.durationUnit || 'Days'}
-                  onChange={(e) => onUpdatePrescription(prescription.id, "durationUnit", e.target.value)}
+                  value={prescription.durationUnit || "Days"}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "durationUnit",
+                      e.target.value,
+                    )
+                  }
                   className="flex-1 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-sm"
                 >
                   <option value="Days">Days</option>
@@ -136,7 +171,9 @@ export function PrescriptionForm({
                 <input
                   type="text"
                   value={prescription.qty}
-                  onChange={(e) => onUpdatePrescription(prescription.id, "qty", e.target.value)}
+                  onChange={(e) =>
+                    onUpdatePrescription(prescription.id, "qty", e.target.value)
+                  }
                   className="w-full px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                   placeholder="10"
                 />

@@ -1,10 +1,9 @@
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import "tw-animate-css";
-
-@import "@fontsource-variable/inter";
 
 @layer base {
   :root {

@@ -1,33 +1,11 @@
-﻿import React, { useState, useMemo } from 'react';
-import { QrCode, Download, UserCheck, UserX, User, Building2, Plus, Search, Filter, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react';
-import { ConfirmModal } from '@/components/ui';
-import { PatientStats } from './PatientList/PatientStats';
-import { PatientFilters } from './PatientList/PatientFilters';
-import { PatientCard } from './PatientList/PatientCard';
-import { PatientTable } from './PatientList/PatientTable';
-
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  lastVisit: string;
-  totalVisits: number;
-  outstandingBalance: number;
-  status: 'active' | 'inactive' | 'new';
-  dateOfBirth?: string;
-  gender?: string;
-  address?: string;
-  medicalHistory?: string[];
-  allergies?: string[];
-  avatar?: string;
-  isPerson?: boolean;
-  category?: string;
-  barcode?: string;
-  corporatePlanId?: string;
-  corporatePlanName?: string;
-  registeredDate?: string;
-}
+import { useState, useMemo } from "react";
+import { User } from "lucide-react";
+import { ConfirmModal } from "@/components/ui";
+import { PatientStats } from "./PatientList/PatientStats";
+import { PatientFilters } from "./PatientList/PatientFilters";
+import { PatientCard } from "./PatientList/PatientCard";
+import { PatientTable } from "./PatientList/PatientTable";
+import { Patient } from "@/types";
 
 interface PatientListProps {
   patients: Patient[];
@@ -36,34 +14,41 @@ interface PatientListProps {
   onEditPatient: (patientId: string) => void;
   onDeletePatient: (patientId: string) => void;
   onExportPatient?: (patientId: string) => void;
-  onToggleStatus?: (id: string, newStatus: 'active' | 'inactive') => void;
+  onToggleStatus?: (id: string, newStatus: "active" | "inactive") => void;
   onToggleCategory?: (id: string, newCategory: string) => void;
+  onShowCorporateManagement?: () => void;
 }
 
-export function PatientList({ 
-  patients, 
-  onAddPatient, 
-  onViewPatient, 
-  onEditPatient, 
-  onDeletePatient, 
+export function PatientList({
+  patients,
+  onAddPatient,
+  onViewPatient,
+  onEditPatient,
+  onDeletePatient,
   onExportPatient,
   onToggleStatus,
-  onToggleCategory
+  onToggleCategory,
 }: PatientListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
 
   const filteredPatients = useMemo(() => {
-    return patients.filter(patient => {
-      const matchesSearch = (patient.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (patient.phone || '').includes(searchTerm) ||
-                           (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (patient.id || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterStatus === 'all' || (patient.status || 'active') === filterStatus;
-      const matchesCategory = filterCategory === 'all' || (patient.category || 'regular') === filterCategory;
+    return patients.filter((patient) => {
+      const matchesSearch =
+        (patient.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.phone || "").includes(searchTerm) ||
+        (patient.email || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (patient.id || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter =
+        filterStatus === "all" || (patient.status || "active") === filterStatus;
+      const matchesCategory =
+        filterCategory === "all" ||
+        (patient.category || "regular") === filterCategory;
       return matchesSearch && matchesFilter && matchesCategory;
     });
   }, [patients, searchTerm, filterStatus, filterCategory]);
@@ -84,17 +69,17 @@ export function PatientList({
         <body>
           <div class="barcode-card">
             <h2>🦷 DentalCare Pro</h2>
-            <div class="barcode">${patient.barcode || '*'+patient.id+'*'}</div>
+            <div class="barcode">${patient.barcode || "*" + patient.id + "*"}</div>
             <div class="patient-info">
               <div class="info-row"><span>ID:</span><span>${patient.id}</span></div>
               <div class="info-row"><span>Name:</span><span>${patient.name}</span></div>
-              <div class="info-row"><span>Status:</span><span>${(patient.status || 'active').toUpperCase()}</span></div>
+              <div class="info-row"><span>Status:</span><span>${(patient.status || "active").toUpperCase()}</span></div>
             </div>
           </div>
         </body>
       </html>
     `;
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(printContent);
       printWindow.document.close();
@@ -104,16 +89,19 @@ export function PatientList({
 
   const handleToggleStatus = (id: string, currentStatus: string) => {
     if (onToggleStatus) {
-      onToggleStatus(id, currentStatus === 'active' ? 'inactive' : 'active');
+      onToggleStatus(id, currentStatus === "active" ? "inactive" : "active");
     }
   };
 
   const handleToggleCategory = (id: string, currentCategory: string) => {
     if (onToggleCategory) {
-      onToggleCategory(id, currentCategory === 'regular' ? 'premium' : 'regular');
+      onToggleCategory(
+        id,
+        currentCategory === "regular" ? "premium" : "regular",
+      );
     } else {
       // If parent doesn't provide a toggle, we can trigger the add-person-to-patient flow
-      onAddPatient('person', id);
+      onAddPatient("person", id);
     }
   };
 
@@ -136,18 +124,24 @@ export function PatientList({
       {filteredPatients.length === 0 ? (
         <div className="bg-card rounded-2xl border border-dashed border-border py-20 text-center">
           <User className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-foreground">No patients found</h3>
-          <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+          <h3 className="text-lg font-bold text-foreground">
+            No patients found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search or filters
+          </p>
         </div>
-      ) : viewMode === 'grid' ? (
+      ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredPatients.map(patient => (
+          {filteredPatients.map((patient) => (
             <PatientCard
               key={patient.id}
               patient={patient}
               onView={onViewPatient}
               onEdit={onEditPatient}
-              onDelete={(id) => setPatientToDelete(patients.find(p => p.id === id) || null)}
+              onDelete={(id) =>
+                setPatientToDelete(patients.find((p) => p.id === id) || null)
+              }
               onExport={(id) => onExportPatient?.(id)}
               onPrintBarcode={printBarcode}
               onToggleStatus={handleToggleStatus}
@@ -160,7 +154,9 @@ export function PatientList({
           patients={filteredPatients}
           onView={onViewPatient}
           onEdit={onEditPatient}
-          onDelete={(id) => setPatientToDelete(patients.find(p => p.id === id) || null)}
+          onDelete={(id) =>
+            setPatientToDelete(patients.find((p) => p.id === id) || null)
+          }
           onExport={(id) => onExportPatient?.(id)}
           onPrintBarcode={printBarcode}
         />

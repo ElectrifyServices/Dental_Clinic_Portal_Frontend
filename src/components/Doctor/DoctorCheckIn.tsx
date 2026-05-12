@@ -1,5 +1,15 @@
-﻿import React, { useState } from 'react';
-import { Search, Clock, User, Phone, MessageSquare, Stethoscope, CheckCircle, AlertCircle, Calendar, FileText } from 'lucide-react';
+import { useState } from "react";
+import {
+  Search,
+  Clock,
+  User,
+  Phone,
+  MessageSquare,
+  Stethoscope,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+} from "lucide-react";
 
 interface CheckedInPatient {
   id: string;
@@ -10,7 +20,7 @@ interface CheckedInPatient {
   treatmentType: string;
   patientConcern: string;
   checkInTime: string;
-  status: 'waiting' | 'in-consultation' | 'completed';
+  status: "waiting" | "in-consultation" | "completed";
   notes?: string;
   patientHistory?: {
     lastVisit?: string;
@@ -22,56 +32,58 @@ interface CheckedInPatient {
 
 const checkedInPatients: CheckedInPatient[] = [
   {
-    id: '1',
-    appointmentId: 'APT-001',
-    patientName: 'Rajesh Kumar',
-    patientPhone: '+91 98765 43210',
-    appointmentTime: '10:00 AM',
-    treatmentType: 'Root Canal Treatment',
-    patientConcern: 'Severe pain in upper right molar, especially when eating hot or cold foods. Pain started 3 days ago.',
-    checkInTime: '9:55 AM',
-    status: 'waiting',
+    id: "1",
+    appointmentId: "APT-001",
+    patientName: "Rajesh Kumar",
+    patientPhone: "+91 98765 43210",
+    appointmentTime: "10:00 AM",
+    treatmentType: "Root Canal Treatment",
+    patientConcern:
+      "Severe pain in upper right molar, especially when eating hot or cold foods. Pain started 3 days ago.",
+    checkInTime: "9:55 AM",
+    status: "waiting",
     patientHistory: {
-      lastVisit: '2024-01-08',
+      lastVisit: "2024-01-08",
       totalVisits: 5,
-      medicalHistory: ['Diabetes Type 2', 'Hypertension'],
-      allergies: ['Penicillin']
-    }
+      medicalHistory: ["Diabetes Type 2", "Hypertension"],
+      allergies: ["Penicillin"],
+    },
   },
   {
-    id: '2',
-    appointmentId: 'APT-002',
-    patientName: 'Priya Sharma',
-    patientPhone: '+91 87654 32109',
-    appointmentTime: '10:30 AM',
-    treatmentType: 'Teeth Cleaning',
-    patientConcern: 'Regular cleaning and checkup. Some bleeding while brushing teeth.',
-    checkInTime: '10:25 AM',
-    status: 'in-consultation',
+    id: "2",
+    appointmentId: "APT-002",
+    patientName: "Priya Sharma",
+    patientPhone: "+91 87654 32109",
+    appointmentTime: "10:30 AM",
+    treatmentType: "Teeth Cleaning",
+    patientConcern:
+      "Regular cleaning and checkup. Some bleeding while brushing teeth.",
+    checkInTime: "10:25 AM",
+    status: "in-consultation",
     patientHistory: {
-      lastVisit: '2023-12-15',
+      lastVisit: "2023-12-15",
       totalVisits: 2,
       medicalHistory: [],
-      allergies: ['Latex']
-    }
+      allergies: ["Latex"],
+    },
   },
   {
-    id: '3',
-    appointmentId: 'APT-003',
-    patientName: 'Amit Singh',
-    patientPhone: '+91 76543 21098',
-    appointmentTime: '11:00 AM',
-    treatmentType: 'Dental Filling',
-    patientConcern: 'Cavity in lower left molar. Mild pain when chewing.',
-    checkInTime: '10:58 AM',
-    status: 'waiting',
+    id: "3",
+    appointmentId: "APT-003",
+    patientName: "Amit Singh",
+    patientPhone: "+91 76543 21098",
+    appointmentTime: "11:00 AM",
+    treatmentType: "Dental Filling",
+    patientConcern: "Cavity in lower left molar. Mild pain when chewing.",
+    checkInTime: "10:58 AM",
+    status: "waiting",
     patientHistory: {
-      lastVisit: '2024-01-05',
+      lastVisit: "2024-01-05",
       totalVisits: 8,
-      medicalHistory: ['Previous root canal'],
-      allergies: []
-    }
-  }
+      medicalHistory: ["Previous root canal"],
+      allergies: [],
+    },
+  },
 ];
 
 interface DoctorCheckInProps {
@@ -79,45 +91,69 @@ interface DoctorCheckInProps {
   onSelectPatient: (patient: CheckedInPatient) => void;
 }
 
-export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+export function DoctorCheckIn({
+  doctorName,
+  onSelectPatient,
+}: DoctorCheckInProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [patients, setPatients] = useState(checkedInPatients);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (
+    status: "waiting" | "in-consultation" | "completed",
+  ) => {
     switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in-consultation': return 'bg-primary/10 text-primary border-primary/30';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-muted text-foreground border-border';
+      case "waiting":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "in-consultation":
+        return "bg-primary/10 text-primary border-primary/30";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-muted text-foreground border-border";
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (
+    status: "waiting" | "in-consultation" | "completed",
+  ) => {
     switch (status) {
-      case 'waiting': return <Clock className="w-4 h-4" />;
-      case 'in-consultation': return <Stethoscope className="w-4 h-4" />;
-      case 'completed': return <CheckCircle className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
+      case "waiting":
+        return <Clock className="w-4 h-4" />;
+      case "in-consultation":
+        return <Stethoscope className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 
-  const updatePatientStatus = (patientId: string, newStatus: string) => {
-    setPatients(prev => prev.map(patient => 
-      patient.id === patientId ? { ...patient, status: newStatus } : patient
-    ));
+  const updatePatientStatus = (
+    patientId: string,
+    newStatus: "waiting" | "in-consultation" | "completed",
+  ) => {
+    setPatients((prev) =>
+      prev.map((patient) =>
+        patient.id === patientId ? { ...patient, status: newStatus } : patient,
+      ),
+    );
   };
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.patientConcern.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || patient.status === filterStatus;
+  const filteredPatients = patients.filter((patient) => {
+    const matchesSearch =
+      patient.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.patientConcern.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter =
+      filterStatus === "all" || patient.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
-  const waitingCount = patients.filter(p => p.status === 'waiting').length;
-  const inConsultationCount = patients.filter(p => p.status === 'in-consultation').length;
+  const waitingCount = patients.filter((p) => p.status === "waiting").length;
+  const inConsultationCount = patients.filter(
+    (p) => p.status === "in-consultation",
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -125,31 +161,43 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
       <div className="bg-gradient-to-r from-primary/10 to-cyan-50 rounded-2xl p-6 border border-primary/30">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
-                <h2 className="text-xl font-bold text-foreground">Doctor Check-In Dashboard</h2>
-                <p className="text-muted-foreground mt-1">Welcome, {doctorName} - Manage your checked-in patients</p>
+            <h2 className="text-xl font-bold text-foreground">
+              Doctor Check-In Dashboard
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              Welcome, {doctorName} - Manage your checked-in patients
+            </p>
             <div className="flex items-center space-x-6 mt-3">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                <span className="text-sm text-muted-foreground">{waitingCount} Waiting</span>
+                <span className="text-sm text-muted-foreground">
+                  {waitingCount} Waiting
+                </span>
               </div>
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-primary/100 rounded-full mr-2"></div>
-                <span className="text-sm text-muted-foreground">{inConsultationCount} In Consultation</span>
+                <span className="text-sm text-muted-foreground">
+                  {inConsultationCount} In Consultation
+                </span>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-primary">{new Date().toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: true 
-            })}</div>
-            <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString('en-IN', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</div>
+            <div className="text-2xl font-bold text-primary">
+              {new Date().toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -183,7 +231,10 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
       {/* Patient Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredPatients.map((patient) => (
-          <div key={patient.id} className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div
+            key={patient.id}
+            className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
             {/* Patient Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center">
@@ -191,17 +242,29 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
                   <User className="w-8 h-8 text-primary" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="font-bold text-foreground text-lg">{patient.patientName}</h3>
-                  <p className="text-sm text-muted-foreground">{patient.appointmentId}</p>
-                  <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(patient.status)}`}>
+                  <h3 className="font-bold text-foreground text-lg">
+                    {patient.patientName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {patient.appointmentId}
+                  </p>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(patient.status)}`}
+                  >
                     {getStatusIcon(patient.status)}
-                    <span className="ml-1">{patient.status.replace('-', ' ').toUpperCase()}</span>
+                    <span className="ml-1">
+                      {patient.status.replace("-", " ").toUpperCase()}
+                    </span>
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-primary">{patient.appointmentTime}</div>
-                <div className="text-sm text-muted-foreground">Check-in: {patient.checkInTime}</div>
+                <div className="text-lg font-bold text-primary">
+                  {patient.appointmentTime}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Check-in: {patient.checkInTime}
+                </div>
               </div>
             </div>
 
@@ -209,17 +272,25 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
             <div className="space-y-3 mb-4">
               <div className="flex items-center text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground/60 mr-3" />
-                <span className="text-muted-foreground">{patient.patientPhone}</span>
+                <span className="text-muted-foreground">
+                  {patient.patientPhone}
+                </span>
               </div>
               <div className="flex items-center text-sm">
                 <Stethoscope className="w-4 h-4 text-muted-foreground/60 mr-3" />
-                <span className="font-medium text-foreground">{patient.treatmentType}</span>
+                <span className="font-medium text-foreground">
+                  {patient.treatmentType}
+                </span>
               </div>
               <div className="flex items-start text-sm">
                 <MessageSquare className="w-4 h-4 text-muted-foreground/60 mr-3 mt-0.5" />
                 <div>
-                  <p className="font-medium text-muted-foreground mb-1">Patient Concern:</p>
-                  <p className="text-muted-foreground line-clamp-3">{patient.patientConcern}</p>
+                  <p className="font-medium text-muted-foreground mb-1">
+                    Patient Concern:
+                  </p>
+                  <p className="text-muted-foreground line-clamp-3">
+                    {patient.patientConcern}
+                  </p>
                 </div>
               </div>
             </div>
@@ -229,22 +300,32 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
               <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200">
                 <div className="flex items-center mb-2">
                   <AlertCircle className="w-4 h-4 text-orange-600 mr-2" />
-                  <span className="text-sm font-medium text-orange-800">Medical History</span>
+                  <span className="text-sm font-medium text-orange-800">
+                    Medical History
+                  </span>
                 </div>
                 <div className="space-y-1">
                   {patient.patientHistory.allergies.length > 0 && (
                     <div className="text-xs text-destructive">
-                      <strong>Allergies:</strong> {patient.patientHistory.allergies.join(', ')}
+                      <strong>Allergies:</strong>{" "}
+                      {patient.patientHistory.allergies.join(", ")}
                     </div>
                   )}
                   {patient.patientHistory.medicalHistory.length > 0 && (
                     <div className="text-xs text-orange-700">
-                      <strong>Conditions:</strong> {patient.patientHistory.medicalHistory.join(', ')}
+                      <strong>Conditions:</strong>{" "}
+                      {patient.patientHistory.medicalHistory.join(", ")}
                     </div>
                   )}
                   <div className="text-xs text-muted-foreground">
-                    <strong>Visits:</strong> {patient.patientHistory.totalVisits} | 
-                    <strong> Last Visit:</strong> {patient.patientHistory.lastVisit ? new Date(patient.patientHistory.lastVisit).toLocaleDateString() : 'First visit'}
+                    <strong>Visits:</strong>{" "}
+                    {patient.patientHistory.totalVisits} |
+                    <strong> Last Visit:</strong>{" "}
+                    {patient.patientHistory.lastVisit
+                      ? new Date(
+                          patient.patientHistory.lastVisit,
+                        ).toLocaleDateString()
+                      : "First visit"}
                   </div>
                 </div>
               </div>
@@ -253,10 +334,10 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-4 border-t border-border">
               <div className="flex space-x-2">
-                {patient.status === 'waiting' && (
+                {patient.status === "waiting" && (
                   <button
                     onClick={() => {
-                      updatePatientStatus(patient.id, 'in-consultation');
+                      updatePatientStatus(patient.id, "in-consultation");
                       onSelectPatient(patient);
                     }}
                     className="btn-primary"
@@ -265,7 +346,7 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
                     Start Consultation
                   </button>
                 )}
-                {patient.status === 'in-consultation' && (
+                {patient.status === "in-consultation" && (
                   <button
                     onClick={() => onSelectPatient(patient)}
                     className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 font-medium text-sm transition-all duration-200 flex items-center"
@@ -274,7 +355,7 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
                     Continue Consultation
                   </button>
                 )}
-                {patient.status === 'completed' && (
+                {patient.status === "completed" && (
                   <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium text-sm flex items-center">
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Consultation Completed
@@ -282,7 +363,13 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                Waiting: {Math.floor((new Date().getTime() - new Date(`2024-01-15 ${patient.checkInTime}`).getTime()) / (1000 * 60))} min
+                Waiting:{" "}
+                {Math.floor(
+                  (new Date().getTime() -
+                    new Date(`2024-01-15 ${patient.checkInTime}`).getTime()) /
+                    (1000 * 60),
+                )}{" "}
+                min
               </div>
             </div>
           </div>
@@ -295,12 +382,13 @@ export function DoctorCheckIn({ doctorName, onSelectPatient }: DoctorCheckInProp
           <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
             <User className="w-12 h-12 text-muted-foreground/60" />
           </div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">No checked-in patients</h3>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            No checked-in patients
+          </h3>
           <p className="text-muted-foreground mb-4">
-            {searchTerm || filterStatus !== 'all'
-              ? 'Try adjusting your search criteria or filters.'
-              : 'Patients will appear here once they check in for their appointments.'
-            }
+            {searchTerm || filterStatus !== "all"
+              ? "Try adjusting your search criteria or filters."
+              : "Patients will appear here once they check in for their appointments."}
           </p>
         </div>
       )}

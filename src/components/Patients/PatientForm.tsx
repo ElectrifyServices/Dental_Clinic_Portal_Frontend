@@ -1,34 +1,32 @@
-﻿import React, { useState } from 'react';
-import { X, Save, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
-import { usePatientForm } from './PatientForm/usePatientForm';
-import { Step1BasicInfo } from './PatientForm/Step1BasicInfo';
-import { Step2MedicalHistory } from './PatientForm/Step2MedicalHistory';
-import { Step3Consent } from './PatientForm/Step3Consent';
-import { Step4Review } from './PatientForm/Step4Review';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import React, { useState } from "react";
+import { Save, Calendar, CheckCircle, AlertTriangle } from "lucide-react";
+import { usePatientForm } from "./PatientForm/usePatientForm";
+import { Step1BasicInfo } from "./PatientForm/Step1BasicInfo";
+import { Step2MedicalHistory } from "./PatientForm/Step2MedicalHistory";
+import { Step3Consent } from "./PatientForm/Step3Consent";
+import { Step4Review } from "./PatientForm/Step4Review";
+import { Button, Modal } from "@/components/ui";
 
 interface PatientFormProps {
   onClose: () => void;
   onSave: (patient: any) => void;
   patient?: any;
-  type?: 'normal' | 'person';
+  type?: "normal" | "person";
   parentId?: string;
   isCheckIn?: boolean;
   corporateEmployees?: any[];
   corporatePlans?: any[];
 }
 
-export function PatientForm({ 
-  onClose, 
-  onSave, 
-  patient, 
-  type, 
-  parentId, 
+export function PatientForm({
+  onClose,
+  onSave,
+  patient,
+  type,
+  parentId,
   isCheckIn,
   corporateEmployees = [],
-  corporatePlans = []
+  corporatePlans = [],
 }: PatientFormProps) {
   const {
     formData,
@@ -44,32 +42,40 @@ export function PatientForm({
     handleCustomRelation,
     handleImageUpload,
     handleDentalFilesUpload,
-  } = usePatientForm(patient, corporateEmployees, onSave);
+  } = usePatientForm(patient, corporateEmployees);
 
   const [step, setStep] = useState(1);
-  const [medicalSearch, setMedicalSearch] = useState('');
-  const [allergySearch, setAllergySearch] = useState('');
-  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<string[]>(patient?.medicalHistory || []);
-  const [selectedAllergies, setSelectedAllergies] = useState<string[]>(patient?.allergies || []);
+  const [medicalSearch, setMedicalSearch] = useState("");
+  const [allergySearch, setAllergySearch] = useState("");
+  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<
+    string[]
+  >(patient?.medicalHistory || []);
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
+    patient?.allergies || [],
+  );
   const [showOtherTreatment, setShowOtherTreatment] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step !== 4 || loading) return;
     setLoading(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     onSave({
       ...formData,
       id: formData.patientId,
-      medicalHistory: formData.medicalHistory.split('\n').filter(item => item.trim()),
+      medicalHistory: formData.medicalHistory
+        .split("\n")
+        .filter((item: string) => item.trim()),
       pastDentalHistory: formData.pastDentalHistory,
-      allergies: formData.allergies.split('\n').filter(item => item.trim()),
+      allergies: formData.allergies
+        .split("\n")
+        .filter((item: string) => item.trim()),
       allergyOther: formData.allergyOther,
       allergyNotes: formData.allergyNotes,
-      parentId: type === 'person' ? parentId : undefined,
+      parentId: type === "person" ? parentId : undefined,
       lastUpdated: new Date().toISOString(),
     });
     setLoading(false);
@@ -79,118 +85,40 @@ export function PatientForm({
     if (stepNumber < step) {
       return <CheckCircle className="w-6 h-6 text-primary" />;
     } else if (stepNumber === step) {
-      return <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xs">{stepNumber}</div>;
+      return (
+        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
+          {stepNumber}
+        </div>
+      );
     } else {
-      return <div className="w-6 h-6 bg-secondary text-primary/40 rounded-full flex items-center justify-center font-bold text-xs">{stepNumber}</div>;
+      return (
+        <div className="w-6 h-6 bg-secondary text-primary/40 rounded-full flex items-center justify-center font-bold text-xs">
+          {stepNumber}
+        </div>
+      );
     }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box max-w-4xl">
-        <div className="sticky top-0 z-50 bg-card border-b border-border p-6 rounded-t-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="modal-title text-lg">
-                {(patient && patient.id) ? 'Edit Patient Information' : 'New Patient Registration'}
-              </h2>
-              <p className="text-muted-foreground mt-1">Complete patient registration</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-muted-foreground/60 hover:text-muted-foreground p-2 hover:bg-muted rounded-xl transition-all duration-200"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-12">
-            {[
-              { num: 1, label: 'Basic Info' },
-              { num: 2, label: 'Medical History' },
-              { num: 3, label: 'Consent' },
-              { num: 4, label: 'Review' }
-            ].map(s => (
-              <div key={s.num} className="flex items-center gap-3 relative">
-                {getStepIndicator(s.num)}
-                <span className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? 'text-primary' : 'text-muted-foreground/60'}`}>
-                  {s.label}
-                </span>
-                {s.num < 4 && (
-                  <div className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? 'bg-primary' : 'bg-muted'}`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-8 max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
-          <form onSubmit={handleSubmit}>
-            {step === 1 && (
-              <Step1BasicInfo 
-                formData={formData} 
-                handleChange={handleChange} 
-                setFormData={setFormData}
-                validationErrors={validationErrors}
-                matchedCorporateEmp={matchedCorporateEmp}
-                corporatePlans={corporatePlans}
-                type={type}
-                handleCustomRelation={handleCustomRelation}
-                applyCustomRelation={applyCustomRelation}
-                handleImageUpload={handleImageUpload}
-              />
-            )}
-            {step === 2 && (
-              <Step2MedicalHistory 
-                formData={formData}
-                setFormData={setFormData}
-                handleChange={handleChange}
-                matchedCorporateEmp={matchedCorporateEmp}
-                corporatePlans={corporatePlans}
-                medicalSearch={medicalSearch}
-                setMedicalSearch={setMedicalSearch}
-                selectedMedicalHistory={selectedMedicalHistory}
-                setSelectedMedicalHistory={setSelectedMedicalHistory}
-                allergySearch={allergySearch}
-                setAllergySearch={setAllergySearch}
-                selectedAllergies={selectedAllergies}
-                setSelectedAllergies={setSelectedAllergies}
-                handleDentalFilesUpload={handleDentalFilesUpload}
-                showOtherTreatment={showOtherTreatment}
-                setShowOtherTreatment={setShowOtherTreatment}
-              />
-            )}
-            {step === 3 && (
-              <Step3Consent 
-                formData={formData}
-                setFormData={setFormData}
-                handleChange={handleChange}
-              />
-            )}
-            {step === 4 && (
-              <Step4Review 
-                formData={formData}
-                isCheckIn={isCheckIn}
-              />
-            )}
-          </form>
-
-          {Object.keys(validationErrors).length > 0 && (
-            <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-              <p className="text-sm text-destructive font-medium">Please fill all required fields before proceeding.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="sticky bottom-0 bg-muted/80 backdrop-blur-sm border-t border-border p-6 flex justify-between items-center rounded-b-2xl">
+    <Modal
+      title={
+        patient && patient.id
+          ? "Edit Patient Information"
+          : "New Patient Registration"
+      }
+      subtitle="Complete patient registration"
+      onClose={onClose}
+      size="5xl"
+      icon={<Calendar className="w-5 h-5" />}
+      footer={
+        <div className="flex justify-between items-center w-full">
           <Button
             type="button"
             variant="ghost"
             onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
             className="text-muted-foreground"
           >
-            {step === 1 ? 'Cancel' : 'Previous Step'}
+            {step === 1 ? "Cancel" : "Previous Step"}
           </Button>
 
           <div className="flex gap-3">
@@ -206,7 +134,7 @@ export function PatientForm({
               <Button
                 type="submit"
                 disabled={loading}
-                variant="ternary"
+                variant="default"
                 onClick={handleSubmit}
                 className="px-10 shadow-lg"
               >
@@ -225,7 +153,88 @@ export function PatientForm({
             )}
           </div>
         </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="flex items-center gap-12 pb-6 border-b border-border">
+          {[
+            { num: 1, label: "Basic Info" },
+            { num: 2, label: "Medical History" },
+            { num: 3, label: "Consent" },
+            { num: 4, label: "Review" },
+          ].map((s) => (
+            <div key={s.num} className="flex items-center gap-3 relative">
+              {getStepIndicator(s.num)}
+              <span
+                className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? "text-primary" : "text-muted-foreground/60"}`}
+              >
+                {s.label}
+              </span>
+              {s.num < 4 && (
+                <div
+                  className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? "bg-primary" : "bg-muted"}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {step === 1 && (
+            <Step1BasicInfo
+              formData={formData}
+              handleChange={handleChange}
+              setFormData={setFormData}
+              validationErrors={validationErrors}
+              matchedCorporateEmp={matchedCorporateEmp}
+              corporatePlans={corporatePlans}
+              type={type}
+              handleCustomRelation={handleCustomRelation}
+              applyCustomRelation={applyCustomRelation}
+              handleImageUpload={handleImageUpload}
+            />
+          )}
+          {step === 2 && (
+            <Step2MedicalHistory
+              formData={formData}
+              setFormData={setFormData}
+              handleChange={handleChange}
+              matchedCorporateEmp={matchedCorporateEmp}
+              corporatePlans={corporatePlans}
+              medicalSearch={medicalSearch}
+              setMedicalSearch={setMedicalSearch}
+              selectedMedicalHistory={selectedMedicalHistory}
+              setSelectedMedicalHistory={setSelectedMedicalHistory}
+              allergySearch={allergySearch}
+              setAllergySearch={setAllergySearch}
+              selectedAllergies={selectedAllergies}
+              setSelectedAllergies={setSelectedAllergies}
+              handleDentalFilesUpload={handleDentalFilesUpload}
+              showOtherTreatment={showOtherTreatment}
+              setShowOtherTreatment={setShowOtherTreatment}
+            />
+          )}
+          {step === 3 && (
+            <Step3Consent
+              formData={formData}
+              setFormData={setFormData}
+              handleChange={handleChange}
+            />
+          )}
+          {step === 4 && (
+            <Step4Review formData={formData} isCheckIn={isCheckIn} />
+          )}
+        </form>
+
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            <p className="text-sm text-destructive font-medium">
+              Please fill all required fields before proceeding.
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

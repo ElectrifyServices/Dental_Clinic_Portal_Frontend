@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { TenantConfig } from '../config/schema';
-import { resolveTenant, getTenantConfig, getAvailableTenants } from '../config';
+import { createContext, useContext, useState, ReactNode } from "react";
+import { TenantConfig } from "../config/schema";
+import { resolveTenant, getTenantConfig, getAvailableTenants } from "../config";
 
 interface TenantContextValue {
   /** Full config object for the active tenant */
@@ -17,19 +17,30 @@ const TenantContext = createContext<TenantContextValue | null>(null);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState<string>(() => resolveTenant());
-  const [tenant, setTenant] = useState<TenantConfig>(() => getTenantConfig(resolveTenant()));
+  const [tenant, setTenant] = useState<TenantConfig>(() =>
+    getTenantConfig(resolveTenant()),
+  );
 
   const switchTenant = (id: string) => {
     try {
-      localStorage.setItem('dental_tenant_id', id);
-    } catch { /* private browsing */ }
+      localStorage.setItem("dental_tenant_id", id);
+    } catch {
+      /* private browsing */
+    }
     const config = getTenantConfig(id);
     setTenantId(id);
     setTenant(config);
   };
 
   return (
-    <TenantContext.Provider value={{ tenant, tenantId, switchTenant, availableTenants: getAvailableTenants() }}>
+    <TenantContext.Provider
+      value={{
+        tenant,
+        tenantId,
+        switchTenant,
+        availableTenants: getAvailableTenants(),
+      }}
+    >
       {children}
     </TenantContext.Provider>
   );
@@ -37,6 +48,6 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
 export function useTenant() {
   const ctx = useContext(TenantContext);
-  if (!ctx) throw new Error('useTenant must be used within TenantProvider');
+  if (!ctx) throw new Error("useTenant must be used within TenantProvider");
   return ctx;
 }

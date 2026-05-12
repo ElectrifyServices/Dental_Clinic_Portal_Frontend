@@ -8,19 +8,26 @@
  *   <FormInput control={form.control} name="email" label="Email" type="email" />
  */
 
-import * as React from 'react';
+import * as React from "react";
 import {
   type Control,
   type FieldPath,
   type FieldValues,
   useController,
-} from 'react-hook-form';
-import { cn } from '@/lib/utils';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/Form';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { Label } from '@/components/ui/Label';
-import { Checkbox } from '@/components/ui/Checkbox';
+} from "react-hook-form";
+import { cn } from "@/lib/utils";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/Form";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+
+import { Checkbox } from "@/components/ui/Checkbox";
 
 // ─── Shared prop base ─────────────────────────────────────────────────────────
 interface BaseFieldProps<
@@ -39,15 +46,25 @@ interface BaseFieldProps<
 interface FormInputProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
-> extends BaseFieldProps<TFieldValues, TName>,
-    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'name'> {
+>
+  extends
+    BaseFieldProps<TFieldValues, TName>,
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, "name"> {
   type?: React.HTMLInputTypeAttribute;
 }
 
 export function FormInput<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({ control, name, label, description, className, required, ...inputProps }: FormInputProps<TFieldValues, TName>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  required,
+  ...inputProps
+}: FormInputProps<TFieldValues, TName>) {
   return (
     <FormField
       control={control}
@@ -61,7 +78,7 @@ export function FormInput<
             </FormLabel>
           )}
           <FormControl>
-            <Input {...field} {...inputProps} value={field.value ?? ''} />
+            <Input {...field} {...inputProps} value={field.value ?? ""} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
@@ -75,13 +92,23 @@ export function FormInput<
 interface FormTextareaProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
-> extends BaseFieldProps<TFieldValues, TName>,
-    Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'name'> {}
+>
+  extends
+    BaseFieldProps<TFieldValues, TName>,
+    Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "name"> {}
 
 export function FormTextarea<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({ control, name, label, description, className, required, ...textareaProps }: FormTextareaProps<TFieldValues, TName>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  required,
+  ...textareaProps
+}: FormTextareaProps<TFieldValues, TName>) {
   return (
     <FormField
       control={control}
@@ -95,7 +122,7 @@ export function FormTextarea<
             </FormLabel>
           )}
           <FormControl>
-            <Textarea {...field} {...textareaProps} value={field.value ?? ''} />
+            <Textarea {...field} {...textareaProps} value={field.value ?? ""} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
@@ -149,9 +176,9 @@ export function FormSelect<
           <FormControl>
             <select
               {...field}
-              value={field.value ?? ''}
+              value={field.value ?? ""}
               className={cn(
-                'form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all',
+                "form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all",
                 selectClassName,
               )}
             >
@@ -186,13 +213,25 @@ interface FormCheckboxProps<
 export function FormCheckbox<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({ control, name, label, description, className, checkboxLabel }: FormCheckboxProps<TFieldValues, TName>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  checkboxLabel,
+}: FormCheckboxProps<TFieldValues, TName>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={cn('flex flex-row items-start space-x-3 space-y-0', className)}>
+        <FormItem
+          className={cn(
+            "flex flex-row items-start space-x-3 space-y-0",
+            className,
+          )}
+        >
           <FormControl>
             <Checkbox
               checked={!!field.value}
@@ -218,7 +257,16 @@ export function FormCheckbox<
 export function FormDateInput<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({ control, name, label, description, className, required, min, max }: BaseFieldProps<TFieldValues, TName> & { min?: string; max?: string }) {
+>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  required,
+  min,
+  max,
+}: BaseFieldProps<TFieldValues, TName> & { min?: string; max?: string }) {
   return (
     <FormInput
       control={control}
@@ -238,7 +286,14 @@ export function FormDateInput<
 export function FormPhoneInput<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({ control, name, label, description, className, required }: BaseFieldProps<TFieldValues, TName>) {
+>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  required,
+}: BaseFieldProps<TFieldValues, TName>) {
   const { field } = useController({ control, name });
   return (
     <FormField
@@ -256,8 +311,10 @@ export function FormPhoneInput<
             <Input
               {...field}
               type="tel"
-              value={field.value ?? ''}
-              onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ''))}
+              value={field.value ?? ""}
+              onChange={(e) =>
+                field.onChange(e.target.value.replace(/\D/g, ""))
+              }
               maxLength={15}
               placeholder="98765 43210"
             />
