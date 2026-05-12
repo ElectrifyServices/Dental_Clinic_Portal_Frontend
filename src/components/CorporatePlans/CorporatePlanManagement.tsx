@@ -145,7 +145,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
         <div>
           <h1 className="text-2xl font-bold text-foreground leading-none">Corporate Plans</h1>
           <p className="text-muted-foreground text-sm mt-1.5 font-medium">
-            {activePlans} active plan{activePlans !== 1 ? 's' : ''} · {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
+            {activePlans} active plan{activePlans !== 1 ? 's' : ''} ï¿½ {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
           </p>
         </div>
         <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
@@ -157,7 +157,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex items-start gap-3 bg-primary/5 border border-primary/10 rounded-2xl px-5 py-4">
         <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm text-primary/80 font-medium leading-relaxed">
-          Plans created here are available company-wide. When registering a patient, staff can map them to a plan — discounts and benefits apply automatically in the billing engine.
+          Plans created here are available company-wide. When registering a patient, staff can map them to a plan ï¿½ discounts and benefits apply automatically in the billing engine.
         </p>
       </div>
 
@@ -165,7 +165,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex gap-4 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" placeholder="Search plans, companies…" value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder="Search plans, companiesï¿½" value={search} onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" />
         </div>
         <div className="flex p-1 bg-muted rounded-xl border border-border">
@@ -209,7 +209,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                         {plan.description && <p className="text-xs text-muted-foreground/60 mt-1.5 font-medium leading-relaxed max-w-2xl">{plan.description}</p>}
                         <div className="flex gap-6 mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                           <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Users className="w-3.5 h-3.5" />{plan.currentMembers}{plan.maxMembers ? ` / ${plan.maxMembers}` : ''} Enrollments</span>
-                          <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Calendar className="w-3.5 h-3.5" />{plan.validFrom} — {plan.validTo}</span>
+                          <span className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl"><Calendar className="w-3.5 h-3.5" />{plan.validFrom} ï¿½ {plan.validTo}</span>
                         </div>
                       </div>
                     </div>
@@ -310,7 +310,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                 />
               )}
 
-              {/* Color swatch — kept custom (visual picker, not a standard select) */}
+              {/* Color swatch ï¿½ kept custom (visual picker, not a standard select) */}
               <LabeledField label={fl('color', 'Visual Branding Theme')}>
                 <div className="flex gap-2 flex-wrap pt-1">
                   {PLAN_COLORS.map(c => (
