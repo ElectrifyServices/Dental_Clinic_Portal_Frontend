@@ -1,0 +1,51 @@
+import apiClient from "../services/apiClient";
+import {
+  parseApiResponse,
+  type ApiResponse,
+} from "../services/parseApiResponse";
+import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
+
+interface MutationProps<TData, TVariables> {
+  endpoint?: string;
+  getEndpoint?: (variables: TVariables) => string;
+  method?: "post" | "put" | "patch" | "delete";
+  options?: Omit<UseMutationOptions<TData, any, TVariables>, "mutationFn">;
+  transformRequest?: (variables: TVariables) => any;
+}
+
+export function useApiMutation<TData, TVariables = any>({
+  endpoint,
+  getEndpoint,
+  method = "post",
+  options,
+  transformRequest,
+}: MutationProps<TData, TVariables>) {
+  return useMutation<TData, any, TVariables>({
+    mutationFn: async (variables) => {
+      const resolvedEndpoint = getEndpoint?.(variables) ?? endpoint;
+      if (!resolvedEndpoint) {
+        throw new Error("No endpoint provided");
+      }
+
+      const requestData = transformRequest
+        ? transformRequest(variables)
+        : variables;
+
+      const res = await apiClient.request<ApiResponse<TData>>({
+        url: resolvedEndpoint,
+        method,
+        data: requestData,
+      });
+
+      const parsed = parseApiResponse(res.data);
+      
+      // If the API structure uses status codes within the response body
+      if (parsed.status && parsed.status.statusCode !== 200) {
+        throw parsed.data || new Error(parsed.status.statusDesc);
+      }
+
+      return parsed.data as TData;
+    },
+    ...options,
+  });
+}
