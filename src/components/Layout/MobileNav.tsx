@@ -33,11 +33,7 @@ export function MobileNav() {
   const role = state.user?.role || "";
 
   const visible = ITEMS.filter((item) => {
-    // 1. Role-based fallback check
-    const hasRoleAccess = item.roles.includes("all") || item.roles.includes(role);
-    if (!hasRoleAccess) return false;
-
-    // 2. Check dynamic module_permission from backend
+    // 1. Check dynamic module_permission from backend
     const userPermissions = (state.user as any)?.module_permission;
     if (Array.isArray(userPermissions)) {
       const allowedModulesForScreen = PERMISSION_MAP[item.id];
@@ -46,7 +42,12 @@ export function MobileNav() {
           userPermissions.includes(p.toUpperCase())
         );
       }
+      return true;
     }
+
+    // 2. Role-based fallback check (only used if module_permission is NOT provided)
+    const hasRoleAccess = item.roles.includes("all") || item.roles.includes(role);
+    if (!hasRoleAccess) return false;
     return true;
   });
 

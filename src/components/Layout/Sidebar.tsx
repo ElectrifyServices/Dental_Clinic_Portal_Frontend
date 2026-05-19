@@ -76,22 +76,22 @@ export function Sidebar() {
   );
 
   const canAccess = (item: (typeof allItems)[0]) => {
-    // 1. Super admin role check
-    if (item.group === "SUPER_ADMIN") return role === "superadmin";
-
-    // 2. Check dynamic module_permission from backend
+    // 1. Check dynamic module_permission from backend
     const userPermissions = (state.user as any)?.module_permission;
     if (Array.isArray(userPermissions)) {
+      if (item.group === "SUPER_ADMIN") return role === "superadmin";
+
       const allowedModulesForScreen = PERMISSION_MAP[item.id];
       if (allowedModulesForScreen) {
-        const hasPermission = allowedModulesForScreen.some(p =>
+        return allowedModulesForScreen.some(p =>
           userPermissions.includes(p.toUpperCase())
         );
-        if (!hasPermission) return false;
       }
+      return true;
     }
 
-    // 3. Fallback role checks
+    // 2. Fallback role checks (only used if module_permission is NOT provided)
+    if (item.group === "SUPER_ADMIN") return role === "superadmin";
     if (item.id === "patient-queue") return role === "doctor" || hasAll;
     if (item.group === "admin") {
       if (hasAll) return true;
