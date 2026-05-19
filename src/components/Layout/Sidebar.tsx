@@ -37,6 +37,23 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   "corporate-plans": Building2,
 };
 
+/** Maps screen IDs to backend module_permission keys. */
+const PERMISSION_MAP: Record<string, string[]> = {
+  dashboard: ["DASHBOARD"],
+  appointments: ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
+  patients: ["PATIENTS"],
+  "patient-queue": ["CONSULTATION"],
+  treatments: ["TREATMENTS"],
+  emr: ["MEDICAL_RECORDS"],
+  consent: ["CONSENT_FORMS"],
+  billing: ["BILLING"],
+  inventory: ["INVENTORY"],
+  reports: ["ANALYTICS"],
+  staff: ["STAFF"],
+  "profit-sharing": ["PROFIT_SHARING"],
+  "corporate-plans": ["CORPORATE_PLANS"],
+};
+
 export function Sidebar() {
   const { state } = useAuth();
   const { tenant } = useTenant();
@@ -59,7 +76,22 @@ export function Sidebar() {
   );
 
   const canAccess = (item: (typeof allItems)[0]) => {
+    // 1. Super admin role check
     if (item.group === "SUPER_ADMIN") return role === "superadmin";
+
+    // 2. Check dynamic module_permission from backend
+    const userPermissions = (state.user as any)?.module_permission;
+    if (Array.isArray(userPermissions)) {
+      const allowedModulesForScreen = PERMISSION_MAP[item.id];
+      if (allowedModulesForScreen) {
+        const hasPermission = allowedModulesForScreen.some(p =>
+          userPermissions.includes(p.toUpperCase())
+        );
+        if (!hasPermission) return false;
+      }
+    }
+
+    // 3. Fallback role checks
     if (item.id === "patient-queue") return role === "doctor" || hasAll;
     if (item.group === "admin") {
       if (hasAll) return true;
