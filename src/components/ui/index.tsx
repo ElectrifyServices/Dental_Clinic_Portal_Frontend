@@ -742,6 +742,7 @@ export * from "./Tooltip";
 export * from "./Dialog";
 export * from "./Tabs";
 export * from "./DropdownMenu";
+export * from "./Popover";
 export { FormRenderer, SectionRenderer } from "./FormRenderer";
 export type { FormRendererProps, SectionRendererProps } from "./FormRenderer";
 export {
