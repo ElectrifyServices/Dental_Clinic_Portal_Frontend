@@ -212,6 +212,7 @@ interface ConfirmModalProps {
   message: string;
   confirmLabel?: string;
   variant?: "danger" | "primary";
+  isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -220,25 +221,34 @@ export function ConfirmModal({
   message,
   confirmLabel = "Confirm",
   variant = "danger",
+  isLoading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
   return (
     <Modal
       title={title}
-      onClose={onCancel}
+      onClose={isLoading ? () => {} : onCancel}
       size="sm"
       icon={<AlertTriangle className="w-4 h-4" />}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button
             variant={variant === "danger" ? "destructive" : "default"}
             onClick={onConfirm}
+            disabled={isLoading}
           >
-            {confirmLabel}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              confirmLabel
+            )}
           </Button>
         </>
       }
@@ -732,6 +742,8 @@ export * from "./Tooltip";
 export * from "./Dialog";
 export * from "./Tabs";
 export * from "./DropdownMenu";
+export * from "./Popover";
+export * from "./SearchableSelect";
 export { FormRenderer, SectionRenderer } from "./FormRenderer";
 export type { FormRendererProps, SectionRendererProps } from "./FormRenderer";
 export {

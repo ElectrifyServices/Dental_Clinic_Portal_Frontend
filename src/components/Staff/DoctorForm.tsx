@@ -57,10 +57,13 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       password: "",
       confirmPassword: "",
       permissions: doctor?.permissions ?? [
+        "dashboard",
         "appointments",
         "patients",
+        "consultation",
         "treatments",
-        "emr",
+        "medical_records",
+        "consent_forms",
       ],
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
       documents: doctor?.documents ?? [],
@@ -114,7 +117,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       salaryPending: !doctor
         ? (parseFloat(data.monthlySalary ?? "0") || 0).toLocaleString("en-IN")
         : data.salaryPending,
-      permissions: data.role === "admin" ? ["all"] : data.permissions,
+      permissions: (data.role === "admin" || data.role === "super_admin") ? ["all"] : data.permissions,
       workingHours: doctor?.workingHours || {
         monday: {
           isWorking: true,
@@ -205,14 +208,64 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             fileInputRef={fileInputRef}
             onImageUpload={handleImageUpload}
             isEdit={!!doctor}
+            errors={form.formState.errors}
           />
         );
       case 2:
         return (
           <Step2Role
             formData={formData}
-            onChange={(role) => form.setValue("role", role as any)}
+            onChange={(role) => {
+              form.setValue("role", role as any, { shouldValidate: true });
+              if (role === "super_admin" || role === "staff") {
+                form.setValue(
+                  "permissions",
+                  [
+                    "dashboard",
+                    "appointments",
+                    "patients",
+                    "consultation",
+                    "treatments",
+                    "medical_records",
+                    "consent_forms",
+                    "billing",
+                    "inventory",
+                    "reports",
+                    "staff_management",
+                  ],
+                  { shouldValidate: true }
+                );
+              } else if (role === "doctor") {
+                form.setValue(
+                  "permissions",
+                  [
+                    "dashboard",
+                    "appointments",
+                    "patients",
+                    "consultation",
+                    "treatments",
+                    "medical_records",
+                    "consent_forms",
+                  ],
+                  { shouldValidate: true }
+                );
+              } else if (role === "receptionist") {
+                form.setValue(
+                  "permissions",
+                  [
+                    "dashboard",
+                    "appointments",
+                    "patients",
+                    "consent_forms",
+                    "billing",
+                    "inventory",
+                  ],
+                  { shouldValidate: true }
+                );
+              }
+            }}
             onPermissionChange={handlePermissionChange}
+            errors={form.formState.errors}
           />
         );
       case 3:
@@ -222,11 +275,16 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             documents={formData.documents}
             onUpload={handleDocumentUpload}
             onRemove={handleDocumentRemove}
+            errors={form.formState.errors}
           />
         );
       case 4:
         return (
-          <Step4Professional formData={formData} onChange={handleChange} />
+          <Step4Professional 
+            formData={formData} 
+            onChange={handleChange} 
+            errors={form.formState.errors} 
+          />
         );
       default:
         return null;

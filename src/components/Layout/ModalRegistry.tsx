@@ -66,8 +66,8 @@ export function ModalRegistry() {
     setDoctorAvailability,
     toast,
     showToast,
-    deleteConfig,
-    setDeleteConfig,
+    confirmConfig,
+    setConfirmConfig,
   } = useModal();
 
   const {
@@ -673,16 +673,17 @@ export function ModalRegistry() {
         </Modal>
       )}
 
-      {deleteConfig.show && (
+      {confirmConfig.show && (
         <ConfirmModal
-          title={deleteConfig.title}
-          message={deleteConfig.message}
-          onConfirm={deleteConfig.onConfirm}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          onConfirm={confirmConfig.onConfirm}
           onCancel={() =>
-            setDeleteConfig((prev: any) => ({ ...prev, show: false }))
+            setConfirmConfig((prev: any) => ({ ...prev, show: false }))
           }
-          confirmLabel="Delete"
-          variant="danger"
+          confirmLabel={confirmConfig.confirmLabel}
+          variant={confirmConfig.variant}
+          isLoading={confirmConfig.isLoading}
         />
       )}
 

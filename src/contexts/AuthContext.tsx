@@ -6,6 +6,9 @@ import React, {
   useEffect,
 } from "react";
 import { User } from "../types";
+import { useLoginMutation } from "../hooks/auth/useLoginMutation";
+import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
+import { AuthStorage } from "../auth/authStorage";
 
 interface AuthState {
   user: User | null;
@@ -31,8 +34,8 @@ const initialState: AuthState = {
 const AuthContext = createContext<{
   state: AuthState;
   dispatch: React.Dispatch<AuthAction>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password?: string) => Promise<void>;
+  logout: () => Promise<void>;
 } | null>(null);
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -57,94 +60,85 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-const DEMO_USERS: Record<string, { user: User; password: string }> = {
-  "superadmin@clinic.com": {
-    password: "admin123",
-    user: {
-      id: "SA-1",
-      name: "Super Admin",
-      email: "superadmin@clinic.com",
-      role: "superadmin",
-      permissions: ["all", "corporate_plans"],
-      isActive: true,
-    },
-  },
-  "admin@clinic.com": {
-    password: "admin123",
-    user: {
-      id: "AD-1",
-      name: "Dr. Rajesh Sharma",
-      email: "admin@clinic.com",
-      role: "admin",
-      permissions: ["all"],
-      isActive: true,
-      specialization: "General Dentistry",
-      avatar:
-        "https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-  },
-  "doctor@clinic.com": {
-    password: "doctor123",
-    user: {
-      id: "DR-1",
-      name: "Dr. Priya Patel",
-      email: "doctor@clinic.com",
-      role: "doctor",
-      permissions: ["appointments", "patients", "treatments", "emr"],
-      isActive: true,
-      specialization: "Orthodontics",
-      avatar:
-        "https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-  },
-  "receptionist@clinic.com": {
-    password: "recep123",
-    user: {
-      id: "RC-1",
-      name: "Meena Kumari",
-      email: "receptionist@clinic.com",
-      role: "receptionist",
-      permissions: ["appointments", "patients", "billing", "consent"],
-      isActive: true,
-    },
-  },
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const login = async (email: string) => {
+  const loginMutation = useLoginMutation();
+  const logoutMutation = useLogoutMutation();
+
+  const login = async (email: string, password?: string) => {
     dispatch({ type: "LOGIN_START" });
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      const entry = DEMO_USERS[email.toLowerCase()];
-      if (!entry) {
-        dispatch({
-          type: "LOGIN_FAILURE",
-          payload: "Invalid email or password",
-        });
-        return;
+      // useApiMutation returns parsed.data directly (i.e. LoginResponseData)
+      const response = await loginMutation.mutateAsync({ email, password });
+
+      // Support wrapping in response.data or flat response
+      const apiData = response && "data" in response ? (response as any).data : response;
+
+      const user_info = apiData?.user_info;
+      const tokens = apiData?.tokens;
+      const sessionId = apiData?.sessionId;
+
+      if (!user_info || !tokens) {
+        throw new Error("Invalid response from server");
       }
-      localStorage.setItem("user", JSON.stringify(entry.user));
-      dispatch({ type: "LOGIN_SUCCESS", payload: entry.user });
-    } catch {
-      dispatch({ type: "LOGIN_FAILURE", payload: "Login failed. Try again." });
+
+      // Map role object from API to string format expected by frontend
+      const mappedRole = typeof user_info.role === 'object' && user_info.role !== null
+        ? user_info.role.name.toLowerCase().replace('_', '')
+        : user_info.role;
+
+      const normalizedUserInfo = {
+        ...user_info,
+        role: mappedRole
+      };
+
+      const authData = {
+        user_info: normalizedUserInfo,
+        tokens: {
+          ...tokens,
+          session_id: sessionId,
+        },
+      };
+
+      // Always remembering for now, you can wire this to a checkbox later
+      AuthStorage.save(authData, true);
+
+      dispatch({ type: "LOGIN_SUCCESS", payload: normalizedUserInfo });
+    } catch (error: any) {
+      // The API returns error messages inside responseStatusList.statusList[0].statusDesc
+      const apiStatusDesc =
+        error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc;
+
+      const errorMessage =
+        apiStatusDesc ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed. Try again.";
+
+      dispatch({ type: "LOGIN_FAILURE", payload: errorMessage });
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    dispatch({ type: "LOGOUT" });
+  const logout = async () => {
+    try {
+      await logoutMutation.mutateAsync({});
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      AuthStorage.clear();
+      dispatch({ type: "LOGOUT" });
+    }
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) {
-      try {
-        dispatch({ type: "LOGIN_SUCCESS", payload: JSON.parse(saved) });
-      } catch {
-        localStorage.removeItem("user");
+    const savedUser = AuthStorage.getUser();
+    if (savedUser) {
+      // Add a safety check in case a bad object was saved to storage previously
+      if (typeof savedUser.role === 'object' && savedUser.role !== null) {
+        savedUser.role = (savedUser.role as any).name.toLowerCase().replace('_', '');
       }
+      dispatch({ type: "LOGIN_SUCCESS", payload: savedUser });
     }
   }, []);
 

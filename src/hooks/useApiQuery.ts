@@ -36,7 +36,7 @@ export function useApiQuery<TData>({
         const parsed = parseApiResponse(res.data);
 
         // If the API structure uses status codes within the response body
-        if (parsed.status && parsed.status.statusCode !== 200) {
+        if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
           throw parsed.data || new Error(parsed.status.statusDesc);
         }
         

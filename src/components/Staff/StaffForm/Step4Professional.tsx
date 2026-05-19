@@ -1,9 +1,14 @@
-﻿import { Award, IndianRupee, GraduationCap } from "lucide-react";
-import { LabeledField } from "@/components/ui";
+import { useState, useRef, useEffect } from "react";
+import { Award, IndianRupee, GraduationCap, Search, Plus, Check, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { LabeledField, SearchableSelect } from "@/components/ui";
+import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
+import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
 
 interface Step4Props {
   formData: any;
   onChange: (e: any) => void;
+  errors?: any;
 }
 
 const SPECIALIZATIONS = [
@@ -18,7 +23,43 @@ const SPECIALIZATIONS = [
   "Cosmetic Dentistry",
 ];
 
-export function Step4Professional({ formData, onChange }: Step4Props) {
+export function Step4Professional({ formData, onChange, errors = {} }: Step4Props) {
+  const { data: apiSpecs, isLoading: isSpecsLoading } = useSpecializationsQuery();
+  const createMutation = useCreateSpecializationMutation();
+  const queryClient = useQueryClient();
+
+  const rawSpecs = Array.isArray(apiSpecs)
+    ? apiSpecs
+    : (apiSpecs && Array.isArray((apiSpecs as any).data) ? (apiSpecs as any).data : null);
+
+  const specsList = rawSpecs
+    ? rawSpecs.map((s: any) => (typeof s === "string" ? s : s.name || ""))
+    : SPECIALIZATIONS;
+
+  const handleCreateSpecialization = async (createdValue: string) => {
+    try {
+      await createMutation.mutateAsync({
+        name: createdValue,
+        description: "",
+      });
+
+      // Refresh updated list
+      await queryClient.invalidateQueries({
+        queryKey: ["specializations"],
+      });
+
+      // Auto select created specialization
+      onChange({
+        target: {
+          name: "specialization",
+          value: createdValue,
+        },
+      });
+    } catch (err) {
+      console.error("Failed to create specialization:", err);
+    }
+  };
+
   const isDoctor =
     formData.role === "doctor" || formData.role === "admin_doctor";
   const isAdmin = formData.role === "admin";
@@ -40,22 +81,27 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
         {isDoctor && (
           <>
             <LabeledField label="Clinical Specialization">
-              <select
-                name="specialization"
-                value={formData.specialization}
-                onChange={onChange}
-                className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option value="">Select Specialization</option>
-                {SPECIALIZATIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                value={formData.specialization || ""}
+                onChange={(value) => {
+                  onChange({
+                    target: {
+                      name: "specialization",
+                      value,
+                    },
+                  });
+                }}
+                options={specsList}
+                placeholder="Search or select specialization..."
+                searchPlaceholder="Search specializations..."
+                isLoading={isSpecsLoading}
+                onCreateOption={handleCreateSpecialization}
+                createLabel="Create specialization"
+                isCreating={createMutation.isPending}
+              />
             </LabeledField>
 
-            <LabeledField label="Consultation Fee (₹)">
+            <LabeledField label="Consultation Fee (₹)" error={errors.consultationFee?.message}>
               <div className="relative">
                 <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -64,7 +110,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
                   value={formData.consultationFee}
                   onChange={onChange}
                   min="0"
-                  className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                  className={`w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.consultationFee ? 'border-destructive ring-destructive/20' : ''}`}
                 />
               </div>
             </LabeledField>
@@ -185,7 +231,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
       </div>
 
       <div className="pt-4 border-t border-dashed space-y-6">
-        <LabeledField label="Monthly Salary (₹) *" required>
+        <LabeledField label="Monthly Salary (₹) *" required error={errors.monthlySalary?.message}>
           <div className="relative">
             <IndianRupee className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
             <input
@@ -195,7 +241,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
               onChange={onChange}
               required
               min="0"
-              className="w-full pl-10 pr-4 py-3 border border-emerald-100 bg-emerald-50/20 rounded-2xl text-lg font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm"
+              className={`w-full pl-10 pr-4 py-3 border border-emerald-100 bg-emerald-50/20 rounded-2xl text-lg font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm ${errors.monthlySalary ? 'border-destructive ring-destructive/20 bg-destructive/5 text-destructive' : ''}`}
             />
           </div>
         </LabeledField>
