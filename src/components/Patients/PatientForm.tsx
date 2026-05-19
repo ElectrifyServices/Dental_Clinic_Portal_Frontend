@@ -66,13 +66,17 @@ export function PatientForm({
     onSave({
       ...formData,
       id: formData.patientId,
-      medicalHistory: formData.medicalHistory
-        .split("\n")
-        .filter((item: string) => item.trim()),
+      medicalHistory: typeof formData.medicalHistory === "string"
+        ? formData.medicalHistory.split("\n").filter((item: string) => item.trim())
+        : Array.isArray(formData.medicalHistory)
+        ? formData.medicalHistory
+        : [],
       pastDentalHistory: formData.pastDentalHistory,
-      allergies: formData.allergies
-        .split("\n")
-        .filter((item: string) => item.trim()),
+      allergies: typeof formData.allergies === "string"
+        ? formData.allergies.split("\n").filter((item: string) => item.trim())
+        : Array.isArray(formData.allergies)
+        ? formData.allergies
+        : [],
       allergyOther: formData.allergyOther,
       allergyNotes: formData.allergyNotes,
       parentId: type === "person" ? parentId : undefined,
