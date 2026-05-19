@@ -47,13 +47,14 @@ const refreshAuthToken = async (): Promise<string> => {
     }
   );
 
-  const newToken = response.data?.accessToken;
+  const apiData = response.data?.responseObject ?? response.data;
+  const newToken = apiData?.accessToken;
   if (!newToken) throw new Error("Failed to refresh token");
 
   AuthStorage.setAccessToken(newToken);
-  AuthStorage.setRefreshToken(response.data?.refreshToken);
-  if (response.data?.session_id) {
-    AuthStorage.setSessionId(response.data?.session_id);
+  AuthStorage.setRefreshToken(apiData?.refreshToken);
+  if (apiData?.session_id) {
+    AuthStorage.setSessionId(apiData?.session_id);
   }
   return newToken;
 };

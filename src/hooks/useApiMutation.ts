@@ -11,6 +11,7 @@ interface MutationProps<TData, TVariables> {
   method?: "post" | "put" | "patch" | "delete";
   options?: Omit<UseMutationOptions<TData, any, TVariables>, "mutationFn">;
   transformRequest?: (variables: TVariables) => any;
+  headers?: any | ((variables: TVariables) => any);
 }
 
 export function useApiMutation<TData, TVariables = any>({
@@ -19,6 +20,7 @@ export function useApiMutation<TData, TVariables = any>({
   method = "post",
   options,
   transformRequest,
+  headers,
 }: MutationProps<TData, TVariables>) {
   return useMutation<TData, any, TVariables>({
     mutationFn: async (variables) => {
@@ -31,10 +33,15 @@ export function useApiMutation<TData, TVariables = any>({
         ? transformRequest(variables)
         : variables;
 
+      const resolvedHeaders = typeof headers === "function"
+        ? headers(variables)
+        : headers;
+
       const res = await apiClient.request<ApiResponse<TData>>({
         url: resolvedEndpoint,
         method,
         data: requestData,
+        headers: resolvedHeaders,
       });
 
       const parsed = parseApiResponse(res.data);
