@@ -57,8 +57,9 @@ interface ModalContextType {
   toast: any;
   showToast: (message: string, type?: 'success' | 'error') => void;
 
-  deleteConfig: any;
-  setDeleteConfig: React.Dispatch<React.SetStateAction<any>>;
+  confirmConfig: any;
+  setConfirmConfig: React.Dispatch<React.SetStateAction<any>>;
+  showConfirm: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, variant?: string, toastMessage?: string) => void;
   confirmDelete: (title: string, message: string, onConfirm: () => void) => void;
 }
 
@@ -85,8 +86,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
   );
   const [toast, setToast] = useState<any>(null);
-  const [deleteConfig, setDeleteConfig] = useState<any>({
-    show: false, title: '', message: '', onConfirm: () => {},
+  const [confirmConfig, setConfirmConfig] = useState<any>({
+    show: false, title: '', message: '', onConfirm: () => {}, confirmLabel: 'Confirm', variant: 'primary', toastMessage: '', isLoading: false
   });
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -94,20 +95,36 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  const confirmDelete = useCallback(
-    (title: string, message: string, onConfirm: () => void) => {
-      setDeleteConfig({
+  const showConfirm = useCallback(
+    (title: string, message: string, onConfirm: () => void | Promise<void>, confirmLabel = 'Confirm', variant = 'primary', toastMessage?: string) => {
+      setConfirmConfig({
         show: true,
         title,
         message,
-        onConfirm: () => {
-          onConfirm();
-          setDeleteConfig((prev: any) => ({ ...prev, show: false }));
-          showToast('Record deleted successfully!', 'error');
+        confirmLabel,
+        variant,
+        isLoading: false,
+        onConfirm: async () => {
+          setConfirmConfig((prev: any) => ({ ...prev, isLoading: true }));
+          try {
+            await onConfirm();
+          } finally {
+            setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
+            if (toastMessage) {
+              showToast(toastMessage, variant === 'danger' ? 'error' : 'success');
+            }
+          }
         },
       });
     },
     [showToast]
+  );
+
+  const confirmDelete = useCallback(
+    (title: string, message: string, onConfirm: () => void) => {
+      showConfirm(title, message, onConfirm, 'Delete', 'danger', 'Record deleted successfully!');
+    },
+    [showConfirm]
   );
 
   const handleDraftUpdate = useCallback((patientId: string, data: any) => {
@@ -138,7 +155,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         draftConsultations, setDraftConsultations, handleDraftUpdate,
         doctorAvailability, setDoctorAvailability,
         toast, showToast,
-        deleteConfig, setDeleteConfig, confirmDelete,
+        confirmConfig, setConfirmConfig, showConfirm, confirmDelete,
       }}
     >
       {children}

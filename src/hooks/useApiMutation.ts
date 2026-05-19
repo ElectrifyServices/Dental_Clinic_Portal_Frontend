@@ -40,8 +40,11 @@ export function useApiMutation<TData, TVariables = any>({
       const parsed = parseApiResponse(res.data);
       
       // If the API structure uses status codes within the response body
-      if (parsed.status && parsed.status.statusCode !== 200) {
-        throw parsed.data || new Error(parsed.status.statusDesc);
+      if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
+        const err: any = new Error(parsed.status.statusDesc || "API Error");
+        err.data = parsed.data;
+        err.status = parsed.status;
+        throw err;
       }
 
       return parsed.data as TData;

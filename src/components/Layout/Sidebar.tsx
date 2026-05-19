@@ -44,7 +44,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
-  const hasAll = perms.includes("all");
+  const hasAll = perms.includes("all") || role === "superadmin";
 
   // Build flat item list from tenant sidebar config, filtering disabled screens
   const allItems = tenant.sidebar.groups.flatMap((group) =>
@@ -59,7 +59,7 @@ export function Sidebar() {
   );
 
   const canAccess = (item: (typeof allItems)[0]) => {
-    if (item.group === "superadmin") return role === "superadmin";
+    if (item.group === "SUPER_ADMIN") return role === "superadmin";
     if (item.id === "patient-queue") return role === "doctor" || hasAll;
     if (item.group === "admin") {
       if (hasAll) return true;

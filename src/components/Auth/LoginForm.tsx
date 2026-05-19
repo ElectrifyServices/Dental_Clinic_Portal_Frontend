@@ -25,29 +25,29 @@ import {
 
 const DEMO = [
   {
-    email: "superadmin@clinic.com",
-    password: "admin123",
+    email: "Software.Development@electrifyservices.com",
+    password: "Admin@123",
     role: "Super Admin",
     color: "violet",
     desc: "Manage corporate plans & full access",
   },
   {
-    email: "admin@clinic.com",
-    password: "admin123",
-    role: "Admin / Doctor",
+    email: "kunal@gmail.com",
+    password: "Admin@123",
+    role: "Staff",
     color: "blue",
     desc: "Full clinic management",
   },
   {
-    email: "doctor@clinic.com",
-    password: "doctor123",
+    email: "vikash@gmail.com",
+    password: "Admin@123",
     role: "Doctor",
     color: "emerald",
     desc: "Consultations & treatments",
   },
   {
-    email: "receptionist@clinic.com",
-    password: "recep123",
+    email: "raj@gmail.com",
+    password: "Admin@123",
     role: "Receptionist",
     color: "amber",
     desc: "Appointments & registration",

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { User, Mail, Phone, Upload } from 'lucide-react';
 import { LabeledField } from '@/components/ui';
 
@@ -8,9 +8,10 @@ interface Step1Props {
   fileInputRef: React.RefObject<HTMLInputElement>;
   onImageUpload: (e: any) => void;
   isEdit?: boolean;
+  errors?: any;
 }
 
-export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload, isEdit }: Step1Props) {
+export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload, isEdit, errors = {} }: Step1Props) {
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
@@ -40,34 +41,34 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <LabeledField label="Full Name *" required>
+        <LabeledField label="Full Name *" required error={errors.name?.message}>
           <div className="relative">
             <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="text" name="name" value={formData.name} onChange={onChange} required
-              className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.name ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="e.g. Dr. Sameer Khan" />
           </div>
         </LabeledField>
 
-        <LabeledField label="Email Address *" required>
+        <LabeledField label="Email Address *" required error={errors.email?.message}>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="email" name="email" value={formData.email} onChange={onChange} required
-              className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.email ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="sameer@clinic.com" />
           </div>
         </LabeledField>
 
-        <LabeledField label="Phone Number">
+        <LabeledField label="Phone Number *" required error={errors.phone?.message}>
           <div className="relative">
             <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="tel" name="phone" value={formData.phone} onChange={onChange}
-              className="w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+            <input type="tel" name="phone" value={formData.phone} onChange={onChange} required
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="+91 98765 43210" />
           </div>
         </LabeledField>
 
-        <LabeledField label="Staff ID (Unique)">
+        <LabeledField label="Staff ID (Unique)" error={errors.uniqueId?.message}>
           <input type="text" name="uniqueId" value={formData.uniqueId} readOnly
             className="w-full px-4 py-2.5 border rounded-xl text-sm font-mono font-bold bg-muted/50 cursor-not-allowed" />
         </LabeledField>
@@ -75,14 +76,14 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
 
       {!isEdit && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
-          <LabeledField label="Secure Password *" required>
+          <LabeledField label="Secure Password *" required error={errors.password?.message}>
             <input type="password" name="password" value={formData.password} onChange={onChange} required
-              className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+              className={`w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="••••••••" />
           </LabeledField>
-          <LabeledField label="Confirm Password *" required>
+          <LabeledField label="Confirm Password *" required error={errors.confirmPassword?.message}>
             <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={onChange} required
-              className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+              className={`w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="••••••••" />
           </LabeledField>
         </div>

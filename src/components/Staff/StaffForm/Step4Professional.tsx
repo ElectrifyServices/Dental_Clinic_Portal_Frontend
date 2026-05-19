@@ -1,9 +1,14 @@
-﻿import { Award, IndianRupee, GraduationCap } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Award, IndianRupee, GraduationCap, Search, Plus, Check, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { LabeledField } from "@/components/ui";
+import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
+import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
 
 interface Step4Props {
   formData: any;
   onChange: (e: any) => void;
+  errors?: any;
 }
 
 const SPECIALIZATIONS = [
@@ -18,7 +23,81 @@ const SPECIALIZATIONS = [
   "Cosmetic Dentistry",
 ];
 
-export function Step4Professional({ formData, onChange }: Step4Props) {
+export function Step4Professional({ formData, onChange, errors = {} }: Step4Props) {
+  const { data: apiSpecs, isLoading: isSpecsLoading } = useSpecializationsQuery();
+  const createMutation = useCreateSpecializationMutation();
+  const queryClient = useQueryClient();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(formData.specialization || "");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const rawSpecs = Array.isArray(apiSpecs)
+    ? apiSpecs
+    : (apiSpecs && Array.isArray((apiSpecs as any).data) ? (apiSpecs as any).data : null);
+
+  const specsList = rawSpecs
+    ? rawSpecs.map((s: any) => (typeof s === "string" ? s : s.name || ""))
+    : SPECIALIZATIONS;
+
+  useEffect(() => {
+    setSearchQuery(formData.specialization || "");
+  }, [formData.specialization]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredSpecs = specsList.filter((s: string) =>
+    s.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const exactMatchExists = specsList.some(
+    (s: string) => s.toLowerCase() === searchQuery.toLowerCase()
+  );
+
+  const handleCreateSpecialization = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      const createdValue = searchQuery.trim();
+
+      await createMutation.mutateAsync({
+        name: createdValue,
+        description: "",
+      });
+
+      // Refresh updated list
+      await queryClient.invalidateQueries({
+        queryKey: ["specializations"],
+      });
+
+      // Auto select created specialization
+      onChange({
+        target: {
+          name: "specialization",
+          value: createdValue,
+        },
+      });
+
+      setSearchQuery(createdValue);
+
+      // Close dropdown
+      setTimeout(() => {
+        setIsOpen(false);
+      }, 100);
+
+    } catch (err) {
+      console.error("Failed to create specialization:", err);
+    }
+  };
+
   const isDoctor =
     formData.role === "doctor" || formData.role === "admin_doctor";
   const isAdmin = formData.role === "admin";
@@ -40,22 +119,165 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
         {isDoctor && (
           <>
             <LabeledField label="Clinical Specialization">
-              <select
-                name="specialization"
-                value={formData.specialization}
-                onChange={onChange}
-                className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option value="">Select Specialization</option>
-                {SPECIALIZATIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <div ref={dropdownRef} className="relative w-full">
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="specialization"
+                    placeholder={isSpecsLoading ? "Loading Specializations..." : "Search or type specialization..."}
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setIsOpen(true);
+                      onChange({
+                        target: {
+                          name: "specialization",
+                          value: e.target.value,
+                        },
+                      });
+                    }}
+                    onFocus={() => setIsOpen(true)}
+                    disabled={isSpecsLoading}
+                    className="w-full pl-9 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50"
+                  />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setIsOpen(true);
+                        onChange({
+                          target: {
+                            name: "specialization",
+                            value: "",
+                          },
+                        });
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {isOpen && (
+                  <div className="
+absolute
+z-50
+w-full
+mt-1.5
+bg-card
+border
+border-border/80
+rounded-2xl
+shadow-2xl
+shadow-black/5
+max-h-60
+overflow-y-auto
+py-1.5
+backdrop-blur-md
+animate-in
+fade-in
+zoom-in-95
+slide-in-from-top-2
+duration-200
+">
+                    {filteredSpecs.length > 0 ? (
+                      filteredSpecs.map((s: string) => {
+                        const isSelected = formData.specialization === s;
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              onChange({
+                                target: {
+                                  name: "specialization",
+                                  value: s,
+                                },
+                              });
+                              setSearchQuery(s);
+                              setIsOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-left hover:bg-muted/50 ${isSelected ? "text-primary bg-primary/5" : "text-foreground"
+                              }`}
+                          >
+                            <span>{s}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-primary" />}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="px-4 py-2 text-xs font-medium text-muted-foreground text-center">
+                        No matching specializations found.
+                      </div>
+                    )}
+
+                    {!exactMatchExists &&
+                      searchQuery.trim().length >= 2 && (
+                        <div className="border-t border-dashed border-border/60 mt-2 pt-2 px-2">
+                          <button
+                            type="button"
+                            disabled={createMutation.isPending}
+                            onClick={handleCreateSpecialization}
+                            className="
+      w-full
+      flex
+      items-center
+      justify-between
+      px-4
+      py-3
+      rounded-xl
+      bg-primary/5
+      hover:bg-primary/10
+      border
+      border-primary/10
+      transition-all
+      duration-200
+      group
+      disabled:opacity-50
+    "
+                          >
+                            {createMutation.isPending ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+
+                                <span className="text-xs font-black text-primary">
+                                  Creating...
+                                </span
+                                >
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                    <Plus className="w-4 h-4 text-primary" />
+                                  </div>
+
+                                  <div className="flex flex-col text-left">
+                                    <span className="text-xs font-black text-primary">
+                                      Create New Specialization
+                                    </span>
+
+                                    <span className="text-[10px] text-muted-foreground font-semibold">
+                                      "{searchQuery.trim()}"
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <Plus className="w-4 h-4 text-primary" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                  </div>
+                )}
+              </div>
             </LabeledField>
 
-            <LabeledField label="Consultation Fee (₹)">
+            <LabeledField label="Consultation Fee (₹)" error={errors.consultationFee?.message}>
               <div className="relative">
                 <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -64,7 +286,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
                   value={formData.consultationFee}
                   onChange={onChange}
                   min="0"
-                  className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                  className={`w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.consultationFee ? 'border-destructive ring-destructive/20' : ''}`}
                 />
               </div>
             </LabeledField>
@@ -185,7 +407,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
       </div>
 
       <div className="pt-4 border-t border-dashed space-y-6">
-        <LabeledField label="Monthly Salary (₹) *" required>
+        <LabeledField label="Monthly Salary (₹) *" required error={errors.monthlySalary?.message}>
           <div className="relative">
             <IndianRupee className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
             <input
@@ -195,7 +417,7 @@ export function Step4Professional({ formData, onChange }: Step4Props) {
               onChange={onChange}
               required
               min="0"
-              className="w-full pl-10 pr-4 py-3 border border-emerald-100 bg-emerald-50/20 rounded-2xl text-lg font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm"
+              className={`w-full pl-10 pr-4 py-3 border border-emerald-100 bg-emerald-50/20 rounded-2xl text-lg font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm ${errors.monthlySalary ? 'border-destructive ring-destructive/20 bg-destructive/5 text-destructive' : ''}`}
             />
           </div>
         </LabeledField>

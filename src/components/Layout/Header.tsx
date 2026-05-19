@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Bell, LogOut, Calendar, ChevronDown, Stethoscope } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -7,8 +7,19 @@ import { useModal } from "../../contexts/ModalContext";
 export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
-  const { setActiveModal } = useModal();
+  const { setActiveModal, showConfirm } = useModal();
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const onShowTodaySchedule = () => setActiveModal("todaySchedule");
 
@@ -75,7 +86,7 @@ export function Header() {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
         </button>
 
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted rounded-xl transition-colors"
@@ -97,19 +108,29 @@ export function Header() {
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 mt-1.5 w-52 bg-card rounded-xl shadow-xl border border-border py-1.5 z-50">
+            <div className="absolute right-0 mt-1.5 w-64 bg-card rounded-xl shadow-xl border border-border py-1.5 z-50">
               <div className="px-4 py-2.5 border-b border-border">
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-semibold text-foreground truncate">
                   {state.user?.name}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 truncate" title={state.user?.email}>
                   {state.user?.email}
                 </p>
               </div>
               <button
                 onClick={() => {
-                  logout();
-                  setShowMenu(false);
+                  showConfirm(
+                    "Sign Out",
+                    "Are you sure you want to sign out?",
+                    async () => {
+                      setShowMenu(false);
+                      await logout();
+                      // We don't show the toast here because we are redirecting to /login
+                      // The modal closes immediately because showConfirm doesn't await
+                    },
+                    "Sign Out",
+                    "danger"
+                  );
                 }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
               >
