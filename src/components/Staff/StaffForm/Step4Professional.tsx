@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Award, IndianRupee, GraduationCap, Search, Plus, Check, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LabeledField } from "@/components/ui";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
+import { useSearch } from "@/hooks/useSearch";
 
 interface Step4Props {
   formData: any;
@@ -29,7 +30,6 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
   const queryClient = useQueryClient();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(formData.specialization || "");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const rawSpecs = Array.isArray(apiSpecs)
@@ -40,9 +40,23 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
     ? rawSpecs.map((s: any) => (typeof s === "string" ? s : s.name || ""))
     : SPECIALIZATIONS;
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredData: filteredSpecs,
+  } = useSearch<string>({
+    data: specsList,
+  });
+
+  const exactMatchExists = useMemo(() => {
+    return specsList.some(
+      (s: string) => s.toLowerCase() === searchQuery.toLowerCase()
+    );
+  }, [specsList, searchQuery]);
+
   useEffect(() => {
     setSearchQuery(formData.specialization || "");
-  }, [formData.specialization]);
+  }, [formData.specialization, setSearchQuery]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -53,14 +67,6 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const filteredSpecs = specsList.filter((s: string) =>
-    s.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const exactMatchExists = specsList.some(
-    (s: string) => s.toLowerCase() === searchQuery.toLowerCase()
-  );
 
   const handleCreateSpecialization = async () => {
     if (!searchQuery.trim()) return;
