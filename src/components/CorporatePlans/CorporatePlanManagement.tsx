@@ -9,6 +9,9 @@ import { CorporatePlan, PlanBenefit, PlanBenefitType } from '../../types';
 import { PLAN_COLORS, TREATMENT_LABELS, COLOR_MAP, getPlanStatus } from '../../utils/corporatePlan';
 import { Modal, Button, LabeledField, SectionRenderer } from '../ui';
 import { useFormConfig } from '../../hooks/useFormConfig';
+import { useCreateCorporatePlanMutation } from '../../hooks/corporate/useCreateCorporatePlanMutation';
+import { useUpdateCorporatePlanMutation } from '../../hooks/corporate/useUpdateCorporatePlanMutation';
+import { useModal } from '../../contexts/ModalContext';
 
 interface Props {
   plans: CorporatePlan[];
@@ -66,6 +69,10 @@ function autoDesc(b: PlanBenefit): string {
 export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: Props) {
   const cfg = useFormConfig('corporate');
   const cfgAny = cfg as any;
+  const { showToast } = useModal();
+  const createPlanMutation = useCreateCorporatePlanMutation();
+  const updatePlanMutation = useUpdateCorporatePlanMutation();
+
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
   );
@@ -104,13 +111,132 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
     return !Object.keys(e).length;
   };
 
-  const handleSave = () => {
+  const mapColorToHex = (colorName: string): string => {
+    const hexMap: Record<string, string> = {
+      blue: "#3B82F6",
+      violet: "#8B5CF6",
+      emerald: "#10B981",
+      rose: "#F43F5E",
+      amber: "#F59E0B",
+      cyan: "#06B6D4",
+      indigo: "#6366F1",
+      teal: "#14B8A6",
+    };
+    return hexMap[colorName] || "#4F46E5";
+  };
+
+  const mapBenefitType = (frontendType: string): string => {
+    const typeMap: Record<string, string> = {
+      flat_discount: "FLAT_DISCOUNT",
+      treatment_discount: "TREATMENT_DISCOUNT",
+      free_consultations: "FREE_CONSULTATION",
+      free_treatments: "FREE_TREATMENT_SERVICE",
+      capped_discount: "CAPPED_DISCOUNT",
+      custom: "CUSTOM",
+    };
+    return typeMap[frontendType] || "CUSTOM";
+  };
+
+  const buildBenefitsPayload = (benefits: typeof form.benefits) =>
+    benefits.map((b) => {
+      const count = ["free_consultations", "free_treatments"].includes(b.type) ? b.value : 0;
+      const discount_percentage = b.type.includes("discount") || b.type === "custom" ? b.value : 0;
+
+      let clinical_procedures: string[] = [];
+      if (b.type === "free_consultations") {
+        clinical_procedures = ["Consultation"];
+      } else if (Array.isArray(b.treatmentTypes)) {
+        clinical_procedures = b.treatmentTypes.map(t => TREATMENT_LABELS[t] || t);
+      }
+
+      return {
+        type: mapBenefitType(b.type),
+        count,
+        clinical_procedures,
+        description: b.description || "",
+        benifit_label: b.customName || b.description || "Benefit",
+        discount_percentage,
+        max_amount: b.cap || 0,
+      };
+    });
+
+  const handleSave = async () => {
     if (!validate()) return;
-    const plan: CorporatePlan = editing
-      ? { ...editing, ...form }
-      : { ...form, id: `CORP-${Date.now()}`, currentMembers: 0, createdAt: new Date().toISOString(), createdBy: 'Super Admin' };
-    onSave(plan);
-    setShowForm(false);
+
+    if (!editing) {
+      // ── CREATE ──
+      try {
+        const validFromObj = new Date(form.validFrom);
+        const todayObj = new Date();
+        let submitValidFrom = validFromObj.toISOString();
+
+        // If it's today, use current time + 2 minutes so the backend doesn't flag midnight as 'past'
+        if (form.validFrom === todayObj.toISOString().split('T')[0]) {
+          todayObj.setMinutes(todayObj.getMinutes() + 2);
+          submitValidFrom = todayObj.toISOString();
+        }
+
+        const transformedBody = {
+          plan_name: form.name,
+          company_name: form.companyName,
+          plan_code: form.code,
+          description: form.description || "",
+          valid_from: submitValidFrom,
+          valid_till: new Date(form.validTo).toISOString(),
+          enrollment_cap: form.maxMembers || 0,
+          theme_color: mapColorToHex(form.color),
+          benefits: buildBenefitsPayload(form.benefits),
+        };
+
+        const apiResponse = await createPlanMutation.mutateAsync(transformedBody);
+
+        const plan: CorporatePlan = {
+          ...form,
+          id: apiResponse?.id || `CORP-${Date.now()}`,
+          currentMembers: 0,
+          createdAt: new Date().toISOString(),
+          createdBy: 'Super Admin',
+        };
+        onSave(plan);
+        showToast('Plan created successfully');
+        setShowForm(false);
+      } catch (err: any) {
+        console.error("Failed to create corporate plan via API:", err);
+        setErrors(prev => ({
+          ...prev,
+          submit: err?.response?.data?.message || err?.message || "Failed to create plan on backend",
+        }));
+      }
+    } else {
+      // ── UPDATE ──
+      try {
+        const transformedBody = {
+          id: editing.id,
+          plan_name: form.name,
+          company_name: form.companyName,
+          plan_code: form.code,
+          description: form.description || "",
+          valid_from: new Date(form.validFrom).toISOString(),
+          valid_till: new Date(form.validTo).toISOString(),
+          enrollment_cap: form.maxMembers || 0,
+          theme_color: mapColorToHex(form.color),
+          benefits: buildBenefitsPayload(form.benefits),
+        };
+
+        await updatePlanMutation.mutateAsync(transformedBody);
+
+        const plan: CorporatePlan = { ...editing, ...form };
+        onSave(plan);
+        showToast('Plan updated successfully');
+        setShowForm(false);
+      } catch (err: any) {
+        console.error("Failed to update corporate plan via API:", err);
+        setErrors(prev => ({
+          ...prev,
+          submit: err?.response?.data?.message || err?.message || "Failed to update plan on backend",
+        }));
+      }
+    }
   };
 
   const openNew = () => { setEditing(null); setForm(mkForm()); setErrors({}); setShowForm(true); };
@@ -285,11 +411,28 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
           size="5xl"
           icon={<Building2 className="w-4 h-4" />}
           footer={
-            <div className="flex justify-end gap-3 w-full">
-              <Button variant="outline" onClick={() => setShowForm(false)}>Discard Changes</Button>
-              <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10">
-                <CheckCircle className="w-4 h-4" /> {editing ? (cfgAny.submitLabel?.edit ?? 'Apply Plan Updates') : (cfgAny.submitLabel?.create ?? 'Launch New Plan')}
-              </Button>
+            <div className="flex flex-col gap-3 w-full">
+              {errors.submit && (
+                <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
+                  {errors.submit}
+                </p>
+              )}
+              <div className="flex justify-end gap-3 w-full">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Discard Changes</Button>
+                <Button
+                  onClick={handleSave}
+                  className="gap-2 shadow-lg shadow-primary/10"
+                  disabled={createPlanMutation.isLoading || updatePlanMutation.isLoading}
+                >
+                  {(createPlanMutation.isLoading || updatePlanMutation.isLoading) ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" /> {editing ? (cfgAny.submitLabel?.edit ?? 'Apply Plan Updates') : (cfgAny.submitLabel?.create ?? 'Launch New Plan')}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           }
         >

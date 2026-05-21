@@ -37,6 +37,13 @@
         { "name": "department",         "label": "Department",          "type": "text",   "required": false, "placeholder": "e.g. Engineering, HR" },
         { "name": "corporatePlanId",    "label": "Corporate Health Plan","type": "select", "required": true }
       ]
+    },
+    {
+      "id": "eligibility",
+      "title": "Eligibility Details",
+      "fields": [
+        { "name": "eligible_date",      "label": "Eligibility Date",    "type": "date",   "required": true }
+      ]
     }
   ]
 }

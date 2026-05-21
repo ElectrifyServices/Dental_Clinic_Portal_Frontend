@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, Upload, Download, Building2,
   Users, Phone, Mail, User, CheckCircle, AlertTriangle,
@@ -12,6 +12,8 @@ import {
   Button, SectionRenderer
 } from '../ui';
 import { useFormConfig } from '../../hooks/useFormConfig';
+import { useCreateEmployeeMutation } from '../../hooks/corporate/useCreateEmployeeMutation';
+import { useBulkImportEmployeeMutation } from '../../hooks/corporate/useBulkImportEmployeeMutation';
 import type { SelectOption } from '../ui/FormRenderer';
 
 interface EmployeeManagementProps {
@@ -27,6 +29,7 @@ const EMPTY_EMP = (): Partial<CorporateEmployee> => ({
   employeeId: '', name: '', phone: '', email: '', gender: 'male',
   dateOfBirth: '', designation: '', department: '',
   companyName: '', corporatePlanId: '', corporatePlanName: '',
+  eligible_date: new Date().toISOString().split('T')[0],
   isActive: true,
 });
 
@@ -49,14 +52,28 @@ function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: Partial<
           const name = String(r['Name'] || r['name'] || '').trim();
           const phone = String(r['Phone'] || r['Mobile'] || r['phone'] || '').trim();
           const email = String(r['Email'] || r['email'] || '').trim();
-          const planCode = String(r['PlanCode'] || r['Plan Code'] || r['plan_code'] || '').trim().toUpperCase();
+          const planCode = String(r['PlanCode'] || r['Plan Code'] || r['plan_code'] || '').trim();
+          const planCodeUpper = planCode.toUpperCase();
           const companyName = String(r['Company'] || r['CompanyName'] || r['company'] || '').trim();
 
           if (!name) { errors.push(`Row ${row}: Name is required`); return; }
           if (!phone) { errors.push(`Row ${row}: Phone is required`); return; }
 
-          const plan = plans.find(p => p.code.toUpperCase() === planCode || p.name === planCode);
-          if (planCode && !plan) { errors.push(`Row ${row}: Plan code "${planCode}" not found`); }
+          const plan = plans.find(p => 
+            p.id.toUpperCase() === planCodeUpper ||
+            p.code.toUpperCase() === planCodeUpper ||
+            p.name.toUpperCase() === planCodeUpper
+          );
+
+          const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(planCode);
+
+          if (!planCode) {
+            errors.push(`Row ${row}: Plan Code is required`);
+          } else if (!plan && !isUuid) { 
+            errors.push(`Row ${row}: Plan "${planCode}" not found`); 
+          }
+
+          const eligibleDate = String(r['EligibleDate'] || r['eligible_date'] || r['Eligible Date'] || '').trim();
 
           rows.push({
             id: `EMP-${Date.now()}-${i}`,
@@ -67,9 +84,10 @@ function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: Partial<
             designation: String(r['Designation'] || r['designation'] || '').trim(),
             department: String(r['Department'] || r['department'] || '').trim(),
             companyName: companyName || plan?.companyName || '',
-            corporatePlanId: plan?.id || '',
-            corporatePlanName: plan?.name || '',
+            corporatePlanId: plan?.id || (isUuid ? planCode : ''),
+            corporatePlanName: plan?.name || (isUuid ? 'Selected Plan' : ''),
             enrolledAt: new Date().toISOString(),
+            eligible_date: eligibleDate || new Date().toISOString().split('T')[0],
             isActive: true,
           });
         });
@@ -84,9 +102,9 @@ function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: Partial<
 
 function downloadTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ['Name', 'Phone', 'Email', 'Gender', 'EmployeeId', 'Designation', 'Department', 'Company', 'PlanCode', 'DOB'],
-    ['Rajesh Kumar', '9876543210', 'rajesh@tcs.com', 'male', 'Electrify001', 'Engineer', 'IT', 'Tata Consultancy Services', 'Electrify-GOLD', '1990-01-15'],
-    ['Priya Sharma', '8765432109', 'priya@tcs.com', 'female', 'Electrify002', 'Manager', 'HR', 'Tata Consultancy Services', 'Electrify-GOLD', '1988-05-22'],
+    ['Name', 'Phone', 'Email', 'Gender', 'EmployeeId', 'Designation', 'Department', 'Company', 'PlanCode', 'DOB', 'EligibleDate'],
+    ['Rajesh Kumar', '9876543210', 'rajesh@tcs.com', 'male', 'Electrify001', 'Engineer', 'IT', 'Tata Consultancy Services', 'Electrify-GOLD', '1990-01-15', '2026-05-20'],
+    ['Priya Sharma', '8765432109', 'priya@tcs.com', 'female', 'Electrify002', 'Manager', 'HR', 'Tata Consultancy Services', 'Electrify-GOLD', '1988-05-22', '2026-05-20'],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Employees');
@@ -96,9 +114,12 @@ function downloadTemplate() {
 // ─── Component ────────────────────────────────────────────────────────────────
 export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan }: EmployeeManagementProps) {
   const empCfg = useFormConfig('employee');
+  const createEmployeeMutation = useCreateEmployeeMutation();
+  const bulkImportMutation = useBulkImportEmployeeMutation();
   const empCfgAny = empCfg as any;
   const personalSection   = empCfg.sections?.find(s => s.id === 'personal');
   const employmentSection = empCfg.sections?.find(s => s.id === 'employment');
+  const eligibilitySection = empCfg.sections?.find(s => s.id === 'eligibility');
   const [tab, setTab] = useState<'list' | 'import'>('list');
   const [viewMode, setViewMode] = useState<'employees' | 'companies'>('employees');
   const [search, setSearch] = useState('');
@@ -192,28 +213,78 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     return !Object.keys(errs).length;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
     const plan = plans.find(p => p.id === form.corporatePlanId);
-    const emp: CorporateEmployee = {
-      id: editEmp?.id || `EMP-${Date.now()}`,
-      employeeId: form.employeeId || '',
-      name: form.name!,
-      phone: form.phone!,
-      email: form.email || '',
-      gender: form.gender || 'male',
-      dateOfBirth: form.dateOfBirth || '',
-      designation: form.designation || '',
-      department: form.department || '',
-      companyName: form.companyName!,
-      corporatePlanId: form.corporatePlanId!,
-      corporatePlanName: plan?.name || '',
-      enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
-      isActive: form.isActive !== false,
-      patientId: editEmp?.patientId,
-    };
-    onSave(emp);
-    setShowForm(false);
+    
+    if (!editEmp) {
+      try {
+        const transformedBody = {
+          name: form.name!,
+          emp_id: form.employeeId || `EMP${Date.now().toString().slice(-5)}`,
+          phone: form.phone!,
+          email: form.email || "noemail@example.com",
+          gender: (form.gender || "male").toUpperCase(),
+          date_of_birth: form.dateOfBirth || "1990-01-01",
+          company_name: form.companyName!,
+          designation: form.designation || "Employee",
+          department: form.department || "General",
+          corporate_plan_id: form.corporatePlanId!,
+          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
+        };
+
+        const apiResponse = await createEmployeeMutation.mutateAsync(transformedBody);
+        
+        const emp: CorporateEmployee = {
+          id: apiResponse?.id || `EMP-${Date.now()}`,
+          employeeId: form.employeeId || apiResponse?.emp_id || '',
+          name: form.name!,
+          phone: form.phone!,
+          email: form.email || '',
+          gender: form.gender || 'male',
+          dateOfBirth: form.dateOfBirth || '',
+          designation: form.designation || '',
+          department: form.department || '',
+          companyName: form.companyName!,
+          corporatePlanId: form.corporatePlanId!,
+          corporatePlanName: plan?.name || '',
+          enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
+          eligible_date: form.eligible_date || apiResponse?.eligible_date || '',
+          isActive: form.isActive !== false,
+          patientId: editEmp?.patientId || undefined,
+        };
+        onSave(emp);
+        setShowForm(false);
+      } catch (err: any) {
+        console.error("Failed to create employee via API:", err);
+        setFormErrors(prev => ({
+          ...prev,
+          submit: err?.response?.data?.message || err?.message || "Failed to create employee on backend"
+        }));
+      }
+    } else {
+      const emp: CorporateEmployee = {
+        id: editEmp.id,
+        employeeId: form.employeeId || '',
+        name: form.name!,
+        phone: form.phone!,
+        email: form.email || '',
+        gender: form.gender || 'male',
+        dateOfBirth: form.dateOfBirth || '',
+        designation: form.designation || '',
+        department: form.department || '',
+        companyName: form.companyName!,
+        corporatePlanId: form.corporatePlanId!,
+        corporatePlanName: plan?.name || '',
+        enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
+        eligible_date: form.eligible_date || editEmp?.eligible_date || '',
+        isActive: form.isActive !== false,
+        patientId: editEmp?.patientId || undefined,
+      };
+      onSave(emp);
+      setShowForm(false);
+    }
   };
 
   // ── Plan change ──
@@ -234,13 +305,43 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     setImporting(false);
   };
 
-  const handleImportConfirm = () => {
-    const valid = importRows.filter(r => r.name && r.phone);
+  const handleImportConfirm = async () => {
+    const valid = importRows.filter(r => r.name && r.phone && r.corporatePlanId);
     if (!valid.length) return;
-    onBulkSave(valid as CorporateEmployee[]);
-    setImportRows([]);
-    setImportErrors([]);
-    setTab('list');
+    
+    setImporting(true);
+    try {
+      const payload = {
+        employees: valid.map((r, i) => ({
+          name: r.name!,
+          emp_id: r.employeeId || `EMP${Date.now().toString().slice(-4)}${i}`,
+          phone: r.phone!,
+          email: r.email || "noemail@example.com",
+          gender: (r.gender || "male").toUpperCase(),
+          company_name: r.companyName || "Unknown Company",
+          designation: r.designation || "Employee",
+          department: r.department || "General",
+          corporate_plan_id: r.corporatePlanId || "",
+          date_of_birth: r.dateOfBirth || "1990-01-01",
+          eligible_date: r.eligible_date || new Date().toISOString().split('T')[0]
+        }))
+      };
+
+      await bulkImportMutation.mutateAsync(payload);
+      
+      onBulkSave(valid as CorporateEmployee[]);
+      setImportRows([]);
+      setImportErrors([]);
+      setTab('list');
+    } catch (err: any) {
+      console.error("Bulk import failed:", err);
+      setImportErrors(prev => [
+        err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
+        ...prev
+      ]);
+    } finally {
+      setImporting(false);
+    }
   };
 
   // ── Table columns ──
@@ -426,7 +527,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               <div>
                 <p className="text-sm font-semibold text-foreground mb-1">Upload Excel / CSV file</p>
                 <p className="text-xs text-muted-foreground">
-                  Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB
+                  Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB, EligibleDate
                 </p>
               </div>
               <button onClick={downloadTemplate} className="btn-secondary flex-shrink-0">
@@ -458,7 +559,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-foreground">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
                 <button onClick={handleImportConfirm} className="btn-primary">
-                  <CheckCircle className="w-4 h-4" /> Import {importRows.filter(r => r.name && r.phone).length} Employees
+                  <CheckCircle className="w-4 h-4" /> Import {importRows.filter(r => r.name && r.phone && r.corporatePlanId).length} Employees
                 </button>
               </div>
               <DataTable
@@ -471,7 +572,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                     const p = plans.find(pl => pl.id === r.corporatePlanId);
                     return p ? <PlanBadge name={p.name} code={p.code} color={p.color} /> : <Badge variant="amber">No plan</Badge>;
                   }},
-                  { key: 'ok', header: '', render: r => r.name && r.phone
+                  { key: 'ok', header: '', render: r => r.name && r.phone && r.corporatePlanId
                     ? <CheckCircle className="w-4 h-4 text-emerald-500" />
                     : <AlertTriangle className="w-4 h-4 text-red-500" /> },
                 ]}
@@ -491,11 +592,24 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           size="2xl"
           icon={<User className="w-4 h-4" />}
           footer={
-            <div className="flex justify-end gap-3 w-full">
-              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10">
-                <CheckCircle className="w-4 h-4" /> {editEmp ? (empCfgAny.submitLabel?.edit ?? 'Update Details') : (empCfgAny.submitLabel?.create ?? 'Register Employee')}
-              </Button>
+            <div className="flex flex-col gap-3 w-full">
+              {formErrors.submit && (
+                <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
+                  {formErrors.submit}
+                </p>
+              )}
+              <div className="flex justify-end gap-3 w-full">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10" disabled={createEmployeeMutation.isLoading}>
+                  {createEmployeeMutation.isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" /> {editEmp ? (empCfgAny.submitLabel?.edit ?? 'Update Details') : (empCfgAny.submitLabel?.create ?? 'Register Employee')}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           }
         >
@@ -519,6 +633,17 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 onChange={handleFormChange}
                 errors={formErrors}
                 dynamicOptions={{ corporatePlanId: planOptions }}
+                cols={2}
+              />
+            )}
+
+            {/* Eligibility section from JSON config */}
+            {eligibilitySection && (
+              <SectionRenderer
+                section={eligibilitySection}
+                values={form}
+                onChange={handleFormChange}
+                errors={formErrors}
                 cols={2}
               />
             )}
