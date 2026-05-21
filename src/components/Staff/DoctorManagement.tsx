@@ -80,8 +80,8 @@ const ROLE_FILTERS = [
   { key: "all", label: "All Roles" },
   { key: "doctor", label: "Doctors" },
   { key: "admin", label: "Admin" },
-  { key: "receptionist", label: "Reception" },
-  { key: "assistant", label: "Assistants" },
+  { key: "receptionist", label: "Receptionist" },
+  { key: "assistant", label: "Assistant" },
 ];
 
 export function DoctorManagement({

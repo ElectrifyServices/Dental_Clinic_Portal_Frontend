@@ -239,6 +239,7 @@ export interface CorporateEmployee {
   corporatePlanId: string;     // which plan they are on
   corporatePlanName: string;
   enrolledAt: string;
+  eligible_date?: string;
   isActive: boolean;
   patientId?: string;          // linked patient record if registered
 }
