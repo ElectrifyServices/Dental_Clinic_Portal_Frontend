@@ -147,8 +147,8 @@ export function ModalRegistry() {
               ? patients.find((p: any) => p.id === selectedPatientId)
               : preFilledPatientData
           }
-          onSave={(p: any) => {
-            handleSavePatient(p, patientFormType, parentPatientId);
+          onSave={async (p: any) => {
+            await handleSavePatient(p, patientFormType, parentPatientId);
             const hasCheckIn = !!pendingCheckInAppt;
             setActiveModal(null);
             setSelectedPatientId("");
@@ -479,7 +479,6 @@ export function ModalRegistry() {
             setSelectedItemId("");
           }}
           onSave={(d: any) => {
-            handleSaveStaff(d);
             setActiveModal(null);
             setSelectedItemId("");
             showToast("Staff saved!");
@@ -492,7 +491,7 @@ export function ModalRegistry() {
         />
       )}
 
-      {activeModal === "scheduleManager" && (
+      {activeModal === "scheduleManager" && selectedItemId && (
         <DoctorScheduleManager
           doctorId={selectedItemId}
           doctorName={
@@ -502,17 +501,7 @@ export function ModalRegistry() {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          currentSchedule={
-            staffMembers.find((s: any) => s.id === selectedItemId)?.workingHours
-          }
-          onSave={(sd: any) => {
-            const s = staffMembers.find((x: any) => x.id === selectedItemId);
-            if (s)
-              handleSaveStaff({
-                ...s,
-                workingHours: sd.workingHours,
-                timeSlots: sd.timeSlots,
-              });
+          onSave={() => {
             setActiveModal(null);
             setSelectedItemId("");
             showToast("Schedule updated!");
@@ -527,7 +516,7 @@ export function ModalRegistry() {
           pendingAmount={parseFloat(
             staffMembers
               .find((s: any) => s.id === selectedStaffForSalary.id)
-              ?.salaryPending?.replace(/,/g, "") || "0",
+              ?.salaryPending?.toString().replace(/,/g, "") || "0"
           )}
           onClose={() => {
             setActiveModal(null);
@@ -536,9 +525,9 @@ export function ModalRegistry() {
           onSave={(pd: any) => {
             const s = staffMembers.find((x: any) => x.id === pd.staffId);
             if (s) {
-              const paid = parseFloat(s.salaryPaid?.replace(/,/g, "") || "0");
+              const paid = parseFloat(s.salaryPaid?.toString().replace(/,/g, "") || "0");
               const pending = parseFloat(
-                s.salaryPending?.replace(/,/g, "") || "0",
+                s.salaryPending?.toString().replace(/,/g, "") || "0"
               );
               const amt = parseFloat(pd.amount);
               handleSaveStaff({

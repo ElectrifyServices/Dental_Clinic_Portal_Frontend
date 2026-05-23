@@ -3,14 +3,16 @@ import {
   Plus, Edit2, Trash2, Building2, Users, Calendar,
   CheckCircle, ChevronDown, ChevronUp, Gift,
   Percent, Star, Tag, Search, ToggleLeft, ToggleRight, Info,
-  Settings2
+  Settings2, MoreHorizontal
 } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, PlanBenefitType } from '../../types';
 import { PLAN_COLORS, TREATMENT_LABELS, COLOR_MAP, getPlanStatus } from '../../utils/corporatePlan';
-import { Modal, Button, LabeledField, SectionRenderer } from '../ui';
+import { Modal, Button, LabeledField, SectionRenderer, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui';
 import { useFormConfig } from '../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../hooks/corporate/useCreateCorporatePlanMutation';
 import { useUpdateCorporatePlanMutation } from '../../hooks/corporate/useUpdateCorporatePlanMutation';
+import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
+import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
 
 interface Props {
@@ -72,6 +74,8 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
   const { showToast } = useModal();
   const createPlanMutation = useCreateCorporatePlanMutation();
   const updatePlanMutation = useUpdateCorporatePlanMutation();
+  const deletePlanMutation = useDeleteCorporatePlanMutation();
+  const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
 
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
@@ -159,6 +163,19 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
         max_amount: b.cap || 0,
       };
     });
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this plan?')) {
+      try {
+        await deletePlanMutation.mutateAsync({ id });
+        onDelete(id);
+        showToast('Plan deleted successfully');
+      } catch (err: any) {
+        console.error("Failed to delete corporate plan via API:", err);
+        showToast(err?.response?.data?.message || err?.message || "Failed to delete plan");
+      }
+    }
+  };
 
   const handleSave = async () => {
     if (!validate()) return;
@@ -339,18 +356,44 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button onClick={() => onToggle(plan.id)} title={plan.isActive ? 'Deactivate' : 'Activate'}
-                        className="p-2.5 hover:bg-muted rounded-2xl transition-all">
-                        {plan.isActive ? <ToggleRight className="w-6 h-6 text-emerald-500" /> : <ToggleLeft className="w-6 h-6 text-muted-foreground/40" />}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await updateStatusMutation.mutateAsync({ id: plan.id, status: plan.isActive ? 'INACTIVE' : 'ACTIVE' });
+                            onToggle(plan.id);
+                            showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'} successfully`);
+                          } catch (err: any) {
+                            console.error("Failed to update status", err);
+                            showToast(err?.response?.data?.message || err?.message || "Failed to update status");
+                          }
+                        }}
+                        disabled={updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
+                          plan.isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                        }`}
+                      >
+                        {plan.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                        {plan.isActive ? 'Active' : 'Inactive'}
                       </button>
-                      <button onClick={() => openEdit(plan)} className="p-2.5 hover:bg-primary/10 rounded-2xl transition-all text-primary">
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => onDelete(plan.id)}
-                        className="p-2.5 hover:bg-destructive/10 rounded-2xl transition-all text-red-500">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-muted rounded-full transition-all text-muted-foreground">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem onClick={() => openEdit(plan)} className="cursor-pointer">
+                            <Edit2 className="w-4 h-4 mr-2 text-primary" />
+                            <span>Edit Plan</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(plan.id)} className="cursor-pointer text-destructive focus:text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            <span>Delete Plan</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 

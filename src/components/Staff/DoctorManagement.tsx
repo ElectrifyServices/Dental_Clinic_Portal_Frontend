@@ -245,13 +245,14 @@ export function DoctorManagement({
       header: "Role",
       render: (staff: UserType) => {
         const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+        const displayLabel = (staff as any).originalRoleName || rm.label;
         return (
           <Badge
             variant={rm.variant}
             className="gap-1.5 uppercase font-bold text-[10px]"
           >
             {rm.icon}
-            {rm.label}
+            {displayLabel}
           </Badge>
         );
       },
@@ -450,7 +451,7 @@ export function DoctorManagement({
                           variant={rm.variant}
                           className="text-[9px] font-black uppercase px-1.5 h-4"
                         >
-                          {rm.label}
+                          {(staff as any).originalRoleName || rm.label}
                         </Badge>
                         {!staff.isActive && (
                           <Badge

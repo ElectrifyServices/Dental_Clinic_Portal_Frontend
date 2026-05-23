@@ -144,9 +144,16 @@ export function Step2Role({
 }: Step2Props) {
   const { data: apiRoles, isLoading } = useRolesQuery();
 
-  const rawRoles = Array.isArray(apiRoles)
-    ? apiRoles
-    : (apiRoles && Array.isArray((apiRoles as any).data) ? (apiRoles as any).data : null);
+  let rawRoles: any[] | null = null;
+  if (Array.isArray(apiRoles)) {
+    rawRoles = apiRoles;
+  } else if (apiRoles && Array.isArray((apiRoles as any).roles)) {
+    rawRoles = (apiRoles as any).roles;
+  } else if (apiRoles && (apiRoles as any).data && Array.isArray((apiRoles as any).data.roles)) {
+    rawRoles = (apiRoles as any).data.roles;
+  } else if (apiRoles && Array.isArray((apiRoles as any).data)) {
+    rawRoles = (apiRoles as any).data;
+  }
 
   const rolesList = rawRoles
     ? rawRoles.map((r: any) => {

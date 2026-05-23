@@ -2,18 +2,26 @@ import React, { useState, useRef, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, Upload, Download, Building2,
   Users, Phone, Mail, User, CheckCircle, AlertTriangle,
-  Search, X, FileText, ToggleLeft, ToggleRight, RefreshCw
+  Search, X, FileText, ToggleLeft, ToggleRight, RefreshCw,
+  MoreHorizontal, ArrowRightLeft
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { CorporateEmployee, CorporatePlan } from '../../types';
 import {
   PageHeader, Modal, DataTable, Pagination, SearchInput,
-  FilterTabs, FormField, FileUploadZone, Badge, PlanBadge, ConfirmModal,
-  Button, SectionRenderer
+  FilterTabs, LabeledField, FileUploadZone, Badge, PlanBadge, ConfirmModal,
+  Button, SectionRenderer, DropdownMenu, DropdownMenuTrigger,
+  DropdownMenuContent, DropdownMenuItem
 } from '../ui';
 import { useFormConfig } from '../../hooks/useFormConfig';
 import { useCreateEmployeeMutation } from '../../hooks/corporate/useCreateEmployeeMutation';
+import { useUpdateEmployeeMutation } from '../../hooks/corporate/useUpdateEmployeeMutation';
+import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useBulkImportEmployeeMutation } from '../../hooks/corporate/useBulkImportEmployeeMutation';
+import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
+import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
+import { useActivePlansQuery } from '../../hooks/corporate/useActivePlansQuery';
+import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
 import type { SelectOption } from '../ui/FormRenderer';
 
 interface EmployeeManagementProps {
@@ -115,6 +123,8 @@ function downloadTemplate() {
 export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan }: EmployeeManagementProps) {
   const empCfg = useFormConfig('employee');
   const createEmployeeMutation = useCreateEmployeeMutation();
+  const updateEmployeeMutation = useUpdateEmployeeMutation();
+  const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const bulkImportMutation = useBulkImportEmployeeMutation();
   const empCfgAny = empCfg as any;
   const personalSection   = empCfg.sections?.find(s => s.id === 'personal');
@@ -147,47 +157,134 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const { data: activePlansData } = useActivePlansQuery();
+  const updateStatusMutation = useUpdateEmployeeStatusMutation();
+
+  const activePlans = useMemo(() => {
+    let arr: any[] = [];
+    if (Array.isArray(activePlansData)) arr = activePlansData;
+    else if (activePlansData && Array.isArray(activePlansData.data)) arr = activePlansData.data;
+    else if (activePlansData?.data && Array.isArray(activePlansData.data.data)) arr = activePlansData.data.data;
+    else if (activePlansData?.plans && Array.isArray(activePlansData.plans)) arr = activePlansData.plans;
+
+    if (arr.length > 0) {
+      return arr.map((p: any) => {
+        const colorMap: Record<string, string> = {
+          "#3B82F6": "blue", "#8B5CF6": "violet", "#10B981": "emerald",
+          "#F43F5E": "rose", "#F59E0B": "amber", "#06B6D4": "cyan",
+          "#6366F1": "indigo", "#14B8A6": "teal",
+        };
+        const mappedColor = p.theme_color ? (colorMap[p.theme_color.toUpperCase()] || 'blue') : 'blue';
+
+        return {
+          id: p.id,
+          name: p.plan_name || p.name,
+          companyName: p.company_name || '',
+          code: p.plan_code || p.code,
+          description: p.description || "",
+          isActive: p.status === "ACTIVE",
+          color: p.color || mappedColor,
+        } as CorporatePlan;
+      });
+    }
+    return plans; // fallback to props
+  }, [activePlansData, plans]);
+
   // Filters
   const planFilterTabs = [
     { key: 'all', label: 'All Plans' },
-    ...plans.filter(p => p.isActive).map(p => ({ key: p.id, label: p.code })),
+    ...activePlans.filter(p => p.isActive).map(p => ({ key: p.id, label: p.code })),
   ];
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return employees.filter(e => {
-      const matchQ = e.name.toLowerCase().includes(q) || e.phone.includes(q) || e.email.toLowerCase().includes(q) ||
-        e.employeeId.toLowerCase().includes(q) || e.companyName.toLowerCase().includes(q);
-      const matchPlan = planFilter === 'all' || e.corporatePlanId === planFilter;
-      const matchCompany = !selectedCompany || e.companyName === selectedCompany;
-      return matchQ && matchPlan && matchCompany;
-    });
-  }, [employees, search, planFilter, selectedCompany]);
+  const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
+    search,
+    page,
+    limit: PER_PAGE,
+    filters: {
+      corporate_plan_id: planFilter !== 'all' ? planFilter : undefined,
+      company_name: selectedCompany ? [selectedCompany] : undefined,
+    }
+  });
+
+  const apiEmployees: CorporateEmployee[] = useMemo(() => {
+    let arr: any[] = [];
+    if (Array.isArray(employeesData)) arr = employeesData;
+    else if (employeesData && Array.isArray(employeesData.data)) arr = employeesData.data;
+    else if (employeesData?.data && Array.isArray(employeesData.data.data)) arr = employeesData.data.data;
+    else if (employeesData?.data?.employees && Array.isArray(employeesData.data.employees)) arr = employeesData.data.employees;
+    else if (employeesData?.employees && Array.isArray(employeesData.employees)) arr = employeesData.employees;
+
+    return arr.map((e: any) => ({
+      id: e.id,
+      employeeId: e.emp_id || '',
+      name: e.name,
+      phone: e.phone,
+      email: e.email,
+      gender: e.gender?.toLowerCase() || 'male',
+      dateOfBirth: e.date_of_birth,
+      designation: e.designation,
+      department: e.department,
+      companyName: e.company_name || 'Unknown',
+      corporatePlanId: e.corporate_plan?.id || e.corporate_plan_id || '',
+      corporatePlanName: e.corporate_plan?.plan_name || activePlans.find(p => p.id === (e.corporate_plan?.id || e.corporate_plan_id))?.name || '',
+      enrolledAt: e.created_at || new Date().toISOString(),
+      eligible_date: e.eligible_date,
+      isActive: e.status === 'ACTIVE',
+      patientId: e.patient_id || undefined,
+    }));
+  }, [employeesData, activePlans]);
+
+  const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 };
+  const totalPages = pagination.totalPages || 1;
+  const totalItems = pagination.total || 0;
+
+  const { data: companiesData } = useCompaniesQuery();
 
   // Group by company
   const companiesList = useMemo(() => {
-    const companies = new Map<string, { name: string; count: number; employees: CorporateEmployee[] }>();
-    employees.forEach(e => {
-      const company = e.companyName || 'Unassigned';
-      if (!companies.has(company)) {
-        companies.set(company, { name: company, count: 0, employees: [] });
-      }
-      const entry = companies.get(company)!;
-      entry.count++;
-      entry.employees.push(e);
-    });
-    return Array.from(companies.values()).sort((a, b) => b.count - a.count);
-  }, [employees]);
+    let arr: any[] = [];
+    if (Array.isArray(companiesData)) arr = companiesData;
+    else if (companiesData && Array.isArray(companiesData.data)) arr = companiesData.data;
+    else if (companiesData?.data && Array.isArray(companiesData.data.data)) arr = companiesData.data.data;
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+    if (arr.length > 0) {
+      return arr.map((c: any) => ({
+        name: c.company_name || c.name || 'Unknown',
+        count: Number(c.employee_count || c.count || c.total || c._count?.employees || 0),
+      })).sort((a, b) => b.count - a.count);
+    }
+
+    return [];
+  }, [companiesData]);
 
   // Stats
   const byPlan = useMemo(() => {
     const m: Record<string, number> = {};
-    employees.forEach(e => { m[e.corporatePlanId] = (m[e.corporatePlanId] || 0) + 1; });
+    let arr: any[] = [];
+    if (Array.isArray(companiesData)) arr = companiesData;
+    else if (companiesData && Array.isArray(companiesData.data)) arr = companiesData.data;
+    else if (companiesData?.data && Array.isArray(companiesData.data.data)) arr = companiesData.data.data;
+
+    if (arr.length > 0) {
+      arr.forEach((company: any) => {
+        if (company.employees && Array.isArray(company.employees)) {
+          company.employees.forEach((emp: any) => {
+            const planId = emp.corporate_plan?.id || emp.corporate_plan_id;
+            if (planId) {
+              m[planId] = (m[planId] || 0) + 1;
+            }
+          });
+        }
+      });
+      return m;
+    }
+
+    // Fallback to currently visible employees if companies data is unavailable
+    apiEmployees.forEach(e => {
+      if (e.corporatePlanId) m[e.corporatePlanId] = (m[e.corporatePlanId] || 0) + 1;
+    });
     return m;
-  }, [employees]);
+  }, [companiesData, apiEmployees]);
 
   // ── Form ──
   const openNew = () => { setEditEmp(null); setForm(EMPTY_EMP()); setFormErrors({}); setShowForm(true); };
@@ -199,7 +296,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   };
 
   // Plans as SelectOption for corporatePlanId dynamic options
-  const planOptions: SelectOption[] = plans
+  const planOptions: SelectOption[] = activePlans
     .filter(p => p.isActive)
     .map(p => ({ value: p.id, label: `${p.name} (${p.companyName})` }));
 
@@ -215,7 +312,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    const plan = plans.find(p => p.id === form.corporatePlanId);
+    const plan = activePlans.find(p => p.id === form.corporatePlanId);
     
     if (!editEmp) {
       try {
@@ -255,6 +352,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           patientId: editEmp?.patientId || undefined,
         };
         onSave(emp);
+        refetch();
         setShowForm(false);
       } catch (err: any) {
         console.error("Failed to create employee via API:", err);
@@ -264,42 +362,92 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         }));
       }
     } else {
-      const emp: CorporateEmployee = {
-        id: editEmp.id,
-        employeeId: form.employeeId || '',
-        name: form.name!,
-        phone: form.phone!,
-        email: form.email || '',
-        gender: form.gender || 'male',
-        dateOfBirth: form.dateOfBirth || '',
-        designation: form.designation || '',
-        department: form.department || '',
-        companyName: form.companyName!,
-        corporatePlanId: form.corporatePlanId!,
-        corporatePlanName: plan?.name || '',
-        enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
-        eligible_date: form.eligible_date || editEmp?.eligible_date || '',
-        isActive: form.isActive !== false,
-        patientId: editEmp?.patientId || undefined,
-      };
-      onSave(emp);
-      setShowForm(false);
+      try {
+        const transformedBody = {
+          id: editEmp.id,
+          name: form.name!,
+          emp_id: form.employeeId || '',
+          phone: form.phone!,
+          email: form.email || "noemail@example.com",
+          gender: (form.gender || "male").toUpperCase(),
+          date_of_birth: form.dateOfBirth || "1990-01-01",
+          company_name: form.companyName!,
+          designation: form.designation || "Employee",
+          department: form.department || "General",
+          corporate_plan_id: form.corporatePlanId!,
+          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
+        };
+
+        await updateEmployeeMutation.mutateAsync(transformedBody);
+
+        const emp: CorporateEmployee = {
+          id: editEmp.id,
+          employeeId: form.employeeId || '',
+          name: form.name!,
+          phone: form.phone!,
+          email: form.email || '',
+          gender: form.gender || 'male',
+          dateOfBirth: form.dateOfBirth || '',
+          designation: form.designation || '',
+          department: form.department || '',
+          companyName: form.companyName!,
+          corporatePlanId: form.corporatePlanId!,
+          corporatePlanName: plan?.name || '',
+          enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
+          eligible_date: form.eligible_date || editEmp?.eligible_date || '',
+          isActive: form.isActive !== false,
+          patientId: editEmp?.patientId || undefined,
+        };
+        onSave(emp);
+        refetch();
+        setShowForm(false);
+      } catch (err: any) {
+        console.error("Failed to update employee via API:", err);
+        setFormErrors(prev => ({
+          ...prev,
+          submit: err?.response?.data?.message || err?.message || "Failed to update employee on backend"
+        }));
+      }
     }
   };
 
   // ── Plan change ──
   const openChangePlan = (e: CorporateEmployee) => { setChangePlanEmp(e); setNewPlanId(e.corporatePlanId); };
-  const handleChangePlan = () => {
+  const handleChangePlan = async () => {
     if (!changePlanEmp || !newPlanId) return;
-    const plan = plans.find(p => p.id === newPlanId);
-    if (plan) onChangePlan(changePlanEmp.id, plan.id, plan.name);
-    setChangePlanEmp(null);
+    const plan = activePlans.find(p => p.id === newPlanId);
+    if (!plan) return;
+
+    try {
+      const transformedBody = {
+        id: changePlanEmp.id,
+        name: changePlanEmp.name,
+        emp_id: changePlanEmp.employeeId || '',
+        phone: changePlanEmp.phone,
+        email: changePlanEmp.email || "noemail@example.com",
+        gender: (changePlanEmp.gender || "male").toUpperCase(),
+        date_of_birth: changePlanEmp.dateOfBirth || "1990-01-01",
+        company_name: changePlanEmp.companyName,
+        designation: changePlanEmp.designation || "Employee",
+        department: changePlanEmp.department || "General",
+        corporate_plan_id: newPlanId,
+        eligible_date: changePlanEmp.eligible_date || new Date().toISOString(),
+        status: changePlanEmp.isActive ? "ACTIVE" : "INACTIVE",
+      };
+
+      await updateEmployeeMutation.mutateAsync(transformedBody);
+      refetch();
+      setChangePlanEmp(null);
+    } catch (err) {
+      console.error("Failed to change plan", err);
+    }
   };
 
   // ── Import ──
   const handleFile = async (file: File) => {
     setImporting(true);
-    const { rows, errors } = await parseXlsx(file, plans);
+    const { rows, errors } = await parseXlsx(file, activePlans);
     setImportRows(rows);
     setImportErrors(errors);
     setImporting(false);
@@ -377,7 +525,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     },
     {
       key: 'plan', header: 'Corporate Plan', render: (e: CorporateEmployee) => {
-        const plan = plans.find(p => p.id === e.corporatePlanId);
+        const plan = activePlans.find(p => p.id === e.corporatePlanId);
         return plan
           ? <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
           : <span className="text-xs text-muted-foreground/60">No plan</span>;
@@ -392,21 +540,49 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     },
     {
       key: 'status', header: 'Status', render: (e: CorporateEmployee) => (
-        <Badge variant={e.isActive ? 'green' : 'gray'}>{e.isActive ? 'Active' : 'Inactive'}</Badge>
+        <button
+          onClick={async () => {
+            try {
+              await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
+              refetch();
+            } catch (err) {
+              console.error("Failed to update status", err);
+            }
+          }}
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border ${
+            e.isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+          }`}
+          disabled={updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
+        >
+          {e.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+          {e.isActive ? 'Active' : 'Inactive'}
+        </button>
       ),
     },
     {
-      key: 'actions', header: '', align: 'right' as const, render: (e: CorporateEmployee) => (
-        <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openChangePlan(e)} className="btn-icon" title="Change plan">
-            <RefreshCw className="w-4 h-4 text-blue-500" />
-          </button>
-          <button onClick={() => openEdit(e)} className="btn-icon-blue" title="Edit">
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button onClick={() => setDeleteEmp(e)} className="btn-icon-red" title="Delete">
-            <Trash2 className="w-4 h-4" />
-          </button>
+      key: 'actions', header: 'Action', align: 'right' as const, render: (e: CorporateEmployee) => (
+        <div className="flex items-center justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="btn-icon">
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => openChangePlan(e)} className="cursor-pointer">
+                <ArrowRightLeft className="w-4 h-4 mr-2 text-blue-500" />
+                <span>Change Plan</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openEdit(e)} className="cursor-pointer">
+                <Edit2 className="w-4 h-4 mr-2 text-primary" />
+                <span>Edit Employee</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDeleteEmp(e)} className="cursor-pointer text-destructive focus:text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" />
+                <span>Remove Employee</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
@@ -416,7 +592,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     <div className="space-y-5">
       <PageHeader
         title="Employee Management"
-        subtitle={`${employees.length} employees across ${plans.filter(p => p.isActive).length} active plans`}
+        subtitle={`${totalItems} employees across ${activePlans.filter(p => p.isActive).length} active plans`}
         action={
           <div className="flex items-center gap-2">
             <button onClick={() => { setTab('import'); setImportRows([]); setImportErrors([]); }} className="btn-secondary">
@@ -471,13 +647,13 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               )}
               <DataTable
                 columns={columns}
-                data={paginated}
+                data={apiEmployees}
                 rowKey={e => e.id}
                 emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
                 emptyTitle="No employees found"
                 emptySubtitle="Add employees individually or import from Excel"
                 footer={
-                  <Pagination page={page} totalPages={totalPages} totalItems={filtered.length}
+                  <Pagination page={page} totalPages={totalPages} totalItems={totalItems}
                     perPage={PER_PAGE} onPageChange={setPage} />
                 }
               />
@@ -600,8 +776,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               )}
               <div className="flex justify-end gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10" disabled={createEmployeeMutation.isLoading}>
-                  {createEmployeeMutation.isLoading ? (
+                <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10" disabled={createEmployeeMutation.isLoading || updateEmployeeMutation.isLoading}>
+                  {(createEmployeeMutation.isLoading || updateEmployeeMutation.isLoading) ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
@@ -710,7 +886,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 </div>
               </div>
 
-              <FormField label="Target Health Plan Selection" required>
+              <LabeledField label="Target Health Plan Selection" required>
                 <select 
                   value={newPlanId} 
                   onChange={e => setNewPlanId(e.target.value)} 
@@ -721,7 +897,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                     <option key={p.id} value={p.id}>{p.name} — {p.companyName} ({p.code})</option>
                   ))}
                 </select>
-              </FormField>
+              </LabeledField>
             </div>
 
             <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex gap-3">
@@ -741,7 +917,17 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           message={`Remove ${deleteEmp.name} from the corporate employee list? Their patient record will remain but plan association will be cleared.`}
           confirmLabel="Remove"
           variant="danger"
-          onConfirm={() => { onDelete(deleteEmp.id); setDeleteEmp(null); }}
+          isLoading={deleteEmployeeMutation.isLoading}
+          onConfirm={async () => { 
+            try {
+              await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
+              onDelete(deleteEmp.id); 
+              refetch();
+              setDeleteEmp(null); 
+            } catch(e) {
+              console.error("Failed to delete employee", e);
+            }
+          }}
           onCancel={() => setDeleteEmp(null)}
         />
       )}

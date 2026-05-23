@@ -10,7 +10,8 @@ export interface CorporatePlansResponse {
   };
 }
 
-export function useCorporatePlansQuery() {
+export function useCorporatePlansQuery(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? false;
   return useApiQuery<CorporatePlansResponse>({
     queryKey: ["corporatePlans"],
     endpoint: "/corporate/plan/list",
@@ -22,6 +23,7 @@ export function useCorporatePlansQuery() {
       status: "ACTIVE",
     },
     options: {
+      enabled,
       staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
     },

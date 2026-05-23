@@ -8,7 +8,7 @@ export function useCorporateData() {
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<any[]>('corporateEmployees', []);
 
-  const { data: apiPlansData, refetch: refetchPlans } = useCorporatePlansQuery();
+  const { data: apiPlansData, refetch: refetchPlans } = useCorporatePlansQuery({ enabled: false });
 
   const mapBackendPlanToFrontend = (plan: any): CorporatePlan => {
     const mapHexToColor = (hex: string): string => {

@@ -17,6 +17,11 @@ interface PatientListProps {
   onToggleStatus?: (id: string, newStatus: "active" | "inactive") => void;
   onToggleCategory?: (id: string, newCategory: string) => void;
   onShowCorporateManagement?: () => void;
+  // API-driven search & filter (optional – falls back to local state)
+  searchValue?: string;
+  onSearchChange?: (val: string) => void;
+  filters?: { is_active?: string[]; [key: string]: any };
+  onFiltersChange?: (filters: { is_active?: string[]; [key: string]: any }) => void;
 }
 
 export function PatientList({
@@ -28,8 +33,12 @@ export function PatientList({
   onExportPatient,
   onToggleStatus,
   onToggleCategory,
+  searchValue,
+  onSearchChange,
 }: PatientListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const searchTerm = searchValue !== undefined ? searchValue : localSearch;
+  const setSearchTerm = onSearchChange ?? setLocalSearch;
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");

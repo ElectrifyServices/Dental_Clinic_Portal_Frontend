@@ -1,4 +1,4 @@
-﻿/**
+/**
  * FormRenderer — Generic field renderer driven by JSON FormField config.
  *
  * Usage:
@@ -15,6 +15,7 @@
 
 import React from 'react';
 import type { FormField, SelectOption } from '../../config/forms/schema';
+import { SearchableSelect } from './SearchableSelect';
 
 // Inline label + error wrapper (replaces the deleted ./FormField module)
 function FormFieldWrapper({
@@ -119,6 +120,18 @@ export function FormRenderer({
             rows={field.rows ?? 3}
             placeholder={field.placeholder}
             className={`${inputCls} resize-none leading-relaxed`}
+          />
+        );
+
+      // ── Searchable Select ─────────────────────────────────────────────────
+      case 'searchable_select':
+        return (
+          <SearchableSelect
+            value={value ?? ''}
+            onChange={(val) => onChange(field.name, val)}
+            options={options}
+            placeholder={field.placeholder ?? "Select..."}
+            disabled={isDisabled}
           />
         );
 

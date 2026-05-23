@@ -14,6 +14,7 @@ import {
   Gift,
 } from "lucide-react";
 import { Modal, Button, ContentCard } from "@/components/ui";
+import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import * as XLSX from "xlsx";
 
 interface CorporatePlan {
@@ -61,6 +62,9 @@ export function CorporateManagement({
   onUpdateEmployee,
   onClose,
 }: CorporateManagementProps) {
+  // Fetch corporate plans when modal is open
+  useCorporatePlansQuery({ enabled: true });
+
   const [activeTab, setActiveTab] = useState<"plans" | "bulk">("plans");
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<CorporatePlan | null>(null);
