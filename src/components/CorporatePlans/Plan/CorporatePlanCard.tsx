@@ -7,6 +7,7 @@ import { CorporatePlan } from '../../../types';
 import { COLOR_MAP, getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';
 import { BENEFIT_ICONS, STATUS_BADGE, STATUS_LABEL } from './constants';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../ui';
+import { Card, CardContent } from '../../ui/Card';
 
 interface CorporatePlanCardProps {
   plan: CorporatePlan;
@@ -24,8 +25,8 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
   const status = getPlanStatus(plan);
 
   return (
-    <div className="bg-card rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl transition-all overflow-hidden group">
-      <div className="p-6 md:p-8">
+    <Card className="rounded-[2.5rem] border border-border shadow-sm hover:shadow-xl transition-all overflow-hidden group">
+      <CardContent className="p-6 md:p-8">
         <div className="flex items-start justify-between gap-6">
           <div className="flex items-start gap-4 min-w-0">
             <div className={`w-14 h-14 rounded-2xl ${c.iconBg} flex items-center justify-center flex-shrink-0 shadow-lg`}>
@@ -92,7 +93,7 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           {expanded ? 'Collapse Details' : 'View Full Configuration'}
         </button>
-      </div>
+      </CardContent>
 
       {expanded && (
         <div className={`px-8 pb-8 pt-2 border-t border-border bg-muted/10`}>
@@ -119,6 +120,6 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
