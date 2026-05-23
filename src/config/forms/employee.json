@@ -35,7 +35,7 @@
         { "name": "companyName",        "label": "Company Name",        "type": "text",   "required": true,  "placeholder": "Employer organization name" },
         { "name": "designation",        "label": "Designation / Role",  "type": "text",   "required": false, "placeholder": "e.g. Software Engineer" },
         { "name": "department",         "label": "Department",          "type": "text",   "required": false, "placeholder": "e.g. Engineering, HR" },
-        { "name": "corporatePlanId",    "label": "Corporate Health Plan","type": "select", "required": true }
+        { "name": "corporatePlanId",    "label": "Corporate Health Plan","type": "searchable_select", "required": true }
       ]
     },
     {

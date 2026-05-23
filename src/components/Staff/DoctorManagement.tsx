@@ -245,13 +245,14 @@ export function DoctorManagement({
       header: "Role",
       render: (staff: UserType) => {
         const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+        const displayLabel = (staff as any).originalRoleName || rm.label;
         return (
           <Badge
             variant={rm.variant}
             className="gap-1.5 uppercase font-bold text-[10px]"
           >
             {rm.icon}
-            {rm.label}
+            {displayLabel}
           </Badge>
         );
       },
@@ -402,26 +403,37 @@ export function DoctorManagement({
               return (
                 <Card
                   key={staff.id}
-                  className="group hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5"
+                  className="group relative overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 bg-card/50 backdrop-blur-sm"
                 >
-                  <CardContent className="p-5">
-                    <div className="flex justify-between items-start mb-4">
-                      {staff.avatar ? (
-                        <img
-                          src={staff.avatar}
-                          alt={staff.name}
-                          className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform"
+                  {/* Subtle top gradient */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-5">
+                      <div className="relative">
+                        {staff.avatar ? (
+                          <img
+                            src={staff.avatar}
+                            alt={staff.name}
+                            className="w-16 h-16 rounded-2xl object-cover border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">
+                            {getInitials(staff.name)}
+                          </div>
+                        )}
+                        {/* Status dot on avatar */}
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card ${staff.isActive ? "bg-emerald-500" : "bg-gray-400"}`}
+                          title={staff.isActive ? "Active" : "Inactive"}
                         />
-                      ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-lg border-2 border-white shadow-md group-hover:scale-105 transition-transform">
-                          {getInitials(staff.name)}
-                        </div>
-                      )}
-                      <div className="flex gap-1">
+                      </div>
+                      
+                      <div className="flex gap-1 bg-muted/30 rounded-xl p-1 border border-border/50">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                           onClick={() => onEditDoctor(staff.id)}
                         >
                           <Edit className="w-4 h-4" />
@@ -430,7 +442,7 @@ export function DoctorManagement({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground/60"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                             onClick={(e) => openMenu(e, staff.id)}
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -441,55 +453,70 @@ export function DoctorManagement({
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
                         {staff.name}
                       </h3>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge
                           variant={rm.variant}
-                          className="text-[9px] font-black uppercase px-1.5 h-4"
+                          className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
                         >
-                          {rm.label}
+                          {(staff as any).originalRoleName || rm.label}
                         </Badge>
-                        {!staff.isActive && (
-                          <Badge
-                            variant="gray"
-                            className="text-[9px] font-black uppercase px-1.5 h-4"
-                          >
-                            Inactive
-                          </Badge>
-                        )}
+                        <Badge
+                          variant={staff.isActive ? "green" : "gray"}
+                          className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
+                        >
+                          {staff.isActive ? "Active" : "Inactive"}
+                        </Badge>
                       </div>
+                      {staff.specialization && (
+                        <p className="text-xs font-bold text-primary/80 uppercase tracking-wider mt-1">
+                          {staff.specialization}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="mt-4 space-y-2 border-t border-border pt-4">
-                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium truncate">
-                        <Mail className="w-3 h-3 flex-shrink-0 text-blue-400" />{" "}
-                        {staff.email}
+                    <div className="mt-5 space-y-3 border-t border-border/50 pt-5">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium truncate group-hover:text-foreground/80 transition-colors">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-blue-500/20">
+                           <Mail className="w-3.5 h-3.5 text-blue-500" />
+                        </div>
+                        <span className="truncate">{staff.email}</span>
                       </div>
                       {staff.phone && (
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-                          <Phone className="w-3 h-3 flex-shrink-0 text-emerald-400" />{" "}
-                          {staff.phone}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-emerald-500/20">
+                            <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                          </div>
+                          <span>{staff.phone}</span>
+                        </div>
+                      )}
+                      {(staff as any).experience && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-amber-500/20">
+                            <Stethoscope className="w-3.5 h-3.5 text-amber-500" />
+                          </div>
+                          <span>{(staff as any).experience} Years Exp.</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div className="p-2 bg-muted rounded-xl">
-                        <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-wider">
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-muted/50 rounded-xl border border-border/50 group-hover:bg-muted transition-colors">
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
                           Salary Due
                         </p>
-                        <p className="text-xs font-black text-amber-600 mt-0.5">
+                        <p className="text-sm font-black text-amber-600">
                           ₹{(staff as any).salaryPending || "0"}
                         </p>
                       </div>
-                      <div className="p-2 bg-emerald-50/50 rounded-xl">
-                        <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-wider">
+                      <div className="p-3 bg-emerald-50/30 rounded-xl border border-emerald-100/50 group-hover:bg-emerald-50 transition-colors">
+                        <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-wider mb-1">
                           Total Paid
                         </p>
-                        <p className="text-xs font-black text-emerald-600 mt-0.5">
+                        <p className="text-sm font-black text-emerald-600">
                           ₹{(staff as any).salaryPaid || "0"}
                         </p>
                       </div>

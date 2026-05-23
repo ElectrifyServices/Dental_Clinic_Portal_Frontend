@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LabeledField, SearchableSelect } from "@/components/ui";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
+import { useDeleteSpecializationMutation } from "@/hooks/specializations/useDeleteSpecializationMutation";
 
 interface Step4Props {
   formData: any;
@@ -26,11 +27,20 @@ const SPECIALIZATIONS = [
 export function Step4Professional({ formData, onChange, errors = {} }: Step4Props) {
   const { data: apiSpecs, isLoading: isSpecsLoading } = useSpecializationsQuery();
   const createMutation = useCreateSpecializationMutation();
+  const deleteMutation = useDeleteSpecializationMutation();
   const queryClient = useQueryClient();
+  const [deletingName, setDeletingName] = useState<string | null>(null);
 
-  const rawSpecs = Array.isArray(apiSpecs)
-    ? apiSpecs
-    : (apiSpecs && Array.isArray((apiSpecs as any).data) ? (apiSpecs as any).data : null);
+  let rawSpecs: any[] | null = null;
+  if (Array.isArray(apiSpecs)) {
+    rawSpecs = apiSpecs;
+  } else if (apiSpecs && Array.isArray((apiSpecs as any).specializations)) {
+    rawSpecs = (apiSpecs as any).specializations;
+  } else if (apiSpecs && (apiSpecs as any).data && Array.isArray((apiSpecs as any).data.specializations)) {
+    rawSpecs = (apiSpecs as any).data.specializations;
+  } else if (apiSpecs && Array.isArray((apiSpecs as any).data)) {
+    rawSpecs = (apiSpecs as any).data;
+  }
 
   const specsList = rawSpecs
     ? rawSpecs.map((s: any) => (typeof s === "string" ? s : s.name || ""))
@@ -57,6 +67,32 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
       });
     } catch (err) {
       console.error("Failed to create specialization:", err);
+    }
+  };
+
+  const handleDeleteSpecialization = async (valueName: string) => {
+    if (!rawSpecs) return;
+    const spec = rawSpecs.find((s: any) => s.name === valueName || s === valueName);
+    if (!spec || !spec.id) return; // Cannot delete if there's no ID
+
+    try {
+      setDeletingName(valueName);
+      await deleteMutation.mutateAsync(spec.id);
+      
+      await queryClient.invalidateQueries({
+        queryKey: ["specializations"],
+      });
+      
+      // If the deleted specialization is currently selected, clear it
+      if (formData.specialization === valueName) {
+        onChange({
+          target: { name: "specialization", value: "" }
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete specialization:", err);
+    } finally {
+      setDeletingName(null);
     }
   };
 
@@ -98,6 +134,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
                 onCreateOption={handleCreateSpecialization}
                 createLabel="Create specialization"
                 isCreating={createMutation.isPending}
+                onDeleteOption={handleDeleteSpecialization}
+                isDeletingValue={deletingName}
               />
             </LabeledField>
 

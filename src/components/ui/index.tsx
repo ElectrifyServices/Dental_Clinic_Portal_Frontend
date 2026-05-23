@@ -29,6 +29,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./Card";
+export * from "./DropdownMenu";
 
 // ─── PageHeader ──────────────────────────────────────────────────────────────
 interface PageHeaderProps {

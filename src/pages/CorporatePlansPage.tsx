@@ -1,9 +1,10 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Building2, Users } from 'lucide-react';
 import { CorporatePlanManagement } from '../components/CorporatePlans/CorporatePlanManagement';
 import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagement';
 import { useAppData } from '../hooks/useAppData';
 import { useModal } from '../contexts/ModalContext';
+import { useCorporatePlansQuery } from '../hooks/corporate/useCorporatePlansQuery';
 
 const TABS = [
   { key: 'plans', label: 'Corporate Plans', icon: Building2 },
@@ -18,6 +19,9 @@ export const CorporatePlansPage: React.FC = () => {
   } = useAppData();
   const { confirmDelete } = useModal();
   const [tab, setTab] = useState<'plans' | 'employees'>('plans');
+
+  // Fetch corporate plans when on this page
+  useCorporatePlansQuery({ enabled: true });
 
   const plans = corporatePlans;
   const employees = corporateEmployees;
@@ -60,9 +64,7 @@ export const CorporatePlansPage: React.FC = () => {
           employees={employees}
           plans={plans}
           onSave={handleSaveEmployee}
-          onDelete={(id: string) =>
-            confirmDelete('Delete Employee', 'Delete employee?', () => handleDeleteEmployee(id))
-          }
+          onDelete={handleDeleteEmployee}
           onBulkSave={handleBulkSaveEmployees}
           onChangePlan={handleChangeEmployeePlan}
         />

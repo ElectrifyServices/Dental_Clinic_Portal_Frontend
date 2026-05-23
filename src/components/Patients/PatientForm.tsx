@@ -5,6 +5,8 @@ import { Step1BasicInfo } from "./PatientForm/Step1BasicInfo";
 import { Step2MedicalHistory } from "./PatientForm/Step2MedicalHistory";
 import { Step3Consent } from "./PatientForm/Step3Consent";
 import { Step4Review } from "./PatientForm/Step4Review";
+import { PatientData } from "@/types";
+import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import { Button, Modal } from "@/components/ui";
 
 interface PatientFormProps {
@@ -44,6 +46,11 @@ export function PatientForm({
     handleDentalFilesUpload,
   } = usePatientForm(patient, corporateEmployees);
 
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  
+  // Fetch corporate plans when adding/editing patient
+  useCorporatePlansQuery({ enabled: true });
+
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
   const [allergySearch, setAllergySearch] = useState("");
@@ -60,25 +67,22 @@ export function PatientForm({
     if (step !== 4 || loading) return;
     setLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    onSave({
-      ...formData,
-      id: formData.patientId,
-      medicalHistory: formData.medicalHistory
-        .split("\n")
-        .filter((item: string) => item.trim()),
-      pastDentalHistory: formData.pastDentalHistory,
-      allergies: formData.allergies
-        .split("\n")
-        .filter((item: string) => item.trim()),
-      allergyOther: formData.allergyOther,
-      allergyNotes: formData.allergyNotes,
-      parentId: type === "person" ? parentId : undefined,
-      lastUpdated: new Date().toISOString(),
-    });
-    setLoading(false);
+    try {
+      // Pass the raw formData to onSave; the consumer (ModalRegistry → handleSavePatient)
+      // is responsible for mapping fields to the API payload via mapFormDataToCreatePayload.
+      // We preserve the `id` field so callers can distinguish create vs. update.
+      await onSave({
+        ...formData,
+        // Keep id from existing patient for edit mode; undefined for new patients
+        id: patient?.id ?? undefined,
+        parentId: type === "person" ? parentId : undefined,
+      });
+    } catch (err) {
+      console.error("Patient save failed", err);
+      setFormErrors({ submit: "Failed to save patient. Please try again." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStepIndicator = (stepNumber: number) => {
@@ -231,6 +235,15 @@ export function PatientForm({
             <AlertTriangle className="w-5 h-5 text-destructive" />
             <p className="text-sm text-destructive font-medium">
               Please fill all required fields before proceeding.
+            </p>
+          </div>
+        )}
+
+        {formErrors.submit && (
+          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            <p className="text-sm text-destructive font-medium">
+              {formErrors.submit}
             </p>
           </div>
         )}

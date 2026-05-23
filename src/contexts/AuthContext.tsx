@@ -31,6 +31,18 @@ const initialState: AuthState = {
   error: null,
 };
 
+function initAuth(initial: AuthState): AuthState {
+  const savedUser = AuthStorage.getUser();
+  const token = AuthStorage.getAccessToken();
+  if (savedUser && token) {
+    if (typeof savedUser.role === 'object' && savedUser.role !== null) {
+      savedUser.role = (savedUser.role as any).name.toLowerCase().replace('_', '');
+    }
+    return { ...initial, user: savedUser, isAuthenticated: true };
+  }
+  return initial;
+}
+
 const AuthContext = createContext<{
   state: AuthState;
   dispatch: React.Dispatch<AuthAction>;
@@ -61,7 +73,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+  const [state, dispatch] = useReducer(authReducer, initialState, initAuth);
 
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
@@ -130,17 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "LOGOUT" });
     }
   };
-
-  useEffect(() => {
-    const savedUser = AuthStorage.getUser();
-    if (savedUser) {
-      // Add a safety check in case a bad object was saved to storage previously
-      if (typeof savedUser.role === 'object' && savedUser.role !== null) {
-        savedUser.role = (savedUser.role as any).name.toLowerCase().replace('_', '');
-      }
-      dispatch({ type: "LOGIN_SUCCESS", payload: savedUser });
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{ state, dispatch, login, logout }}>

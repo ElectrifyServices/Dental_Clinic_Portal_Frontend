@@ -27,6 +27,11 @@ import {
   staffStep2Fields,
   staffStep3Fields,
 } from "@/lib/schemas/staff.schema";
+import { useCreateStaffMutation } from "../../hooks/staff/useCreateStaffMutation";
+import { useUpdateStaffMutation } from "../../hooks/staff/useUpdateStaffMutation";
+import { useRolesQuery } from "@/hooks/roles/useRolesQuery";
+import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
+import apiClient from "@/services/apiClient";
 
 interface DoctorFormProps {
   onClose: () => void;
@@ -45,6 +50,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   }));
   const [currentStep, setCurrentStep] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema) as any,
@@ -89,6 +96,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => form.setValue("avatar", reader.result as string);
       reader.readAsDataURL(file);
@@ -109,63 +117,176 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     }
     setCurrentStep((s) => s + 1);
   };
+  const { data: apiRoles } = useRolesQuery();
+  const { data: apiSpecs } = useSpecializationsQuery();
+  const { mutateAsync: createStaff, isPending: isCreating } = useCreateStaffMutation();
+  const { mutateAsync: updateStaff, isPending: isUpdating } = useUpdateStaffMutation();
+  const isSaving = isCreating || isUpdating;
 
-  const onSubmit = (data: StaffFormData) => {
-    onSave({
-      ...data,
-      id: doctor?.id || Date.now().toString(),
-      salaryPending: !doctor
-        ? (parseFloat(data.monthlySalary ?? "0") || 0).toLocaleString("en-IN")
-        : data.salaryPending,
-      permissions: (data.role === "admin" || data.role === "super_admin") ? ["all"] : data.permissions,
-      workingHours: doctor?.workingHours || {
-        monday: {
-          isWorking: true,
-          startTime: "09:00",
-          endTime: "18:00",
-          breakStart: "13:00",
-          breakEnd: "14:00",
+  const onSubmit = async (data: StaffFormData) => {
+    try {
+      let currentApiRoles = apiRoles;
+      if (!currentApiRoles) {
+        // Fallback fetch if React Query failed or returned undefined (e.g., due to QuotaExceededError)
+        try {
+          const res = await apiClient.post("/role/list", { all: true });
+          currentApiRoles = res.data?.responseObject ?? res.data;
+        } catch (e) {
+          console.error("Fallback role fetch failed", e);
+        }
+      }
+
+      let rawRoles: any[] | null = null;
+      if (Array.isArray(currentApiRoles)) {
+        rawRoles = currentApiRoles;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).roles)) {
+        rawRoles = (currentApiRoles as any).roles;
+      } else if (currentApiRoles && (currentApiRoles as any).data && Array.isArray((currentApiRoles as any).data.roles)) {
+        rawRoles = (currentApiRoles as any).data.roles;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).data)) {
+        rawRoles = (currentApiRoles as any).data;
+      }
+
+      // Attempt to map by exact match
+      let roleObj = rawRoles?.find((r: any) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
+      
+      // If exact match fails, maybe it's mapping "super_admin" to "SUPER_ADMIN"
+      if (!roleObj && data.role === "super_admin") {
+        roleObj = rawRoles?.find((r: any) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
+      }
+
+      if (!roleObj) {
+        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r:any) => r.name).join(', ') : 'None fetched'}`);
+      }
+
+      const roleId = roleObj.id || roleObj.role_id || roleObj.uuid;
+
+      if (!roleId) {
+        throw new Error(`Role found but ID is missing! Keys available: ${Object.keys(roleObj).join(', ')}`);
+      }
+
+      let rawSpecs: any[] | null = null;
+      if (Array.isArray(apiSpecs)) {
+        rawSpecs = apiSpecs;
+      } else if (apiSpecs && Array.isArray((apiSpecs as any).specializations)) {
+        rawSpecs = (apiSpecs as any).specializations;
+      } else if (apiSpecs && (apiSpecs as any).data && Array.isArray((apiSpecs as any).data.specializations)) {
+        rawSpecs = (apiSpecs as any).data.specializations;
+      } else if (apiSpecs && Array.isArray((apiSpecs as any).data)) {
+        rawSpecs = (apiSpecs as any).data;
+      }
+
+      const specObj = rawSpecs?.find((s: any) => (typeof s === "string" ? s : s.name || "") === data.specialization);
+      const specId = specObj?.id || data.specialization;
+
+      const formDataObj = new FormData();
+      formDataObj.append("name", data.name);
+      formDataObj.append("email", data.email);
+      if (data.password) formDataObj.append("password", data.password);
+      if (data.phone) formDataObj.append("phone", data.phone);
+
+      // Pass the mapped UUID instead of name
+      formDataObj.append("role_id", roleId);
+      formDataObj.append("status", data.isActive ? "ACTIVE" : "INACTIVE");
+
+      const personalProfile = {
+        specialization_id: specId,
+        experience_years: parseInt(data.experience || "0", 10),
+        qualification: data.qualification,
+        license_number: data.licenseNumber,
+        consultation_fee: parseInt(data.consultationFee || "0", 10),
+        profit_sharing: data.profitSharing,
+        status: data.isActive ? "ACTIVE" : "INACTIVE"
+      };
+      formDataObj.append("personal_profile", JSON.stringify(personalProfile));
+
+      const perms = (data.role === "admin" || data.role === "super_admin") ? ["all"] : data.permissions;
+      formDataObj.append("module_permission", JSON.stringify(perms.map(p => p.toUpperCase())));
+
+      if (avatarFile) {
+        formDataObj.append("profile_picture", avatarFile);
+      }
+
+      const docTypeMapping: Record<string, string> = {
+        "Aadhaar / Identity Proof": "aadhar_card",
+        "Aadhaar Card": "aadhar_card",
+        "Educational Degree Documents": "educational_degree",
+        "Educational Certificate": "educational_degree",
+        "Education Certificate": "educational_degree",
+        "Medical Council Registration": "medical_council_registration",
+        "Experience Certificates": "experience_certificates",
+        "Experience Certificate": "experience_certificates",
+        "Previous Employment Proof": "experience_certificates",
+        "Previous Experience Proof": "experience_certificates",
+        "Medical Indemnity Insurance": "medical_indemnity_insurance",
+        "NOC (if applicable)": "noc",
+        "Police Verification": "police_verification",
+        "PAN Card": "pan_card",
+        "Bank Details / Passbook": "bank_details",
+        "Signed Employment Contract": "employment_contract",
+        "Signed NDA": "employment_contract",
+        "Appointment Letter": "employment_contract"
+      };
+
+      data.documents?.forEach((doc: any) => {
+        if (doc.file) {
+          const fieldName = docTypeMapping[doc.type] || doc.type.toLowerCase().replace(/[^a-z0-9]/g, "_");
+          formDataObj.append(fieldName, doc.file);
+        }
+      });
+
+      // API call
+      let response;
+      if (doctor?.id) {
+        response = await updateStaff({ id: doctor.id, formData: formDataObj });
+      } else {
+        response = await createStaff({ formData: formDataObj });
+      }
+
+      // Strip large files/base64 before saving to local state
+      const cleanData = { ...data };
+      if (cleanData.documents) {
+        cleanData.documents = cleanData.documents.map((d: any) => ({
+          type: d.type,
+          name: d.name,
+          size: d.size
+        }));
+      }
+      cleanData.avatar = ""; // don't store base64 in local state
+
+      onSave({
+        ...cleanData,
+        id: response?.id || doctor?.id || Date.now().toString(),
+        salaryPending: !doctor
+          ? (parseFloat(cleanData.monthlySalary ?? "0") || 0).toLocaleString("en-IN")
+          : cleanData.salaryPending,
+        permissions: perms,
+        workingHours: doctor?.workingHours || {
+          monday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
+          tuesday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
+          wednesday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
+          thursday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
+          friday: { isWorking: true, startTime: "09:00", endTime: "18:00", breakStart: "13:00", breakEnd: "14:00" },
+          saturday: { isWorking: false, startTime: "09:00", endTime: "18:00" },
+          sunday: { isWorking: false, startTime: "09:00", endTime: "18:00" },
         },
-        tuesday: {
-          isWorking: true,
-          startTime: "09:00",
-          endTime: "18:00",
-          breakStart: "13:00",
-          breakEnd: "14:00",
-        },
-        wednesday: {
-          isWorking: true,
-          startTime: "09:00",
-          endTime: "18:00",
-          breakStart: "13:00",
-          breakEnd: "14:00",
-        },
-        thursday: {
-          isWorking: true,
-          startTime: "09:00",
-          endTime: "18:00",
-          breakStart: "13:00",
-          breakEnd: "14:00",
-        },
-        friday: {
-          isWorking: true,
-          startTime: "09:00",
-          endTime: "18:00",
-          breakStart: "13:00",
-          breakEnd: "14:00",
-        },
-        saturday: { isWorking: false, startTime: "09:00", endTime: "18:00" },
-        sunday: { isWorking: false, startTime: "09:00", endTime: "18:00" },
-      },
-      timeSlots: doctor?.timeSlots || { duration: 30, bufferTime: 5 },
-    });
+        timeSlots: doctor?.timeSlots || { duration: 30, bufferTime: 5 },
+      });
+    } catch (error: any) {
+      console.error("Error creating staff:", error);
+      alert(`API Error: ${error.message || "Failed to create staff. Please try again."}`);
+    }
   };
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
+    let finalValue = type === "checkbox" ? checked : value;
+    if (name === "profitPercentage") {
+      finalValue = value === "" ? 0 : Number(value);
+    }
     form.setValue(
       name as keyof StaffFormData,
-      type === "checkbox" ? checked : value,
+      finalValue,
       { shouldValidate: true },
     );
   };
@@ -184,7 +305,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       const current = form.getValues("documents");
       form.setValue("documents", [
         ...current.filter((d: any) => d.type !== docType),
-        { type: docType, name: file.name, url: reader.result, size: file.size },
+        { type: docType, name: file.name, url: reader.result, size: file.size, file },
       ]);
     };
     reader.readAsDataURL(file);
@@ -280,10 +401,10 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         );
       case 4:
         return (
-          <Step4Professional 
-            formData={formData} 
-            onChange={handleChange} 
-            errors={form.formState.errors} 
+          <Step4Professional
+            formData={formData}
+            onChange={handleChange}
+            errors={form.formState.errors}
           />
         );
       default:
@@ -312,13 +433,22 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           <div className="flex gap-3">
             <Button
               onClick={
-                currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit)
+                currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
+                    console.error("Form Validation Failed:", errs);
+                    // You can optionally show a toast here
+                  })
               }
+              disabled={isSaving}
               className="gap-2"
             >
               {currentStep < 4 ? (
                 <>
                   <ChevronRight className="w-4 h-4" /> Next Step
+                </>
+              ) : isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
                 </>
               ) : (
                 <>
