@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Modal, Button } from "@/components/ui";
 import { Step1Personal } from "./StaffForm/Step1Personal";
 import { Step2Role } from "./StaffForm/Step2Role";
@@ -77,19 +78,58 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       profitSharing: doctor?.profitSharing ?? false,
       profitPercentage: doctor?.profitPercentage ?? 0,
       licenseNumber: doctor?.licenseNumber ?? "",
-      monthlySalary: doctor?.monthlySalary ?? "",
-      salaryPaid: doctor?.salaryPaid ?? "0",
-      salaryPending: doctor?.salaryPending ?? "0",
+      monthlySalary: doctor?.monthlySalary !== undefined ? String(doctor.monthlySalary) : "",
+      salaryPaid: doctor?.salaryPaid !== undefined ? String(doctor.salaryPaid) : "0",
+      salaryPending: doctor?.salaryPending !== undefined ? String(doctor.salaryPending) : "0",
       education: doctor?.education ?? "",
-      experience: doctor?.experience ?? "",
+      experience: doctor?.experience !== undefined ? String(doctor.experience) : "",
       department: doctor?.department ?? "",
       designation: doctor?.designation ?? "",
       qualification: doctor?.qualification ?? "",
-      consultationFee: doctor?.consultationFee ?? "",
+      consultationFee: doctor?.consultationFee !== undefined ? String(doctor.consultationFee) : "",
       isActive: doctor?.isActive !== undefined ? doctor.isActive : true,
       avatar: doctor?.avatar ?? doctor?.image ?? "",
     },
   });
+
+  React.useEffect(() => {
+    if (doctor) {
+      form.reset({
+        name: doctor.name ?? "",
+        email: doctor.email ?? "",
+        phone: doctor.phone ?? "",
+        role: doctor.role ?? "doctor",
+        specialization: doctor.specialization ?? "",
+        password: "",
+        confirmPassword: "",
+        permissions: doctor.permissions ?? [
+          "dashboard",
+          "appointments",
+          "patients",
+          "consultation",
+          "treatments",
+          "medical_records",
+          "consent_forms",
+        ],
+        uniqueId: doctor.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
+        documents: doctor.documents ?? [],
+        profitSharing: doctor.profitSharing ?? false,
+        profitPercentage: doctor.profitPercentage ?? 0,
+        licenseNumber: doctor.licenseNumber ?? "",
+        monthlySalary: doctor.monthlySalary !== undefined ? String(doctor.monthlySalary) : "",
+        salaryPaid: doctor.salaryPaid !== undefined ? String(doctor.salaryPaid) : "0",
+        salaryPending: doctor.salaryPending !== undefined ? String(doctor.salaryPending) : "0",
+        education: doctor.education ?? "",
+        experience: doctor.experience !== undefined ? String(doctor.experience) : "",
+        department: doctor.department ?? "",
+        designation: doctor.designation ?? "",
+        qualification: doctor.qualification ?? "",
+        consultationFee: doctor.consultationFee !== undefined ? String(doctor.consultationFee) : "",
+        isActive: doctor.isActive !== undefined ? doctor.isActive : true,
+        avatar: doctor.avatar ?? doctor.image ?? "",
+      });
+    }
+  }, [doctor, form]);
 
   const formData = form.watch();
 
@@ -121,6 +161,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   const { data: apiSpecs } = useSpecializationsQuery();
   const { mutateAsync: createStaff, isPending: isCreating } = useCreateStaffMutation();
   const { mutateAsync: updateStaff, isPending: isUpdating } = useUpdateStaffMutation();
+  const queryClient = useQueryClient();
   const isSaving = isCreating || isUpdating;
 
   const onSubmit = async (data: StaffFormData) => {
@@ -149,14 +190,14 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
       // Attempt to map by exact match
       let roleObj = rawRoles?.find((r: any) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
-      
+
       // If exact match fails, maybe it's mapping "super_admin" to "SUPER_ADMIN"
       if (!roleObj && data.role === "super_admin") {
         roleObj = rawRoles?.find((r: any) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
       }
 
       if (!roleObj) {
-        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r:any) => r.name).join(', ') : 'None fetched'}`);
+        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r: any) => r.name).join(', ') : 'None fetched'}`);
       }
 
       const roleId = roleObj.id || roleObj.role_id || roleObj.uuid;
@@ -196,6 +237,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         license_number: data.licenseNumber,
         consultation_fee: parseInt(data.consultationFee || "0", 10),
         profit_sharing: data.profitSharing,
+        profit_percentage: data.profitPercentage || 0,
+        department: data.department || "",
+        designation: data.designation || "",
+        education: data.education || "",
+        monthly_salary: data.monthlySalary ? parseInt(data.monthlySalary, 10) : 0,
         status: data.isActive ? "ACTIVE" : "INACTIVE"
       };
       formDataObj.append("personal_profile", JSON.stringify(personalProfile));
@@ -230,8 +276,14 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
       data.documents?.forEach((doc: any) => {
         if (doc.file) {
-          const fieldName = docTypeMapping[doc.type] || doc.type.toLowerCase().replace(/[^a-z0-9]/g, "_");
-          formDataObj.append(fieldName, doc.file);
+          const fieldName = docTypeMapping[doc.type];
+          // Only append if the backend explicitly supports this field name.
+          // Otherwise, multer will throw an "Unexpected field" error.
+          if (fieldName) {
+            formDataObj.append(fieldName, doc.file);
+          } else {
+            console.warn(`Skipping upload for ${doc.type} because backend mapping is missing.`);
+          }
         }
       });
 
@@ -242,6 +294,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       } else {
         response = await createStaff({ formData: formDataObj });
       }
+
+      // Explicitly invalidate staff list so UI refreshes immediately
+      await queryClient.invalidateQueries({ queryKey: ["staff"] });
 
       // Strip large files/base64 before saving to local state
       const cleanData = { ...data };
@@ -274,7 +329,37 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       });
     } catch (error: any) {
       console.error("Error creating staff:", error);
-      alert(`API Error: ${error.message || "Failed to create staff. Please try again."}`);
+
+      let errMsg = "Failed to save staff. Please check the details.   Staff already exists";
+
+      const resData = error.response?.data;
+      if (resData) {
+        if (typeof resData === 'string') {
+          errMsg = resData;
+        } else if (resData.status?.statusDesc) {
+          errMsg = resData.status.statusDesc;
+        } else if (resData.message) {
+          errMsg = resData.message;
+        } else if (resData.error && typeof resData.error === 'string') {
+          errMsg = resData.error;
+        } else if (resData.errors && Array.isArray(resData.errors)) {
+          errMsg = resData.errors.join(", ");
+        } else if (resData.responseObject?.message) {
+          errMsg = resData.responseObject.message;
+        } else {
+          // If there's some other JSON structure but no clear message, stringify it or keep default
+          const str = JSON.stringify(resData);
+          if (str.length < 100) errMsg = str;
+        }
+      } else if (error.status?.statusDesc) {
+        errMsg = error.status.statusDesc;
+      } else if (error.message && !error.message.includes('status code')) {
+        errMsg = error.message;
+      } else if (typeof error === 'string') {
+        errMsg = error;
+      }
+
+      alert(errMsg);
     }
   };
 
@@ -304,18 +389,18 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     reader.onloadend = () => {
       const current = form.getValues("documents");
       form.setValue("documents", [
-        ...current.filter((d: any) => d.type !== docType),
+        ...current,
         { type: docType, name: file.name, url: reader.result, size: file.size, file },
       ]);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDocumentRemove = (docType: string) => {
+  const handleDocumentRemove = (fileObj: any) => {
     const current = form.getValues("documents");
     form.setValue(
       "documents",
-      current.filter((d: any) => d.type !== docType),
+      current.filter((d: any) => d !== fileObj && d.url !== fileObj.url),
     );
   };
 
@@ -434,9 +519,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             <Button
               onClick={
                 currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
-                    console.error("Form Validation Failed:", errs);
-                    // You can optionally show a toast here
-                  })
+                  console.error("Form Validation Failed:", errs);
+                  // You can optionally show a toast here
+                })
               }
               disabled={isSaving}
               className="gap-2"

@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 type OptionType = string | { label: string; value: string };
 
 interface SearchableSelectProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string | string[];
+  onChange: (value: any) => void;
   options: OptionType[];
   placeholder?: string;
   searchPlaceholder?: string;
@@ -18,6 +18,7 @@ interface SearchableSelectProps {
   isCreating?: boolean;
   onDeleteOption?: (value: string) => Promise<void> | void;
   isDeletingValue?: string | null;
+  isMulti?: boolean;
 }
 
 export function SearchableSelect({
@@ -33,6 +34,7 @@ export function SearchableSelect({
   isCreating = false,
   onDeleteOption,
   isDeletingValue = null,
+  isMulti = false,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -60,8 +62,16 @@ export function SearchableSelect({
   }, [options, searchQuery]);
 
   const handleSelect = (val: string) => {
-    onChange(val);
-    setIsOpen(false);
+    if (isMulti) {
+      const currentValues = Array.isArray(value) ? value : [];
+      const newValues = currentValues.includes(val)
+        ? currentValues.filter((v) => v !== val)
+        : [...currentValues, val];
+      onChange(newValues);
+    } else {
+      onChange(val);
+      setIsOpen(false);
+    }
   };
 
   const handleCreate = async () => {
@@ -85,7 +95,9 @@ export function SearchableSelect({
           <span className="truncate">
             {isLoading
               ? "Loading..."
-              : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : value) || placeholder}
+              : isMulti
+                ? (Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder)
+                : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : value) || placeholder}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </button>
@@ -95,6 +107,8 @@ export function SearchableSelect({
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
+            name="search-query"
+            autoComplete="off"
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -111,12 +125,18 @@ export function SearchableSelect({
           )}
         </div>
 
-        <div className="max-h-60 overflow-y-auto space-y-0.5">
+        <div 
+          className="max-h-60 overflow-y-auto space-y-0.5"
+          onWheelCapture={(e) => e.stopPropagation()}
+          onTouchMoveCapture={(e) => e.stopPropagation()}
+        >
           {filteredOptions.length > 0 ? (
             filteredOptions.map((opt, i) => {
               const optValue = getOptionValue(opt);
               const optLabel = getOptionLabel(opt);
-              const isSelected = value === optValue;
+              const isSelected = isMulti 
+                ? Array.isArray(value) && value.includes(optValue)
+                : value === optValue;
               return (
                 <div
                   key={optValue || i}
