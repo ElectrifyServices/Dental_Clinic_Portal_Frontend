@@ -34,12 +34,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   handleChange,
   matchedCorporateEmp,
   corporatePlans,
-  medicalSearch,
-  setMedicalSearch,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
-  allergySearch,
-  setAllergySearch,
   selectedAllergies,
   setSelectedAllergies,
   handleDentalFilesUpload,
@@ -54,80 +50,6 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   const { data: allergies = [] } = useAllergiesQuery();
   const createAllergy = useCreateAllergyMutation();
   const deleteAllergy = useDeleteAllergyMutation();
-
-  const filteredMedical = medicalHistories.filter((item: any) => 
-    item.name?.toLowerCase().includes(medicalSearch.toLowerCase())
-  );
-  
-  const exactMedicalMatch = medicalHistories.some((item: any) => 
-    item.name?.toLowerCase() === medicalSearch.toLowerCase()
-  );
-
-  const filteredAllergies = allergies.filter((item: any) => 
-    item.allergy_name?.toLowerCase().includes(allergySearch.toLowerCase())
-  );
-
-  const exactAllergyMatch = allergies.some((item: any) => 
-    item.allergy_name?.toLowerCase() === allergySearch.toLowerCase()
-  );
-
-  const handleCreateMedical = async () => {
-    if (!medicalSearch.trim() || exactMedicalMatch) return;
-    try {
-      const res = await createMedicalHistory.mutateAsync({ name: medicalSearch, is_custom: true });
-      const newName = res?.data?.name || medicalSearch;
-      if (!selectedMedicalHistory.includes(newName)) {
-        const updated = [...selectedMedicalHistory, newName];
-        setSelectedMedicalHistory(updated);
-        setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-      }
-      setMedicalSearch("");
-    } catch (error) {
-      console.error("Failed to create medical history", error);
-    }
-  };
-
-  const handleCreateAllergy = async () => {
-    if (!allergySearch.trim() || exactAllergyMatch) return;
-    try {
-      const res = await createAllergy.mutateAsync({ allergy_name: allergySearch, is_custom: true });
-      const newName = res?.data?.allergy_name || allergySearch;
-      if (!selectedAllergies.includes(newName)) {
-        const updated = [...selectedAllergies, newName];
-        setSelectedAllergies(updated);
-        setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-      }
-      setAllergySearch("");
-    } catch (error) {
-      console.error("Failed to create allergy", error);
-    }
-  };
-
-  const handleDeleteMedical = async (id: string, name: string) => {
-    try {
-      await deleteMedicalHistory.mutateAsync(id);
-      if (selectedMedicalHistory.includes(name)) {
-        const updated = selectedMedicalHistory.filter(i => i !== name);
-        setSelectedMedicalHistory(updated);
-        setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-      }
-    } catch (error) {
-      console.error("Failed to delete medical history", error);
-    }
-  };
-
-  const handleDeleteAllergy = async (id: string, name: string) => {
-    try {
-      await deleteAllergy.mutateAsync(id);
-      if (selectedAllergies.includes(name)) {
-        const updated = selectedAllergies.filter(i => i !== name);
-        setSelectedAllergies(updated);
-        setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-      }
-    } catch (error) {
-      console.error("Failed to delete allergy", error);
-    }
-  };
 
   return (
     <div className="space-y-4">

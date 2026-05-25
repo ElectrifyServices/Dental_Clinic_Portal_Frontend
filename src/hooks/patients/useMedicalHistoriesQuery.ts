@@ -1,24 +1,26 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import apiClient from "@/services/apiClient";
-import { parseApiResponse } from "@/services/parseApiResponse";
+import { useQueryClient } from "@tanstack/react-query";
+import { useApiQuery } from "../useApiQuery";
+import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Medical Histories
 export const useMedicalHistoriesQuery = () => {
-  return useQuery({
+  return useApiQuery<any[]>({
     queryKey: ["medical-histories"],
-    queryFn: async () => {
-      const res = await apiClient.get("/patientMedical/medical-histories");
-      const parsed = parseApiResponse(res.data);
-      if (Array.isArray(parsed.data)) {
-        return parsed.data;
-      }
-      if (parsed.data && Array.isArray((parsed.data as any).all)) {
-        return (parsed.data as any).all;
-      }
-      if (parsed.data && (parsed.data as any).data && Array.isArray((parsed.data as any).data.all)) {
-        return (parsed.data as any).data.all;
-      }
-      return [];
+    endpoint: "/patientMedical/medical-histories",
+    method: "get",
+    options: {
+      select: (data: any) => {
+        if (Array.isArray(data)) {
+          return data;
+        }
+        if (data && Array.isArray(data.all)) {
+          return data.all;
+        }
+        if (data && data.data && Array.isArray(data.data.all)) {
+          return data.data.all;
+        }
+        return [];
+      },
     },
   });
 };
@@ -27,13 +29,13 @@ export const useMedicalHistoriesQuery = () => {
 export const useCreateMedicalHistoryMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: { name: string; is_custom: boolean }) => {
-      const res = await apiClient.post("/patientMedical/medical-histories/create", data);
-      return parseApiResponse(res.data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["medical-histories"] });
+  return useApiMutation<any, { name: string; is_custom: boolean }>({
+    endpoint: "/patientMedical/medical-histories/create",
+    method: "post",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["medical-histories"] });
+      },
     },
   });
 };
@@ -42,13 +44,13 @@ export const useCreateMedicalHistoryMutation = () => {
 export const useDeleteMedicalHistoryMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await apiClient.delete(`/patientMedical/medical-histories/${id}`);
-      return parseApiResponse(res.data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["medical-histories"] });
+  return useApiMutation<any, string>({
+    getEndpoint: (id: string) => `/patientMedical/medical-histories/${id}`,
+    method: "delete",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["medical-histories"] });
+      },
     },
   });
 };
