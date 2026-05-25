@@ -1,10 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
-import { medicalConditions, commonAllergies } from './utils';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
-import { AlertTriangle, Heart, History, ShieldCheck, Upload, User, X } from 'lucide-react';
+import { SearchableSelect } from '@/components/ui';
+import { AlertTriangle, Heart, History, ShieldCheck, Upload, User, X, Trash2, Plus } from 'lucide-react';
+import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 interface Step2Props {
   formData: any;
@@ -31,18 +32,29 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   handleChange,
   matchedCorporateEmp,
   corporatePlans,
-  medicalSearch,
-  setMedicalSearch,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
-  allergySearch,
-  setAllergySearch,
   selectedAllergies,
   setSelectedAllergies,
   handleDentalFilesUpload,
   showOtherTreatment,
   setShowOtherTreatment
 }) => {
+  const {
+    medicalHistories,
+    allergies,
+    handleCreateMedicalHistory,
+    handleDeleteMedicalHistory,
+    handleCreateAllergy,
+    handleDeleteAllergy,
+  } = useStep2MedicalHistory({
+    selectedMedicalHistory,
+    setSelectedMedicalHistory,
+    selectedAllergies,
+    setSelectedAllergies,
+    setFormData,
+  });
+
   return (
     <div className="space-y-4">
       <div className="text-center mb-3">
@@ -121,41 +133,39 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             Medical History
           </label>
           <div className="space-y-3">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search condition..."
-                value={medicalSearch}
-                onChange={(e) => setMedicalSearch(e.target.value)}
-                className="pl-9"
-              />
-              <Heart className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-            </div>
-            <div className="max-h-48 overflow-y-auto border border-input rounded-md bg-secondary/5">
-              {medicalConditions
-                .filter(item => item.toLowerCase().includes(medicalSearch.toLowerCase()))
-                .map((condition) => (
-                  <label key={condition} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-card transition-colors border-b border-border last:border-0">
-                    <input
-                      type="checkbox"
-                      checked={selectedMedicalHistory.includes(condition)}
-                      onChange={(e) => {
-                        let updated = e.target.checked
-                          ? [...selectedMedicalHistory, condition]
-                          : selectedMedicalHistory.filter(i => i !== condition);
+            <SearchableSelect
+              isMulti
+              value={selectedMedicalHistory}
+              onChange={(values: string[]) => {
+                setSelectedMedicalHistory(values);
+                setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
+              }}
+              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => ({ label: h.name, value: h.name }))}
+              placeholder="Select medical conditions..."
+              searchPlaceholder="Search conditions..."
+              onCreateOption={handleCreateMedicalHistory}
+              createLabel="Create condition"
+              onDeleteOption={handleDeleteMedicalHistory}
+            />
+            {selectedMedicalHistory.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedMedicalHistory.map((item) => (
+                  <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
+                    <span className="truncate max-w-[200px]">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = selectedMedicalHistory.filter((i) => i !== item);
                         setSelectedMedicalHistory(updated);
                         setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
                       }}
-                      className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-muted-foreground">{condition}</span>
-                  </label>
+                      className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
                 ))}
-            </div>
-            {selectedMedicalHistory.length > 0 && (
-              <p className="text-[10px] font-bold text-primary px-1 uppercase tracking-wider">
-                {selectedMedicalHistory.length} Selected
-              </p>
+              </div>
             )}
           </div>
         </div>
@@ -166,41 +176,42 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             Allergies
           </label>
           <div className="space-y-3">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search allergy..."
-                value={allergySearch}
-                onChange={(e) => setAllergySearch(e.target.value)}
-                className="pl-9"
-              />
-              <AlertTriangle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-            </div>
-            <div className="max-h-48 overflow-y-auto border border-input rounded-md bg-secondary/5">
-              {commonAllergies
-                .filter(item => item.toLowerCase().includes(allergySearch.toLowerCase()))
-                .map((allergy) => (
-                  <label key={allergy} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-card transition-colors border-b border-border last:border-0">
-                    <input
-                      type="checkbox"
-                      checked={selectedAllergies.includes(allergy)}
-                      onChange={(e) => {
-                        let updated = e.target.checked
-                          ? [...selectedAllergies, allergy]
-                          : selectedAllergies.filter(i => i !== allergy);
+            <SearchableSelect
+              isMulti
+              value={selectedAllergies}
+              onChange={(values: string[]) => {
+                setSelectedAllergies(values);
+                setFormData((prev: any) => ({ ...prev, allergies: values.join('\n') }));
+              }}
+              options={allergies.filter((a: any) => a && (a.allergy_name || a.name)).map((a: any) => {
+                const name = a.allergy_name || a.name;
+                return { label: name, value: name };
+              })}
+              placeholder="Select allergies..."
+              searchPlaceholder="Search allergies..."
+              onCreateOption={handleCreateAllergy}
+              createLabel="Create allergy"
+              onDeleteOption={handleDeleteAllergy}
+            />
+            {selectedAllergies.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedAllergies.map((item) => (
+                  <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
+                    <span className="truncate max-w-[200px]">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = selectedAllergies.filter((i) => i !== item);
                         setSelectedAllergies(updated);
                         setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
                       }}
-                      className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-muted-foreground">{allergy}</span>
-                  </label>
+                      className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
                 ))}
-            </div>
-            {selectedAllergies.length > 0 && (
-              <p className="text-[10px] font-bold text-destructive px-1 uppercase tracking-wider">
-                {selectedAllergies.length} Selected
-              </p>
+              </div>
             )}
           </div>
         </div>

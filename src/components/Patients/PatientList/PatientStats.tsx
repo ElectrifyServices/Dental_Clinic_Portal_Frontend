@@ -12,12 +12,26 @@ interface PatientStatsProps {
 }
 
 import { MetricCard } from '@/components/ui';
+import { usePatientTotalQuery } from '@/hooks/patients/usePatientTotalQuery';
+import { usePatientActiveQuery } from '@/hooks/patients/usePatientActiveQuery';
+import { usePatientNewQuery } from '@/hooks/patients/usePatientNewQuery';
+import { usePatientOutstandingQuery } from '@/hooks/patients/usePatientOutstandingQuery';
 
 export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
-  const totalPatients = patients.length;
-  const activePatients = patients.filter(p => p.status === 'active').length;
-  const newPatients = patients.filter(p => p.status === 'new').length;
-  const totalOutstanding = patients.reduce((sum, p) => sum + (p.outstandingBalance || 0), 0);
+  const { data: totalData } = usePatientTotalQuery();
+  const { data: activeData } = usePatientActiveQuery();
+  const { data: newData } = usePatientNewQuery();
+  const { data: outstandingData } = usePatientOutstandingQuery();
+
+  const parseData = (d: any) => {
+    if (!d) return undefined;
+    return d.count ?? d.total ?? d.amount ?? d.data?.count ?? d.data?.total ?? d.data?.amount;
+  };
+
+  const totalPatients = parseData(totalData) ?? patients.length;
+  const activePatients = parseData(activeData) ?? patients.filter(p => p.status === 'active').length;
+  const newPatients = parseData(newData) ?? patients.filter(p => p.status === 'new').length;
+  const totalOutstanding = parseData(outstandingData) ?? patients.reduce((sum, p) => sum + (p.outstandingBalance || 0), 0);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
