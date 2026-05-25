@@ -3,6 +3,7 @@ import { useLocalStorage } from './useLocalStorage';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
 import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutation';
+import { FILE_BASE_URL } from '../services/apiClient';
 
 export function useStaffData() {
   const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery();
@@ -47,7 +48,6 @@ export function useStaffData() {
       // Construct documents array from API fields
       const documents: any[] = [];
       if (Array.isArray(s.files)) {
-        const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace(/\/api$/, "");
         
         s.files.forEach((file: any) => {
           let uiType = file.category || "Unknown";
@@ -70,7 +70,7 @@ export function useStaffData() {
           documents.push({
             type: uiType,
             name: file.file_name || `${uiType} Document`,
-            url: file.file_url ? (file.file_url.startsWith('http') ? file.file_url : `${baseUrl}${file.file_url}`) : ""
+            url: file.file_url ? (file.file_url.startsWith('http') ? file.file_url : `${FILE_BASE_URL}${file.file_url}`) : ""
           });
         });
       }
