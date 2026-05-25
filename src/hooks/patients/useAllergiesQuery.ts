@@ -4,24 +4,10 @@ import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Allergies
 export const useAllergiesQuery = () => {
-  return useApiQuery<any[]>({
+  return useApiQuery<any>({
     queryKey: ["allergies"],
     endpoint: "/patientMedical/allergies",
     method: "get",
-    options: {
-      select: (data: any) => {
-        if (Array.isArray(data)) {
-          return data;
-        }
-        if (data && Array.isArray(data.all)) {
-          return data.all;
-        }
-        if (data && data.data && Array.isArray(data.data.all)) {
-          return data.data.all;
-        }
-        return [];
-      },
-    },
   });
 };
 

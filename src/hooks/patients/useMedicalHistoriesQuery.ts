@@ -4,24 +4,10 @@ import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Medical Histories
 export const useMedicalHistoriesQuery = () => {
-  return useApiQuery<any[]>({
+  return useApiQuery<any>({
     queryKey: ["medical-histories"],
     endpoint: "/patientMedical/medical-histories",
     method: "get",
-    options: {
-      select: (data: any) => {
-        if (Array.isArray(data)) {
-          return data;
-        }
-        if (data && Array.isArray(data.all)) {
-          return data.all;
-        }
-        if (data && data.data && Array.isArray(data.data.all)) {
-          return data.data.all;
-        }
-        return [];
-      },
-    },
   });
 };
 

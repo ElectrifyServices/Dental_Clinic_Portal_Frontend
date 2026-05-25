@@ -5,9 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect } from '@/components/ui';
 import { AlertTriangle, Heart, History, ShieldCheck, Upload, User, X, Trash2, Plus } from 'lucide-react';
-import { useMedicalHistoriesQuery, useCreateMedicalHistoryMutation, useDeleteMedicalHistoryMutation } from '@/hooks/patients/useMedicalHistoriesQuery';
-import { useAllergiesQuery, useCreateAllergyMutation, useDeleteAllergyMutation } from '@/hooks/patients/useAllergiesQuery';
-import { useModal } from '@/contexts/ModalContext';
+import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 interface Step2Props {
   formData: any;
@@ -42,14 +40,20 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   showOtherTreatment,
   setShowOtherTreatment
 }) => {
-  const { data: medicalHistories = [] } = useMedicalHistoriesQuery();
-  const createMedicalHistory = useCreateMedicalHistoryMutation();
-  const deleteMedicalHistory = useDeleteMedicalHistoryMutation();
-  const { confirmDelete } = useModal();
-
-  const { data: allergies = [] } = useAllergiesQuery();
-  const createAllergy = useCreateAllergyMutation();
-  const deleteAllergy = useDeleteAllergyMutation();
+  const {
+    medicalHistories,
+    allergies,
+    handleCreateMedicalHistory,
+    handleDeleteMedicalHistory,
+    handleCreateAllergy,
+    handleDeleteAllergy,
+  } = useStep2MedicalHistory({
+    selectedMedicalHistory,
+    setSelectedMedicalHistory,
+    selectedAllergies,
+    setSelectedAllergies,
+    setFormData,
+  });
 
   return (
     <div className="space-y-4">
@@ -136,44 +140,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 setSelectedMedicalHistory(values);
                 setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
               }}
-              options={medicalHistories.map((h: any) => ({ label: h.name, value: h.name }))}
+              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => ({ label: h.name, value: h.name }))}
               placeholder="Select medical conditions..."
               searchPlaceholder="Search conditions..."
-              onCreateOption={async (val) => {
-                try {
-                  const res = await createMedicalHistory.mutateAsync({ name: val, is_custom: true });
-                  const newName = res?.data?.name || val;
-                  if (!selectedMedicalHistory.includes(newName)) {
-                    const updated = [...selectedMedicalHistory, newName];
-                    setSelectedMedicalHistory(updated);
-                    setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-                  }
-                } catch (error) {
-                  console.error("Failed to create medical history", error);
-                }
-              }}
+              onCreateOption={handleCreateMedicalHistory}
               createLabel="Create condition"
-              onDeleteOption={async (val) => {
-                const item = medicalHistories.find((h: any) => h.name === val);
-                if (item) {
-                  confirmDelete(
-                    "Delete Condition",
-                    `Are you sure you want to permanently delete "${val}"?`,
-                    async () => {
-                      try {
-                        await deleteMedicalHistory.mutateAsync(item.id);
-                        if (selectedMedicalHistory.includes(val)) {
-                          const updated = selectedMedicalHistory.filter((i) => i !== val);
-                          setSelectedMedicalHistory(updated);
-                          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-                        }
-                      } catch (error) {
-                        console.error("Failed to delete medical history", error);
-                      }
-                    }
-                  );
-                }
-              }}
+              onDeleteOption={handleDeleteMedicalHistory}
             />
             {selectedMedicalHistory.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -211,44 +183,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 setSelectedAllergies(values);
                 setFormData((prev: any) => ({ ...prev, allergies: values.join('\n') }));
               }}
-              options={allergies.map((a: any) => ({ label: a.allergy_name, value: a.allergy_name }))}
+              options={allergies.filter((a: any) => a && (a.allergy_name || a.name)).map((a: any) => {
+                const name = a.allergy_name || a.name;
+                return { label: name, value: name };
+              })}
               placeholder="Select allergies..."
               searchPlaceholder="Search allergies..."
-              onCreateOption={async (val) => {
-                try {
-                  const res = await createAllergy.mutateAsync({ allergy_name: val, is_custom: true });
-                  const newName = res?.data?.allergy_name || val;
-                  if (!selectedAllergies.includes(newName)) {
-                    const updated = [...selectedAllergies, newName];
-                    setSelectedAllergies(updated);
-                    setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-                  }
-                } catch (error) {
-                  console.error("Failed to create allergy", error);
-                }
-              }}
+              onCreateOption={handleCreateAllergy}
               createLabel="Create allergy"
-              onDeleteOption={async (val) => {
-                const item = allergies.find((a: any) => a.allergy_name === val);
-                if (item) {
-                  confirmDelete(
-                    "Delete Allergy",
-                    `Are you sure you want to permanently delete "${val}"?`,
-                    async () => {
-                      try {
-                        await deleteAllergy.mutateAsync(item.id);
-                        if (selectedAllergies.includes(val)) {
-                          const updated = selectedAllergies.filter((i) => i !== val);
-                          setSelectedAllergies(updated);
-                          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-                        }
-                      } catch (error) {
-                        console.error("Failed to delete allergy", error);
-                      }
-                    }
-                  );
-                }
-              }}
+              onDeleteOption={handleDeleteAllergy}
             />
             {selectedAllergies.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">

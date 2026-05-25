@@ -46,8 +46,8 @@ export function SearchableSelect({
     }
   }, [isOpen]);
 
-  const getOptionLabel = (opt: OptionType) => typeof opt === 'string' ? opt : opt.label;
-  const getOptionValue = (opt: OptionType) => typeof opt === 'string' ? opt : opt.value;
+  const getOptionLabel = (opt: OptionType) => typeof opt === 'string' ? opt : (opt.label || "");
+  const getOptionValue = (opt: OptionType) => typeof opt === 'string' ? opt : (opt.value || "");
 
   const filteredOptions = React.useMemo(() => {
     return options.filter((option) =>
