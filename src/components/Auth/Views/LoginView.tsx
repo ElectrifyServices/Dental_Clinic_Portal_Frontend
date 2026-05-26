@@ -13,67 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/Form";
 
-// const DEMO = [
-//   {
-//     email: "Software.Development@electrifyservices.com",
-//     password: "Admin@123",
-//     role: "Super Admin",
-//     color: "violet",
-//     desc: "Corporate plans & full access",
-//     initial: "SA",
-//   },
-//   {
-//     email: "clinic@gmail.com",
-//     password: "Clinic@123",
-//     role: "Staff",
-//     color: "blue",
-//     desc: "Full clinic management",
-//     initial: "ST",
-//   },
-//   {
-//     email: "vikash@gmail.com",
-//     password: "Admin@123",
-//     role: "Doctor",
-//     color: "emerald",
-//     desc: "Consultations & treatments",
-//     initial: "DR",
-//   },
-//   {
-//     email: "raj@gmail.com",
-//     password: "Admin@123",
-//     role: "Receptionist",
-//     color: "amber",
-//     desc: "Appointments & registration",
-//     initial: "RC",
-//   },
-// ];
-
-// const ROLE_STYLES: Record<
-//   string,
-//   { badge: string; avatar: string; dot: string }
-// > = {
-//   violet: {
-//     badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
-//     avatar: "bg-violet-100 text-violet-700",
-//     dot: "bg-violet-400",
-//   },
-//   blue: {
-//     badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-//     avatar: "bg-blue-100 text-blue-700",
-//     dot: "bg-blue-400",
-//   },
-//   emerald: {
-//     badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-//     avatar: "bg-emerald-100 text-emerald-700",
-//     dot: "bg-emerald-400",
-//   },
-//   amber: {
-//     badge: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-//     avatar: "bg-amber-100 text-amber-700",
-//     dot: "bg-amber-400",
-//   },
-// };
-
 interface LoginViewProps {
   setView: (view: 'login' | 'forgot' | 'forgot-sent') => void;
 }
@@ -91,12 +30,6 @@ export function LoginView({ setView }: LoginViewProps) {
   const onSubmit = async (data: LoginFormData) => {
     await login(data.email, data.password);
   };
-
-  // const handleDemoSelect = (d: (typeof DEMO)[0]) => {
-  //   setActiveDemo(d.email);
-  //   form.setValue("email", d.email);
-  //   form.setValue("password", d.password);
-  // };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -214,59 +147,6 @@ export function LoginView({ setView }: LoginViewProps) {
         </form>
       </Form>
 
-      {/* Demo accounts */}
-      {/* <div className="mt-9">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-gray-100" />
-          <span className="text-gray-400 text-[11px] font-semibold uppercase tracking-widest">
-            Try a demo account
-          </span>
-          <div className="flex-1 h-px bg-gray-100" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {DEMO.map((d) => {
-            const styles = ROLE_STYLES[d.color];
-            const isActive = activeDemo === d.email;
-            return (
-              <button
-                key={d.email}
-                type="button"
-                onClick={() => handleDemoSelect(d)}
-                className={`
-                  group text-left p-3.5 rounded-xl border transition-all duration-150
-                  ${isActive
-                    ? "bg-blue-50 border-blue-200 shadow-sm"
-                    : "bg-gray-50 border-gray-100 hover:bg-white hover:border-gray-200 hover:shadow-sm"
-                  }
-                `}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`w-7 h-7 rounded-lg text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${styles.avatar}`}
-                  >
-                    {d.initial}
-                  </div>
-                  <ChevronRight
-                    className={`w-3.5 h-3.5 transition-all ${isActive
-                        ? "text-blue-500 translate-x-0.5"
-                        : "text-gray-300 group-hover:text-gray-400 group-hover:translate-x-0.5"
-                      }`}
-                  />
-                </div>
-                <p
-                  className={`text-[11px] font-bold mb-0.5 ${styles.badge.split(" ")[1]}`}
-                >
-                  {d.role}
-                </p>
-                <p className="text-gray-500 text-[11px] leading-snug">
-                  {d.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div> */}
     </div>
   );
 }

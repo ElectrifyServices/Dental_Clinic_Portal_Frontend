@@ -101,8 +101,8 @@ export function LoginForm() {
           </div>
 
           {view === 'login' && <LoginView setView={setView} />}
-          {/* {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
-          {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />} */}
+          {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
+          {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
         </div>
       </div>
     </div>

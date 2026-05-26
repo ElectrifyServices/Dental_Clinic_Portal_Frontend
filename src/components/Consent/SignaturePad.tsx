@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { RotateCcw, Upload, MousePointer2 } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 interface SignaturePadProps {
   onSave: (signatureDataUrl: string) => void;
@@ -121,26 +122,30 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
   return (
     <div className="space-y-3">
       <div className="flex bg-muted p-1 rounded-xl w-fit">
-        <button
+        <Button
           type="button"
           onClick={() => setMode('draw')}
+          variant={mode === 'draw' ? 'default' : 'ghost'}
+          size="sm"
           className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'draw' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'
+            mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           <MousePointer2 className="w-3.5 h-3.5" />
           Draw
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setMode('upload')}
+          variant={mode === 'upload' ? 'default' : 'ghost'}
+          size="sm"
           className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'upload' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground'
+            mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
           }`}
         >
           <Upload className="w-3.5 h-3.5" />
           Upload
-        </button>
+        </Button>
       </div>
 
       <div className="relative w-full">
@@ -162,14 +167,14 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
         
         {mode === 'upload' && (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all ${hasSigned ? 'bg-white/70 backdrop-blur-[1px] opacity-0 hover:opacity-100' : ''}`}>
-            <button
+            <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-primary transition-all flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
               {hasSigned ? "Change Signature" : "Select Signature File"}
-            </button>
+            </Button>
             {!hasSigned && <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>}
           </div>
         )}
@@ -181,14 +186,16 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
         )}
 
         {hasSigned && (
-          <button
+          <Button
             type="button"
             onClick={clearCanvas}
+            variant="outline"
+            size="icon"
             className="absolute bottom-4 right-4 p-2 bg-white rounded-full shadow-md text-muted-foreground hover:text-red-500 transition-all border border-border"
             title="Clear Signature"
           >
             <RotateCcw className="w-5 h-5" />
-          </button>
+          </Button>
         )}
 
         <input

@@ -3,7 +3,7 @@ import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelecto
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
-import { SearchableSelect } from '@/components/ui';
+import { SearchableSelect, Button } from '@/components/ui';
 import { AlertTriangle, Heart, History, ShieldCheck, Upload, User, X, Trash2, Plus } from 'lucide-react';
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
@@ -396,11 +396,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 }}
                 autoFocus
               />
-              <button
+              <Button
                 type="button"
-                className="px-2 bg-primary text-white rounded-r-md text-[10px] font-bold"
+                size="xs"
+                className="px-3 bg-primary text-white rounded-l-none rounded-r-md text-[10px] font-bold h-8 hover:bg-primary/95"
                 onClick={() => {
-                  const input = (document.activeElement as HTMLInputElement);
+                  const input = (document.querySelector('input[placeholder="Enter other treatment"]') as HTMLInputElement);
                   const val = input?.value?.trim();
                   if (val && !formData.previousTreatments.includes(val)) {
                     setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
@@ -410,7 +411,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 }}
               >
                 ADD
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -21,7 +21,8 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
   const { showToast } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
-  
+  // Fetch corporate form configuration data 
+// (like benefit types, dropdown values, labels, etc.)
   const cfg = useFormConfig('corporate');
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     ((cfg as any).benefitTypes ?? []).map((b: any) => [b.value, b.label])

@@ -13,7 +13,7 @@ import { InvoiceViewer } from "../Billing/InvoiceViewer";
 import { TreatmentForm } from "../Treatments/TreatmentForm";
 import { DoctorForm } from "../Staff/DoctorForm";
 import { PatientConsultation } from "../Doctor/PatientConsultation";
-import { PatientDetails } from "../Patients/PatientDetails";
+import { PatientDetailsModal } from "./PatientDetailsModal";
 import { TodaySchedulePopup } from "../Appointments/TodaySchedulePopup";
 import { DoctorScheduleManager } from "../Staff/DoctorScheduleManager";
 import { SalaryPaymentModal } from "../Staff/SalaryPaymentModal";
@@ -336,43 +336,18 @@ export function ModalRegistry() {
         />
       )}
 
-      {activeModal === "patientDetails" &&
-        (() => {
-          const localPatient = patients.find((x: any) => x.id === selectedPatientId);
-          const p = apiPatientDetail || localPatient;
-          if (!p) return null;
-          let family: any[] = [];
-          if (p.parentId) {
-            const parent = patients.find((x: any) => x.id === p.parentId);
-            const siblings = patients.filter(
-              (x: any) => x.parentId === p.parentId && x.id !== p.id,
-            );
-            if (parent)
-              family.push({
-                ...parent,
-                relation: parent.isPerson
-                  ? parent.relation || "Parent"
-                  : "Head of Family",
-              });
-            family = [...family, ...siblings];
-          } else {
-            family = patients.filter((x: any) => x.parentId === p.id);
-          }
-          return (
-            <PatientDetails
-              patient={p}
-              familyMembers={family}
-              appointments={appointments}
-              treatments={treatments}
-              invoices={invoices}
-              onClose={() => setActiveModal(null)}
-              onSendReminder={(_id: string, amt: number) =>
-                alert(`Reminder sent for ₹${amt}`)
-              }
-              onExport={handleExportPatient}
-            />
-          );
-        })()}
+      {activeModal === "patientDetails" && (
+        <PatientDetailsModal
+          patients={patients}
+          selectedPatientId={selectedPatientId}
+          apiPatientDetail={apiPatientDetail}
+          appointments={appointments}
+          treatments={treatments}
+          invoices={invoices}
+          onClose={() => setActiveModal(null)}
+          onExport={handleExportPatient}
+        />
+      )}
 
       {activeModal === "corporateModal" && (
         <CorporateManagement
