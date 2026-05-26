@@ -12,7 +12,7 @@ export function useUpdatePatientStatusMutation() {
   return useApiMutation<any, UpdatePatientStatusVariables>({
     getEndpoint: (variables) => `/patient/status/${variables.id}`,
     method: "patch",
-    transformRequest: (variables) => ({ status: variables.status }),
+    transformRequest: (variables) => ({ is_active: variables.status === "ACTIVE" }),
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["patients"] });

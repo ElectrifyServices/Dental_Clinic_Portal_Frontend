@@ -1,12 +1,29 @@
-export const exportPatientReport = (
+import apiClient from "../services/apiClient";
+import { parseApiResponse } from "../services/parseApiResponse";
+import { normalizePatient } from "../hooks/patients/usePatientDetailQuery";
+
+export const exportPatientReport = async (
   patientId: string,
   patients: any[],
   appointments: any[],
   treatments: any[],
   invoices: any[]
 ) => {
-  const patient = patients.find((p) => p.id === patientId);
+  let patient = patients.find((p) => p.id === patientId);
   if (!patient) return;
+
+  try {
+    const res = await apiClient.request({ url: `/patient/${patientId}`, method: 'get' });
+    const parsed = parseApiResponse(res.data);
+    if (parsed.data) {
+      const detailedPatient = normalizePatient(parsed.data);
+      if (detailedPatient) {
+        patient = { ...patient, ...detailedPatient };
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch detailed patient for export", err);
+  }
 
   const patientAppointments = appointments.filter(
     (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
@@ -18,6 +35,9 @@ export const exportPatientReport = (
     (inv) => inv.patientId === patient.id,
   );
   const prescriptions = patient.prescriptionHistory || [];
+
+  const allergiesList = patient.allergyNames?.length ? patient.allergyNames : patient.allergies;
+  const medicalHistoryList = patient.medicalHistoryNames?.length ? patient.medicalHistoryNames : patient.medicalHistory;
 
   const printContent = `
     <html>
@@ -140,25 +160,25 @@ export const exportPatientReport = (
         </div>
 
         ${
-          patient.medicalHistory?.length > 0 || patient.allergies?.length > 0
+          medicalHistoryList?.length > 0 || allergiesList?.length > 0
             ? `
           <div class="section">
             <div class="section-title">Medical Alerts</div>
             <div class="alert-box">
               ${
-                patient.allergies?.length > 0
+                allergiesList?.length > 0
                   ? `
                 <div class="alert-title">ALLERGIES</div>
-                <div class="alert-text">${patient.allergies.join(", ")}</div>
+                <div class="alert-text">${allergiesList.join(", ")}</div>
                 <div style="margin-bottom: 10px;"></div>
               `
                   : ""
               }
               ${
-                patient.medicalHistory?.length > 0
+                medicalHistoryList?.length > 0
                   ? `
                 <div class="alert-title">MEDICAL CONDITIONS</div>
-                <div class="alert-text">${patient.medicalHistory.join(", ")}</div>
+                <div class="alert-text">${medicalHistoryList.join(", ")}</div>
               `
                   : ""
               }

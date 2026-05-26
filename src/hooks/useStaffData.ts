@@ -3,7 +3,7 @@ import { useLocalStorage } from './useLocalStorage';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
 import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutation';
-import { FILE_BASE_URL } from '../services/apiClient';
+import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
 
 export function useStaffData() {
   const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery();
@@ -70,7 +70,7 @@ export function useStaffData() {
           documents.push({
             type: uiType,
             name: file.file_name || `${uiType} Document`,
-            url: file.file_url ? (file.file_url.startsWith('http') ? file.file_url : `${FILE_BASE_URL}${file.file_url}`) : ""
+            url: getFileUrl(file.file_url)
           });
         });
       }
@@ -85,7 +85,7 @@ export function useStaffData() {
         originalRoleName: s.role?.name || (typeof s.role === 'string' ? s.role : 'Staff'),
         specialization: s.personal_profile?.specialization?.name || s.specialization || '',
         isActive: s.status === 'ACTIVE',
-        avatar: s.profile_picture || s.avatar || '',
+        avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || '',
         salaryPaid: s.salaryPaid || 0,
         salaryPending: s.salaryPending || 0,
         documents: documents.length > 0 ? documents : (s.documents || []),

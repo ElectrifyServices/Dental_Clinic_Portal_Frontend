@@ -140,7 +140,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 setSelectedMedicalHistory(values);
                 setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
               }}
-              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => ({ label: h.name, value: h.name }))}
+              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => ({ label: h.name, value: h.id || h.name }))}
               placeholder="Select medical conditions..."
               searchPlaceholder="Search conditions..."
               onCreateOption={handleCreateMedicalHistory}
@@ -149,22 +149,26 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             />
             {selectedMedicalHistory.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {selectedMedicalHistory.map((item) => (
-                  <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
-                    <span className="truncate max-w-[200px]">{item}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updated = selectedMedicalHistory.filter((i) => i !== item);
-                        setSelectedMedicalHistory(updated);
-                        setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-                      }}
-                      className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+                {selectedMedicalHistory.map((item) => {
+                  const condition = medicalHistories.find((h: any) => (h.id || h.name) === item);
+                  const displayName = condition ? condition.name : item;
+                  return (
+                    <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
+                      <span className="truncate max-w-[200px]">{displayName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = selectedMedicalHistory.filter((i) => i !== item);
+                          setSelectedMedicalHistory(updated);
+                          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
+                        }}
+                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -185,7 +189,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               }}
               options={allergies.filter((a: any) => a && (a.allergy_name || a.name)).map((a: any) => {
                 const name = a.allergy_name || a.name;
-                return { label: name, value: name };
+                return { label: name, value: a.id || name };
               })}
               placeholder="Select allergies..."
               searchPlaceholder="Search allergies..."
@@ -195,22 +199,26 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             />
             {selectedAllergies.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {selectedAllergies.map((item) => (
-                  <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
-                    <span className="truncate max-w-[200px]">{item}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updated = selectedAllergies.filter((i) => i !== item);
-                        setSelectedAllergies(updated);
-                        setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-                      }}
-                      className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+                {selectedAllergies.map((item) => {
+                  const allergy = allergies.find((a: any) => (a.id || a.allergy_name || a.name) === item);
+                  const displayName = allergy ? (allergy.allergy_name || allergy.name) : item;
+                  return (
+                    <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
+                      <span className="truncate max-w-[200px]">{displayName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = selectedAllergies.filter((i) => i !== item);
+                          setSelectedAllergies(updated);
+                          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
+                        }}
+                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -256,7 +264,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   onClick={() => {
                     setFormData((prev: any) => ({
                       ...prev,
-                      dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index)
+                      dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
+                      rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
                     }));
                   }}
                   className="p-0.5 hover:bg-primary/10 rounded-full text-primary"
@@ -317,6 +326,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               name="previousLastVisitDate"
               value={formData.previousLastVisitDate}
               onChange={handleChange}
+              max={new Date().toISOString().split("T")[0]}
             />
           </div>
         </div>

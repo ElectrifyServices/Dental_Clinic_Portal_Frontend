@@ -40,6 +40,11 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     corporatePlanId: "",
     corporatePlanName: "",
     corporateMemberId: "",
+    isFOC: false,
+    rawAvatarFile: null as File | null,
+    rawDentalFiles: [] as File[],
+    rawConsentFormFile: null as File | null,
+    consentFormUrl: "",
   });
 
   const form = useForm<PatientFormData>({
@@ -260,6 +265,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setExtraData((prev) => ({ ...prev, rawAvatarFile: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         form.setValue("avatar", reader.result as string);
@@ -268,8 +274,24 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     }
   };
 
+  const handleConsentFormUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setExtraData((prev) => ({ ...prev, rawConsentFormFile: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setExtraData((prev) => ({ ...prev, consentFormUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDentalFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    setExtraData((prev) => ({
+      ...prev,
+      rawDentalFiles: [...(prev.rawDentalFiles || []), ...files],
+    }));
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -296,6 +318,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     applyCustomRelation,
     handleCustomRelation,
     handleImageUpload,
+    handleConsentFormUpload,
     handleDentalFilesUpload,
   };
 };

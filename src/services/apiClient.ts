@@ -5,7 +5,16 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 export const FILE_BASE_URL =
-  import.meta.env.VITE_FILE_URL || API_BASE_URL.replace(/\/api$/, "");
+  import.meta.env.VITE_FILE_URL || API_BASE_URL;
+
+export const getFileUrl = (path?: string | null) => {
+  if (!path) return "";
+  const normalizedPath = path.replace(/\\/g, '/');
+  if (normalizedPath.startsWith("http")) return normalizedPath;
+  const basePath = FILE_BASE_URL.endsWith("/") ? FILE_BASE_URL.slice(0, -1) : FILE_BASE_URL;
+  const filePath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
+  return `${basePath}${filePath}`;
+};
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -72,7 +81,7 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const url = originalRequest.url ?? "";
 
-    // ⛔ Skip interceptor for auth APIs
+    //  Skip interceptor for auth APIs
     if (url.includes("/login") || url.includes("/auth/login")) {
       return Promise.reject(error);
     }

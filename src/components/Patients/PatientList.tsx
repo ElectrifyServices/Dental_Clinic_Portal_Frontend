@@ -42,7 +42,6 @@ export function PatientList({
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
 
   const filteredPatients = useMemo(() => {
     return patients.filter((patient) => {
@@ -148,9 +147,7 @@ export function PatientList({
               patient={patient}
               onView={onViewPatient}
               onEdit={onEditPatient}
-              onDelete={(id) =>
-                setPatientToDelete(patients.find((p) => p.id === id) || null)
-              }
+              onDelete={onDeletePatient}
               onExport={(id) => onExportPatient?.(id)}
               onPrintBarcode={printBarcode}
               onToggleStatus={handleToggleStatus}
@@ -163,26 +160,12 @@ export function PatientList({
           patients={filteredPatients}
           onView={onViewPatient}
           onEdit={onEditPatient}
-          onDelete={(id) =>
-            setPatientToDelete(patients.find((p) => p.id === id) || null)
-          }
+          onDelete={onDeletePatient}
           onExport={(id) => onExportPatient?.(id)}
           onPrintBarcode={printBarcode}
         />
       )}
 
-      {patientToDelete && (
-        <ConfirmModal
-          title="Delete Patient Record"
-          message={`Are you sure you want to delete the record for ${patientToDelete.name}? This action cannot be undone.`}
-          confirmLabel="Delete Permanently"
-          onConfirm={() => {
-            onDeletePatient(patientToDelete.id);
-            setPatientToDelete(null);
-          }}
-          onCancel={() => setPatientToDelete(null)}
-        />
-      )}
     </div>
   );
 }

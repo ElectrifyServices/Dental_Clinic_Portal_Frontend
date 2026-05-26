@@ -1,8 +1,10 @@
-﻿import React from "react";
+import React from "react";
 import { User, Phone, Heart, ClipboardCheck, CheckCircle } from "lucide-react";
 import { calculateAge } from "./utils";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { useMedicalHistoriesQuery } from "../../../hooks/patients/useMedicalHistoriesQuery";
+import { useAllergiesQuery } from "../../../hooks/patients/useAllergiesQuery";
 
 interface Step4Props {
   formData: any;
@@ -10,6 +12,19 @@ interface Step4Props {
 }
 
 export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
+  const { data: rawAllergies } = useAllergiesQuery();
+
+  const getAllergyName = (id: string) => {
+    const found = (rawAllergies || []).find((a: any) => a.id === id);
+    return found ? (found.allergy_name || found.name || id) : id;
+  };
+
+  const getMedicalHistoryName = (id: string) => {
+    const found = (rawMedicalHistories || []).find((m: any) => m.id === id);
+    return found ? (found.name || found.history_name || id) : id;
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -149,7 +164,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                               variant="destructive"
                               className="text-[10px] px-2 py-0"
                             >
-                              {a}
+                              {getAllergyName(a)}
                             </Badge>
                           ))
                       ) : (
@@ -176,7 +191,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                               variant="secondary"
                               className="text-[10px] px-2 py-0"
                             >
-                              {m}
+                              {getMedicalHistoryName(m)}
                             </Badge>
                           ))
                       ) : (
@@ -222,22 +237,22 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                   No previous dentist details provided
                 </p>
               )}
-              <div className="p-3 bg-secondary/20 border border-secondary rounded-xl">
+              <div className="p-3 bg-secondary/20 border border-secondary rounded-xl mt-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">
-                    Signature
+                    {formData.guardianSignature ? "Guardian Signature" : "Patient Signature"}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[9px] font-bold border-primary/20 text-primary"
+                    className={`text-[9px] font-bold border-primary/20 ${formData.patientSignature || formData.guardianSignature ? "text-primary" : "text-destructive border-destructive"}`}
                   >
-                    SIGNED
+                    {formData.patientSignature || formData.guardianSignature ? "SIGNED" : "PENDING"}
                   </Badge>
                 </div>
                 <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner">
-                  {formData.patientSignature ? (
+                  {formData.patientSignature || formData.guardianSignature ? (
                     <img
-                      src={formData.patientSignature}
+                      src={formData.patientSignature || formData.guardianSignature}
                       alt="Signature"
                       className="h-16 mx-auto object-contain"
                     />

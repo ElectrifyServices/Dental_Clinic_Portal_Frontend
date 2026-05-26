@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -44,8 +44,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* Avatar Upload */}
-      <div className="text-center">
+      {/* Avatar moved to Step 3 */}
+       <div className="text-center">
         <div className="relative inline-block">
           <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
             {formData.avatar ? (
@@ -414,14 +414,40 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
-                Default Discount (%)
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-muted-foreground">
+                  Default Discount (%)
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="isFOC"
+                    checked={formData.isFOC || false}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        isFOC: checked,
+                        defaultDiscount: checked ? 100 : 0,
+                      }));
+                    }}
+                    className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                  />
+                  <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
+                </label>
+              </div>
               <Input
                 type="number"
                 name="defaultDiscount"
-                value={formData.defaultDiscount || 0}
-                onChange={handleChange}
+                value={formData.defaultDiscount !== undefined ? formData.defaultDiscount : 0}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
+                  handleChange({
+                    ...e,
+                    target: { ...e.target, name: 'defaultDiscount', value: val }
+                  } as any);
+                }}
+                disabled={formData.isFOC}
                 min="0"
                 max="100"
                 placeholder="e.g. 100 for full free"
@@ -544,13 +570,19 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
           </label>
-          <Input
-            type="tel"
-            name="emergencyContact"
-            value={formData.emergencyContact || ""}
-            onChange={handleChange}
-            placeholder="Emergency contact phone number"
-          />
+            <Input
+              type="tel"
+              name="emergencyContact"
+              value={formData.emergencyContact || ""}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '');
+                handleChange({
+                  ...e,
+                  target: { ...e.target, name: 'emergencyContact', value: digits }
+                } as any);
+              }}
+              placeholder="Emergency contact phone number"
+            />
         </div>
       </div>
     </div>

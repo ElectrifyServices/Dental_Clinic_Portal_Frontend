@@ -58,11 +58,13 @@ export function useStep2MedicalHistory({
   const handleCreateMedicalHistory = async (val: string) => {
     try {
       const res = await createMedicalHistory.mutateAsync({ name: val, is_custom: true });
-      const newName = res?.data?.name || val;
-      if (!selectedMedicalHistory.includes(newName)) {
-        const updated = [...selectedMedicalHistory, newName];
-        setSelectedMedicalHistory(updated);
-        setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
+      const newId = res?.data?.id || res?.data?.medical_history_id || res?.id || res?.medical_history_id;
+      if (newId) {
+        if (!selectedMedicalHistory.includes(newId)) {
+          const updated = [...selectedMedicalHistory, newId];
+          setSelectedMedicalHistory(updated);
+          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
+        }
       }
     } catch (error) {
       console.error("Failed to create medical history", error);
@@ -70,11 +72,11 @@ export function useStep2MedicalHistory({
   };
 
   const handleDeleteMedicalHistory = async (val: string) => {
-    const item = medicalHistories.find((h: any) => h.name === val);
-    if (item) {
+    const item = medicalHistories.find((h: any) => (h.id || h.name) === val);
+    if (item && item.id) {
       confirmDelete(
         "Delete Condition",
-        `Are you sure you want to permanently delete "${val}"?`,
+        `Are you sure you want to permanently delete "${item.name || val}"?`,
         async () => {
           try {
             await deleteMedicalHistory.mutateAsync(item.id);
@@ -94,11 +96,13 @@ export function useStep2MedicalHistory({
   const handleCreateAllergy = async (val: string) => {
     try {
       const res = await createAllergy.mutateAsync({ allergy_name: val, is_custom: true });
-      const newName = res?.data?.allergy_name || res?.data?.name || val;
-      if (!selectedAllergies.includes(newName)) {
-        const updated = [...selectedAllergies, newName];
-        setSelectedAllergies(updated);
-        setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
+      const newId = res?.data?.id || res?.data?.allergy_id || res?.id || res?.allergy_id;
+      if (newId) {
+        if (!selectedAllergies.includes(newId)) {
+          const updated = [...selectedAllergies, newId];
+          setSelectedAllergies(updated);
+          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
+        }
       }
     } catch (error) {
       console.error("Failed to create allergy", error);
@@ -106,11 +110,11 @@ export function useStep2MedicalHistory({
   };
 
   const handleDeleteAllergy = async (val: string) => {
-    const item = allergies.find((a: any) => (a.allergy_name || a.name) === val);
-    if (item) {
+    const item = allergies.find((a: any) => (a.id || a.allergy_name || a.name) === val);
+    if (item && item.id) {
       confirmDelete(
         "Delete Allergy",
-        `Are you sure you want to permanently delete "${val}"?`,
+        `Are you sure you want to permanently delete "${item.allergy_name || item.name || val}"?`,
         async () => {
           try {
             await deleteAllergy.mutateAsync(item.id);

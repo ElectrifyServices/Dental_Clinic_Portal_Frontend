@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
@@ -7,7 +7,7 @@ import { PatientList } from "../components/Patients/PatientList";
 export const PatientsPage: React.FC = () => {
   const {
     patients, appointments, treatments, invoices,
-    handleSavePatient, handleDeletePatient,
+    handleSavePatient, handleDeletePatient, handleUpdatePatientStatus,
   } = useAppData();
   const {
     setActiveModal, setSelectedPatientId, setPatientFormType,
@@ -36,14 +36,10 @@ export const PatientsPage: React.FC = () => {
     );
   };
 
-  const handleToggleStatus = (id: string, status: "active" | "inactive") => {
+  const handleToggleStatus = async (id: string, status: "active" | "inactive") => {
     const p = patients.find((x: any) => x.id === id);
     if (p) {
-      handleSavePatient({
-        ...p,
-        status,
-        deactivatedAt: status === "inactive" ? new Date().toISOString() : undefined,
-      });
+      await handleUpdatePatientStatus(id, status === "active" ? "ACTIVE" : "INACTIVE");
       showToast(`Patient marked as ${status}!`);
     }
   };

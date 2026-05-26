@@ -7,7 +7,10 @@ import {
   useCreatePatientMutation,
   mapFormDataToCreatePayload,
 } from './patients/useCreatePatientMutation';
+import { useUpdatePatientMutation } from './patients/useUpdatePatientMutation';
 import { useLocalStorage } from './useLocalStorage';
+import { useMedicalHistoriesQuery } from './patients/useMedicalHistoriesQuery';
+import { useAllergiesQuery } from './patients/useAllergiesQuery';
 
 export function usePatientData() {
   const queryClient = useQueryClient();
@@ -22,9 +25,13 @@ export function usePatientData() {
     is_active: patientIsActive,
   });
 
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
+  const { data: rawAllergies } = useAllergiesQuery();
+
   const { mutateAsync: deletePatientMutation } = useDeletePatientMutation();
   const { mutateAsync: updateStatusMutation } = useUpdatePatientStatusMutation();
   const { mutateAsync: createPatientMutation } = useCreatePatientMutation();
+  const { mutateAsync: updatePatientMutation } = useUpdatePatientMutation();
 
   // Local storage for queue (not part of API)
   const [queuedPatients, setQueuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
@@ -45,6 +52,17 @@ export function usePatientData() {
       rawList = (apiPatients as any).data;
     }
 
+    const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
+      "A_POSITIVE": "A+",
+      "A_NEGATIVE": "A-",
+      "B_POSITIVE": "B+",
+      "B_NEGATIVE": "B-",
+      "AB_POSITIVE": "AB+",
+      "AB_NEGATIVE": "AB-",
+      "O_POSITIVE": "O+",
+      "O_NEGATIVE": "O-",
+    };
+
     return rawList.map((p: any) => ({
       ...p,
       id: p.id,
@@ -55,9 +73,59 @@ export function usePatientData() {
       isActive: p.status === 'ACTIVE' || p.is_active === true,
       avatar: p.profile_picture || p.avatar || '',
       age: p.age || p.dob || '',
-      gender: p.gender || '',
+      gender: p.gender ? p.gender.toLowerCase() : '',
+      
+      // Mapped fields for usePatientForm
+      dateOfBirth: p.date_of_birth || p.dateOfBirth || '',
+      bloodGroup: REVERSE_BLOOD_GROUP_MAP[p.blood_group] || p.blood_group || p.bloodGroup || '',
+      maritalStatus: p.marital_status ? p.marital_status.toLowerCase() : '',
+      address: p.address || '',
+      occupation: p.occupation || '',
+      
+      // Emergency Contact
+      emergencyName: p.emergency_contact_name || p.emergencyName || '',
+      emergencyContact: p.emergency_contact_phone || p.emergencyContact || '',
+      emergencyRelation: p.emergency_contact_relation || p.emergencyRelation || '',
+      
+      // Referral & Category
+      referredBy: p.referred_by || p.referredBy || '',
+      category: p.patient_category ? p.patient_category.toLowerCase() : 'regular',
+      isFOC: p.is_foc || p.isFOC || false,
+      defaultDiscount: p.discount_percentage !== undefined ? p.discount_percentage : (p.defaultDiscount || 0),
+      
+      // Medical History
+      medicalHistory: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
+      allergies: (p.allergies || []).map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
+      medicalHistoryNames: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => {
+        if (typeof m === 'object') {
+          return m.history?.name || m.medical_history?.name || m.name || m.history_id || m.medical_history_id || m.id;
+        }
+        const found = (rawMedicalHistories || []).find((mh: any) => mh.id === m);
+        return found ? (found.name || found.history_name || m) : m;
+      }),
+      allergyNames: (p.allergies || []).map((a: any) => {
+        if (typeof a === 'object') {
+          return a.allergy?.allergy_name || a.allergy?.name || a.allergy_name || a.name || a.allergy_id || a.id;
+        }
+        const found = (rawAllergies || []).find((al: any) => al.id === a);
+        return found ? (found.allergy_name || found.name || a) : a;
+      }),
+      pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
+      
+      // Previous Dentist
+      previousDoctorName: p.previous_doctor_name || p.previousDoctorName || '',
+      previousClinicName: p.clinic_name || p.previousClinicName || '',
+      previousDoctorPhone: p.doctor_phone || p.previousDoctorPhone || '',
+      previousLastVisitDate: p.last_visit_date || p.previousLastVisitDate || '',
+      previousClinicAddress: p.clinic_address || p.previousClinicAddress || '',
+      previousReason: p.reason_for_treatment || p.previousReason || '',
+      previousTreatments: (p.previous_treatments || p.previousTreatments || []).map((t: any) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
+      
+      // Consents
+      consentFormUrl: p.consent_form_image || p.consentFormUrl || '',
+      patientSignature: p.consent_signature_image || p.patientSignature || '',
     }));
-  }, [apiPatients]);
+  }, [apiPatients, rawMedicalHistories, rawAllergies]);
 
   const handleDeletePatient = async (id: string) => {
     try {
@@ -97,14 +165,14 @@ export function usePatientData() {
     try {
       const isNew = !patient?.id;
 
+      const payload = mapFormDataToCreatePayload(patient, {
+        primaryPatientId: parentPatientId || undefined,
+      });
+
       if (isNew) {
-        const payload = mapFormDataToCreatePayload(patient, {
-          primaryPatientId: parentPatientId || undefined,
-        });
         await createPatientMutation(payload);
       } else {
-        // Edit path: refetch for now; update mutation to be wired when API is available
-        refetchPatients();
+        await updatePatientMutation({ id: patient.id, formData: payload });
       }
     } catch (e) {
       console.error('Save patient failed', e);

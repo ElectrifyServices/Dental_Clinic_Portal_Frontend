@@ -27,6 +27,8 @@ import { ConsentFormViewer } from "../Consent/ConsentFormViewer";
 import { InventoryForm } from "../Inventory/InventoryForm";
 import { RestockForm } from "../Inventory/RestockForm";
 import { ConfirmModal, Modal, Button } from "../ui";
+import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
+import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
 
 export function ModalRegistry() {
   const {
@@ -107,8 +109,15 @@ export function ModalRegistry() {
     [staffMembers],
   );
 
+  const { data: apiPatientDetail } = usePatientDetailQuery(
+    selectedPatientId,
+    activeModal === "patientDetails"
+  );
+
   const handleExportPatient = (id: string) =>
     exportPatientReport(id, patients, appointments, treatments, invoices);
+
+  const { mutateAsync: createAppointmentMutation } = useCreateAppointmentMutation();
 
   return (
     <>
@@ -121,12 +130,42 @@ export function ModalRegistry() {
           doctorAvailability={doctorAvailability}
           appointments={appointments}
           patients={patients}
-          onSave={(apt: any) => {
-            handleSaveAppointment(apt);
-            setActiveModal(null);
-            setSelectedAppointment(null);
-            setIsFollowUpBooking(false);
-            showToast("Appointment saved!");
+          onSave={async (apt: any) => {
+            try {
+              if (!apt.id || apt.id.length > 20 === false) { // Assuming new if ID is a timestamp
+                const payload = {
+                  doctor_id: apt.doctorId,
+                  patient_name: apt.patientName,
+                  patient_phone: apt.patientPhone,
+                  date: apt.date,
+                  start_time: apt.time,
+                  specific_treatment: apt.treatment || "General",
+                  slot_duration_mins: Number(apt.duration) || 30,
+                  treatment_cost: Number(apt.fee) || 0,
+                  concern: apt.patientConcern || "",
+                  notes: apt.notes || "",
+                  status: "BOOKED"
+                };
+                
+                // Only attach patient_id if it's a valid uuid (length > 20)
+                if (apt.patientId && apt.patientId.length > 20) {
+                  (payload as any).patient_id = apt.patientId;
+                }
+
+                const response = await createAppointmentMutation(payload);
+                // Optionally update apt ID from response
+                apt.id = response.id || apt.id;
+              }
+
+              handleSaveAppointment(apt);
+              setActiveModal(null);
+              setSelectedAppointment(null);
+              setIsFollowUpBooking(false);
+              showToast("Appointment saved!");
+            } catch (error: any) {
+              const msg = error?.response?.data?.message || error?.message || "Failed to create appointment";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
           }}
         />
       )}
@@ -148,35 +187,42 @@ export function ModalRegistry() {
               : preFilledPatientData
           }
           onSave={async (p: any) => {
-            await handleSavePatient(p, patientFormType, parentPatientId);
-            const hasCheckIn = !!pendingCheckInAppt;
-            setActiveModal(null);
-            setSelectedPatientId("");
-            setParentPatientId("");
-            setPreFilledPatientData(null);
-            if (hasCheckIn) {
-              setQueuedPatients((prev: any[]) => [
-                ...prev,
-                {
-                  id: pendingCheckInAppt.id,
-                  patientId: p.id,
-                  patientName: p.name,
-                  patientPhone: p.phone,
-                  appointmentTime: pendingCheckInAppt.time,
-                  status: "waiting",
-                  treatmentType:
-                    pendingCheckInAppt.treatment || pendingCheckInAppt.type,
-                  patientConcern: pendingCheckInAppt.patientConcern || "",
-                },
-              ]);
-              handleUpdateAppointmentStatus(
-                pendingCheckInAppt.id,
-                "checked-in",
-              );
-              setPendingCheckInAppt(null);
-              showToast("Patient checked-in successfully!");
-            } else {
-              showToast("Patient saved successfully!");
+            try {
+              await handleSavePatient(p, patientFormType, parentPatientId);
+              const hasCheckIn = !!pendingCheckInAppt;
+              setActiveModal(null);
+              setSelectedPatientId("");
+              setParentPatientId("");
+              setPreFilledPatientData(null);
+              if (hasCheckIn) {
+                setQueuedPatients((prev: any[]) => [
+                  ...prev,
+                  {
+                    id: pendingCheckInAppt.id,
+                    patientId: p.id,
+                    patientName: p.name,
+                    patientPhone: p.phone,
+                    appointmentTime: pendingCheckInAppt.time,
+                    status: "waiting",
+                    treatmentType:
+                      pendingCheckInAppt.treatment || pendingCheckInAppt.type,
+                    patientConcern: pendingCheckInAppt.patientConcern || "",
+                  },
+                ]);
+                handleUpdateAppointmentStatus(
+                  pendingCheckInAppt.id,
+                  "checked-in",
+                );
+                setPendingCheckInAppt(null);
+                showToast("Patient checked-in successfully!");
+              } else {
+                showToast("Patient saved successfully!");
+              }
+            } catch (err: any) {
+              const errorObj = err?.response?.data || err;
+              const errorMessage = errorObj.message || err?.message || "Failed to save patient";
+              const msg = Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage;
+              showToast(msg, "error");
             }
           }}
         />
@@ -228,37 +274,6 @@ export function ModalRegistry() {
                 (selectedPatientForDiagnose.patientId ||
                   selectedPatientForDiagnose.id),
             );
-            if (target) {
-              const meds = (d.prescriptions || []).filter((pr: any) =>
-                pr.medicine?.trim(),
-              );
-              if (meds.length) {
-                handleSavePatient({
-                  ...target,
-                  prescriptionHistory: [
-                    {
-                      id: Date.now().toString(),
-                      date: d.consultationDate || new Date().toISOString(),
-                      treatment:
-                        d.treatmentProcedure || d.diagnosis || "Consultation",
-                      observations: d.observations,
-                      diagnosis: d.diagnosis,
-                      vitals: {
-                        bp: d.bp || "",
-                        height: d.height || "",
-                        weight: d.weight || "",
-                        bmi: d.bmi || "",
-                      },
-                      consultationNotes: d.consultationNotes,
-                      tests: d.tests,
-                      nextVisit: d.nextVisit,
-                      prescriptions: meds,
-                    },
-                    ...(target.prescriptionHistory || []),
-                  ],
-                });
-              }
-            }
             setQueuedPatients((prev: any[]) =>
               prev.filter((p: any) => p.id !== selectedPatientForDiagnose.id),
             );
@@ -323,7 +338,8 @@ export function ModalRegistry() {
 
       {activeModal === "patientDetails" &&
         (() => {
-          const p = patients.find((x: any) => x.id === selectedPatientId);
+          const localPatient = patients.find((x: any) => x.id === selectedPatientId);
+          const p = apiPatientDetail || localPatient;
           if (!p) return null;
           let family: any[] = [];
           if (p.parentId) {

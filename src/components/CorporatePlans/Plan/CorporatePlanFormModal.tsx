@@ -19,11 +19,11 @@ interface CorporatePlanFormModalProps {
 export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave }: CorporatePlanFormModalProps) {
   const [form, setForm] = useState(mkForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const cfg = useFormConfig('corporate');
   const cfgAny = cfg as any;
   const { showToast } = useModal();
-  
+
   const createPlanMutation = useCreateCorporatePlanMutation();
   const updatePlanMutation = useUpdateCorporatePlanMutation();
 
@@ -33,7 +33,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const planColorDots: Record<string, string> = Object.fromEntries(
     (cfgAny.planColors ?? []).map((c: any) => [c.value, c.dot])
   );
-  
+
   const allFields = [...(cfg.sections?.flatMap(s => s.fields) ?? [])];
   const fieldMap = Object.fromEntries(allFields.map(f => [f.name, f]));
   const fl = (name: string, fallback = name) => fieldMap[name]?.label ?? fallback;
@@ -229,9 +229,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             <Button
               onClick={handleSave}
               className="gap-2 shadow-lg shadow-primary/10"
-              disabled={createPlanMutation.isLoading || updatePlanMutation.isLoading}
+              disabled={createPlanMutation.isPending || updatePlanMutation.isPending}
             >
-              {(createPlanMutation.isLoading || updatePlanMutation.isLoading) ? (
+              {(createPlanMutation.isPending || updatePlanMutation.isPending) ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>

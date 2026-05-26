@@ -5,6 +5,7 @@ import { useModal } from "../contexts/ModalContext";
 import { AppointmentCalendar } from "../components/Appointments/AppointmentCalendar";
 import { AppointmentList } from "../components/Appointments/AppointmentList";
 import { AppointmentStats } from "../components/Appointments/AppointmentList/AppointmentStats";
+import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -24,13 +25,7 @@ export const AppointmentsPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState("calendar");
 
-  const activeDoctors = useMemo(
-    () =>
-      staffMembers.filter(
-        (s: any) => s.role === "doctor" || s.role === "admin",
-      ),
-    [staffMembers],
-  );
+  const { doctors: activeDoctors } = useDoctorsListQuery();
 
   const listCount = appointments.filter(
     (a: any) => a.status !== "no-show",

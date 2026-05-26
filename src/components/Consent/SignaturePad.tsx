@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { RotateCcw, Upload, MousePointer2 } from 'lucide-react';
 
 interface SignaturePadProps {
@@ -160,17 +160,17 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           }`}
         />
         
-        {mode === 'upload' && !hasSigned && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+        {mode === 'upload' && (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all ${hasSigned ? 'bg-white/70 backdrop-blur-[1px] opacity-0 hover:opacity-100' : ''}`}>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-primary transition-all flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Select Signature File
+              {hasSigned ? "Change Signature" : "Select Signature File"}
             </button>
-            <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>
+            {!hasSigned && <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>}
           </div>
         )}
 
@@ -184,7 +184,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           <button
             type="button"
             onClick={clearCanvas}
-            className="absolute top-4 right-4 p-2.5 bg-card rounded-xl shadow-lg text-muted-foreground/60 hover:text-red-500 transition-all border border-border"
+            className="absolute bottom-4 right-4 p-2 bg-white rounded-full shadow-md text-muted-foreground hover:text-red-500 transition-all border border-border"
             title="Clear Signature"
           >
             <RotateCcw className="w-5 h-5" />

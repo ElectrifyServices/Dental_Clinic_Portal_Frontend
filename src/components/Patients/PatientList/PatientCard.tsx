@@ -81,7 +81,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   const age = calculateAge(patient.dateOfBirth);
 
   return (
-    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit">
       <CardContent className="p-4 sm:p-5">
         {/* Header Section - More compact */}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
@@ -176,11 +176,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           <div className="space-y-1">
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">ALLERGIES:</span>{" "}
-              {patient.allergies?.join(", ") || "None"}
+              {patient.allergyNames?.join(", ") || patient.allergies?.join(", ") || "None"}
             </p>
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">CONDITIONS:</span>{" "}
-              {patient.medicalHistory?.join(", ") || "None"}
+              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || "None"}
             </p>
           </div>
         </div>
