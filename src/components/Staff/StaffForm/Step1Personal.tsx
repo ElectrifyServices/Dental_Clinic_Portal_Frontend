@@ -20,10 +20,24 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         <div className="relative group">
           <div className="w-32 h-32 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden transition-all group-hover:border-primary/40 shadow-inner">
             {formData.avatar ? (
-              <img src={formData.avatar} alt="Preview" className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-3xl font-black text-primary/20">{formData.name ? getInitials(formData.name) : <User className="w-12 h-12" />}</div>
-            )}
+              <img 
+                src={formData.avatar} 
+                alt="Preview" 
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.nextElementSibling) {
+                     (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                  }
+                }}
+              />
+            ) : null}
+            <div 
+              className="text-3xl font-black text-primary/20 flex items-center justify-center w-full h-full" 
+              style={{ display: formData.avatar ? 'none' : 'flex' }}
+            >
+              {formData.name ? getInitials(formData.name) : <User className="w-12 h-12" />}
+            </div>
             <div
               onClick={() => fileInputRef.current?.click()}
               className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all cursor-pointer backdrop-blur-[2px]"

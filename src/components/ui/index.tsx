@@ -163,7 +163,7 @@ export function Modal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "overflow-y-auto p-0 gap-0 max-h-[calc(100vh-5rem)]",
+          "overflow-y-auto p-0 gap-0 max-h-[calc(100vh-5rem)] scrollbar-hide",
           MODAL_SIZES[size],
         )}
       >
@@ -179,7 +179,7 @@ export function Modal({
                 {title}
               </DialogTitle>
               {subtitle ? (
-                <DialogDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">
+                <DialogDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 break-words">
                   {subtitle}
                 </DialogDescription>
               ) : (

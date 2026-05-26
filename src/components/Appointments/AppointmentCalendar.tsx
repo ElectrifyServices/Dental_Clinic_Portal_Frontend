@@ -3,6 +3,7 @@ import { DoctorSidebar } from "./AppointmentCalendar/DoctorSidebar";
 import { CalendarGrid } from "./AppointmentCalendar/CalendarGrid";
 import { DayAgenda } from "./AppointmentCalendar/DayAgenda";
 import { BookingSlots } from "./AppointmentCalendar/BookingSlots";
+import { useDoctorScheduleQuery, mapApiResponseToScheduleState } from "../../hooks/staff/useDoctorScheduleQuery";
 
 interface Doctor {
   id: string;
@@ -12,15 +13,6 @@ interface Doctor {
   qualification: string;
   location: string;
   image: string;
-  workingHours?: {
-    [key: string]: {
-      isWorking: boolean;
-      startTime: string;
-      endTime: string;
-      breakStart?: string;
-      breakEnd?: string;
-    };
-  };
 }
 
 interface CalendarProps {
@@ -42,6 +34,9 @@ export function AppointmentCalendar({
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [monthOffset, setMonthOffset] = useState(0);
+
+  const { data: scheduleResponse, isLoading: isLoadingSchedule } = useDoctorScheduleQuery(selectedDoctorId);
+  const scheduleState = useMemo(() => mapApiResponseToScheduleState(scheduleResponse), [scheduleResponse]);
 
   const monthNames = [
     "January",
@@ -89,10 +84,10 @@ export function AppointmentCalendar({
   }, [monthOffset]);
 
   const availableSlots = useMemo(() => {
-    const selDoctor = doctors.find((d) => d.id === selectedDoctorId);
-    if (!selDoctor?.workingHours || !selectedDate) return [];
+    if (!selectedDoctorId || !selectedDate || !scheduleState) return [];
+    
     const daySchedule =
-      selDoctor.workingHours[
+      scheduleState.workingHours[
         selectedDate
           .toLocaleDateString("en-US", { weekday: "long" })
           .toLowerCase()
@@ -136,9 +131,10 @@ export function AppointmentCalendar({
         return true;
       })
       .map((s) => {
-        const sStart =
-          parseInt(s.time24.split(":")[0]) * 60 +
-          parseInt(s.time24.split(":")[1]);
+        const sHr = parseInt(s.time24.split(":")[0]) % 12;
+        const sMn = parseInt(s.time24.split(":")[1]);
+        const sStart12 = sHr * 60 + sMn;
+
         const isBooked = appointments.some((a) => {
           if (
             a.doctorId !== selectedDoctorId ||
@@ -148,14 +144,12 @@ export function AppointmentCalendar({
 
           // Robust time parsing
           let [h, m] = a.time.split(":");
-          let hr = parseInt(h);
+          let hr = parseInt(h) % 12;
           let mn = parseInt(m);
-          if (a.time.includes("PM") && hr < 12) hr += 12;
-          if (a.time.includes("AM") && hr === 12) hr = 0;
 
           const aStart = hr * 60 + mn;
           const aDuration = parseInt(a.duration?.toString() || "15");
-          return sStart >= aStart && sStart < aStart + aDuration;
+          return sStart12 >= aStart && sStart12 < aStart + aDuration;
         });
         const now = new Date();
         const slotTime = new Date(selectedDate);
@@ -167,7 +161,7 @@ export function AppointmentCalendar({
         );
         return { ...s, isBooked, isPast: slotTime < now };
       });
-  }, [selectedDoctorId, selectedDate, appointments, doctors]);
+  }, [selectedDoctorId, selectedDate, appointments, scheduleState]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-280px)] xl:overflow-hidden">
@@ -211,6 +205,7 @@ export function AppointmentCalendar({
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           availableSlots={availableSlots}
+          isLoading={isLoadingSchedule}
           onBookAppointment={(doctorId, time) =>
             onBookAppointment?.(doctorId, selectedDate, time)
           }

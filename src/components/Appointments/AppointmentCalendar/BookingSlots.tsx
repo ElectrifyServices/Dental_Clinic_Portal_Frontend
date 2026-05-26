@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { CalendarCheck, Stethoscope, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -7,6 +7,7 @@ interface BookingSlotsProps {
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
   availableSlots: any[];
+  isLoading?: boolean;
   onBookAppointment?: (doctorId: string, time: string) => void;
 }
 
@@ -15,6 +16,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
   selectedTime,
   setSelectedTime,
   availableSlots,
+  isLoading,
   onBookAppointment,
 }) => {
   return (
@@ -27,7 +29,11 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
           </div>
 
           <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar pr-1">
-            {availableSlots.length > 0 ? (
+            {isLoading ? (
+              <div className="col-span-3 py-6 text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Loading slots...</p>
+              </div>
+            ) : availableSlots.length > 0 ? (
               availableSlots.map((slot, idx) => {
                 const isDisabled = slot.isBooked || slot.isPast;
                 return (
@@ -36,9 +42,9 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
                     disabled={isDisabled}
                     onClick={() => setSelectedTime(slot.time24)}
                     className={`py-2 rounded-xl text-[9px] font-bold text-center border transition-all relative
-                      ${selectedTime === slot.time24 ? "bg-primary border-primary text-white shadow-md scale-[0.98]" : 
-                        isDisabled ? "bg-muted text-muted-foreground/20 border-transparent cursor-not-allowed" : 
-                        "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200 hover:bg-emerald-100"}`}
+                      ${selectedTime === slot.time24 ? "bg-primary border-primary text-white shadow-md scale-[0.98]" :
+                        isDisabled ? "bg-muted text-muted-foreground/20 border-transparent cursor-not-allowed" :
+                          "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200 hover:bg-emerald-100"}`}
                   >
                     {slot.time12}
                     {slot.isBooked && (

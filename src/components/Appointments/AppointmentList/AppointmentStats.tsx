@@ -1,48 +1,64 @@
 import React from 'react';
 import { Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { MetricCard } from '@/components/ui';
+import {
+  useAppointmentTotalVolumeQuery,
+  useAppointmentUpcomingQuery,
+  useAppointmentCompletedQuery,
+  useAppointmentCancelledQuery,
+} from '@/hooks/appointments/useAppointmentStatsQueries';
 
 interface Appointment {
   status: string;
 }
 
 interface AppointmentStatsProps {
-  appointments: Appointment[];
+  appointments?: Appointment[];
 }
 
-import { MetricCard } from '@/components/ui';
+export const AppointmentStats: React.FC<AppointmentStatsProps> = () => {
+  const { data: totalVolumeData, isPending: isTotalLoading } = useAppointmentTotalVolumeQuery();
+  const { data: upcomingData, isPending: isUpcomingLoading } = useAppointmentUpcomingQuery();
+  const { data: completedData, isPending: isCompletedLoading } = useAppointmentCompletedQuery();
+  const { data: cancelledData, isPending: isCancelledLoading } = useAppointmentCancelledQuery();
 
-export const AppointmentStats: React.FC<AppointmentStatsProps> = ({ appointments }) => {
-  const total = appointments.length;
-  const confirmed = appointments.filter(a => ['confirmed', 'scheduled', 'checked-in'].includes(a.status)).length;
-  const completed = appointments.filter(a => a.status === 'completed').length;
-  const cancelled = appointments.filter(a => ['cancelled', 'no-show'].includes(a.status)).length;
+  const parseData = (d: any) => {
+    if (!d) return undefined;
+    return d.count ?? d.total ?? d.data?.count ?? d.data?.total;
+  };
+
+  const total = parseData(totalVolumeData) ?? 0;
+  const upcoming = parseData(upcomingData) ?? 0;
+  const completed = parseData(completedData) ?? 0;
+  const cancelled = parseData(cancelledData) ?? 0;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      <MetricCard 
+      <MetricCard
         label="Total Volume"
-        value={total}
+        value={isTotalLoading ? "..." : total}
         icon={<Calendar className="w-6 h-6" />}
         variant="gray"
       />
-      <MetricCard 
+      <MetricCard
         label="Upcoming"
-        value={confirmed}
+        value={isUpcomingLoading ? "..." : upcoming}
         icon={<Clock className="w-6 h-6" />}
         variant="primary"
       />
-      <MetricCard 
+      <MetricCard
         label="Completed"
-        value={completed}
+        value={isCompletedLoading ? "..." : completed}
         icon={<CheckCircle className="w-6 h-6" />}
         variant="emerald"
       />
-      <MetricCard 
+      <MetricCard
         label="Cancelled"
-        value={cancelled}
+        value={isCancelledLoading ? "..." : cancelled}
         icon={<XCircle className="w-6 h-6" />}
         variant="rose"
       />
     </div>
   );
 };
+

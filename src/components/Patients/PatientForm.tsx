@@ -43,6 +43,7 @@ export function PatientForm({
     applyCustomRelation,
     handleCustomRelation,
     handleImageUpload,
+    handleConsentFormUpload,
     handleDentalFilesUpload,
   } = usePatientForm(patient, corporateEmployees);
 
@@ -223,6 +224,7 @@ export function PatientForm({
               formData={formData}
               setFormData={setFormData}
               handleChange={handleChange}
+              handleConsentFormUpload={handleConsentFormUpload}
             />
           )}
           {step === 4 && (

@@ -100,6 +100,7 @@ export function DoctorManagement({
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   const filtered = staffMembers.filter((s) => {
     const q = search.toLowerCase();
@@ -216,11 +217,12 @@ export function DoctorManagement({
       header: "Staff Member",
       render: (staff: UserType) => (
         <div className="flex items-center gap-3">
-          {staff.avatar ? (
+          {staff.avatar && !imgErrors[staff.id] ? (
             <img
               src={staff.avatar}
               alt={staff.name}
-              className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-border shadow-sm"
+              onError={() => setImgErrors(prev => ({ ...prev, [staff.id]: true }))}
+              className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-border shadow-sm bg-muted/20"
             />
           ) : (
             <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs flex-shrink-0 border border-primary/5">
@@ -411,11 +413,12 @@ export function DoctorManagement({
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-5">
                       <div className="relative">
-                        {staff.avatar ? (
+                        {staff.avatar && !imgErrors[staff.id] ? (
                           <img
                             src={staff.avatar}
                             alt={staff.name}
-                            className="w-16 h-16 rounded-2xl object-cover border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
+                            onError={() => setImgErrors(prev => ({ ...prev, [staff.id]: true }))}
+                            className="w-16 h-16 rounded-2xl object-cover border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300 bg-muted/20"
                           />
                         ) : (
                           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">

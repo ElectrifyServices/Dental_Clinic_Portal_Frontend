@@ -10,7 +10,7 @@ import {
   Heart,
   CreditCard,
 } from "lucide-react";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
 import {
   MedicalInfoTab,
@@ -207,70 +207,64 @@ export function PatientDetails({
       }
     >
       <div className="space-y-8">
-        <div className="flex p-1.5 bg-muted/30 rounded-2xl gap-1 overflow-x-auto scrollbar-hide border border-border/50">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all whitespace-nowrap
-                  ${
-                    isActive
-                      ? "bg-white text-primary shadow-xl shadow-primary/5 ring-1 ring-border/50"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/50"
-                  }
-                `}
-              >
-                <Icon
-                  className={`w-3.5 h-3.5 mr-2 ${isActive ? "text-primary" : "text-muted-foreground/60"}`}
-                />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
+          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        <div className="min-h-[60vh]">
-          {activeTab === "overview" && (
-            <OverviewTab
-              patient={patient}
-              patientAppointments={patientAppointments}
-            />
-          )}
-          {activeTab === "medical" && <MedicalInfoTab patient={patient} />}
-          {activeTab === "appointments" && (
-            <AppointmentsTab
-              patientAppointments={patientAppointments}
-              getStatusColor={getStatusColor}
-            />
-          )}
-          {activeTab === "treatments" && (
-            <TreatmentsTab patientTreatments={patientTreatments} />
-          )}
-          {activeTab === "billing" && (
-            <BillingTab
-              patient={patient}
-              patientInvoices={patientInvoices}
-              getStatusColor={getStatusColor}
-              handleSendReminder={handleSendReminder}
-            />
-          )}
-          {activeTab === "prescriptions" && (
-            <PrescriptionsTab
-              patient={patient}
-              handlePrintDocument={handleOpenPrintModal}
-            />
-          )}
-          {activeTab === "documents" && (
-            <DocumentsTab patient={patient} loading={loading} />
-          )}
-          {activeTab === "family" && (
-            <FamilyTab familyMembers={familyMembers} />
-          )}
-        </div>
+          <div className="min-h-[60vh] mt-6">
+            <TabsContent value="overview" className="m-0 focus-visible:outline-none">
+              <OverviewTab
+                patient={patient}
+                patientAppointments={patientAppointments}
+              />
+            </TabsContent>
+            <TabsContent value="medical" className="m-0 focus-visible:outline-none">
+              <MedicalInfoTab patient={patient} />
+            </TabsContent>
+            <TabsContent value="appointments" className="m-0 focus-visible:outline-none">
+              <AppointmentsTab
+                patientAppointments={patientAppointments}
+                getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+            <TabsContent value="treatments" className="m-0 focus-visible:outline-none">
+              <TreatmentsTab patientTreatments={patientTreatments} />
+            </TabsContent>
+            <TabsContent value="billing" className="m-0 focus-visible:outline-none">
+              <BillingTab
+                patient={patient}
+                patientInvoices={patientInvoices}
+                getStatusColor={getStatusColor}
+                handleSendReminder={handleSendReminder}
+              />
+            </TabsContent>
+            <TabsContent value="prescriptions" className="m-0 focus-visible:outline-none">
+              <PrescriptionsTab
+                patient={patient}
+                handlePrintDocument={handleOpenPrintModal}
+              />
+            </TabsContent>
+            <TabsContent value="documents" className="m-0 focus-visible:outline-none">
+              <DocumentsTab patient={patient} loading={loading} />
+            </TabsContent>
+            <TabsContent value="family" className="m-0 focus-visible:outline-none">
+              <FamilyTab familyMembers={familyMembers} />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
 
       <PrescriptionPrintModal

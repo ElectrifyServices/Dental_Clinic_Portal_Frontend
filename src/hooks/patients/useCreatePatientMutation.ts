@@ -77,83 +77,125 @@ const MARITAL_STATUS_MAP: Record<string, string> = {
 
 const CATEGORY_MAP: Record<string, string> = {
   regular: "REGULAR",
-  corporate: "CORPORATE",
+  corporate: "REGULAR", // Corporate is not in backend enum, mapping to REGULAR
   family: "FAMILY",
-  staff: "STAFF",
+  staff: "CLINIC_STAFF",
   vip: "VIP",
   complimentary: "COMPLIMENTARY",
 };
 
 /**
- * Converts the flat formData object (from usePatientForm) into the
- * shape expected by POST /patient/create.
+ * Converts the flat formData object (from usePatientForm) into a FormData 
+ * object expected by POST /patient/create.
  */
 export function mapFormDataToCreatePayload(
   formData: any,
   options?: { primaryPatientId?: string }
-): CreatePatientPayload {
-  // Medical histories: stored as newline-separated string in the form
-  const medicalHistories = formData.medicalHistory
-    ? formData.medicalHistory
-        .split("\n")
-        .map((s: string) => s.trim())
-        .filter(Boolean)
-    : [];
+): FormData {
+  const payload = new FormData();
 
-  // Allergies: stored as newline-separated string in the form
-  const allergies = formData.allergies
-    ? formData.allergies
-        .split("\n")
-        .map((s: string) => s.trim())
-        .filter(Boolean)
-    : [];
-
-  const payload: CreatePatientPayload = {
-    name: formData.name,
-    phone: formData.phone,
-  };
-
-  if (formData.email) payload.email = formData.email;
-  if (formData.dateOfBirth) payload.date_of_birth = formData.dateOfBirth;
-  if (formData.gender) payload.gender = GENDER_MAP[formData.gender] ?? formData.gender.toUpperCase();
-  if (formData.bloodGroup) payload.blood_group = BLOOD_GROUP_MAP[formData.bloodGroup] ?? formData.bloodGroup;
-  if (formData.address) payload.address = formData.address;
-  if (formData.occupation) payload.occupation = formData.occupation;
-  if (formData.maritalStatus) payload.marital_status = MARITAL_STATUS_MAP[formData.maritalStatus] ?? formData.maritalStatus.toUpperCase();
+  // Basic Details
+  if (formData.name) payload.append('name', formData.name);
+  if (formData.phone) payload.append('phone', formData.phone);
+  if (formData.email) payload.append('email', formData.email);
+  if (formData.dateOfBirth) payload.append('date_of_birth', formData.dateOfBirth);
+  
+  if (formData.gender) payload.append('gender', GENDER_MAP[formData.gender] ?? formData.gender.toUpperCase());
+  if (formData.bloodGroup) payload.append('blood_group', BLOOD_GROUP_MAP[formData.bloodGroup] ?? formData.bloodGroup);
+  if (formData.address) payload.append('address', formData.address);
+  if (formData.occupation) payload.append('occupation', formData.occupation);
+  if (formData.maritalStatus) payload.append('marital_status', MARITAL_STATUS_MAP[formData.maritalStatus] ?? formData.maritalStatus.toUpperCase());
 
   // Emergency contact
-  if (formData.emergencyName) payload.emergency_contact_name = formData.emergencyName;
-  if (formData.emergencyContact) payload.emergency_contact_phone = formData.emergencyContact;
+  if (formData.emergencyName) payload.append('emergency_contact_name', formData.emergencyName);
+  if (formData.emergencyContact) payload.append('emergency_contact_phone', formData.emergencyContact);
   const emergencyRelation = formData.emergencyRelation === "Other"
     ? formData.customEmergencyRelation
     : formData.emergencyRelation;
-  if (emergencyRelation) payload.emergency_contact_relation = emergencyRelation;
+  if (emergencyRelation) payload.append('emergency_contact_relation', emergencyRelation);
+
+  // Relation Type
+  const relationType = formData.relation === "Other" ? formData.customRelation : formData.relation;
+  if (relationType) payload.append('relation_type', relationType.toUpperCase());
 
   // Referral & category
-  if (formData.referredBy) payload.referred_by = formData.referredBy;
+  if (formData.referredBy) payload.append('referred_by', formData.referredBy);
   const category = formData.category || "regular";
-  payload.patient_category = CATEGORY_MAP[category] ?? category.toUpperCase();
+  payload.append('patient_category', CATEGORY_MAP[category] ?? category.toUpperCase());
 
-  // Medical history
-  if (formData.pastDentalHistory) payload.past_dental_history = formData.pastDentalHistory;
-  if (medicalHistories.length) payload.medical_histories = medicalHistories;
-  if (allergies.length) payload.allergies = allergies;
+  // Arrays (Medical History & Allergies)
+  const medicalHistories = formData.medicalHistory
+    ? formData.medicalHistory.split("\n").map((s: string) => s.trim()).filter(Boolean)
+    : [];
+  medicalHistories.forEach((id: string) => payload.append('medical_history_ids', id));
+
+  const allergies = formData.allergies
+    ? formData.allergies.split("\n").map((s: string) => s.trim()).filter(Boolean)
+    : [];
+  allergies.forEach((id: string) => payload.append('allergy_ids', id));
+
+  // Past Dental History
+  if (formData.pastDentalHistory) payload.append('past_dental_history', formData.pastDentalHistory);
 
   // Previous dentist / clinic
-  if (formData.previousDoctorName) payload.previous_doctor_name = formData.previousDoctorName;
-  if (formData.previousClinicName) payload.clinic_name = formData.previousClinicName;
-  if (formData.previousDoctorPhone) payload.doctor_phone = formData.previousDoctorPhone;
-  if (formData.previousLastVisitDate) payload.last_visit_date = formData.previousLastVisitDate;
-  if (formData.previousClinicAddress) payload.clinic_address = formData.previousClinicAddress;
-  if (formData.previousReason) payload.reason_for_treatment = formData.previousReason;
-  if (formData.previousTreatments?.length) payload.previous_treatments = formData.previousTreatments;
+  if (formData.previousDoctorName) payload.append('previous_doctor_name', formData.previousDoctorName);
+  if (formData.previousClinicName) payload.append('clinic_name', formData.previousClinicName);
+  if (formData.previousDoctorPhone) payload.append('doctor_phone', formData.previousDoctorPhone);
+  if (formData.previousLastVisitDate) payload.append('last_visit_date', formData.previousLastVisitDate);
+  if (formData.previousClinicAddress) payload.append('clinic_address', formData.previousClinicAddress);
+  if (formData.previousReason) payload.append('reason_for_treatment', formData.previousReason);
+  
+  if (formData.previousTreatments?.length) {
+    formData.previousTreatments.forEach((pt: string) => payload.append('previous_treatments', pt));
+  }
 
   // Step tracking
-  payload.current_step = 4;
+  payload.append('current_step', '4');
 
   // Family link
   if (options?.primaryPatientId) {
-    payload.primary_patient_id = options.primaryPatientId;
+    payload.append('primary_patient_id', options.primaryPatientId);
+  }
+
+  if (formData.rawAvatarFile) {
+    payload.append('profile_picture', formData.rawAvatarFile);
+  }
+  if (formData.rawConsentFormFile) {
+    payload.append('consent_form_image', formData.rawConsentFormFile);
+  }
+  if (formData.isFOC) {
+    payload.append('is_foc', 'true');
+  }
+  if (formData.defaultDiscount !== undefined) {
+    payload.append('discount_percentage', String(formData.defaultDiscount));
+  }
+
+  // Convert base64 signature to File
+  const signatureData = formData.patientSignature || formData.guardianSignature;
+  if (signatureData && signatureData.startsWith('data:image')) {
+    try {
+      const arr = signatureData.split(',');
+      const mimeMatch = arr[0].match(/:(.*?);/);
+      if (mimeMatch) {
+        const mime = mimeMatch[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const file = new File([u8arr], "signature.png", { type: mime });
+        payload.append('consent_signature_image', file);
+      }
+    } catch (e) {
+      console.error("Error converting signature to file", e);
+    }
+  }
+
+  if (formData.rawDentalFiles?.length) {
+    formData.rawDentalFiles.forEach((file: File) => {
+      payload.append('medical_images', file);
+    });
   }
 
   return payload;
@@ -161,10 +203,15 @@ export function mapFormDataToCreatePayload(
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
+export interface CreatePatientResponse {
+  id: string;
+  [key: string]: any;
+}
+
 export function useCreatePatientMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<CreatePatientResponse, CreatePatientPayload>({
+  return useApiMutation<CreatePatientResponse, FormData>({
     endpoint: "/patient/create",
     method: "post",
     options: {

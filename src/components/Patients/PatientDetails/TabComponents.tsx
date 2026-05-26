@@ -1,4 +1,4 @@
-﻿import {
+import {
   Activity,
   AlertTriangle,
   Calendar,
@@ -44,8 +44,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
         <Heart className="w-5 h-5 mr-2" /> Medical History
       </h3>
       <div className="space-y-3">
-        {(patient?.medicalHistory || []).length > 0 ? (
-          patient.medicalHistory.map((condition: string, index: number) => (
+        {(patient?.medicalHistoryNames || patient?.medicalHistory || []).length > 0 ? (
+          (patient.medicalHistoryNames || patient.medicalHistory).map((condition: string, index: number) => (
             <div
               key={index}
               className="bg-card rounded-xl p-4 border border-primary/30 shadow-sm"
@@ -66,8 +66,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
       <div className="space-y-3">
-        {(patient?.allergies || []).length > 0 ? (
-          patient.allergies.map((allergy: string, index: number) => (
+        {(patient?.allergyNames || patient?.allergies || []).length > 0 ? (
+          (patient.allergyNames || patient.allergies).map((allergy: string, index: number) => (
             <div
               key={index}
               className="bg-card rounded-xl p-4 border border-destructive/20 shadow-sm"
