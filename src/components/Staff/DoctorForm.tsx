@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Modal, Button } from "@/components/ui";
 import { Step1Personal } from "./StaffForm/Step1Personal";
 import { Step2Role } from "./StaffForm/Step2Role";
-import { Step3Documentation } from "./StaffForm/Step3Documentation";
+import { Step3Documentation, REQUIRED_DOCS } from "./StaffForm/Step3Documentation";
 import { Step4Professional } from "./StaffForm/Step4Professional";
 import {
   useFormConfig,
@@ -32,7 +32,9 @@ import { useCreateStaffMutation } from "../../hooks/staff/useCreateStaffMutation
 import { useUpdateStaffMutation } from "../../hooks/staff/useUpdateStaffMutation";
 import { useRolesQuery } from "@/hooks/roles/useRolesQuery";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
+import { useSingleStaffQuery } from "../../hooks/staff/useSingleStaffQuery";
 import apiClient from "@/services/apiClient";
+import { useModal } from "@/contexts/ModalContext";
 
 interface DoctorFormProps {
   onClose: () => void;
@@ -41,6 +43,7 @@ interface DoctorFormProps {
 }
 
 export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
+  const { showToast } = useModal();
   const staffFormCfg = useFormConfig("staff");
   const formTitle = useFormTitle("staff", doctor ? "edit" : "create");
   const submitLabel = useSubmitLabel("staff", doctor ? "edit" : "create");
@@ -53,6 +56,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // Fetch detailed staff details from API GET /staff/:id when editing
+  const { data: singleStaffData, isLoading: isFetching } = useSingleStaffQuery(doctor?.id || undefined, {
+    enabled: !!doctor?.id,
+  });
 
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema) as any,
@@ -94,42 +102,97 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
   React.useEffect(() => {
     if (doctor) {
-      form.reset({
-        name: doctor.name ?? "",
-        email: doctor.email ?? "",
-        phone: doctor.phone ?? "",
-        role: doctor.role ?? "doctor",
-        specialization: doctor.specialization ?? "",
-        password: "",
-        confirmPassword: "",
-        permissions: doctor.permissions ?? [
-          "dashboard",
-          "appointments",
-          "patients",
-          "consultation",
-          "treatments",
-          "medical_records",
-          "consent_forms",
-        ],
-        uniqueId: doctor.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
-        documents: doctor.documents ?? [],
-        profitSharing: doctor.profitSharing ?? false,
-        profitPercentage: doctor.profitPercentage ?? 0,
-        licenseNumber: doctor.licenseNumber ?? "",
-        monthlySalary: doctor.monthlySalary !== undefined ? String(doctor.monthlySalary) : "",
-        salaryPaid: doctor.salaryPaid !== undefined ? String(doctor.salaryPaid) : "0",
-        salaryPending: doctor.salaryPending !== undefined ? String(doctor.salaryPending) : "0",
-        education: doctor.education ?? "",
-        experience: doctor.experience !== undefined ? String(doctor.experience) : "",
-        department: doctor.department ?? "",
-        designation: doctor.designation ?? "",
-        qualification: doctor.qualification ?? "",
-        consultationFee: doctor.consultationFee !== undefined ? String(doctor.consultationFee) : "",
-        isActive: doctor.isActive !== undefined ? doctor.isActive : true,
-        avatar: doctor.avatar ?? doctor.image ?? "",
-      });
+      if (singleStaffData) {
+        const s = singleStaffData.data || singleStaffData;
+
+        let normalizedRole = 'staff';
+        let rawRole = s.role?.name || s.role_id || s.role || 'staff';
+        if (rawRole.toLowerCase().includes('super')) normalizedRole = 'super_admin';
+        else if (rawRole.toLowerCase().includes('admin')) normalizedRole = 'admin';
+        else if (rawRole.toLowerCase().includes('doctor')) normalizedRole = 'doctor';
+        else if (rawRole.toLowerCase().includes('receptionist')) normalizedRole = 'receptionist';
+        else if (rawRole.toLowerCase().includes('assistant')) normalizedRole = 'assistant';
+
+        let permissions: string[] = [];
+        try {
+          if (s.module_permission) {
+            const rawPerms = typeof s.module_permission === 'string' ? JSON.parse(s.module_permission) : s.module_permission;
+            if (Array.isArray(rawPerms)) {
+              permissions = rawPerms.map((p: string) => p.toLowerCase());
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse permissions", e);
+        }
+
+        const profile = s.personal_profile || {};
+        const exp = profile.experience_years !== undefined ? String(profile.experience_years) : '';
+        const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
+
+        form.reset({
+          name: s.name || doctor.name || "",
+          email: s.email || doctor.email || "",
+          phone: s.phone || doctor.phone || "",
+          role: normalizedRole as any,
+          specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
+          password: "",
+          confirmPassword: "",
+          permissions: permissions.length > 0 ? permissions : doctor.permissions || ['dashboard'],
+          uniqueId: s.emp_id || doctor.uniqueId || s.id.slice(0, 8),
+          documents: s.documents || doctor.documents || [],
+          profitSharing: profile.profit_sharing || doctor.profitSharing || false,
+          profitPercentage: profile.profit_sharing_percentage || doctor.profitPercentage || 0,
+          licenseNumber: profile.license_number || doctor.licenseNumber || '',
+          monthlySalary: sal || doctor.monthlySalary || '',
+          salaryPaid: s.salaryPaid || doctor.salaryPaid || '0',
+          salaryPending: s.salaryPending || doctor.salaryPending || sal || '0',
+          education: profile.education || doctor.education || '',
+          experience: exp || doctor.experience || '',
+          department: profile.department || doctor.department || '',
+          designation: profile.designation || doctor.designation || '',
+          qualification: profile.qualification || doctor.qualification || '',
+          consultationFee: profile.consultation_fee !== undefined ? String(profile.consultation_fee) : doctor.consultationFee || '',
+          isActive: s.status === 'ACTIVE',
+          avatar: s.profile_picture || doctor.avatar || doctor.image || '',
+        });
+      } else {
+        form.reset({
+          name: doctor.name ?? "",
+          email: doctor.email ?? "",
+          phone: doctor.phone ?? "",
+          role: doctor.role ?? "doctor",
+          specialization: doctor.specialization ?? "",
+          password: "",
+          confirmPassword: "",
+          permissions: doctor.permissions ?? [
+            "dashboard",
+            "appointments",
+            "patients",
+            "consultation",
+            "treatments",
+            "medical_records",
+            "consent_forms",
+          ],
+          uniqueId: doctor.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
+          documents: doctor.documents ?? [],
+          profitSharing: doctor.profitSharing ?? false,
+          profitPercentage: doctor.profitPercentage ?? 0,
+          licenseNumber: doctor.licenseNumber ?? "",
+          monthlySalary: doctor.monthlySalary !== undefined ? String(doctor.monthlySalary) : "",
+          salaryPaid: doctor.salaryPaid !== undefined ? String(doctor.salaryPaid) : "0",
+          salaryPending: doctor.salaryPending !== undefined ? String(doctor.salaryPending) : "0",
+          education: doctor.education ?? "",
+          experience: doctor.experience !== undefined ? String(doctor.experience) : "",
+          department: doctor.department ?? "",
+          designation: doctor.designation ?? "",
+          qualification: doctor.qualification ?? "",
+          consultationFee: doctor.consultationFee !== undefined ? String(doctor.consultationFee) : "",
+          isActive: doctor.isActive !== undefined ? doctor.isActive : true,
+          avatar: doctor.avatar ?? doctor.image ?? "",
+        });
+      }
     }
-  }, [doctor, form]);
+  }, [doctor, singleStaffData, form]);
 
   const formData = form.watch();
 
@@ -155,6 +218,23 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       const valid = await form.trigger(fields);
       if (!valid) return;
     }
+
+    // Step 3 Document Compliance validation
+    if (currentStep === 3) {
+      const docs = form.getValues("documents") || [];
+      const role = form.getValues("role") || "doctor";
+      const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
+
+      const missingDocs = requiredList.filter(
+        reqDoc => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
+      );
+
+      if (missingDocs.length > 0) {
+        showToast(`Please upload the following mandatory documents:\n• ${missingDocs.join("\n• ")}`, "error");
+        return;
+      }
+    }
+
     setCurrentStep((s) => s + 1);
   };
   const { data: apiRoles } = useRolesQuery();
@@ -237,10 +317,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         license_number: data.licenseNumber,
         consultation_fee: parseInt(data.consultationFee || "0", 10),
         profit_sharing: data.profitSharing,
-        profit_percentage: data.profitPercentage || 0,
-        department: data.department || "",
-        designation: data.designation || "",
-        education: data.education || "",
+        profit_sharing_percentage: data.profitPercentage || 0,
         monthly_salary: data.monthlySalary ? parseInt(data.monthlySalary, 10) : 0,
         status: data.isActive ? "ACTIVE" : "INACTIVE"
       };
@@ -271,7 +348,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "Bank Details / Passbook": "bank_details",
         "Signed Employment Contract": "employment_contract",
         "Signed NDA": "employment_contract",
-        "Appointment Letter": "employment_contract"
+        "Appointment Letter": "employment_contract",
+        "Vaccination Proof (Hep-B/COVID)": "vaccination_proof",
+        "Medical Fitness Certificate": "medical_fitness_certificate"
       };
 
       data.documents?.forEach((doc: any) => {
@@ -330,36 +409,31 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     } catch (error: any) {
       console.error("Error creating staff:", error);
 
-      let errMsg = "Failed to save staff. Please check the details.   Staff already exists";
+      let errMsg = "Failed to save staff. Please check the details.";
 
-      const resData = error.response?.data;
-      if (resData) {
-        if (typeof resData === 'string') {
-          errMsg = resData;
-        } else if (resData.status?.statusDesc) {
-          errMsg = resData.status.statusDesc;
-        } else if (resData.message) {
-          errMsg = resData.message;
-        } else if (resData.error && typeof resData.error === 'string') {
-          errMsg = resData.error;
-        } else if (resData.errors && Array.isArray(resData.errors)) {
-          errMsg = resData.errors.join(", ");
-        } else if (resData.responseObject?.message) {
-          errMsg = resData.responseObject.message;
-        } else {
-          // If there's some other JSON structure but no clear message, stringify it or keep default
-          const str = JSON.stringify(resData);
-          if (str.length < 100) errMsg = str;
-        }
-      } else if (error.status?.statusDesc) {
-        errMsg = error.status.statusDesc;
+      const resData = error.response?.data || error;
+      
+      if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
+        errMsg = resData.responseStatusList.statusList[0].statusDesc;
+      } else if (resData?.status?.statusDesc) {
+        errMsg = resData.status.statusDesc;
+      } else if (resData?.message) {
+        errMsg = resData.message;
+      } else if (resData?.error && typeof resData.error === 'string') {
+        errMsg = resData.error;
+      } else if (resData?.errors && Array.isArray(resData.errors)) {
+        errMsg = resData.errors.join(", ");
+      } else if (resData?.responseObject?.message) {
+        errMsg = resData.responseObject.message;
+      } else if (typeof resData === 'string') {
+        errMsg = resData;
       } else if (error.message && !error.message.includes('status code')) {
         errMsg = error.message;
       } else if (typeof error === 'string') {
         errMsg = error;
       }
 
-      alert(errMsg);
+      showToast(errMsg, "error");
     }
   };
 
@@ -545,7 +619,13 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 relative min-h-[400px]">
+        {isFetching && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
+            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
+            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading staff details from API...</p>
+          </div>
+        )}
         <div className="flex items-center justify-between px-2">
           {STEPS.map((s, i) => {
             const Icon = s.icon;

@@ -23,6 +23,7 @@ interface Step1Props {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   validationErrors: { [key: string]: string };
   matchedCorporateEmp: any;
+  acceptCorporateEmployee: () => void;
   corporatePlans: any[];
   type?: string;
   handleCustomRelation: (value: string) => void;
@@ -36,6 +37,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   setFormData,
   validationErrors,
   matchedCorporateEmp,
+  acceptCorporateEmployee,
   corporatePlans,
   type,
   handleCustomRelation,
@@ -75,22 +77,43 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       {matchedCorporateEmp &&
         (() => {
-          const planId =
-            matchedCorporateEmp.corporatePlanId ||
-            matchedCorporateEmp.companyId;
-          const plan = corporatePlans.find((cp: any) => cp.id === planId);
+          let plan = null;
+          
+          if (matchedCorporateEmp.corporate_plan) {
+            const cp = matchedCorporateEmp.corporate_plan;
+            plan = {
+              name: cp.plan_name,
+              code: cp.plan_code || "CORP",
+              validTo: cp.valid_till ? new Date(cp.valid_till).toLocaleDateString() : "Lifetime",
+              benefits: cp.benefits?.map((b: any) => ({
+                id: b.id || Math.random().toString(),
+                description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
+              })) || [],
+              companyName: matchedCorporateEmp.company_name
+            };
+          } else {
+            const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
+            plan = corporatePlans.find((cp: any) => cp.id === planId);
+          }
+
           return (
-            <Card className="mx-6 overflow-hidden border-secondary bg-secondary/30">
+            <Card 
+              onClick={acceptCorporateEmployee}
+              className="mx-6 overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
+            >
               <div className="flex items-center gap-3 px-4 py-3 bg-primary">
                 <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white">
+                  <p className="text-sm font-bold text-white flex items-center gap-2">
                     Corporate Employee Identified
+                    <span className="text-[10px] bg-white text-primary px-2 py-0.5 rounded-full font-bold animate-pulse">
+                      Click to Auto-Fill
+                    </span>
                   </p>
                   <p className="text-xs text-primary-foreground/80">
-                    {matchedCorporateEmp.companyName || plan?.companyName} ·
+                    {matchedCorporateEmp.company_name || plan?.companyName} ·
                     EMP:{" "}
-                    {matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
+                    {matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
                   </p>
                 </div>
                 {plan && (
@@ -124,13 +147,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     ))}
                   </div>
                   <p className="text-xs text-primary/70 font-medium italic">
-                    ✓ Discount will be applied automatically in billing.
+                    ✓ Click anywhere on this card to auto-fill details. Discount will be applied automatically in billing.
                   </p>
                 </CardContent>
               ) : (
                 <CardContent className="px-4 py-3">
                   <p className="text-xs text-amber-700 font-medium">
-                    Employee found but no active plan assigned.
+                    Employee found but no active plan assigned. Click to fill available info.
                   </p>
                 </CardContent>
               )}
@@ -172,12 +195,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             name="phone"
             value={formData.phone || ""}
             onChange={handleChange}
+            disabled={!!formData.id}
             className={
               validationErrors.phone
                 ? "border-destructive bg-destructive/5"
-                : ""
+                : (!!formData.id ? "bg-muted cursor-not-allowed opacity-70" : "")
             }
-            placeholder="+91 98765 43210"
+            placeholder="e.g. 9876543210"
           />
           {validationErrors.phone && (
             <p className="text-destructive text-xs mt-1 flex items-center">
@@ -279,36 +303,19 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 setFormData((prev: any) => ({
                   ...prev,
                   relation: value,
-                  customRelation: value === "Other" ? prev.customRelation : "",
+                  customRelation: value === "OTHER" ? prev.customRelation : "",
                 }));
               }}
               className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
             >
               <option value="">Select Relation</option>
-              <option value="Father">Father</option>
-              <option value="Mother">Mother</option>
-              <option value="Brother">Brother</option>
-              <option value="Sister">Sister</option>
-              <option value="Wife">Wife</option>
-              <option value="Husband">Husband</option>
-              <option value="Friend">Friend</option>
-              <option value="Other">Other</option>
-              {formData.relation &&
-                ![
-                  "",
-                  "Father",
-                  "Mother",
-                  "Brother",
-                  "Sister",
-                  "Wife",
-                  "Husband",
-                  "Friend",
-                  "Other",
-                ].includes(formData.relation) && (
-                  <option value={formData.relation}>{formData.relation}</option>
-                )}
+              <option value="SELF">Self</option>
+              <option value="SPOUSE">Spouse</option>
+              <option value="CHILD">Child</option>
+              <option value="PARENT">Parent</option>
+              <option value="SIBLING">Sibling</option>
             </select>
-            {formData.relation === "Other" && (
+            {formData.relation === "OTHER" && (
               <div className="flex mt-3">
                 <Input
                   type="text"
@@ -383,78 +390,81 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </select>
         </div>
 
-        {!matchedCorporateEmp && (
-          <>
-            <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
-                Patient Category
-              </label>
-              <select
-                name="category"
-                value={formData.category || "regular"}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData((prev: any) => ({
-                    ...prev,
-                    category: val as any,
-                    defaultDiscount:
-                      val === "family" || val === "staff"
-                        ? 100
-                        : prev.defaultDiscount,
-                  }));
-                }}
-                className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
-              >
-                <option value="regular">Regular</option>
-                <option value="corporate">Corporate</option>
-                <option value="family">Family (Doctor's House)</option>
-                <option value="staff">Clinic Staff</option>
-                <option value="vip">VIP</option>
-                <option value="complimentary">Complimentary</option>
-              </select>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-muted-foreground">
-                  Default Discount (%)
+        {(() => {
+          const isCorporate = !!matchedCorporateEmp || formData.category === 'corporate';
+          return (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                  Patient Category
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors">
-                  <input
-                    type="checkbox"
-                    name="isFOC"
-                    checked={formData.isFOC || false}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        isFOC: checked,
-                        defaultDiscount: checked ? 100 : 0,
-                      }));
-                    }}
-                    className="w-3.5 h-3.5 accent-primary cursor-pointer"
-                  />
-                  <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
-                </label>
+                <select
+                  name="category"
+                  value={isCorporate ? "corporate" : (formData.category?.toLowerCase() || "regular")}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      category: val as any,
+                      defaultDiscount:
+                        val === "family" || val === "staff"
+                          ? 100
+                          : prev.defaultDiscount,
+                    }));
+                  }}
+                  disabled={isCorporate}
+                  className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm disabled:opacity-80 disabled:bg-muted"
+                >
+                  <option value="regular">Regular</option>
+                  {isCorporate && <option value="corporate">Corporate</option>}
+                  <option value="family">Family (Doctor's House)</option>
+                  <option value="staff">Clinic Staff</option>
+                  <option value="vip">VIP</option>
+                  <option value="complimentary">Complimentary</option>
+                </select>
               </div>
-              <Input
-                type="number"
-                name="defaultDiscount"
-                value={formData.defaultDiscount !== undefined ? formData.defaultDiscount : 0}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
-                  handleChange({
-                    ...e,
-                    target: { ...e.target, name: 'defaultDiscount', value: val }
-                  } as any);
-                }}
-                disabled={formData.isFOC}
-                min="0"
-                max="100"
-                placeholder="e.g. 100 for full free"
-              />
-            </div>
-          </>
-        )}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-muted-foreground">
+                    Default Discount (%)
+                  </label>
+                  <label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="isFOC"
+                      checked={formData.isFOC || false}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          isFOC: checked,
+                          defaultDiscount: checked ? 100 : 0,
+                        }));
+                      }}
+                      disabled={isCorporate}
+                      className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
+                  </label>
+                </div>
+                <Input
+                  type="number"
+                  name="defaultDiscount"
+                  value={isCorporate ? (formData.defaultDiscount || 0) : (formData.defaultDiscount !== undefined ? formData.defaultDiscount : 0)}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
+                    setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
+                  }}
+                  disabled={isCorporate || formData.isFOC}
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 100 for full free"
+                  className="disabled:opacity-80 disabled:bg-muted"
+                />
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -576,10 +586,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               value={formData.emergencyContact || ""}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, '');
-                handleChange({
-                  ...e,
-                  target: { ...e.target, name: 'emergencyContact', value: digits }
-                } as any);
+                setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
               }}
               placeholder="Emergency contact phone number"
             />

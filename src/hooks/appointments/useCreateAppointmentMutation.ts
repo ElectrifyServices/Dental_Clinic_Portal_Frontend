@@ -9,6 +9,7 @@ export interface CreateAppointmentPayload {
   date: string;
   start_time: string;
   specific_treatment?: string;
+  treatment_type?: string;
   slot_duration_mins: number;
   treatment_cost?: number;
   concern?: string;

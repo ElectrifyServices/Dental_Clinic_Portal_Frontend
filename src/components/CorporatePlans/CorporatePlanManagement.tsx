@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: Props) {
-  const { showToast } = useModal();
+  const { showToast, confirmDelete } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
   // Fetch corporate form configuration data 
@@ -40,17 +40,21 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
     return match && f;
   });
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this plan?')) {
-      try {
-        await deletePlanMutation.mutateAsync({ id });
-        onDelete(id);
-        showToast('Plan deleted successfully');
-      } catch (err: any) {
-        console.error("Failed to delete corporate plan via API:", err);
-        showToast(err?.response?.data?.message || err?.message || "Failed to delete plan");
+  const handleDelete = (id: string) => {
+    confirmDelete(
+      'Delete Corporate Plan',
+      'Delete this plan?',
+      async () => {
+        try {
+          await deletePlanMutation.mutateAsync({ id });
+          onDelete(id);
+          // The global confirmDelete already shows a success toast: 'Record deleted successfully!'
+        } catch (err: any) {
+          console.error("Failed to delete corporate plan via API:", err);
+          showToast(err?.response?.data?.message || err?.message || "Failed to delete plan", "error");
+        }
       }
-    }
+    );
   };
 
   const handleToggle = async (plan: CorporatePlan) => {

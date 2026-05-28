@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { User } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -11,6 +11,7 @@ interface PatientInfoFieldsProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPhoneChange: (val: string) => void;
   onAcceptSuggestion: () => void;
+  errors?: any;
 }
 
 export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
@@ -22,6 +23,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   onChange,
   onPhoneChange,
   onAcceptSuggestion,
+  errors,
 }) => {
   return (
     <section className="space-y-6">
@@ -38,7 +40,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
-            Patient Name
+            Patient Name <span className="text-destructive">*</span>
           </label>
           <Input
             name="patientName"
@@ -49,6 +51,11 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
             placeholder="Search or enter name"
             className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
           />
+          {errors?.patientName && (
+            <p className="text-[10px] text-destructive font-bold mt-1 ml-1 uppercase tracking-wider">
+              {errors.patientName.message}
+            </p>
+          )}
           {suggestion && (
             <div
               className="mt-2 p-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2 cursor-pointer hover:bg-primary/10 transition-colors"
@@ -67,7 +74,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
-            Phone Number
+            Phone Number <span className="text-destructive">*</span>
           </label>
           <Input
             name="patientPhone"
@@ -78,6 +85,11 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
             placeholder="98765 43210"
             className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
           />
+          {errors?.patientPhone && (
+            <p className="text-[10px] text-destructive font-bold mt-1 ml-1 uppercase tracking-wider">
+              {errors.patientPhone.message}
+            </p>
+          )}
         </div>
       </div>
       {isConsulted && (

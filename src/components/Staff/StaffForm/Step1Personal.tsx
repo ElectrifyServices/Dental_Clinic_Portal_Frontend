@@ -76,9 +76,14 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         <LabeledField label="Phone Number *" required error={errors.phone?.message}>
           <div className="relative">
             <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="tel" name="phone" value={formData.phone} onChange={onChange} required
+            <input type="tel" name="phone" value={formData.phone} 
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                onChange(e);
+              }} 
+              required
               className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
-              placeholder="+91 98765 43210" />
+              placeholder="9876543210" />
           </div>
         </LabeledField>
 

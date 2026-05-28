@@ -5,6 +5,7 @@ import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagem
 import { useAppData } from '../hooks/useAppData';
 import { useModal } from '../contexts/ModalContext';
 import { useCorporatePlansQuery } from '../hooks/corporate/useCorporatePlansQuery';
+import { useEmployeesQuery } from '../hooks/corporate/useEmployeesQuery';
 
 const TABS = [
   { key: 'plans', label: 'Corporate Plans', icon: Building2 },
@@ -23,6 +24,11 @@ export const CorporatePlansPage: React.FC = () => {
   // Fetch corporate plans when on this page
   useCorporatePlansQuery({ enabled: true });
 
+  // Fetch employee list to get the exact count dynamically from backend API
+  const { data: employeesData } = useEmployeesQuery({ page: 1, limit: 1 });
+  const pagination = employeesData?.pagination || employeesData?.data?.pagination;
+  const totalEmployees = pagination ? (pagination.total || 0) : corporateEmployees.length;
+
   const plans = corporatePlans;
   const employees = corporateEmployees;
 
@@ -40,11 +46,6 @@ export const CorporatePlansPage: React.FC = () => {
               }`}>
               <Icon className="w-4 h-4" />
               {t.label}
-              {t.key === 'employees' && employees.length > 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  {employees.length}
-                </span>
-              )}
             </button>
           );
         })}
@@ -54,9 +55,7 @@ export const CorporatePlansPage: React.FC = () => {
         <CorporatePlanManagement
           plans={plans}
           onSave={handleSaveCorporatePlan}
-          onDelete={(id: string) =>
-            confirmDelete('Delete Corporate Plan', 'Delete this plan?', () => handleDeleteCorporatePlan(id))
-          }
+          onDelete={handleDeleteCorporatePlan}
           onToggle={handleToggleCorporatePlan}
         />
       ) : (

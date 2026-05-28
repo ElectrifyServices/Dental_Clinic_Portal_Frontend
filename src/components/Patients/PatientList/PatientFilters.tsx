@@ -57,6 +57,8 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
           <option value="family">Family</option>
           <option value="staff">Staff</option>
           <option value="corporate">Corporate</option>
+          <option value="vip">VIP</option>
+          <option value="complimentary">Complimentary</option>
         </select>
 
         <div className="h-8 w-px bg-border hidden lg:block" />

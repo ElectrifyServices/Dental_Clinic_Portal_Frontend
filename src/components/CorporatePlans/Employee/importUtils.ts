@@ -17,9 +17,17 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           const name = String(r['Name'] || r['name'] || '').trim();
           const phone = String(r['Phone'] || r['Mobile'] || r['phone'] || '').trim();
           const email = String(r['Email'] || r['email'] || '').trim();
-          const planCode = String(r['PlanCode'] || r['Plan Code'] || r['plan_code'] || '').trim();
+          const planCode = String(
+            r['PlanCode'] || 
+            r['Plan Code'] || 
+            r['plan_code'] || 
+            r['corporate_plan_id'] || 
+            r['corporatePlanId'] || 
+            r['corporate_plan'] || 
+            ''
+          ).trim();
           const planCodeUpper = planCode.toUpperCase();
-          const companyName = String(r['Company'] || r['CompanyName'] || r['company'] || '').trim();
+          const companyName = String(r['Company'] || r['CompanyName'] || r['company'] || r['company_name'] || '').trim();
 
           if (!name) { errors.push(`Row ${row}: Name is required`); return; }
           if (!phone) { errors.push(`Row ${row}: Phone is required`); return; }
@@ -42,10 +50,10 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
 
           rows.push({
             id: `EMP-${Date.now()}-${i}`,
-            employeeId: String(r['EmployeeId'] || r['EmpID'] || r['employee_id'] || '').trim(),
+            employeeId: String(r['EmployeeId'] || r['EmpID'] || r['employee_id'] || r['emp_id'] || '').trim(),
             name, phone, email,
-            gender: (['male','female','other'].includes(String(r['Gender'] || '').toLowerCase()) ? String(r['Gender']).toLowerCase() : 'male') as any,
-            dateOfBirth: String(r['DOB'] || r['DateOfBirth'] || '').trim(),
+            gender: (['male','female','other'].includes(String(r['Gender'] || r['gender'] || '').toLowerCase()) ? String(r['Gender'] || r['gender']).toLowerCase() : 'male') as any,
+            dateOfBirth: String(r['DOB'] || r['DateOfBirth'] || r['date_of_birth'] || '').trim(),
             designation: String(r['Designation'] || r['designation'] || '').trim(),
             department: String(r['Department'] || r['department'] || '').trim(),
             companyName: companyName || plan?.companyName || '',
@@ -65,11 +73,15 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
   });
 }
 
-export function downloadTemplate() {
+export function downloadTemplate(plans?: CorporatePlan[]) {
+  const activePlanCode = plans && plans.length > 0 ? (plans[0].code || plans[0].id) : 'DENTAL-BASIC-2024';
+  const activeCompanyName = plans && plans.length > 0 ? (plans[0].companyName || 'electrify') : 'Tata Consultancy Services';
+
   const ws = XLSX.utils.aoa_to_sheet([
-    ['Name', 'Phone', 'Email', 'Gender', 'EmployeeId', 'Designation', 'Department', 'Company', 'PlanCode', 'DOB', 'EligibleDate'],
-    ['Rajesh Kumar', '9876543210', 'rajesh@tcs.com', 'male', 'Electrify001', 'Engineer', 'IT', 'Tata Consultancy Services', 'Electrify-GOLD', '1990-01-15', '2026-05-20'],
-    ['Priya Sharma', '8765432109', 'priya@tcs.com', 'female', 'Electrify002', 'Manager', 'HR', 'Tata Consultancy Services', 'Electrify-GOLD', '1988-05-22', '2026-05-20'],
+    ['name', 'emp_id', 'phone', 'email', 'gender', 'company_name', 'designation', 'department', 'plan_code', 'date_of_birth', 'eligible_date'],
+    ['Bulk User 1', 'BULK001', '9999911111', 'bulk1@example.com', 'MALE', activeCompanyName, 'Developer', 'IT', activePlanCode, '1995-01-01', '2026-06-01'],
+    ['Bulk User 2', 'BULK002', '9999922222', 'bulk2@example.com', 'FEMALE', activeCompanyName, 'Tester', 'QA', activePlanCode, '1996-02-02', '2026-06-01'],
+    ['Bulk User 3', 'BULK003', '9999933333', 'bulk3@example.com', 'MALE', activeCompanyName, 'Manager', 'Management', activePlanCode, '1994-03-03', '2026-06-01'],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Employees');

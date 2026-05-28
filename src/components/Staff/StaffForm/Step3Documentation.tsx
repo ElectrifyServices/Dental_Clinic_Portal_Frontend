@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
+import { useModal } from '@/contexts/ModalContext';
 
 interface Step3Props {
   role: string;
@@ -33,8 +34,28 @@ const DOC_REQUIREMENTS: Record<string, string[]> = {
   ]
 };
 
+export const REQUIRED_DOCS: Record<string, string[]> = {
+  doctor: [
+    'Aadhaar / Identity Proof', 'Educational Degree Documents', 'Medical Council Registration', 'PAN Card', 'Bank Details / Passbook'
+  ],
+  receptionist: [
+    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook'
+  ],
+  assistant: [
+    'Aadhaar / Identity Proof', 'Vaccination Proof (Hep-B/COVID)'
+  ],
+  admin: [
+    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook', 'Signed Employment Contract'
+  ],
+  super_admin: [
+    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook', 'Signed Employment Contract'
+  ]
+};
+
 export function Step3Documentation({ role, documents, onUpload, onRemove }: Step3Props) {
+  const { showConfirm } = useModal();
   const requirements = DOC_REQUIREMENTS[role] || DOC_REQUIREMENTS.assistant;
+  const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant;
 
   const handleFileChange = (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,6 +75,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
         {requirements.map((doc, idx) => {
           const uploadedFiles = documents.filter(d => d.type === doc);
           const hasFiles = uploadedFiles.length > 0;
+          const isRequired = requiredList.includes(doc);
 
           return (
             <div key={idx} className={`p-4 border rounded-2xl transition-all bg-card/50 group relative overflow-hidden ${hasFiles ? 'border-emerald-200 bg-emerald-50/30' : 'border-border hover:border-primary/30'}`}>
@@ -66,8 +88,10 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                 </div>
                 {hasFiles ? (
                   <Badge variant="green" className="text-[8px] font-black tracking-widest">{uploadedFiles.length} UPLOADED</Badge>
-                ) : (
+                ) : isRequired ? (
                   <Badge variant="amber" className="text-[8px] font-black tracking-widest">REQUIRED</Badge>
+                ) : (
+                  <Badge variant="gray" className="text-[8px] font-black tracking-widest bg-muted text-muted-foreground/60 border border-border">OPTIONAL</Badge>
                 )}
               </div>
 
@@ -105,7 +129,12 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            onRemove(file);
+                            showConfirm(
+                              'Remove Document',
+                              `Are you sure you want to remove ${file.name}?`,
+                              () => onRemove(file),
+                              'Remove'
+                            );
                           }}
                         >
                           <Trash2 className="w-3.5 h-3.5" />

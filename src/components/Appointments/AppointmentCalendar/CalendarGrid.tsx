@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -8,6 +8,7 @@ interface CalendarGridProps {
   rollingDates: Date[];
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
+  appointmentsByDate?: Record<string, number>;
   getDayAppointmentsForDate: (date: Date) => any[];
   monthNames: string[];
 }
@@ -18,6 +19,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   rollingDates,
   selectedDate,
   setSelectedDate,
+  appointmentsByDate = {},
   getDayAppointmentsForDate,
   monthNames,
 }) => {
@@ -81,6 +83,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
           {rollingDates.map((date, index) => {
             const dayAppointments = getDayAppointmentsForDate(date);
+            const countToDisplay = dayAppointments.length;
             const isSelected = selectedDate.toDateString() === date.toDateString();
             const isToday = isTodayDate(date);
             const isPast = isPastActualDate(date);
@@ -98,9 +101,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 <span className={`text-sm md:text-base font-bold ${isToday ? "text-white" : isPast ? "text-muted-foreground/60" : "text-foreground"}`}>
                   {date.getDate()}
                 </span>
-                {dayAppointments.length > 0 && (
+                {countToDisplay > 0 && (
                   <div className={`mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isToday ? "bg-card/20 text-white" : "bg-primary/10 text-primary"}`}>
-                    {dayAppointments.length}
+                    {countToDisplay}
                   </div>
                 )}
                 {date.getDate() === 1 && (

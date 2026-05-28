@@ -39,13 +39,19 @@ const PERMISSION_MAP: Record<string, string[]> = {
 
 function GuardedRoute({ path, element }: { path: string; element: React.ReactElement }) {
   const { state } = useAuth();
-  const userPermissions = (state.user as any)?.module_permission;
+  const userPermissions: string[] = (state.user as any)?.module_permission || [];
 
-  if (Array.isArray(userPermissions)) {
+  // If user has ALL permission (e.g. SUPER_ADMIN), allow access to every route
+  const hasAll = userPermissions.some((p) => p.toUpperCase() === "ALL");
+  if (hasAll) return element;
+
+  if (userPermissions.length > 0) {
     const key = path.replace(/^\//, "");
     const allowed = PERMISSION_MAP[key];
     if (allowed) {
-      const hasAccess = allowed.some(p => userPermissions.includes(p.toUpperCase()));
+      const hasAccess = allowed.some((p) =>
+        userPermissions.some((up) => up.toUpperCase() === p.toUpperCase())
+      );
       if (!hasAccess) {
         return <Navigate to="/dashboard" replace />;
       }

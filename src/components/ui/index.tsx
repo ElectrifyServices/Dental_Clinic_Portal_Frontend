@@ -575,13 +575,14 @@ export function SearchInput({
     <div className={cn("relative", className)}>
       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
       <input
-        type="text"
-        name="search"
-        autoComplete="off"
+        type="search"
+        name="search-query-input"
+        autoComplete="new-password"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="search-input"
+        spellCheck="false"
       />
     </div>
   );

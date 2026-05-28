@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Edit, UserX, CheckCircle, Trash2, UserCheck } from 'lucide-react';
 
 interface AppointmentActionMenuProps {
@@ -52,7 +52,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             Edit Appointment
           </button>
 
-          {appointment.status !== 'no-show' ? (
+          {appointment.status !== 'no-show' && appointment.status !== 'checked-in' ? (
             <button 
               onClick={() => { onUpdateStatus?.(appointment.id, 'no-show'); onClose(); }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium"
@@ -62,7 +62,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
               </div>
               Mark No-Show
             </button>
-          ) : (
+          ) : appointment.status === 'no-show' ? (
             <button 
               onClick={() => { onUpdateStatus?.(appointment.id, 'scheduled'); onClose(); }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 flex items-center gap-3 text-primary rounded-xl transition-colors font-medium"
@@ -72,7 +72,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
               </div>
               Restore Status
             </button>
-          )}
+          ) : null}
 
           <div className="h-px bg-muted my-1 mx-2" />
 

@@ -69,6 +69,16 @@ function minsToTime(mins: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+/** Convert "HH:MM" (24h) to "HH:MM AM/PM" (12h) */
+function formatTo12Hr(t: string): string {
+  if (!t || !t.includes(":")) return t;
+  const [hStr, mStr] = t.split(":");
+  const h = parseInt(hStr, 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const displayHour = h % 12 === 0 ? 12 : h % 12;
+  return `${String(displayHour).padStart(2, "0")}:${mStr} ${ampm}`;
+}
+
 /**
  * Calculate end time given a start time, slot count, slot duration and buffer.
  * Total time = slots × duration + (slots - 1) × buffer
@@ -113,6 +123,74 @@ function calcSlotCount(
   return count;
 }
 
+interface HourMinPickerProps {
+  value: string;
+  onChange: (newValue: string) => void;
+  optional?: boolean;
+}
+
+function HourMinPicker({ value, onChange, optional = false }: HourMinPickerProps) {
+  const [hStr, mStr] = value && value.includes(":") ? value.split(":") : ["", ""];
+  
+  const hours = Array.from({ length: 24 }, (_, i) => {
+    const val = String(i).padStart(2, "0");
+    const ampm = i >= 12 ? "PM" : "AM";
+    const displayHour = i % 12 === 0 ? 12 : i % 12;
+    const label = `${String(displayHour).padStart(2, "0")} ${ampm}`;
+    return { val, label };
+  });
+
+  const minutes = Array.from({ length: 12 }, (_, i) => {
+    const val = String(i * 5).padStart(2, "0");
+    return val;
+  });
+
+  const handleHourChange = (newH: string) => {
+    if (!newH) {
+      if (optional) onChange("");
+      return;
+    }
+    const currentM = mStr || "00";
+    onChange(`${newH}:${currentM}`);
+  };
+
+  const handleMinChange = (newM: string) => {
+    const currentH = hStr || "09";
+    onChange(`${currentH}:${newM}`);
+  };
+
+  return (
+    <div className="flex gap-1 items-center w-full">
+      <select
+        value={hStr}
+        onChange={(e) => handleHourChange(e.target.value)}
+        className="w-[60%] px-1.5 py-1.5 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card"
+      >
+        <option value="">Hour</option>
+        {hours.map((h) => (
+          <option key={h.val} value={h.val}>
+            {h.label}
+          </option>
+        ))}
+      </select>
+      <span className="text-muted-foreground font-black text-xs">:</span>
+      <select
+        value={mStr}
+        disabled={!hStr}
+        onChange={(e) => handleMinChange(e.target.value)}
+        className="w-[40%] px-1.5 py-1.5 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card disabled:opacity-50"
+      >
+        <option value="">Min</option>
+        {minutes.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function DoctorScheduleManager({
@@ -127,6 +205,7 @@ export function DoctorScheduleManager({
   const [slotCounts, setSlotCounts] = useState<Record<string, number>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
   // ── Fetch existing schedule ───────────────────────────────────────────────
   const {
@@ -278,14 +357,35 @@ export function DoctorScheduleManager({
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     setSaveError(null);
+
+    // Validate that all checked working days have start/end times and complete break times if configured
+    for (const [dayKey, day] of Object.entries(schedule)) {
+      if (day.isWorking) {
+        const capitalizedDay = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+        
+        if (!day.startTime || !day.endTime) {
+          setSaveError(`Please select both Start Time and End Time for ${capitalizedDay}.`);
+          return;
+        }
+        
+        if ((day.breakStart && !day.breakEnd) || (!day.breakStart && day.breakEnd)) {
+          setSaveError(`Please configure both Break Start and Break End times for ${capitalizedDay}, or clear both.`);
+          return;
+        }
+      }
+    }
+
     try {
       const payload = mapScheduleToPayload(schedule, settings);
       await createSchedule({ doctorId, payload });
       onSave({ doctorId, workingHours: schedule, timeSlots: settings });
     } catch (err: any) {
-      setSaveError(
-        err?.status?.statusDesc || err?.message || "Failed to save schedule.",
-      );
+      // Extract detailed validation messages from backend responseObject if available
+      const backendErr = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                        err?.response?.data?.message ||
+                        err?.message ||
+                        "Failed to save schedule.";
+      setSaveError(backendErr);
     }
   };
 
@@ -417,20 +517,16 @@ export function DoctorScheduleManager({
                         {/* Row 1: Start / End / No. of Slots */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           <LabeledField label="Start Time">
-                            <input
-                              type="time"
+                            <HourMinPicker
                               value={schedule[day.key]?.startTime ?? ""}
-                              onChange={(e) => handleStartTimeChange(day.key, e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-xl text-xs font-bold"
+                              onChange={(val) => handleStartTimeChange(day.key, val)}
                             />
                           </LabeledField>
 
                           <LabeledField label="End Time">
-                            <input
-                              type="time"
+                            <HourMinPicker
                               value={schedule[day.key]?.endTime ?? ""}
-                              onChange={(e) => handleEndTimeChange(day.key, e.target.value)}
-                              className="w-full px-3 py-1.5 border rounded-xl text-xs font-bold"
+                              onChange={(val) => handleEndTimeChange(day.key, val)}
                             />
                           </LabeledField>
 
@@ -466,42 +562,40 @@ export function DoctorScheduleManager({
                         {/* Row 2: Break Start / Break End */}
                         <div className="grid grid-cols-2 gap-3">
                           <LabeledField label="Break Start (optional)">
-                            <input
-                              type="time"
+                            <HourMinPicker
                               value={schedule[day.key]?.breakStart ?? ""}
-                              onChange={(e) => {
-                                handleDayChange(day.key, "breakStart", e.target.value);
+                              onChange={(val) => {
+                                handleDayChange(day.key, "breakStart", val);
                                 // Recompute slot count after break change
                                 const day_ = schedule[day.key];
                                 if (day_?.startTime && day_?.endTime) {
                                   const derived = calcSlotCount(
                                     day_.startTime, day_.endTime,
-                                    e.target.value, day_.breakEnd,
+                                    val, day_.breakEnd,
                                     settings.duration, settings.bufferTime,
                                   );
                                   setSlotCounts((p) => ({ ...p, [day.key]: derived }));
                                 }
                               }}
-                              className="w-full px-3 py-1.5 border rounded-xl text-xs font-medium text-muted-foreground bg-muted/30"
+                              optional
                             />
                           </LabeledField>
                           <LabeledField label="Break End (optional)">
-                            <input
-                              type="time"
+                            <HourMinPicker
                               value={schedule[day.key]?.breakEnd ?? ""}
-                              onChange={(e) => {
-                                handleDayChange(day.key, "breakEnd", e.target.value);
+                              onChange={(val) => {
+                                handleDayChange(day.key, "breakEnd", val);
                                 const day_ = schedule[day.key];
                                 if (day_?.startTime && day_?.endTime) {
                                   const derived = calcSlotCount(
                                     day_.startTime, day_.endTime,
-                                    day_.breakStart, e.target.value,
+                                    day_.breakStart, val,
                                     settings.duration, settings.bufferTime,
                                   );
                                   setSlotCounts((p) => ({ ...p, [day.key]: derived }));
                                 }
                               }}
-                              className="w-full px-3 py-1.5 border rounded-xl text-xs font-medium text-muted-foreground bg-muted/30"
+                              optional
                             />
                           </LabeledField>
                         </div>
@@ -512,15 +606,19 @@ export function DoctorScheduleManager({
                             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mr-2">
                               Slots ({slots.length}):
                             </span>
-                            {slots.slice(0, 10).map((s, i) => (
+                            {(expandedDays[day.key] ? slots : slots.slice(0, 10)).map((s, i) => (
                               <Badge key={i} variant="blue" className="text-[9px] font-bold px-1.5 h-4">
-                                {s}
+                                {formatTo12Hr(s)}
                               </Badge>
                             ))}
                             {slots.length > 10 && (
-                              <span className="text-[9px] font-bold text-muted-foreground">
-                                +{slots.length - 10} more
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedDays((prev) => ({ ...prev, [day.key]: !prev[day.key] }))}
+                                className="text-[9px] font-black text-primary hover:underline cursor-pointer bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-full transition-all"
+                              >
+                                {expandedDays[day.key] ? "Show Less" : `+${slots.length - 10} more`}
+                              </button>
                             )}
                           </div>
                         )}

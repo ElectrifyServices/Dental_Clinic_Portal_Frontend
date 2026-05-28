@@ -6,6 +6,7 @@ import {
   type PatientFormData,
 } from "@/lib/schemas/patient.schema";
 import { generatePatientId, generateBarcode, calculateAge } from "./utils";
+import { useCheckEmployeeQuery } from "@/hooks/patients/useCheckEmployeeQuery";
 
 export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
   const [loading, setLoading] = useState(false);
@@ -120,7 +121,11 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       const extraUpdates: Partial<typeof extraData> = {};
       const merged = {
         ...patient,
-        patientId: patient.id || generatePatientId(),
+        dateOfBirth: (patient.date_of_birth || patient.dateOfBirth) ? (patient.date_of_birth || patient.dateOfBirth).split("T")[0] : "",
+        previousLastVisitDate: (patient.last_visit_date || patient.previousLastVisitDate) ? (patient.last_visit_date || patient.previousLastVisitDate).split("T")[0] : "",
+        patientSignature: patient.consent_signature_url || patient.patientSignature,
+        consentFormUrl: patient.consent_form_url || patient.consentFormUrl,
+        patientId: patient.patient_id || patient.patientId || generatePatientId(),
         medicalHistory: patient.medicalHistory?.join("\n") ?? "",
         allergies: patient.allergies?.join("\n") ?? "",
         dentalFiles: patient.dentalFiles ?? [],
@@ -146,47 +151,45 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     }
   }, [form.watch("patientId")]);
 
-  // Corporate Lookup logic
+  const searchPhone = form.watch("phone")?.trim();
+  const phoneToSearch = searchPhone && searchPhone.length >= 10 ? searchPhone : "";
+  const { data: checkEmployeeResponse } = useCheckEmployeeQuery(phoneToSearch);
+
+  // Corporate Lookup logic using API
   useEffect(() => {
-    const searchPhone = form.getValues("phone")?.trim();
-    const searchEmail = form.getValues("email")?.trim().toLowerCase();
-    if (
-      (searchPhone && searchPhone.length >= 10) ||
-      (searchEmail && searchEmail.includes("@"))
-    ) {
-      const emp = corporateEmployees.find(
-        (e) =>
-          (searchPhone && e.phone === searchPhone) ||
-          (searchEmail && e.email?.toLowerCase() === searchEmail),
-      );
-      if (emp) {
-        setMatchedCorporateEmp(emp);
-        if (lastAutoFilledEmpId !== emp.id) {
-          if (!form.getValues("name")) form.setValue("name", emp.name);
-          if (!form.getValues("gender"))
-            form.setValue("gender", emp.gender?.toLowerCase());
-          if (!form.getValues("dateOfBirth"))
-            form.setValue("dateOfBirth", emp.dateOfBirth);
-          if (!form.getValues("occupation"))
-            form.setValue("occupation", emp.designation);
-          setExtraData((prev) => ({
-            ...prev,
-            category: "corporate",
-            corporatePlanId: emp.corporatePlanId || emp.companyId,
-            corporatePlanName: emp.companyName,
-            corporateMemberId: emp.employeeId || emp.id,
-          }));
-          setLastAutoFilledEmpId(emp.id);
-        }
-      } else {
-        setMatchedCorporateEmp(null);
-        setLastAutoFilledEmpId(null);
-      }
+    // We get response wrapped in responseObject.data
+    const data = checkEmployeeResponse?.responseObject?.data || checkEmployeeResponse?.data || checkEmployeeResponse;
+    const emp = data?.employee || data;
+    const isEmployee = data?.is_employee ?? !!emp;
+    
+    if (phoneToSearch && emp && isEmployee && !emp.error) {
+      setMatchedCorporateEmp(emp);
     } else {
       setMatchedCorporateEmp(null);
       setLastAutoFilledEmpId(null);
     }
-  }, [form.watch("phone"), form.watch("email"), corporateEmployees]);
+  }, [checkEmployeeResponse, phoneToSearch]);
+
+  const acceptCorporateEmployee = () => {
+    if (!matchedCorporateEmp) return;
+    const emp = matchedCorporateEmp;
+    
+    if (emp.name || emp.full_name) form.setValue("name", emp.name || emp.full_name);
+    if (emp.gender) form.setValue("gender", emp.gender.toLowerCase());
+    if (emp.date_of_birth) form.setValue("dateOfBirth", emp.date_of_birth.split("T")[0]);
+    if (emp.designation) form.setValue("occupation", emp.designation);
+    if (emp.email) form.setValue("email", emp.email);
+    
+    const plan = emp.corporate_plan || {};
+    
+    setExtraData((prev) => ({
+      ...prev,
+      category: "corporate",
+      corporatePlanId: plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id,
+      corporatePlanName: plan.plan_name || emp.company_name || emp.companyName || "Corporate Plan",
+      corporateMemberId: emp.emp_id || emp.employee_id || emp.employeeId || emp.id,
+    }));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -312,6 +315,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     setLoading,
     validationErrors,
     matchedCorporateEmp,
+    acceptCorporateEmployee,
     handleChange,
     handleNext,
     handlePrevious,

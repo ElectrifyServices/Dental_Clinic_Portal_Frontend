@@ -61,7 +61,11 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
-  const hasAll = perms.includes("all") || role === "superadmin";
+  const rawModulePerms: string[] = (state.user as any)?.module_permission || [];
+  const hasAll =
+    perms.includes("all") ||
+    role === "superadmin" ||
+    rawModulePerms.some((p) => p.toUpperCase() === "ALL");
 
   // Build flat item list from tenant sidebar config, filtering disabled screens
   const allItems = tenant.sidebar.groups.flatMap((group) =>
@@ -76,25 +80,25 @@ export function Sidebar() {
   );
 
   const canAccess = (item: (typeof allItems)[0]) => {
-    // 1. Check dynamic module_permission from backend
-    const userPermissions = (state.user as any)?.module_permission;
-    if (Array.isArray(userPermissions)) {
-      if (item.group === "SUPER_ADMIN") return role === "superadmin";
+    // If user has ALL permission (e.g. SUPER_ADMIN), grant access to everything
+    if (hasAll) return true;
 
+    // Check dynamic module_permission from backend
+    if (Array.isArray(rawModulePerms) && rawModulePerms.length > 0) {
       const allowedModulesForScreen = PERMISSION_MAP[item.id];
       if (allowedModulesForScreen) {
-        return allowedModulesForScreen.some(p =>
-          userPermissions.includes(p.toUpperCase())
+        return allowedModulesForScreen.some((p) =>
+          rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase())
         );
       }
+      // Screen not in permission map — allow by default
       return true;
     }
 
-    // 2. Fallback role checks (only used if module_permission is NOT provided)
-    if (item.group === "SUPER_ADMIN") return role === "superadmin";
-    if (item.id === "patient-queue") return role === "doctor" || hasAll;
+    // Fallback role checks (used only when module_permission is not provided)
+    if (item.group === "superadmin") return role === "superadmin";
+    if (item.id === "patient-queue") return role === "doctor";
     if (item.group === "admin") {
-      if (hasAll) return true;
       if (role === "receptionist")
         return ["billing", "consent"].includes(item.id);
       return false;

@@ -16,6 +16,7 @@ import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
 import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
 import { useActivePlansQuery } from '../../hooks/corporate/useActivePlansQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
+import { useModal } from '../../contexts/ModalContext';
 
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
@@ -32,7 +33,6 @@ interface EmployeeManagementProps {
 
 import { parseXlsx, downloadTemplate } from './Employee/importUtils';
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan }: EmployeeManagementProps) {
@@ -46,43 +46,17 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   const [page, setPage] = useState(1);
   const PER_PAGE = 15;
 
+  const { showToast } = useModal();
   const [showForm, setShowForm] = useState(false);
   const [editEmp, setEditEmp] = useState<CorporateEmployee | null>(null);
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
 
-  const { data: activePlansData } = useActivePlansQuery();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
 
   const activePlans = useMemo(() => {
-    let arr: any[] = [];
-    if (Array.isArray(activePlansData)) arr = activePlansData;
-    else if (activePlansData && Array.isArray(activePlansData.data)) arr = activePlansData.data;
-    else if (activePlansData?.data && Array.isArray(activePlansData.data.data)) arr = activePlansData.data.data;
-    else if (activePlansData?.plans && Array.isArray(activePlansData.plans)) arr = activePlansData.plans;
-
-    if (arr.length > 0) {
-      return arr.map((p: any) => {
-        const colorMap: Record<string, string> = {
-          "#3B82F6": "blue", "#8B5CF6": "violet", "#10B981": "emerald",
-          "#F43F5E": "rose", "#F59E0B": "amber", "#06B6D4": "cyan",
-          "#6366F1": "indigo", "#14B8A6": "teal",
-        };
-        const mappedColor = p.theme_color ? (colorMap[p.theme_color.toUpperCase()] || 'blue') : 'blue';
-
-        return {
-          id: p.id,
-          name: p.plan_name || p.name,
-          companyName: p.company_name || '',
-          code: p.plan_code || p.code,
-          description: p.description || "",
-          isActive: p.status === "ACTIVE",
-          color: p.color || mappedColor,
-        } as CorporatePlan;
-      });
-    }
-    return plans; // fallback to props
-  }, [activePlansData, plans]);
+    return plans; // Fallback to props directly, which is always up-to-date
+  }, [plans]);
 
   // Filters
   const planFilterTabs = [
@@ -95,7 +69,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     page,
     limit: PER_PAGE,
     filters: {
-      corporate_plan_id: planFilter !== 'all' ? planFilter : undefined,
+      // API filter might be broken, rely on local filtering below
       company_name: selectedCompany ? [selectedCompany] : undefined,
     }
   });
@@ -108,7 +82,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     else if (employeesData?.data?.employees && Array.isArray(employeesData.data.employees)) arr = employeesData.data.employees;
     else if (employeesData?.employees && Array.isArray(employeesData.employees)) arr = employeesData.employees;
 
-    return arr.map((e: any) => ({
+    let mapped = arr.map((e: any) => ({
       id: e.id,
       employeeId: e.emp_id || '',
       name: e.name,
@@ -124,13 +98,20 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       enrolledAt: e.created_at || new Date().toISOString(),
       eligible_date: e.eligible_date,
       isActive: e.status === 'ACTIVE',
+      status: e.status,
       patientId: e.patient_id || undefined,
     }));
-  }, [employeesData, activePlans]);
+
+    if (planFilter !== 'all') {
+      mapped = mapped.filter(e => e.corporatePlanId === planFilter);
+    }
+    
+    return mapped;
+  }, [employeesData, activePlans, planFilter]);
 
   const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 };
-  const totalPages = pagination.totalPages || 1;
-  const totalItems = pagination.total || 0;
+  const totalPages = planFilter !== 'all' ? Math.ceil(apiEmployees.length / PER_PAGE) || 1 : pagination.totalPages || 1;
+  const totalItems = planFilter !== 'all' ? apiEmployees.length : pagination.total || 0;
 
   const { data: companiesData } = useCompaniesQuery();
 
@@ -232,25 +213,39 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       ),
     },
     {
-      key: 'status', header: 'Status', render: (e: CorporateEmployee) => (
-        <button
-          onClick={async () => {
-            try {
-              await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
-              refetch();
-            } catch (err) {
-              console.error("Failed to update status", err);
-            }
-          }}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border ${
-            e.isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-          }`}
-          disabled={updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
-        >
-          {e.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-          {e.isActive ? 'Active' : 'Inactive'}
-        </button>
-      ),
+      key: 'status', header: 'Status', render: (e: CorporateEmployee) => {
+        const isExpired = e.status === 'EXPIRED';
+        return (
+          <button
+            onClick={async () => {
+              if (isExpired) return;
+              try {
+                await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
+                refetch();
+              } catch (err) {
+                console.error("Failed to update status", err);
+              }
+            }}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border ${isExpired
+              ? 'bg-rose-100 text-rose-700 border-rose-200 cursor-not-allowed'
+              : e.isActive
+                ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+              }`}
+            disabled={isExpired || updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
+            title={isExpired ? "Expired! Please update the eligibility date to change status." : ""}
+          >
+            {isExpired ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            ) : e.isActive ? (
+              <ToggleRight className="w-4 h-4" />
+            ) : (
+              <ToggleLeft className="w-4 h-4" />
+            )}
+            {isExpired ? 'Expired' : e.isActive ? 'Active' : 'Inactive'}
+          </button>
+        );
+      },
     },
     {
       key: 'actions', header: 'Action', align: 'right' as const, render: (e: CorporateEmployee) => (
@@ -318,7 +313,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
             {viewMode === 'employees' && (
               <FilterTabs tabs={planFilterTabs} active={planFilter} onChange={v => { setPlanFilter(v); setPage(1); }} />
             )}
-            <button 
+            <button
               onClick={() => { setViewMode(viewMode === 'employees' ? 'companies' : 'employees'); setSelectedCompany(null); setPage(1); }}
               className={`btn-secondary px-3 py-2 whitespace-nowrap ${viewMode === 'companies' ? 'bg-primary/10 text-primary border-primary/50' : ''}`}
               title={viewMode === 'employees' ? 'Switch to companies view' : 'Switch to employees view'}
@@ -357,7 +352,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               {companiesList
                 .filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
                 .map(company => (
-                  <div key={company.name} 
+                  <div key={company.name}
                     onClick={() => { setSelectedCompany(company.name); setViewMode('employees'); setPage(1); }}
                     className="card p-5 cursor-pointer hover:shadow-md hover:border-primary/50 transition-all group">
                     <div className="flex items-start justify-between">
@@ -385,7 +380,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         </>
       ) : (
         /* Import tab */
-        <EmployeeImportTab 
+        <EmployeeImportTab
           plans={plans}
           activePlans={activePlans}
           setTab={setTab}
@@ -417,14 +412,23 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           confirmLabel="Remove"
           variant="danger"
           isLoading={deleteEmployeeMutation.isLoading}
-          onConfirm={async () => { 
+          onConfirm={async () => {
             try {
               await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
-              onDelete(deleteEmp.id); 
+              onDelete(deleteEmp.id);
               refetch();
-              setDeleteEmp(null); 
-            } catch(e) {
+              setDeleteEmp(null);
+            } catch (e: any) {
               console.error("Failed to delete employee", e);
+              let errMsg = "Failed to remove employee.";
+              const resData = e.response?.data || e;
+
+              if (resData?.message) {
+                errMsg = resData.message;
+              } else if (resData?.statusDesc) {
+                errMsg = resData.statusDesc;
+              }
+              showToast(errMsg, "error");
             }
           }}
           onCancel={() => setDeleteEmp(null)}

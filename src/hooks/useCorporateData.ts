@@ -63,6 +63,7 @@ export function useCorporateData() {
       maxMembers: plan.max_member || undefined,
       currentMembers: plan._count?.employees || 0,
       isActive: plan.status === "ACTIVE",
+      status: plan.status,
       createdAt: plan.created_at || new Date().toISOString(),
       createdBy: plan.created_by || "Super Admin",
       color: mapHexToColor(plan.theme_color),

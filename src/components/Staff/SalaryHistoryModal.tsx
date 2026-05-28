@@ -1,17 +1,22 @@
-import { Calendar, IndianRupee, History } from "lucide-react";
+import { Calendar, IndianRupee, History, Loader2 } from "lucide-react";
 import { Modal, Button, Badge } from "@/components/ui";
+import { useSalaryHistoryQuery } from "../../hooks/staff/useSalaryHistoryQuery";
 
 interface SalaryHistoryModalProps {
+  staffId: string;
   staffName: string;
-  history: any[];
   onClose: () => void;
 }
 
 export function SalaryHistoryModal({
+  staffId,
   staffName,
-  history,
   onClose,
 }: SalaryHistoryModalProps) {
+  const { data: responseData, isLoading } = useSalaryHistoryQuery(staffId);
+  const historyData = responseData?.responseObject?.data || responseData?.responseObject || responseData?.data || responseData || [];
+  const history = Array.isArray(historyData) ? historyData : (Array.isArray(historyData?.data) ? historyData.data : []);
+
   return (
     <Modal
       title="Salary History"
@@ -28,7 +33,12 @@ export function SalaryHistoryModal({
       }
     >
       <div className="space-y-4">
-        {history.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
+            <p className="text-sm font-bold uppercase tracking-widest">Loading history...</p>
+          </div>
+        ) : history.length === 0 ? (
           <div className="text-center py-12 flex flex-col items-center justify-center">
             <History className="w-12 h-12 text-muted-foreground/20 mb-3" />
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
@@ -37,7 +47,13 @@ export function SalaryHistoryModal({
           </div>
         ) : (
           <div className="space-y-3">
-            {history.map((payment, index) => (
+            {history.map((payment: any, index: number) => {
+              const amount = payment.payment_amount || payment.amount || 0;
+              const date = payment.payment_date || payment.date || new Date().toISOString();
+              const mode = payment.payment_mode || payment.mode || "Unknown";
+              const note = payment.disbursement_note || payment.note || "";
+
+              return (
               <div
                 key={index}
                 className="p-4 border border-border rounded-2xl bg-card hover:bg-muted/30 transition-colors group"
@@ -49,11 +65,11 @@ export function SalaryHistoryModal({
                     </div>
                     <div>
                       <div className="text-lg font-black text-foreground">
-                        ₹{payment.amount.toLocaleString("en-IN")}
+                        ₹{amount.toLocaleString("en-IN")}
                       </div>
                       <div className="text-[10px] text-muted-foreground flex items-center gap-1 font-bold uppercase tracking-wider mt-0.5">
                         <Calendar className="w-3 h-3" />
-                        {new Date(payment.date).toLocaleDateString("en-IN", {
+                        {new Date(date).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
@@ -65,16 +81,16 @@ export function SalaryHistoryModal({
                     variant="gray"
                     className="text-[9px] font-black tracking-widest uppercase px-2"
                   >
-                    {payment.mode}
+                    {mode}
                   </Badge>
                 </div>
-                {payment.note && (
+                {note && (
                   <div className="mt-3 pl-13 text-[11px] text-muted-foreground font-medium border-l-2 border-border ml-[52px] py-0.5">
-                    "{payment.note}"
+                    "{note}"
                   </div>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

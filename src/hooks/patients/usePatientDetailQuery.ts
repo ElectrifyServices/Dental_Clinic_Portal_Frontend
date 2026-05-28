@@ -14,8 +14,10 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
 export function normalizePatient(payload: any) {
   if (!payload) return null;
   
-  // Unwrap the patient object if the backend wraps it in "patient", "data", etc.
-  const p = payload.patient || payload.data || payload;
+  // Unwrap the patient object if the backend wraps it
+  const p = payload?.responseObject?.data || payload?.data || payload?.patient || payload;
+
+  const prevDental = p.previous_dental || {};
 
   return {
     ...p,
@@ -25,7 +27,7 @@ export function normalizePatient(payload: any) {
     phone: p.phone || p.mobile || '',
     status: p.status || (p.is_active ? 'active' : 'inactive'),
     isActive: p.status === 'ACTIVE' || p.is_active === true,
-    avatar: p.profile_picture || p.avatar || '',
+    avatar: p.profile_picture_url || p.profile_picture || p.avatar || '',
     age: p.age || p.dob || '',
     gender: p.gender ? p.gender.toLowerCase() : '',
     
@@ -44,19 +46,37 @@ export function normalizePatient(payload: any) {
     // Referral & Category
     referredBy: p.referred_by || p.referredBy || '',
     category: p.patient_category ? p.patient_category.toLowerCase() : 'regular',
-    isFOC: p.is_foc || p.isFOC || false,
+    isFOC: p.freeOfCost || p.is_foc || p.isFOC || false,
     defaultDiscount: p.discount_percentage !== undefined ? p.discount_percentage : (p.defaultDiscount || 0),
     
     // Medical History
-    medicalHistory: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
-    allergies: (p.allergies || []).map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
-    medicalHistoryNames: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => typeof m === 'object' ? (m.history?.name || m.medical_history?.name || m.name || m.history_id || m.medical_history_id || m.id) : m),
-    allergyNames: (p.allergies || []).map((a: any) => typeof a === 'object' ? (a.allergy?.allergy_name || a.allergy?.name || a.allergy_name || a.name || a.allergy_id || a.id) : a),
+    medicalHistory: (p.medicalHistories || []).map((m: any) => m.history_id || m.medical_history_id || m.id),
+    allergies: (p.allergies || []).map((a: any) => a.allergy_id || a.id),
+    medicalHistoryNames: (p.medicalHistories || []).map((m: any) => m.history?.name || m.name || ''),
+    allergyNames: (p.allergies || []).map((a: any) => a.allergy?.name || a.name || ''),
     pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
     
-    // Previous Dentist
-    previousDoctorName: p.previous_doctor_name || p.previousDoctorName || '',
-    previousClinicName: p.clinic_name || p.previousClinicName || '',
+    // Previous Dentist (nested in previous_dental)
+    previousDoctorName: prevDental.previous_doctor_name || p.previous_doctor_name || '',
+    previousClinicName: prevDental.clinic_name || p.clinic_name || '',
+    previousDoctorPhone: prevDental.doctor_phone || p.doctor_phone || '',
+    previousLastVisitDate: prevDental.last_visit_date || p.last_visit_date || '',
+    previousClinicAddress: prevDental.clinic_address || p.clinic_address || '',
+    previousReason: prevDental.reason_for_treatment || p.reason_for_treatment || '',
+    previousTreatments: prevDental.previous_treatments || p.previous_treatments || [],
+    
+    // Consents & Images
+    consentFormUrl: p.consent_form_url || p.consentFormUrl || '',
+    patientSignature: p.consent_signature_url || p.patientSignature || '',
+    dentalFiles: (p.images || []).map((img: any) => ({
+      name: img.file_name,
+      url: img.image_url,
+      type: img.mime_type
+    })),
+
+    // Relation for dependents
+    relation: p.relation_type || p.relation || '',
+    primaryPatientId: p.primary_patient_id || p.primaryPatientId || null,
   };
 }
 

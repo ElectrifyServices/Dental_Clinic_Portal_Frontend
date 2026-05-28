@@ -35,6 +35,13 @@ interface BulkPatient {
   email: string;
   gender: string;
   companyId: string;
+  emp_id?: string;
+  company_name?: string;
+  designation?: string;
+  department?: string;
+  corporate_plan_id?: string;
+  date_of_birth?: string;
+  eligible_date?: string;
 }
 
 interface CorporateManagementProps {
@@ -97,7 +104,20 @@ export function CorporateManagement({
 
   // Bulk Import State
   const [bulkPatients, setBulkPatients] = useState<BulkPatient[]>([
-    { name: "", phone: "", email: "", gender: "male", companyId: "" },
+    { 
+      name: "", 
+      phone: "", 
+      email: "", 
+      gender: "male", 
+      companyId: "", 
+      emp_id: "", 
+      company_name: "", 
+      designation: "", 
+      department: "", 
+      corporate_plan_id: "", 
+      date_of_birth: "", 
+      eligible_date: "" 
+    },
   ]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -130,6 +150,13 @@ export function CorporateManagement({
         email: "",
         gender: "male",
         companyId: selectedCompanyId,
+        emp_id: "",
+        company_name: "",
+        designation: "",
+        department: "",
+        corporate_plan_id: selectedCompanyId,
+        date_of_birth: "",
+        eligible_date: "",
       },
     ]);
   };
@@ -195,27 +222,34 @@ export function CorporateManagement({
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-        header: 1,
-      }) as any[][];
+      const rows = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-      const rows = jsonData.slice(1); // Skip header row
       const importedPatients: BulkPatient[] = rows
-        .map((cols) => {
-          if (!cols[0]) return null;
+        .map((row: any) => {
+          const getVal = (keys: string[]) => {
+            const foundKey = Object.keys(row).find(k => keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, '') === key.toLowerCase().replace(/[^a-z0-9]/g, '')));
+            return foundKey ? String(row[foundKey]).trim() : '';
+          };
+
+          const name = getVal(['name', 'fullname', 'username']);
+          if (!name) return null;
+
           return {
-            name: String(cols[0] || "").trim(),
-            phone: String(cols[1] || "").trim(),
-            email: String(cols[2] || "")
-              .trim()
-              .toLowerCase(),
-            gender: String(cols[3] || "male")
-              .toLowerCase()
-              .trim() as any,
+            name,
+            phone: getVal(['phone', 'phonenumber', 'mobile', 'contact']),
+            email: getVal(['email', 'emailaddress']).toLowerCase(),
+            gender: getVal(['gender']) || 'male',
             companyId: selectedCompanyId,
+            emp_id: getVal(['employeeid', 'empid', 'id']),
+            company_name: getVal(['companyname', 'company', 'company_name']),
+            designation: getVal(['designation', 'role', 'occupation']),
+            department: getVal(['department', 'dept']),
+            corporate_plan_id: getVal(['corporateplanid', 'planid', 'corporate_plan_id']) || selectedCompanyId,
+            date_of_birth: getVal(['dateofbirth', 'dob', 'date_of_birth']),
+            eligible_date: getVal(['eligibledate', 'eligible_date', 'eligibilitydate']),
           };
         })
-        .filter((p) => p !== null && p.name !== "") as BulkPatient[];
+        .filter((p) => p !== null) as BulkPatient[];
 
       const newUniqueList = [...bulkPatients.filter((p) => p.name !== "")];
       importedPatients.forEach((imp) => {
@@ -232,6 +266,13 @@ export function CorporateManagement({
                 email: "",
                 gender: "male",
                 companyId: selectedCompanyId,
+                emp_id: "",
+                company_name: "",
+                designation: "",
+                department: "",
+                corporate_plan_id: selectedCompanyId,
+                date_of_birth: "",
+                eligible_date: "",
               },
             ],
       );
@@ -258,7 +299,7 @@ export function CorporateManagement({
 
     if (duplicates.length > 0) {
       alert(
-        `Duplicate entries detected for: ${duplicates.map((d) => d.name).join(", ")}. These will be skipped.`,
+          `Duplicate entries detected for: ${duplicates.map((d) => d.name).join(", ")}. These will be skipped.`,
       );
     }
 
@@ -279,6 +320,8 @@ export function CorporateManagement({
     const finalPatients = uniqueNewPatients.map((p) => ({
       ...p,
       companyId: p.companyId || selectedCompanyId,
+      corporate_plan_id: p.corporate_plan_id || p.companyId || selectedCompanyId,
+      company_name: p.company_name || corporatePlans.find(cp => cp.id === (p.companyId || selectedCompanyId))?.name || "Corporate",
     }));
     onBulkAddPatients(finalPatients);
     onClose();
@@ -286,7 +329,7 @@ export function CorporateManagement({
 
   const downloadSampleCsv = () => {
     const csvContent =
-      "data:text/csv;charset=utf-8,Name,Phone,Email,Gender(male/female)\nJohn Doe,9876543210,john@example.com,male\nJane Smith,8765432109,jane@example.com,female";
+      "data:text/csv;charset=utf-8,Name,Phone,Email,Gender(male/female),Employee ID,Company Name,Designation,Department,Corporate Plan ID,Date of Birth,Eligible Date\nJohn Doe,9876543210,john@example.com,male,BULK001,Google,Developer,IT,e5e8ae28-d088-4db2-91df-931500725fa5,1995-01-01,2026-06-01\nJane Smith,8765432109,jane@example.com,female,BULK002,Google,Tester,QA,e5e8ae28-d088-4db2-91df-931500725fa5,1996-02-02,2026-06-01";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -605,14 +648,17 @@ export function CorporateManagement({
                   </select>
                 </div>
 
-                <div className="border border-border rounded-2xl overflow-hidden">
-                  <table className="w-full text-left">
+                <div className="border border-border rounded-2xl overflow-x-auto">
+                  <table className="w-full text-left min-w-[900px]">
                     <thead className="bg-muted text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-border">
                       <tr>
                         <th className="px-6 py-4">Full Name</th>
                         <th className="px-6 py-4">Phone</th>
                         <th className="px-6 py-4">Email</th>
                         <th className="px-6 py-4">Gender</th>
+                        <th className="px-6 py-4">Employee ID</th>
+                        <th className="px-6 py-4">Designation</th>
+                        <th className="px-6 py-4">Department</th>
                         <th className="px-6 py-4">Action</th>
                       </tr>
                     </thead>
@@ -681,6 +727,36 @@ export function CorporateManagement({
                                 <option value="female">Female</option>
                                 <option value="other">Other</option>
                               </select>
+                            </td>
+                            <td className="px-6 py-3">
+                              <input
+                                value={p.emp_id || ""}
+                                onChange={(e) =>
+                                  handleBulkChange(idx, "emp_id", e.target.value)
+                                }
+                                placeholder="Employee ID"
+                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+                              />
+                            </td>
+                            <td className="px-6 py-3">
+                              <input
+                                value={p.designation || ""}
+                                onChange={(e) =>
+                                  handleBulkChange(idx, "designation", e.target.value)
+                                }
+                                placeholder="Designation"
+                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+                              />
+                            </td>
+                            <td className="px-6 py-3">
+                              <input
+                                value={p.department || ""}
+                                onChange={(e) =>
+                                  handleBulkChange(idx, "department", e.target.value)
+                                }
+                                placeholder="Department"
+                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+                              />
                             </td>
                             <td className="px-6 py-3">
                               <button

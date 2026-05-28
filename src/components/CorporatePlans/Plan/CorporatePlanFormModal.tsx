@@ -8,6 +8,7 @@ import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
 import { useUpdateCorporatePlanMutation } from '../../../hooks/corporate/useUpdateCorporatePlanMutation';
 import { useModal } from '../../../contexts/ModalContext';
+import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
 
 interface CorporatePlanFormModalProps {
   showForm: boolean;
@@ -27,6 +28,11 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const createPlanMutation = useCreateCorporatePlanMutation();
   const updatePlanMutation = useUpdateCorporatePlanMutation();
 
+  // Fetch detailed plan details from API GET /corporate/plan/:id when editing
+  const { data: planDetails, isLoading: isFetching } = useCorporatePlanQuery(editing?.id || undefined, {
+    enabled: showForm && !!editing?.id,
+  });
+
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
   );
@@ -42,24 +48,94 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   useEffect(() => {
     if (showForm) {
       if (editing) {
-        setForm({
-          name: editing.name,
-          companyName: editing.companyName,
-          code: editing.code,
-          description: editing.description,
-          benefits: editing.benefits,
-          validFrom: editing.validFrom,
-          validTo: editing.validTo,
-          maxMembers: editing.maxMembers,
-          isActive: editing.isActive,
-          color: editing.color
-        });
+        if (planDetails) {
+          const planData = planDetails.data || planDetails;
+
+          const mapHexToColor = (hex: string): string => {
+            const colorMap: Record<string, string> = {
+              "#3B82F6": "blue",
+              "#8B5CF6": "violet",
+              "#10B981": "emerald",
+              "#F43F5E": "rose",
+              "#F59E0B": "amber",
+              "#06B6D4": "cyan",
+              "#6366F1": "indigo",
+              "#14B8A6": "teal",
+            };
+            return colorMap[hex?.toUpperCase()] || "blue";
+          };
+
+          const mapBackendBenefitType = (backendType: string): string => {
+            const typeMap: Record<string, string> = {
+              FLAT_DISCOUNT: "flat_discount",
+              TREATMENT_DISCOUNT: "treatment_discount",
+              FREE_CONSULTATION: "free_consultations",
+              FREE_TREATMENT_SERVICE: "free_treatments",
+              CAPPED_DISCOUNT: "capped_discount",
+              CUSTOM: "custom",
+            };
+            return typeMap[backendType] || "custom";
+          };
+
+          const mapProcedureLabelToKey = (label: string): string => {
+            const labelMap: Record<string, string> = {
+              "Consultation": "consultation",
+              "Teeth Cleaning": "cleaning",
+              "Dental Filling": "filling",
+              "Tooth Extraction": "extraction",
+              "Root Canal": "root-canal",
+              "Crown Fitting": "crown",
+              "Orthodontics": "orthodontics",
+              "Oral Surgery": "surgery",
+              "Other": "other",
+            };
+            return labelMap[label] || label.toLowerCase();
+          };
+
+          const benefits = (planData.benefits || []).map((b: any) => ({
+            id: b.id || `b-${Date.now()}-${Math.random()}`,
+            type: mapBackendBenefitType(b.type),
+            value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
+              ? (b.count || 0)
+              : (b.discount_percentage || 0),
+            cap: b.max_amount || undefined,
+            customName: b.benifit_label || undefined,
+            treatmentTypes: (b.clinical_procedures || []).map(mapProcedureLabelToKey),
+            description: b.description || "",
+          }));
+
+          setForm({
+            name: planData.plan_name || editing.name,
+            companyName: planData.company_name || editing.companyName,
+            code: planData.plan_code || editing.code,
+            description: planData.description || editing.description,
+            benefits: benefits.length > 0 ? benefits : editing.benefits,
+            validFrom: planData.valid_from ? planData.valid_from.split('T')[0] : editing.validFrom,
+            validTo: planData.valid_till ? planData.valid_till.split('T')[0] : editing.validTo,
+            maxMembers: planData.max_member || editing.maxMembers,
+            isActive: planData.status === "ACTIVE",
+            color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color
+          });
+        } else {
+          setForm({
+            name: editing.name,
+            companyName: editing.companyName,
+            code: editing.code,
+            description: editing.description,
+            benefits: editing.benefits,
+            validFrom: editing.validFrom,
+            validTo: editing.validTo,
+            maxMembers: editing.maxMembers,
+            isActive: editing.isActive,
+            color: editing.color
+          });
+        }
       } else {
         setForm(mkForm());
       }
       setErrors({});
     }
-  }, [showForm, editing]);
+  }, [showForm, editing, planDetails]);
 
   const handleFormChange = (name: string, value: any) => {
     setForm(prev => {
@@ -243,7 +319,13 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         </div>
       }
     >
-      <div className="space-y-8 py-2">
+      <div className="space-y-8 py-2 relative min-h-[200px]">
+        {isFetching && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
+            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
+            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading corporate plan details from API...</p>
+          </div>
+        )}
         <section className="space-y-4">
           <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
             {coreIdentitySection?.title ?? 'Core Identity'}

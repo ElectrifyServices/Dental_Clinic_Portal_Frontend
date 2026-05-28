@@ -37,6 +37,7 @@ export function PatientForm({
     setLoading,
     validationErrors,
     matchedCorporateEmp,
+    acceptCorporateEmployee,
     handleChange,
     handleNext,
     handlePrevious,
@@ -61,6 +62,14 @@ export function PatientForm({
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
     patient?.allergies || [],
   );
+
+  React.useEffect(() => {
+    if (patient) {
+      if (patient.medicalHistory) setSelectedMedicalHistory(patient.medicalHistory);
+      if (patient.allergies) setSelectedAllergies(patient.allergies);
+    }
+  }, [patient]);
+
   const [showOtherTreatment, setShowOtherTreatment] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,6 +201,7 @@ export function PatientForm({
               setFormData={setFormData}
               validationErrors={validationErrors}
               matchedCorporateEmp={matchedCorporateEmp}
+              acceptCorporateEmployee={acceptCorporateEmployee}
               corporatePlans={corporatePlans}
               type={type}
               handleCustomRelation={handleCustomRelation}

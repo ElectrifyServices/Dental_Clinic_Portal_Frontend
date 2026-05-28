@@ -4,8 +4,10 @@ import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
 import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutation';
 import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useStaffData() {
+  const queryClient = useQueryClient();
   const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery();
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
   const { mutateAsync: updateStatusMutation } = useUpdateStaffStatusMutation();
@@ -48,16 +50,16 @@ export function useStaffData() {
       // Construct documents array from API fields
       const documents: any[] = [];
       if (Array.isArray(s.files)) {
-        
+
         s.files.forEach((file: any) => {
           let uiType = file.category || "Unknown";
           const cat = file.category?.toUpperCase() || "";
-          
+
           if (cat === "ADHAR_CARD" || cat === "AADHAR_CARD") uiType = "Aadhaar / Identity Proof";
           else if (cat === "EDUCATIONAL_DEGREE" || cat === "MEDICAL_CERTIFICATE") uiType = "Educational Degree Documents";
           else if (cat === "MEDICAL_COUNCIL_REGISTRATION") uiType = "Medical Council Registration";
           else if (cat === "EXPERIENCE_CERTIFICATE" || cat === "EXPERIENCE_CERTIFICATES") uiType = "Experience Certificates";
-          else if (cat === "MEDICAL_INDEMNITY_INSURANCE") uiType = "Medical Indemnity Insurance";
+          else if (cat === "MEDICAL_INDEMNITY_INSURANCE" || cat === "MEDICAL_INDEMINITY_INSURANCE") uiType = "Medical Indemnity Insurance";
           else if (cat === "NOC") uiType = "NOC (if applicable)";
           else if (cat === "POLICE_VERIFICATION") uiType = "Police Verification";
           else if (cat === "PAN_CARD") uiType = "PAN Card";
@@ -65,7 +67,8 @@ export function useStaffData() {
           else if (cat === "EMPLOYMENT_CONTRACT" || cat === "SIGNED_EMPLOYMENT_CONTRACT") uiType = "Signed Employment Contract";
           else if (cat === "RESUME" || cat === "RESUME_CV") uiType = "Resume / CV";
           else if (cat === "MEDICAL_FITNESS") uiType = "Medical Fitness Certificate";
-          else if (cat === "VACCINATION") uiType = "Vaccination Proof (Hep-B/COVID)";
+          else if (cat === "VACCINATION" || cat === "VACCINATION_PROOF") uiType = "Vaccination Proof (Hep-B/COVID)";
+          else if (cat === "MEDICAL_FITNESS_CERTIFICATE") uiType = "Medical Fitness Certificate";
 
           documents.push({
             type: uiType,
@@ -75,32 +78,37 @@ export function useStaffData() {
         });
       }
 
-      return {
-        ...s,
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        phone: s.phone,
-        role: normalizedRole,
-        originalRoleName: s.role?.name || (typeof s.role === 'string' ? s.role : 'Staff'),
-        specialization: s.personal_profile?.specialization?.name || s.specialization || '',
-        isActive: s.status === 'ACTIVE',
-        avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || '',
-        salaryPaid: s.salaryPaid || 0,
-        salaryPending: s.salaryPending || 0,
-        documents: documents.length > 0 ? documents : (s.documents || []),
-        // Map personal profile
-        profitSharing: s.personal_profile?.profit_sharing || false,
-        profitPercentage: s.personal_profile?.profit_percentage || 0,
-        licenseNumber: s.personal_profile?.license_number || s.license_number || '',
-        experience: s.personal_profile?.experience_years || s.experience || '',
-        qualification: s.personal_profile?.qualification || s.qualification || '',
-        consultationFee: s.personal_profile?.consultation_fee || s.consultation_fee || '',
-        department: s.personal_profile?.department || s.department || '',
-        designation: s.personal_profile?.designation || s.designation || '',
-        education: s.personal_profile?.education || s.education || '',
-        monthlySalary: s.personal_profile?.monthly_salary || s.monthly_salary || s.personal_profile?.salary || s.salary || '',
-      };
+        const paymentSummary = s.payment_summary || {};
+        const monthly = paymentSummary.base_salary ?? s.personal_profile?.monthly_salary ?? s.monthly_salary ?? s.personal_profile?.salary ?? s.salary ?? 0;
+        const paid = paymentSummary.total_paid ?? s.salaryPaid ?? s.total_paid_salary ?? 0;
+        const pending = paymentSummary.pending_due ?? (s.salaryPending !== undefined ? s.salaryPending : Math.max(0, Number(monthly) - Number(paid)));
+
+        return {
+          ...s,
+          id: s.id,
+          name: s.name,
+          email: s.email,
+          phone: s.phone,
+          role: normalizedRole,
+          originalRoleName: s.role?.name || (typeof s.role === 'string' ? s.role : 'Staff'),
+          specialization: s.personal_profile?.specialization?.name || s.specialization || '',
+          isActive: s.status === 'ACTIVE',
+          avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || '',
+          salaryPaid: paid,
+          salaryPending: pending,
+          monthlySalary: monthly,
+          documents: documents.length > 0 ? documents : (s.documents || []),
+          // Map personal profile
+          profitSharing: s.personal_profile?.profit_sharing || false,
+          profitPercentage: s.personal_profile?.profit_sharing_percentage || 0,
+          licenseNumber: s.personal_profile?.license_number || s.license_number || '',
+          experience: s.personal_profile?.experience_years || s.experience || '',
+          qualification: s.personal_profile?.qualification || s.qualification || '',
+          consultationFee: s.personal_profile?.consultation_fee || s.consultation_fee || '',
+          department: s.personal_profile?.department || s.department || '',
+          designation: s.personal_profile?.designation || s.designation || '',
+          education: s.personal_profile?.education || s.education || '',
+        };
     });
   }, [apiStaff]);
 
@@ -120,9 +128,29 @@ export function useStaffData() {
     }
   };
 
-  const handleSaveStaff = async (_staff: any) => {
-    // Schedule is saved directly inside DoctorScheduleManager via useCreateDoctorScheduleMutation.
-    // This handler remains for ModalRegistry compatibility (e.g. salary updates).
+  const handleSaveStaff = async (staff: any) => {
+    queryClient.setQueryData(["staff"], (oldData: any) => {
+      if (!oldData) return oldData;
+
+      let isArray = Array.isArray(oldData);
+      let rawStaffList = isArray ? oldData : (oldData?.data?.staffs || oldData?.data?.staff || oldData?.data?.data || oldData?.data || oldData?.staffs || oldData?.responseObject?.data || []);
+      
+      const updatedList = rawStaffList.map((s: any) => {
+        if (s.id === staff.id) {
+          return { ...s, ...staff };
+        }
+        return s;
+      });
+
+      if (isArray) return updatedList;
+      if (oldData?.responseObject?.data) return { ...oldData, responseObject: { ...oldData.responseObject, data: updatedList } };
+      if (oldData?.data?.staffs) return { ...oldData, data: { ...oldData.data, staffs: updatedList } };
+      if (oldData?.data?.staff) return { ...oldData, data: { ...oldData.data, staff: updatedList } };
+      if (oldData?.data?.data) return { ...oldData, data: { ...oldData.data, data: updatedList } };
+      if (oldData?.data) return { ...oldData, data: updatedList };
+      if (oldData?.staffs) return { ...oldData, staffs: updatedList };
+      return updatedList;
+    });
   };
 
   const handleSaveEMR = (record: any) => {

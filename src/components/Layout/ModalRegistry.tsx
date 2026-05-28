@@ -29,6 +29,8 @@ import { RestockForm } from "../Inventory/RestockForm";
 import { ConfirmModal, Modal, Button } from "../ui";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
+import { useUpdateAppointmentMutation } from "../../hooks/appointments/useUpdateAppointmentMutation";
+import { useCheckInAfterRegistrationMutation } from "../../hooks/appointments/useCheckInAfterRegistrationMutation";
 
 export function ModalRegistry() {
   const {
@@ -111,13 +113,15 @@ export function ModalRegistry() {
 
   const { data: apiPatientDetail } = usePatientDetailQuery(
     selectedPatientId,
-    activeModal === "patientDetails"
+    activeModal === "patientDetails" || activeModal === "patientForm"
   );
 
   const handleExportPatient = (id: string) =>
     exportPatientReport(id, patients, appointments, treatments, invoices);
 
   const { mutateAsync: createAppointmentMutation } = useCreateAppointmentMutation();
+  const { mutateAsync: updateAppointmentMutation } = useUpdateAppointmentMutation();
+  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
 
   return (
     <>
@@ -132,21 +136,22 @@ export function ModalRegistry() {
           patients={patients}
           onSave={async (apt: any) => {
             try {
+              const payload = {
+                doctor_id: apt.doctorId,
+                patient_name: apt.patientName,
+                patient_phone: apt.patientPhone,
+                date: apt.date,
+                start_time: apt.time,
+                specific_treatment: apt.treatment || "General",
+                treatment_type: apt.treatmentType || "",
+                slot_duration_mins: Number(apt.duration) || 15,
+                treatment_cost: Number(apt.fee) || 0,
+                concern: apt.patientConcern || "",
+                notes: apt.notes || "",
+                status: apt.status || "BOOKED"
+              };
+
               if (!apt.id || apt.id.length > 20 === false) { // Assuming new if ID is a timestamp
-                const payload = {
-                  doctor_id: apt.doctorId,
-                  patient_name: apt.patientName,
-                  patient_phone: apt.patientPhone,
-                  date: apt.date,
-                  start_time: apt.time,
-                  specific_treatment: apt.treatment || "General",
-                  slot_duration_mins: Number(apt.duration) || 30,
-                  treatment_cost: Number(apt.fee) || 0,
-                  concern: apt.patientConcern || "",
-                  notes: apt.notes || "",
-                  status: "BOOKED"
-                };
-                
                 // Only attach patient_id if it's a valid uuid (length > 20)
                 if (apt.patientId && apt.patientId.length > 20) {
                   (payload as any).patient_id = apt.patientId;
@@ -155,6 +160,12 @@ export function ModalRegistry() {
                 const response = await createAppointmentMutation(payload);
                 // Optionally update apt ID from response
                 apt.id = response.id || apt.id;
+              } else {
+                // Call edit/update API via PUT request
+                await updateAppointmentMutation({
+                  id: apt.id,
+                  payload: payload
+                });
               }
 
               handleSaveAppointment(apt);
@@ -163,7 +174,7 @@ export function ModalRegistry() {
               setIsFollowUpBooking(false);
               showToast("Appointment saved!");
             } catch (error: any) {
-              const msg = error?.response?.data?.message || error?.message || "Failed to create appointment";
+              const msg = error?.response?.data?.message || error?.message || "Failed to save appointment";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
           }}
@@ -183,7 +194,7 @@ export function ModalRegistry() {
           corporatePlans={corporatePlans}
           patient={
             selectedPatientId
-              ? patients.find((p: any) => p.id === selectedPatientId)
+              ? apiPatientDetail || patients.find((p: any) => p.id === selectedPatientId)
               : preFilledPatientData
           }
           onSave={async (p: any) => {
@@ -209,6 +220,16 @@ export function ModalRegistry() {
                     patientConcern: pendingCheckInAppt.patientConcern || "",
                   },
                 ]);
+                
+                try {
+                  await checkInAfterRegistration({
+                    id: pendingCheckInAppt.id,
+                    patient_id: p.id
+                  });
+                } catch (err) {
+                  console.error("Failed to check-in after registration:", err);
+                }
+
                 handleUpdateAppointmentStatus(
                   pendingCheckInAppt.id,
                   "checked-in",
@@ -355,9 +376,14 @@ export function ModalRegistry() {
           corporateEmployees={corporateEmployees}
           onSavePlan={handleSaveCorporatePlan}
           onDeletePlan={handleDeleteCorporatePlan}
-          onBulkAddPatients={(ps: any[]) => {
-            handleBulkSavePatients(ps);
-            showToast(`Registered ${ps.length} employees!`);
+          onBulkAddPatients={async (ps: any[]) => {
+            try {
+              await handleBulkSavePatients(ps);
+              showToast(`Registered ${ps.length} employees successfully!`);
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || err?.message || "Bulk registration failed";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
           }}
           onDeleteEmployee={handleDeleteCorporateEmployee}
           onUpdateEmployee={handleUpdateCorporateEmployee}
@@ -521,12 +547,15 @@ export function ModalRegistry() {
                 s.salaryPending?.toString().replace(/,/g, "") || "0"
               );
               const amt = parseFloat(pd.amount);
+              const newPending = pd.pending_dues !== undefined ? parseFloat(pd.pending_dues) : Math.max(0, pending - amt);
+              const newBase = pd.base_salary !== undefined ? parseFloat(pd.base_salary) : parseFloat(s.monthlySalary?.toString().replace(/,/g, "") || "0");
+              const newPaid = newBase - newPending;
+
               handleSaveStaff({
                 ...s,
-                salaryPaid: (paid + amt).toLocaleString("en-IN"),
-                salaryPending: Math.max(0, pending - amt).toLocaleString(
-                  "en-IN",
-                ),
+                salaryPaid: newPaid >= 0 ? newPaid : paid + amt,
+                salaryPending: newPending,
+                monthlySalary: newBase > 0 ? newBase : s.monthlySalary,
                 salaryHistory: [
                   { amount: amt, date: pd.date, mode: pd.mode, note: pd.note },
                   ...(s.salaryHistory || []),
@@ -542,11 +571,8 @@ export function ModalRegistry() {
 
       {activeModal === "salaryHistory" && selectedStaffForSalary && (
         <SalaryHistoryModal
+          staffId={selectedStaffForSalary.id}
           staffName={selectedStaffForSalary.name}
-          history={
-            staffMembers.find((s: any) => s.id === selectedStaffForSalary.id)
-              ?.salaryHistory || []
-          }
           onClose={() => {
             setActiveModal(null);
             setSelectedStaffForSalary(null);

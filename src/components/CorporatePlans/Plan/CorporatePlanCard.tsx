@@ -48,14 +48,28 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
-              onClick={() => onToggle(plan.id)}
-              disabled={isUpdatingStatus}
+              onClick={() => {
+                if (status === 'expired') return;
+                onToggle(plan.id);
+              }}
+              disabled={status === 'expired' || isUpdatingStatus}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border ${
-                plan.isActive ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                status === 'expired'
+                  ? 'bg-rose-100 text-rose-700 border-rose-200 cursor-not-allowed'
+                  : plan.isActive
+                    ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
               }`}
+              title={status === 'expired' ? "Expired! Please update the validity dates to activate." : ""}
             >
-              {plan.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-              {plan.isActive ? 'Active' : 'Inactive'}
+              {status === 'expired' ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              ) : plan.isActive ? (
+                <ToggleRight className="w-4 h-4" />
+              ) : (
+                <ToggleLeft className="w-4 h-4" />
+              )}
+              {status === 'expired' ? 'Expired' : plan.isActive ? 'Active' : 'Inactive'}
             </button>
             
             <DropdownMenu>

@@ -11,6 +11,7 @@ import { useUpdatePatientMutation } from './patients/useUpdatePatientMutation';
 import { useLocalStorage } from './useLocalStorage';
 import { useMedicalHistoriesQuery } from './patients/useMedicalHistoriesQuery';
 import { useAllergiesQuery } from './patients/useAllergiesQuery';
+import { useBulkImportEmployeeMutation } from './corporate/useBulkImportEmployeeMutation';
 
 export function usePatientData() {
   const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ export function usePatientData() {
   const { mutateAsync: updateStatusMutation } = useUpdatePatientStatusMutation();
   const { mutateAsync: createPatientMutation } = useCreatePatientMutation();
   const { mutateAsync: updatePatientMutation } = useUpdatePatientMutation();
+  const { mutateAsync: bulkImportEmployee } = useBulkImportEmployeeMutation();
 
   // Local storage for queue (not part of API)
   const [queuedPatients, setQueuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
@@ -180,10 +182,30 @@ export function usePatientData() {
     }
   };
 
-  // Bulk save (for future use – kept for backward compat)
-  const handleBulkSavePatients = (_newPatients: any[]) => {
-    // Will be wired to a bulk create API when available
-    refetchPatients();
+  // Bulk save
+  const handleBulkSavePatients = async (newPatients: any[]) => {
+    try {
+      const payload = {
+        employees: newPatients.map((p) => ({
+          name: p.name,
+          emp_id: p.emp_id || `EMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          phone: p.phone || "",
+          email: p.email || "",
+          gender: (p.gender || "MALE").toUpperCase(),
+          company_name: p.company_name || p.companyName || "Corporate",
+          designation: p.designation || p.occupation || "Employee",
+          department: p.department || "Staff",
+          corporate_plan_id: p.corporate_plan_id || p.corporatePlanId || p.companyId || "",
+          date_of_birth: p.date_of_birth || p.dateOfBirth || "1990-01-01",
+          eligible_date: p.eligible_date || p.eligibleDate || new Date().toISOString().split("T")[0],
+        })),
+      };
+      await bulkImportEmployee(payload);
+      refetchPatients();
+    } catch (e) {
+      console.error("Bulk save patients failed", e);
+      throw e;
+    }
   };
 
   // setPatients stub – kept for useAppData cross-domain operations (invoice outstanding balance etc.)

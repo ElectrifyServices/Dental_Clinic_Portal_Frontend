@@ -15,13 +15,29 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
   const { data: rawAllergies } = useAllergiesQuery();
 
+  const extractList = (data: any) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray((data as any).all)) return (data as any).all;
+    if (data && Array.isArray((data as any).data?.all)) return (data as any).data.all;
+    if (data && Array.isArray((data as any).data)) return (data as any).data;
+    if (data && Array.isArray((data as any).responseObject?.data?.all)) return (data as any).responseObject.data.all;
+    if (data && Array.isArray((data as any).responseObject?.data)) return (data as any).responseObject.data;
+    if (data?.allergies && Array.isArray(data.allergies)) return data.allergies;
+    if (data?.history && Array.isArray(data.history)) return data.history;
+    if (data?.medicalHistories && Array.isArray(data.medicalHistories)) return data.medicalHistories;
+    return [];
+  };
+
   const getAllergyName = (id: string) => {
-    const found = (rawAllergies || []).find((a: any) => a.id === id);
+    const list = extractList(rawAllergies);
+    const found = list.find((a: any) => a.id === id);
     return found ? (found.allergy_name || found.name || id) : id;
   };
 
   const getMedicalHistoryName = (id: string) => {
-    const found = (rawMedicalHistories || []).find((m: any) => m.id === id);
+    const list = extractList(rawMedicalHistories);
+    const found = list.find((m: any) => m.id === id);
     return found ? (found.name || found.history_name || id) : id;
   };
 

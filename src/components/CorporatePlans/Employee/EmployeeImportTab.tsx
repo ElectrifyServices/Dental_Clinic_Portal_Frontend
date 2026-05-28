@@ -50,7 +50,17 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         }))
       };
 
-      await bulkImportMutation.mutateAsync(payload);
+      const res: any = await bulkImportMutation.mutateAsync(payload);
+      
+      const responseData = res?.responseObject?.data || res?.data;
+      const failed = responseData?.failed || [];
+
+      if (failed.length > 0) {
+        const backendErrors = failed.map((f: any) => `Row ${f.index + 2}: ${f.error}`);
+        setImportErrors(backendErrors);
+        setImporting(false);
+        return; // Do not redirect to list
+      }
       
       onBulkSave(valid as CorporateEmployee[]);
       setImportRows([]);
@@ -82,7 +92,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB, EligibleDate
             </p>
           </div>
-          <button onClick={downloadTemplate} className="btn-secondary flex-shrink-0">
+          <button onClick={() => downloadTemplate(activePlans)} className="btn-secondary flex-shrink-0">
             <Download className="w-4 h-4" /> Template
           </button>
         </div>
