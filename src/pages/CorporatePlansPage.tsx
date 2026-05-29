@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Users } from 'lucide-react';
 import { CorporatePlanManagement } from '../components/CorporatePlans/CorporatePlanManagement';
 import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagement';
@@ -13,16 +13,28 @@ const TABS = [
 ];
 
 export const CorporatePlansPage: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const {
     corporatePlans, corporateEmployees,
     handleSaveCorporatePlan, handleDeleteCorporatePlan, handleToggleCorporatePlan,
     handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees, handleChangeEmployeePlan,
-  } = useAppData();
+    isPlansLoading,
+  } = useAppData({
+    corporateSearch: debouncedSearch,
+    corporateStatus: filter === 'all' ? undefined : filter.toUpperCase(),
+  });
   const { confirmDelete } = useModal();
   const [tab, setTab] = useState<'plans' | 'employees'>('plans');
-
-  // Fetch corporate plans when on this page
-  useCorporatePlansQuery({ enabled: true });
 
   // Fetch employee list to get the exact count dynamically from backend API
   const { data: employeesData } = useEmployeesQuery({ page: 1, limit: 1 });
@@ -57,6 +69,11 @@ export const CorporatePlansPage: React.FC = () => {
           onSave={handleSaveCorporatePlan}
           onDelete={handleDeleteCorporatePlan}
           onToggle={handleToggleCorporatePlan}
+          search={search}
+          onSearchChange={setSearch}
+          filter={filter}
+          onFilterChange={setFilter}
+          isLoading={isPlansLoading}
         />
       ) : (
         <EmployeeManagement

@@ -39,6 +39,11 @@ interface DoctorManagementProps {
   onManageSchedule: (id: string, name: string) => void;
   onPaySalary?: (id: string, name: string) => void;
   onViewSalaryHistory?: (id: string, name: string) => void;
+  search?: string;
+  onSearchChange?: (val: string) => void;
+  roleFilter?: string;
+  onRoleFilterChange?: (val: string) => void;
+  isLoading?: boolean;
 }
 
 const ROLE_META: Record<
@@ -87,9 +92,20 @@ export function DoctorManagement({
   onManageSchedule,
   onPaySalary,
   onViewSalaryHistory,
+  search: propSearch,
+  onSearchChange: propOnSearchChange,
+  roleFilter: propRoleFilter,
+  onRoleFilterChange: propOnRoleFilterChange,
+  isLoading,
 }: DoctorManagementProps) {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [localSearch, setLocalSearch] = useState("");
+  const [localRoleFilter, setLocalRoleFilter] = useState("all");
+
+  const search = propSearch !== undefined ? propSearch : localSearch;
+  const setSearch = propOnSearchChange || setLocalSearch;
+  const roleFilter = propRoleFilter !== undefined ? propRoleFilter : localRoleFilter;
+  const setRoleFilter = propOnRoleFilterChange || setLocalRoleFilter;
+
   const [statusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -284,12 +300,12 @@ export function DoctorManagement({
             <span className="text-muted-foreground/60 font-medium">Paid:</span>
             <span className="text-emerald-600">₹{(staff as any).salaryPaid?.toLocaleString() || "0"}</span>
           </div>
-          <div className="flex justify-between gap-4">
+          {/* <div className="flex justify-between gap-4">
             <span className="text-muted-foreground/60 font-medium">Due:</span>
             <span className="text-amber-600">
               ₹{(staff as any).salaryPending?.toLocaleString() || "0"}
             </span>
-          </div>
+          </div> */}
         </div>
       ),
     },
@@ -379,7 +395,14 @@ export function DoctorManagement({
         </div>
       </div>
 
-      {viewMode === "list" ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-24 bg-card rounded-2xl border border-border shadow-sm">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider animate-pulse">
+            Fetching staff directory...
+          </p>
+        </div>
+      ) : viewMode === "list" ? (
         <DataTable
           columns={columns}
           data={filtered}
@@ -506,7 +529,7 @@ export function DoctorManagement({
                       )}
                     </div>
 
-                    <div className="mt-5 grid grid-cols-3 gap-2">
+                    <div className="mt-5 grid grid-cols-2 gap-2">
                       <div className="p-2 bg-muted/20 rounded-xl border border-border/50 group-hover:bg-muted/40 transition-colors">
                         <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
                           Monthly
@@ -523,14 +546,14 @@ export function DoctorManagement({
                           ₹{(staff as any).salaryPaid?.toLocaleString() || "0"}
                         </p>
                       </div>
-                      <div className="p-2 bg-amber-50/30 rounded-xl border border-amber-100/50 group-hover:bg-amber-50 transition-colors">
+                      {/* <div className="p-2 bg-amber-50/30 rounded-xl border border-amber-100/50 group-hover:bg-amber-50 transition-colors">
                         <p className="text-[9px] text-amber-600/70 font-bold uppercase tracking-wider mb-1">
                           Due
                         </p>
                         <p className="text-xs font-black text-amber-600 truncate" title={(staff as any).salaryPending?.toLocaleString()}>
                           ₹{(staff as any).salaryPending?.toLocaleString() || "0"}
                         </p>
-                      </div>
+                      </div> */}
                     </div>
                   </CardContent>
                 </Card>

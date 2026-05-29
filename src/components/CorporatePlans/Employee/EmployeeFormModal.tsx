@@ -6,6 +6,7 @@ import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useUpdateEmployeeMutation } from '../../../hooks/corporate/useUpdateEmployeeMutation';
 import { useEmployeeQuery } from '../../../hooks/corporate/useEmployeeQuery';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeFormModalProps {
   showForm: boolean;
@@ -25,6 +26,7 @@ const EMPTY_EMP = (): Partial<CorporateEmployee> => ({
 });
 
 export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans, onSave, refetch }: EmployeeFormModalProps) {
+  const queryClient = useQueryClient();
   const [form, setForm] = useState<Partial<CorporateEmployee>>(EMPTY_EMP());
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
@@ -152,6 +154,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           patientId: editEmp?.patientId || undefined,
         };
         onSave(emp);
+        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {
@@ -200,6 +203,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           patientId: editEmp?.patientId || undefined,
         };
         onSave(emp);
+        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {

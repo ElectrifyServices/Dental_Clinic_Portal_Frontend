@@ -3,7 +3,7 @@ import { useApiQuery } from "../useApiQuery";
 export interface EmployeeListFilters {
   status?: string[];
   company_name?: string[];
-  corporate_plan_id?: string;
+  corporate_plan_id?: string[];
 }
 
 export interface EmployeeListVariables {

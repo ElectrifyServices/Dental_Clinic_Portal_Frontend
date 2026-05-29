@@ -8,6 +8,9 @@ export const PatientsPage: React.FC = () => {
   const {
     patients, appointments, treatments, invoices,
     handleSavePatient, handleDeletePatient, handleUpdatePatientStatus,
+    patientSearch, setPatientSearch,
+    patientStatus, setPatientStatus,
+    patientCategory, setPatientCategory,
   } = useAppData();
   const {
     setActiveModal, setSelectedPatientId, setPatientFormType,
@@ -70,6 +73,12 @@ export const PatientsPage: React.FC = () => {
         onExportPatient={handleExportPatient}
         onToggleStatus={handleToggleStatus}
         onShowCorporateManagement={() => setActiveModal("corporateModal")}
+        searchValue={patientSearch}
+        onSearchChange={setPatientSearch}
+        filterStatus={patientStatus}
+        onFilterStatusChange={setPatientStatus}
+        filterCategory={patientCategory}
+        onFilterCategoryChange={setPatientCategory}
       />
     </div>
   );

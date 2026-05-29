@@ -4,11 +4,14 @@ import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
 import { CorporatePlan, PlanBenefitType } from '../types';
 import { useMemo } from 'react';
 
-export function useCorporateData() {
+export function useCorporateData(params?: { search?: string; status?: string }) {
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<any[]>('corporateEmployees', []);
 
-  const { data: apiPlansData, refetch: refetchPlans } = useCorporatePlansQuery({ enabled: false });
+  const { data: apiPlansData, refetch: refetchPlans, isLoading: isPlansLoading } = useCorporatePlansQuery({
+    enabled: true,
+    ...params
+  });
 
   const mapBackendPlanToFrontend = (plan: any): CorporatePlan => {
     const mapHexToColor = (hex: string): string => {
@@ -95,8 +98,8 @@ export function useCorporateData() {
       plansArray = apiPlansData.data.plans;
     }
 
-    return plansArray ? plansArray.map(mapBackendPlanToFrontend) : localPlans;
-  }, [apiPlansData, localPlans]);
+    return plansArray ? plansArray.map(mapBackendPlanToFrontend) : [];
+  }, [apiPlansData]);
 
   const handleSaveCorporatePlan = (plan: any) => {
     setLocalPlans(prev => {
@@ -154,5 +157,6 @@ export function useCorporateData() {
     handleSaveCorporatePlan, handleDeleteCorporatePlan, handleToggleCorporatePlan,
     handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees,
     handleDeleteCorporateEmployee, handleUpdateCorporateEmployee,
+    isPlansLoading,
   };
 }

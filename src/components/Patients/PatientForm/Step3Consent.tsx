@@ -52,9 +52,31 @@ export const Step3Consent: React.FC<Step3Props> = ({
                 onChange={handleConsentFormUpload} 
                 className="hidden" 
               />
-              {formData.consentFormUrl ? (
+              {formData.consentFormUrl && formData.consentFormUrl !== "null" && formData.consentFormUrl !== "undefined" && formData.consentFormUrl !== "" ? (
                 <div className="relative inline-block">
-                   <img src={formData.consentFormUrl} alt="Consent Form" className="h-32 object-contain mx-auto rounded-lg shadow-sm" />
+                   {formData.consentFormUrl.endsWith(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
+                     <div className="h-32 w-48 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-4">
+                       <ClipboardCheck className="w-8 h-8 text-primary mb-2 animate-pulse" />
+                       <span className="text-xs font-semibold text-foreground text-center truncate w-full">Consent Form (PDF)</span>
+                     </div>
+                   ) : (
+                     <img
+                       src={formData.consentFormUrl}
+                       alt="Consent Form"
+                       className="h-32 object-contain mx-auto rounded-lg shadow-sm"
+                       onError={(e) => {
+                         // Fallback in case of broken image URL
+                         (e.target as HTMLImageElement).style.display = 'none';
+                         const parent = (e.target as HTMLImageElement).parentElement;
+                         if (parent) {
+                           const fallback = document.createElement('div');
+                           fallback.className = "h-32 w-48 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-4";
+                           fallback.innerHTML = `<svg class="w-8 h-8 text-muted-foreground mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span class="text-xs font-semibold text-muted-foreground text-center">Image Load Failed</span>`;
+                           parent.appendChild(fallback);
+                         }
+                       }}
+                     />
+                   )}
                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center">
                       <Upload className="w-6 h-6 text-white mb-2" />
                       <span className="text-white text-xs font-bold">Change Form</span>

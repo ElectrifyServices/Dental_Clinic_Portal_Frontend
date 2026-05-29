@@ -163,7 +163,7 @@ export function Modal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "overflow-y-auto p-0 gap-0 max-h-[calc(100vh-5rem)] scrollbar-hide",
+          "flex flex-col p-0 gap-0 max-h-[calc(100vh-5rem)] overflow-hidden",
           MODAL_SIZES[size],
         )}
       >
@@ -196,9 +196,9 @@ export function Modal({
             <X className="w-5 h-5" />
           </button>
         </DialogHeader>
-        <div className="modal-body p-6">{children}</div>
+        <div className="modal-body p-6 overflow-y-auto flex-1 scrollbar-hide">{children}</div>
         {footer && (
-          <DialogFooter className="p-6 border-t border-border">
+          <DialogFooter className="p-6 border-t border-border bg-card/95 backdrop-blur-md sticky bottom-0 z-20">
             {footer}
           </DialogFooter>
         )}

@@ -108,11 +108,19 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
           setConfirmConfig((prev: any) => ({ ...prev, isLoading: true }));
           try {
             await onConfirm();
-          } finally {
             setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
             if (toastMessage) {
-              showToast(toastMessage, variant === 'danger' ? 'error' : 'success');
+              showToast(toastMessage, 'success');
             }
+          } catch (error: any) {
+            setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
+            const apiError = 
+              error?.response?.data?.message || 
+              error?.status?.statusDesc || 
+              error?.response?.data?.status?.statusDesc || 
+              error?.message || 
+              "Failed to complete action";
+            showToast(apiError, 'error');
           }
         },
       });

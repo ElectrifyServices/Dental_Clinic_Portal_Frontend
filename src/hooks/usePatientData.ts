@@ -18,12 +18,23 @@ export function usePatientData() {
 
   // Search & filter state – these drive the API query
   const [patientSearch, setPatientSearch] = useState('');
-  // undefined = all, true = active only, false = inactive only
-  const [patientIsActive, setPatientIsActive] = useState<boolean | undefined>(undefined);
+  const [patientStatus, setPatientStatus] = useState('all');
+  const [patientCategory, setPatientCategory] = useState('all');
+
+  const apiFilters = useMemo(() => {
+    const filters: Record<string, string[]> = {};
+    if (patientStatus !== 'all') {
+      filters.status = [patientStatus.toUpperCase()];
+    }
+    if (patientCategory !== 'all') {
+      filters.category = [patientCategory.toUpperCase()];
+    }
+    return Object.keys(filters).length > 0 ? filters : undefined;
+  }, [patientStatus, patientCategory]);
 
   const { data: apiPatients, isLoading: isPatientsLoading } = usePatientQuery({
     search: patientSearch || undefined,
-    is_active: patientIsActive,
+    filters: apiFilters,
   });
 
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
@@ -221,8 +232,10 @@ export function usePatientData() {
     isPatientsLoading,
     patientSearch,
     setPatientSearch,
-    patientIsActive,
-    setPatientIsActive,
+    patientStatus,
+    setPatientStatus,
+    patientCategory,
+    setPatientCategory,
     queuedPatients,
     setQueuedPatients,
     handleSavePatient,

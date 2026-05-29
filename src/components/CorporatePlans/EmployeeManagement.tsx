@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus, Trash2, Edit2, Upload, Building2,
   Users, Phone, Mail, Search, X, ToggleLeft, ToggleRight,
@@ -21,6 +21,7 @@ import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -36,15 +37,24 @@ import { parseXlsx, downloadTemplate } from './Employee/importUtils';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan }: EmployeeManagementProps) {
+  const queryClient = useQueryClient();
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
 
   const [tab, setTab] = useState<'list' | 'import'>('list');
   const [viewMode, setViewMode] = useState<'employees' | 'companies'>('employees');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const PER_PAGE = 15;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   const { showToast } = useModal();
   const [showForm, setShowForm] = useState(false);
@@ -65,12 +75,12 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   ];
 
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
-    search,
+    search: debouncedSearch,
     page,
     limit: PER_PAGE,
     filters: {
-      // API filter might be broken, rely on local filtering below
       company_name: selectedCompany ? [selectedCompany] : undefined,
+      corporate_plan_id: planFilter === 'all' ? undefined : [planFilter],
     }
   });
 
@@ -105,7 +115,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     if (planFilter !== 'all') {
       mapped = mapped.filter(e => e.corporatePlanId === planFilter);
     }
-    
+
     return mapped;
   }, [employeesData, activePlans, planFilter]);
 
@@ -383,8 +393,15 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         <EmployeeImportTab
           plans={plans}
           activePlans={activePlans}
-          setTab={setTab}
-          onBulkSave={onBulkSave}
+          setTab={(t) => {
+            setTab(t);
+            if (t === 'list') setViewMode('employees');
+          }}
+          onBulkSave={(emps) => {
+            onBulkSave(emps);
+            setTab('list');
+            setViewMode('employees');
+          }}
         />
       )}
 
@@ -393,7 +410,11 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         setShowForm={setShowForm}
         editEmp={editEmp}
         activePlans={activePlans}
-        onSave={onSave}
+        onSave={(emp) => {
+          onSave(emp);
+          setTab('list');
+          setViewMode('employees');
+        }}
         refetch={refetch}
       />
 
@@ -415,6 +436,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           onConfirm={async () => {
             try {
               await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
+              queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
               onDelete(deleteEmp.id);
               refetch();
               setDeleteEmp(null);

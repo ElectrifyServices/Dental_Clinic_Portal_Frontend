@@ -6,9 +6,9 @@ import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutati
 import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useStaffData() {
+export function useStaffData(params?: { search?: string; role?: string }) {
   const queryClient = useQueryClient();
-  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery();
+  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(params);
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
   const { mutateAsync: updateStatusMutation } = useUpdateStaffStatusMutation();
 

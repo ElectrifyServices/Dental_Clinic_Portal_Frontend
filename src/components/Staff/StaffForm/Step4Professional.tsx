@@ -30,7 +30,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
   const createMutation = useCreateSpecializationMutation();
   const deleteMutation = useDeleteSpecializationMutation();
   const queryClient = useQueryClient();
-  const { confirmDelete } = useModal();
+  const { confirmDelete, showToast } = useModal();
   const [deletingName, setDeletingName] = useState<string | null>(null);
 
   let rawSpecs: any[] | null = null;
@@ -67,8 +67,18 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
           value: createdValue,
         },
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create specialization:", err);
+      let errMsg = "Failed to create specialization.";
+      const resData = err.response?.data || err;
+      if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
+        errMsg = resData.responseStatusList.statusList[0].statusDesc;
+      } else if (resData?.message) {
+        errMsg = resData.message;
+      } else if (resData?.status?.statusDesc) {
+        errMsg = resData.status.statusDesc;
+      }
+      showToast(errMsg, "error");
     }
   };
 

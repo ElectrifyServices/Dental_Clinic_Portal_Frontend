@@ -3,6 +3,7 @@ import { RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Modal, Button, Badge, LabeledField } from '../../ui';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { useUpdateEmployeeMutation } from '../../../hooks/corporate/useUpdateEmployeeMutation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ChangePlanModalProps {
   changePlanEmp: CorporateEmployee | null;
@@ -12,6 +13,7 @@ interface ChangePlanModalProps {
 }
 
 export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, refetch }: ChangePlanModalProps) {
+  const queryClient = useQueryClient();
   const [newPlanId, setNewPlanId] = useState('');
   const updateEmployeeMutation = useUpdateEmployeeMutation();
 
@@ -44,6 +46,7 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
       };
 
       await updateEmployeeMutation.mutateAsync(transformedBody);
+      queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
       refetch();
       setChangePlanEmp(null);
     } catch (err) {
