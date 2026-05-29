@@ -96,8 +96,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             id: b.id || `b-${Date.now()}-${Math.random()}`,
             type: mapBackendBenefitType(b.type),
             value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
-              ? (b.count || 0)
+              ? (b.allocationCount || b.count || 0)
               : (b.discount_percentage || 0),
+            allocationCount: b.allocationCount || b.count || 0,
             cap: b.max_amount || undefined,
             customName: b.benifit_label || undefined,
             treatmentTypes: (b.clinical_procedures || []).map(mapProcedureLabelToKey),
@@ -187,7 +188,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
   const buildBenefitsPayload = (benefits: typeof form.benefits) =>
     benefits.map((b) => {
-      const count = ["free_consultations", "free_treatments"].includes(b.type) ? b.value : 0;
+      const allocationCount = ["free_consultations", "free_treatments"].includes(b.type) ? b.value : 0;
       const discount_percentage = b.type.includes("discount") || b.type === "custom" ? b.value : 0;
 
       let clinical_procedures: string[] = [];
@@ -199,7 +200,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
       return {
         type: mapBenefitType(b.type),
-        count,
+        allocationCount,
         clinical_procedures,
         description: b.description || "",
         benifit_label: b.customName || b.description || "Benefit",
@@ -248,9 +249,34 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         setShowForm(false);
       } catch (err: any) {
         console.error("Failed to create corporate plan via API:", err);
+        let errorMsg = "Failed to create plan on backend";
+        const data = err?.response?.data;
+        if (data) {
+          if (data.responseStatusList?.statusList?.[0]?.statusDesc) {
+            errorMsg = data.responseStatusList.statusList[0].statusDesc;
+          } else if (Array.isArray(data.message)) {
+            errorMsg = data.message.join(", ");
+          } else if (typeof data.message === "string") {
+            errorMsg = data.message;
+          } else if (Array.isArray(data.error)) {
+            errorMsg = data.error.join(", ");
+          } else if (typeof data.error === "string") {
+            errorMsg = data.error;
+          } else if (data.statusDesc) {
+            errorMsg = data.statusDesc;
+          } else {
+            errorMsg = JSON.stringify(data);
+          }
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+
+        if (typeof errorMsg === "string") {
+          errorMsg = errorMsg.replace(/enrollment_cap/gi, "Enrollment Cap");
+        }
         setErrors(prev => ({
           ...prev,
-          submit: err?.response?.data?.message || err?.message || "Failed to create plan on backend",
+          submit: errorMsg,
         }));
       }
     } else {
@@ -276,9 +302,34 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         setShowForm(false);
       } catch (err: any) {
         console.error("Failed to update corporate plan via API:", err);
+        let errorMsg = "Failed to update plan on backend";
+        const data = err?.response?.data;
+        if (data) {
+          if (data.responseStatusList?.statusList?.[0]?.statusDesc) {
+            errorMsg = data.responseStatusList.statusList[0].statusDesc;
+          } else if (Array.isArray(data.message)) {
+            errorMsg = data.message.join(", ");
+          } else if (typeof data.message === "string") {
+            errorMsg = data.message;
+          } else if (Array.isArray(data.error)) {
+            errorMsg = data.error.join(", ");
+          } else if (typeof data.error === "string") {
+            errorMsg = data.error;
+          } else if (data.statusDesc) {
+            errorMsg = data.statusDesc;
+          } else {
+            errorMsg = JSON.stringify(data);
+          }
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+
+        if (typeof errorMsg === "string") {
+          errorMsg = errorMsg.replace(/enrollment_cap/gi, "Enrollment Cap");
+        }
         setErrors(prev => ({
           ...prev,
-          submit: err?.response?.data?.message || err?.message || "Failed to update plan on backend",
+          submit: errorMsg,
         }));
       }
     }

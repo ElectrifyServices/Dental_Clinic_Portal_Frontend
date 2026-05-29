@@ -134,7 +134,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
                 const p = plans.find(pl => pl.id === r.corporatePlanId);
                 return p ? <PlanBadge name={p.name} code={p.code} color={p.color} /> : <Badge variant="amber">No plan</Badge>;
               }},
-              { key: 'ok', header: '', render: r => r.name && r.phone && r.corporatePlanId
+              { key: 'ok', header: 'Status', render: r => r.name && r.phone && r.corporatePlanId
                 ? <CheckCircle className="w-4 h-4 text-emerald-500" />
                 : <AlertTriangle className="w-4 h-4 text-red-500" /> },
             ]}

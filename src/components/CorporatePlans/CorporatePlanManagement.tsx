@@ -144,7 +144,7 @@ export function CorporatePlanManagement({
           <p className="text-muted-foreground/60 text-xs mt-2 font-medium">Create your first corporate plan to get started</p>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map(plan => (
             <CorporatePlanCard
               key={plan.id}
