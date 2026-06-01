@@ -10,6 +10,20 @@ import { useUpdateCorporatePlanMutation } from '../../../hooks/corporate/useUpda
 import { useModal } from '../../../contexts/ModalContext';
 import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
 
+function parseBackendError(err: any, fallback = "An error occurred"): string {
+  const data = err?.response?.data;
+  if (!data) return err?.message || fallback;
+
+  const desc = data.responseStatusList?.statusList?.[0]?.statusDesc || data.statusDesc;
+  if (desc) return desc;
+
+  const msg = data.message || data.error;
+  if (Array.isArray(msg)) return msg.join(", ");
+  if (typeof msg === "string") return msg;
+
+  return typeof data === "object" ? JSON.stringify(data) : String(data);
+}
+
 interface CorporatePlanFormModalProps {
   showForm: boolean;
   setShowForm: (show: boolean) => void;
@@ -249,27 +263,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         setShowForm(false);
       } catch (err: any) {
         console.error("Failed to create corporate plan via API:", err);
-        let errorMsg = "Failed to create plan on backend";
-        const data = err?.response?.data;
-        if (data) {
-          if (data.responseStatusList?.statusList?.[0]?.statusDesc) {
-            errorMsg = data.responseStatusList.statusList[0].statusDesc;
-          } else if (Array.isArray(data.message)) {
-            errorMsg = data.message.join(", ");
-          } else if (typeof data.message === "string") {
-            errorMsg = data.message;
-          } else if (Array.isArray(data.error)) {
-            errorMsg = data.error.join(", ");
-          } else if (typeof data.error === "string") {
-            errorMsg = data.error;
-          } else if (data.statusDesc) {
-            errorMsg = data.statusDesc;
-          } else {
-            errorMsg = JSON.stringify(data);
-          }
-        } else if (err?.message) {
-          errorMsg = err.message;
-        }
+        let errorMsg = parseBackendError(err, "Failed to create plan on backend");
 
         if (typeof errorMsg === "string") {
           errorMsg = errorMsg.replace(/enrollment_cap/gi, "Enrollment Cap");
@@ -302,27 +296,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         setShowForm(false);
       } catch (err: any) {
         console.error("Failed to update corporate plan via API:", err);
-        let errorMsg = "Failed to update plan on backend";
-        const data = err?.response?.data;
-        if (data) {
-          if (data.responseStatusList?.statusList?.[0]?.statusDesc) {
-            errorMsg = data.responseStatusList.statusList[0].statusDesc;
-          } else if (Array.isArray(data.message)) {
-            errorMsg = data.message.join(", ");
-          } else if (typeof data.message === "string") {
-            errorMsg = data.message;
-          } else if (Array.isArray(data.error)) {
-            errorMsg = data.error.join(", ");
-          } else if (typeof data.error === "string") {
-            errorMsg = data.error;
-          } else if (data.statusDesc) {
-            errorMsg = data.statusDesc;
-          } else {
-            errorMsg = JSON.stringify(data);
-          }
-        } else if (err?.message) {
-          errorMsg = err.message;
-        }
+        let errorMsg = parseBackendError(err, "Failed to update plan on backend");
 
         if (typeof errorMsg === "string") {
           errorMsg = errorMsg.replace(/enrollment_cap/gi, "Enrollment Cap");
