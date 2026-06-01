@@ -10,7 +10,12 @@ interface SalaryPaymentModalProps {
   onSave: (paymentData: any) => void;
 }
 
+import { usePaySalaryMutation } from '../../hooks/staff/usePaySalaryMutation';
+
+import { useModal } from '@/contexts/ModalContext';
+
 export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose, onSave }: SalaryPaymentModalProps) {
+  const { showToast } = useModal();
   const [formData, setFormData] = useState({
     amount: pendingAmount.toString(),
     date: new Date().toISOString().split('T')[0],
@@ -18,13 +23,45 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
     note: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const paySalaryMutation = usePaySalaryMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      staffId,
-      ...formData,
-      amount: parseFloat(formData.amount)
-    });
+    try {
+      const res = await paySalaryMutation.mutateAsync({
+        staff_id: staffId,
+        payment_amount: parseFloat(formData.amount),
+        payment_date: formData.date,
+        payment_mode: formData.mode.toUpperCase(),
+        disbursement_note: formData.note
+      });
+      
+      const backendData = res?.responseObject?.data || res?.data || {};
+
+      onSave({
+        staffId,
+        ...formData,
+        amount: parseFloat(formData.amount),
+        pending_dues: backendData.pending_dues,
+        base_salary: backendData.base_salary,
+      });
+    } catch (err: any) {
+      console.error("Failed to pay salary", err);
+      let errMsg = "Failed to record salary payment.";
+      const resData = err.response?.data || err;
+
+      if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
+        errMsg = resData.responseStatusList.statusList[0].statusDesc;
+      } else if (resData?.status?.statusDesc) {
+        errMsg = resData.status.statusDesc;
+      } else if (resData?.message) {
+        errMsg = resData.message;
+      } else if (typeof resData === 'string') {
+        errMsg = resData;
+      }
+      
+      showToast(errMsg, 'error');
+    }
   };
 
   return (

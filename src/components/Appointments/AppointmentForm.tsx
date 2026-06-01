@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import {
   appointmentSchema,
   type AppointmentFormData,
 } from "@/lib/schemas/appointment.schema";
+import { useAppointmentQuery } from "../../hooks/appointments/useAppointmentQuery";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -62,25 +63,99 @@ export function AppointmentForm({
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema) as any,
     defaultValues: {
-      patientName: appointment?.patientName ?? "",
-      patientPhone: appointment?.patientPhone ?? "",
-      treatment: appointment?.treatment ?? "",
-      doctorId: appointment?.doctorId ?? "1",
-      doctorName: appointment?.doctorName ?? "Dr. Sharma",
+      patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
+      patientPhone: appointment?.patientPhone ?? appointment?.patient_phone ?? "",
+      treatment: appointment?.treatment ?? appointment?.specific_treatment ?? "",
+      doctorId: appointment?.doctorId ?? appointment?.doctor_id ?? "1",
+      doctorName: appointment?.doctorName ?? appointment?.doctor_name ?? "Dr. Sharma",
       date: appointment?.date
         ? formatDateLocal(new Date(appointment.date))
         : formatDateLocal(safeDate),
-      time: appointment?.time ?? "09:00",
-      duration: appointment?.duration?.toString() ?? "",
+      time: (() => {
+        const rawTime = appointment?.start_time_ist || appointment?.time || appointment?.start_time;
+        if (!rawTime) return "09:00";
+        if (typeof rawTime === "string" && (rawTime.toLowerCase().includes("am") || rawTime.toLowerCase().includes("pm"))) {
+          const match = rawTime.match(/(\d+):(\d+)\s*(am|pm)/i);
+          if (match) {
+            let hrs = parseInt(match[1], 10);
+            const mins = match[2];
+            const period = match[3].toLowerCase();
+            
+            if (period === "pm" && hrs < 12) hrs += 12;
+            if (period === "am" && hrs === 12) hrs = 0;
+            
+            return `${String(hrs).padStart(2, '0')}:${mins}`;
+          }
+        }
+        if (rawTime.includes("T")) {
+          const dObj = new Date(rawTime);
+          const hrs = String(dObj.getUTCHours()).padStart(2, '0');
+          const mins = String(dObj.getUTCMinutes()).padStart(2, '0');
+          return `${hrs}:${mins}`;
+        }
+        return rawTime;
+      })(),
+      duration: appointment?.duration?.toString() ?? appointment?.slot_duration_mins?.toString() ?? "15",
       type: appointment?.type ?? "consultation",
       notes: appointment?.notes ?? "",
-      fee: appointment?.fee ?? 500,
-      patientConcern: appointment?.patientConcern ?? "",
-      treatmentType: appointment?.treatmentType ?? "",
+      fee: appointment?.fee ?? appointment?.treatment_cost ?? 500,
+      patientConcern: appointment?.patientConcern ?? appointment?.concern ?? "",
+      treatmentType: appointment?.treatmentType ?? appointment?.treatment_type ?? "",
     },
   });
 
+  const { data: fetchedAppointmentResponse, isPending: isFetchingAppointment } = useAppointmentQuery(appointment?.id);
+
+  useEffect(() => {
+    if (fetchedAppointmentResponse) {
+      // The API might wrap the data in response.data or response.data.data
+      const fetchedAppointment = fetchedAppointmentResponse.data?.data || fetchedAppointmentResponse.data || fetchedAppointmentResponse;
+      
+      form.reset({
+        patientName: fetchedAppointment?.patientName ?? fetchedAppointment?.patient_name ?? form.getValues().patientName,
+        patientPhone: fetchedAppointment?.patientPhone ?? fetchedAppointment?.patient_phone ?? form.getValues().patientPhone,
+        treatment: fetchedAppointment?.treatment ?? fetchedAppointment?.specific_treatment ?? form.getValues().treatment,
+        doctorId: fetchedAppointment?.doctorId ?? fetchedAppointment?.doctor_id ?? form.getValues().doctorId,
+        doctorName: fetchedAppointment?.doctorName ?? fetchedAppointment?.doctor_name ?? form.getValues().doctorName,
+        date: fetchedAppointment?.date
+          ? formatDateLocal(new Date(fetchedAppointment.date))
+          : form.getValues().date,
+        time: (() => {
+          const rawTime = fetchedAppointment?.start_time_ist || fetchedAppointment?.time || fetchedAppointment?.start_time;
+          if (!rawTime) return form.getValues().time;
+          if (typeof rawTime === "string" && (rawTime.toLowerCase().includes("am") || rawTime.toLowerCase().includes("pm"))) {
+            const match = rawTime.match(/(\d+):(\d+)\s*(am|pm)/i);
+            if (match) {
+              let hrs = parseInt(match[1], 10);
+              const mins = match[2];
+              const period = match[3].toLowerCase();
+              
+              if (period === "pm" && hrs < 12) hrs += 12;
+              if (period === "am" && hrs === 12) hrs = 0;
+              
+              return `${String(hrs).padStart(2, '0')}:${mins}`;
+            }
+          }
+          if (rawTime.includes("T")) {
+            const dObj = new Date(rawTime);
+            const hrs = String(dObj.getUTCHours()).padStart(2, '0');
+            const mins = String(dObj.getUTCMinutes()).padStart(2, '0');
+            return `${hrs}:${mins}`;
+          }
+          return rawTime;
+        })(),
+        duration: fetchedAppointment?.duration?.toString() ?? fetchedAppointment?.slot_duration_mins?.toString() ?? form.getValues().duration,
+        type: fetchedAppointment?.type ?? form.getValues().type,
+        notes: fetchedAppointment?.notes ?? form.getValues().notes,
+        fee: fetchedAppointment?.fee ?? fetchedAppointment?.treatment_cost ?? form.getValues().fee,
+        patientConcern: fetchedAppointment?.patientConcern ?? fetchedAppointment?.concern ?? form.getValues().patientConcern,
+        treatmentType: fetchedAppointment?.treatmentType ?? fetchedAppointment?.treatment_type ?? form.getValues().treatmentType,
+      });
+    }
+  }, [fetchedAppointmentResponse, form]);
+
   const formData = form.watch();
+  const { formState: { errors } } = form;
 
   const onSubmit = (data: AppointmentFormData) => {
     if (
@@ -178,6 +253,7 @@ export function AppointmentForm({
             form.setValue("patientPhone", suggestion!.phone);
             setSuggestion(null);
           }}
+          errors={errors}
         />
         <ScheduleFields
           date={formData.date}

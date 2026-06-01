@@ -6,14 +6,22 @@ import { useStaffData } from "./useStaffData";
 import { useInventoryData } from "./useInventoryData";
 import { useCorporateData } from "./useCorporateData";
 
-export const useAppData = () => {
+export const useAppData = (params?: {
+  search?: string;
+  role?: string;
+  corporateSearch?: string;
+  corporateStatus?: string;
+}) => {
   const patientData = usePatientData();
   const apptData = useAppointmentData();
   const invoiceData = useInvoiceData();
   const treatmentData = useTreatmentData();
-  const staffData = useStaffData();
+  const staffData = useStaffData(params);
   const inventoryData = useInventoryData();
-  const corpData = useCorporateData();
+  const corpData = useCorporateData({
+    search: params?.corporateSearch,
+    status: params?.corporateStatus,
+  });
 
   const { setPatients } = patientData;
   const { setInvoices } = invoiceData;

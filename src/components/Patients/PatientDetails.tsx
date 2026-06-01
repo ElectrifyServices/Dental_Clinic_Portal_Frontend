@@ -27,6 +27,8 @@ import {
   getPrescriptionHTML,
   getBarcodeHTML,
 } from "./PatientDetails/PrintTemplates";
+import { usePatientAppointmentHistoryQuery } from "../../hooks/patients/usePatientAppointmentHistoryQuery";
+import { usePatientFamilyTreeQuery } from "../../hooks/patients/usePatientFamilyTreeQuery";
 
 interface PatientDetailsProps {
   patient: any;
@@ -68,9 +70,94 @@ export function PatientDetails({
 
   if (!patient) return null;
 
-  const patientAppointments = appointments.filter(
+  const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
+  const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
+
+  // Extract family members from API response
+  const apiData = familyTreeData?.responseObject?.data || familyTreeData?.data;
+  
+  let allFamilyMembers: any[] = [];
+  if (apiData) {
+    if (apiData.primary) {
+      allFamilyMembers.push(apiData.primary);
+    }
+    if (Array.isArray(apiData.dependents)) {
+      allFamilyMembers = [...allFamilyMembers, ...apiData.dependents];
+    }
+  }
+
+  // Filter out the current patient so they don't see themselves in their own family list
+  const otherFamilyMembers = allFamilyMembers.filter((m: any) => m.id !== patient.id);
+
+  const resolvedFamilyMembers = (otherFamilyMembers.length > 0 || apiData)
+    ? otherFamilyMembers.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        // If it's the primary patient, we label them as PRIMARY, otherwise use their relation
+        relation: m.id === apiData?.primary?.id 
+          ? "PRIMARY" 
+          : (m.relation_type || m.relation || m.relationship || "Family"),
+        phone: m.phone,
+        email: m.email,
+        dateOfBirth: m.date_of_birth || m.dateOfBirth || m.dob,
+        gender: m.gender,
+        bloodGroup: m.blood_group || m.bloodGroup,
+        status: m.is_active ? "active" : "inactive",
+        lastVisit: m.last_visit_date || m.lastVisit || null,
+        outstandingBalance: m.outstanding_balance || m.outstandingBalance || 0,
+        totalVisits: m.total_visits || 0,
+        profilePicture: m.profile_picture_url || null,
+      }))
+    : familyMembers;
+
+  const localPatientAppointments = appointments.filter(
     (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
   );
+
+  let patientAppointments = localPatientAppointments;
+  if (historyData) {
+    // Navigate the exact API structure: responseObject.data.history[]
+    const rawAppointments: any[] =
+      historyData?.responseObject?.data?.history ||
+      historyData?.data?.history ||
+      historyData?.history ||
+      (Array.isArray(historyData) ? historyData : []);
+
+    if (rawAppointments.length > 0) {
+      patientAppointments = rawAppointments.map((a: any) => {
+        // Prefer start_time_ist (already IST formatted like "02:35 pm"), fallback to ISO
+        let timeStr = a.start_time_ist || a.time || a.start_time || "";
+        if (timeStr && timeStr.includes("T")) {
+          try {
+            timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          } catch(e) {}
+        }
+        // Doctor name from nested personalProfile.staff.name
+        const doctorName =
+          a.personalProfile?.staff?.name ||
+          a.doctorName ||
+          a.doctor_name ||
+          a.doctor ||
+          "Assigned Doctor";
+        return {
+          id: a.id,
+          treatmentType: a.specific_treatment || a.treatmentType || a.type || "General Checkup",
+          type: a.type || a.treatmentType,
+          date: a.date_ist || a.date,
+          time: timeStr,
+          doctorName,
+          doctor: doctorName,
+          status: (a.status || "scheduled").toLowerCase().replace(/_/g, '-'),
+          cost: a.treatment_cost,
+          concern: a.concern,
+          notes: a.notes,
+        };
+      });
+    } else if (historyData?.responseObject?.data) {
+      // API returned a valid response with empty history
+      patientAppointments = [];
+    }
+  }
   const patientTreatments = treatments.filter(
     (t) => t.patientId === patient.id,
   );
@@ -261,7 +348,7 @@ export function PatientDetails({
               <DocumentsTab patient={patient} loading={loading} />
             </TabsContent>
             <TabsContent value="family" className="m-0 focus-visible:outline-none">
-              <FamilyTab familyMembers={familyMembers} />
+              <FamilyTab familyMembers={resolvedFamilyMembers} />
             </TabsContent>
           </div>
         </Tabs>

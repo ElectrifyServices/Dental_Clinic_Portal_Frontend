@@ -12,6 +12,8 @@ interface AppointmentListProps {
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string) => void;
   onCheckInPatient?: (appointment: any) => void;
+  selectedDate?: string;
+  setSelectedDate?: (date: string) => void;
 }
 
 const STATUS_VARIANTS: Record<string, any> = {
@@ -39,6 +41,8 @@ export function AppointmentList({
   onDeleteAppointment,
   onUpdateStatus,
   onCheckInPatient,
+  selectedDate,
+  setSelectedDate,
 }: AppointmentListProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -54,6 +58,13 @@ export function AppointmentList({
       (a.treatmentType || a.type || "")
         .toLowerCase()
         .includes(search.toLowerCase());
+    let dateMatch = true;
+    if (selectedDate) {
+      const aDate = new Date(a.date);
+      const aDateString = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, '0')}-${String(aDate.getDate()).padStart(2, '0')}`;
+      dateMatch = (aDateString === selectedDate);
+    }
+
     if (filter === "today")
       return (
         searchMatch && new Date(a.date).toDateString() === today.toDateString()
@@ -62,8 +73,8 @@ export function AppointmentList({
       const diff = (new Date(a.date).getTime() - today.getTime()) / 86400000;
       return searchMatch && diff >= 0 && diff <= 7;
     }
-    if (filter === "no-show") return searchMatch && a.status === "no-show";
-    return searchMatch;
+    if (filter === "no-show") return searchMatch && dateMatch && a.status === "no-show";
+    return searchMatch && dateMatch;
   });
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
@@ -80,17 +91,31 @@ export function AppointmentList({
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
-          <Input
-            placeholder="Search patient, treatment or doctor..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="pl-10 h-10 rounded-2xl bg-card border-border"
-          />
+        <div className="flex flex-1 items-center gap-4 max-w-2xl">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+            <Input
+              placeholder="Search patient, treatment or doctor..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-10 h-10 rounded-2xl bg-card border-border"
+            />
+          </div>
+          <div className="w-48">
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate?.(e.target.value);
+                setFilter("all"); // reset other filters if user picks a date manually
+                setPage(1);
+              }}
+              className="h-10 rounded-2xl bg-card border-border"
+            />
+          </div>
         </div>
         <div className="flex bg-muted p-1 rounded-2xl border border-border self-start">
           {TYPE_FILTERS.map((f) => (

@@ -68,6 +68,24 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     }
   };
 
+  const getCategoryStyles = (category: string) => {
+    switch (category?.toLowerCase()) {
+      case "vip":
+        return "bg-purple-100 text-purple-700 hover:bg-purple-100";
+      case "corporate":
+        return "bg-blue-100 text-blue-700 hover:bg-blue-100";
+      case "family":
+        return "bg-emerald-100 text-emerald-700 hover:bg-emerald-100";
+      case "staff":
+      case "clinic_staff":
+        return "bg-indigo-100 text-indigo-700 hover:bg-indigo-100";
+      case "complimentary":
+        return "bg-pink-100 text-pink-700 hover:bg-pink-100";
+      default:
+        return "bg-amber-50 text-amber-600 hover:bg-amber-50";
+    }
+  };
+
   const calculateAge = (dob?: string) => {
     if (!dob) return 0;
     const birthDate = new Date(dob);
@@ -108,7 +126,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                   {(patient.name || "Unknown").toLowerCase()}
                 </h3>
                 {patient.category && (
-                  <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap">
+                  <Badge className={`border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap ${getCategoryStyles(patient.category)}`}>
                     {patient.category.toUpperCase()}
                   </Badge>
                 )}
@@ -268,14 +286,6 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-purple-50 text-purple-600 hover:bg-purple-100"
-              onClick={() => onExport(patient.id)}
-            >
-              <Download className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
               className="h-8 w-8 bg-destructive/10 text-destructive hover:bg-destructive/10"
               onClick={() => onDelete(patient.id)}
             >
@@ -286,22 +296,22 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         <Button
           variant="ghost"
           className={`w-full mt-2 h-8 font-black text-[10px] gap-1.5 ${
-            patient.status === "inactive"
-              ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-              : "bg-orange-50 text-orange-600 hover:bg-orange-100"
-          }`}
-          onClick={() => onToggleStatus(patient.id, patient.status)}
-        >
-          {patient.status === "inactive" ? (
-            <>
-              <UserCheck className="w-3.5 h-3.5" /> ACTIVATE
-            </>
-          ) : (
-            <>
-              <PowerOff className="w-3.5 h-3.5" /> DEACTIVATE
-            </>
-          )}
-        </Button>
+                patient.status === "inactive"
+                  ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                  : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+              }`}
+              onClick={() => onToggleStatus(patient.id, patient.status)}
+            >
+              {patient.status === "inactive" ? (
+                <>
+                  <UserCheck className="w-3.5 h-3.5" /> ACTIVATE
+                </>
+              ) : (
+                <>
+                  <PowerOff className="w-3.5 h-3.5" /> DEACTIVATE
+                </>
+              )}
+            </Button>
       </CardContent>
     </Card>
   );

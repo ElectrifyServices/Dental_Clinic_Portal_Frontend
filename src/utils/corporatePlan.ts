@@ -68,6 +68,7 @@ export function computePlanDiscount(
 }
 
 export function getPlanStatus(plan: CorporatePlan): 'active' | 'expiring' | 'expired' | 'inactive' {
+  if (plan.status === 'EXPIRED') return 'expired';
   if (!plan.isActive) return 'inactive';
   const now = new Date();
   const validTo = new Date(plan.validTo);

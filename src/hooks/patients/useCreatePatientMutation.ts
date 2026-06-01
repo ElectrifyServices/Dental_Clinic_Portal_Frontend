@@ -77,7 +77,7 @@ const MARITAL_STATUS_MAP: Record<string, string> = {
 
 const CATEGORY_MAP: Record<string, string> = {
   regular: "REGULAR",
-  corporate: "REGULAR", // Corporate is not in backend enum, mapping to REGULAR
+  corporate: "CORPORATE",
   family: "FAMILY",
   staff: "CLINIC_STAFF",
   vip: "VIP",
@@ -114,9 +114,12 @@ export function mapFormDataToCreatePayload(
     : formData.emergencyRelation;
   if (emergencyRelation) payload.append('emergency_contact_relation', emergencyRelation);
 
-  // Relation Type
-  const relationType = formData.relation === "Other" ? formData.customRelation : formData.relation;
-  if (relationType) payload.append('relation_type', relationType.toUpperCase());
+  // Relation Type — values are already backend enum values (FATHER, MOTHER, etc.)
+  // For OTHER, use the custom text typed by user
+  const relationType = formData.relation === "OTHER"
+    ? formData.customRelation?.trim()
+    : formData.relation;
+  if (relationType) payload.append('relation_type', relationType);
 
   // Referral & category
   if (formData.referredBy) payload.append('referred_by', formData.referredBy);
@@ -164,9 +167,9 @@ export function mapFormDataToCreatePayload(
     payload.append('consent_form_image', formData.rawConsentFormFile);
   }
   if (formData.isFOC) {
-    payload.append('is_foc', 'true');
-  }
-  if (formData.defaultDiscount !== undefined) {
+    payload.append('freeOfCost', 'true');
+    payload.append('discount_percentage', '100');
+  } else if (formData.defaultDiscount !== undefined) {
     payload.append('discount_percentage', String(formData.defaultDiscount));
   }
 

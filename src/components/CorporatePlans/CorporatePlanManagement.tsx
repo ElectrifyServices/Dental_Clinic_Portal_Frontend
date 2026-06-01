@@ -15,14 +15,29 @@ interface Props {
   onSave: (plan: CorporatePlan) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
+  search?: string;
+  onSearchChange?: (val: string) => void;
+  filter?: 'all' | 'active' | 'inactive';
+  onFilterChange?: (val: 'all' | 'active' | 'inactive') => void;
+  isLoading?: boolean;
 }
 
-export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: Props) {
-  const { showToast } = useModal();
+export function CorporatePlanManagement({
+  plans,
+  onSave,
+  onDelete,
+  onToggle,
+  search: propSearch,
+  onSearchChange: propOnSearchChange,
+  filter: propFilter,
+  onFilterChange: propOnFilterChange,
+  isLoading,
+}: Props) {
+  const { showToast, confirmDelete } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
   // Fetch corporate form configuration data 
-// (like benefit types, dropdown values, labels, etc.)
+  // (like benefit types, dropdown values, labels, etc.)
   const cfg = useFormConfig('corporate');
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     ((cfg as any).benefitTypes ?? []).map((b: any) => [b.value, b.label])
@@ -30,27 +45,31 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<CorporatePlan | null>(null);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [localSearch, setLocalSearch] = useState('');
+  const [localFilter, setLocalFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  const filtered = plans.filter(p => {
-    const q = search.toLowerCase();
-    const match = p.name.toLowerCase().includes(q) || p.companyName.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
-    const f = filter === 'all' || (filter === 'active' ? p.isActive : !p.isActive);
-    return match && f;
-  });
+  const search = propSearch !== undefined ? propSearch : localSearch;
+  const setSearch = propOnSearchChange || setLocalSearch;
+  const filter = propFilter !== undefined ? propFilter : localFilter;
+  const setFilter = propOnFilterChange || setLocalFilter;
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this plan?')) {
-      try {
-        await deletePlanMutation.mutateAsync({ id });
-        onDelete(id);
-        showToast('Plan deleted successfully');
-      } catch (err: any) {
-        console.error("Failed to delete corporate plan via API:", err);
-        showToast(err?.response?.data?.message || err?.message || "Failed to delete plan");
+  const filtered = plans; // Since backend already filters if props are passed, let's just use plans directly (or we can double check, but direct is perfectly clean!)
+
+  const handleDelete = (id: string) => {
+    confirmDelete(
+      'Delete Corporate Plan',
+      'Delete this plan?',
+      async () => {
+        try {
+          await deletePlanMutation.mutateAsync({ id });
+          onDelete(id);
+          // The global confirmDelete already shows a success toast: 'Record deleted successfully!'
+        } catch (err: any) {
+          console.error("Failed to delete corporate plan via API:", err);
+          showToast(err?.response?.data?.message || err?.message || "Failed to delete plan", "error");
+        }
       }
-    }
+    );
   };
 
   const handleToggle = async (plan: CorporatePlan) => {
@@ -77,7 +96,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
         <div>
           <h1 className="text-2xl font-bold text-foreground leading-none">Corporate Plans</h1>
           <p className="text-muted-foreground text-sm mt-1.5 font-medium">
-            {activePlans} active plan{activePlans !== 1 ? 's' : ''} � {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
+            {activePlans} active plan{activePlans !== 1 ? 's' : ''} & {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
           </p>
         </div>
         <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
@@ -89,7 +108,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex items-start gap-3 bg-primary/5 border border-primary/10 rounded-2xl px-5 py-4">
         <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-sm text-primary/80 font-medium leading-relaxed">
-          Plans created here are available company-wide. When registering a patient, staff can map them to a plan � discounts and benefits apply automatically in the billing engine.
+          Plans created here are available company-wide. When registering a patient, staff can map them to a plan, discounts and benefits apply automatically in the billing engine.
         </p>
       </div>
 
@@ -97,7 +116,7 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       <div className="flex gap-4 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" placeholder="Search plans, companies�" value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder="Search plans, companies" value={search} onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" />
         </div>
         <div className="flex p-1 bg-muted rounded-xl border border-border">
@@ -111,14 +130,21 @@ export function CorporatePlanManagement({ plans, onSave, onDelete, onToggle }: P
       </div>
 
       {/* Plan cards */}
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-24 bg-card rounded-[2.5rem] border border-border shadow-sm">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider animate-pulse">
+            Fetching corporate plans...
+          </p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-24 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-border/50">
           <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">No plans found</p>
           <p className="text-muted-foreground/60 text-xs mt-2 font-medium">Create your first corporate plan to get started</p>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map(plan => (
             <CorporatePlanCard
               key={plan.id}

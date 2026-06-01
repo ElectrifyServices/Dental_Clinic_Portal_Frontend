@@ -1,4 +1,5 @@
 import { useApiMutation } from "../useApiMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface BulkImportEmployee {
   name: string;
@@ -25,8 +26,14 @@ export interface BulkImportEmployeeResponse {
 }
 
 export function useBulkImportEmployeeMutation() {
+  const queryClient = useQueryClient();
   return useApiMutation<BulkImportEmployeeResponse, BulkImportEmployeeVariables>({
     endpoint: "/employee/bulk-import",
     method: "post",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
+      },
+    },
   });
 }

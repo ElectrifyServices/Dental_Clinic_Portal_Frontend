@@ -39,6 +39,11 @@ interface DoctorManagementProps {
   onManageSchedule: (id: string, name: string) => void;
   onPaySalary?: (id: string, name: string) => void;
   onViewSalaryHistory?: (id: string, name: string) => void;
+  search?: string;
+  onSearchChange?: (val: string) => void;
+  roleFilter?: string;
+  onRoleFilterChange?: (val: string) => void;
+  isLoading?: boolean;
 }
 
 const ROLE_META: Record<
@@ -54,11 +59,6 @@ const ROLE_META: Record<
     variant: "violet",
     icon: <Shield className="w-3 h-3" />,
   },
-  admin: {
-    label: "Admin",
-    variant: "indigo",
-    icon: <Shield className="w-3 h-3" />,
-  },
   doctor: {
     label: "Doctor",
     variant: "blue",
@@ -70,7 +70,7 @@ const ROLE_META: Record<
     icon: <User className="w-3 h-3" />,
   },
   assistant: {
-    label: "Assistant",
+    label: "STAFF",
     variant: "amber",
     icon: <User className="w-3 h-3" />,
   },
@@ -79,9 +79,8 @@ const ROLE_META: Record<
 const ROLE_FILTERS = [
   { key: "all", label: "All Roles" },
   { key: "doctor", label: "Doctors" },
-  { key: "admin", label: "Admin" },
   { key: "receptionist", label: "Receptionist" },
-  { key: "assistant", label: "Assistant" },
+  { key: "staff", label: "STAFF" }, 
 ];
 
 export function DoctorManagement({
@@ -93,9 +92,20 @@ export function DoctorManagement({
   onManageSchedule,
   onPaySalary,
   onViewSalaryHistory,
+  search: propSearch,
+  onSearchChange: propOnSearchChange,
+  roleFilter: propRoleFilter,
+  onRoleFilterChange: propOnRoleFilterChange,
+  isLoading,
 }: DoctorManagementProps) {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [localSearch, setLocalSearch] = useState("");
+  const [localRoleFilter, setLocalRoleFilter] = useState("all");
+
+  const search = propSearch !== undefined ? propSearch : localSearch;
+  const setSearch = propOnSearchChange || setLocalSearch;
+  const roleFilter = propRoleFilter !== undefined ? propRoleFilter : localRoleFilter;
+  const setRoleFilter = propOnRoleFilterChange || setLocalRoleFilter;
+
   const [statusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -166,15 +176,17 @@ export function DoctorManagement({
             </>
           )}
         </button>
-        <button
-          onClick={() => {
-            onManageSchedule(staff.id, staff.name);
-            setOpenMenuId(null);
-          }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
-        >
-          <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
-        </button>
+        {staff.role === "doctor" && (
+          <button
+            onClick={() => {
+              onManageSchedule(staff.id, staff.name);
+              setOpenMenuId(null);
+            }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
+          >
+            <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
+          </button>
+        )}
         {onPaySalary && (
           <button
             onClick={() => {
@@ -280,16 +292,20 @@ export function DoctorManagement({
       header: "Financials",
       render: (staff: any) => (
         <div className="text-[11px] font-bold">
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground/60 font-medium">Paid:</span>
-            <span className="text-emerald-600">₹{staff.salaryPaid || "0"}</span>
+          <div className="flex justify-between gap-4 mb-0.5">
+            <span className="text-muted-foreground/60 font-medium">Monthly:</span>
+            <span className="text-foreground">₹{(staff as any).monthlySalary?.toLocaleString() || "0"}</span>
           </div>
-          <div className="flex justify-between gap-4 mt-0.5">
+          <div className="flex justify-between gap-4 mb-0.5">
+            <span className="text-muted-foreground/60 font-medium">Paid:</span>
+            <span className="text-emerald-600">₹{(staff as any).salaryPaid?.toLocaleString() || "0"}</span>
+          </div>
+          {/* <div className="flex justify-between gap-4">
             <span className="text-muted-foreground/60 font-medium">Due:</span>
             <span className="text-amber-600">
-              ₹{staff.salaryPending || "0"}
+              ₹{(staff as any).salaryPending?.toLocaleString() || "0"}
             </span>
-          </div>
+          </div> */}
         </div>
       ),
     },
@@ -379,7 +395,14 @@ export function DoctorManagement({
         </div>
       </div>
 
-      {viewMode === "list" ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-24 bg-card rounded-2xl border border-border shadow-sm">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider animate-pulse">
+            Fetching staff directory...
+          </p>
+        </div>
+      ) : viewMode === "list" ? (
         <DataTable
           columns={columns}
           data={filtered}
@@ -431,7 +454,7 @@ export function DoctorManagement({
                           title={staff.isActive ? "Active" : "Inactive"}
                         />
                       </div>
-                      
+
                       <div className="flex gap-1 bg-muted/30 rounded-xl p-1 border border-border/50">
                         <Button
                           variant="ghost"
@@ -484,7 +507,7 @@ export function DoctorManagement({
                     <div className="mt-5 space-y-3 border-t border-border/50 pt-5">
                       <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium truncate group-hover:text-foreground/80 transition-colors">
                         <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-blue-500/20">
-                           <Mail className="w-3.5 h-3.5 text-blue-500" />
+                          <Mail className="w-3.5 h-3.5 text-blue-500" />
                         </div>
                         <span className="truncate">{staff.email}</span>
                       </div>
@@ -506,23 +529,31 @@ export function DoctorManagement({
                       )}
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-muted/50 rounded-xl border border-border/50 group-hover:bg-muted transition-colors">
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                          Salary Due
+                    <div className="mt-5 grid grid-cols-2 gap-2">
+                      <div className="p-2 bg-muted/20 rounded-xl border border-border/50 group-hover:bg-muted/40 transition-colors">
+                        <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
+                          Monthly
                         </p>
-                        <p className="text-sm font-black text-amber-600">
-                          ₹{(staff as any).salaryPending || "0"}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-emerald-50/30 rounded-xl border border-emerald-100/50 group-hover:bg-emerald-50 transition-colors">
-                        <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-wider mb-1">
-                          Total Paid
-                        </p>
-                        <p className="text-sm font-black text-emerald-600">
-                          ₹{(staff as any).salaryPaid || "0"}
+                        <p className="text-xs font-black text-foreground truncate" title={(staff as any).monthlySalary?.toLocaleString()}>
+                          ₹{(staff as any).monthlySalary?.toLocaleString() || "0"}
                         </p>
                       </div>
+                      <div className="p-2 bg-emerald-50/30 rounded-xl border border-emerald-100/50 group-hover:bg-emerald-50 transition-colors">
+                        <p className="text-[9px] text-emerald-600/70 font-bold uppercase tracking-wider mb-1">
+                          Paid
+                        </p>
+                        <p className="text-xs font-black text-emerald-600 truncate" title={(staff as any).salaryPaid?.toLocaleString()}>
+                          ₹{(staff as any).salaryPaid?.toLocaleString() || "0"}
+                        </p>
+                      </div>
+                      {/* <div className="p-2 bg-amber-50/30 rounded-xl border border-amber-100/50 group-hover:bg-amber-50 transition-colors">
+                        <p className="text-[9px] text-amber-600/70 font-bold uppercase tracking-wider mb-1">
+                          Due
+                        </p>
+                        <p className="text-xs font-black text-amber-600 truncate" title={(staff as any).salaryPending?.toLocaleString()}>
+                          ₹{(staff as any).salaryPending?.toLocaleString() || "0"}
+                        </p>
+                      </div> */}
                     </div>
                   </CardContent>
                 </Card>

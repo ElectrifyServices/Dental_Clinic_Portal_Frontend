@@ -246,7 +246,7 @@ export function TreatmentSessionManager({
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
                   Target Date
@@ -260,6 +260,27 @@ export function TreatmentSessionManager({
                   className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
                   min={new Date().toISOString().split("T")[0]}
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
+                  Available Slots
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewSession({ ...newSession, time: e.target.value });
+                    }
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select slot</option>
+                  <option value="09:00">09:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:30">11:30 AM</option>
+                  <option value="14:00">02:00 PM</option>
+                  <option value="16:00">04:00 PM</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">

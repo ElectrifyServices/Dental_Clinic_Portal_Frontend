@@ -51,29 +51,4 @@ export const demoInventory = [
   { id: '5', name: 'Dental X-Ray Films', category: 'consumables', currentStock: 50, minStock: 20, unit: 'sheets', supplier: 'ImageTech', lastRestocked: '2024-01-08', cost: 45 },
 ];
 
-export const demoCorporatePlans = [
-  {
-    id: 'CORP-SAMPLE-1', name: 'Electrify Gold Health Plan', companyName: 'Tata Consultancy Services',
-    code: 'Electrify-GOLD', description: 'Premium dental care for Electrify employees',
-    benefits: [
-      { id: 'b1', type: 'flat_discount', value: 20, description: '20% discount on all treatments' },
-      { id: 'b2', type: 'free_consultations', value: 2, description: '2 free consultations per year' },
-    ],
-    validFrom: new Date().toISOString().split('T')[0],
-    validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-    maxMembers: 500, currentMembers: 0, isActive: true,
-    createdAt: new Date().toISOString(), createdBy: 'Super Admin', color: 'blue',
-  },
-  {
-    id: 'CORP-SAMPLE-2', name: 'Infosys Silver Plan', companyName: 'Infosys Limited',
-    code: 'INFO-SILV', description: 'Standard dental coverage for Infosys employees',
-    benefits: [
-      { id: 'b3', type: 'treatment_discount', value: 15, treatmentTypes: ['root-canal', 'crown', 'surgery'], description: '15% off major procedures' },
-      { id: 'b4', type: 'capped_discount', value: 10, cap: 2000, description: '10% discount (max ₹2,000 per visit)' },
-    ],
-    validFrom: new Date().toISOString().split('T')[0],
-    validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-    currentMembers: 0, isActive: true,
-    createdAt: new Date().toISOString(), createdBy: 'Super Admin', color: 'emerald',
-  },
-];
+export const demoCorporatePlans = [];

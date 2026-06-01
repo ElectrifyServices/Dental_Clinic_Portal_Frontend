@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, Mail, Phone, Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Mail, Phone, Upload, Eye, EyeOff } from 'lucide-react';
 import { LabeledField } from '@/components/ui';
 
 interface Step1Props {
@@ -13,6 +13,8 @@ interface Step1Props {
 
 export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload, isEdit, errors = {} }: Step1Props) {
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="space-y-8 py-4">
@@ -20,20 +22,20 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         <div className="relative group">
           <div className="w-32 h-32 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden transition-all group-hover:border-primary/40 shadow-inner">
             {formData.avatar ? (
-              <img 
-                src={formData.avatar} 
-                alt="Preview" 
-                className="w-full h-full object-cover" 
+              <img
+                src={formData.avatar}
+                alt="Preview"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   if (e.currentTarget.nextElementSibling) {
-                     (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
                   }
                 }}
               />
             ) : null}
-            <div 
-              className="text-3xl font-black text-primary/20 flex items-center justify-center w-full h-full" 
+            <div
+              className="text-3xl font-black text-primary/20 flex items-center justify-center w-full h-full"
               style={{ display: formData.avatar ? 'none' : 'flex' }}
             >
               {formData.name ? getInitials(formData.name) : <User className="w-12 h-12" />}
@@ -55,7 +57,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <LabeledField label="Full Name *" required error={errors.name?.message}>
+        <LabeledField label="Full Name" required error={errors.name?.message}>
           <div className="relative">
             <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="text" name="name" value={formData.name} onChange={onChange} required
@@ -64,7 +66,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           </div>
         </LabeledField>
 
-        <LabeledField label="Email Address *" required error={errors.email?.message}>
+        <LabeledField label="Email Address" required error={errors.email?.message}>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="email" name="email" value={formData.email} onChange={onChange} required
@@ -73,12 +75,17 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           </div>
         </LabeledField>
 
-        <LabeledField label="Phone Number *" required error={errors.phone?.message}>
+        <LabeledField label="Phone Number" required error={errors.phone?.message}>
           <div className="relative">
             <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input type="tel" name="phone" value={formData.phone} onChange={onChange} required
+            <input type="tel" name="phone" value={formData.phone}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                onChange(e);
+              }}
+              required
               className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
-              placeholder="+91 98765 43210" />
+              placeholder="9876543210" />
           </div>
         </LabeledField>
 
@@ -90,15 +97,48 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
 
       {!isEdit && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
-          <LabeledField label="Secure Password *" required error={errors.password?.message}>
-            <input type="password" name="password" value={formData.password} onChange={onChange} required
-              className={`w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
-              placeholder="••••••••" />
+          <LabeledField label="Secure Password" required error={errors.password?.message}>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={onChange}
+                required
+                className={`w-full px-4 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </LabeledField>
-          <LabeledField label="Confirm Password *" required error={errors.confirmPassword?.message}>
-            <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={onChange} required
-              className={`w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
-              placeholder="••••••••" />
+
+          <LabeledField label="Confirm Password" required error={errors.confirmPassword?.message}>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={onChange}
+                required
+                className={`w-full px-4 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </LabeledField>
         </div>
       )}

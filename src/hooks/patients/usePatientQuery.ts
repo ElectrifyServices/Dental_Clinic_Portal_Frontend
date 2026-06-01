@@ -4,7 +4,10 @@ export interface PatientListParams {
   page?: number;
   limit?: number;
   search?: string;
-  is_active?: boolean; // API expects boolean directly, not inside filters
+  filters?: {
+    status?: string[];
+    category?: string[];
+  };
 }
 
 export interface Patient {
@@ -24,13 +27,12 @@ export function usePatientQuery(params: PatientListParams = {}) {
     limit: params.limit ?? 100,
   };
 
-  if (params.search) {
+  if (params.search !== undefined && params.search !== "") {
     body.search = params.search;
   }
 
-  // Only send is_active if explicitly provided (true or false)
-  if (params.is_active !== undefined) {
-    body.is_active = params.is_active;
+  if (params.filters && Object.keys(params.filters).length > 0) {
+    body.filters = params.filters;
   }
 
   return useApiQuery<Patient[]>({

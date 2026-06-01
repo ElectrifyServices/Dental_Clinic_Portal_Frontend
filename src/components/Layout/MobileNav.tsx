@@ -33,22 +33,27 @@ export function MobileNav() {
   const role = state.user?.role || "";
 
   const visible = ITEMS.filter((item) => {
-    // 1. Check dynamic module_permission from backend
-    const userPermissions = (state.user as any)?.module_permission;
-    if (Array.isArray(userPermissions)) {
+    const rawModulePerms: string[] = (state.user as any)?.module_permission || [];
+    const hasAll =
+      role === "superadmin" ||
+      rawModulePerms.some((p) => p.toUpperCase() === "ALL");
+
+    // If user has ALL access, show everything
+    if (hasAll) return true;
+
+    // Check dynamic module_permission from backend
+    if (rawModulePerms.length > 0) {
       const allowedModulesForScreen = PERMISSION_MAP[item.id];
       if (allowedModulesForScreen) {
-        return allowedModulesForScreen.some(p =>
-          userPermissions.includes(p.toUpperCase())
+        return allowedModulesForScreen.some((p) =>
+          rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase())
         );
       }
       return true;
     }
 
-    // 2. Role-based fallback check (only used if module_permission is NOT provided)
-    const hasRoleAccess = item.roles.includes("all") || item.roles.includes(role);
-    if (!hasRoleAccess) return false;
-    return true;
+    // Role-based fallback check (only used if module_permission is not provided)
+    return item.roles.includes("all") || item.roles.includes(role);
   });
 
   return (

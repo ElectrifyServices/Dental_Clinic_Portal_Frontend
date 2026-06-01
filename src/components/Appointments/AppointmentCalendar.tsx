@@ -3,7 +3,8 @@ import { DoctorSidebar } from "./AppointmentCalendar/DoctorSidebar";
 import { CalendarGrid } from "./AppointmentCalendar/CalendarGrid";
 import { DayAgenda } from "./AppointmentCalendar/DayAgenda";
 import { BookingSlots } from "./AppointmentCalendar/BookingSlots";
-import { useDoctorScheduleQuery, mapApiResponseToScheduleState } from "../../hooks/staff/useDoctorScheduleQuery";
+import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
+import { useAppointmentCalendarQuery } from "../../hooks/appointments/useAppointmentCalendarQuery";
 
 interface Doctor {
   id: string;
@@ -35,8 +36,25 @@ export function AppointmentCalendar({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [monthOffset, setMonthOffset] = useState(0);
 
-  const { data: scheduleResponse, isLoading: isLoadingSchedule } = useDoctorScheduleQuery(selectedDoctorId);
-  const scheduleState = useMemo(() => mapApiResponseToScheduleState(scheduleResponse), [scheduleResponse]);
+  const formattedDate = useMemo(() => {
+    if (!selectedDate) return "";
+    return `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+  }, [selectedDate]);
+
+  const referenceDate = useMemo(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  }, [monthOffset]);
+
+  const { data: calendarDataResponse } = useAppointmentCalendarQuery(
+    referenceDate.getMonth() + 1,
+    referenceDate.getFullYear()
+  );
+
+  const { data: availableSlotsResponse, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
+    selectedDoctorId,
+    formattedDate
+  );
 
   const monthNames = [
     "January",
@@ -84,84 +102,38 @@ export function AppointmentCalendar({
   }, [monthOffset]);
 
   const availableSlots = useMemo(() => {
-    if (!selectedDoctorId || !selectedDate || !scheduleState) return [];
+    if (!availableSlotsResponse?.data?.slots) return [];
     
-    const daySchedule =
-      scheduleState.workingHours[
-        selectedDate
-          .toLocaleDateString("en-US", { weekday: "long" })
-          .toLowerCase()
-      ];
-    if (!daySchedule?.isWorking) return [];
-
-    const slots = [];
-    for (let h = 9; h <= 18; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        if (h === 18 && m > 0) break;
-        const t24 = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-        const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
-        slots.push({
-          time24: t24,
-          time12: `${h12}:${m.toString().padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`,
-        });
+    // Convert 12-hour time format (e.g., "10:00 AM") to 24-hour time format (e.g., "10:00") for internal logic.
+    const convert12to24 = (time12: string) => {
+      const [time, modifier] = time12.split(" ");
+      let [hours, minutes] = time.split(":");
+      if (hours === "12") {
+        hours = "00";
       }
-    }
+      if (modifier === "PM") {
+        hours = (parseInt(hours, 10) + 12).toString();
+      }
+      return `${hours.padStart(2, "0")}:${minutes}`;
+    };
 
-    const startH = parseInt(daySchedule.startTime.split(":")[0]);
-    const endH = parseInt(daySchedule.endTime.split(":")[0]);
-    const endM = parseInt(daySchedule.endTime.split(":")[1]);
-
-    return slots
-      .filter((s) => {
-        const sh = parseInt(s.time24.split(":")[0]);
-        const sm = parseInt(s.time24.split(":")[1]);
-        if (sh < startH || sh > endH || (sh === endH && sm > endM))
-          return false;
-        if (daySchedule.breakStart && daySchedule.breakEnd) {
-          const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
-          const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
-          const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
-          const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
-          if (
-            (sh > bsH || (sh === bsH && sm >= bsM)) &&
-            (sh < beH || (sh === beH && sm < beM))
-          )
-            return false;
-        }
-        return true;
-      })
-      .map((s) => {
-        const sHr = parseInt(s.time24.split(":")[0]) % 12;
-        const sMn = parseInt(s.time24.split(":")[1]);
-        const sStart12 = sHr * 60 + sMn;
-
-        const isBooked = appointments.some((a) => {
-          if (
-            a.doctorId !== selectedDoctorId ||
-            new Date(a.date).toDateString() !== selectedDate.toDateString()
-          )
-            return false;
-
-          // Robust time parsing
-          let [h, m] = a.time.split(":");
-          let hr = parseInt(h) % 12;
-          let mn = parseInt(m);
-
-          const aStart = hr * 60 + mn;
-          const aDuration = parseInt(a.duration?.toString() || "15");
-          return sStart12 >= aStart && sStart12 < aStart + aDuration;
-        });
-        const now = new Date();
-        const slotTime = new Date(selectedDate);
-        slotTime.setHours(
-          parseInt(s.time24.split(":")[0]),
-          parseInt(s.time24.split(":")[1]),
-          0,
-          0,
-        );
-        return { ...s, isBooked, isPast: slotTime < now };
-      });
-  }, [selectedDoctorId, selectedDate, appointments, scheduleState]);
+    return availableSlotsResponse.data.slots.map((slot) => {
+      const time24 = convert12to24(slot.time);
+      const isBooked = !slot.is_available;
+      
+      const now = new Date();
+      const slotTime = new Date(selectedDate);
+      const [sh, sm] = time24.split(":");
+      slotTime.setHours(parseInt(sh, 10), parseInt(sm, 10), 0, 0);
+      
+      return {
+        time24,
+        time12: slot.time,
+        isBooked,
+        isPast: slotTime < now,
+      };
+    });
+  }, [availableSlotsResponse, selectedDate]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-280px)] xl:overflow-hidden">
@@ -179,6 +151,7 @@ export function AppointmentCalendar({
         rollingDates={rollingDates}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        appointmentsByDate={calendarDataResponse?.data?.appointments_by_date || {}}
         getDayAppointmentsForDate={(date) =>
           appointments.filter(
             (a) =>
@@ -205,7 +178,7 @@ export function AppointmentCalendar({
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           availableSlots={availableSlots}
-          isLoading={isLoadingSchedule}
+          isLoading={isLoadingSlots}
           onBookAppointment={(doctorId, time) =>
             onBookAppointment?.(doctorId, selectedDate, time)
           }

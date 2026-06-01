@@ -14,11 +14,26 @@ export interface StaffMember {
   [key: string]: any;
 }
 
-export function useStaffQuery() {
+export interface StaffListParams {
+  search?: string;
+  role?: string;
+}
+
+export function useStaffQuery(params: StaffListParams = {}) {
+  const body: Record<string, any> = { all: true };
+  if (params.search) {
+    body.search = params.search;
+  }
+  if (params.role && params.role !== "all") {
+    body.filters = {
+      roles: [params.role.toUpperCase()]
+    };
+  }
+
   return useApiQuery<StaffMember[]>({
-    queryKey: ["staff"],
+    queryKey: ["staff", body],
     endpoint: "/staff/list",
     method: "post",
-    data: { all: true }, // As per standard list APIs in this project
+    data: body,
   });
 }

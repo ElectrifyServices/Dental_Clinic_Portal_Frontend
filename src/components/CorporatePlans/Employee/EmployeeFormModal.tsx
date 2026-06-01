@@ -5,6 +5,8 @@ import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useUpdateEmployeeMutation } from '../../../hooks/corporate/useUpdateEmployeeMutation';
+import { useEmployeeQuery } from '../../../hooks/corporate/useEmployeeQuery';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeFormModalProps {
   showForm: boolean;
@@ -24,12 +26,18 @@ const EMPTY_EMP = (): Partial<CorporateEmployee> => ({
 });
 
 export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans, onSave, refetch }: EmployeeFormModalProps) {
+  const queryClient = useQueryClient();
   const [form, setForm] = useState<Partial<CorporateEmployee>>(EMPTY_EMP());
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
   const empCfg = useFormConfig('employee');
   const createEmployeeMutation = useCreateEmployeeMutation();
   const updateEmployeeMutation = useUpdateEmployeeMutation();
+
+  // Fetch detailed employee data from backend GET /employee/:id when editing
+  const { data: employeeDetails, isLoading: isFetching } = useEmployeeQuery(editEmp?.id || undefined, {
+    enabled: showForm && !!editEmp?.id,
+  });
   
   const empCfgAny = empCfg as any;
   const personalSection = empCfg.sections?.find(s => s.id === 'personal');
@@ -39,21 +47,60 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   useEffect(() => {
     if (showForm) {
       if (editEmp) {
-        setForm({ ...editEmp });
+        if (employeeDetails) {
+          const empData = employeeDetails.data || employeeDetails;
+          const plan = activePlans.find(p => p.id === (empData.corporate_plan?.id || empData.corporate_plan_id));
+          setForm({
+            id: empData.id,
+            employeeId: empData.emp_id || '',
+            name: empData.name || '',
+            phone: empData.phone || '',
+            email: empData.email || '',
+            gender: empData.gender?.toLowerCase() || 'male',
+            dateOfBirth: empData.date_of_birth ? empData.date_of_birth.split('T')[0] : '',
+            designation: empData.designation || '',
+            department: empData.department || '',
+            companyName: empData.company_name || '',
+            corporatePlanId: empData.corporate_plan?.id || empData.corporate_plan_id || '',
+            corporatePlanName: empData.corporate_plan?.plan_name || plan?.name || '',
+            enrolledAt: empData.created_at || editEmp.enrolledAt || '',
+            eligible_date: empData.eligible_date ? empData.eligible_date.split('T')[0] : '',
+            isActive: empData.status === 'ACTIVE',
+            patientId: empData.patient_id || editEmp.patientId,
+          });
+        } else {
+          setForm({ ...editEmp });
+        }
       } else {
         setForm(EMPTY_EMP());
       }
       setFormErrors({});
     }
-  }, [showForm, editEmp]);
+  }, [showForm, editEmp, employeeDetails, activePlans]);
 
   const handleFormChange = (name: string, value: any) => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const planOptions = activePlans
-    .filter(p => p.isActive)
-    .map(p => ({ value: p.id, label: `${p.name} (${p.companyName})` }));
+  const planOptions = React.useMemo(() => {
+    const list = activePlans
+      .filter(p => p.isActive)
+      .map(p => ({ value: p.id, label: `${p.name} (${p.companyName})` }));
+
+    // If the employee's current plan is not in the active list (e.g. it is inactive), 
+    // append it so that the user sees the plan name rather than the UUID.
+    if (form.corporatePlanId && !list.some(p => p.value === form.corporatePlanId)) {
+      const plan = activePlans.find(p => p.id === form.corporatePlanId);
+      if (plan) {
+        list.push({ value: plan.id, label: `${plan.name} (${plan.companyName})` });
+      } else if (form.corporatePlanName) {
+        list.push({ value: form.corporatePlanId, label: `${form.corporatePlanName} (${form.companyName || 'Current Plan'})` });
+      } else {
+        list.push({ value: form.corporatePlanId, label: `Current Plan (${form.corporatePlanId.slice(0, 8)})` });
+      }
+    }
+    return list;
+  }, [activePlans, form.corporatePlanId, form.corporatePlanName, form.companyName]);
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
@@ -107,6 +154,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           patientId: editEmp?.patientId || undefined,
         };
         onSave(emp);
+        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {
@@ -155,6 +203,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           patientId: editEmp?.patientId || undefined,
         };
         onSave(emp);
+        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {
@@ -197,7 +246,13 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 relative min-h-[200px]">
+        {isFetching && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
+            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
+            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading employee details from API...</p>
+          </div>
+        )}
         {personalSection && (
           <SectionRenderer
             section={personalSection}

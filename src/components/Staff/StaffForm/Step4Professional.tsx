@@ -5,6 +5,7 @@ import { LabeledField, SearchableSelect } from "@/components/ui";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
 import { useDeleteSpecializationMutation } from "@/hooks/specializations/useDeleteSpecializationMutation";
+import { useModal } from "@/contexts/ModalContext";
 
 interface Step4Props {
   formData: any;
@@ -29,6 +30,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
   const createMutation = useCreateSpecializationMutation();
   const deleteMutation = useDeleteSpecializationMutation();
   const queryClient = useQueryClient();
+  const { confirmDelete, showToast } = useModal();
   const [deletingName, setDeletingName] = useState<string | null>(null);
 
   let rawSpecs: any[] | null = null;
@@ -65,35 +67,51 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
           value: createdValue,
         },
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create specialization:", err);
+      let errMsg = "Failed to create specialization.";
+      const resData = err.response?.data || err;
+      if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
+        errMsg = resData.responseStatusList.statusList[0].statusDesc;
+      } else if (resData?.message) {
+        errMsg = resData.message;
+      } else if (resData?.status?.statusDesc) {
+        errMsg = resData.status.statusDesc;
+      }
+      showToast(errMsg, "error");
     }
   };
 
-  const handleDeleteSpecialization = async (valueName: string) => {
+  const handleDeleteSpecialization = (valueName: string) => {
     if (!rawSpecs) return;
     const spec = rawSpecs.find((s: any) => s.name === valueName || s === valueName);
     if (!spec || !spec.id) return; // Cannot delete if there's no ID
 
-    try {
-      setDeletingName(valueName);
-      await deleteMutation.mutateAsync(spec.id);
-      
-      await queryClient.invalidateQueries({
-        queryKey: ["specializations"],
-      });
-      
-      // If the deleted specialization is currently selected, clear it
-      if (formData.specialization === valueName) {
-        onChange({
-          target: { name: "specialization", value: "" }
-        });
+    confirmDelete(
+      "Delete Clinical Specialization",
+      `Are you sure you want to delete the clinical specialization "${valueName}"?`,
+      async () => {
+        try {
+          setDeletingName(valueName);
+          await deleteMutation.mutateAsync(spec.id);
+          
+          await queryClient.invalidateQueries({
+            queryKey: ["specializations"],
+          });
+          
+          // If the deleted specialization is currently selected, clear it
+          if (formData.specialization === valueName) {
+            onChange({
+              target: { name: "specialization", value: "" }
+            });
+          }
+        } catch (err) {
+          console.error("Failed to delete specialization:", err);
+        } finally {
+          setDeletingName(null);
+        }
       }
-    } catch (err) {
-      console.error("Failed to delete specialization:", err);
-    } finally {
-      setDeletingName(null);
-    }
+    );
   };
 
   const isDoctor =
@@ -309,7 +327,10 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
                   type="number"
                   name="profitPercentage"
                   value={formData.profitPercentage}
-                  onChange={onChange}
+                  onChange={(e) => {
+                    e.target.value = e.target.value.replace(/^0+(?=\d)/, '');
+                    onChange(e);
+                  }}
                   min="0"
                   max="100"
                   className="w-full px-4 py-3 border rounded-xl text-xl font-black text-primary focus:ring-2 focus:ring-primary/20 outline-none"

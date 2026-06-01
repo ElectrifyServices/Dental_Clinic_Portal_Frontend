@@ -75,7 +75,7 @@ export function DirectConsultationPopup({
     const dayName = new Date()
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
-    const daySchedule = selDoctor.workingHours[dayName];
+    const daySchedule = selDoctor.workingHours?.[dayName];
 
     if (
       !daySchedule ||

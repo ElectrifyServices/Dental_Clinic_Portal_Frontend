@@ -17,11 +17,12 @@ interface PatientListProps {
   onToggleStatus?: (id: string, newStatus: "active" | "inactive") => void;
   onToggleCategory?: (id: string, newCategory: string) => void;
   onShowCorporateManagement?: () => void;
-  // API-driven search & filter (optional – falls back to local state)
   searchValue?: string;
   onSearchChange?: (val: string) => void;
-  filters?: { is_active?: string[]; [key: string]: any };
-  onFiltersChange?: (filters: { is_active?: string[]; [key: string]: any }) => void;
+  filterStatus?: string;
+  onFilterStatusChange?: (val: string) => void;
+  filterCategory?: string;
+  onFilterCategoryChange?: (val: string) => void;
 }
 
 export function PatientList({
@@ -35,15 +36,31 @@ export function PatientList({
   onToggleCategory,
   searchValue,
   onSearchChange,
+  filterStatus,
+  onFilterStatusChange,
+  filterCategory,
+  onFilterCategoryChange,
 }: PatientListProps) {
   const [localSearch, setLocalSearch] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : localSearch;
   const setSearchTerm = onSearchChange ?? setLocalSearch;
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
+
+  const [localFilterStatus, setLocalFilterStatus] = useState("all");
+  const filterStatusVal = filterStatus !== undefined ? filterStatus : localFilterStatus;
+  const setFilterStatusVal = onFilterStatusChange ?? setLocalFilterStatus;
+
+  const [localFilterCategory, setLocalFilterCategory] = useState("all");
+  const filterCategoryVal = filterCategory !== undefined ? filterCategory : localFilterCategory;
+  const setFilterCategoryVal = onFilterCategoryChange ?? setLocalFilterCategory;
+
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const filteredPatients = useMemo(() => {
+    // If filtering is driven by parent API, return patients list directly
+    if (searchValue !== undefined || filterStatus !== undefined || filterCategory !== undefined) {
+      return patients;
+    }
+    // Fall back to client-side filtering
     return patients.filter((patient) => {
       const matchesSearch =
         (patient.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,13 +70,13 @@ export function PatientList({
           .includes(searchTerm.toLowerCase()) ||
         (patient.id || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter =
-        filterStatus === "all" || (patient.status || "active") === filterStatus;
+        filterStatusVal === "all" || (patient.status || "active").toLowerCase() === filterStatusVal.toLowerCase();
       const matchesCategory =
-        filterCategory === "all" ||
-        (patient.category || "regular") === filterCategory;
+        filterCategoryVal === "all" ||
+        (patient.category || "regular").toLowerCase() === filterCategoryVal.toLowerCase();
       return matchesSearch && matchesFilter && matchesCategory;
     });
-  }, [patients, searchTerm, filterStatus, filterCategory]);
+  }, [patients, searchTerm, filterStatusVal, filterCategoryVal, searchValue, filterStatus, filterCategory]);
 
   const printBarcode = (patient: Patient) => {
     const printContent = `
@@ -120,10 +137,10 @@ export function PatientList({
       <PatientFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        filterCategory={filterCategory}
-        setFilterCategory={setFilterCategory}
+        filterStatus={filterStatusVal}
+        setFilterStatus={setFilterStatusVal}
+        filterCategory={filterCategoryVal}
+        setFilterCategory={setFilterCategoryVal}
         viewMode={viewMode}
         setViewMode={setViewMode}
         onAddPatient={() => onAddPatient()}

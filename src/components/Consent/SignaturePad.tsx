@@ -96,7 +96,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
         const dataUrl = event.target?.result as string;
         onSave(dataUrl);
         setHasSigned(true);
-        
+
         // Draw to canvas for preview
         const canvas = canvasRef.current;
         if (canvas) {
@@ -127,9 +127,8 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           onClick={() => setMode('draw')}
           variant={mode === 'draw' ? 'default' : 'ghost'}
           size="sm"
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
-          }`}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+            }`}
         >
           <MousePointer2 className="w-3.5 h-3.5" />
           Draw
@@ -139,9 +138,8 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           onClick={() => setMode('upload')}
           variant={mode === 'upload' ? 'default' : 'ghost'}
           size="sm"
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
-            mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
-          }`}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+            }`}
         >
           <Upload className="w-3.5 h-3.5" />
           Upload
@@ -160,11 +158,10 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-[2rem] transition-all ${
-            mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
-          }`}
+          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-[2rem] transition-all ${mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
+            }`}
         />
-        
+
         {mode === 'upload' && (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all ${hasSigned ? 'bg-white/70 backdrop-blur-[1px] opacity-0 hover:opacity-100' : ''}`}>
             <Button

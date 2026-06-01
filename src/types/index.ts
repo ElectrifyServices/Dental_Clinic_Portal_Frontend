@@ -32,6 +32,7 @@ export interface CorporatePlan {
   createdAt: string;
   createdBy: string;
   color: string;
+  status?: string;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -241,5 +242,6 @@ export interface CorporateEmployee {
   enrolledAt: string;
   eligible_date?: string;
   isActive: boolean;
+  status?: string;
   patientId?: string;          // linked patient record if registered
 }

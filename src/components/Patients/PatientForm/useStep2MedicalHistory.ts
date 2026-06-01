@@ -87,6 +87,7 @@ export function useStep2MedicalHistory({
             }
           } catch (error) {
             console.error("Failed to delete medical history", error);
+            throw error;
           }
         }
       );
@@ -125,6 +126,7 @@ export function useStep2MedicalHistory({
             }
           } catch (error) {
             console.error("Failed to delete allergy", error);
+            throw error;
           }
         }
       );
