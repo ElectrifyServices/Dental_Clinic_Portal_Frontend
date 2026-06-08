@@ -32,20 +32,17 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
     resolver: zodResolver(restockSchema) as any,
     defaultValues: {
       quantity: 1,
-      purchasePrice: item.cost ?? 0,
-      supplier: item.supplier ?? "",
-      invoiceNo: "",
-      date: new Date().toISOString().split("T")[0],
+      reason: "Monthly restock from supplier",
+      reference_id: "",
     },
   });
 
   const onSubmit = (data: RestockFormData) => {
     onSave({
-      ...item,
-      currentStock: item.currentStock + data.quantity,
-      lastRestocked: data.date,
-      supplier: data.supplier,
-      cost: data.purchasePrice,
+      id: item.id,
+      quantity: data.quantity,
+      reason: data.reason,
+      reference_id: data.reference_id,
     });
   };
 
@@ -91,7 +88,7 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid grid-cols-2 gap-4"
+            className="grid grid-cols-1 gap-4"
           >
             <FormField
               control={form.control}
@@ -102,7 +99,14 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
                     Quantity to Add <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} type="number" min={1} />
+                    <Input 
+                      {...field} 
+                      type="number" 
+                      min={1} 
+                      value={field.value === 0 ? "" : field.value}
+                      onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
+                      onFocus={(e) => e.target.select()} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,12 +114,12 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
             />
             <FormField
               control={form.control}
-              name="purchasePrice"
+              name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Purchase Price (₹)</FormLabel>
+                  <FormLabel>Reason</FormLabel>
                   <FormControl>
-                    <Input {...field} type="number" min={0} step="0.01" />
+                    <Input {...field} placeholder="e.g. Monthly restock from supplier" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -123,40 +127,12 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
             />
             <FormField
               control={form.control}
-              name="supplier"
+              name="reference_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supplier</FormLabel>
+                  <FormLabel>Reference ID (Optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Supplier name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="invoiceNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Invoice No.</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. INV-2025-001" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>
-                    Restock Date <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} type="date" />
+                    <Input {...field} placeholder="e.g. PO-2026-001" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

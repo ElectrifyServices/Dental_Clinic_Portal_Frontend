@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Search, Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -73,9 +73,12 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 flex-shrink-0">
               <img
-                src={doctor.avatar || doctor.image}
+                src={doctor.avatar || doctor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`}
                 alt={doctor.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`;
+                }}
               />
             </div>
             <div className="min-w-0">

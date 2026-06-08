@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Calendar as CalendarIcon, Clock, Stethoscope } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 

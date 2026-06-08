@@ -1,5 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import { Stethoscope } from "lucide-react";
+import { SearchableSelect } from "@/components/ui";
 
 interface TreatmentPlan {
   id: string;
@@ -22,6 +23,9 @@ interface TreatmentPlanningProps {
   onTreatmentCostChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTreatmentCostFocus: () => void;
   onTreatmentCostBlur: (value: string) => void;
+  followUpRequired: boolean;
+  onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  errors?: Record<string, string>;
 }
 
 export function TreatmentPlanning({
@@ -34,7 +38,10 @@ export function TreatmentPlanning({
   onTreatmentPlanTextChange,
   onTreatmentCostChange,
   onTreatmentCostFocus,
-  onTreatmentCostBlur
+  onTreatmentCostBlur,
+  followUpRequired,
+  onFollowUpRequiredChange,
+  errors = {},
 }: TreatmentPlanningProps) {
   const totalPlannedCost = treatmentPlans.reduce((sum, p) => sum + (p.cost || 0), 0);
 
@@ -79,20 +86,22 @@ export function TreatmentPlanning({
                         <span className="font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-lg">#{plan.tooth}</span>
                       </td>
                       <td className="py-3 px-4">
-                        <select
+                        <SearchableSelect
                           value={plan.procedure}
-                          onChange={(e) => onUpdatePlan(index, "procedure", e.target.value)}
-                          className="w-full px-3 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-card"
-                        >
-                          <option value="">Select Procedure</option>
-                          <option value="Dental Filling">Dental Filling</option>
-                          <option value="Root Canal Treatment">Root Canal Treatment</option>
-                          <option value="Crown Placement">Crown Placement</option>
-                          <option value="Tooth Extraction">Tooth Extraction</option>
-                          <option value="Teeth Cleaning">Teeth Cleaning</option>
-                          <option value="Orthodontic Treatment">Orthodontic Treatment</option>
-                          <option value="Dental Implant">Dental Implant</option>
-                        </select>
+                          onChange={(val) => onUpdatePlan(index, "procedure", val)}
+                          options={[
+                            "Dental Filling",
+                            "Root Canal Treatment",
+                            "Crown Placement",
+                            "Tooth Extraction",
+                            "Teeth Cleaning",
+                            "Orthodontic Treatment",
+                            "Dental Implant"
+                          ]}
+                          placeholder="Select Procedure"
+                          searchPlaceholder="Search procedure..."
+                          className="h-9 font-semibold text-xs rounded-lg border-purple-200"
+                        />
                       </td>
                       <td className="py-3 px-4">
                         <input
@@ -107,7 +116,7 @@ export function TreatmentPlanning({
                         <input
                           type="number"
                           min="0"
-                          value={plan.cost}
+                          value={plan.cost === 0 ? "" : plan.cost}
                           onChange={(e) => onUpdatePlan(index, "cost", parseInt(e.target.value) || 0)}
                           className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
                           placeholder="Cost"
@@ -126,7 +135,7 @@ export function TreatmentPlanning({
                 </tbody>
               </table>
             </div>
-            
+
             {treatmentPlans.length === 0 && (
               <div className="text-center py-6 text-purple-400 italic text-sm">
                 No teeth selected in the chart above
@@ -148,7 +157,7 @@ export function TreatmentPlanning({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-muted-foreground mb-2">
-            Treatment Plan Description *
+            Treatment Plan Description <span className="text-destructive">*</span>
           </label>
           <textarea
             name="treatmentPlan"
@@ -156,29 +165,32 @@ export function TreatmentPlanning({
             onChange={onTreatmentPlanTextChange}
             required
             rows={4}
-            className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 ${errors.treatmentPlan
+              ? "border-destructive focus:ring-destructive/30 bg-destructive/5"
+              : "border-border focus:ring-primary"
+              }`}
             placeholder="Outline the recommended treatment plan and procedures..."
           />
+          {errors.treatmentPlan && (
+            <p className="mt-1.5 text-xs font-semibold text-destructive flex items-center gap-1">
+              <span>⚠</span> {errors.treatmentPlan}
+            </p>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
-            Total Estimated Cost (₹)
-          </label>
-          <input
-            type="number"
-            name="treatmentCost"
-            value={treatmentCost}
-            onChange={onTreatmentCostChange}
-            onFocus={onTreatmentCostFocus}
-            onBlur={(e) => onTreatmentCostBlur(e.target.value)}
-            min="0"
-            className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-            placeholder="Enter overall treatment cost"
-          />
-          <p className="mt-2 text-xs text-muted-foreground italic">
-            This is the total cost for the entire consultation/treatment.
-          </p>
+          <div className="flex items-center p-3 bg-muted/40 border border-border/60 rounded-xl mt-4">
+            <input
+              type="checkbox"
+              name="followUpRequired"
+              checked={followUpRequired}
+              onChange={onFollowUpRequiredChange}
+              className="w-4 h-4 text-primary border-border rounded focus:ring-primary cursor-pointer"
+            />
+            <span className="ml-2 text-sm font-bold text-muted-foreground">
+              Follow-up appointment required
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -11,14 +11,15 @@ export interface AppointmentCalendarResponse {
   data: AppointmentCalendarData;
 }
 
-export function useAppointmentCalendarQuery(month: number, year: number) {
+export function useAppointmentCalendarQuery(month: number, year: number, doctorId?: string | null) {
   return useApiQuery<AppointmentCalendarResponse>({
-    queryKey: ["appointmentCalendar", month, year],
+    queryKey: ["appointmentCalendar", month, year, doctorId],
     endpoint: "/appointment/calendar",
     method: "get",
     params: {
       month: month,
       year: year,
+      doctor_id: doctorId,
     },
     options: {
       enabled: Boolean(month && year),

@@ -176,7 +176,7 @@ export function DoctorManagement({
             </>
           )}
         </button>
-        {staff.role === "doctor" && (
+        {staff.role?.toLowerCase() === "doctor" && (
           <button
             onClick={() => {
               onManageSchedule(staff.id, staff.name);
@@ -259,7 +259,8 @@ export function DoctorManagement({
       header: "Role",
       render: (staff: UserType) => {
         const rm = ROLE_META[staff.role] || ROLE_META.assistant;
-        const displayLabel = (staff as any).originalRoleName || rm.label;
+        const rawLabel = (staff as any).originalRoleName || rm.label;
+        const displayLabel = rawLabel.replace(/_/g, ' ');
         return (
           <Badge
             variant={rm.variant}
@@ -353,7 +354,7 @@ export function DoctorManagement({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Staff Directory"
         subtitle={`${staffMembers.length} team members recorded`}
@@ -364,21 +365,22 @@ export function DoctorManagement({
         }
       />
 
-      <div className="flex flex-col xl:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search by name, email or role…"
           className="flex-1 w-full"
         />
-        <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
-          <FilterTabs
-            tabs={ROLE_FILTERS}
-            active={roleFilter}
-            onChange={setRoleFilter}
-          />
-          <div className="h-8 w-px bg-muted hidden md:block" />
-          <div className="flex items-center bg-muted p-1 rounded-xl border border-border">
+        <div className="flex flex-row items-center justify-between gap-4 w-full lg:w-auto overflow-hidden">
+          <div className="overflow-x-auto scrollbar-none flex-1">
+            <FilterTabs
+              tabs={ROLE_FILTERS}
+              active={roleFilter}
+              onChange={setRoleFilter}
+            />
+          </div>
+          <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
@@ -488,7 +490,7 @@ export function DoctorManagement({
                           variant={rm.variant}
                           className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
                         >
-                          {(staff as any).originalRoleName || rm.label}
+                          {((staff as any).originalRoleName || rm.label).replace(/_/g, ' ')}
                         </Badge>
                         <Badge
                           variant={staff.isActive ? "green" : "gray"}

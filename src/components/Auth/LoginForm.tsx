@@ -33,7 +33,7 @@ export function LoginForm() {
               <Stethoscope className="w-[18px] h-[18px] text-blue-300" />
             </div>
             <span className="text-white font-semibold text-[15px] tracking-tight">
-              DentalCare Pro
+              Opal Smiles Dental Studio
             </span>
           </div>
 
@@ -82,7 +82,7 @@ export function LoginForm() {
           ))}
 
           <p className="text-slate-600 text-xs pt-4">
-            © 2025 DentalCare Pro · All rights reserved
+            © 2025 Opal Smiles Dental Studio · All rights reserved
           </p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function LoginForm() {
               <Stethoscope className="w-[18px] h-[18px] text-white" />
             </div>
             <span className="font-bold text-gray-900 text-lg tracking-tight">
-              DentalCare Pro
+              Opal Smiles Dental Studio
             </span>
           </div>
 

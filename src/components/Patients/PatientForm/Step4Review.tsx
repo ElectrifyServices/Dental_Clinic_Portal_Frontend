@@ -293,25 +293,90 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
             <CardContent className="p-6">
               <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-primary" />
-                Declarations & Consents
+                <User className="w-5 h-5 text-primary" />
+                Previous Dentist / Doctor Details
               </h4>
-              {formData.previousDoctorName ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                      Doctor / Clinic
-                    </span>
-                    <p className="font-semibold text-foreground text-sm">
-                      {formData.previousDoctorName}
-                    </p>
+              {formData.previousDoctorName || formData.previousClinicName || formData.previousClinicAddress ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Doctor Name
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        Dr. {formData.previousDoctorName || "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Clinic Name
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        {formData.previousClinicName || "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Doctor Phone
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        {formData.previousDoctorPhone || "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Last Visit Date
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        {formData.previousLastVisitDate || "—"}
+                      </p>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Clinic Address
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        {formData.previousClinicAddress || "—"}
+                      </p>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Reason for Treatment
+                      </span>
+                      <p className="font-semibold text-foreground text-sm">
+                        {formData.previousReason || "—"}
+                      </p>
+                    </div>
+                    {formData.previousTreatments?.length > 0 && (
+                      <div className="col-span-2 space-y-1">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block mb-1">
+                          Previous Treatments
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {formData.previousTreatments.map((t: string) => (
+                            <Badge key={t} variant="secondary" className="text-[9px] px-2 py-0 bg-muted text-muted-foreground">
+                              {t}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground/60 italic">
+                <p className="text-xs text-muted-foreground/60 italic">
                   No previous dentist details provided
                 </p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-secondary bg-card shadow-sm overflow-hidden">
+            <CardContent className="p-6">
+              <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-primary" />
+                Declarations & Consents
+              </h4>
               <div className="p-3 bg-secondary/20 border border-secondary rounded-xl mt-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">

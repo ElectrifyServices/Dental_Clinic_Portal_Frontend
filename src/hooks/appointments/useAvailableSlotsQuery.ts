@@ -28,6 +28,8 @@ export function useAvailableSlotsQuery(doctorId: string | null | undefined, date
     options: {
       enabled: Boolean(doctorId && date),
       refetchOnMount: "always",
+      staleTime: 0,
+      gcTime: 0,
     },
   });
 }

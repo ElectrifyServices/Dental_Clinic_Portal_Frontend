@@ -287,7 +287,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
       </div>
 
       <div className="pt-4 border-t border-dashed space-y-6">
-        <LabeledField label="Monthly Salary (₹) *" required error={errors.monthlySalary?.message}>
+        <LabeledField label="Monthly Salary (₹)" required error={errors.monthlySalary?.message}>
           <div className="relative">
             <IndianRupee className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
             <input

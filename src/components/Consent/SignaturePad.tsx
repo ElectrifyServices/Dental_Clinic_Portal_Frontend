@@ -13,6 +13,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSigned, setHasSigned] = useState(!!defaultValue);
   const [mode, setMode] = useState<'draw' | 'upload'>('draw');
+  const [hasDrawn, setHasDrawn] = useState(!!defaultValue);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,6 +42,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
   const stopDrawing = () => {
     if (mode !== 'draw') return;
     setIsDrawing(false);
+    if (!hasDrawn) return;
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -72,10 +74,16 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
       clientY = e.clientY;
     }
 
-    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+    ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    ctx.moveTo(x, y);
+    if (!hasDrawn) {
+      setHasDrawn(true);
+    }
   };
 
   const clearCanvas = () => {
@@ -85,6 +93,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
       ctx?.clearRect(0, 0, canvas.width, canvas.height);
       onSave('');
       setHasSigned(false);
+      setHasDrawn(false);
     }
   };
 
@@ -96,6 +105,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
         const dataUrl = event.target?.result as string;
         onSave(dataUrl);
         setHasSigned(true);
+        setHasDrawn(true);
 
         // Draw to canvas for preview
         const canvas = canvasRef.current;

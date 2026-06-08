@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
@@ -8,9 +8,19 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export function useStaffData(params?: { search?: string; role?: string }) {
   const queryClient = useQueryClient();
-  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(params);
+  const isEnabled = useMemo(() => {
+    const path = window.location.pathname;
+    const isExcluded = path.includes('/inventory') || path.includes('/corporate-plans');
+    return !isExcluded;
+  }, []);
+
+  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(params, { enabled: isEnabled });
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
   const { mutateAsync: updateStatusMutation } = useUpdateStaffStatusMutation();
+
+  const refetchStaff = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['staff'] });
+  }, [queryClient]);
 
   const [emrRecords, setEmrRecords] = useLocalStorage<any[]>('emrRecords', []);
   const [consentForms, setConsentForms] = useLocalStorage<any[]>('consentForms', []);
@@ -78,37 +88,37 @@ export function useStaffData(params?: { search?: string; role?: string }) {
         });
       }
 
-        const paymentSummary = s.payment_summary || {};
-        const monthly = paymentSummary.base_salary ?? s.personal_profile?.monthly_salary ?? s.monthly_salary ?? s.personal_profile?.salary ?? s.salary ?? 0;
-        const paid = paymentSummary.total_paid ?? s.salaryPaid ?? s.total_paid_salary ?? 0;
-        const pending = paymentSummary.pending_due ?? (s.salaryPending !== undefined ? s.salaryPending : Math.max(0, Number(monthly) - Number(paid)));
+      const paymentSummary = s.payment_summary || {};
+      const monthly = s.monthlySalary !== undefined ? s.monthlySalary : (paymentSummary.base_salary ?? s.personal_profile?.monthly_salary ?? s.personal_profile?.salary ?? s.salary ?? 0);
+      const paid = s.salaryPaid !== undefined ? s.salaryPaid : (paymentSummary.total_paid ?? s.salaryPaid ?? s.total_paid_salary ?? 0);
+      const pending = s.salaryPending !== undefined ? s.salaryPending : (paymentSummary.pending_due ?? (s.salaryPending !== undefined ? s.salaryPending : Math.max(0, Number(monthly) - Number(paid))));
 
-        return {
-          ...s,
-          id: s.id,
-          name: s.name,
-          email: s.email,
-          phone: s.phone,
-          role: normalizedRole,
-          originalRoleName: s.role?.name || (typeof s.role === 'string' ? s.role : 'Staff'),
-          specialization: s.personal_profile?.specialization?.name || s.specialization || '',
-          isActive: s.status === 'ACTIVE',
-          avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || '',
-          salaryPaid: paid,
-          salaryPending: pending,
-          monthlySalary: monthly,
-          documents: documents.length > 0 ? documents : (s.documents || []),
-          // Map personal profile
-          profitSharing: s.personal_profile?.profit_sharing || false,
-          profitPercentage: s.personal_profile?.profit_sharing_percentage || 0,
-          licenseNumber: s.personal_profile?.license_number || s.license_number || '',
-          experience: s.personal_profile?.experience_years || s.experience || '',
-          qualification: s.personal_profile?.qualification || s.qualification || '',
-          consultationFee: s.personal_profile?.consultation_fee || s.consultation_fee || '',
-          department: s.personal_profile?.department || s.department || '',
-          designation: s.personal_profile?.designation || s.designation || '',
-          education: s.personal_profile?.education || s.education || '',
-        };
+      return {
+        ...s,
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        role: normalizedRole,
+        originalRoleName: s.role?.name || (typeof s.role === 'string' ? s.role : 'Staff'),
+        specialization: s.personal_profile?.specialization?.name || s.specialization || '',
+        isActive: s.status === 'ACTIVE',
+        avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || '',
+        salaryPaid: paid,
+        salaryPending: pending,
+        monthlySalary: monthly,
+        documents: documents.length > 0 ? documents : (s.documents || []),
+        // Map personal profile
+        profitSharing: s.personal_profile?.profit_sharing || false,
+        profitPercentage: s.personal_profile?.profit_sharing_percentage || 0,
+        licenseNumber: s.personal_profile?.license_number || s.license_number || '',
+        experience: s.personal_profile?.experience_years || s.experience || '',
+        qualification: s.personal_profile?.qualification || s.qualification || '',
+        consultationFee: s.personal_profile?.consultation_fee || s.consultation_fee || '',
+        department: s.personal_profile?.department || s.department || '',
+        designation: s.personal_profile?.designation || s.designation || '',
+        education: s.personal_profile?.education || s.education || '',
+      };
     });
   }, [apiStaff]);
 
@@ -129,27 +139,41 @@ export function useStaffData(params?: { search?: string; role?: string }) {
   };
 
   const handleSaveStaff = async (staff: any) => {
-    queryClient.setQueryData(["staff"], (oldData: any) => {
-      if (!oldData) return oldData;
+    const queryCache = queryClient.getQueryCache();
+    const staffQueries = queryCache.findAll({ queryKey: ["staff"] });
 
-      let isArray = Array.isArray(oldData);
-      let rawStaffList = isArray ? oldData : (oldData?.data?.staffs || oldData?.data?.staff || oldData?.data?.data || oldData?.data || oldData?.staffs || oldData?.responseObject?.data || []);
-      
-      const updatedList = rawStaffList.map((s: any) => {
-        if (s.id === staff.id) {
-          return { ...s, ...staff };
-        }
-        return s;
+    staffQueries.forEach((query) => {
+      queryClient.setQueryData(query.queryKey, (oldData: any) => {
+        if (!oldData) return oldData;
+
+        let isArray = Array.isArray(oldData);
+        let rawStaffList = isArray ? oldData : (oldData?.data?.staffs || oldData?.data?.staff || oldData?.data?.data || oldData?.data || oldData?.staffs || oldData?.responseObject?.data || []);
+
+        const updatedList = rawStaffList.map((s: any) => {
+          if (s.id === staff.id) {
+            const updated = { ...s, ...staff };
+            if (updated.personal_profile) {
+              updated.personal_profile = {
+                ...updated.personal_profile,
+                monthly_salary: staff.monthlySalary !== undefined ? Number(staff.monthlySalary) : updated.personal_profile.monthly_salary,
+                consultation_fee: staff.consultationFee !== undefined ? Number(staff.consultationFee) : updated.personal_profile.consultation_fee,
+                experience_years: staff.experience !== undefined ? Number(staff.experience) : updated.personal_profile.experience_years,
+              };
+            }
+            return updated;
+          }
+          return s;
+        });
+
+        if (isArray) return updatedList;
+        if (oldData?.responseObject?.data) return { ...oldData, responseObject: { ...oldData.responseObject, data: updatedList } };
+        if (oldData?.data?.staffs) return { ...oldData, data: { ...oldData.data, staffs: updatedList } };
+        if (oldData?.data?.staff) return { ...oldData, data: { ...oldData.data, staff: updatedList } };
+        if (oldData?.data?.data) return { ...oldData, data: { ...oldData.data, data: updatedList } };
+        if (oldData?.data) return { ...oldData, data: updatedList };
+        if (oldData?.staffs) return { ...oldData, staffs: updatedList };
+        return updatedList;
       });
-
-      if (isArray) return updatedList;
-      if (oldData?.responseObject?.data) return { ...oldData, responseObject: { ...oldData.responseObject, data: updatedList } };
-      if (oldData?.data?.staffs) return { ...oldData, data: { ...oldData.data, staffs: updatedList } };
-      if (oldData?.data?.staff) return { ...oldData, data: { ...oldData.data, staff: updatedList } };
-      if (oldData?.data?.data) return { ...oldData, data: { ...oldData.data, data: updatedList } };
-      if (oldData?.data) return { ...oldData, data: updatedList };
-      if (oldData?.staffs) return { ...oldData, staffs: updatedList };
-      return updatedList;
     });
   };
 
@@ -184,5 +208,6 @@ export function useStaffData(params?: { search?: string; role?: string }) {
     handleSaveStaff, handleDeleteStaff, handleUpdateStaffStatus,
     handleSaveEMR, handleDeleteEMR,
     handleSaveConsentForm, handleDeleteConsentForm,
+    refetchStaff,
   };
 }

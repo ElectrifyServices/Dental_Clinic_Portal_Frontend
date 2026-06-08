@@ -30,6 +30,8 @@ export function useUpdateAppointmentMutation() {
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+        queryClient.invalidateQueries({ queryKey: ["appointmentCalendar"] });
       },
     },
   });

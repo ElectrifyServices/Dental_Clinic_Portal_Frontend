@@ -26,11 +26,27 @@ import { ConsentForm } from "../Consent/ConsentForm";
 import { ConsentFormViewer } from "../Consent/ConsentFormViewer";
 import { InventoryForm } from "../Inventory/InventoryForm";
 import { RestockForm } from "../Inventory/RestockForm";
-import { ConfirmModal, Modal, Button } from "../ui";
+import { ConsumeForm } from "../Inventory/ConsumeForm";
+import { AdjustForm } from "../Inventory/AdjustForm";
+import { InventoryHistoryViewer } from "../Inventory/InventoryHistoryViewer";
+import { ConfirmModal, Modal, Button, toast } from "../ui";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
 import { useUpdateAppointmentMutation } from "../../hooks/appointments/useUpdateAppointmentMutation";
 import { useCheckInAfterRegistrationMutation } from "../../hooks/appointments/useCheckInAfterRegistrationMutation";
+import { useCreateConsentFormMutation } from "../../hooks/patients/useCreateConsentFormMutation";
+import { useConsentFormDetailQuery } from "../../hooks/patients/useConsentFormDetailQuery";
+import { useUpdateConsentFormMutation } from "../../hooks/patients/useUpdateConsentFormMutation";
+import { useCreateInventoryItemMutation } from "../../hooks/inventory/useCreateInventoryItemMutation";
+import { useInventoryItemQuery } from "../../hooks/inventory/useInventoryItemQuery";
+import { useUpdateInventoryItemMutation } from "../../hooks/inventory/useUpdateInventoryItemMutation";
+import { useRestockInventoryItemMutation } from "../../hooks/inventory/useRestockInventoryItemMutation";
+import { useConsumeInventoryItemMutation } from "../../hooks/inventory/useConsumeInventoryItemMutation";
+import { useAdjustInventoryItemMutation } from "../../hooks/inventory/useAdjustInventoryItemMutation";
+import { useCreateConsultationMutation } from "../../hooks/consultation/useCreateConsultationMutation";
+import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdateConsultationMutation";
+import { toApiCreateConsultation, toApiUpdateConsultation } from "../../hooks/consultation/consultationUtils";
+import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
 
 export function ModalRegistry() {
   const {
@@ -68,7 +84,6 @@ export function ModalRegistry() {
     handleDraftUpdate,
     doctorAvailability,
     setDoctorAvailability,
-    toast,
     showToast,
     confirmConfig,
     setConfirmConfig,
@@ -122,6 +137,113 @@ export function ModalRegistry() {
   const { mutateAsync: createAppointmentMutation } = useCreateAppointmentMutation();
   const { mutateAsync: updateAppointmentMutation } = useUpdateAppointmentMutation();
   const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
+  const { mutateAsync: createEMR } = useCreateEMRMutation();
+  const createConsentMutation = useCreateConsentFormMutation();
+  const { mutateAsync: createInventoryMutation } = useCreateInventoryItemMutation();
+  const { mutateAsync: updateInventoryMutation } = useUpdateInventoryItemMutation();
+  const { mutateAsync: restockInventoryMutation } = useRestockInventoryItemMutation();
+  const { mutateAsync: consumeInventoryMutation } = useConsumeInventoryItemMutation();
+  const { mutateAsync: adjustInventoryMutation } = useAdjustInventoryItemMutation();
+  const { mutateAsync: createConsultationMutation } = useCreateConsultationMutation();
+  const { mutateAsync: updateConsultationMutation } = useUpdateConsultationMutation();
+
+  const isInventoryAction = ["inventoryForm", "restockForm", "consumeForm", "adjustForm"].includes(activeModal || "");
+  const currentInvItemId = selectedItemId || selectedItemForRestock?.id;
+
+  const { data: apiInventoryItem, isLoading: isInventoryItemLoading } = useInventoryItemQuery(
+    isInventoryAction && currentInvItemId ? currentInvItemId : ""
+  );
+
+  const mappedInventoryItem = useMemo(() => {
+    if (!currentInvItemId) return null;
+    const raw: any = apiInventoryItem;
+    if (!raw) return inventory.find((i: any) => i.id === currentInvItemId);
+
+    const itemData = raw.data || raw;
+
+    return {
+      id: itemData.id,
+      name: itemData.name,
+      category: itemData.category?.toLowerCase() || "instruments",
+      currentStock: itemData.current_stock ?? itemData.currentStock ?? 0,
+      minStock: itemData.min_stock ?? itemData.minStock ?? 0,
+      maxStock: itemData.max_stock ?? itemData.maxStock ?? 100,
+      unit: itemData.unit?.toLowerCase() || "pieces",
+      supplier: itemData.supplier ?? "Unknown",
+      lastRestocked: itemData.last_restocked ?? itemData.lastRestocked ?? "",
+      cost: itemData.unit_cost ?? itemData.cost ?? 0,
+      expiryDate: (itemData.expiry_date ?? itemData.expiryDate ?? "").split("T")[0],
+      batchNumber: itemData.batch_number ?? itemData.batchNumber ?? "",
+      description: itemData.description ?? "",
+      warranty: itemData.warranty ?? "",
+    };
+  }, [apiInventoryItem, currentInvItemId, inventory]);
+
+  function dataURLtoFile(dataurl: string, filename: string): File | null {
+    if (!dataurl || !dataurl.startsWith("data:")) return null;
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
+
+  const updateConsentMutation = useUpdateConsentFormMutation();
+
+  const { data: apiConsentDetail, isLoading: isConsentDetailLoading } = useConsentFormDetailQuery(
+    selectedConsentForm?.id,
+    (activeModal === "consentForm" || activeModal === "consentViewer") && !!selectedConsentForm?.id
+  );
+
+  const mappedEditForm = useMemo(() => {
+    if (!apiConsentDetail) return selectedConsentForm;
+    const form = apiConsentDetail?.data || apiConsentDetail;
+    const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
+    return {
+      id: form.id,
+      patientId: form.patient_id || "",
+      patientName: form.patient_name || "",
+      treatmentType: form.procedure_type || "",
+      content: form.consent_declaration || "",
+      riskDisclosure: form.clinical_risks || "",
+      alternativeTreatments: form.alternative_risks || "",
+      witnessName: form.witness_name || "",
+      patientSignature: form.patient_signature || "",
+      witnessSignature: form.witness_signature || "",
+      doctorName: doctorObj?.name || form.doctor_name || "",
+      doctorId: form.doctor_id || "",
+    };
+  }, [apiConsentDetail, selectedConsentForm, staffMembers]);
+
+  const mappedViewerForm = useMemo(() => {
+    if (!apiConsentDetail) return selectedConsentForm;
+    const form = apiConsentDetail?.data || apiConsentDetail;
+    const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
+    return {
+      id: form.id,
+      patientId: form.patient_id || "",
+      patientName: form.patient_name || "",
+      treatmentType: form.procedure_type || "",
+      content: form.consent_declaration || "",
+      riskDisclosure: form.clinical_risks || "",
+      alternativeTreatments: form.alternative_risks || "",
+      postTreatmentCare: form.post_treatment_care || "Follow doctor's post-treatment guidelines carefully.",
+      witnessName: form.witness_name || "",
+      patientSignature: form.patient_signature || "",
+      witnessSignature: form.witness_signature || "",
+      doctorName: doctorObj?.name || form.doctor_name || "Attending Dentist",
+      doctorId: form.doctor_id || "",
+      date: form.created_at || new Date().toISOString(),
+      createdDate: form.created_at || form.createdAt || null,
+      signedDate: form.signed_on || null,
+      status: !form.signed_on ? "PENDING" : (form.status || "PENDING"),
+      signature: form.patient_signature || "",
+    };
+  }, [apiConsentDetail, selectedConsentForm, staffMembers]);
 
   return (
     <>
@@ -136,6 +258,16 @@ export function ModalRegistry() {
           patients={patients}
           onSave={async (apt: any) => {
             try {
+              const statusMap: Record<string, string> = {
+                'scheduled': 'BOOKED',
+                'booked': 'BOOKED',
+                'checked-in': 'CHECKED_IN',
+                'completed': 'COMPLETED',
+                'cancelled': 'CANCELLED',
+                'no-show': 'NO_SHOW',
+                'follow-up': 'FOLLOW_UP',
+              };
+
               const payload = {
                 doctor_id: apt.doctorId,
                 patient_name: apt.patientName,
@@ -148,10 +280,11 @@ export function ModalRegistry() {
                 treatment_cost: Number(apt.fee) || 0,
                 concern: apt.patientConcern || "",
                 notes: apt.notes || "",
-                status: apt.status || "BOOKED"
+                status: statusMap[(apt.status || "").toLowerCase()] || "BOOKED"
               };
 
-              if (!apt.id || apt.id.length > 20 === false) { // Assuming new if ID is a timestamp
+              const isNew = !apt.id || apt.id.length > 20 === false;
+              if (isNew) {
                 // Only attach patient_id if it's a valid uuid (length > 20)
                 if (apt.patientId && apt.patientId.length > 20) {
                   (payload as any).patient_id = apt.patientId;
@@ -172,10 +305,15 @@ export function ModalRegistry() {
               setActiveModal(null);
               setSelectedAppointment(null);
               setIsFollowUpBooking(false);
-              showToast("Appointment saved!");
+              toast.success(isNew ? "Appointment created successfully!" : "Appointment updated successfully!");
             } catch (error: any) {
-              const msg = error?.response?.data?.message || error?.message || "Failed to save appointment";
-              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+              const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                          error?.response?.data?.statusDesc ||
+                          error?.response?.data?.message ||
+                          error?.status?.statusDesc ||
+                          error?.message ||
+                          "Failed to save appointment";
+              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
             }
           }}
         />
@@ -199,20 +337,21 @@ export function ModalRegistry() {
           }
           onSave={async (p: any) => {
             try {
-              await handleSavePatient(p, patientFormType, parentPatientId);
+              const savedPatientResponse = await handleSavePatient(p, patientFormType, parentPatientId);
+              const patientId = p.id || savedPatientResponse?.data?.id || savedPatientResponse?.id;
               const hasCheckIn = !!pendingCheckInAppt;
               setActiveModal(null);
               setSelectedPatientId("");
               setParentPatientId("");
               setPreFilledPatientData(null);
-              if (hasCheckIn) {
+              if (hasCheckIn && patientId) {
                 setQueuedPatients((prev: any[]) => [
                   ...prev,
                   {
                     id: pendingCheckInAppt.id,
-                    patientId: p.id,
-                    patientName: p.name,
-                    patientPhone: p.phone,
+                    patientId: patientId,
+                    patientName: p.name || savedPatientResponse?.data?.name || savedPatientResponse?.name || "",
+                    patientPhone: p.phone || savedPatientResponse?.data?.phone || savedPatientResponse?.phone || "",
                     appointmentTime: pendingCheckInAppt.time,
                     status: "waiting",
                     treatmentType:
@@ -220,30 +359,29 @@ export function ModalRegistry() {
                     patientConcern: pendingCheckInAppt.patientConcern || "",
                   },
                 ]);
-                
+
                 try {
                   await checkInAfterRegistration({
                     id: pendingCheckInAppt.id,
-                    patient_id: p.id
+                    patient_id: patientId
                   });
                 } catch (err) {
                   console.error("Failed to check-in after registration:", err);
+                  throw err;
                 }
 
-                handleUpdateAppointmentStatus(
-                  pendingCheckInAppt.id,
-                  "checked-in",
-                );
                 setPendingCheckInAppt(null);
-                showToast("Patient checked-in successfully!");
+                toast.success("Patient checked-in successfully!");
               } else {
-                showToast("Patient saved successfully!");
+                toast.success("Patient saved successfully!");
               }
             } catch (err: any) {
-              const errorObj = err?.response?.data || err;
-              const errorMessage = errorObj.message || err?.message || "Failed to save patient";
-              const msg = Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage;
-              showToast(msg, "error");
+              const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Failed to save patient";
+              const msg = Array.isArray(apiError) ? apiError.join(', ') : apiError;
+              toast.error(msg);
             }
           }}
         />
@@ -258,14 +396,14 @@ export function ModalRegistry() {
           bookedFollowUp={bookedFollowUp}
           initialData={
             draftConsultations[
-              selectedPatientForDiagnose.patientId ||
-                selectedPatientForDiagnose.id
+            selectedPatientForDiagnose.patientId ||
+            selectedPatientForDiagnose.id
             ]
           }
           onDraftUpdate={(d: any) =>
             handleDraftUpdate(
               selectedPatientForDiagnose.patientId ||
-                selectedPatientForDiagnose.id,
+              selectedPatientForDiagnose.id,
               d,
             )
           }
@@ -278,34 +416,104 @@ export function ModalRegistry() {
             setActiveModal(null);
             setBookedFollowUp(null);
           }}
-          onCompleteConsultation={(d: any) => {
-            handleCompleteConsultation({
-              ...d,
-              id: Date.now(),
-              patientName: selectedPatientForDiagnose.patientName,
-              completedAt: d.consultationDate || new Date().toISOString(),
-              patientId:
-                selectedPatientForDiagnose.patientId ||
-                selectedPatientForDiagnose.id,
-              patientContact: selectedPatientForDiagnose.patientPhone,
-            });
-            const target = patients.find(
-              (p: any) =>
-                p.id ===
-                (selectedPatientForDiagnose.patientId ||
-                  selectedPatientForDiagnose.id),
-            );
-            setQueuedPatients((prev: any[]) =>
-              prev.filter((p: any) => p.id !== selectedPatientForDiagnose.id),
-            );
-            const pId =
-              selectedPatientForDiagnose.patientId ||
-              selectedPatientForDiagnose.id;
-            setDraftConsultations((prev: Record<string, any>) => {
-              const n = { ...prev };
-              delete n[pId];
-              return n;
-            });
+          onCompleteConsultation={async (d: any) => {
+            try {
+              // Map tooth chart state to tooth_findings array
+              const tooth_findings = Object.entries(d.toothChartState || {}).map(([toothNum, condition]) => {
+                const condStr = typeof condition === 'string' ? condition.toLowerCase() : '';
+                let mappedCondition = condStr.toUpperCase();
+                if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
+                else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
+                else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+                return {
+                  tooth_number: parseInt(toothNum),
+                  condition: mappedCondition
+                };
+              });
+
+              // Map treatment plans to treatments array
+              const treatments = (d.treatmentPlans || []).map((tp: any) => ({
+                tooth_number: parseInt(tp.tooth),
+                procedure: tp.procedure,
+                total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
+                est_cost: parseFloat(tp.cost) || 0,
+                is_active: tp.isActive ?? true
+              }));
+
+              // Map prescriptions array
+              const prescriptions = (d.prescriptions || [])
+                .filter((p: any) => p.medicine)
+                .map((p: any) => ({
+                  medicine_name: p.medicine,
+                  dosage: p.dosage,
+                  timing: p.timing,
+                  frequency: p.frequency,
+                  duration: parseInt(p.duration) || 1,
+                  duration_type: (p.durationUnit || 'days').toUpperCase(),
+                  qty: parseInt(p.qty) || 1,
+                  instructions: p.instructions || ''
+                }));
+
+              const validDoctorId = selectedPatientForDiagnose.doctorId && selectedPatientForDiagnose.doctorId !== "1"
+                ? selectedPatientForDiagnose.doctorId
+                : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
+
+              const apiPayload: any = {
+                patientId: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id,
+                appointmentId: selectedPatientForDiagnose.appointmentId,
+                doctorId: validDoctorId,
+                observations: d.observations,
+                diagnosis: d.diagnosis,
+                treatmentPlan: d.treatmentPlan,
+                treatmentCost: d.treatmentCost,
+                followUpRequired: d.followUpRequired,
+                consultationNotes: d.consultationNotes,
+                status: "COMPLETED",
+                toothFindings: tooth_findings,
+                treatments: treatments,
+                prescriptions: prescriptions
+              };
+
+              if (d.followUpRequired) {
+                apiPayload.appointment_info = {
+                  patient_id: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id,
+                  doctor_id: d.followUpDoctorId,
+                  date: d.followUpDate,
+                  start_time: d.followUpTime,
+                  slot_duration_mins: 15
+                };
+              }
+
+              const consultationId = selectedPatientForDiagnose.id;
+              const isExistingBackendConsultation = consultationId && !String(consultationId).startsWith("WALK-");
+
+              if (isExistingBackendConsultation) {
+                // Update existing consultation via PATCH
+                await updateConsultationMutation(toApiUpdateConsultation({
+                  ...apiPayload,
+                  id: consultationId
+                }));
+              } else {
+                // Make the actual POST /consultations API call
+                await createConsultationMutation(toApiCreateConsultation(apiPayload));
+              }
+
+              // Cleanup local queue and draft
+              setQueuedPatients((prev: any[]) =>
+                prev.filter((p: any) => p.id !== selectedPatientForDiagnose.id),
+              );
+              const pId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
+              setDraftConsultations((prev: Record<string, any>) => {
+                const n = { ...prev };
+                delete n[pId];
+                return n;
+              });
+              showToast("Consultation completed successfully", "success");
+            } catch (err: any) {
+              const message = err?.response?.data?.message || err?.message || "Failed to complete consultation";
+              showToast(message, "error");
+              throw err;
+            }
           }}
           onCreateTreatment={handleSaveTreatment}
         />
@@ -447,7 +655,7 @@ export function ModalRegistry() {
               id: Date.now().toString(),
               status: "scheduled",
             });
-            showToast("Appointment scheduled!");
+            toast.success("Appointment scheduled!");
           }}
         />
       )}
@@ -455,10 +663,32 @@ export function ModalRegistry() {
       {activeModal === "emrForm" && (
         <EMRForm
           onClose={() => setActiveModal(null)}
-          onSave={(r: any) => {
-            handleSaveEMR(r);
-            setActiveModal(null);
-            showToast("EMR saved!");
+          onSave={async (r: any) => {
+            try {
+              const formData = new FormData();
+
+              // Find the selected patient ID from patients list
+              const selectedPatient = patients.find((p: any) => p.name === r.patientName);
+              const pId = selectedPatient?.id || r.patientId || "59ff70ab-0adf-443b-be94-f8defa47dfba";
+              formData.append("patient_id", pId);
+
+              formData.append("record_type", (r.type || "CONSULTATION").toUpperCase());
+              formData.append("title", r.title);
+              formData.append("content", r.content);
+
+              if (r.files && r.files.length > 0) {
+                r.files.forEach((file: File) => {
+                  formData.append("attachments", file);
+                });
+              }
+
+              await createEMR(formData);
+              setActiveModal(null);
+              showToast("EMR saved!");
+            } catch (err: any) {
+              console.error("Failed to create EMR record:", err);
+              showToast(err?.response?.data?.message || err?.message || "Failed to save EMR", "error");
+            }
           }}
           patients={patients}
         />
@@ -496,6 +726,7 @@ export function ModalRegistry() {
             setSelectedItemId("");
           }}
           onSave={(d: any) => {
+            handleSaveStaff(d);
             setActiveModal(null);
             setSelectedItemId("");
             showToast("Staff saved!");
@@ -582,20 +813,64 @@ export function ModalRegistry() {
 
       {activeModal === "consentForm" && (
         <ConsentForm
-          onClose={() => setActiveModal(null)}
-          onSave={(f: any) => {
-            handleSaveConsentForm(f);
+          onClose={() => {
             setActiveModal(null);
-            showToast("Consent generated!");
+            setSelectedConsentForm(null);
           }}
           patients={patients}
           doctors={activeDoctors}
+          form={mappedEditForm || undefined}
+          isLoading={isConsentDetailLoading}
+          onSave={async (f: any) => {
+            try {
+              const payload = new FormData();
+              payload.append("patient_name", f.patientName || "Ram");
+              payload.append("doctor_id", f.doctorId || "d11a6adb-2420-4ca6-8b10-a798edbbfce9");
+              payload.append("procedure_type", f.treatmentType || "Root Canal Treatment");
+              payload.append("patient_id", f.patientId || "96609aed-e06b-42ac-ac8a-8ea978315ce2");
+              payload.append("consent_declaration", f.content || "I understand the procedure");
+              payload.append("procedure_declaration", f.procedure_declaration || f.content || "I understand the procedure");
+              payload.append("clinical_risks", f.riskDisclosure || "Infection");
+              payload.append("alternative_risks", f.alternativeTreatments || "Tooth extraction");
+              if (f.witnessName) {
+                payload.append("witness_name", f.witnessName);
+              }
+
+              if (f.patientSignature && f.patientSignature.startsWith("data:")) {
+                const patientFile = dataURLtoFile(f.patientSignature, "patient_signature.png");
+                if (patientFile) {
+                  payload.append("patient_signature", patientFile);
+                }
+              }
+
+              if (f.witnessSignature && f.witnessSignature.startsWith("data:")) {
+                const witnessFile = dataURLtoFile(f.witnessSignature, "witness_signature.png");
+                if (witnessFile) {
+                  payload.append("witness_signature", witnessFile);
+                }
+              }
+
+              if (f.id && !f.id.startsWith("CONSENT-")) {
+                await updateConsentMutation.mutateAsync({ id: f.id, formData: payload });
+                showToast("Consent updated successfully!");
+              } else {
+                await createConsentMutation.mutateAsync(payload);
+                showToast("Consent generated!");
+              }
+              setActiveModal(null);
+              setSelectedConsentForm(null);
+            } catch (err: any) {
+              console.error("Failed to save consent form via API:", err);
+              showToast(err?.response?.data?.message || err?.message || "Failed to save consent form", "error");
+            }
+          }}
         />
       )}
 
-      {activeModal === "consentViewer" && selectedConsentForm && (
+      {activeModal === "consentViewer" && mappedViewerForm && (
         <ConsentFormViewer
-          form={selectedConsentForm}
+          form={mappedViewerForm}
+          isLoading={isConsentDetailLoading}
           onClose={() => {
             setActiveModal(null);
             setSelectedConsentForm(null);
@@ -605,31 +880,134 @@ export function ModalRegistry() {
 
       {activeModal === "inventoryForm" && (
         <InventoryForm
-          item={inventory.find((i: any) => i.id === selectedItemId)}
+          item={selectedItemId ? mappedInventoryItem : undefined}
+          isLoading={isInventoryItemLoading}
           onClose={() => {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          onSave={(i: any) => {
-            handleSaveInventoryItem(i);
-            setActiveModal(null);
-            setSelectedItemId("");
+          onSave={async (i: any) => {
+            try {
+              if (!selectedItemId) {
+                const payload = {
+                  name: i.name,
+                  category: i.category ? i.category.toUpperCase() : "INSTRUMENTS",
+                  description: i.description || "",
+                  current_stock: Number(i.currentStock) || 0,
+                  min_stock: Number(i.minStock) || 0,
+                  max_stock: Number(i.maxStock) || 100,
+                  unit: i.unit ? i.unit.toUpperCase() : "PIECES",
+                  batch_number: i.batchNumber || "",
+                  expiry_date: i.expiryDate || "",
+                  unit_cost: Number(i.cost) || 0,
+                  supplier: i.supplier || "",
+                  warranty: i.warranty || "",
+                };
+                const res = await createInventoryMutation(payload);
+                if (res?.id) i.id = res.id;
+              } else {
+                await updateInventoryMutation({ id: selectedItemId, ...payload });
+              }
+              handleSaveInventoryItem(i);
+              setActiveModal(null);
+              setSelectedItemId("");
+              showToast(selectedItemId ? "Item updated!" : "Item added successfully!");
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || err?.message || "Failed to save item";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
           }}
         />
       )}
 
       {activeModal === "restockForm" && selectedItemForRestock && (
         <RestockForm
-          item={selectedItemForRestock}
+          item={mappedInventoryItem || selectedItemForRestock}
           onClose={() => {
             setActiveModal(null);
             setSelectedItemForRestock(null);
           }}
-          onSave={(ui: any) => {
-            handleSaveInventoryItem(ui);
+          onSave={async (ui: any) => {
+            try {
+              await restockInventoryMutation({
+                id: ui.id,
+                quantity: ui.quantity,
+                reason: ui.reason,
+                reference_id: ui.reference_id,
+              });
+              handleSaveInventoryItem(ui); // optimistic update if needed, but react-query invalidates anyway
+              setActiveModal(null);
+              setSelectedItemForRestock(null);
+              showToast(`${ui.name || 'Item'} restocked successfully!`);
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || err?.message || "Failed to restock item";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
+          }}
+        />
+      )}
+
+      {activeModal === "consumeForm" && selectedItemForRestock && (
+        <ConsumeForm
+          item={mappedInventoryItem || selectedItemForRestock}
+          onClose={() => {
             setActiveModal(null);
             setSelectedItemForRestock(null);
-            showToast(`${ui.name} restocked!`);
+          }}
+          onSave={async (ui: any) => {
+            try {
+              await consumeInventoryMutation({
+                id: ui.id,
+                quantity: ui.quantity,
+                reason: ui.reason,
+                reference_id: ui.reference_id,
+              });
+              handleSaveInventoryItem(ui);
+              setActiveModal(null);
+              setSelectedItemForRestock(null);
+              showToast(`${ui.name || 'Item'} consumed successfully!`);
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || err?.message || "Failed to consume item";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
+          }}
+        />
+      )}
+
+      {activeModal === "adjustForm" && selectedItemForRestock && (
+        <AdjustForm
+          item={mappedInventoryItem || selectedItemForRestock}
+          onClose={() => {
+            setActiveModal(null);
+            setSelectedItemForRestock(null);
+          }}
+          onSave={async (ui: any) => {
+            try {
+              await adjustInventoryMutation({
+                id: ui.id,
+                quantity: ui.quantity,
+                reason: ui.reason,
+                reference_id: ui.reference_id,
+              });
+              handleSaveInventoryItem(ui);
+              setActiveModal(null);
+              setSelectedItemForRestock(null);
+              showToast(`${ui.name || 'Item'} adjusted successfully!`);
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || err?.message || "Failed to adjust item";
+              showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
+            }
+          }}
+        />
+      )}
+
+      {activeModal === "inventoryHistory" && selectedItemForRestock && (
+        <InventoryHistoryViewer
+          itemId={selectedItemForRestock.id}
+          itemName={selectedItemForRestock.name || "Item"}
+          onClose={() => {
+            setActiveModal(null);
+            setSelectedItemForRestock(null);
           }}
         />
       )}
@@ -691,27 +1069,6 @@ export function ModalRegistry() {
           variant={confirmConfig.variant}
           isLoading={confirmConfig.isLoading}
         />
-      )}
-
-      {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4">
-          <div
-            className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${
-              toast.type === "success"
-                ? "bg-emerald-600 border-emerald-500"
-                : "bg-destructive border-destructive"
-            } text-white`}
-          >
-            {toast.type === "success" ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <AlertTriangle className="w-5 h-5" />
-            )}
-            <span className="font-black text-xs uppercase tracking-widest">
-              {toast.message}
-            </span>
-          </div>
-        </div>
       )}
     </>
   );

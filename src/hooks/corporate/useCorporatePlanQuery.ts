@@ -5,7 +5,7 @@ export function useCorporatePlanQuery(id?: string, options?: { enabled?: boolean
   
   return useApiQuery<any>({
     queryKey: ["corporatePlan", id],
-    endpoint: `/corporate/plan/${id}`,
+    endpoint: `/corporatePlan/${id}`,
     method: "get",
     options: {
       enabled,

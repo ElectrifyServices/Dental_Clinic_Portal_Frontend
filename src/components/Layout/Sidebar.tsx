@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
+import { getParsedPermissions } from "../../utils/permission";
 
 /** Maps screen IDs to their Lucide icon component. */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -61,7 +62,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
-  const rawModulePerms: string[] = (state.user as any)?.module_permission || [];
+  const rawModulePerms = getParsedPermissions(state.user);
   const hasAll =
     perms.includes("all") ||
     role === "superadmin" ||

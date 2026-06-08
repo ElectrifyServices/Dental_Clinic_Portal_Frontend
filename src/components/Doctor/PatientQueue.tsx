@@ -50,6 +50,10 @@ interface PatientQueueProps {
   doctors: any[];
   appointments: any[];
   doctorAvailability: { [key: string]: boolean };
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  filterStatus?: string;
+  onFilterStatusChange?: (value: string) => void;
 }
 
 export function PatientQueue({
@@ -63,19 +67,28 @@ export function PatientQueue({
   doctors,
   appointments,
   doctorAvailability,
+  searchTerm: propSearchTerm,
+  onSearchChange,
+  filterStatus: propFilterStatus,
+  onFilterStatusChange,
 }: PatientQueueProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+  const [localFilterStatus, setLocalFilterStatus] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
   const [showDirectPopup, setShowDirectPopup] = useState(false);
 
-  const getStatusColor = (status: string) => {
+  const searchTerm = propSearchTerm !== undefined ? propSearchTerm : localSearchTerm;
+  const filterStatus = propFilterStatus !== undefined ? propFilterStatus : localFilterStatus;
+  const handleSearchChange = onSearchChange || setLocalSearchTerm;
+  const handleFilterStatusChange = onFilterStatusChange || setLocalFilterStatus;
+
+  const getStatusColor = (status: string) => {  
     switch (status) {
-      case "waiting":
+      case "PENDING":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "in-consultation":
+      case "IN_PROGRESS":
         return "bg-primary/10 text-primary border-primary/30";
-      case "completed":
+      case "COMPLETED":
         return "bg-green-100 text-green-800 border-green-200";
       default:
         return "bg-muted text-foreground border-border";
@@ -84,11 +97,11 @@ export function PatientQueue({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "waiting":
+      case "PENDING":
         return <Clock className="w-4 h-4" />;
-      case "in-consultation":
+      case "IN_PROGRESS":
         return <Stethoscope className="w-4 h-4" />;
-      case "completed":
+      case "COMPLETED":
         return <CheckCircle className="w-4 h-4" />;
       default:
         return <AlertTriangle className="w-4 h-4" />;
@@ -103,35 +116,34 @@ export function PatientQueue({
       safe(patient.patientName).includes(search) ||
       safe(patient.treatmentType).includes(search) ||
       safe(patient.patientConcern).includes(search);
-    const matchesFilter =
-      filterStatus === "all" || patient.status === filterStatus;
+    const matchesFilter = filterStatus === "ALL" || patient.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const waitingCount = queuedPatients.filter(
-    (p) => p.status === "waiting",
+    (p) => p.status === "PENDING",
   ).length;
   const inConsultationCount = queuedPatients.filter(
-    (p) => p.status === "in-consultation",
+    (p) => p.status === "IN_PROGRESS",
   ).length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header bg-gradient-to-r from-primary/10 to-indigo-50/30 p-6 rounded-3xl border border-primary/10 shadow-sm">
+      <div className="page-header bg-gradient-to-r from-primary/10 to-indigo-50/30 p-6 rounded-3xl border border-primary/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/20">
+          <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/20 shrink-0">
             <Stethoscope className="w-8 h-8 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight">
               Consultation Queue
             </h1>
-            <div className="flex items-center gap-3 mt-1.5">
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
               <span className="text-sm font-medium text-muted-foreground">
                 Dr. {doctorName}
               </span>
-              <span className="w-1 h-1 bg-muted rounded-full" />
+              <span className="w-1 h-1 bg-muted rounded-full hidden sm:inline" />
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
@@ -149,7 +161,7 @@ export function PatientQueue({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-sm">
+        <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-sm self-start md:self-auto">
           <Clock className="w-5 h-5 text-blue-500" />
           <div className="text-right">
             <div className="text-lg font-black text-foreground leading-none">
@@ -171,69 +183,69 @@ export function PatientQueue({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
-        <div className="relative flex-1 group">
+      <div className="flex flex-col xl:flex-row xl:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <div className="relative flex-1 group w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             placeholder="Search by patient name, treatment, or concern..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-11 pr-4 py-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-muted/80 p-1.5 rounded-xl border border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
+          <div className="flex items-center bg-muted/80 p-1 rounded-xl border border-border/60 overflow-x-auto scrollbar-none w-full sm:w-auto shrink-0">
             {[
               {
-                id: "all",
+                id: "ALL",
                 label: "All",
                 icon: <Users className="w-3.5 h-3.5" />,
               },
               {
-                id: "waiting",
-                label: "Waiting",
+                id: "PENDING",
+                label: "Pending",
                 icon: <Clock className="w-3.5 h-3.5" />,
               },
               {
-                id: "in-consultation",
-                label: "Consulting",
+                id: "IN_PROGRESS",
+                label: "In Progress",
                 icon: <Stethoscope className="w-3.5 h-3.5" />,
               },
               {
-                id: "completed",
-                label: "Done",
+                id: "COMPLETED",
+                label: "Completed",
                 icon: <CheckCircle className="w-3.5 h-3.5" />,
               },
             ].map((s) => (
               <button
                 key={s.id}
-                onClick={() => setFilterStatus(s.id)}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                onClick={() => handleFilterStatusChange(s.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${
                   filterStatus === s.id
                     ? "bg-card text-primary shadow-sm border border-border"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 {s.icon}
-                <span className="hidden sm:inline">{s.label}</span>
+                <span>{s.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* <button
               onClick={() => setShowDirectPopup(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm flex-1 sm:flex-initial"
             >
               <UserPlus className="w-4 h-4" />
               <span>Direct</span>
-            </button>
+            </button> */}
 
             <button
               onClick={() => setShowHistory(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted active:scale-95 transition-all shadow-sm font-bold text-sm"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted active:scale-95 transition-all shadow-sm font-bold text-sm flex-1 sm:flex-initial"
             >
               <History className="w-4 h-4 text-blue-500" />
               <span>History</span>

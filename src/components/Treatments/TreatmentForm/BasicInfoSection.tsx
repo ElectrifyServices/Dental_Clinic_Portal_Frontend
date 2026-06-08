@@ -1,9 +1,10 @@
-﻿import React from 'react';
-import { User, Calendar, DollarSign, Plus } from 'lucide-react';
+import React from "react";
+import { Info, AlertCircle } from "lucide-react";
+import { SearchableSelect } from "@/components/ui";
 
 interface BasicInfoSectionProps {
   formData: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  handleChange: (e: React.ChangeEvent<any>) => void;
   allPatients: any[];
   doctors: any[];
   procedures: string[];
@@ -22,161 +23,127 @@ export function BasicInfoSection({
   teeth,
   pendingPlans,
   onLoadPlan,
-  isEdit
+  isEdit,
 }: BasicInfoSectionProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label className="form-label text-muted-foreground">
-          <User className="w-4 h-4 inline mr-2 text-primary" />
-          Patient Name *
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+          <Info className="w-3.5 h-3.5 text-primary" />
+          Patient Details
         </label>
-        <select
-          name="patientName"
+        <SearchableSelect
           value={formData.patientName}
-          onChange={handleChange}
-          required
-          className="form-input py-3 font-medium"
-        >
-          <option value="">Select Patient</option>
-          {allPatients.map((patient, i) => {
-            const patientName = typeof patient === 'string' ? patient : patient.name;
-            const patientId = typeof patient === 'object' ? patient.id : patientName;
-            return (
-              <option key={`${patientId}-${i}`} value={patientName}>
-                {patientName}
-              </option>
-            );
+          onChange={(val) => handleChange({ target: { name: "patientName", value: val } } as any)}
+          options={allPatients.map((p) => {
+            const name = typeof p === "string" ? p : p.name;
+            return { label: name, value: name };
           })}
-        </select>
-      </div>
-
-      {/* Recommended Plans */}
-      {pendingPlans.length > 0 && !isEdit && (
-        <div className="col-span-1 md:col-span-2 p-4 bg-purple-50 rounded-2xl border border-purple-200 animate-in slide-in-from-top duration-500 shadow-sm">
-          <p className="text-sm font-bold text-purple-900 mb-3 flex items-center">
-            <Plus className="w-4 h-4 mr-1 text-purple-600" />
-            Recommended Plans from Consultation:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {pendingPlans.map((plan: any) => (
-              <button
-                key={plan.id}
-                type="button"
-                onClick={() => onLoadPlan(plan)}
-                className="px-3 py-2 bg-card text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors flex items-center border border-purple-200 shadow-sm"
-              >
-                {plan.procedure} (#{plan.tooth})
-              </button>
-            ))}
+          placeholder="Select Patient"
+          disabled={isEdit}
+        />
+        {pendingPlans.length > 0 && !isEdit && (
+          <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-yellow-800 dark:text-yellow-400">
+                  Pending Treatment Plans
+                </p>
+                {pendingPlans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => onLoadPlan(plan)}
+                    className="text-xs text-yellow-700 dark:text-yellow-500 hover:underline block mt-1"
+                  >
+                    {plan.procedure} (₹{plan.cost})
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">Procedure *</label>
-        <select
-          name="procedure"
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Treatment Details
+        </label>
+        <SearchableSelect
           value={formData.procedure}
-          onChange={handleChange}
-          required
-          className="form-input py-3 font-medium"
-        >
-          <option value="">Select Procedure</option>
-          {procedures.map(proc => (
-            <option key={proc} value={proc}>{proc}</option>
-          ))}
-        </select>
+          onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as any)}
+          options={procedures.map((proc) => ({ label: proc, value: proc }))}
+          placeholder="Select Procedure"
+        />
       </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">Tooth/Area *</label>
-        <select
-          name="tooth"
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Tooth / Area
+        </label>
+        <SearchableSelect
           value={formData.tooth}
-          onChange={handleChange}
-          required
-          className="form-input py-3 font-medium"
-        >
-          <option value="">Select Tooth</option>
-          {teeth.map(tooth => (
-            <option key={tooth} value={tooth}>{tooth}</option>
-          ))}
-        </select>
+          onChange={(val) => handleChange({ target: { name: "tooth", value: val } } as any)}
+          options={teeth.map((tooth) => ({ label: tooth, value: tooth }))}
+          placeholder="Select Tooth"
+        />
       </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">Assigned Doctor *</label>
-        <select
-          name="doctorId"
-          value={formData.doctorId}
-          onChange={handleChange}
-          required
-          className="form-input py-3 font-medium"
-        >
-          {doctors.map(doctor => (
-            <option key={doctor.id} value={doctor.id}>
-              {doctor.name} - {doctor.specialization}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="form-label text-muted-foreground mb-2">
-          <Calendar className="w-4 h-4 inline mr-2 text-primary" />
-          Treatment Date *
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Start Date
         </label>
         <input
           type="date"
           name="date"
           value={formData.date}
           onChange={handleChange}
-          required
-          className="form-input py-3 font-medium"
+          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
         />
       </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">
-          <DollarSign className="w-4 h-4 inline mr-2 text-primary" />
-          Treatment Cost (₹)
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Estimated Cost (₹)
         </label>
         <input
           type="number"
           name="cost"
           value={formData.cost}
           onChange={handleChange}
-          min="0"
-          className="form-input py-3 font-medium"
-          placeholder="Enter treatment cost"
+          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
+          placeholder="0"
         />
       </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">Treatment Status</label>
-        <select
-          name="status"
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Status
+        </label>
+        <SearchableSelect
           value={formData.status}
-          onChange={handleChange}
-          className="form-input py-3 font-medium"
-        >
-          <option value="planned">Planned</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-        </select>
+          onChange={(val) => handleChange({ target: { name: "status", value: val } } as any)}
+          options={[
+            { label: "Planned", value: "planned" },
+            { label: "In Progress", value: "in-progress" },
+            { label: "Completed", value: "completed" },
+            { label: "Cancelled", value: "cancelled" },
+          ]}
+          placeholder="Select Status"
+        />
       </div>
 
-      <div>
-        <label className="form-label text-muted-foreground mb-2">Next Appointment</label>
-        <input
-          type="date"
-          name="nextAppointment"
-          value={formData.nextAppointment}
-          onChange={handleChange}
-          className="form-input py-3 font-medium"
+      <div className="space-y-2">
+        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+          Assigned Doctor
+        </label>
+        <SearchableSelect
+          value={formData.doctorId}
+          onChange={(val) => handleChange({ target: { name: "doctorId", value: val } } as any)}
+          options={doctors.map((doc) => ({ label: doc.name, value: doc.id }))}
+          placeholder="Select Doctor"
         />
       </div>
     </div>
   );
-}
+}

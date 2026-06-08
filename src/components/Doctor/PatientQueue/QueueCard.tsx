@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Clock,
@@ -9,6 +9,7 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
+import { Card, CardContent, Button } from "@/components/ui";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -71,187 +72,157 @@ export function QueueCard({
   const waitingTime = useWaitingTime(patient.checkInTime);
   const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
   const gender = fullPatient?.gender || "";
-  const medHistory: string[] = fullPatient?.medicalHistory
+  
+  const medHistory: string[] = fullPatient?.medicalHistoryNames?.length
+    ? Array.isArray(fullPatient.medicalHistoryNames)
+      ? fullPatient.medicalHistoryNames
+      : fullPatient.medicalHistoryNames.split("\n").filter(Boolean)
+    : fullPatient?.medicalHistory
     ? Array.isArray(fullPatient.medicalHistory)
       ? fullPatient.medicalHistory
       : fullPatient.medicalHistory.split("\n").filter(Boolean)
     : [];
-  const allergies: string[] = fullPatient?.allergies
+  const allergies: string[] = fullPatient?.allergyNames?.length
+    ? Array.isArray(fullPatient.allergyNames)
+      ? fullPatient.allergyNames
+      : fullPatient.allergyNames.split("\n").filter(Boolean)
+    : fullPatient?.allergies
     ? Array.isArray(fullPatient.allergies)
       ? fullPatient.allergies
       : fullPatient.allergies.split("\n").filter(Boolean)
     : [];
 
   return (
-    <div className="card-hover p-4">
-      {/* Patient Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center">
-          <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
-              <User className="w-8 h-8 text-primary" />
+    <Card className="hover:shadow-md hover:border-gray-200 transition-all duration-300 rounded-2xl border border-gray-100 bg-white overflow-hidden">
+      <CardContent className="p-5 flex flex-col h-full space-y-4">
+        {/* Patient Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-4 flex-wrap">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100/50">
+              <User className="w-5.5 h-5.5" />
             </div>
-            <div
-              className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-md text-white ${patient.status === "waiting" ? "bg-yellow-500" : patient.status === "in-consultation" ? "bg-primary/100" : "bg-green-500"}`}
-            >
-              {getStatusIcon(patient.status)}
-            </div>
-          </div>
-          <div className="ml-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-foreground text-lg">
+            <div className="flex-1 min-w-0 pt-0.5">
+              <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 truncate" title={patient.patientName}>
                 {patient.patientName}
               </h3>
-              {fullPatient?.category && fullPatient.category !== "regular" && (
-                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded uppercase border border-amber-200">
-                  {fullPatient.category}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {age !== null && gender && (
-                <span className="text-muted-foreground/40"></span>
-              )}
               {gender && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs text-gray-500 font-semibold block mb-2">
                   Gender: <span className="capitalize">{gender}</span>
                 </span>
               )}
+              <div className="flex flex-wrap gap-1">
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider border ${getStatusColor(patient.status)}`}
+                >
+                  {getStatusIcon(patient.status)}
+                  {patient.status.replace("_", " ")}
+                </span>
+              </div>
             </div>
-            <span
-              className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full border mt-1 ${getStatusColor(patient.status)}`}
-            >
-              {getStatusIcon(patient.status)}
-              <span className="ml-1">
-                {patient.status.replace("-", " ").toUpperCase()}
-              </span>
+          </div>
+          {/* Appointment time */}
+          <div className="text-right flex-shrink-0 pt-0.5">
+            <div className="text-sm font-black text-blue-600 mb-1">
+              {patient.appointmentTime}
+            </div>
+            <div className="text-[10px] text-gray-400 font-bold">
+              Check-in: {patient.checkInTime}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact & Concern */}
+        <div className="space-y-2.5 text-sm">
+          <div className="flex items-center justify-between py-0.5">
+            <span className="flex items-center text-gray-500 text-xs font-semibold">
+              <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" /> Phone
             </span>
+            <span className="font-bold text-gray-900 font-mono">{patient.patientPhone || "—"}</span>
           </div>
-        </div>
-        {/* Appointment time */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-lg font-bold text-primary">
-            {patient.appointmentTime}
-          </div>
-          <div className="text-xs text-muted-foreground/60 mt-0.5">
-            Check-in: {patient.checkInTime}
-          </div>
-          {patient.status === "waiting" && waitingTime && (
-            <div className="flex items-center justify-end gap-1 mt-1">
-              <Clock className="w-3 h-3 text-amber-500" />
-              <span className="text-xs font-bold text-amber-600">
-                {waitingTime}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Contact & Concern */}
-      <div className="space-y-3 mb-4">
-        <div className="flex items-start text-sm">
-          <Phone className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs text-muted-foreground">Phone</p>
-            <p className="text-muted-foreground">{patient.patientPhone}</p>
-          </div>
-        </div>
-
-        <div className="flex items-start text-sm">
-          <Stethoscope className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs text-muted-foreground">Treatment Type</p>
-            <p className="font-medium text-foreground">
+          <div className="flex items-start justify-between py-0.5 gap-2">
+            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+              <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
+            </span>
+            <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
               {patient.treatmentType || "—"}
-            </p>
-          </div>
-        </div>
-
-        {patient.patientConcern && (
-          <div className="flex items-start text-sm">
-            <MessageSquare className="w-4 h-4 text-muted-foreground/60 mr-3 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs text-muted-foreground">Patient Concern</p>
-              <p className="text-muted-foreground line-clamp-2">
-                {patient.patientConcern}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Medical Alerts */}
-      {(medHistory.length > 0 || allergies.length > 0) && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200">
-          <div className="flex items-center mb-2">
-            <AlertTriangle className="w-4 h-4 text-orange-600 mr-2" />
-            <span className="text-sm font-medium text-orange-800">
-              Medical Alerts
             </span>
           </div>
-          {allergies.length > 0 && (
-            <div className="text-xs text-destructive mb-1">
-              <strong>Allergies:</strong> {allergies.slice(0, 3).join(", ")}
-              {allergies.length > 3 && ` +${allergies.length - 3} more`}
+
+          {patient.patientConcern && (
+            <div className="border-t border-gray-50 pt-2.5 mt-1">
+              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
+                <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
+              </div>
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 line-clamp-2">
+                {patient.patientConcern}
+              </div>
             </div>
           )}
-          {medHistory.length > 0 && (
-            <div className="text-xs text-orange-700">
-              <strong>Conditions:</strong> {medHistory.slice(0, 2).join(", ")}
-              {medHistory.length > 2 && ` +${medHistory.length - 2} more`}
+        </div>
+
+        {/* Medical Alerts */}
+        {(medHistory.length > 0 || allergies.length > 0) && (
+          <div className="p-3 bg-red-50/40 rounded-xl border border-red-100/60">
+            <div className="flex items-center mb-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500 mr-1.5" />
+              <span className="text-[10px] font-black text-red-800 uppercase tracking-widest">
+                Medical Alerts
+              </span>
             </div>
-          )}
-        </div>
-      )}
+            <div className="space-y-1">
+              {allergies.length > 0 && (
+                <div className="text-[11px] text-red-600 font-bold leading-tight">
+                  <strong>Allergies:</strong> {allergies.slice(0, 3).join(", ")}
+                  {allergies.length > 3 && ` +${allergies.length - 3} more`}
+                </div>
+              )}
+              {medHistory.length > 0 && (
+                <div className="text-[11px] text-amber-700 font-bold leading-tight">
+                  <strong>Conditions:</strong> {medHistory.slice(0, 2).join(", ")}
+                  {medHistory.length > 2 && ` +${medHistory.length - 2} more`}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="text-center p-3 bg-primary/50 rounded-xl border border-primary/20">
-          <div className="text-lg font-bold text-primary">
-            {fullPatient?.totalVisits ?? 0}
-          </div>
-          <div className="text-xs text-primary font-bold uppercase tracking-wider">
-            Visits
+        <div className="mt-auto pt-2">
+          {/* Action Button */}
+          <div>
+            {patient.status === "PENDING" && (
+              <Button
+                onClick={() => {
+                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                  onSelectPatient(patient);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2 h-10"
+              >
+                <Stethoscope className="w-4 h-4" />
+                Start Consultation
+              </Button>
+            )}
+            {patient.status === "IN_PROGRESS" && (
+              <Button
+                onClick={() => {
+                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                  onSelectPatient(patient);
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 h-10"
+              >
+                <FileText className="w-4 h-4" />
+                Continue Consultation
+              </Button>
+            )}
+            {patient.status === "COMPLETED" && (
+              <div className="w-full py-2 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                Consultation Completed
+              </div>
+            )}
           </div>
         </div>
-        <div className="text-center p-3 bg-green-50/50 rounded-xl border border-green-100">
-          <div className="text-lg font-bold text-green-600">{age ?? "N/A"}</div>
-          <div className="text-xs text-green-700 font-bold uppercase tracking-wider">
-            Age
-          </div>
-        </div>
-      </div>
-
-      {/* Action Button */}
-      <div className="pt-4 border-t border-border">
-        {patient.status === "waiting" && (
-          <button
-            onClick={() => {
-              onUpdatePatientStatus(patient.id, "in-consultation");
-              onSelectPatient(patient);
-            }}
-            className="btn-primary w-full justify-center"
-          >
-            <Stethoscope className="w-4 h-4" />
-            Start Consultation
-          </button>
-        )}
-        {patient.status === "in-consultation" && (
-          <button
-            onClick={() => onSelectPatient(patient)}
-            className="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-          >
-            <FileText className="w-4 h-4" />
-            Continue Consultation
-          </button>
-        )}
-        {patient.status === "completed" && (
-          <span className="w-full py-2.5 bg-green-100 text-green-800 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Consultation Completed
-          </span>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

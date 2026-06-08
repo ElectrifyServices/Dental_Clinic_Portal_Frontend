@@ -1,9 +1,26 @@
 import { CorporatePlan, PlanBenefit } from '../types';
 
 export const TREATMENT_LABELS: Record<string, string> = {
-  consultation: 'Consultation', cleaning: 'Teeth Cleaning', filling: 'Dental Filling',
-  extraction: 'Tooth Extraction', 'root-canal': 'Root Canal', crown: 'Crown Fitting',
-  orthodontics: 'Orthodontics', surgery: 'Oral Surgery', other: 'Other',
+  consultation: 'Consultation / Check-up',
+  'follow-up': 'Follow Up Visit',
+  'xray-review': 'X-ray Review',
+  cleaning: 'Teeth Cleaning',
+  emergency: 'Tooth Pain / Emergency',
+  filling: 'Filling',
+  'root-canal': 'Root Canal Treatment',
+  extraction: 'Extraction / Wisdom Tooth',
+  orthodontics: 'Braces / Aligners',
+  implants: 'Implants',
+  'full-mouth-rehab': 'Full Mouth Rehabilitation',
+  'veneers-cosmetic': 'Veneers / Cosmetic Dentistry',
+  'child-dentistry': 'Child Dentistry',
+  crown: 'Crown',
+  denture: 'Denture',
+  toothache: 'Toothache',
+  'swelling-infection': 'Swelling / Infection',
+  'broken-tooth': 'Broken Tooth',
+  'trauma-injury': 'Trauma / Injury',
+  other: 'Other / Not Sure',
 };
 
 export interface AppliedBenefit {

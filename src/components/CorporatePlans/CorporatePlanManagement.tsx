@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Building2, Search, Info } from 'lucide-react';
+import { Plus, Building2, Search, Info, Users } from 'lucide-react';
 import { CorporatePlan } from '../../types';
 import { Button } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
@@ -20,6 +20,8 @@ interface Props {
   filter?: 'all' | 'active' | 'inactive';
   onFilterChange?: (val: 'all' | 'active' | 'inactive') => void;
   isLoading?: boolean;
+  tab: 'plans' | 'employees';
+  setTab: (tab: 'plans' | 'employees') => void;
 }
 
 export function CorporatePlanManagement({
@@ -32,6 +34,8 @@ export function CorporatePlanManagement({
   filter: propFilter,
   onFilterChange: propOnFilterChange,
   isLoading,
+  tab,
+  setTab,
 }: Props) {
   const { showToast, confirmDelete } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
@@ -90,15 +94,33 @@ export function CorporatePlanManagement({
   const activePlans = plans.filter(p => p.isActive).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
         <div>
-          <h1 className="text-2xl font-bold text-foreground leading-none">Corporate Plans</h1>
-          <p className="text-muted-foreground text-sm mt-1.5 font-medium">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Corporate Plans</h1>
+          <p className="text-xs text-muted-foreground font-medium">
             {activePlans} active plan{activePlans !== 1 ? 's' : ''} & {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
           </p>
         </div>
+
+        <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
+          <button
+            onClick={() => setTab("plans")}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${tab === "plans" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            Corporate Plans
+          </button>
+          <button
+            onClick={() => setTab("employees")}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${tab === "employees" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Employee Management
+          </button>
+        </div>
+
         <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
           <Plus className="w-4 h-4" /> Create New Plan
         </Button>

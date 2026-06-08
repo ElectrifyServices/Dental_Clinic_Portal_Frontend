@@ -26,8 +26,8 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   errors,
 }) => {
   return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-2 mb-4">
+    <section className="space-y-3">
+      <div className="flex items-center gap-2 mb-2">
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <User className="w-4 h-4 text-primary" />
         </div>
@@ -37,7 +37,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
         <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Patient Name <span className="text-destructive">*</span>

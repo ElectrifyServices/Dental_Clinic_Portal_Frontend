@@ -259,7 +259,7 @@ export function InvoiceList({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Billing & Invoices"
         subtitle={`${invoices.length} total invoices recorded`}

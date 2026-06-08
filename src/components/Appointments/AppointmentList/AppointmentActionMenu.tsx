@@ -52,7 +52,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             Edit Appointment
           </button>
 
-          {appointment.status !== 'no-show' && appointment.status !== 'checked-in' ? (
+          {appointment.status !== 'no-show' && appointment.status !== 'checked-in' && appointment.status?.toLowerCase() !== 'completed' ? (
             <button 
               onClick={() => { onUpdateStatus?.(appointment.id, 'no-show'); onClose(); }}
               className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium"

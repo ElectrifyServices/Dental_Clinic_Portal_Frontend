@@ -35,7 +35,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
         payment_mode: formData.mode.toUpperCase(),
         disbursement_note: formData.note
       });
-      
+
       const backendData = res?.responseObject?.data || res?.data || {};
 
       onSave({
@@ -59,7 +59,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
       } else if (typeof resData === 'string') {
         errMsg = resData;
       }
-      
+
       showToast(errMsg, 'error');
     }
   };
@@ -93,7 +93,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <LabeledField label="Payment Amount (₹) *" required>
+            <LabeledField label="Payment Amount (₹)" required>
               <div className="relative">
                 <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <select required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -106,7 +106,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
                 </select>
               </div>
             </LabeledField>
-            <LabeledField label="Payment Date *" required>
+            <LabeledField label="Payment Date" required>
               <div className="relative">
                 <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}

@@ -97,17 +97,17 @@ export const ProfitSharingPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-3 animate-in fade-in duration-500">
       {/* Header & Minimalist Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
         <div>
-          <h2 className="page-title">Profit Sharing</h2>
-          <p className="text-muted-foreground text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Profit Sharing</h1>
+          <p className="text-xs text-muted-foreground font-medium">
             Doctor earnings and revenue distribution
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-card p-1 rounded-xl border border-border shadow-sm">
+        <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
           {[
             { id: "thisMonth", label: "This Month" },
             { id: "lastMonth", label: "Last Month" },
@@ -116,10 +116,10 @@ export const ProfitSharingPage: React.FC = () => {
             <button
               key={f.id}
               onClick={() => setDateFilter(f.id as any)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
                 dateFilter === f.id
-                  ? "bg-primary text-white"
-                  : "text-muted-foreground hover:bg-muted"
+                  ? "bg-card text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {f.label}

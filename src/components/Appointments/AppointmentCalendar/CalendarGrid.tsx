@@ -11,6 +11,8 @@ interface CalendarGridProps {
   appointmentsByDate?: Record<string, number>;
   getDayAppointmentsForDate: (date: Date) => any[];
   monthNames: string[];
+  currentDoctorId?: string | null;
+  onRefetchSlots?: () => void;
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -22,6 +24,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   appointmentsByDate = {},
   getDayAppointmentsForDate,
   monthNames,
+  currentDoctorId,
+  onRefetchSlots,
 }) => {
   const isPastActualDate = (date: Date) => {
     const today = new Date();
@@ -83,7 +87,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
           {rollingDates.map((date, index) => {
             const dayAppointments = getDayAppointmentsForDate(date);
-            const countToDisplay = dayAppointments.length;
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+            const apiCount = Object.entries(appointmentsByDate).find(([key]) => key.startsWith(dateStr))?.[1] || 0;
+            const countToDisplay = currentDoctorId ? dayAppointments.length : Math.max(apiCount as number, dayAppointments.length);
             const isSelected = selectedDate.toDateString() === date.toDateString();
             const isToday = isTodayDate(date);
             const isPast = isPastActualDate(date);
@@ -91,7 +97,14 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             return (
               <div
                 key={index}
-                onClick={() => !isPast && setSelectedDate(date)}
+                onClick={() => {
+                  if (isPast) return;
+                  if (isSelected) {
+                    onRefetchSlots?.();
+                  } else {
+                    setSelectedDate(date);
+                  }
+                }}
                 className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group
                   ${isToday ? "bg-primary text-white shadow-lg border-primary" : 
                     isSelected ? "bg-secondary text-primary border-primary/20 shadow-sm" : 

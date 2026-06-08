@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Search,
   Filter,
   X,
-  MoreVertical,
   Eye,
   Activity,
   Stethoscope,
@@ -11,6 +10,7 @@ import {
   FileText,
   Trash2,
 } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 
 interface HistoryListProps {
   data: any[];
@@ -20,8 +20,10 @@ interface HistoryListProps {
   onSearchChange: (val: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
-  filterFollowUp: "all" | "yes" | "no";
-  onFilterFollowUp: (val: "all" | "yes" | "no") => void;
+  startDate: string;
+  onStartDateChange: (val: string) => void;
+  endDate: string;
+  onEndDateChange: (val: string) => void;
   filterSort: "newest" | "oldest";
   onFilterSort: (val: "newest" | "oldest") => void;
   activeFilters: number;
@@ -32,6 +34,7 @@ interface HistoryListProps {
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
   safePage: number;
   PAGE_SIZE: number;
+  isLoading?: boolean;
 }
 
 export function HistoryList({
@@ -41,8 +44,10 @@ export function HistoryList({
   onSearchChange,
   showFilters,
   onToggleFilters,
-  filterFollowUp,
-  onFilterFollowUp,
+  startDate,
+  onStartDateChange,
+  endDate,
+  onEndDateChange,
   filterSort,
   onFilterSort,
   activeFilters,
@@ -53,7 +58,10 @@ export function HistoryList({
   onDeleteClick,
   safePage,
   PAGE_SIZE,
+  isLoading = false,
 }: HistoryListProps) {
+  const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<number | null>(null);
+
   const initials = (name: string) => {
     if (!name) return "??";
     return name
@@ -86,7 +94,7 @@ export function HistoryList({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" onClick={() => setActiveDownloadMenuId(null)}>
       <div className="flex-shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -122,24 +130,38 @@ export function HistoryList({
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap items-center gap-4 pt-0.5 animate-in slide-in-from-top-1 duration-200">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-6 pt-0.5 animate-in slide-in-from-top-1 duration-200">
+            <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">
-                Follow-up:
+                Date Range:
               </span>
-              {(["all", "yes", "no"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => onFilterFollowUp(v)}
-                  className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors font-medium ${filterFollowUp === v ? "bg-primary text-white border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
-                >
-                  {v === "all"
-                    ? "All"
-                    : v === "yes"
-                      ? "Required"
-                      : "Not Required"}
-                </button>
-              ))}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => onStartDateChange(e.target.value)}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
+                />
+                <span className="text-xs text-muted-foreground/60">to</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => onEndDateChange(e.target.value)}
+                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
+                />
+                {(startDate || endDate) && (
+                  <button
+                    onClick={() => {
+                      onStartDateChange("");
+                      onEndDateChange("");
+                    }}
+                    className="p-1 hover:bg-destructive/10 text-destructive rounded-md transition-colors"
+                    title="Clear Date Range"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-muted-foreground">
@@ -159,7 +181,15 @@ export function HistoryList({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-4 relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="text-xs font-medium text-muted-foreground">Loading consultations...</span>
+            </div>
+          </div>
+        )}
         {pageData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="bg-muted rounded-full p-4 mb-3">
@@ -173,172 +203,119 @@ export function HistoryList({
             </p>
           </div>
         ) : (
-          <table className="w-full text-sm border-collapse">
-            <thead className="sticky top-0 bg-muted z-10">
-              <tr className="border-b border-border">
-                <th className="text-left px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide w-8">
-                  #
-                </th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Patient
-                </th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
-                  Diagnosis
-                </th>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
-                  Date
-                </th>
-                <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
-                  Cost
-                </th>
-                <th className="text-right px-5 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageData.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border hover:bg-primary/40 transition-colors"
-                >
-                  <td className="px-5 py-2.5 text-xs text-muted-foreground/60 tabular-nums align-middle">
-                    {(safePage - 1) * PAGE_SIZE + idx + 1}
-                  </td>
-                  <td className="px-3 py-2.5 align-middle">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${avatarColor(item.id)}`}
-                      >
-                        {initials(
-                          item.patientName ||
-                            patients.find((p) => p.id === item.patientId)
-                              ?.patientName,
-                        )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {pageData.map((item, idx) => (
+              <Card key={item.id} className="flex flex-col hover:shadow-md transition-shadow">
+                <CardHeader className="p-4 pb-3 border-b">
+                   <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3 min-w-0">
+                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${avatarColor(item.id)}`}>
+                            {initials(item.patient?.name)}
+                         </div>
+                         <div className="min-w-0">
+                            <CardTitle className="text-base truncate">{item.patient?.name || "Unknown Patient"}</CardTitle>
+                            <CardDescription className="text-xs truncate">ID: {item.patient?.id?.split('-')[0] || "—"}</CardDescription>
+                         </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground text-sm leading-tight truncate">
-                          {item.patientName ||
-                            patients.find((p) => p.id === item.patientId)
-                              ?.patientName ||
-                            "Unknown Patient"}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {item.patientId && (
-                            <span className="text-xs text-muted-foreground/60 font-mono">
-                              {item.patientId}
-                            </span>
-                          )}
-                          {item.followUpRequired && (
-                            <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full font-medium leading-tight">
-                              Follow-up
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5 hidden md:table-cell align-middle">
-                    <span className="text-xs text-muted-foreground truncate block max-w-[180px]">
-                      {item.diagnosis || "—"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 hidden sm:table-cell align-middle">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {fmtShort(item.completedAt || item.consultationDate)}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-right hidden sm:table-cell align-middle">
-                    {item.treatmentCost && item.treatmentCost > 0 ? (
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        ₹{item.treatmentCost}
+                      <span className="text-[9px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0 border border-green-200">
+                         {item.status || "COMPLETED"}
                       </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground/40">
-                        —
+                   </div>
+                </CardHeader>
+                <CardContent className="p-4 flex-1 space-y-3">
+                   <div className="flex items-center gap-2 text-sm text-foreground">
+                      <Stethoscope className="w-4 h-4 text-primary shrink-0" />
+                      <span className="font-semibold truncate">Dr. {item.doctor?.name || "Unknown"}</span>
+                   </div>
+                   <p className="text-xs text-muted-foreground line-clamp-2 h-8">
+                     {item.diagnosis_desc ? (
+                       <><span className="font-semibold text-foreground">Diagnosis:</span> {item.diagnosis_desc}</>
+                     ) : (
+                       <span className="italic">No diagnosis recorded</span>
+                     )}
+                   </p>
+                   <div className="flex justify-between items-center text-xs text-muted-foreground pt-3 border-t border-border">
+                      <span className="flex items-center gap-1.5 font-medium">
+                         <Activity className="w-3.5 h-3.5" />
+                         {fmtShort(item.created_at)}
                       </span>
-                    )}
-                  </td>
-                  <td className="px-5 py-2.5 align-middle">
-                    <div className="flex items-center justify-end relative">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSetActiveMenuId(
-                            activeMenuId === item.id ? null : item.id,
-                          );
-                        }}
-                        className={`p-1.5 rounded-lg transition-all ${activeMenuId === item.id ? "bg-primary text-white" : "hover:bg-muted text-muted-foreground"}`}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-32 bg-card border border-border rounded-xl shadow-xl z-20 py-1.5 animate-in fade-in zoom-in duration-200">
-                          <button
-                            onClick={() => {
-                              onSelectRecord(item);
-                              onSetActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center gap-2 transition-colors"
-                          >
-                            <Eye className="w-3.5 h-3.5" /> View
-                          </button>
-                          <div className="h-px bg-muted my-1" />
-                          <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                            Download Reports
-                          </div>
-                          <button
-                            onClick={() => {
-                              onDownloadPDF(item, "CLINICAL");
-                              onSetActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center gap-2 transition-colors"
-                          >
-                            <Activity className="w-3.5 h-3.5" /> Clinical
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDownloadPDF(item, "TREATMENT");
-                              onSetActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition-colors"
-                          >
-                            <Stethoscope className="w-3.5 h-3.5" /> Treatment
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDownloadPDF(item, "PRESCRIPTION");
-                              onSetActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-2 transition-colors"
-                          >
-                            <Pill className="w-3.5 h-3.5" /> Prescription
-                          </button>
-                          <button
-                            onClick={() => {
-                              onDownloadPDF(item, "FULL");
-                              onSetActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 transition-colors"
-                          >
-                            <FileText className="w-3.5 h-3.5" /> Full Report
-                          </button>
-                          <div className="h-px bg-muted my-1" />
-                          <button
-                            onClick={(e) => onDeleteClick(item.id, e)}
-                            className="w-full px-3 py-1.5 text-left text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center gap-2 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Delete
-                          </button>
-                        </div>
+                      {item.total_estimated_cost > 0 && (
+                         <span className="font-bold text-foreground bg-muted px-2 py-0.5 rounded-md">
+                            ₹{item.total_estimated_cost}
+                         </span>
                       )}
+                   </div>
+                </CardContent>
+                <CardFooter className="p-3 border-t flex justify-between bg-muted/20">
+                   <button onClick={() => onSelectRecord(item)} className="text-xs font-bold text-primary hover:text-primary/80 hover:underline flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors">
+                      <Eye className="w-4 h-4" /> View Full Details
+                   </button>
+                    <div className="flex gap-1 relative">
+                       <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setActiveDownloadMenuId(activeDownloadMenuId === item.id ? null : item.id);
+                         }} 
+                         className={`p-1.5 rounded-md transition-colors ${activeDownloadMenuId === item.id ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} 
+                         title="Download Report"
+                       >
+                          <FileText className="w-4 h-4" />
+                       </button>
+                       
+                       {activeDownloadMenuId === item.id && (
+                         <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onDownloadPDF(item, 'CLINICAL');
+                               setActiveDownloadMenuId(null);
+                             }}
+                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 flex items-center gap-2"
+                           >
+                             <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
+                           </button>
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onDownloadPDF(item, 'TREATMENT');
+                               setActiveDownloadMenuId(null);
+                             }}
+                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 flex items-center gap-2"
+                           >
+                             <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
+                           </button>
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onDownloadPDF(item, 'PRESCRIPTION');
+                               setActiveDownloadMenuId(null);
+                             }}
+                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 flex items-center gap-2"
+                           >
+                             <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                           </button>
+                           <div className="h-px bg-muted my-1" />
+                           <button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onDownloadPDF(item, 'FULL');
+                               setActiveDownloadMenuId(null);
+                             }}
+                             className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-2"
+                           >
+                             <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
+                           </button>
+                         </div>
+                       )}
+                       
+                       <button onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>

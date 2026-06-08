@@ -228,59 +228,72 @@ export function AppointmentForm({
           >
             Cancel
           </Button>
-          <Button
-            onClick={form.handleSubmit(onSubmit)}
-            className="px-10 shadow-lg"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {submitLabel}
-          </Button>
+          {appointment?.status !== "checked-in" && appointment?.status?.toLowerCase() !== "completed" && (
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              className="px-10 shadow-lg"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {submitLabel}
+            </Button>
+          )}
         </div>
       }
     >
-      <form className="space-y-10" onSubmit={form.handleSubmit(onSubmit)}>
-        <PatientInfoFields
-          patientName={formData.patientName}
-          patientPhone={formData.patientPhone ?? ""}
-          isFollowUp={isFollowUp}
-          isConsulted={appointment?.status === "checked-in"}
-          suggestion={suggestion}
-          onChange={handleChange}
-          onPhoneChange={(val) =>
-            form.setValue("patientPhone", val, { shouldValidate: true })
-          }
-          onAcceptSuggestion={() => {
-            form.setValue("patientPhone", suggestion!.phone);
-            setSuggestion(null);
-          }}
-          errors={errors}
-        />
-        <ScheduleFields
-          date={formData.date}
-          time={formData.time}
-          duration={formData.duration ?? ""}
-          doctorId={formData.doctorId}
-          doctors={doctors}
-          onDateChange={handleChange}
-          onTimeChange={handleChange}
-          onDurationChange={(val) => form.setValue("duration", val)}
-          onDoctorChange={(val) => {
-            form.setValue("doctorId", val);
-            form.setValue(
-              "doctorName",
-              doctors.find((d: any) => d.id === val)?.name,
-            );
-          }}
-        />
-        <TreatmentFields
-          treatment={formData.treatment ?? ""}
-          treatmentType={formData.treatmentType ?? ""}
-          fee={formData.fee ?? 0}
-          patientConcern={formData.patientConcern ?? ""}
-          notes={formData.notes ?? ""}
-          appointmentTypes={appointmentTypes}
-          onChange={handleChange}
-        />
+      <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-5 border-none p-0 m-0">
+          <PatientInfoFields
+            patientName={formData.patientName}
+            patientPhone={formData.patientPhone ?? ""}
+            isFollowUp={isFollowUp}
+            isConsulted={appointment?.status === "checked-in"}
+            suggestion={suggestion}
+            onChange={handleChange}
+            onPhoneChange={(val) =>
+              form.setValue("patientPhone", val, { shouldValidate: true })
+            }
+            onAcceptSuggestion={() => {
+              form.setValue("patientPhone", suggestion!.phone);
+              setSuggestion(null);
+            }}
+            errors={errors}
+          />
+          <ScheduleFields
+            date={formData.date}
+            time={formData.time}
+            duration={formData.duration ?? ""}
+            doctorId={formData.doctorId}
+            doctors={doctors}
+            onDateChange={handleChange}
+            onTimeChange={handleChange}
+            onDurationChange={(val) => form.setValue("duration", val)}
+            onDoctorChange={(val) => {
+              form.setValue("doctorId", val);
+              form.setValue(
+                "doctorName",
+                doctors.find((d: any) => d.id === val)?.name,
+              );
+            }}
+          />
+          <TreatmentFields
+            treatment={formData.treatment ?? ""}
+            treatmentType={formData.treatmentType ?? ""}
+            fee={formData.fee ?? 0}
+            patientConcern={formData.patientConcern ?? ""}
+            notes={formData.notes ?? ""}
+            appointmentTypes={appointmentTypes}
+            onChange={handleChange}
+            onTreatmentTypeChange={(val) => {
+              form.setValue("treatmentType", val, { shouldValidate: true });
+              const selectedOption = appointmentTypes.find(
+                (opt) => opt.label === val || opt.value === val
+              );
+              if (selectedOption && selectedOption.fee !== undefined) {
+                form.setValue("fee", selectedOption.fee, { shouldValidate: true });
+              }
+            }}
+          />
+        </fieldset>
       </form>
     </Modal>
   );

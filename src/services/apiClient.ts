@@ -34,6 +34,10 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = AuthStorage.getAccessToken();
+  const tenant_id = AuthStorage.getUser()?.tenant_id;
+  if (tenant_id) {
+    config.headers["x-tenant-id"] = tenant_id;
+  }
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }

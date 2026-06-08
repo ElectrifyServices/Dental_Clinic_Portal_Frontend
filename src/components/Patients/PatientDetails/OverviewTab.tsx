@@ -119,10 +119,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 </span>
               </div>
               <span className="text-xl font-bold text-primary">
-                {
-                  patientAppointments.filter((a) => a.status === "completed")
-                    .length
-                }
+                {patient.total_visits ?? patient.totalVisits ?? patientAppointments.filter((a) => a.status === "completed").length}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
@@ -133,9 +130,33 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 </span>
               </div>
               <span className="text-sm font-bold text-primary">
-                {patient.createdAt
-                  ? new Date(patient.createdAt).toLocaleDateString()
+                {patient.created_at || patient.createdAt
+                  ? new Date(patient.created_at || patient.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                   : "New Registration"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
+              <div className="flex items-center">
+                <Calendar className="w-5 h-5 text-primary mr-3" />
+                <span className="text-sm text-muted-foreground">
+                  Last Visit
+                </span>
+              </div>
+              <span className="text-sm font-bold text-primary">
+                {(() => {
+                  const visitVal = patient.last_visit_date || patient.lastVisit;
+                  if (!visitVal) return "No visits yet";
+                  try {
+                    const d = new Date(visitVal);
+                    return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : visitVal;
+                  } catch(e) {
+                    return visitVal;
+                  }
+                })()}
               </span>
             </div>
           </div>

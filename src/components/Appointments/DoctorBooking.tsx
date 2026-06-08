@@ -663,7 +663,7 @@ export function DoctorBooking({
                     </h5>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
                     {availableSlots.length > 0 ? (
                       availableSlots.map((slot, idx) => {
                         const isDisabled = slot.isBooked || slot.isPast;
@@ -684,7 +684,7 @@ export function DoctorBooking({
                           >
                             {slot.time12}
                             {slot.isBooked && (
-                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full border border-white" />
+                              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
                             )}
                           </button>
                         );

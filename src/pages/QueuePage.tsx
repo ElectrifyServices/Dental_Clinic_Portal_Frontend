@@ -1,8 +1,9 @@
-﻿import React, { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { PatientQueue } from "../components/Doctor/PatientQueue";
+import { useUpdateConsultationMutation } from "../hooks/consultation/useUpdateConsultationMutation";
 
 export const QueuePage: React.FC = () => {
   const {
@@ -16,6 +17,7 @@ export const QueuePage: React.FC = () => {
     doctorAvailability,
   } = useModal();
   const { state } = useAuth();
+  const { mutateAsync: updateConsultation } = useUpdateConsultationMutation();
 
   const activeDoctors = useMemo(
     () => staffMembers.filter((s: any) => s.role === "doctor" || s.role === "admin"),
@@ -86,11 +88,19 @@ export const QueuePage: React.FC = () => {
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
-        onUpdatePatientStatus={(id: string, s: string) =>
+        onUpdatePatientStatus={async (id: string, s: string) => {
           setQueuedPatients((prev: any[]) =>
             prev.map((p: any) => (p.id === id ? { ...p, status: s } : p))
-          )
-        }
+          );
+          const isExistingBackend = id && !String(id).startsWith("WALK-");
+          if (isExistingBackend) {
+            try {
+              await updateConsultation({ id, status: s } as any);
+            } catch (err) {
+              console.error("Failed to update consultation status:", err);
+            }
+          }
+        }}
         onDirectConsultation={handleDirectConsultation}
         onRegisterNew={handleRegisterNew}
         patients={patients}

@@ -1,4 +1,4 @@
-﻿import { Layout } from "lucide-react";
+import { Layout } from "lucide-react";
 import { Modal } from "@/components/ui";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
 import { AppointmentTimeline } from "./TodaySchedule/AppointmentTimeline";
@@ -14,7 +14,7 @@ interface TodaySchedulePopupProps {
 const STATUS_VARIANTS: Record<string, any> = {
   completed: "green",
   "in-progress": "blue",
-  "checked-in": "purple",
+  "checked-in": "green",
   confirmed: "indigo",
   scheduled: "gray",
   cancelled: "red",

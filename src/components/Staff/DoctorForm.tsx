@@ -143,15 +143,15 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           profitSharing: profile.profit_sharing || doctor.profitSharing || false,
           profitPercentage: profile.profit_sharing_percentage || doctor.profitPercentage || 0,
           licenseNumber: profile.license_number || doctor.licenseNumber || '',
-          monthlySalary: sal || doctor.monthlySalary || '',
-          salaryPaid: s.salaryPaid || doctor.salaryPaid || '0',
-          salaryPending: s.salaryPending || doctor.salaryPending || sal || '0',
+          monthlySalary: String(sal ?? doctor.monthlySalary ?? ''),
+          salaryPaid: String(s.salaryPaid ?? doctor.salaryPaid ?? '0'),
+          salaryPending: String(s.salaryPending ?? doctor.salaryPending ?? sal ?? '0'),
           education: profile.education || doctor.education || '',
-          experience: exp || doctor.experience || '',
+          experience: String(exp ?? doctor.experience ?? ''),
           department: profile.department || doctor.department || '',
           designation: profile.designation || doctor.designation || '',
           qualification: profile.qualification || doctor.qualification || '',
-          consultationFee: profile.consultation_fee !== undefined ? String(profile.consultation_fee) : doctor.consultationFee || '',
+          consultationFee: String(profile.consultation_fee ?? doctor.consultationFee ?? ''),
           isActive: s.status === 'ACTIVE',
           avatar: s.profile_picture || doctor.avatar || doctor.image || '',
         });
@@ -376,6 +376,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
       // Explicitly invalidate staff list so UI refreshes immediately
       await queryClient.invalidateQueries({ queryKey: ["staff"] });
+      if (doctor?.id) {
+        await queryClient.invalidateQueries({ queryKey: ["singleStaff", doctor.id] });
+      }
 
       // Strip large files/base64 before saving to local state
       const cleanData = { ...data };
@@ -594,7 +597,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
               onClick={
                 currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
                   console.error("Form Validation Failed:", errs);
-                  // You can optionally show a toast here
+                  const errorMsg = Object.values(errs)
+                    .map((err: any) => err.message)
+                    .filter(Boolean)
+                    .join(", ");
+                  showToast(errorMsg || "Please fill all required fields correctly.", "error");
                 })
               }
               disabled={isSaving}
@@ -640,7 +647,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     <Icon className="w-4 h-4" />
                   </div>
                   <span
-                    className={`text-[9px] font-black uppercase tracking-widest ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}
+                    className={`text-[9px] font-black uppercase tracking-widest hidden sm:block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}
                   >
                     {s.title}
                   </span>

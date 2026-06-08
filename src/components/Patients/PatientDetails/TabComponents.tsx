@@ -141,30 +141,54 @@ export const AppointmentsTab = ({
     {patientAppointments.map((appointment) => (
       <div
         key={appointment.id}
-        className="bg-muted rounded-2xl p-6 border border-border"
+        className="bg-muted rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Calendar className="w-5 h-5 text-muted-foreground/60 mr-3" />
+        <div className="flex items-start justify-between">
+          <div className="flex items-start">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 mt-0.5">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <p className="font-semibold text-foreground">
+              <p className="font-bold text-foreground text-base">
                 {appointment.treatmentType || appointment.type}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(appointment.date).toLocaleDateString()} at{" "}
-                {appointment.time}
+              <p className="text-xs text-primary font-bold mt-1">
+                {appointment.date} • {appointment.time} • {appointment.duration || 15} mins
               </p>
-              <p className="text-sm text-muted-foreground">
-                with {appointment.doctorName || appointment.doctor}
+              <p className="text-xs text-muted-foreground/80 mt-1 font-semibold">
+                Doctor: Dr. {appointment.doctorName || appointment.doctor}
               </p>
             </div>
           </div>
-          <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(appointment.status)}`}
-          >
-            {appointment.status.toUpperCase()}
-          </span>
+          <div className="text-right flex flex-col items-end gap-2">
+            <span
+              className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${getStatusColor(appointment.status)}`}
+            >
+              {appointment.status.toUpperCase()}
+            </span>
+            {appointment.cost > 0 && (
+              <p className="font-bold text-foreground text-sm">
+                ₹{appointment.cost.toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
+
+        {/* Concern or clinical notes */}
+        {(appointment.concern || appointment.notes) && (
+          <div className="mt-2 pt-3 border-t border-border space-y-2">
+            {appointment.concern && (
+              <div className="text-xs text-muted-foreground/80">
+                <span className="font-bold text-foreground/80">Concern:</span> {appointment.concern}
+              </div>
+            )}
+            {appointment.notes && (
+              <div className="text-xs text-muted-foreground/80 bg-card/60 p-2.5 rounded-xl border border-border/50">
+                <span className="font-bold text-foreground/80">Clinical Notes:</span> {appointment.notes}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     ))}
     {patientAppointments.length === 0 && (

@@ -87,6 +87,7 @@ export interface Patient {
   barcode?: string;
   isPerson?: boolean;
   registeredDate?: string;
+  patient_code?: string;
 }
 
 export interface Appointment {

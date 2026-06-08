@@ -37,7 +37,7 @@ export interface AppointmentListResponse {
   limit: number;
 }
 
-export function useAppointmentsListQuery(params: AppointmentListParams = {}) {
+export function useAppointmentsListQuery(params: AppointmentListParams = {}, options?: any) {
   const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
@@ -56,5 +56,6 @@ export function useAppointmentsListQuery(params: AppointmentListParams = {}) {
     endpoint: "/appointment/list",
     method: "post",
     data: body,
+    options,
   });
 }

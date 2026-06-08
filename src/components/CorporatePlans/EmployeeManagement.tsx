@@ -30,13 +30,15 @@ interface EmployeeManagementProps {
   onDelete: (id: string) => void;
   onBulkSave: (emps: CorporateEmployee[]) => void;
   onChangePlan: (empId: string, newPlanId: string, newPlanName: string) => void;
+  parentTab: 'plans' | 'employees';
+  setParentTab: (tab: 'plans' | 'employees') => void;
 }
 
 import { parseXlsx, downloadTemplate } from './Employee/importUtils';
 
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan }: EmployeeManagementProps) {
+export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan, parentTab, setParentTab }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
 
@@ -287,7 +289,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <PageHeader
         title="Employee Management"
         subtitle={`${totalItems} employees across ${activePlans.filter(p => p.isActive).length} active plans`}
@@ -301,7 +303,24 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
             </button>
           </div>
         }
-      />
+      >
+        <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
+          <button
+            onClick={() => setParentTab("plans")}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${parentTab === "plans" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            Corporate Plans
+          </button>
+          <button
+            onClick={() => setParentTab("employees")}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${parentTab === "employees" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Employee Management
+          </button>
+        </div>
+      </PageHeader>
 
       {/* Plan summary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

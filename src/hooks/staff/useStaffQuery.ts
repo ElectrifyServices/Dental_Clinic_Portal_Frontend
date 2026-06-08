@@ -19,7 +19,7 @@ export interface StaffListParams {
   role?: string;
 }
 
-export function useStaffQuery(params: StaffListParams = {}) {
+export function useStaffQuery(params: StaffListParams = {}, options?: any) {
   const body: Record<string, any> = { all: true };
   if (params.search) {
     body.search = params.search;
@@ -35,5 +35,6 @@ export function useStaffQuery(params: StaffListParams = {}) {
     endpoint: "/staff/list",
     method: "post",
     data: body,
+    options,
   });
 }

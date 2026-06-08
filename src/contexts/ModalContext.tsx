@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { doctorsWithSchedules } from '../data/doctors';
+import { toast } from '../components/ui';
 
 interface ModalContextType {
   activeModal: string | null;
@@ -85,14 +86,16 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [doctorAvailability, setDoctorAvailability] = useState<Record<string, boolean>>(
     doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
   );
-  const [toast, setToast] = useState<any>(null);
   const [confirmConfig, setConfirmConfig] = useState<any>({
     show: false, title: '', message: '', onConfirm: () => {}, confirmLabel: 'Confirm', variant: 'primary', toastMessage: '', isLoading: false
   });
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    if (type === 'success') {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   }, []);
 
   const showConfirm = useCallback(
@@ -162,7 +165,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         bookedFollowUp, setBookedFollowUp,
         draftConsultations, setDraftConsultations, handleDraftUpdate,
         doctorAvailability, setDoctorAvailability,
-        toast, showToast,
+        toast: null, showToast,
         confirmConfig, setConfirmConfig, showConfirm, confirmDelete,
       }}
     >

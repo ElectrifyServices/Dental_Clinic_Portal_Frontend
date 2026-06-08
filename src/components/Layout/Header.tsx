@@ -1,13 +1,60 @@
-import { Bell, LogOut, Calendar, ChevronDown, Stethoscope } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  Calendar,
+  ChevronDown,
+  Stethoscope,
+  Package,
+  UserCheck,
+  Coins,
+  CalendarDays,
+  CheckCheck,
+  Trash2,
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { useNotifications } from "../../hooks/useNotifications";
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case "inventory":
+      return Package;
+    case "queue":
+      return UserCheck;
+    case "billing":
+      return Coins;
+    case "appointment":
+    case "followup":
+      return CalendarDays;
+    default:
+      return Bell;
+  }
+};
+
+const getNotificationColorCls = (type: string) => {
+  switch (type) {
+    case "inventory":
+      return "bg-destructive/10 text-destructive";
+    case "queue":
+      return "bg-emerald-100 text-emerald-700";
+    case "billing":
+      return "bg-amber-100 text-amber-700";
+    case "appointment":
+      return "bg-blue-100 text-blue-700";
+    case "followup":
+      return "bg-indigo-100 text-indigo-700";
+    default:
+      return "bg-primary/10 text-primary";
+  }
+};
 
 export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
   const { setActiveModal, showConfirm } = useModal();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
 
   const onShowTodaySchedule = () => setActiveModal("todaySchedule");
 
@@ -69,10 +116,96 @@ export function Header() {
 
       {/* Right */}
       <div className="flex items-center gap-2">
-        <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer">
-          <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="relative p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer outline-none flex items-center justify-center">
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white ring-2 ring-card animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-96 p-0 bg-card/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl flex flex-col max-h-[480px]">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border/60">
+              <div>
+                <h4 className="text-sm font-bold text-foreground">Notifications</h4>
+                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider mt-0.5">
+                  {unreadCount} Unread
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="p-1.5 hover:bg-muted rounded-lg text-primary hover:text-primary-focus transition-all text-xs font-bold flex items-center gap-1"
+                    title="Mark all as read"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={clearAll}
+                    className="p-1.5 hover:bg-destructive/10 rounded-lg text-destructive hover:text-destructive-focus transition-all text-xs font-bold flex items-center gap-1"
+                    title="Clear all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/50 max-h-[360px]">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Bell className="w-8 h-8 text-muted-foreground/20 mb-2" />
+                  <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+                    No Notifications
+                  </p>
+                </div>
+              ) : (
+                notifications.map((n) => {
+                  const Icon = getNotificationIcon(n.type);
+                  const colorCls = getNotificationColorCls(n.type);
+
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        markAsRead(n.id);
+                        if (n.link) {
+                          window.location.pathname = n.link;
+                        }
+                      }}
+                      className={`flex items-start gap-3 p-4 hover:bg-muted/50 transition-all cursor-pointer border-b border-border/30 last:border-none ${!n.isRead ? "bg-primary/5" : ""}`}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${colorCls}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-xs font-bold ${!n.isRead ? "text-foreground font-black" : "text-muted-foreground"}`}>
+                            {n.title}
+                          </p>
+                          <span className="text-[9px] font-semibold text-muted-foreground/50 whitespace-nowrap">
+                            {n.time}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground/80 mt-1 leading-normal break-words">
+                          {n.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <Popover>
           <PopoverTrigger asChild>

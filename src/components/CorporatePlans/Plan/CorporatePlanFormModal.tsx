@@ -93,8 +93,30 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
           const mapProcedureLabelToKey = (label: string): string => {
             const labelMap: Record<string, string> = {
+              "Consultation / Check-up": "consultation",
               "Consultation": "consultation",
+              "follow up visit": "follow-up",
+              "X-ray review": "xray-review",
               "Teeth Cleaning": "cleaning",
+              "Tooth Pain / Emergency": "emergency",
+              "Filling": "filling",
+              "Root Canal Treatment": "root-canal",
+              "Extraction / Wisdom Tooth": "extraction",
+              "Braces / Aligners": "orthodontics",
+              "Implants": "implants",
+              "full mouth rehabilitation": "full-mouth-rehab",
+              "Veneers/Cosmetic Dentistry": "veneers-cosmetic",
+              "Child Dentistry": "child-dentistry",
+              "Crown": "crown",
+              "Denture": "denture",
+              "Toothache": "toothache",
+              "Swelling / Infection": "swelling-infection",
+              "Broken Tooth": "broken-tooth",
+              "Trauma / Injury": "trauma-injury",
+              "other/ not sure": "other",
+              
+              // Legacy mapping fallbacks
+              "Teeth Cleaning & Scaling": "cleaning",
               "Dental Filling": "filling",
               "Tooth Extraction": "extraction",
               "Root Canal": "root-canal",

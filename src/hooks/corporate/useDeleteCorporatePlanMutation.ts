@@ -8,7 +8,7 @@ export interface DeleteCorporatePlanVariables {
 export function useDeleteCorporatePlanMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, DeleteCorporatePlanVariables>({
-    getEndpoint: (variables) => `/corporate/plan/${variables.id}`,
+    getEndpoint: (variables) => `/corporatePlan/${variables.id}`,
     method: "delete",
     transformRequest: () => undefined,
     options: {

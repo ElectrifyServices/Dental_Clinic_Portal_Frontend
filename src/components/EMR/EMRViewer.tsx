@@ -15,6 +15,8 @@ import {
   SearchInput,
   FilterTabs,
 } from "@/components/ui";
+import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface EMRViewerProps {
   record: any;
@@ -27,31 +29,86 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
   const [search, setSearch] = React.useState("");
   const [activeTab, setActiveTab] = React.useState("all");
 
+  const debouncedSearch = useDebounce(search, 500);
+
+  const queryParams: any = {
+    page: 1,
+    limit: 1000,
+    filters: {
+      patient_id: record.patientId,
+    }
+  };
+
+  if (debouncedSearch) {
+    queryParams.search = debouncedSearch;
+  }
+  if (activeTab && activeTab !== "all") {
+    queryParams.filters.record_type = [activeTab.toUpperCase()];
+  }
+
+  const { data: apiListData, isLoading } = useEMRListQuery(queryParams, {
+    refetchOnMount: "always",
+  });
+
+  const detailedRecord = React.useMemo(() => {
+    let rawList: any[] = [];
+    if (apiListData) {
+      if (Array.isArray(apiListData)) {
+        rawList = apiListData;
+      } else if (Array.isArray((apiListData as any).data?.data)) {
+        rawList = (apiListData as any).data.data;
+      } else if (Array.isArray((apiListData as any).data)) {
+        rawList = (apiListData as any).data;
+      } else if (Array.isArray((apiListData as any).responseObject?.data)) {
+        rawList = (apiListData as any).responseObject.data;
+      } else if (Array.isArray((apiListData as any).responseObject)) {
+        rawList = (apiListData as any).responseObject;
+      }
+    }
+
+    const latestItem = rawList[0] || record;
+
+    return {
+      ...record,
+      patientName: latestItem.patient?.name || record.patientName || "—",
+      date: latestItem.created_at || latestItem.date || record.date || new Date().toISOString(),
+      type: (latestItem.record_type || latestItem.type || record.type || "consultation").toLowerCase(),
+      title: latestItem.title || record.title || "—",
+      content: latestItem.content || record.content || "—",
+      doctorName: record.doctorName || "—",
+      attachments: Array.isArray(latestItem.attachments)
+        ? latestItem.attachments.map((file: any) => typeof file === "string" ? file : file.file_url || file.url)
+        : record.attachments || [],
+      timeline: rawList.map((item: any) => ({
+        id: item.id,
+        title: item.title || "—",
+        content: item.content || "—",
+        date: item.created_at || item.date || new Date().toISOString(),
+        category: (item.record_type || item.type || "consultation").toLowerCase(),
+      }))
+    };
+  }, [apiListData, record]);
+
   const TIMELINE_FILTERS = [
     { key: "all", label: "All History" },
-    { key: "appointment", label: "Appointments" },
-    { key: "treatment", label: "Treatments" },
-    { key: "consultation", label: "Consultations" },
-    { key: "prescription", label: "Prescriptions" },
-    { key: "billing", label: "Billing" },
+    { key: "previous-prescriptions", label: "Prescriptions" },
+    { key: "blood-reports", label: "Blood Reports" },
+    { key: "ecg-reports", label: "ECG Reports" },
+    { key: "physician-clearance", label: "Physician Clearance" },
+    { key: "xrays-imaging", label: "X-Rays / Imaging" },
+    { key: "discharge-summary", label: "Discharge" },
+    { key: "other", label: "Other" },
   ];
 
   const filteredTimeline = React.useMemo(() => {
-    if (!record.timeline) return null;
-    return record.timeline.filter((item: any) => {
-      const matchesSearch =
-        item.title?.toLowerCase().includes(search.toLowerCase()) ||
-        item.content?.toLowerCase().includes(search.toLowerCase());
-      const matchesTab = activeTab === "all" || item.category === activeTab;
-      return matchesSearch && matchesTab;
-    });
-  }, [record.timeline, search, activeTab]);
+    return detailedRecord.timeline || [];
+  }, [detailedRecord.timeline]);
 
   const handleDownload = () => {
     const printContent = `
       <html>
         <head>
-          <title>EMR Record - ${record.patientName}</title>
+          <title>EMR Record - ${detailedRecord.patientName}</title>
           <style>
             body { font-family: 'Inter', sans-serif; margin: 40px; line-height: 1.6; color: #1e293b; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 4px solid #2563eb; padding-bottom: 20px; }
@@ -64,24 +121,24 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
         <body>
           <div class="header">
             <h1>Electronic Medical Record</h1>
-            <p style="font-weight: bold; color: #2563eb;">DentalCare Pro - Advanced Dental Solutions</p>
+            <p style="font-weight: bold; color: #2563eb;">Opal Smiles Dental Studio - Advanced Dental Solutions</p>
           </div>
           
           <div class="record-info">
             <h3 style="margin-top:0">Record Information</h3>
-            <p><strong>Patient:</strong> ${record.patientName}</p>
-            <p><strong>Date:</strong> ${new Date(record.date).toLocaleDateString()}</p>
-            <p><strong>Doctor:</strong> ${record.doctorName || "N/A"}</p>
-            <p><strong>Type:</strong> ${record.type.toUpperCase()}</p>
+            <p><strong>Patient:</strong> ${detailedRecord.patientName}</p>
+            <p><strong>Date:</strong> ${new Date(detailedRecord.date).toLocaleDateString()}</p>
+            <p><strong>Doctor:</strong> ${detailedRecord.doctorName || "N/A"}</p>
+            <p><strong>Type:</strong> ${detailedRecord.type.toUpperCase()}</p>
           </div>
 
           <div class="content">
             <h3>Medical Record Content</h3>
-            ${record.content || "No primary content summary available."}
+            ${detailedRecord.content || "No primary content summary available."}
           </div>
 
           <div class="footer">
-            <p>This is a confidential medical document generated from DentalCare Pro EMR System</p>
+            <p>This is a confidential medical document generated from Opal Smiles Dental Studio EMR System</p>
             <p>Generated on ${new Date().toLocaleDateString()}</p>
           </div>
         </body>
@@ -92,14 +149,30 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `emr-${record.patientName}-${record.date}.html`;
+    a.download = `emr-${detailedRecord.patientName}-${detailedRecord.date}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  if (isLoading && !apiListData) {
+    return (
+      <Modal
+        title={record.patientName}
+        subtitle="Loading Complete Electronic Medical History..."
+        onClose={onClose}
+        size="5xl"
+        icon={<FileText className="w-5 h-5" />}
+      >
+        <div className="py-20 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
-      title={record.patientName}
+      title={detailedRecord.patientName}
       subtitle="Complete Electronic Medical History"
       onClose={onClose}
       size="5xl"
@@ -127,7 +200,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                 Patient Name
               </p>
               <p className="font-black text-foreground text-sm tracking-tight">
-                {record.patientName}
+                {detailedRecord.patientName}
               </p>
             </div>
             <div className="space-y-1.5">
@@ -137,7 +210,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary/40" />
                 <p className="font-black text-foreground text-sm tracking-tight">
-                  {new Date(record.date).toLocaleDateString()}
+                  {new Date(detailedRecord.date).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -149,7 +222,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                 variant="blue"
                 className="font-black uppercase text-[9px] tracking-widest px-2.5 h-5"
               >
-                {(record.type || "consultation").replace("-", " ")}
+                {(detailedRecord.type || "previous-prescriptions").replace(/-/g, " ")}
               </Badge>
             </div>
           </div>
@@ -163,7 +236,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
               </div>
               Medical History
             </h3>
-            {record.timeline && (
+            {detailedRecord.timeline && (
               <Badge
                 variant="secondary"
                 className="font-black uppercase text-[9px] tracking-widest px-3 h-6"
@@ -173,7 +246,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
             )}
           </div>
 
-          {record.timeline ? (
+          {detailedRecord.timeline ? (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
                 <SearchInput
@@ -235,22 +308,22 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
               </div>
             </div>
           ) : (
-            <ContentCard title={record.title} className="border-border/50">
+            <ContentCard title={detailedRecord.title} className="border-border/50">
               <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed font-medium">
-                {record.content}
+                {detailedRecord.content}
               </p>
             </ContentCard>
           )}
         </div>
 
-        {record.attachments && record.attachments.length > 0 && (
+        {detailedRecord.attachments && detailedRecord.attachments.length > 0 && (
           <div className="space-y-4">
             <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
               <Camera className="w-4 h-4 text-blue-500" /> Digital Attachments (
-              {record.attachments.length})
+              {detailedRecord.attachments.length})
             </h3>
             <div className="grid grid-cols-4 gap-4">
-              {record.attachments.map((attachment: string, index: number) => (
+              {detailedRecord.attachments.map((attachment: string, index: number) => (
                 <div
                   key={index}
                   className="group aspect-square bg-muted/30 rounded-2xl border border-border/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-all hover:shadow-xl"

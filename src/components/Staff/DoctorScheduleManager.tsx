@@ -112,8 +112,8 @@ function calcSlotCount(
   let count = 0;
   let cur   = start;
   while (cur + duration <= end) {
-    // Skip break window
-    if (bS !== null && bE !== null && cur >= bS && cur < bE) {
+    // Skip break window if the slot overlaps/intersects with it
+    if (bS !== null && bE !== null && cur < bE && cur + duration > bS) {
       cur = bE;
       continue;
     }
@@ -344,7 +344,8 @@ export function DoctorScheduleManager({
 
     let cur = timeToMins(day.startTime);
     while (cur + settings.duration <= end) {
-      if (bS !== null && bE !== null && cur >= bS && cur < bE) {
+      // Skip break window if the slot overlaps/intersects with it
+      if (bS !== null && bE !== null && cur < bE && cur + settings.duration > bS) {
         cur = bE;
         continue;
       }
