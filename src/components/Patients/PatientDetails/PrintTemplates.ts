@@ -65,7 +65,7 @@ export const getBarcodeHTML = (patient: any) => {
       <head><title>Barcode - ${patient.name}</title></head>
       <body>
         <div style="border: 2px solid #2563eb; padding: 20px; width: 300px; text-align: center;">
-          <h2 style="color: #1e40af;">🦷 DentalCare Pro</h2>
+          <h2 style="color: #1e40af;">🦷 Opal Smiles Dental Studio</h2>
           <div style="font-size: 24px; font-weight: bold; margin: 15px 0;">${patient.barcode}</div>
           <p><strong>Name:</strong> ${patient.name}</p>
           <p><strong>ID:</strong> ${patient.id}</p>

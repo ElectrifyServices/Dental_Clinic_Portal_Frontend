@@ -34,29 +34,29 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   const totalOutstanding = parseData(outstandingData) ?? patients.reduce((sum, p) => sum + (p.outstandingBalance || 0), 0);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
       <MetricCard 
         label="Total Patients"
         value={totalPatients}
-        icon={<Users className="w-6 h-6" />}
+        icon={<Users className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="gray"
       />
       <MetricCard 
         label="Active"
         value={activePatients}
-        icon={<UserCheck className="w-6 h-6" />}
+        icon={<UserCheck className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="emerald"
       />
       <MetricCard 
         label="New Registered"
         value={newPatients}
-        icon={<UserPlus className="w-6 h-6" />}
+        icon={<UserPlus className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="primary"
       />
       <MetricCard 
         label="Outstanding"
         value={`₹${totalOutstanding.toLocaleString()}`}
-        icon={<CreditCard className="w-6 h-6" />}
+        icon={<CreditCard className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="amber"
       />
     </div>

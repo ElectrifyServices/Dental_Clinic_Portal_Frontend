@@ -3,11 +3,12 @@ import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Medical Histories
-export const useMedicalHistoriesQuery = () => {
+export const useMedicalHistoriesQuery = (options?: any) => {
   return useApiQuery<any>({
     queryKey: ["medical-histories"],
     endpoint: "/patientMedical/medical-histories",
     method: "get",
+    options,
   });
 };
 

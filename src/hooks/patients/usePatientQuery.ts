@@ -20,7 +20,7 @@ export interface Patient {
   [key: string]: any;
 }
 
-export function usePatientQuery(params: PatientListParams = {}) {
+export function usePatientQuery(params: PatientListParams = {}, options?: any) {
   // Build body — only include fields that are explicitly provided
   const body: Record<string, any> = {
     page: params.page ?? 1,
@@ -40,5 +40,6 @@ export function usePatientQuery(params: PatientListParams = {}) {
     endpoint: "/patient/list",
     method: "post",
     data: body,
+    options,
   });
 }

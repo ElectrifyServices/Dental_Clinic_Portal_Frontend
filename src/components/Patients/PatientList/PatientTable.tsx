@@ -71,8 +71,8 @@ export const PatientTable: React.FC<PatientTableProps> = ({
                       <div className="font-bold text-foreground text-sm">
                         {patient.name}
                       </div>
-                      <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter">
-                        #{patient.id.slice(-6).toUpperCase()}
+                      <div className="text-[10px] text-blue-600 font-bold font-mono tracking-tighter">
+                        {patient.patient_code || patient.id}
                       </div>
                     </div>
                   </div>

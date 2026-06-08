@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePatientQuery } from './patients/usePatientQuery';
 import { useDeletePatientMutation } from './patients/useDeletePatientMutation';
@@ -12,6 +12,8 @@ import { useLocalStorage } from './useLocalStorage';
 import { useMedicalHistoriesQuery } from './patients/useMedicalHistoriesQuery';
 import { useAllergiesQuery } from './patients/useAllergiesQuery';
 import { useBulkImportEmployeeMutation } from './corporate/useBulkImportEmployeeMutation';
+import { useDebounce } from './useDebounce';
+import { toast } from '../components/ui';
 
 export function usePatientData() {
   const queryClient = useQueryClient();
@@ -32,13 +34,21 @@ export function usePatientData() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [patientStatus, patientCategory]);
 
-  const { data: apiPatients, isLoading: isPatientsLoading } = usePatientQuery({
-    search: patientSearch || undefined,
-    filters: apiFilters,
-  });
+  const debouncedSearch = useDebounce(patientSearch, 500);
 
-  const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
-  const { data: rawAllergies } = useAllergiesQuery();
+  const isEnabled = useMemo(() => {
+    const path = window.location.pathname;
+    const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/corporate-plans');
+    return !isExcluded;
+  }, []);
+
+  const { data: apiPatients, isLoading: isPatientsLoading } = usePatientQuery({
+    search: debouncedSearch || undefined,
+    filters: apiFilters,
+  }, { enabled: isEnabled });
+
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ enabled: isEnabled });
+  const { data: rawAllergies } = useAllergiesQuery({ enabled: isEnabled });
 
   const { mutateAsync: deletePatientMutation } = useDeletePatientMutation();
   const { mutateAsync: updateStatusMutation } = useUpdatePatientStatusMutation();
@@ -141,11 +151,7 @@ export function usePatientData() {
   }, [apiPatients, rawMedicalHistories, rawAllergies]);
 
   const handleDeletePatient = async (id: string) => {
-    try {
-      await deletePatientMutation({ id });
-    } catch (e) {
-      console.error('Delete patient failed', e);
-    }
+    await deletePatientMutation({ id });
   };
 
   const handleUpdatePatientStatus = async (id: string, status: 'ACTIVE' | 'INACTIVE') => {
@@ -157,9 +163,9 @@ export function usePatientData() {
   };
 
   // Refresh the patient list manually
-  const refetchPatients = () => {
+  const refetchPatients = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['patients'] });
-  };
+  }, [queryClient]);
 
   /**
    * Create or update a patient.
@@ -183,9 +189,9 @@ export function usePatientData() {
       });
 
       if (isNew) {
-        await createPatientMutation(payload);
+        return await createPatientMutation(payload);
       } else {
-        await updatePatientMutation({ id: patient.id, formData: payload });
+        return await updatePatientMutation({ id: patient.id, formData: payload });
       }
     } catch (e) {
       console.error('Save patient failed', e);

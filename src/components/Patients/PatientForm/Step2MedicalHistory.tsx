@@ -11,6 +11,7 @@ interface Step2Props {
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  validationErrors?: { [key: string]: string };
   matchedCorporateEmp: any;
   corporatePlans: any[];
   medicalSearch: string;
@@ -22,23 +23,20 @@ interface Step2Props {
   selectedAllergies: string[];
   setSelectedAllergies: (val: string[]) => void;
   handleDentalFilesUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  showOtherTreatment: boolean;
-  setShowOtherTreatment: (val: boolean) => void;
 }
 
 export const Step2MedicalHistory: React.FC<Step2Props> = ({
   formData,
   setFormData,
   handleChange,
+  validationErrors = {},
   matchedCorporateEmp,
   corporatePlans,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
   selectedAllergies,
   setSelectedAllergies,
-  handleDentalFilesUpload,
-  showOtherTreatment,
-  setShowOtherTreatment
+  handleDentalFilesUpload
 }) => {
   const {
     medicalHistories,
@@ -293,8 +291,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               name="previousDoctorName"
               value={formData.previousDoctorName}
               onChange={handleChange}
+              className={validationErrors.previousDoctorName ? "border-destructive bg-destructive/5" : ""}
               placeholder="Doctor or Clinic name"
             />
+            {validationErrors.previousDoctorName && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousDoctorName}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Name</label>
@@ -303,8 +308,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               name="previousClinicName"
               value={formData.previousClinicName}
               onChange={handleChange}
+              className={validationErrors.previousClinicName ? "border-destructive bg-destructive/5" : ""}
               placeholder="Clinic Name"
             />
+            {validationErrors.previousClinicName && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousClinicName}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</label>
@@ -326,8 +338,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               name="previousLastVisitDate"
               value={formData.previousLastVisitDate}
               onChange={handleChange}
+              className={validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : ""}
               max={new Date().toISOString().split("T")[0]}
             />
+            {validationErrors.previousLastVisitDate && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousLastVisitDate}
+              </p>
+            )}
           </div>
         </div>
         <div>
@@ -337,9 +356,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             value={formData.previousClinicAddress}
             onChange={handleChange}
             rows={2}
-            className="w-full px-4 py-2 text-sm border border-input rounded-md focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary ${validationErrors.previousClinicAddress ? "border-destructive bg-destructive/5" : "border-input"}`}
             placeholder="Complete Address"
           />
+          {validationErrors.previousClinicAddress && (
+            <p className="text-destructive text-[10px] mt-1 flex items-center">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {validationErrors.previousClinicAddress}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-semibold text-muted-foreground mb-1">Reason for Previous Treatment</label>
@@ -354,7 +379,24 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         <div>
           <label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</label>
           <div className="flex flex-wrap gap-2">
-            {Array.from(new Set(['Root Canal', 'Extraction', 'Braces', 'Implant', 'Crown', 'Filling', 'Surgery', ...(formData.previousTreatments || [])])).map((treatment) => (
+            {Array.from(new Set([
+              'scaling / cleaning and polishing',
+              'root canal treatment',
+              're-rct',
+              'filling',
+              'crown and bridge',
+              'implant',
+              'removal of implant',
+              'veneer',
+              'smile makeover',
+              'full mouth rehabilitation',
+              'braces/aligners',
+              'tooth extraction/ removal',
+              'wisdom tooth removal',
+              'teeth whitening',
+              'paediatric dental treatment',
+              ...(formData.previousTreatments || [])
+            ])).map((treatment) => (
               <Badge
                 key={treatment}
                 onClick={() => {
@@ -369,51 +411,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 {treatment}
               </Badge>
             ))}
-            <Badge
-              onClick={() => setShowOtherTreatment(!showOtherTreatment)}
-              variant={showOtherTreatment ? "default" : "outline"}
-              className="cursor-pointer text-xs border-dashed"
-            >
-              + Other
-            </Badge>
           </div>
-          {showOtherTreatment && (
-            <div className="flex mt-2">
-              <Input
-                type="text"
-                placeholder="Enter other treatment"
-                className="rounded-r-none h-8 text-xs"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const val = (e.target as HTMLInputElement).value.trim();
-                    if (val && !formData.previousTreatments.includes(val)) {
-                      setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
-                      (e.target as HTMLInputElement).value = '';
-                      setShowOtherTreatment(false);
-                    }
-                  }
-                }}
-                autoFocus
-              />
-              <Button
-                type="button"
-                size="xs"
-                className="px-3 bg-primary text-white rounded-l-none rounded-r-md text-[10px] font-bold h-8 hover:bg-primary/95"
-                onClick={() => {
-                  const input = (document.querySelector('input[placeholder="Enter other treatment"]') as HTMLInputElement);
-                  const val = input?.value?.trim();
-                  if (val && !formData.previousTreatments.includes(val)) {
-                    setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
-                    input.value = '';
-                    setShowOtherTreatment(false);
-                  }
-                }}
-              >
-                ADD
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 

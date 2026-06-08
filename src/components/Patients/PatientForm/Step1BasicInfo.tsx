@@ -406,10 +406,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     setFormData((prev: any) => ({
                       ...prev,
                       category: val as any,
-                      defaultDiscount:
-                        val === "family" || val === "staff"
-                          ? 100
-                          : prev.defaultDiscount,
+                      defaultDiscount: 0,
                     }));
                   }}
                   disabled={isCorporate}
@@ -450,7 +447,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 <Input
                   type="number"
                   name="defaultDiscount"
-                  value={isCorporate ? (formData.defaultDiscount || 0) : (formData.defaultDiscount !== undefined ? formData.defaultDiscount : 0)}
+                  value={formData.defaultDiscount || 0}
                   onChange={(e) => {
                     const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
                     setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));

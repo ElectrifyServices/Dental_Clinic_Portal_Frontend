@@ -56,11 +56,7 @@ export function PatientList({
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const filteredPatients = useMemo(() => {
-    // If filtering is driven by parent API, return patients list directly
-    if (searchValue !== undefined || filterStatus !== undefined || filterCategory !== undefined) {
-      return patients;
-    }
-    // Fall back to client-side filtering
+    // Client-side filtering as a robust dual-layer fallback
     return patients.filter((patient) => {
       const matchesSearch =
         (patient.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,6 +64,7 @@ export function PatientList({
         (patient.email || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
+        (patient.patient_code || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.id || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter =
         filterStatusVal === "all" || (patient.status || "active").toLowerCase() === filterStatusVal.toLowerCase();
@@ -76,25 +73,33 @@ export function PatientList({
         (patient.category || "regular").toLowerCase() === filterCategoryVal.toLowerCase();
       return matchesSearch && matchesFilter && matchesCategory;
     });
-  }, [patients, searchTerm, filterStatusVal, filterCategoryVal, searchValue, filterStatus, filterCategory]);
+  }, [patients, searchTerm, filterStatusVal, filterCategoryVal]);
 
   const printBarcode = (patient: Patient) => {
+    const codeData = patient.barcode || patient.id || "0000";
     const printContent = `
       <html>
         <head>
           <title>Patient Barcode - ${patient.name}</title>
           <style>
             body { font-family: sans-serif; margin: 20px; text-align: center; background: white; }
-            .barcode-card { border: 2px solid #2563eb; border-radius: 12px; padding: 20px; margin: 20px auto; width: 300px; background: #f0f9ff; }
-            .barcode { font-family: monospace; font-size: 24px; font-weight: bold; background: white; padding: 10px; border: 1px solid #ddd; margin: 15px 0; border-radius: 6px; }
-            .patient-info { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; }
-            .info-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 14px; }
+            .barcode-card { border: 2px solid #2563eb; border-radius: 12px; padding: 20px; margin: 20px auto; width: 320px; background: #f0f9ff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+            .barcode-img-container { background: white; padding: 15px; border: 1px solid #ddd; margin: 15px 0; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
+            .barcode-img { max-width: 100%; height: auto; }
+            .barcode-text { font-family: monospace; font-size: 14px; font-weight: bold; color: #4b5563; margin-top: 5px; }
+            .patient-info { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #e5e7eb; }
+            .info-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 13px; font-weight: 600; color: #374151; }
           </style>
         </head>
         <body>
           <div class="barcode-card">
-            <h2>🦷 DentalCare Pro</h2>
-            <div class="barcode">${patient.barcode || "*" + patient.id + "*"}</div>
+            <h2 style="color: #1e40af; margin-top: 0; font-size: 20px;">🦷 Opal Smiles Dental Studio</h2>
+            <div class="barcode-img-container">
+              <div>
+                <img class="barcode-img" src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(codeData)}&scale=2.5&rotate=N&includetext=false" alt="Barcode" />
+                <div class="barcode-text">${codeData}</div>
+              </div>
+            </div>
             <div class="patient-info">
               <div class="info-row"><span>ID:</span><span>${patient.id}</span></div>
               <div class="info-row"><span>Name:</span><span>${patient.name}</span></div>
