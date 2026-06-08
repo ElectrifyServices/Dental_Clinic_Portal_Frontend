@@ -19,6 +19,7 @@ interface SearchableSelectProps {
   onDeleteOption?: (value: string) => Promise<void> | void;
   isDeletingValue?: string | null;
   isMulti?: boolean;
+  className?: string;
 }
 
 export function SearchableSelect({
@@ -35,6 +36,7 @@ export function SearchableSelect({
   onDeleteOption,
   isDeletingValue = null,
   isMulti = false,
+  className,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -89,7 +91,8 @@ export function SearchableSelect({
           disabled={disabled || isLoading}
           className={cn(
             "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer",
-            !value && "text-muted-foreground"
+            !value && "text-muted-foreground",
+            className
           )}
         >
           <span className="truncate">

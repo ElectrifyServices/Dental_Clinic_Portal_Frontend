@@ -45,13 +45,13 @@ export function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
       <div>
-        <h1 className="page-title">{title}</h1>
-        {subtitle && <p className="page-subtitle">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs text-muted-foreground font-medium">{subtitle}</p>}
       </div>
-      {action && <div className="flex items-center gap-2">{action}</div>}
       {children}
+      {action && <div className="flex items-center gap-2">{action}</div>}
     </div>
   );
 }
@@ -229,7 +229,7 @@ export function ConfirmModal({
   return (
     <Modal
       title={title}
-      onClose={isLoading ? () => {} : onCancel}
+      onClose={isLoading ? () => { } : onCancel}
       size="sm"
       icon={<AlertTriangle className="w-4 h-4" />}
       footer={
@@ -349,31 +349,31 @@ export function MetricCard({
   return (
     <Card
       className={cn(
-        "p-6 hover:shadow-lg transition-all duration-300",
+        "p-4 md:p-6 hover:shadow-lg transition-all duration-300",
         className,
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 md:gap-4">
         <div
           className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center ring-8",
+            "w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ring-4 md:ring-8 flex-shrink-0",
             variants[variant],
           )}
         >
           {icon}
         </div>
-        <div className="flex-1">
-          <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1.5">
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] md:text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1 md:mb-1.5 truncate">
             {label}
           </p>
-          <div className="flex items-baseline gap-2">
-            <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">
+          <div className="flex items-baseline gap-1 md:gap-2">
+            <h4 className="text-lg md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
               {value}
             </h4>
             {trend && (
               <span
                 className={cn(
-                  "text-[10px] font-bold",
+                  "text-[9px] md:text-[10px] font-bold",
                   typeof trend === "object"
                     ? trend.isUp
                       ? "text-emerald-600"
@@ -768,3 +768,4 @@ export {
   FormDateInput,
   FormPhoneInput,
 } from "./form/index";
+export * from "./Toast";
