@@ -1,0 +1,178 @@
+{
+  "formId": "corporate",
+  "version": "1.0.0",
+  "title": {
+    "create": "Corporate Plan Design",
+    "edit": "Update Corporate Plan"
+  },
+  "submitLabel": {
+    "create": "Launch New Plan",
+    "edit": "Apply Plan Updates"
+  },
+  "benefitTypes": [
+    {
+      "value": "flat_discount",
+      "label": "Flat % Discount (All Services)"
+    },
+    {
+      "value": "treatment_discount",
+      "label": "Treatment-Specific % Discount"
+    },
+    {
+      "value": "free_consultations",
+      "label": "Free Consultations (per year)"
+    },
+    {
+      "value": "free_treatments",
+      "label": "Free Specific Treatments"
+    },
+    {
+      "value": "capped_discount",
+      "label": "Capped % Discount (max ₹)"
+    },
+    {
+      "value": "custom",
+      "label": "Custom Defined Benefit"
+    }
+  ],
+  "planColors": [
+    {
+      "value": "blue",
+      "dot": "bg-blue-500"
+    },
+    {
+      "value": "violet",
+      "dot": "bg-violet-500"
+    },
+    {
+      "value": "emerald",
+      "dot": "bg-emerald-500"
+    },
+    {
+      "value": "rose",
+      "dot": "bg-rose-500"
+    },
+    {
+      "value": "amber",
+      "dot": "bg-amber-500"
+    },
+    {
+      "value": "cyan",
+      "dot": "bg-cyan-500"
+    },
+    {
+      "value": "indigo",
+      "dot": "bg-indigo-500"
+    },
+    {
+      "value": "teal",
+      "dot": "bg-teal-500"
+    }
+  ],
+  "sections": [
+    {
+      "id": "coreIdentity",
+      "title": "Core Identity",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Official Plan Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. Gold Executive Plan"
+        },
+        {
+          "name": "companyName",
+          "label": "Target Organization",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. Google India Pvt Ltd"
+        },
+        {
+          "name": "code",
+          "label": "Unique Plan Code",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. GOOG-PREM-2024"
+        },
+        {
+          "name": "validFrom",
+          "label": "Launch Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "validTo",
+          "label": "Expiry Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "maxMembers",
+          "label": "Enrollment Cap",
+          "type": "number",
+          "required": true,
+          "placeholder": "No limit set"
+        },
+        {
+          "name": "description",
+          "label": "Internal Description / Scope Summary",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "Detailed summary of coverage and eligibility criteria…",
+          "rows": 2,
+          "colSpan": 3
+        },
+        {
+          "name": "color",
+          "label": "Visual Branding Theme",
+          "type": "select",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "benefitLogic",
+      "title": "Plan Benefit Logic",
+      "fields": [
+        {
+          "name": "benefitType",
+          "label": "Logic Type",
+          "type": "select"
+        },
+        {
+          "name": "customName",
+          "label": "Benefit Label (Manual Entry)",
+          "type": "text",
+          "placeholder": "e.g. Lab Charges, X-Ray"
+        },
+        {
+          "name": "value",
+          "label": "Discount Rate (%)",
+          "type": "number"
+        },
+        {
+          "name": "allocationCount",
+          "label": "Allocation Caount",
+          "type": "number"
+        },
+        {
+          "name": "cap",
+          "label": "Maximum Cap (₹)",
+          "type": "number"
+        },
+        {
+          "name": "treatmentTypes",
+          "label": "Target Clinical Procedures",
+          "type": "checkbox"
+        },
+        {
+          "name": "description",
+          "label": "Auto-Generated Display Description",
+          "type": "text",
+          "placeholder": "Patient-facing benefit description"
+        }
+      ]
+    }
+  ]
+}

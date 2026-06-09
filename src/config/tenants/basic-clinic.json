@@ -1,0 +1,146 @@
+{
+  "tenantId": "basic-clinic",
+  "version": "1.0.0",
+  "branding": {
+    "clinicName": "SmileCare Clinic",
+    "tagline": "Caring For Your Smile",
+    "primaryColor": "emerald",
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "timezone": "Asia/Kolkata",
+    "dateFormat": "DD/MM/YYYY",
+    "country": "India"
+  },
+  "screens": {
+    "dashboard": {
+      "enabled": true,
+      "label": "Dashboard",
+      "features": {
+        "showStats": true,
+        "showRecentPatients": true,
+        "showTodayAppointments": true,
+        "showQuickActions": false
+      }
+    },
+    "appointments": {
+      "enabled": true,
+      "label": "Schedule",
+      "features": {
+        "enableCalendarView": true,
+        "enableListView": true,
+        "enableDoctorBooking": false,
+        "defaultView": "list"
+      }
+    },
+    "patients": {
+      "enabled": true,
+      "label": "Patients",
+      "features": {
+        "enableFamilyMembers": false,
+        "enableCorporatePatients": false,
+        "enableExport": false,
+        "enableBulkImport": false,
+        "showOutstandingBalance": true
+      }
+    },
+    "patient-queue": {
+      "enabled": true,
+      "label": "Consultation",
+      "features": {
+        "enableDirectConsultation": false,
+        "enableToothChart": true,
+        "enablePrescriptions": true,
+        "enableLabTests": false,
+        "enableClinicalImages": false
+      }
+    },
+    "treatments": {
+      "enabled": true,
+      "label": "Treatments",
+      "features": {
+        "enableSessions": false
+      }
+    },
+    "emr": {
+      "enabled": false,
+      "label": "Medical Records",
+      "features": {}
+    },
+    "consent": {
+      "enabled": true,
+      "label": "Consent Forms",
+      "features": {
+        "enableDigitalSignature": false
+      }
+    },
+    "billing": {
+      "enabled": true,
+      "label": "Billing",
+      "features": {
+        "enableCorporateDiscounts": false,
+        "enablePartialPayments": true,
+        "enableGST": false,
+        "gstRate": 0
+      }
+    },
+    "inventory": {
+      "enabled": false,
+      "label": "Inventory",
+      "features": {
+        "enableRestocking": false,
+        "lowStockAlertThreshold": 5
+      }
+    },
+    "reports": {
+      "enabled": true,
+      "label": "Reports",
+      "features": {
+        "enableRevenueReport": true,
+        "enablePatientReport": true,
+        "enableAppointmentReport": false
+      }
+    },
+    "staff": {
+      "enabled": true,
+      "label": "Staff",
+      "features": {
+        "enableSalaryManagement": false,
+        "enableScheduleManagement": true
+      }
+    },
+    "profit-sharing": {
+      "enabled": false,
+      "label": "Profit Sharing",
+      "features": {
+        "defaultSharePercent": 0
+      }
+    },
+    "corporate-plans": {
+      "enabled": false,
+      "label": "Corporate Plans",
+      "features": {}
+    }
+  },
+  "sidebar": {
+    "groups": [
+      {
+        "id": "main",
+        "label": "Overview",
+        "items": ["dashboard", "appointments", "patients"]
+      },
+      {
+        "id": "clinical",
+        "label": "Clinical",
+        "items": ["patient-queue", "treatments", "consent"]
+      },
+      {
+        "id": "admin",
+        "label": "Administration",
+        "items": ["billing", "reports", "staff"]
+      }
+    ]
+  },
+  "support": {
+    "email": "info@smilecareclinic.com"
+  }
+}

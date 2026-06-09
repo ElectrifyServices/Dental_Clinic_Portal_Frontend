@@ -1,0 +1,60 @@
+{
+  "formId": "restock",
+  "version": "1.0.0",
+  "title": {
+    "create": "Restock Inventory",
+    "edit": "Restock Inventory"
+  },
+  "submitLabel": { "create": "Update Stock", "edit": "Update Stock" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "restockDetails",
+      "title": "Restock Details",
+      "icon": "RefreshCw",
+      "fields": [
+        {
+          "name": "quantity",
+          "label": "Restock Quantity",
+          "type": "number",
+          "required": true,
+          "defaultValue": 1,
+          "validation": { "min": 1 },
+          "colSpan": 6
+        },
+        {
+          "name": "purchasePrice",
+          "label": "Purchase Rate (₹)",
+          "type": "number",
+          "required": true,
+          "defaultValue": 0,
+          "validation": { "min": 0 },
+          "colSpan": 6
+        },
+        {
+          "name": "supplier",
+          "label": "Supplier",
+          "type": "text",
+          "required": true,
+          "placeholder": "Enter supplier name",
+          "colSpan": 12
+        },
+        {
+          "name": "invoiceNo",
+          "label": "Invoice Number",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g. INV-001",
+          "colSpan": 6
+        },
+        {
+          "name": "date",
+          "label": "Restock Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 6
+        }
+      ]
+    }
+  ]
+}

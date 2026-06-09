@@ -1,0 +1,149 @@
+{
+  "formId": "appointment",
+  "version": "1.0.0",
+  "title": {
+    "create": "New Patient Appointment",
+    "edit": "Edit Appointment",
+    "followUp": "Follow-up Appointment"
+  },
+  "submitLabel": { "create": "Confirm Booking", "edit": "Update Appointment" },
+  "cancelLabel": "Cancel",
+  "sections": [
+    {
+      "id": "patientInfo",
+      "title": "Patient Information",
+      "icon": "User",
+      "fields": [
+        {
+          "name": "patientName",
+          "label": "Patient Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "Search or enter patient name",
+          "colSpan": 6
+        },
+        {
+          "name": "patientPhone",
+          "label": "Phone Number",
+          "type": "phone",
+          "required": true,
+          "placeholder": "98765 43210",
+          "colSpan": 6
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "title": "Schedule Details",
+      "icon": "Calendar",
+      "fields": [
+        {
+          "name": "date",
+          "label": "Appointment Date",
+          "type": "date",
+          "required": true,
+          "colSpan": 4
+        },
+        {
+          "name": "time",
+          "label": "Appointment Time",
+          "type": "time",
+          "required": true,
+          "colSpan": 4
+        },
+        {
+          "name": "duration",
+          "label": "Duration (minutes)",
+          "type": "select",
+          "placeholder": "Auto",
+          "colSpan": 4,
+          "options": [
+            { "value": "15",  "label": "15 min" },
+            { "value": "30",  "label": "30 min" },
+            { "value": "45",  "label": "45 min" },
+            { "value": "60",  "label": "1 hour" },
+            { "value": "90",  "label": "1.5 hours" },
+            { "value": "120", "label": "2 hours" }
+          ]
+        },
+        {
+          "name": "doctorId",
+          "label": "Assigned Doctor",
+          "type": "select",
+          "required": true,
+          "placeholder": "Select doctor",
+          "colSpan": 12,
+          "options": []
+        }
+      ]
+    },
+    {
+      "id": "treatment",
+      "title": "Treatment Details",
+      "icon": "Stethoscope",
+      "fields": [
+        {
+          "name": "treatmentType",
+          "label": "Treatment Type",
+          "type": "select",
+          "placeholder": "General Consultation",
+          "colSpan": 5,
+          "options": [
+            { "value": "consultation",  "label": "Consultation / Check-up",      "fee": 500 },
+            { "value": "follow-up",     "label": "follow up visit",              "fee": 300 },
+            { "value": "xray-review",   "label": "X-ray review",                 "fee": 300 },
+            { "value": "cleaning",      "label": "Teeth Cleaning",               "fee": 1500 },
+            { "value": "emergency",     "label": "Tooth Pain / Emergency",       "fee": 1000 },
+            { "value": "filling",       "label": "Filling",                      "fee": 2000 },
+            { "value": "root-canal",    "label": "Root Canal Treatment",         "fee": 5000 },
+            { "value": "extraction",    "label": "Extraction / Wisdom Tooth",     "fee": 1500 },
+            { "value": "orthodontics",  "label": "Braces / Aligners",            "fee": 3000 },
+            { "value": "implants",      "label": "Implants",                     "fee": 25000 },
+            { "value": "full-mouth-rehab", "label": "full mouth rehabilitation",  "fee": 50000 },
+            { "value": "veneers-cosmetic", "label": "Veneers/Cosmetic Dentistry", "fee": 10000 },
+            { "value": "child-dentistry", "label": "Child Dentistry",            "fee": 1000 },
+            { "value": "crown",         "label": "Crown",                        "fee": 8000 },
+            { "value": "denture",       "label": "Denture",                      "fee": 15000 },
+            { "value": "toothache",     "label": "Toothache",                    "fee": 500 },
+            { "value": "swelling-infection", "label": "Swelling / Infection",    "fee": 500 },
+            { "value": "broken-tooth",  "label": "Broken Tooth",                 "fee": 1500 },
+            { "value": "trauma-injury",  "label": "Trauma / Injury",              "fee": 2000 },
+            { "value": "other",         "label": "other/ not sure",              "fee": 500 }
+          ]
+        },
+        {
+          "name": "treatment",
+          "label": "Specific Treatment",
+          "type": "text",
+          "placeholder": "e.g. Tooth scaling, cavity in upper molar",
+          "colSpan": 5
+        },
+        {
+          "name": "fee",
+          "label": "Fee (₹)",
+          "type": "number",
+          "defaultValue": 500,
+          "validation": { "min": 0 },
+          "colSpan": 2
+        },
+        {
+          "name": "patientConcern",
+          "label": "Patient Concern",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "Main concern or symptoms described by the patient...",
+          "rows": 3,
+          "colSpan": 6
+        },
+        {
+          "name": "notes",
+          "label": "Additional Notes",
+          "type": "textarea",
+          "placeholder": "Any special instructions, allergies, or pre-visit notes...",
+          "rows": 3,
+          "colSpan": 6
+        }
+      ]
+    }
+  ]
+}

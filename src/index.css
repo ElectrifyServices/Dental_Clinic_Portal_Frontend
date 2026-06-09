@@ -1,0 +1,272 @@
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand palette (RGB triplets) */
+    --brand-50: 239 246 255;
+    --brand-100: 219 234 254;
+    --brand-200: 191 219 254;
+    --brand-500: 59 130 246;
+    --brand-600: 37 99 235;
+    --brand-700: 29 78 216;
+    --brand-800: 30 64 175;
+
+    /* Centralized Color System */
+    --primary: 37 99 235;
+    /* blue-600 (Dental Professional Blue) */
+    --primary-foreground: 255 255 255;
+    --secondary: 241 245 249;
+    /* slate-100 */
+    --secondary-foreground: 30 64 175;
+    /* brand-800 */
+    --ternary: 20 184 166;
+    /* teal-500 (Dental Accent) */
+    --ternary-foreground: 255 255 255;
+    --card-bg: 255 255 255;
+    --surface: 248 250 252;
+    --border: 226 232 240;
+
+    /* Shadcn UI compat */
+    --background: 255 255 255;
+    --foreground: 30 64 175;
+    /* brand-800 (Professional Navy) */
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --accent: 241 245 249;
+    --accent-foreground: 15 23 42;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --ring: 59 130 246;
+    --input: 226 232 240;
+
+    /* Radius scale */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius: 0.625rem;
+
+    /* Typography scale */
+    --fs-xs: 0.75rem;
+    --fs-sm: 0.875rem;
+    --fs-base: 1rem;
+    --fs-lg: 1.125rem;
+    --fs-xl: 1.25rem;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* ── Buttons ───────────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-xl hover:bg-primary/80 active:scale-[0.98] transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-foreground bg-background border border-border rounded-xl hover:bg-muted active:scale-[0.98] transition-all duration-150 shadow-sm disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-destructive-foreground bg-destructive rounded-xl hover:bg-destructive/80 active:scale-[0.98] transition-all duration-150 shadow-md disabled:opacity-50;
+  }
+
+  .btn-icon {
+    @apply p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all duration-150;
+  }
+
+  .btn-icon-blue {
+    @apply p-1.5 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors duration-150;
+  }
+
+  .btn-icon-red {
+    @apply p-1.5 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg transition-colors duration-150;
+  }
+
+  /* ── Cards ─────────────────────────────────────────────────────────────── */
+  .card {
+    @apply bg-card rounded-xl border border-border shadow-sm;
+  }
+
+  .card-hover {
+    @apply bg-card rounded-xl border border-border shadow-sm hover:shadow-md hover:border-border/80 transition-all duration-200;
+  }
+
+  .kpi-card {
+    @apply bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* ── Forms ─────────────────────────────────────────────────────────────── */
+  .form-input {
+    @apply w-full px-3 py-2 text-sm border border-input rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-150;
+  }
+
+  .form-label {
+    @apply block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide;
+  }
+
+  /* ── Page layout ────────────────────────────────────────────────────────── */
+  .page-title {
+    @apply text-xl font-bold text-foreground;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-muted-foreground mt-0.5;
+  }
+
+  /* ── Tables ─────────────────────────────────────────────────────────────── */
+  .data-table {
+    @apply w-full text-sm;
+  }
+
+  .data-table thead tr {
+    @apply border-b border-border bg-muted;
+  }
+
+  .data-table thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap;
+  }
+
+  .data-table tbody tr {
+    @apply border-b border-border hover:bg-muted/50 transition-colors duration-100;
+  }
+
+  .data-table tbody td {
+    @apply px-4 py-3 text-sm text-foreground;
+  }
+
+  /* ── Badges ─────────────────────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border;
+  }
+
+  .badge-green { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
+  .badge-blue { @apply bg-blue-50 text-blue-700 border-blue-200; }
+  .badge-amber { @apply bg-amber-50 text-amber-700 border-amber-200; }
+  .badge-red { @apply bg-red-50 text-red-700 border-red-200; }
+  .badge-gray { @apply bg-muted text-muted-foreground border-border; }
+
+  /* ── Modals ─────────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto;
+  }
+
+  .modal-box {
+    @apply bg-card rounded-2xl shadow-2xl my-6;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between px-6 py-4 border-b border-border;
+  }
+
+  .modal-title {
+    @apply text-base font-bold text-foreground;
+  }
+
+  .modal-body {
+    @apply p-6 space-y-4;
+  }
+
+  .modal-footer {
+    @apply flex justify-end gap-3 px-6 py-4 border-t border-border;
+  }
+
+  /* ── Filter Bar & Tabs ─────────────────────────────────────────────────── */
+  .filter-bar {
+    @apply flex flex-wrap items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm;
+  }
+
+  .search-input {
+    @apply w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-muted text-foreground placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all;
+  }
+
+  .filter-tabs {
+    @apply flex items-center bg-muted p-1 rounded-xl border border-border;
+  }
+
+  .filter-tab {
+    @apply px-4 py-1.5 text-xs font-semibold text-muted-foreground rounded-lg hover:text-foreground transition-colors;
+  }
+
+  .filter-tab-active {
+    @apply px-4 py-1.5 text-xs font-bold text-primary bg-card shadow-sm rounded-lg border border-border;
+  }
+
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+  }
+
+  /* ── Utilities ──────────────────────────────────────────────────────────── */
+  .divider-horizontal {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-6;
+  }
+
+  .glass-panel {
+    @apply bg-card/70 backdrop-blur-md border border-border/20 shadow-xl;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar to fix corner clipping and asymmetry */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.4);
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.7);
+  }
+
+  /* Global scrollbar styling so cards/modals look consistent and rounded */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.6);
+  }
+}

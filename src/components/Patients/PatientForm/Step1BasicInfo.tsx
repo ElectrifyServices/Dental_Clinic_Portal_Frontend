@@ -1,0 +1,594 @@
+import React from "react";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
+import {
+  AlertTriangle,
+  Calendar,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Upload,
+  User,
+} from "lucide-react";
+
+interface Step1Props {
+  formData: any;
+  handleChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => void;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  validationErrors: { [key: string]: string };
+  matchedCorporateEmp: any;
+  acceptCorporateEmployee: () => void;
+  corporatePlans: any[];
+  type?: string;
+  handleCustomRelation: (value: string) => void;
+  applyCustomRelation: () => void;
+  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export const Step1BasicInfo: React.FC<Step1Props> = ({
+  formData,
+  handleChange,
+  setFormData,
+  validationErrors,
+  matchedCorporateEmp,
+  acceptCorporateEmployee,
+  corporatePlans,
+  type,
+  handleCustomRelation,
+  applyCustomRelation,
+  handleImageUpload,
+}) => {
+  return (
+    <div className="space-y-6">
+      {/* Avatar moved to Step 3 */}
+       <div className="text-center">
+        <div className="relative inline-block">
+          <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+            {formData.avatar ? (
+              <img
+                src={formData.avatar}
+                alt="Avatar"
+                className="w-24 h-24 object-cover rounded-full"
+              />
+            ) : (
+              <User className="w-12 h-12 text-primary" />
+            )}
+          </div>
+          <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
+            <Upload className="w-4 h-4" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </label>
+        </div>
+        <p className="text-sm text-muted-foreground mt-2">
+          Upload patient photo (optional)
+        </p>
+      </div>
+
+      {matchedCorporateEmp &&
+        (() => {
+          let plan = null;
+          
+          if (matchedCorporateEmp.corporate_plan) {
+            const cp = matchedCorporateEmp.corporate_plan;
+            plan = {
+              name: cp.plan_name,
+              code: cp.plan_code || "CORP",
+              validTo: cp.valid_till ? new Date(cp.valid_till).toLocaleDateString() : "Lifetime",
+              benefits: cp.benefits?.map((b: any) => ({
+                id: b.id || Math.random().toString(),
+                description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
+              })) || [],
+              companyName: matchedCorporateEmp.company_name
+            };
+          } else {
+            const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
+            plan = corporatePlans.find((cp: any) => cp.id === planId);
+          }
+
+          return (
+            <Card 
+              onClick={acceptCorporateEmployee}
+              className="mx-6 overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3 px-4 py-3 bg-primary">
+                <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white flex items-center gap-2">
+                    Corporate Employee Identified
+                    <span className="text-[10px] bg-white text-primary px-2 py-0.5 rounded-full font-bold animate-pulse">
+                      Click to Auto-Fill
+                    </span>
+                  </p>
+                  <p className="text-xs text-primary-foreground/80">
+                    {matchedCorporateEmp.company_name || plan?.companyName} ·
+                    EMP:{" "}
+                    {matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
+                  </p>
+                </div>
+                {plan && (
+                  <Badge
+                    variant="outline"
+                    className="bg-card/20 text-white border-white/30"
+                  >
+                    {plan.code}
+                  </Badge>
+                )}
+              </div>
+              {plan ? (
+                <CardContent className="px-4 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-primary">
+                      {plan.name}
+                    </p>
+                    <span className="text-xs text-ternary font-medium">
+                      Valid till {plan.validTo}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(plan.benefits || []).map((b: any) => (
+                      <Badge
+                        key={b.id}
+                        variant="secondary"
+                        className="bg-card text-primary border-primary/10"
+                      >
+                        {b.description}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-primary/70 font-medium italic">
+                    ✓ Click anywhere on this card to auto-fill details. Discount will be applied automatically in billing.
+                  </p>
+                </CardContent>
+              ) : (
+                <CardContent className="px-4 py-3">
+                  <p className="text-xs text-amber-700 font-medium">
+                    Employee found but no active plan assigned. Click to fill available info.
+                  </p>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })()}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <User className="w-4 h-4 inline mr-2" />
+            Full Name *
+          </label>
+          <Input
+            type="text"
+            name="name"
+            value={formData.name || ""}
+            onChange={handleChange}
+            className={
+              validationErrors.name ? "border-destructive bg-destructive/5" : ""
+            }
+            placeholder="Enter patient's full name"
+          />
+          {validationErrors.name && (
+            <p className="text-destructive text-xs mt-1 flex items-center">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {validationErrors.name}
+            </p>
+          )}
+        </div>
+
+        <div className="relative">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Phone className="w-4 h-4 inline mr-2" />
+            Phone Number *
+          </label>
+          <Input
+            type="tel"
+            name="phone"
+            value={formData.phone || ""}
+            onChange={handleChange}
+            disabled={!!formData.id}
+            className={
+              validationErrors.phone
+                ? "border-destructive bg-destructive/5"
+                : (!!formData.id ? "bg-muted cursor-not-allowed opacity-70" : "")
+            }
+            placeholder="e.g. 9876543210"
+          />
+          {validationErrors.phone && (
+            <p className="text-destructive text-xs mt-1 flex items-center">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {validationErrors.phone}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Mail className="w-4 h-4 inline mr-2" />
+            Email Address
+          </label>
+          <Input
+            type="email"
+            name="email"
+            value={formData.email || ""}
+            onChange={handleChange}
+            className={
+              validationErrors.email
+                ? "border-destructive bg-destructive/5"
+                : ""
+            }
+            placeholder="Enter email address"
+          />
+          {validationErrors.email && (
+            <p className="text-destructive text-xs mt-1 flex items-center">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {validationErrors.email}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Calendar className="w-4 h-4 inline mr-2" />
+            Date of Birth
+          </label>
+          <Input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth || ""}
+            onChange={handleChange}
+            max={new Date().toISOString().split("T")[0]}
+            className="focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            Gender
+          </label>
+          <select
+            name="gender"
+            value={formData.gender || ""}
+            onChange={handleChange}
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+          >
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            Blood Group
+          </label>
+          <select
+            name="bloodGroup"
+            value={formData.bloodGroup || ""}
+            onChange={handleChange}
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+          >
+            <option value="">Select Blood Group</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+
+        {type === "person" && (
+          <div>
+            <label className="block text-sm font-semibold text-muted-foreground mb-2">
+              Relation
+            </label>
+            <select
+              name="relation"
+              value={formData.relation || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev: any) => ({
+                  ...prev,
+                  relation: value,
+                  customRelation: value === "OTHER" ? prev.customRelation : "",
+                }));
+              }}
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+            >
+              <option value="">Select Relation</option>
+              <option value="SELF">Self</option>
+              <option value="SPOUSE">Spouse</option>
+              <option value="CHILD">Child</option>
+              <option value="PARENT">Parent</option>
+              <option value="SIBLING">Sibling</option>
+            </select>
+            {formData.relation === "OTHER" && (
+              <div className="flex mt-3">
+                <Input
+                  type="text"
+                  value={formData.customRelation || ""}
+                  onChange={(e) => handleCustomRelation(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyCustomRelation();
+                    }
+                  }}
+                  placeholder="Enter custom relation"
+                  className="rounded-r-none"
+                />
+                <button
+                  type="button"
+                  onClick={applyCustomRelation}
+                  className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
+                >
+                  →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <MapPin className="w-4 h-4 inline mr-2" />
+          Address
+        </label>
+        <textarea
+          name="address"
+          value={formData.address || ""}
+          onChange={handleChange}
+          rows={3}
+          className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+          placeholder="Enter complete address"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            Occupation
+          </label>
+          <Input
+            type="text"
+            name="occupation"
+            value={formData.occupation || ""}
+            onChange={handleChange}
+            placeholder="Enter occupation"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            Marital Status
+          </label>
+          <select
+            name="maritalStatus"
+            value={formData.maritalStatus || ""}
+            onChange={handleChange}
+            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+          >
+            <option value="">Select Status</option>
+            <option value="single">Single</option>
+            <option value="married">Married</option>
+            <option value="divorced">Divorced</option>
+            <option value="widowed">Widowed</option>
+          </select>
+        </div>
+
+        {(() => {
+          const isCorporate = !!matchedCorporateEmp || formData.category === 'corporate';
+          return (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                  Patient Category
+                </label>
+                <select
+                  name="category"
+                  value={isCorporate ? "corporate" : (formData.category?.toLowerCase() || "regular")}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      category: val as any,
+                      defaultDiscount: 0,
+                    }));
+                  }}
+                  disabled={isCorporate}
+                  className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm disabled:opacity-80 disabled:bg-muted"
+                >
+                  <option value="regular">Regular</option>
+                  {isCorporate && <option value="corporate">Corporate</option>}
+                  <option value="family">Family (Doctor's House)</option>
+                  <option value="staff">Clinic Staff</option>
+                  <option value="vip">VIP</option>
+                  <option value="complimentary">Complimentary</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-muted-foreground">
+                    Default Discount (%)
+                  </label>
+                  <label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <input
+                      type="checkbox"
+                      name="isFOC"
+                      checked={formData.isFOC || false}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          isFOC: checked,
+                          defaultDiscount: checked ? 100 : 0,
+                        }));
+                      }}
+                      disabled={isCorporate}
+                      className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
+                  </label>
+                </div>
+                <Input
+                  type="number"
+                  name="defaultDiscount"
+                  value={formData.defaultDiscount || 0}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
+                    setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
+                  }}
+                  disabled={isCorporate || formData.isFOC}
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 100 for full free"
+                  className="disabled:opacity-80 disabled:bg-muted"
+                />
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <User className="w-4 h-4 inline mr-2" />
+            Emergency Contact Name
+          </label>
+          <Input
+            type="text"
+            name="emergencyName"
+            value={formData.emergencyName || ""}
+            onChange={handleChange}
+            placeholder="Emergency contact person name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <User className="w-4 h-4 inline mr-2" />
+            Emergency Contact Relation
+          </label>
+          <div className="space-y-3">
+            <select
+              name="emergencyRelation"
+              value={formData.emergencyRelation || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData((prev: any) => ({
+                  ...prev,
+                  emergencyRelation: val,
+                  customEmergencyRelation:
+                    val === "Other" ? prev.customEmergencyRelation : "",
+                }));
+              }}
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+            >
+              <option value="">Select Relation</option>
+              <option value="Father">Father</option>
+              <option value="Mother">Mother</option>
+              <option value="Brother">Brother</option>
+              <option value="Sister">Sister</option>
+              <option value="Husband">Husband</option>
+              <option value="Wife">Wife</option>
+              <option value="Guardian">Guardian</option>
+              <option value="Friend">Friend</option>
+              <option value="Other">Other</option>
+              {formData.emergencyRelation &&
+                ![
+                  "",
+                  "Father",
+                  "Mother",
+                  "Brother",
+                  "Sister",
+                  "Husband",
+                  "Wife",
+                  "Guardian",
+                  "Friend",
+                  "Other",
+                ].includes(formData.emergencyRelation) && (
+                  <option value={formData.emergencyRelation}>
+                    {formData.emergencyRelation}
+                  </option>
+                )}
+            </select>
+            {formData.emergencyRelation === "Other" && (
+              <div className="flex animate-in fade-in slide-in-from-top-2">
+                <Input
+                  type="text"
+                  value={formData.customEmergencyRelation || ""}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      customEmergencyRelation: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (formData.customEmergencyRelation?.trim()) {
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          emergencyRelation: prev.customEmergencyRelation,
+                          customEmergencyRelation: "",
+                        }));
+                      }
+                    }
+                  }}
+                  className="rounded-r-none"
+                  placeholder="Enter custom relation"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.customEmergencyRelation.trim()) {
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        emergencyRelation: prev.customEmergencyRelation,
+                        customEmergencyRelation: "",
+                      }));
+                    }
+                  }}
+                  className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
+                >
+                  →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Phone className="w-4 h-4 inline mr-2" />
+            Emergency Contact Number
+          </label>
+            <Input
+              type="tel"
+              name="emergencyContact"
+              value={formData.emergencyContact || ""}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '');
+                setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
+              }}
+              placeholder="Emergency contact phone number"
+            />
+        </div>
+      </div>
+    </div>
+  );
+};

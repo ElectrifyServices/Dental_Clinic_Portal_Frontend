@@ -1,0 +1,248 @@
+// ─── Corporate Plan Types ────────────────────────────────────────────────────
+export type PlanBenefitType =
+  | 'flat_discount'        // X% off all services
+  | 'treatment_discount'   // X% off specific treatments
+  | 'free_consultations'   // N free consultations/year
+  | 'free_treatments'      // N free specific treatments
+  | 'capped_discount'      // X% off, max ₹Y per visit
+  | 'custom';              // Manually defined benefit
+
+export interface PlanBenefit {
+  id: string;
+  type: PlanBenefitType;
+  value: number;
+  cap?: number;
+  customName?: string;
+  treatmentTypes?: string[];
+  description: string;
+}
+
+export interface CorporatePlan {
+  id: string;
+  name: string;
+  companyName: string;
+  code: string;
+  description: string;
+  benefits: PlanBenefit[];
+  validFrom: string;
+  validTo: string;
+  maxMembers?: number;
+  currentMembers: number;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string;
+  color: string;
+  status?: string;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'superadmin' | 'admin' | 'doctor' | 'receptionist' | 'assistant';
+  avatar?: string;
+  permissions: string[];
+  specialization?: string;
+  phone?: string;
+  isActive: boolean;
+  workingHours?: {
+    [key: string]: {
+      isWorking: boolean;
+      startTime: string;
+      endTime: string;
+      breakStart?: string;
+      breakEnd?: string;
+    };
+  };
+  timeSlots?: { duration: number; bufferTime: number; };
+}
+
+export interface Patient {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other';
+  address: string;
+  emergencyContact: string;
+  medicalHistory: string[];
+  allergies: string[];
+  createdAt: string;
+  lastVisit?: string;
+  totalVisits: number;
+  outstandingBalance: number;
+  status: 'active' | 'inactive' | 'new';
+  category?: 'regular' | 'family' | 'staff' | 'vip' | 'complimentary' | 'corporate';
+  defaultDiscount?: number;
+  avatar?: string;
+  // Corporate plan fields
+  corporatePlanId?: string;
+  corporatePlanName?: string;
+  corporateMemberId?: string;
+  planEnrolledAt?: string;
+  // Legacy field kept for compatibility
+  companyId?: string;
+  barcode?: string;
+  isPerson?: boolean;
+  registeredDate?: string;
+  patient_code?: string;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  date: string;
+  time: string;
+  duration: number;
+  type: 'consultation' | 'cleaning' | 'filling' | 'extraction' | 'root-canal' | 'crown' | 'orthodontics' | 'surgery' | 'emergency' | 'other';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'checked-in';
+  treatment?: string;
+  notes?: string;
+  fee: number;
+  patientConcern: string;
+  treatmentType: string;
+  doctorId: string;
+  doctorName: string;
+  reminderSent: boolean;
+}
+
+export interface Treatment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  date: string;
+  procedure: string;
+  tooth: string;
+  notes: string;
+  cost: number;
+  status: 'planned' | 'in-progress' | 'completed';
+  images?: string[];
+  nextAppointment?: string;
+  doctorId: string;
+  doctorName: string;
+  prescriptions?: Prescription[];
+  isBilled?: boolean;
+}
+
+export interface Prescription {
+  id: string;
+  medicine: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string;
+}
+
+export interface Invoice {
+  id: string;
+  patientId: string;
+  patientName: string;
+  date: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'complimentary';
+  isComplimentary?: boolean;
+  complimentaryNote?: string;
+  paymentMethod?: 'cash' | 'card' | 'upi' | 'razorpay' | 'bank-transfer';
+  dueDate: string;
+  paidDate?: string;
+  // Corporate plan billing fields
+  corporatePlanId?: string;
+  corporatePlanName?: string;
+  planDiscountApplied?: number;
+  planBenefitsUsed?: string[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  category: 'instruments' | 'materials' | 'consumables' | 'medicines';
+  currentStock: number;
+  minStock: number;
+  maxStock: number;
+  unit: string;
+  supplier: string;
+  lastRestocked: string;
+  cost: number;
+  expiryDate?: string;
+  batchNumber?: string;
+}
+
+export interface EMRRecord {
+  id: string;
+  patientId: string;
+  date: string;
+  type: 'consultation' | 'prescription' | 'lab-report' | 'x-ray' | 'treatment-note';
+  title: string;
+  content: string;
+  attachments?: string[];
+  doctorId: string;
+  doctorName: string;
+}
+
+export interface ConsentForm {
+  id: string;
+  patientId: string;
+  treatmentType: string;
+  content: string;
+  signature: string;
+  date: string;
+  witnessSignature?: string;
+}
+
+export interface DashboardStats {
+  todayAppointments: number;
+  todayEarnings: number;
+  totalPatients: number;
+  monthlyEarnings: number;
+  pendingPayments: number;
+  lowStockItems: number;
+  completedTreatments: number;
+  cancelledAppointments: number;
+}
+
+export interface Report {
+  id: string;
+  type: 'earnings' | 'patients' | 'appointments' | 'inventory' | 'treatments';
+  title: string;
+  dateRange: { start: string; end: string; };
+  data: any;
+  generatedAt: string;
+  generatedBy: string;
+}
+
+// ─── Corporate Employee ───────────────────────────────────────────────────────
+export interface CorporateEmployee {
+  id: string;
+  employeeId: string;          // company-issued ID
+  name: string;
+  phone: string;
+  email: string;
+  gender: 'male' | 'female' | 'other';
+  dateOfBirth?: string;
+  designation?: string;
+  department?: string;
+  companyName: string;
+  corporatePlanId: string;     // which plan they are on
+  corporatePlanName: string;
+  enrolledAt: string;
+  eligible_date?: string;
+  isActive: boolean;
+  status?: string;
+  patientId?: string;          // linked patient record if registered
+}

@@ -1,0 +1,824 @@
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText, Trash2,
+  AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera, Edit, Save, X, Check, Loader2, CheckCircle,
+  FileCode, User, HeartPulse, FileSpreadsheet
+} from "lucide-react";
+import apiClient from "../../../services/apiClient";
+import { parseApiResponse } from "../../../services/parseApiResponse";
+import { useDoctorsListQuery } from "../../../hooks/staff/useDoctorsListQuery";
+import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
+import { useUpdateAppointmentMutation } from "../../../hooks/appointments/useUpdateAppointmentMutation";
+import { SearchableSelect, Button } from "@/components/ui";
+
+interface HistoryDetailProps {
+  record: any;
+  onDownloadPDF: (record: any, type: any) => void;
+  onDeleteClick: (id: number, e: React.MouseEvent) => void;
+}
+
+export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryDetailProps) {
+  const [showPrintMenu, setShowPrintMenu] = useState(false);
+  const [fullRecord, setFullRecord] = useState<any>(record);
+  const [isLoadingFull, setIsLoadingFull] = useState(false);
+  const [appointment, setAppointment] = useState<any>(null);
+  const [isLoadingAppt, setIsLoadingAppt] = useState(false);
+
+  // Edit Appointment States
+  const [editMode, setEditMode] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [isSavingAppt, setIsSavingAppt] = useState(false);
+
+  const { doctors: apiDoctors } = useDoctorsListQuery();
+  const doctorsList = apiDoctors || [];
+
+  const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
+    editMode ? selectedDoctorId : null,
+    editMode ? selectedDate : null
+  );
+
+  const availableSlots = useMemo(() => {
+    if (!slotsData?.data?.slots) return [];
+    return slotsData.data.slots.map((s: any) => {
+      const time24 = s.time;
+      let time12 = time24;
+      if (!time24.includes("AM") && !time24.includes("PM")) {
+        const [h, m] = time24.split(":");
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        time12 = `${hour12}:${m} ${ampm}`;
+      }
+      return { time24, time12, isAvailable: s.is_available };
+    });
+  }, [slotsData]);
+
+  const updateMutation = useUpdateAppointmentMutation();
+
+  // Fetch full detailed record and search for associated appointment
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingFull(true);
+        const response = await apiClient.get(`/consultations/${record.id}`);
+        const parsed = parseApiResponse(response.data);
+        if (parsed.data) {
+          const detailedData = parsed.data.data || parsed.data;
+          setFullRecord({ ...record, ...detailedData });
+
+          // Try to get associated appointment directly from the response or record
+          const pData: any = detailedData;
+          const rec: any = record;
+
+          // Helper to check if an object is non-empty
+          const isNonEmptyObj = (x: any) => x && typeof x === 'object' && Object.keys(x).length > 0;
+
+          let appt = null;
+
+          // 1. Prioritize follow-up arrays
+          if (Array.isArray(pData?.follow_up_appointments) && pData.follow_up_appointments.length > 0) {
+            appt = pData.follow_up_appointments.find(isNonEmptyObj) || null;
+          }
+          if (!appt && Array.isArray(rec?.follow_up_appointments) && rec.follow_up_appointments.length > 0) {
+            appt = rec.follow_up_appointments.find(isNonEmptyObj) || null;
+          }
+
+          // 2. Prioritize singular follow-up fields
+          if (!appt) {
+            const followUpKeys = [
+              pData?.['follow-up-appointment'],
+              pData?.follow_up_appointment,
+              pData?.followup_appointment,
+              pData?.followUpAppointment,
+              pData?.follow_up_appointment_info,
+              rec?.['follow-up-appointment'],
+              rec?.follow_up_appointment,
+              rec?.followup_appointment,
+              rec?.followUpAppointment,
+              rec?.follow_up_appointment_info
+            ];
+            appt = followUpKeys.find(isNonEmptyObj) || null;
+          }
+
+          const hasExplicitFollowUpArray = Array.isArray(pData?.follow_up_appointments) || Array.isArray(rec?.follow_up_appointments);
+
+          if (appt) {
+            setAppointment(appt);
+          } else if (!hasExplicitFollowUpArray) {
+            // Search appointment using patient ID and follow-up date if no array was provided
+            const patientId = parsed.data.patient_id || parsed.data.patientId || record.patient_id || record.patientId;
+            if (patientId) {
+              setIsLoadingAppt(true);
+              const apptListRes = await apiClient.post("/appointment/list", {
+                filters: { patient_id: patientId }
+              });
+              const appts = apptListRes.data?.responseObject?.appointments ||
+                (Array.isArray(apptListRes.data?.responseObject) ? apptListRes.data.responseObject : null) ||
+                apptListRes.data?.responseObject?.data ||
+                apptListRes.data?.data?.appointments ||
+                apptListRes.data?.appointments || [];
+              if (Array.isArray(appts) && appts.length > 0) {
+                const followUpDateStr = parsed.data.follow_up_date || record.follow_up_date;
+                if (followUpDateStr) {
+                  const targetDate = new Date(followUpDateStr).toDateString();
+                  const match = appts.find((a: any) => new Date(a.date).toDateString() === targetDate);
+                  if (match) {
+                    setAppointment(match);
+                  } else {
+                    setAppointment(appts[0]); // fallback
+                  }
+                } else {
+                  setAppointment(appts[0]);
+                }
+              }
+              setIsLoadingAppt(false);
+            }
+          } else {
+            setAppointment(null);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load full consultation/appointment details:", err);
+      } finally {
+        setIsLoadingFull(false);
+      }
+    };
+    fetchDetails();
+  }, [record.id]);
+
+  const extractTime24 = (timeStr: string) => {
+    if (!timeStr) return "";
+    if (timeStr.includes("T")) {
+      const date = new Date(timeStr);
+      if (!isNaN(date.getTime())) {
+        const hrs = date.getHours().toString().padStart(2, "0");
+        const mins = date.getMinutes().toString().padStart(2, "0");
+        return `${hrs}:${mins}`;
+      }
+    }
+    return timeStr;
+  };
+
+  const getDoctorName = () => {
+    if (appointment?.doctor?.name) return appointment.doctor.name;
+    if (appointment?.personal_profile?.staff?.name) return appointment.personal_profile.staff.name;
+    const docId = appointment?.doctor_id || appointment?.personal_profile?.staff?.id;
+    const doc = doctorsList.find((d: any) => d.id === docId);
+    return doc ? doc.name : "Doctor";
+  };
+
+  // Sync edit state values when appointment loads
+  useEffect(() => {
+    if (appointment) {
+      const docId = appointment.doctor_id || appointment?.personal_profile?.staff?.id || "";
+      setSelectedDoctorId(docId);
+      setSelectedDate(appointment.date ? new Date(appointment.date).toISOString().split("T")[0] : "");
+      setSelectedSlot(appointment.start_time ? extractTime24(appointment.start_time) : "");
+    }
+  }, [appointment]);
+
+  const handleSaveAppointment = async () => {
+    if (!appointment || !appointment.id) return;
+    try {
+      setIsSavingAppt(true);
+      await updateMutation.mutateAsync({
+        id: appointment.id,
+        payload: {
+          doctor_id: selectedDoctorId,
+          date: selectedDate,
+          start_time: selectedSlot
+        }
+      });
+      // Refresh local display state
+      setAppointment((prev: any) => ({
+        ...prev,
+        doctor_id: selectedDoctorId,
+        date: selectedDate,
+        start_time: selectedSlot,
+        doctor: doctorsList.find((d: any) => d.id === selectedDoctorId) || prev.doctor
+      }));
+      setEditMode(false);
+    } catch (err) {
+      console.error("Failed to update appointment:", err);
+    } finally {
+      setIsSavingAppt(false);
+    }
+  };
+
+  const fmt = (d: any) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "—";
+    return date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const fmtShort = (d: any) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const formatSlotTime = (timeStr: string) => {
+    if (!timeStr) return "";
+    const time24 = extractTime24(timeStr);
+    if (time24.includes("AM") || time24.includes("PM")) return time24;
+    const parts = time24.split(":");
+    if (parts.length < 2) return timeStr;
+    const h = parts[0];
+    const m = parts[1];
+    const hr = parseInt(h);
+    if (isNaN(hr)) return timeStr;
+    const ampm = hr >= 12 ? "PM" : "AM";
+    const h12 = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+    return `${h12}:${m.substring(0, 2)} ${ampm}`;
+  };
+
+  const hasValidPrescriptions = (p?: any[]) =>
+    p && p.some(x => (x.medicine_name || x.medicine)?.trim() !== "");
+
+  const getToothConditionBadgeStyle = (condition: string) => {
+    const cond = condition.toUpperCase();
+    if (cond.includes("HEALTHY")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (cond.includes("CARIES")) return "bg-red-50 text-red-700 border-red-200";
+    if (cond.includes("MISSING")) return "bg-slate-100 text-slate-700 border-slate-300";
+    if (cond.includes("ENDO") || cond.includes("RCT")) return "bg-purple-50 text-purple-700 border-purple-200";
+    if (cond.includes("CROWN")) return "bg-amber-50 text-amber-700 border-amber-200";
+    if (cond.includes("EXTRACTION")) return "bg-rose-50 text-rose-700 border-rose-200";
+    return "bg-blue-50 text-blue-700 border-blue-200";
+  };
+
+  if (isLoadingFull) {
+    return (
+      <div className="flex flex-col justify-center items-center py-24 space-y-4">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm font-semibold animate-pulse">
+          Loading detailed report...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto" onClick={() => setShowPrintMenu(false)}>
+      {/* Patient Header Card */}
+      <div className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border border-border/70 rounded-xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100">
+            {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-foreground tracking-tight leading-none mb-1.5">
+              {fullRecord.patient?.name || "Unknown Patient"}
+            </h3>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-bold text-muted-foreground">
+              {fullRecord.patient?.id && (
+                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-[10px] font-bold">
+                  ID: {fullRecord.patient.id.split("-")[0]}
+                </span>
+              )}
+              {fullRecord.patient?.phone && (
+                <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded text-[11px]">
+                  <Phone className="w-3 h-3 text-primary/70" /> {fullRecord.patient.phone}
+                </span>
+              )}
+              <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded text-[11px]">
+                <Clock className="w-3 h-3 text-primary/70" /> {fmt(fullRecord.created_at || fullRecord.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 w-full md:w-auto shrink-0 border-t md:border-t-0 pt-4 md:pt-0">
+          <div className="relative flex-1 md:flex-initial">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPrintMenu(!showPrintMenu);
+              }}
+              className={`w-full md:w-auto flex items-center justify-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all border shadow-sm ${showPrintMenu
+                ? "bg-primary text-white border-primary"
+                : "bg-white text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/45"
+                }`}
+            >
+              <Printer className="w-4.5 h-4.5" /> Download Report
+            </button>
+            {showPrintMenu && (
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadPDF(fullRecord, "CLINICAL");
+                    setShowPrintMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors"
+                >
+                  <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadPDF(fullRecord, "TREATMENT");
+                    setShowPrintMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors"
+                >
+                  <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadPDF(fullRecord, "PRESCRIPTION");
+                    setShowPrintMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors"
+                >
+                  <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
+                </button>
+                <div className="h-px bg-muted my-1.5" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadPDF(fullRecord, "FULL");
+                    setShowPrintMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                >
+                  <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={(e) => onDeleteClick(fullRecord.id, e)}
+            className="flex items-center justify-center gap-2 text-sm font-bold text-red-600 hover:text-white px-5 py-2.5 rounded-xl hover:bg-red-600 transition-all border border-red-200 hover:border-red-600 shadow-sm bg-white flex-1 md:flex-initial"
+          >
+            <Trash2 className="w-4.5 h-4.5" /> Delete
+          </button>
+        </div>
+      </div>
+
+      {/* Grid containing Vitals, Medical History & General findings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Medical History Card */}
+        {(fullRecord.allergies || fullRecord.conditions || fullRecord.visits || fullRecord.lastVisit) && (
+          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 border-b border-border/40 pb-2">
+              <Stethoscope className="w-4.5 h-4.5 text-primary" />
+              <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
+            </div>
+            <div className="space-y-3 text-sm font-semibold">
+              {fullRecord.allergies && (
+                <div>
+                  <span className="text-[10px] font-bold text-red-500 block mb-0.5 uppercase tracking-wider">Allergies</span>
+                  <span className="text-foreground bg-red-50/40 px-3 py-1 rounded-lg border border-red-100 block">{fullRecord.allergies}</span>
+                </div>
+              )}
+              {fullRecord.conditions && (
+                <div>
+                  <span className="text-[10px] font-bold text-blue-500 block mb-0.5 uppercase tracking-wider">Medical Conditions</span>
+                  <span className="text-foreground bg-blue-50/30 px-3 py-1 rounded-lg border border-blue-100 block">{fullRecord.conditions}</span>
+                </div>
+              )}
+              {(fullRecord.visits || fullRecord.lastVisit) && (
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1.5 pt-2 border-t border-border/40 font-bold">
+                  {fullRecord.visits && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">🩺 Total Visits: {fullRecord.visits}</span>}
+                  {fullRecord.lastVisit && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">📅 Last Visit: {fullRecord.lastVisit}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Vitals Card */}
+        {(fullRecord.bp || fullRecord.height || fullRecord.weight || fullRecord.bmi) && (
+          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 border-b border-border/40 pb-2">
+              <HeartPulse className="w-4.5 h-4.5 text-blue-600" />
+              <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Patient Vitals</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm font-semibold">
+              {fullRecord.bp && (
+                <div className="bg-slate-50/50 p-3 rounded-lg border border-border/30">
+                  <span className="text-[9px] font-black text-muted-foreground block mb-0.5 uppercase tracking-widest">Blood Pressure</span>
+                  <span className="text-foreground text-base font-bold">{fullRecord.bp} <span className="text-xs font-semibold text-muted-foreground">mmHg</span></span>
+                </div>
+              )}
+              {fullRecord.height && (
+                <div className="bg-slate-50/50 p-3 rounded-lg border border-border/30">
+                  <span className="text-[9px] font-black text-muted-foreground block mb-0.5 uppercase tracking-widest">Height</span>
+                  <span className="text-foreground text-base font-bold">{fullRecord.height} <span className="text-xs font-semibold text-muted-foreground">cm</span></span>
+                </div>
+              )}
+              {fullRecord.weight && (
+                <div className="bg-slate-50/50 p-3 rounded-lg border border-border/30">
+                  <span className="text-[9px] font-black text-muted-foreground block mb-0.5 uppercase tracking-widest">Weight</span>
+                  <span className="text-foreground text-base font-bold">{fullRecord.weight} <span className="text-xs font-semibold text-muted-foreground">kg</span></span>
+                </div>
+              )}
+              {fullRecord.bmi && (
+                <div className="bg-slate-50/50 p-3 rounded-lg border border-border/30">
+                  <span className="text-[9px] font-black text-muted-foreground block mb-0.5 uppercase tracking-widest">BMI</span>
+                  <span className="text-foreground text-base font-bold">{fullRecord.bmi}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Observations & Diagnosis */}
+      {(fullRecord.observations_desc || fullRecord.diagnosis_desc) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {fullRecord.observations_desc && (
+            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2">
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
+                <AlertCircle className="w-4 h-4 text-primary" /> Observations
+              </p>
+              <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-primary/45 pl-3 py-0.5">
+                {fullRecord.observations_desc}
+              </div>
+            </div>
+          )}
+          {fullRecord.diagnosis_desc && (
+            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2">
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
+                <Stethoscope className="w-4.5 h-4.5 text-primary" /> Diagnosis
+              </p>
+              <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-indigo-500/45 pl-3 py-0.5">
+                {fullRecord.diagnosis_desc}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tooth Chart Findings */}
+      {fullRecord.tooth_findings && fullRecord.tooth_findings.length > 0 && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center">
+            <Activity className="w-4.5 h-4.5 mr-2 text-primary" /> Tooth Chart Findings
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {fullRecord.tooth_findings.map((finding: any) => (
+              <div
+                key={finding.id || finding.tooth_number}
+                className={`border rounded-lg px-3 py-1.5 text-xs flex items-center gap-2.5 shadow-sm font-bold ${getToothConditionBadgeStyle(finding.condition)}`}
+              >
+                <span className="font-black">Tooth #{finding.tooth_number}</span>
+                <span className="opacity-90">{finding.condition.replace("_", " ")}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Treatment Plan & Cost Card */}
+      {((fullRecord.treatment_plans && fullRecord.treatment_plans.length > 0) ||
+        (fullRecord.treatments && fullRecord.treatments.length > 0) ||
+        fullRecord.treatment_plan_description ||
+        fullRecord.treatmentPlan ||
+        fullRecord.treatment_plan) && (
+          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+            <p className="text-xs font-black text-emerald-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+              <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-600" /> Treatment Planning
+            </p>
+            {(fullRecord.treatment_plan_description || fullRecord.treatmentPlan || fullRecord.treatment_plan) && (
+              <p className="text-foreground text-sm font-semibold leading-relaxed bg-emerald-50/20 p-3 rounded-lg border border-emerald-100/30">
+                {fullRecord.treatment_plan_description || fullRecord.treatmentPlan || fullRecord.treatment_plan}
+              </p>
+            )}
+            {((fullRecord.treatment_plans || fullRecord.treatments || []).length > 0) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: any, index: number) => (
+                  <div key={tp.id || tp.tooth_number || index} className="bg-slate-50 border border-border/40 rounded-lg p-3 text-sm flex justify-between items-center font-bold">
+                    <span className="text-foreground">
+                      Tooth #{tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
+                    </span>
+                    {(tp.cost > 0 || tp.est_cost > 0) && (
+                      <span className="text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">₹{(tp.cost || tp.est_cost).toLocaleString()}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+      {/* Prescriptions */}
+      {hasValidPrescriptions(fullRecord.prescriptions) && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <p className="text-xs font-black text-indigo-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+            <Pill className="w-4.5 h-4.5 text-indigo-600" /> Prescribed Medicines
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {fullRecord.prescriptions?.map((p: any) => {
+              const medName = p.medicine_name || p.medicine;
+              return medName?.trim() ? (
+                <div key={p.id} className="bg-indigo-50/10 border border-indigo-100/40 rounded-xl p-3 text-sm font-semibold flex flex-col justify-between space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="font-black text-foreground text-sm">{medName}</span>
+                    {p.qty && <span className="bg-indigo-100/60 text-indigo-800 border border-indigo-200/50 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">Qty: {p.qty}</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground font-semibold">
+                    {p.dosage && <span className="bg-white px-1.5 py-0.5 rounded border border-border/50">Dosage: {p.dosage}</span>}
+                    {p.timing && <span className="bg-white px-1.5 py-0.5 rounded border border-border/50">{p.timing}</span>}
+                    {p.frequency && <span className="bg-white px-1.5 py-0.5 rounded border border-border/50">{p.frequency}</span>}
+                    {p.duration && <span className="bg-white px-1.5 py-0.5 rounded border border-border/50">Duration: {p.duration} {p.duration_type || p.durationUnit || "Days"}</span>}
+                  </div>
+                </div>
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations, Tests & Next Visit */}
+      {(fullRecord.recommendations || fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {fullRecord.recommendations && (
+            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2.5">
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
+                <Check className="w-4 h-4 text-primary" /> Recommendations
+              </p>
+              <p className="text-foreground text-sm font-medium leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-border/40">{fullRecord.recommendations}</p>
+            </div>
+          )}
+          {(fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
+            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+              {fullRecord.tests && (
+                <div>
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2 mb-2">
+                    🔬 Prescribed Tests
+                  </p>
+                  <p className="text-foreground text-sm font-medium bg-slate-50/50 p-2.5 rounded-lg border border-border/40">{fullRecord.tests}</p>
+                </div>
+              )}
+              {(fullRecord.next_visit || fullRecord.nextVisit) && (
+                <div className="border-t border-border/30 pt-3 mt-3">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2 mb-2">
+                    📅 Next Visit Note
+                  </p>
+                  <p className="text-foreground text-sm font-medium bg-slate-50/50 p-2.5 rounded-lg border border-border/40">{fullRecord.next_visit || fullRecord.nextVisit}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Lab Reports */}
+      {((fullRecord.labFiles && fullRecord.labFiles.length > 0) || (fullRecord.lab_files && fullRecord.lab_files.length > 0)) && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+            🔬 Lab Reports
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(fullRecord.labFiles || fullRecord.lab_files || []).map((file: any, idx: number) => {
+              const url = typeof file === 'string' ? file : file.url;
+              const name = typeof file === 'string' ? `Lab Report ${idx + 1}` : file.name || `Report ${idx + 1}`;
+              return (
+                <a
+                  key={idx}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-white hover:bg-primary/5 border border-border rounded-lg px-3 py-2 text-xs flex items-center gap-2 shadow-sm font-bold text-primary hover:underline transition-all duration-200"
+                >
+                  📁 {name}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      {fullRecord.additional_notes && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2.5">
+          <p className="text-xs font-black text-amber-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+            <FileText className="w-4.5 h-4.5 text-amber-600" /> Additional Notes
+          </p>
+          <p className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-amber-500/45 pl-3 py-0.5">{fullRecord.additional_notes}</p>
+        </div>
+      )}
+
+      {/* Cost & Follow-up Badges */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {fullRecord.total_estimated_cost !== undefined && fullRecord.total_estimated_cost > 0 && (
+          <div className="bg-gradient-to-r from-emerald-50 to-white border border-emerald-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5 uppercase tracking-wider">
+              <IndianRupee className="w-4.5 h-4.5 text-emerald-600" /> Total Procedure Fee
+            </span>
+            <span className="text-xl font-black text-emerald-700">₹ {fullRecord.total_estimated_cost.toLocaleString()}</span>
+          </div>
+        )}
+        {fullRecord.is_follow_up && fullRecord.follow_up_date && !appointment && (
+          <div className="bg-gradient-to-r from-purple-50 to-white border border-purple-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <Calendar className="w-4.5 h-4.5 text-purple-600 flex-shrink-0" />
+            <div>
+              <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest block mb-0.5">Follow-up Date</span>
+              <span className="text-base font-bold text-purple-900">{fmtShort(fullRecord.follow_up_date)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Associated Appointment & Scheduling Section */}
+      {isLoadingAppt ? (
+        <div className="border border-purple-200 bg-purple-50/10 p-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+          <Loader2 className="w-4.5 h-4.5 text-purple-600 animate-spin" />
+          <span className="text-xs font-bold text-purple-700">Checking scheduled appointments...</span>
+        </div>
+      ) : appointment ? (
+        <div className="border border-purple-200 bg-purple-50/10 p-4 rounded-xl space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-purple-200/50 pb-2.5">
+            <h4 className="text-xs font-black text-purple-800 flex items-center uppercase tracking-widest">
+              <Calendar className="w-4.5 h-4.5 mr-2 text-purple-600" />
+              Follow-up Appointment Scheduling
+            </h4>
+            {!editMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditMode(true)}
+                className="gap-1.5 h-8 border-purple-300 text-purple-700 hover:bg-purple-100/50 font-bold px-3 rounded-lg"
+              >
+                <Edit className="w-3 h-3" /> Edit Appointment
+              </Button>
+            )}
+          </div>
+
+          {!editMode ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-semibold">
+              <div className="bg-white border border-purple-100 p-3 rounded-lg shadow-sm">
+                <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest block mb-0.5">Assigned Doctor</span>
+                <span className="text-foreground text-sm font-bold">{getDoctorName()}</span>
+              </div>
+              <div className="bg-white border border-purple-100 p-3 rounded-lg shadow-sm">
+                <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest block mb-0.5">Appointment Date</span>
+                <span className="text-foreground text-sm font-bold">{fmtShort(appointment.date)}</span>
+              </div>
+              <div className="bg-white border border-purple-100 p-3 rounded-lg shadow-sm">
+                <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest block mb-0.5">Time Slot</span>
+                <span className="text-foreground text-sm font-bold">{formatSlotTime(appointment.start_time)}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                    Assign Doctor
+                  </label>
+                  <SearchableSelect
+                    value={selectedDoctorId}
+                    onChange={(val) => {
+                      setSelectedDoctorId(val);
+                      setSelectedSlot("");
+                    }}
+                    options={doctorsList.map((d: any) => ({
+                      label: `${d.name} (${d.specialization || "Doctor"})`,
+                      value: d.id
+                    }))}
+                    placeholder="Select Doctor"
+                    className="h-10 border-purple-200 rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                    Preferred Date
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setSelectedSlot("");
+                    }}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full h-10 px-3 bg-white border border-purple-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                  Available Slots
+                </label>
+                {isLoadingSlots ? (
+                  <div className="flex items-center gap-2 py-3">
+                    <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+                    <span className="text-xs text-muted-foreground">Checking slot availability...</span>
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-3 border border-purple-100 rounded-lg bg-white shadow-inner">
+                    {availableSlots.map((slot) => {
+                      const isSelected = selectedSlot === slot.time24;
+                      const isBooked = !slot.isAvailable;
+                      return (
+                        <button
+                          key={slot.time24}
+                          type="button"
+                          disabled={isBooked}
+                          onClick={() => !isBooked && setSelectedSlot(slot.time24)}
+                          className={`
+                            relative px-3 py-2 rounded-lg text-[10px] font-black transition-all border-2 flex items-center gap-1
+                            ${isSelected
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-md scale-105"
+                              : isBooked
+                                ? "bg-red-50/60 text-red-300 border-red-50/20 cursor-not-allowed line-through opacity-45"
+                                : "bg-emerald-50 text-emerald-800 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-400 cursor-pointer"
+                            }
+                          `}
+                        >
+                          {isSelected && <CheckCircle className="w-3 h-3 text-white shrink-0" />}
+                          {slot.time12}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-5 bg-white border border-dashed border-purple-200 rounded-lg">
+                    <p className="text-xs text-muted-foreground italic">No slots available for this doctor on this date.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditMode(false)}
+                  className="h-9 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold px-4 rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveAppointment}
+                  disabled={isSavingAppt || !selectedSlot}
+                  size="sm"
+                  className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 gap-1.5 font-bold px-5 rounded-lg"
+                >
+                  {isSavingAppt ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" /> Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Clinical Images */}
+      {fullRecord.images && fullRecord.images.length > 0 && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+            <ImageIcon className="w-4.5 h-4.5 text-primary/70" /> Clinical Images
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {fullRecord.images.map((imgUrl: string, idx: number) => (
+              <img
+                key={idx}
+                src={imgUrl}
+                alt={`Clinical ${idx + 1}`}
+                className="w-20 h-20 rounded-xl object-cover border border-border cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-300"
+                onClick={() => window.open(imgUrl, "_blank")}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* X-Ray Reports */}
+      {fullRecord.xrayFiles && fullRecord.xrayFiles.length > 0 && (
+        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <p className="text-xs font-black text-primary uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+            <Camera className="w-4.5 h-4.5 text-primary/70" /> X-Ray Reports
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {fullRecord.xrayFiles.map((imgUrl: string, idx: number) => (
+              <img
+                key={idx}
+                src={imgUrl}
+                alt={`X-Ray ${idx + 1}`}
+                className="w-20 h-20 rounded-xl object-cover border border-primary/20 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-300"
+                onClick={() => window.open(imgUrl, "_blank")}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

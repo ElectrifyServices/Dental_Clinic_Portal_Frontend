@@ -1,0 +1,218 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { RotateCcw, Upload, MousePointer2 } from 'lucide-react';
+import { Button } from '@/components/ui';
+
+interface SignaturePadProps {
+  onSave: (signatureDataUrl: string) => void;
+  defaultValue?: string;
+}
+
+export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSigned, setHasSigned] = useState(!!defaultValue);
+  const [mode, setMode] = useState<'draw' | 'upload'>('draw');
+  const [hasDrawn, setHasDrawn] = useState(!!defaultValue);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas && defaultValue) {
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const x = (canvas.width / 2) - (img.width / 2) * scale;
+          const y = (canvas.height / 2) - (img.height / 2) * scale;
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        }
+      };
+      img.src = defaultValue;
+    }
+  }, [defaultValue, mode]);
+
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    if (mode !== 'draw') return;
+    setIsDrawing(true);
+    draw(e);
+  };
+
+  const stopDrawing = () => {
+    if (mode !== 'draw') return;
+    setIsDrawing(false);
+    if (!hasDrawn) return;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx?.beginPath();
+      onSave(canvas.toDataURL());
+      setHasSigned(true);
+    }
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing || mode !== 'draw') return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1e3a8a';
+
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    if (!hasDrawn) {
+      setHasDrawn(true);
+    }
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      onSave('');
+      setHasSigned(false);
+      setHasDrawn(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        onSave(dataUrl);
+        setHasSigned(true);
+        setHasDrawn(true);
+
+        // Draw to canvas for preview
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.onload = () => {
+            if (ctx) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              // Calculate scaling to fit within canvas while maintaining aspect ratio
+              const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+              const x = (canvas.width / 2) - (img.width / 2) * scale;
+              const y = (canvas.height / 2) - (img.height / 2) * scale;
+              ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            }
+          };
+          img.src = dataUrl;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex bg-muted p-1 rounded-xl w-fit">
+        <Button
+          type="button"
+          onClick={() => setMode('draw')}
+          variant={mode === 'draw' ? 'default' : 'ghost'}
+          size="sm"
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+            }`}
+        >
+          <MousePointer2 className="w-3.5 h-3.5" />
+          Draw
+        </Button>
+        <Button
+          type="button"
+          onClick={() => setMode('upload')}
+          variant={mode === 'upload' ? 'default' : 'ghost'}
+          size="sm"
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+            }`}
+        >
+          <Upload className="w-3.5 h-3.5" />
+          Upload
+        </Button>
+      </div>
+
+      <div className="relative w-full">
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={180}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseOut={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-[2rem] transition-all ${mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
+            }`}
+        />
+
+        {mode === 'upload' && (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all ${hasSigned ? 'bg-white/70 backdrop-blur-[1px] opacity-0 hover:opacity-100' : ''}`}>
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-primary transition-all flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              {hasSigned ? "Change Signature" : "Select Signature File"}
+            </Button>
+            {!hasSigned && <p className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest">PNG, JPG or SVG allowed</p>}
+          </div>
+        )}
+
+        {!hasSigned && mode === 'draw' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-muted-foreground/40">
+            <span className="text-sm font-bold uppercase tracking-widest">Sign here with mouse/touch</span>
+          </div>
+        )}
+
+        {hasSigned && (
+          <Button
+            type="button"
+            onClick={clearCanvas}
+            variant="outline"
+            size="icon"
+            className="absolute bottom-4 right-4 p-2 bg-white rounded-full shadow-md text-muted-foreground hover:text-red-500 transition-all border border-border"
+            title="Clear Signature"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </Button>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+      </div>
+    </div>
+  );
+}
