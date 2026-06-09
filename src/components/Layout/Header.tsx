@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import {
   Bell,
   LogOut,
@@ -104,13 +105,13 @@ export function Header() {
         </div>
         {/* Quick actions */}
         <div className="hidden sm:flex items-center gap-2">
-          <button
+          <Button
             onClick={onShowTodaySchedule}
             className="flex items-center gap-1.5 bg-background border border-border hover:border-primary hover:bg-primary/10 text-foreground text-sm font-medium px-4 py-2 rounded-xl transition-all cursor-pointer"
           >
             <Calendar className="w-3.5 h-3.5 text-primary" />
             <span>Today's Schedule</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -118,14 +119,14 @@ export function Header() {
       <div className="flex items-center gap-2">
         <Popover>
           <PopoverTrigger asChild>
-            <button className="relative p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer outline-none flex items-center justify-center">
+            <Button variant="ghost" className="relative p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer outline-none flex items-center justify-center">
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white ring-2 ring-card animate-pulse">
                   {unreadCount}
                 </span>
               )}
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-96 p-0 bg-card/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl flex flex-col max-h-[480px]">
             {/* Header */}
@@ -138,22 +139,22 @@ export function Header() {
               </div>
               <div className="flex items-center gap-2">
                 {notifications.length > 0 && (
-                  <button
+                  <Button
                     onClick={markAllAsRead}
                     className="p-1.5 hover:bg-muted rounded-lg text-primary hover:text-primary-focus transition-all text-xs font-bold flex items-center gap-1"
                     title="Mark all as read"
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
                 {notifications.length > 0 && (
-                  <button
+                  <Button
                     onClick={clearAll}
                     className="p-1.5 hover:bg-destructive/10 rounded-lg text-destructive hover:text-destructive-focus transition-all text-xs font-bold flex items-center gap-1"
                     title="Clear all"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -209,8 +210,9 @@ export function Header() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <button
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted rounded-xl transition-colors cursor-pointer outline-none"
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted rounded-xl transition-colors cursor-pointer outline-none h-auto"
             >
               <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xs flex-shrink-0">
                 {state.user?.name?.[0] ?? "U"}
@@ -226,7 +228,7 @@ export function Header() {
                 </span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 hidden sm:block" />
-            </button>
+            </Button>
           </PopoverTrigger>
 
           <PopoverContent align="end" className="w-64 p-0">
@@ -238,7 +240,8 @@ export function Header() {
                 {state.user?.email}
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 showConfirm(
                   "Sign Out",
@@ -250,10 +253,10 @@ export function Header() {
                   "danger"
                 );
               }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors rounded-b-xl cursor-pointer"
+              className="w-full flex items-center justify-start gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors rounded-none rounded-b-xl cursor-pointer h-auto"
             >
               <LogOut className="w-4 h-4" /> Sign Out
-            </button>
+            </Button>
           </PopoverContent>
         </Popover>
       </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui";
 
 interface CalendarGridProps {
   monthOffset: number;
@@ -56,9 +57,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   return (
-    <div className="xl:col-span-6 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
+    <Card className="xl:col-span-6 flex flex-col overflow-hidden h-[500px] xl:h-full shadow-sm">
+      <CardContent className="p-6 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -131,6 +133,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           })}
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

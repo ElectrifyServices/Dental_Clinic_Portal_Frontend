@@ -5,7 +5,8 @@ import {
   TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
   Stethoscope, BadgeCheck, Timer, Sparkle, Sparkles,
 } from "lucide-react";
-import { Modal, Button, Badge } from "@/components/ui";
+import { Modal, Button, Badge, Label, Input, Textarea } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 
 import {
   useTreatmentSessionsQuery,
@@ -77,20 +78,14 @@ export function TreatmentSessionManager({
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
 
-  // ─── API ───────────────────────────────────────────────────────────────────
 
   // FIX: API returns responseObject.data with nested structure
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
-  /* console.log removed */
   // Extract the actual data from responseObject.data
   const responseData = apiResponse?.data;
-  
   const addSession      = useAddTreatmentSessionMutation();
   const updateSession   = useUpdateTreatmentSessionMutation();
   const completeSession = useCompleteTreatmentSessionMutation();
-
-  // ─── Local state ───────────────────────────────────────────────────────────
-
   const [showNewSession,        setShowNewSession]        = useState(false);
   const [expandedSessions,      setExpandedSessions]      = useState<Set<string>>(new Set());
   const [completingId,          setCompletingId]          = useState<string | null>(null);
@@ -284,18 +279,23 @@ export function TreatmentSessionManager({
 
               <div className="flex items-center gap-2 shrink-0">
                 {session.status !== "COMPLETED" && session.status !== "CANCELLED" && (
-                  <select
-                    value={session.status}
-                    onChange={(e) => handleUpdateStatus(session.id, e.target.value as any)}
-                    disabled={updateSession.isPending}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}
-                  >
-                    <option value="SCHEDULED">Scheduled</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Complete</option>
-                    <option value="CANCELLED">Cancel</option>
-                  </select>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={session.status}
+                      onValueChange={(val) => handleUpdateStatus(session.id, val as any)}
+                      disabled={updateSession.isPending}
+                    >
+                      <SelectTrigger className={`text-[10px] h-auto font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                        <SelectItem value="COMPLETED">Complete</SelectItem>
+                        <SelectItem value="CANCELLED">Cancel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
                 {isExpanded
                   ? <ChevronUp className="w-5 h-5 text-muted-foreground" />
@@ -314,7 +314,7 @@ export function TreatmentSessionManager({
                     <ClipboardList className="w-3 h-3" /> Clinical Objectives
                   </p>
                   {!isEditing && session.status !== "COMPLETED" && (
-                    <button
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingClinicalNotes(session.id);
@@ -323,12 +323,12 @@ export function TreatmentSessionManager({
                       className="text-[10px] font-semibold text-primary hover:underline"
                     >
                       Edit
-                    </button>
+                    </Button>
                   )}
                 </div>
                 {isEditing ? (
                   <div className="space-y-2">
-                    <textarea
+                    <Textarea
                       value={editNotes}
                       onChange={(e) => setEditNotes(e.target.value)}
                       rows={3}
@@ -337,8 +337,8 @@ export function TreatmentSessionManager({
                       autoFocus
                     />
                     <div className="flex gap-2 justify-end">
-                      <button onClick={() => setEditingClinicalNotes(null)} className="text-xs px-3 py-1 rounded-lg bg-muted hover:bg-muted/80">Cancel</button>
-                      <button onClick={() => handleUpdateClinicalNotes(session.id)} className="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary/90">Save</button>
+                      <Button variant="ghost" onClick={() => setEditingClinicalNotes(null)} className="text-xs px-3 py-1 rounded-lg bg-muted hover:bg-muted/80 h-auto">Cancel</Button>
+                      <Button onClick={() => handleUpdateClinicalNotes(session.id)} className="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary/90">Save</Button>
                     </div>
                   </div>
                 ) : (
@@ -415,8 +415,8 @@ export function TreatmentSessionManager({
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></label>
-                  <textarea
+                  <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
+                  <Textarea
                     rows={3}
                     placeholder="Describe the procedures performed..."
                     value={completeForm.work_done}
@@ -426,8 +426,8 @@ export function TreatmentSessionManager({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></label>
-                  <textarea
+                  <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
+                  <Textarea
                     rows={3}
                     placeholder="Observations, measurements, patient response..."
                     value={completeForm.session_findings}
@@ -436,8 +436,8 @@ export function TreatmentSessionManager({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Next Session Plan</label>
-                  <textarea
+                  <Label className="text-sm font-semibold block mb-2">Next Session Plan</Label>
+                  <Textarea
                     rows={2}
                     placeholder="Recommended follow-up..."
                     value={completeForm.next_session_plan}
@@ -636,15 +636,15 @@ export function TreatmentSessionManager({
                     <p className="text-sm text-muted-foreground">Add details for the upcoming appointment</p>
                   </div>
                 </div>
-                <button onClick={() => setShowNewSession(false)} className="p-2 hover:bg-muted rounded-full">
+                <Button variant="ghost" onClick={() => setShowNewSession(false)} className="p-2 hover:bg-muted rounded-full h-auto">
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></label>
-                  <input
+                  <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
+                  <Input
                     type="date"
                     value={newSession.date}
                     onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
@@ -653,32 +653,40 @@ export function TreatmentSessionManager({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Start Time</label>
-                  <select
+                  <Label className="text-sm font-semibold block mb-2">Start Time</Label>
+                  <Select
                     value={newSession.time}
-                    onChange={(e) => setNewSession({ ...newSession, time: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"
+                    onValueChange={(val) => setNewSession({ ...newSession, time: val })}
                   >
-                    {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
-                      <option key={t}>{t}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Duration (minutes)</label>
-                  <select
-                    value={newSession.duration}
-                    onChange={(e) => setNewSession({ ...newSession, duration: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"
+                  <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
+                  <Select
+                    value={newSession.duration.toString()}
+                    onValueChange={(val) => setNewSession({ ...newSession, duration: parseInt(val) })}
                   >
-                    {[15, 30, 45, 60, 90, 120].map(d => (
-                      <option key={d} value={d}>{d} minutes</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[15, 30, 45, 60, 90, 120].map(d => (
+                        <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Session Fee (₹) <span className="text-red-500">*</span></label>
-                  <input
+                  <Label className="text-sm font-semibold block mb-2">Session Fee (₹) <span className="text-red-500">*</span></Label>
+                  <Input
                     type="number"
                     value={newSession.cost || ""}
                     onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
@@ -691,8 +699,8 @@ export function TreatmentSessionManager({
               </div>
 
               <div className="mb-6">
-                <label className="text-sm font-semibold block mb-2">Clinical Objectives</label>
-                <textarea
+                <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
+                <Textarea
                   value={newSession.clinical_objectives}
                   onChange={(e) => setNewSession({ ...newSession, clinical_objectives: e.target.value })}
                   rows={3}

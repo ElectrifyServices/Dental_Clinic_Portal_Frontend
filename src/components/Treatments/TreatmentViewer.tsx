@@ -78,9 +78,6 @@ export function TreatmentViewer({
   }
 
   if (!treatment) return null;
-
-  /* console.log removed */
-
   const handleDownload = () => {
     const printContent = `
       <html>

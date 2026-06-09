@@ -41,8 +41,6 @@ export const processPatientCheckIn = (
     return;
   }
 
-  /* console.log removed */
-
   const queuedPatient = {
     id: appointment.id,
     patientId: existingPatient.id,

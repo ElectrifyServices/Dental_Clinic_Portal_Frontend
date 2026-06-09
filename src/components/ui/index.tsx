@@ -770,3 +770,4 @@ export {
 } from "./form/index";
 export * from "./Toast";
 export * from "./Loading";
+export * from "./ErrorState";

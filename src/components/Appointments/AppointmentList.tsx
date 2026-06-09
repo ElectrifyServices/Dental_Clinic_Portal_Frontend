@@ -137,7 +137,8 @@ export function AppointmentList({
         </div>
         <div className="flex bg-muted p-1 rounded-2xl border border-border self-start">
           {TYPE_FILTERS.map((f) => (
-            <button
+            <Button
+              variant={filter === f.id ? "default" : "ghost"}
               key={f.id}
               onClick={() => {
                 setFilter(f.id);
@@ -145,12 +146,12 @@ export function AppointmentList({
               }}
               className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${
                 filter === f.id
-                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5"
-                  : "text-muted-foreground/60 hover:text-primary"
+                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5 hover:bg-card"
+                  : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
               }`}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -239,13 +240,14 @@ export function AppointmentList({
               <div className="flex gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (p) => (
-                    <button
+                    <Button
+                      variant={p === page ? "default" : "ghost"}
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md" : "text-muted-foreground/60 hover:bg-muted"}`}
+                      className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md hover:bg-primary/90" : "text-muted-foreground/60 hover:bg-muted"}`}
                     >
                       {p}
-                    </button>
+                    </Button>
                   ),
                 )}
               </div>

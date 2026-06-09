@@ -215,7 +215,7 @@ export function EMRForm({
           <div>
             <Label>Attachments</Label>
             <div className="border-2 border-dashed border-input rounded-2xl p-8 text-center bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer relative">
-              <input
+              <Input
                 type="file"
                 multiple
                 accept="image/*,.pdf,.doc,.docx"

@@ -1,3 +1,5 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React, { useState, useRef } from "react";
 import {
   Building2,
@@ -357,7 +359,7 @@ export function CorporateManagement({
       <div className="space-y-6">
         {/* Tabs */}
         <div className="flex border-b border-border">
-          <button
+          <Button
             onClick={() => setActiveTab("plans")}
             className={`px-6 py-3 text-sm font-bold transition-all border-b-2 relative ${
               activeTab === "plans"
@@ -366,8 +368,8 @@ export function CorporateManagement({
             }`}
           >
             Corporate Plans
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab("bulk")}
             className={`px-6 py-3 text-sm font-bold transition-all border-b-2 relative ${
               activeTab === "bulk"
@@ -376,7 +378,7 @@ export function CorporateManagement({
             }`}
           >
             Bulk Employee Registration
-          </button>
+          </Button>
         </div>
 
         <div className="min-h-[500px]">
@@ -410,7 +412,7 @@ export function CorporateManagement({
                         className="group hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5"
                         action={
                           <div className="flex gap-1">
-                            <button
+                            <Button
                               onClick={() => {
                                 setEditingPlan(plan);
                                 setShowPlanForm(true);
@@ -418,13 +420,13 @@ export function CorporateManagement({
                               className="p-2 text-primary hover:bg-primary/10 rounded-lg"
                             >
                               <Plus className="w-4 h-4" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               onClick={() => onDeletePlan(plan.id)}
                               className="p-2 text-destructive hover:bg-destructive/10 rounded-lg"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </Button>
                           </div>
                         }
                         footer={
@@ -494,21 +496,21 @@ export function CorporateManagement({
                   className="max-w-2xl mx-auto"
                   icon={<Building2 className="w-5 h-5" />}
                   action={
-                    <button
+                    <Button
                       onClick={() => setShowPlanForm(false)}
                       className="text-muted-foreground/60 hover:text-muted-foreground"
                     >
                       <X className="w-5 h-5" />
-                    </button>
+                    </Button>
                   }
                 >
                   <form onSubmit={handleAddPlan} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="md:col-span-2">
-                        <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
+                        <Label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
                           Company Name
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                           name="name"
                           defaultValue={editingPlan?.name}
                           required
@@ -517,10 +519,10 @@ export function CorporateManagement({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
+                        <Label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
                           Discount Percent (%)
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                           name="discount"
                           type="number"
                           defaultValue={editingPlan?.discountPercent}
@@ -530,10 +532,10 @@ export function CorporateManagement({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
+                        <Label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
                           Credit Limit (₹)
-                        </label>
-                        <input
+                        </Label>
+                        <Input
                           name="creditLimit"
                           type="number"
                           defaultValue={editingPlan?.creditLimit}
@@ -542,15 +544,15 @@ export function CorporateManagement({
                         />
                       </div>
                       <div className="md:col-span-2 flex items-center p-4 bg-primary/5 rounded-xl border border-primary/10">
-                        <input
+                        <Input
                           name="freeConsultation"
                           type="checkbox"
                           defaultChecked={editingPlan?.freeConsultation}
                           className="w-5 h-5 rounded border-border text-primary focus:ring-primary/20"
                         />
-                        <label className="ml-3 text-xs font-black text-primary uppercase tracking-widest">
+                        <Label className="ml-3 text-xs font-black text-primary uppercase tracking-widest">
                           Enable Free Consultation for all employees
-                        </label>
+                        </Label>
                         <Gift className="w-5 h-5 ml-auto text-primary/40" />
                       </div>
                     </div>
@@ -559,19 +561,19 @@ export function CorporateManagement({
                         Contact Details
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <input
+                        <Input
                           name="contactPerson"
                           defaultValue={editingPlan?.contactPerson}
                           placeholder="Contact Person"
                           className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
                         />
-                        <input
+                        <Input
                           name="phone"
                           defaultValue={editingPlan?.phone}
                           placeholder="Phone Number"
                           className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
                         />
-                        <input
+                        <Input
                           name="email"
                           type="email"
                           defaultValue={editingPlan?.email}
@@ -620,7 +622,7 @@ export function CorporateManagement({
                       <Upload className="w-4 h-4" />
                       Upload CSV
                     </Button>
-                    <input
+                    <Input
                       type="file"
                       ref={fileInputRef}
                       onChange={handleCsvUpload}
@@ -631,9 +633,9 @@ export function CorporateManagement({
                 }
               >
                 <div className="mb-6">
-                  <label className="block text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
+                  <Label className="block text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
                     Target Corporate Plan
-                  </label>
+                  </Label>
                   <select
                     value={selectedCompanyId}
                     onChange={(e) => setSelectedCompanyId(e.target.value)}
@@ -672,7 +674,7 @@ export function CorporateManagement({
                           >
                             <td className="px-6 py-3">
                               <div className="relative">
-                                <input
+                                <Input
                                   value={p.name}
                                   onChange={(e) =>
                                     handleBulkChange(
@@ -692,7 +694,7 @@ export function CorporateManagement({
                               </div>
                             </td>
                             <td className="px-6 py-3 text-sm">
-                              <input
+                              <Input
                                 value={p.phone}
                                 onChange={(e) =>
                                   handleBulkChange(idx, "phone", e.target.value)
@@ -702,7 +704,7 @@ export function CorporateManagement({
                               />
                             </td>
                             <td className="px-6 py-3">
-                              <input
+                              <Input
                                 value={p.email}
                                 onChange={(e) =>
                                   handleBulkChange(idx, "email", e.target.value)
@@ -729,7 +731,7 @@ export function CorporateManagement({
                               </select>
                             </td>
                             <td className="px-6 py-3">
-                              <input
+                              <Input
                                 value={p.emp_id || ""}
                                 onChange={(e) =>
                                   handleBulkChange(idx, "emp_id", e.target.value)
@@ -739,7 +741,7 @@ export function CorporateManagement({
                               />
                             </td>
                             <td className="px-6 py-3">
-                              <input
+                              <Input
                                 value={p.designation || ""}
                                 onChange={(e) =>
                                   handleBulkChange(idx, "designation", e.target.value)
@@ -749,7 +751,7 @@ export function CorporateManagement({
                               />
                             </td>
                             <td className="px-6 py-3">
-                              <input
+                              <Input
                                 value={p.department || ""}
                                 onChange={(e) =>
                                   handleBulkChange(idx, "department", e.target.value)
@@ -759,12 +761,12 @@ export function CorporateManagement({
                               />
                             </td>
                             <td className="px-6 py-3">
-                              <button
+                              <Button
                                 onClick={() => handleRemoveBulkRow(idx)}
                                 className="p-2 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                               >
                                 <Trash2 className="w-4 h-4" />
-                              </button>
+                              </Button>
                             </td>
                           </tr>
                         );
@@ -773,13 +775,13 @@ export function CorporateManagement({
                   </table>
                 </div>
 
-                <button
+                <Button
                   onClick={handleBulkAddRow}
                   className="mt-6 w-full py-4 border-2 border-dashed border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Add Another Row
-                </button>
+                </Button>
               </ContentCard>
 
               <div className="flex justify-end gap-4">
@@ -803,12 +805,12 @@ export function CorporateManagement({
           <div className="absolute inset-0 bg-card z-[60] flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-6 border-b border-border flex items-center justify-between bg-muted/50">
               <div className="flex items-center gap-4">
-                <button
+                <Button
                   onClick={() => setViewingEmployeesPlanId(null)}
                   className="p-2 hover:bg-card rounded-lg transition-all text-primary"
                 >
                   <X className="w-6 h-6" />
-                </button>
+                </Button>
                 <div>
                   <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
                     {
@@ -832,7 +834,7 @@ export function CorporateManagement({
               <div className="relative group" ref={searchRef}>
                 <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
                 <form onSubmit={handleSearchSubmit}>
-                  <input
+                  <Input
                     placeholder="Search name, phone, or email..."
                     value={employeeSearchQuery}
                     onChange={(e) => {
@@ -853,7 +855,7 @@ export function CorporateManagement({
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {recentSearches.map((s, i) => (
-                            <button
+                            <Button
                               key={i}
                               onClick={() => {
                                 setEmployeeSearchQuery(s);
@@ -862,7 +864,7 @@ export function CorporateManagement({
                               className="px-3 py-1 bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                               {s}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       </div>
@@ -874,7 +876,7 @@ export function CorporateManagement({
                       <div className="flex flex-wrap gap-2">
                         {["Male", "Female", "Manager", "@gmail.com", "Dev"].map(
                           (s, i) => (
-                            <button
+                            <Button
                               key={i}
                               onClick={() => {
                                 setEmployeeSearchQuery(s);
@@ -883,7 +885,7 @@ export function CorporateManagement({
                               className="px-3 py-1 bg-primary/5 hover:bg-primary text-primary hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                               {s}
-                            </button>
+                            </Button>
                           ),
                         )}
                       </div>
@@ -928,7 +930,7 @@ export function CorporateManagement({
                                 {emp.name[0].toUpperCase()}
                               </div>
                               {isEditing ? (
-                                <input
+                                <Input
                                   value={tempEmpData.name}
                                   onChange={(e) =>
                                     setTempEmpData({
@@ -952,7 +954,7 @@ export function CorporateManagement({
                           </td>
                           <td className="px-6 py-4 text-sm font-bold text-foreground">
                             {isEditing ? (
-                              <input
+                              <Input
                                 value={tempEmpData.phone}
                                 onChange={(e) =>
                                   setTempEmpData({
@@ -972,7 +974,7 @@ export function CorporateManagement({
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {isEditing ? (
-                              <input
+                              <Input
                                 value={tempEmpData.email}
                                 onChange={(e) =>
                                   setTempEmpData({
@@ -1016,7 +1018,7 @@ export function CorporateManagement({
                             <div className="flex justify-end gap-1">
                               {isEditing ? (
                                 <>
-                                  <button
+                                  <Button
                                     onClick={() => {
                                       onUpdateEmployee(
                                         editingEmployee!.name,
@@ -1028,17 +1030,17 @@ export function CorporateManagement({
                                     className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-lg shadow-emerald-100"
                                   >
                                     <CheckCircle className="w-4 h-4" />
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
                                     onClick={() => setEditingEmployee(null)}
                                     className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted"
                                   >
                                     <X className="w-4 h-4" />
-                                  </button>
+                                  </Button>
                                 </>
                               ) : (
                                 <>
-                                  <button
+                                  <Button
                                     onClick={() => {
                                       setEditingEmployee({
                                         name: emp.name,
@@ -1050,8 +1052,8 @@ export function CorporateManagement({
                                     title="Edit Employee"
                                   >
                                     <Plus className="w-4 h-4" />
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
                                     onClick={() =>
                                       onDeleteEmployee(emp.name, emp.email)
                                     }
@@ -1059,7 +1061,7 @@ export function CorporateManagement({
                                     title="Delete Employee"
                                   >
                                     <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  </Button>
                                 </>
                               )}
                             </div>

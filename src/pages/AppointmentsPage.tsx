@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Button } from "@/components/ui/Button";
 import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
@@ -115,27 +116,30 @@ export const AppointmentsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center justify-between w-full md:w-auto gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl">
-          <button
+          <Button
+            variant={viewMode === "calendar" ? "default" : "ghost"}
             onClick={() => setViewMode("calendar")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
             <span className="truncate">Calendar</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
             onClick={() => setViewMode("list")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
           >
             <ListFilter className="w-3.5 h-3.5" />
             <span className="truncate">List View ({listCount})</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={viewMode === "no-show" ? "default" : "ghost"}
             onClick={() => setViewMode("no-show")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm" : "text-muted-foreground hover:text-red-500"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm" : "text-muted-foreground hover:text-red-500 hover:bg-muted/50"}`}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
             <span className="truncate">No Show ({noShowCount})</span>
-          </button>
+          </Button>
         </div>
       </div>
 

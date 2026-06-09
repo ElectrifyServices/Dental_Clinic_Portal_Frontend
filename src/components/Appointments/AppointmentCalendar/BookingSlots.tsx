@@ -37,7 +37,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
               availableSlots.map((slot, idx) => {
                 const isDisabled = slot.isBooked || slot.isPast;
                 return (
-                  <button
+                  <Button
                     key={idx}
                     disabled={isDisabled}
                     onClick={() => setSelectedTime(slot.time24)}
@@ -50,7 +50,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
                     {slot.isBooked && (
                       <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
                     )}
-                  </button>
+                  </Button>
                 );
               })
             ) : (

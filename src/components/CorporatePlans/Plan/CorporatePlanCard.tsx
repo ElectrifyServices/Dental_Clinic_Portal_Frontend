@@ -6,7 +6,7 @@ import {
 import { CorporatePlan } from '../../../types';
 import { COLOR_MAP, getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';
 import { BENEFIT_ICONS, STATUS_BADGE, STATUS_LABEL } from './constants';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../ui';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button } from '../../ui';
 import { Card, CardContent } from '../../ui/Card';
 
 interface CorporatePlanCardProps {
@@ -34,13 +34,14 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
           </div>
           
           <div className="flex items-center gap-1.5">
-            <button
+            <Button
+              variant="outline"
               onClick={() => {
                 if (status === 'expired') return;
                 onToggle(plan.id);
               }}
               disabled={status === 'expired' || isUpdatingStatus}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors border ${
+              className={`flex items-center h-auto gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors border ${
                 status === 'expired'
                   ? 'bg-rose-100 text-rose-700 border-rose-200 cursor-not-allowed'
                   : plan.isActive
@@ -57,13 +58,13 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
                 <ToggleLeft className="w-3.5 h-3.5" />
               )}
               {status === 'expired' ? 'Expired' : plan.isActive ? 'Active' : 'Inactive'}
-            </button>
+            </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1.5 hover:bg-muted rounded-full transition-all text-muted-foreground">
+                <Button variant="ghost" className="p-1.5 hover:bg-muted rounded-full transition-all text-muted-foreground">
                   <MoreHorizontal className="w-4 h-4" />
-                </button>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem onClick={() => onEdit(plan)} className="cursor-pointer">
@@ -113,11 +114,11 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
         </div>
 
         {/* View Details Trigger */}
-        <button onClick={() => setExpanded(!expanded)}
-          className="mt-1 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all">
+        <Button variant="ghost" onClick={() => setExpanded(!expanded)}
+          className="mt-1 flex items-center w-full justify-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all h-8">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           {expanded ? 'Collapse Details' : 'View Full Configuration'}
-        </button>
+        </Button>
       </CardContent>
 
       {expanded && (

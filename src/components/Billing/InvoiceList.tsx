@@ -217,7 +217,7 @@ export function InvoiceList({
                   >
                     <div className="p-1.5 space-y-0.5">
                       {inv.status !== "paid" && onUpdateStatus && (
-                        <button
+                        <Button
                           onClick={() => {
                             setPayInvoice(inv);
                             setOpenMenuId(null);
@@ -225,10 +225,10 @@ export function InvoiceList({
                           className="w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
                         >
                           <IndianRupee className="w-4 h-4" /> Mark as Paid
-                        </button>
+                        </Button>
                       )}
                       {inv.status === "draft" && onUpdateStatus && (
-                        <button
+                        <Button
                           onClick={() => {
                             onUpdateStatus(inv.id, "sent");
                             setOpenMenuId(null);
@@ -236,9 +236,9 @@ export function InvoiceList({
                           className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
                         >
                           <Send className="w-4 h-4" /> Send to Patient
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
                         onClick={() => {
                           onDeleteInvoice?.(inv.id);
                           setOpenMenuId(null);
@@ -246,7 +246,7 @@ export function InvoiceList({
                         className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
                       >
                         <Trash2 className="w-4 h-4" /> Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>,

@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui";
 import { Mail, ArrowRight } from "lucide-react";
 
 interface ForgotViewProps {
@@ -26,12 +29,12 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
         className="space-y-4"
       >
         <div>
-          <label className="text-[13px] font-semibold text-gray-600 block mb-1.5">
+          <Label className="text-[13px] font-semibold text-gray-600 block mb-1.5">
             Email address
-          </label>
+          </Label>
           <div className="relative group">
             <Mail className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
-            <input
+            <Input
               type="email"
               required
               value={resetEmail}
@@ -42,23 +45,24 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
           className="w-full h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-150 shadow-sm shadow-blue-200 mt-2"
         >
           <span>Send Reset Link</span>
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </Button>
       </form>
 
       <div className="mt-8 text-center">
-        <button
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => setView('login')}
-          className="text-[13px] text-blue-600 hover:text-blue-700 font-medium transition-colors"
+          className="text-[13px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-medium transition-colors p-0 h-auto"
         >
           Back to Login
-        </button>
+        </Button>
       </div>
     </div>
   );

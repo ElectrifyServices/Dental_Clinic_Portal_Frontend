@@ -1,3 +1,7 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { Calendar, Plus, Trash2, Clock, DollarSign, FileText } from "lucide-react";
 
 interface SessionPlannerSectionProps {
@@ -31,14 +35,14 @@ export function SessionPlannerSection({
             </p>
           </div>
         </div>
-        <button
+        <Button
           type="button"
           onClick={onAddSession}
           className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary/90 flex items-center text-sm font-semibold transition-all shadow-md shadow-primary/20 active:scale-95"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Session
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -70,7 +74,7 @@ export function SessionPlannerSection({
                 >
                   {index + 1}
                 </div>
-                <input
+                <Input
                   type="text"
                   value={session.name}
                   onChange={(e) =>
@@ -86,25 +90,25 @@ export function SessionPlannerSection({
                     Optional
                   </span>
                 )}
-                <button
+                <Button
                   type="button"
                   onClick={() => onRemoveSession(session.id)}
                   className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                   disabled={sessions.length === 1 && session.isRequired}
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="space-y-3">
               {/* Visit Date */}
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                   <Calendar className="w-3 h-3" />
                   Visit Date
-                </label>
-                <input
+                </Label>
+                <Input
                   type="date"
                   value={session.scheduledDate || session.suggestedDate}
                   onChange={(e) =>
@@ -122,10 +126,10 @@ export function SessionPlannerSection({
               {/* Start Time & Duration */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     Start Time
-                  </label>
+                  </Label>
                   <select
                     value={session.startTime || "09:00"}
                     onChange={(e) =>
@@ -156,10 +160,10 @@ export function SessionPlannerSection({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     Duration (min)
-                  </label>
+                  </Label>
                   <select
                     value={session.duration || 45}
                     onChange={(e) =>
@@ -184,11 +188,11 @@ export function SessionPlannerSection({
               {/* Session Fee & Status */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                     <DollarSign className="w-3 h-3" />
                     Session Fee (₹)
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="number"
                     value={session.cost || 0}
                     onChange={(e) =>
@@ -203,9 +207,9 @@ export function SessionPlannerSection({
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                     Status
-                  </label>
+                  </Label>
                   <select
                     value={session.status || "scheduled"}
                     onChange={(e) =>
@@ -223,11 +227,11 @@ export function SessionPlannerSection({
 
               {/* Clinical Objectives / Notes */}
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                   <FileText className="w-3 h-3" />
                   Clinical Objectives
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   value={session.notes || session.description || ""}
                   onChange={(e) =>
                     onUpdateSession(session.id, {
@@ -245,10 +249,10 @@ export function SessionPlannerSection({
               {/* Work Done (for completed sessions) */}
               {(session.status === "completed" || session.status === "in-progress") && (
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                     Work Done
-                  </label>
-                  <textarea
+                  </Label>
+                  <Textarea
                     value={session.workDone || ""}
                     onChange={(e) =>
                       onUpdateSession(session.id, {
@@ -266,10 +270,10 @@ export function SessionPlannerSection({
               {/* Session Findings (for completed sessions) */}
               {session.status === "completed" && (
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                     Session Findings
-                  </label>
-                  <textarea
+                  </Label>
+                  <Textarea
                     value={session.findings || ""}
                     onChange={(e) =>
                       onUpdateSession(session.id, {

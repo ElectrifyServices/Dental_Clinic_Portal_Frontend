@@ -24,6 +24,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  DataTable,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -44,6 +45,131 @@ export function ConsentFormList({
   onFilterChange,
   doctorsList,
 }: ConsentFormListProps) {
+  const columns = [
+    {
+      key: "patient",
+      header: "Patient",
+      render: (form: any) => (
+        <>
+          <div className="font-bold text-foreground text-sm">
+            {form.patientName}
+          </div>
+          {form.patientId && (
+            <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
+              #{form.patientId.slice(-6)}
+            </div>
+          )}
+        </>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "consentType",
+      header: "Consent Type",
+      render: (form: any) => (
+        <div className="font-bold text-foreground text-sm uppercase tracking-tight">
+          {form.treatmentType}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "doctor",
+      header: "Doctor",
+      render: (form: any) => (
+        <div className="font-semibold text-muted-foreground text-sm">
+          {form.doctorName}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "created",
+      header: "Created",
+      render: (form: any) => (
+        <div className="text-sm font-medium text-muted-foreground">
+          {form.createdDate
+            ? new Date(form.createdDate).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+            : "-"}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "signed",
+      header: "Signed",
+      render: (form: any) => {
+        const statusUpper = form.status?.toUpperCase() || "";
+        const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
+        return (
+          <div className={`text-sm font-medium ${isSigned ? 'text-muted-foreground' : 'text-amber-600 font-semibold'}`}>
+            {isSigned && form.signedDate
+              ? new Date(form.signedDate).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              : "Pending"}
+          </div>
+        );
+      },
+      className: "px-6 py-4",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (form: any) => {
+        const statusUpper = form.status?.toUpperCase() || "";
+        const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
+        const isDraft = statusUpper === "DRAFT";
+        return isSigned ? (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10">
+            <CheckCircle className="w-3 h-3" /> Signed
+          </Badge>
+        ) : isDraft ? (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-blue-500/10 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
+            <Clock className="w-3 h-3" /> Draft
+          </Badge>
+        ) : (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10">
+            <Clock className="w-3 h-3" /> Pending
+          </Badge>
+        );
+      },
+      className: "px-6 py-4",
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right" as const,
+      render: (form: any) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors outline-none">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={() => onViewForm(form.id)} className="cursor-pointer gap-2">
+              <Eye className="w-4 h-4 text-primary" /> View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditForm(form.id)} className="cursor-pointer gap-2">
+              <Edit className="w-4 h-4 text-blue-600" /> Edit Form
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDeleteForm(form.id)} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+              <Trash2 className="w-4 h-4" /> Delete Form
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      className: "px-6 py-4",
+    },
+  ];
+
   return (
     <div className="space-y-3">
       <PageHeader
@@ -153,137 +279,11 @@ export function ConsentFormList({
           bodyClassName="p-0 overflow-hidden"
           className="rounded-3xl border-border/50"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Patient
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Consent Type
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Doctor
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Created
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Signed
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {forms.map((form) => (
-                  <tr
-                    key={form.id}
-                    className="hover:bg-muted/50 transition-colors group"
-                  >
-                    {(() => {
-                      const statusUpper = form.status?.toUpperCase() || "";
-                      const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
-                      const isDraft = statusUpper === "DRAFT";
-
-                      return (
-                        <>
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-foreground text-sm">
-                              {form.patientName}
-                            </div>
-                            {form.patientId && (
-                              <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
-                                #{form.patientId.slice(-6)}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-foreground text-sm uppercase tracking-tight">
-                              {form.treatmentType}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="font-semibold text-muted-foreground text-sm">
-                              {form.doctorName}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-muted-foreground">
-                              {form.createdDate
-                                ? new Date(form.createdDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                                : "-"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className={`text-sm font-medium ${isSigned ? 'text-muted-foreground' : 'text-amber-600 font-semibold'}`}>
-                              {isSigned && form.signedDate
-                                ? new Date(form.signedDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                                : "Pending"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {isSigned ? (
-                              <Badge
-                                className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10"
-                              >
-                                <CheckCircle className="w-3 h-3" /> Signed
-                              </Badge>
-                            ) : isDraft ? (
-                              <Badge
-                                className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-blue-500/10 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
-                              >
-                                <Clock className="w-3 h-3" /> Draft
-                              </Badge>
-                            ) : (
-                              <Badge
-                                className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10"
-                              >
-                                <Clock className="w-3 h-3" /> Pending
-                              </Badge>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors outline-none">
-                                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem onClick={() => onViewForm(form.id)} className="cursor-pointer gap-2">
-                                  <Eye className="w-4 h-4 text-primary" /> View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onEditForm(form.id)} className="cursor-pointer gap-2">
-                                  <Edit className="w-4 h-4 text-blue-600" /> Edit Form
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onDeleteForm(form.id)} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
-                                  <Trash2 className="w-4 h-4" /> Delete Form
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </>
-                      );
-                    })()}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={forms}
+            rowKey={(row) => row.id}
+          />
         </ContentCard>
       )}
     </div>

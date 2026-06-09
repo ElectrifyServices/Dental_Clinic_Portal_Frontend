@@ -1,3 +1,5 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import { useState, useRef, useEffect } from "react";
 import {
   Search,
@@ -14,6 +16,7 @@ import {
   User,
   Check,
 } from "lucide-react";
+import { Button } from "../ui";
 
 interface Doctor {
   id: string;
@@ -245,7 +248,7 @@ export function DoctorBooking({
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-            <input
+            <Input
               type="text"
               placeholder="Search by name or department..."
               value={searchTerm}
@@ -254,12 +257,12 @@ export function DoctorBooking({
             />
           </div>
           <div className="relative" ref={filterRef}>
-            <button
+            <Button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-3 rounded-2xl transition-all shadow-sm border ${showFilters ? "bg-primary text-white border-primary shadow-blue-100" : "bg-card text-muted-foreground border-border hover:text-primary"}`}
             >
               <Filter className="w-5 h-5" />
-            </button>
+            </Button>
 
             {/* Filter Dropdown Popover */}
             {showFilters && (
@@ -268,7 +271,7 @@ export function DoctorBooking({
                   <h4 className="text-sm font-bold text-foreground leading-none">
                     Global Filters
                   </h4>
-                  <button
+                  <Button
                     onClick={() => {
                       setSelectedSpecialty([]);
                       setSelectedCity([]);
@@ -277,7 +280,7 @@ export function DoctorBooking({
                     className="text-[10px] font-bold text-primary hover:underline uppercase"
                   >
                     Reset
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="space-y-6">
@@ -288,7 +291,7 @@ export function DoctorBooking({
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {specialties.slice(0, 4).map((s) => (
-                        <button
+                        <Button
                           key={s}
                           onClick={() =>
                             toggleFilter(
@@ -300,7 +303,7 @@ export function DoctorBooking({
                           className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all ${selectedSpecialty.includes(s) ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted border-transparent text-muted-foreground"}`}
                         >
                           {s}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -312,7 +315,7 @@ export function DoctorBooking({
                     </p>
                     <div className="flex gap-2">
                       {["Male", "Female"].map((g) => (
-                        <button
+                        <Button
                           key={g}
                           onClick={() =>
                             toggleFilter(selectedGender, setSelectedGender, g)
@@ -323,7 +326,7 @@ export function DoctorBooking({
                             <Check className="w-3 h-3" />
                           )}
                           {g}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -335,11 +338,11 @@ export function DoctorBooking({
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {cities.map((c) => (
-                        <label
+                        <Label
                           key={c}
                           className="flex items-center gap-2 cursor-pointer group"
                         >
-                          <input
+                          <Input
                             type="checkbox"
                             checked={selectedCity.includes(c)}
                             onChange={() =>
@@ -350,7 +353,7 @@ export function DoctorBooking({
                           <span className="text-[10px] font-bold text-muted-foreground group-hover:text-foreground">
                             {c}
                           </span>
-                        </label>
+                        </Label>
                       ))}
                     </div>
                   </div>
@@ -362,14 +365,14 @@ export function DoctorBooking({
 
         {/* Quick Department Filter Bar */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          <button
+          <Button
             onClick={() => setSelectedSpecialty([])}
             className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? "bg-slate-900 border-slate-900 text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
           >
             All Departments
-          </button>
+          </Button>
           {specialties.map((s) => (
-            <button
+            <Button
               key={s}
               onClick={() =>
                 toggleFilter(selectedSpecialty, setSelectedSpecialty, s)
@@ -377,7 +380,7 @@ export function DoctorBooking({
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
             >
               {s}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -443,7 +446,7 @@ export function DoctorBooking({
               <p className="text-[10px] font-semibold text-muted-foreground/60 mt-1">
                 Try adjusting your filters or department selection
               </p>
-              <button
+              <Button
                 onClick={() => {
                   setSelectedSpecialty([]);
                   setSelectedCity([]);
@@ -453,7 +456,7 @@ export function DoctorBooking({
                 className="mt-6 text-primary font-bold text-[10px] uppercase hover:underline"
               >
                 Clear all filters
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -503,9 +506,9 @@ export function DoctorBooking({
                   </div>
                   <div className="flex gap-1.5 items-center">
                     <div className="relative group">
-                      <button className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground">
+                      <Button variant="ghost" className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground">
                         <CalendarIcon className="w-3.5 h-3.5" />
-                        <input
+                        <Input
                           type="date"
                           className="absolute inset-0 opacity-0 cursor-pointer"
                           min={new Date().toISOString().split("T")[0]}
@@ -531,10 +534,10 @@ export function DoctorBooking({
                             }
                           }}
                         />
-                      </button>
+                      </Button>
                     </div>
                     <div className="w-px h-4 bg-muted mx-0.5" />
-                    <button
+                    <Button
                       onClick={() => {
                         const el = document.getElementById("date-strip");
                         if (el) el.scrollBy({ left: -200, behavior: "smooth" });
@@ -542,8 +545,8 @@ export function DoctorBooking({
                       className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => {
                         const el = document.getElementById("date-strip");
                         if (el) el.scrollBy({ left: 200, behavior: "smooth" });
@@ -551,7 +554,7 @@ export function DoctorBooking({
                       className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground"
                     >
                       <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -570,7 +573,7 @@ export function DoctorBooking({
                     const dayNum = date.getDate();
 
                     return (
-                      <button
+                      <Button
                         key={idx}
                         onClick={() => setSelectedDate(date)}
                         className={`flex-shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
@@ -593,7 +596,7 @@ export function DoctorBooking({
                         {isToday && !isSelected && (
                           <div className="w-1 h-1 bg-primary rounded-full mt-0.5" />
                         )}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -669,7 +672,7 @@ export function DoctorBooking({
                         const isDisabled = slot.isBooked || slot.isPast;
 
                         return (
-                          <button
+                          <Button
                             key={idx}
                             disabled={isDisabled}
                             onClick={() => setSelectedTime(slot.time24)}
@@ -686,7 +689,7 @@ export function DoctorBooking({
                             {slot.isBooked && (
                               <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
                             )}
-                          </button>
+                          </Button>
                         );
                       })
                     ) : (
@@ -701,7 +704,7 @@ export function DoctorBooking({
 
                 {/* Bottom Actions */}
                 <div className="pt-6">
-                  <button
+                  <Button
                     onClick={() =>
                       onBookAppointment(
                         selectedDoctor.id,
@@ -713,7 +716,7 @@ export function DoctorBooking({
                   >
                     Confirm & Schedule
                     <ChevronRight className="w-5 h-5 font-bold" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

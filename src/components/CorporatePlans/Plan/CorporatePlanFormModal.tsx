@@ -1,8 +1,9 @@
+import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, Settings2, CheckCircle } from 'lucide-react';
 import { CorporatePlan, PlanBenefit } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui';
+import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading } from '../../ui';
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -248,7 +249,6 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         showToast('Plan created successfully');
         setShowForm(false);
       } catch (err: any) {
-        /* console.error removed */
         let errorMsg = parseBackendError(err, "Failed to create plan on backend");
 
         if (typeof errorMsg === "string") {
@@ -281,7 +281,6 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         showToast('Plan updated successfully');
         setShowForm(false);
       } catch (err: any) {
-        /* console.error removed */
         let errorMsg = parseBackendError(err, "Failed to update plan on backend");
 
         if (typeof errorMsg === "string") {
@@ -332,15 +331,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     >
       <div className="space-y-8 py-2 relative min-h-[200px]">
         {isFetching && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
-            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading corporate plan details from API...</p>
-          </div>
+          <Loading type="spinner" text="Loading corporate plan details from API..." className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-50 rounded-2xl" />
         )}
         <section className="space-y-4">
-          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+          <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
             {coreIdentitySection?.title ?? 'Core Identity'}
-          </label>
+          </Label>
 
           {/* Standard fields from JSON config */}
           {coreIdentitySection && (
@@ -357,7 +353,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           <LabeledField label={fl('color', 'Visual Branding Theme')}>
             <div className="flex gap-2 flex-wrap pt-1">
               {PLAN_COLORS.map(c => (
-                <button key={c} type="button" onClick={() => setForm({ ...form, color: c as any })}
+                <Button key={c} type="button" onClick={() => setForm({ ...form, color: c as any })}
                   className={`w-9 h-9 rounded-xl ${planColorDots[c] ?? 'bg-gray-400'} transition-all shadow-md ${form.color === c ? 'ring-2 ring-offset-4 ring-primary scale-110' : 'opacity-30 hover:opacity-100'}`} />
               ))}
             </div>
@@ -369,7 +365,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         <section className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{cfg.sections?.find(s => s.id === 'benefitLogic')?.title ?? 'Plan Benefit Logic'}</label>
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{cfg.sections?.find(s => s.id === 'benefitLogic')?.title ?? 'Plan Benefit Logic'}</Label>
               <div className="bg-primary/10 text-primary text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Automatic Calculations</div>
             </div>
             <Button variant="outline" size="sm" onClick={() => setForm({ ...form, benefits: [...form.benefits, mkBenefit()] })} className="h-9 gap-2 shadow-sm">
@@ -387,23 +383,24 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 </div>
 
                 {form.benefits.length > 1 && (
-                  <button type="button" onClick={() => setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) })}
+                  <Button variant="ghost" size="icon" type="button" onClick={() => setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) })}
                     className="absolute top-4 right-4 p-2.5 text-muted-foreground hover:text-red-500 hover:bg-destructive/10 rounded-2xl transition-all">
                     <Trash2 className="w-5 h-5" />
-                  </button>
+                  </Button>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-2">
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Logic Type</label>
-                      <button
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Logic Type</Label>
+                      <Button
+                        variant={b.type === 'custom' ? 'default' : 'secondary'}
                         type="button"
                         onClick={() => updateBenefit(idx, 'type', b.type === 'custom' ? 'flat_discount' : 'custom')}
-                        className={`flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-tight transition-all ${b.type === 'custom' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'}`}
+                        className={`flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-tight transition-all ${b.type === 'custom' ? 'shadow-lg shadow-primary/20' : 'hover:bg-primary/10 hover:text-primary'}`}
                       >
                         <Settings2 className="w-3 h-3" /> {b.type === 'custom' ? 'Using Custom Label' : 'Use Custom Label'}
-                      </button>
+                      </Button>
                     </div>
                     <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
                       <SelectTrigger className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm text-left">
@@ -421,13 +418,13 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
                   {b.type === 'custom' ? (
                     <LabeledField label={fl('customName', 'Benefit Label (Manual Entry)')}>
-                      <input type="text" value={b.customName || ''} onChange={e => updateBenefit(idx, 'customName', e.target.value)}
+                      <Input type="text" value={b.customName || ''} onChange={e => updateBenefit(idx, 'customName', e.target.value)}
                         placeholder="e.g. Lab Charges, X-Ray"
                         className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
                     </LabeledField>
                   ) : (
                     <LabeledField label={['free_consultations', 'free_treatments'].includes(b.type) ? fl('allocationCount', 'Allocation Count') : fl('value', 'Discount Rate (%)')}>
-                      <input type="number" min="0" max={b.type.includes('discount') ? 100 : 999} value={b.value}
+                      <Input type="number" min="0" max={b.type.includes('discount') ? 100 : 999} value={b.value}
                         onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                         className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
                     </LabeledField>
@@ -435,7 +432,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
                   {b.type === 'custom' && (
                     <LabeledField label={fl('value', 'Discount Rate (%)')}>
-                      <input type="number" min="0" max={100} value={b.value}
+                      <Input type="number" min="0" max={100} value={b.value}
                         onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                         className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-black bg-background shadow-sm" />
                     </LabeledField>
@@ -443,7 +440,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
                   {b.type === 'capped_discount' && (
                     <LabeledField label={fl('cap', 'Maximum Cap (₹)')}>
-                      <input type="number" min="0" value={b.cap ?? ''}
+                      <Input type="number" min="0" value={b.cap ?? ''}
                         onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
                         className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm" />
                     </LabeledField>
@@ -451,17 +448,17 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
                   {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
                     <div className="md:col-span-3">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block ml-1">{fl('treatmentTypes', 'Target Clinical Procedures')}</label>
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block ml-1">{fl('treatmentTypes', 'Target Clinical Procedures')}</Label>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
-                          <label key={key} className={`flex items-center gap-2 px-4 py-2 rounded-2xl border cursor-pointer transition-all select-none ${b.treatmentTypes?.includes(key) ? 'bg-primary/10 border-primary text-primary font-bold shadow-sm' : 'bg-background border-border text-muted-foreground hover:border-primary/40'}`}>
-                            <input type="checkbox" checked={b.treatmentTypes?.includes(key) ?? false} className="sr-only"
+                          <Label key={key} className={`flex items-center gap-2 px-4 py-2 rounded-2xl border cursor-pointer transition-all select-none ${b.treatmentTypes?.includes(key) ? 'bg-primary/10 border-primary text-primary font-bold shadow-sm' : 'bg-background border-border text-muted-foreground hover:border-primary/40'}`}>
+                            <Input type="checkbox" checked={b.treatmentTypes?.includes(key) ?? false} className="sr-only"
                               onChange={e => {
                                 const curr = b.treatmentTypes || [];
                                 updateBenefit(idx, 'treatmentTypes', e.target.checked ? [...curr, key] : curr.filter(t => t !== key));
                               }} />
                             <span className="text-[11px] uppercase tracking-tighter font-black">{label}</span>
-                          </label>
+                          </Label>
                         ))}
                       </div>
                     </div>
@@ -469,7 +466,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
                   <div className="md:col-span-3">
                     <LabeledField label={fl('description', 'Auto-Generated Display Description')} error={errors[`b_${idx}`]}>
-                      <input type="text" value={b.description} onChange={e => updateBenefit(idx, 'description', e.target.value)}
+                      <Input type="text" value={b.description} onChange={e => updateBenefit(idx, 'description', e.target.value)}
                         placeholder="Patient-facing benefit description"
                         className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium bg-muted/30 shadow-inner" />
                     </LabeledField>

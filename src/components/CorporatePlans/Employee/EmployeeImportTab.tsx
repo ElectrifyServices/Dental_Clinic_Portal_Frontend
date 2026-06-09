@@ -67,7 +67,6 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       setImportErrors([]);
       setTab('list');
     } catch (err: any) {
-      /* console.error removed */
       setImportErrors(prev => [
         err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
         ...prev

@@ -1,5 +1,8 @@
 import React from "react";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
@@ -67,15 +70,15 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <User className="w-12 h-12 text-primary" />
             )}
           </div>
-          <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
+          <Label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
             <Upload className="w-4 h-4" />
-            <input
+            <Input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
             />
-          </label>
+          </Label>
         </div>
         <p className="text-sm text-muted-foreground mt-2">
           Upload patient photo (optional)
@@ -170,10 +173,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Full Name *
-          </label>
+          </Label>
           <Input
             type="text"
             name="name"
@@ -193,10 +196,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div className="relative">
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number *
-          </label>
+          </Label>
           <Input
             type="tel"
             name="phone"
@@ -222,10 +225,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Mail className="w-4 h-4 inline mr-2" />
             Email Address
-          </label>
+          </Label>
           <Input
             type="email"
             name="email"
@@ -247,10 +250,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
-          </label>
+          </Label>
           <Input
             type="date"
             name="dateOfBirth"
@@ -262,9 +265,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Gender
-          </label>
+          </Label>
           <Select
             value={formData.gender || ""}
             onValueChange={(val) => {
@@ -283,9 +286,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Blood Group
-          </label>
+          </Label>
           <Select
             value={formData.bloodGroup || ""}
             onValueChange={(val) => {
@@ -310,9 +313,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
         {type === "person" && (
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Label className="block text-sm font-semibold text-muted-foreground mb-2">
               Relation
-            </label>
+            </Label>
             <Select
               value={formData.relation || ""}
               onValueChange={(val) => {
@@ -356,13 +359,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   placeholder="Enter custom relation"
                   className="rounded-r-none"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={applyCustomRelation}
                   className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
                 >
                   →
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -370,11 +373,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground mb-2">
+        <Label className="block text-sm font-semibold text-muted-foreground mb-2">
           <MapPin className="w-4 h-4 inline mr-2" />
           Address
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           name="address"
           value={formData.address || ""}
           onChange={handleChange}
@@ -386,9 +389,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Occupation
-          </label>
+          </Label>
           <Input
             type="text"
             name="occupation"
@@ -399,9 +402,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Marital Status
-          </label>
+          </Label>
           <Select
             value={formData.maritalStatus || ""}
             onValueChange={(val) => {
@@ -425,9 +428,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           return (
             <>
               <div>
-                <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                   Patient Category
-                </label>
+                </Label>
                 <Select
                   value={isCorporate ? "corporate" : (formData.category?.toLowerCase() || "regular")}
                   onValueChange={(val) => {
@@ -454,11 +457,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-semibold text-muted-foreground">
+                  <Label className="block text-sm font-semibold text-muted-foreground">
                     Default Discount (%)
-                  </label>
-                  <label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <input
+                  </Label>
+                  <Label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <Input
                       type="checkbox"
                       name="isFOC"
                       checked={formData.isFOC || false}
@@ -474,7 +477,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                       className="w-3.5 h-3.5 accent-primary cursor-pointer"
                     />
                     <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
-                  </label>
+                  </Label>
                 </div>
                 <Input
                   type="number"
@@ -498,10 +501,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Name
-          </label>
+          </Label>
           <Input
             type="text"
             name="emergencyName"
@@ -511,10 +514,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Relation
-          </label>
+          </Label>
           <div className="space-y-3">
             <Select
               value={formData.emergencyRelation || ""}
@@ -585,7 +588,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   className="rounded-r-none"
                   placeholder="Enter custom relation"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     if (formData.customEmergencyRelation.trim()) {
@@ -599,17 +602,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
                 >
                   →
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
-          </label>
+          </Label>
             <Input
               type="tel"
               name="emergencyContact"

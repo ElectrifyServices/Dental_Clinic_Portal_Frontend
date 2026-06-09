@@ -35,9 +35,6 @@ interface EmployeeManagementProps {
 }
 
 import { parseXlsx, downloadTemplate } from './Employee/importUtils';
-
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan, parentTab, setParentTab }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
@@ -178,6 +175,32 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
   const openEdit = (e: CorporateEmployee) => { setEditEmp(e); setShowForm(true); };
   const openChangePlan = (e: CorporateEmployee) => { setChangePlanEmp(e); };
 
+  const handleDeleteEmployee = async () => {
+    if (!deleteEmp) return;
+    try {
+      await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
+      queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+      onDelete(deleteEmp.id);
+      refetch();
+      setDeleteEmp(null);
+    } catch (e: any) {
+      const resData = e.response?.data || e;
+      const statusDesc = resData?.responseStatusList?.statusList?.[0]?.statusDesc;
+      let errMsg = "Failed to remove employee.";
+
+      if (statusDesc) {
+        errMsg = statusDesc;
+      } else if (resData?.statusDesc) {
+        errMsg = resData.statusDesc;
+      } else if (resData?.message) {
+        errMsg = resData.message;
+      } else if (e.message) {
+        errMsg = e.message;
+      }
+      showToast(errMsg, "error");
+    }
+  };
+
   // ── Table columns ──
   const columns = [
     {
@@ -235,7 +258,6 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
                 refetch();
               } catch (err) {
-                /* console.error removed */
               }
             }}
             className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border h-auto ${isExpired
@@ -269,17 +291,14 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => openChangePlan(e)} className="cursor-pointer">
-                <ArrowRightLeft className="w-4 h-4 mr-2 text-blue-500" />
-                <span>Change Plan</span>
+              <DropdownMenuItem onSelect={() => openEdit(e)}>
+                <Edit2 className="w-4 h-4 mr-2" /> Edit Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openEdit(e)} className="cursor-pointer">
-                <Edit2 className="w-4 h-4 mr-2 text-primary" />
-                <span>Edit Employee</span>
+              <DropdownMenuItem onSelect={() => openChangePlan(e)}>
+                <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteEmp(e)} className="cursor-pointer text-destructive focus:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                <span>Remove Employee</span>
+              <DropdownMenuItem onSelect={() => setDeleteEmp(e)} className="text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -453,26 +472,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           confirmLabel="Remove"
           variant="danger"
           isLoading={deleteEmployeeMutation.isPending}
-          onConfirm={async () => {
-            try {
-              await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
-              queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
-              onDelete(deleteEmp.id);
-              refetch();
-              setDeleteEmp(null);
-            } catch (e: any) {
-              /* console.error removed */
-              let errMsg = "Failed to remove employee.";
-              const resData = e.response?.data || e;
-
-              if (resData?.message) {
-                errMsg = resData.message;
-              } else if (resData?.statusDesc) {
-                errMsg = resData.statusDesc;
-              }
-              showToast(errMsg, "error");
-            }
-          }}
+          onConfirm={handleDeleteEmployee}
           onCancel={() => setDeleteEmp(null)}
         />
       )}

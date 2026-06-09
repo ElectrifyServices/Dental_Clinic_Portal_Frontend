@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -150,12 +151,12 @@ export function MobileNav() {
           >
             <div className="flex items-center justify-between mb-5 border-b border-border/50 pb-3">
               <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">All Modules</h4>
-              <button
+              <Button
                 onClick={() => setMenuOpen(false)}
                 className="p-1.5 hover:bg-muted rounded-full text-muted-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -207,7 +208,7 @@ export function MobileNav() {
             );
           })}
 
-          <button
+          <Button
             onClick={() => setMenuOpen(!menuOpen)}
             className={`flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-colors outline-none ${
               menuOpen
@@ -217,7 +218,7 @@ export function MobileNav() {
           >
             <Menu className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] font-medium truncate">Menu</span>
-          </button>
+          </Button>
         </div>
       </div>
     </>

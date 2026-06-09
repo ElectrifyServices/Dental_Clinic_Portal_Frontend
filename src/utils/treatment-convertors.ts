@@ -129,15 +129,6 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
       clinical_objectives: s.notes || s.description || "",
     }));
 
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-
   return {
     patient_id: formData.patientId,
     doctor_id: formData.doctorId,

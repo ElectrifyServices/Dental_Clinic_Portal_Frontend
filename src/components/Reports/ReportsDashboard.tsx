@@ -397,7 +397,7 @@ export function ReportsDashboard({
           const Icon = r.icon;
           const isActive = selectedReport === r.id;
           return (
-            <button
+            <Button
               key={r.id}
               onClick={() => setSelectedReport(r.id)}
               className={`p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${isActive ? "border-primary bg-card shadow-xl shadow-primary/5" : "border-transparent bg-card hover:border-border hover:shadow-md"}`}
@@ -416,7 +416,7 @@ export function ReportsDashboard({
               {isActive && (
                 <div className="absolute top-4 right-4 w-2 h-2 bg-primary rounded-full animate-pulse" />
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

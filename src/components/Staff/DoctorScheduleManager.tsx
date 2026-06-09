@@ -1,3 +1,5 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import { useState, useEffect } from "react";
 import { Save, Clock, Calendar, AlertTriangle, Loader2 } from "lucide-react";
 import { Modal, Button, LabeledField, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
@@ -509,8 +511,8 @@ export function DoctorScheduleManager({
                           </span>
                         )}
                       </div>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
+                      <Label className="flex items-center gap-2 cursor-pointer">
+                        <Input
                           type="checkbox"
                           checked={isWorking}
                           onChange={(e) => handleDayChange(day.key, "isWorking", e.target.checked)}
@@ -519,7 +521,7 @@ export function DoctorScheduleManager({
                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
                           Working Day
                         </span>
-                      </label>
+                      </Label>
                     </div>
 
                     {isWorking && (
@@ -542,14 +544,14 @@ export function DoctorScheduleManager({
 
                           <LabeledField label="No. of Slots">
                             <div className="relative flex items-center">
-                              <button
+                              <Button
                                 type="button"
                                 onClick={() => handleSlotCountChange(day.key, String(Math.max(1, (slotCount || 1) - 1)))}
                                 className="absolute left-1.5 w-6 h-6 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors z-10 font-bold"
                               >
                                 -
-                              </button>
-                              <input
+                              </Button>
+                              <Input
                                 type="number"
                                 min={1}
                                 max={100}
@@ -558,13 +560,13 @@ export function DoctorScheduleManager({
                                 onChange={(e) => handleSlotCountChange(day.key, e.target.value)}
                                 className="w-full text-center px-8 py-1.5 border-2 border-primary/30 rounded-xl text-xs font-black text-primary bg-primary/5 focus:outline-none focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
-                              <button
+                              <Button
                                 type="button"
                                 onClick={() => handleSlotCountChange(day.key, String((slotCount || 1) + 1))}
                                 className="absolute right-1.5 w-6 h-6 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors z-10 font-bold"
                               >
                                 +
-                              </button>
+                              </Button>
                             </div>
                           </LabeledField>
                         </div>
@@ -622,13 +624,13 @@ export function DoctorScheduleManager({
                               </Badge>
                             ))}
                             {slots.length > 10 && (
-                              <button
+                              <Button
                                 type="button"
                                 onClick={() => setExpandedDays((prev) => ({ ...prev, [day.key]: !prev[day.key] }))}
                                 className="text-[9px] font-black text-primary hover:underline cursor-pointer bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded-full transition-all"
                               >
                                 {expandedDays[day.key] ? "Show Less" : `+${slots.length - 10} more`}
-                              </button>
+                              </Button>
                             )}
                           </div>
                         )}

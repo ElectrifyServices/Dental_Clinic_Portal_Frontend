@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 ﻿import { Clock } from "lucide-react";
 
 interface Slot {
@@ -23,7 +24,7 @@ export function TimeSlotGrid({
       {slots.length > 0 ? (
         <div className="grid grid-cols-3 gap-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
           {slots.map((slot) => (
-            <button
+            <Button
               key={slot.time24}
               disabled={slot.isBooked || slot.isPast}
               onClick={() => onSelectTime(slot.time12)}
@@ -36,7 +37,7 @@ export function TimeSlotGrid({
               }`}
             >
               {slot.time12}
-            </button>
+            </Button>
           ))}
         </div>
       ) : (

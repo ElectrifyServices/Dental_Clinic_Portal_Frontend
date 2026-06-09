@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import {
   Shield,
   Stethoscope,
@@ -202,7 +205,7 @@ export function Step2Role({
           const isActive = formData.role === role.value;
 
           return (
-            <button
+            <Button
               key={role.value}
               type="button"
               onClick={() => onChange(role.value)}
@@ -230,7 +233,7 @@ export function Step2Role({
               {isActive && (
                 <div className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-pulse" />
               )}
-            </button>
+            </Button>
           );
         }))}
       </div>
@@ -254,14 +257,14 @@ export function Step2Role({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {PERMISSIONS.map((permission) => (
-              <label
+              <Label
                 key={permission.id}
                 className={`flex items-start gap-3 p-3 border rounded-2xl cursor-pointer transition-colors ${formData.permissions.includes(permission.id)
                   ? "border-primary/30 bg-primary/5"
                   : "border-border bg-muted/30 hover:bg-muted/50"
                   }`}
               >
-                <input
+                <Input
                   type="checkbox"
                   checked={formData.permissions.includes(permission.id)}
                   onChange={(e) =>
@@ -284,7 +287,7 @@ export function Step2Role({
                     {permission.description}
                   </p>
                 </div>
-              </label>
+              </Label>
             ))}
           </div>
         </div>

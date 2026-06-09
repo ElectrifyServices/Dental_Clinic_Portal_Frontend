@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
@@ -150,7 +151,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                   <Upload className="w-3.5 h-3.5 text-muted-foreground mr-2 group-hover:scale-110 transition-transform" />
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{hasFiles ? "Upload Another" : "Tap to upload PDF/JPG"}</span>
                 </div>
-                <input
+                <Input
                   type="file"
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   onChange={(e) => handleFileChange(doc, e)}

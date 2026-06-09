@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Loading } from "@/components/ui/Loading";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { ConsentFormList } from "../components/Consent/ConsentFormList";
@@ -83,7 +84,6 @@ export function ConsentPage() {
       await deleteMutation.mutateAsync({ id });
       showToast("Consent form deleted successfully");
     } catch (err: any) {
-      /* console.error removed */
       showToast(err?.response?.data?.message || err?.message || "Failed to delete consent form", "error");
     }
   };
@@ -91,12 +91,7 @@ export function ConsentPage() {
   return (
     <div className="space-y-3">
       {isLoading && !search ? (
-        <div className="flex flex-col items-center justify-center py-24 bg-card rounded-[2.5rem] border border-border shadow-sm">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider animate-pulse">
-            Fetching consent documents...
-          </p>
-        </div>
+        <Loading text="Fetching consent documents..." />
       ) : (
         <ConsentFormList
           forms={mappedForms}

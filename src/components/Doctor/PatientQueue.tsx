@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import {
   Search,
@@ -186,7 +188,7 @@ export function PatientQueue({
       <div className="flex flex-col xl:flex-row xl:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
         <div className="relative flex-1 group w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-          <input
+          <Input
             type="text"
             placeholder="Search by patient name, treatment, or concern..."
             value={searchTerm}
@@ -219,37 +221,39 @@ export function PatientQueue({
                 icon: <CheckCircle className="w-3.5 h-3.5" />,
               },
             ].map((s) => (
-              <button
+              <Button
                 key={s.id}
+                variant={filterStatus === s.id ? "default" : "ghost"}
                 onClick={() => handleFilterStatusChange(s.id)}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${
                   filterStatus === s.id
-                    ? "bg-card text-primary shadow-sm border border-border"
+                    ? "bg-card text-primary shadow-sm border border-border hover:bg-card/90"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 {s.icon}
                 <span>{s.label}</span>
-              </button>
+              </Button>
             ))}
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* <button
+            {/* <Button
               onClick={() => setShowDirectPopup(true)}
               className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm flex-1 sm:flex-initial"
             >
               <UserPlus className="w-4 h-4" />
               <span>Direct</span>
-            </button> */}
+            </Button> */}
 
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowHistory(true)}
               className="flex items-center justify-center gap-2 px-5 py-2.5 bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted active:scale-95 transition-all shadow-sm font-bold text-sm flex-1 sm:flex-initial"
             >
               <History className="w-4 h-4 text-blue-500" />
               <span>History</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

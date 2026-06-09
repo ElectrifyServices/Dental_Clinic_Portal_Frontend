@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 ﻿import { X, Stethoscope, User } from "lucide-react";
 
 interface Patient {
@@ -53,12 +54,12 @@ export function ConsultationHeader({
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
             className="text-muted-foreground/60 hover:text-muted-foreground p-2 hover:bg-muted rounded-xl transition-all duration-200"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
       </div>
 

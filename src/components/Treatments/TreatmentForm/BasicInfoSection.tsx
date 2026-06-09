@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import React from "react";
 import { Info, AlertCircle } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
@@ -28,10 +31,10 @@ export function BasicInfoSection({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-primary" />
           Patient Details
-        </label>
+        </Label>
         <SearchableSelect
           value={formData.patientName}
           onChange={(val) => handleChange({ target: { name: "patientName", value: val } } as any)}
@@ -51,13 +54,13 @@ export function BasicInfoSection({
                   Pending Treatment Plans
                 </p>
                 {pendingPlans.map((plan) => (
-                  <button
+                  <Button
                     key={plan.id}
                     onClick={() => onLoadPlan(plan)}
                     className="text-xs text-yellow-700 dark:text-yellow-500 hover:underline block mt-1"
                   >
                     {plan.procedure} (₹{plan.cost})
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -66,9 +69,9 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Treatment Details
-        </label>
+        </Label>
         <SearchableSelect
           value={formData.procedure}
           onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as any)}
@@ -78,9 +81,9 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Tooth / Area
-        </label>
+        </Label>
         <SearchableSelect
           value={formData.tooth}
           onChange={(val) => handleChange({ target: { name: "tooth", value: val } } as any)}
@@ -90,10 +93,10 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Start Date
-        </label>
-        <input
+        </Label>
+        <Input
           type="date"
           name="date"
           value={formData.date}
@@ -103,10 +106,10 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Estimated Cost (₹)
-        </label>
-        <input
+        </Label>
+        <Input
           type="number"
           name="cost"
           value={formData.cost === 0 ? "" : formData.cost}
@@ -117,9 +120,9 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Status
-        </label>
+        </Label>
         <SearchableSelect
           value={formData.status}
           onChange={(val) => handleChange({ target: { name: "status", value: val } } as any)}
@@ -134,9 +137,9 @@ export function BasicInfoSection({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black text-foreground uppercase tracking-widest">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Assigned Doctor
-        </label>
+        </Label>
         <SearchableSelect
           value={formData.doctorId}
           onChange={(val) => handleChange({ target: { name: "doctorId", value: val } } as any)}

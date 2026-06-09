@@ -1,3 +1,4 @@
+import { Label } from "@/components/ui/Label";
 import {
   Printer,
   Shield,
@@ -180,33 +181,33 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Patient
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground">
                   {form.patientName}
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Doctor
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground">
                   {form.doctorName}
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Procedure
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground uppercase tracking-tight">
                   {form.treatmentType}
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Created Date
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground">
                   {form.createdDate ? new Date(form.createdDate).toLocaleDateString("en-IN", {
                     day: "numeric", month: "short", year: "numeric"
@@ -214,9 +215,9 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Signed Date
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground">
                   {(form.status?.toUpperCase() === "SIGNED" || form.status?.toUpperCase() === "COMPLETED") && form.signedDate ? new Date(form.signedDate).toLocaleDateString("en-IN", {
                     day: "numeric", month: "short", year: "numeric"
@@ -224,9 +225,9 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <Label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
                   Status
-                </label>
+                </Label>
                 <div className="text-sm font-bold text-foreground capitalize">
                   {form.status?.toLowerCase() || "pending"}
                 </div>

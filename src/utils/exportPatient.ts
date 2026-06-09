@@ -22,7 +22,6 @@ export const exportPatientReport = async (
       }
     }
   } catch (err) {
-    /* console.error removed */
   }
 
   const patientAppointments = appointments.filter(

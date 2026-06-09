@@ -139,7 +139,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutMutation.mutateAsync({});
     } catch (error) {
-      /* console.error removed */
     } finally {
       AuthStorage.clear();
       dispatch({ type: "LOGOUT" });

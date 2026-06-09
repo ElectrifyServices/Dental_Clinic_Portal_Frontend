@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText, Trash2,
@@ -9,7 +10,7 @@ import { parseApiResponse } from "../../../services/parseApiResponse";
 import { useDoctorsListQuery } from "../../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 import { useUpdateAppointmentMutation } from "../../../hooks/appointments/useUpdateAppointmentMutation";
-import { SearchableSelect, Button, Label, Loading } from "@/components/ui";
+import { SearchableSelect, Button, Label, Loading, Card, CardContent } from "@/components/ui";
 
 interface HistoryDetailProps {
   record: any;
@@ -140,7 +141,6 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
           }
         }
       } catch (err) {
-        /* console.error removed */
       } finally {
         setIsLoadingFull(false);
       }
@@ -201,7 +201,6 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
       }));
       setEditMode(false);
     } catch (err) {
-      /* console.error removed */
     } finally {
       setIsSavingAppt(false);
     }
@@ -259,7 +258,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
   return (
     <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto" onClick={() => setShowPrintMenu(false)}>
       {/* Patient Header Card */}
-      <div className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border border-border/70 rounded-xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <Card className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
+        <CardContent className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4 shrink-0">
           <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100">
             {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
@@ -354,13 +354,15 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
             <Trash2 className="w-4.5 h-4.5" /> Delete
           </Button>
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Grid containing Vitals, Medical History & General findings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Medical History Card */}
         {(fullRecord.allergies || fullRecord.conditions || fullRecord.visits || fullRecord.lastVisit) && (
-          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <Card className="border-border/70 rounded-xl shadow-sm">
+            <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 border-b border-border/40 pb-2">
               <Stethoscope className="w-4.5 h-4.5 text-primary" />
               <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
@@ -385,12 +387,14 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                 </div>
               )}
             </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Vitals Card */}
         {(fullRecord.bp || fullRecord.height || fullRecord.weight || fullRecord.bmi) && (
-          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <Card className="border-border/70 rounded-xl shadow-sm">
+            <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 border-b border-border/40 pb-2">
               <HeartPulse className="w-4.5 h-4.5 text-blue-600" />
               <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Patient Vitals</h4>
@@ -421,7 +425,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                 </div>
               )}
             </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -429,31 +434,36 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
       {(fullRecord.observations_desc || fullRecord.diagnosis_desc) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fullRecord.observations_desc && (
-            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2">
+            <Card className="border-border/70 rounded-xl shadow-sm">
+              <CardContent className="p-4 space-y-2">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                 <AlertCircle className="w-4 h-4 text-primary" /> Observations
               </p>
               <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-primary/45 pl-3 py-0.5">
                 {fullRecord.observations_desc}
               </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
           {fullRecord.diagnosis_desc && (
-            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2">
+            <Card className="border-border/70 rounded-xl shadow-sm">
+              <CardContent className="p-4 space-y-2">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                 <Stethoscope className="w-4.5 h-4.5 text-primary" /> Diagnosis
               </p>
               <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-indigo-500/45 pl-3 py-0.5">
                 {fullRecord.diagnosis_desc}
               </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
 
       {/* Tooth Chart Findings */}
       {fullRecord.tooth_findings && fullRecord.tooth_findings.length > 0 && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center">
             <Activity className="w-4.5 h-4.5 mr-2 text-primary" /> Tooth Chart Findings
           </p>
@@ -468,7 +478,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               </div>
             ))}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Treatment Plan & Cost Card */}
@@ -477,7 +488,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
         fullRecord.treatment_plan_description ||
         fullRecord.treatmentPlan ||
         fullRecord.treatment_plan) && (
-          <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+          <Card className="border-border/70 rounded-xl shadow-sm">
+            <CardContent className="p-4 space-y-3">
             <p className="text-xs font-black text-emerald-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
               <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-600" /> Treatment Planning
             </p>
@@ -500,12 +512,14 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                 ))}
               </div>
             )}
-          </div>
+            </CardContent>
+          </Card>
         )}
 
       {/* Prescriptions */}
       {hasValidPrescriptions(fullRecord.prescriptions) && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
           <p className="text-xs font-black text-indigo-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
             <Pill className="w-4.5 h-4.5 text-indigo-600" /> Prescribed Medicines
           </p>
@@ -528,22 +542,26 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               ) : null;
             })}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Recommendations, Tests & Next Visit */}
       {(fullRecord.recommendations || fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fullRecord.recommendations && (
-            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2.5">
+            <Card className="border-border/70 rounded-xl shadow-sm">
+              <CardContent className="p-4 space-y-2.5">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                 <Check className="w-4 h-4 text-primary" /> Recommendations
               </p>
               <p className="text-foreground text-sm font-medium leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-border/40">{fullRecord.recommendations}</p>
-            </div>
+              </CardContent>
+            </Card>
           )}
           {(fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
-            <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+            <Card className="border-border/70 rounded-xl shadow-sm">
+              <CardContent className="p-4 space-y-3">
               {fullRecord.tests && (
                 <div>
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2 mb-2">
@@ -560,14 +578,16 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                   <p className="text-foreground text-sm font-medium bg-slate-50/50 p-2.5 rounded-lg border border-border/40">{fullRecord.next_visit || fullRecord.nextVisit}</p>
                 </div>
               )}
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
 
       {/* Lab Reports */}
       {((fullRecord.labFiles && fullRecord.labFiles.length > 0) || (fullRecord.lab_files && fullRecord.lab_files.length > 0)) && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
             🔬 Lab Reports
           </p>
@@ -588,17 +608,20 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               );
             })}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Notes */}
       {fullRecord.additional_notes && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-2.5">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-2.5">
           <p className="text-xs font-black text-amber-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
             <FileText className="w-4.5 h-4.5 text-amber-600" /> Additional Notes
           </p>
           <p className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-amber-500/45 pl-3 py-0.5">{fullRecord.additional_notes}</p>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Cost & Follow-up Badges */}
@@ -688,7 +711,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                   <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                     Preferred Date
                   </Label>
-                  <input
+                  <Input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => {
@@ -777,7 +800,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
 
       {/* Clinical Images */}
       {fullRecord.images && fullRecord.images.length > 0 && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
             <ImageIcon className="w-4.5 h-4.5 text-primary/70" /> Clinical Images
           </p>
@@ -792,12 +816,14 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               />
             ))}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* X-Ray Reports */}
       {fullRecord.xrayFiles && fullRecord.xrayFiles.length > 0 && (
-        <div className="bg-card border border-border/70 rounded-xl p-4 shadow-sm space-y-3">
+        <Card className="border-border/70 rounded-xl shadow-sm">
+          <CardContent className="p-4 space-y-3">
           <p className="text-xs font-black text-primary uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
             <Camera className="w-4.5 h-4.5 text-primary/70" /> X-Ray Reports
           </p>
@@ -812,7 +838,8 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               />
             ))}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

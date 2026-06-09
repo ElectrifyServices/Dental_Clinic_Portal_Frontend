@@ -1,3 +1,6 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
@@ -54,7 +57,7 @@ export function TreatmentPlanning({
         </h3>
 
         <div className="flex items-center mb-4">
-          <input
+          <Input
             type="checkbox"
             name="requiresTreatment"
             checked={requiresTreatment}
@@ -104,7 +107,7 @@ export function TreatmentPlanning({
                         />
                       </td>
                       <td className="py-3 px-4">
-                        <input
+                        <Input
                           type="number"
                           min="1"
                           value={plan.sessions}
@@ -113,7 +116,7 @@ export function TreatmentPlanning({
                         />
                       </td>
                       <td className="py-3 px-4">
-                        <input
+                        <Input
                           type="number"
                           min="0"
                           value={plan.cost === 0 ? "" : plan.cost}
@@ -123,7 +126,7 @@ export function TreatmentPlanning({
                         />
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <input
+                        <Input
                           type="checkbox"
                           checked={plan.isActive}
                           onChange={(e) => onUpdatePlan(index, "isActive", e.target.checked)}
@@ -156,10 +159,10 @@ export function TreatmentPlanning({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Treatment Plan Description <span className="text-destructive">*</span>
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             name="treatmentPlan"
             value={treatmentPlanText}
             onChange={onTreatmentPlanTextChange}
@@ -180,7 +183,7 @@ export function TreatmentPlanning({
 
         <div>
           <div className="flex items-center p-3 bg-muted/40 border border-border/60 rounded-xl mt-4">
-            <input
+            <Input
               type="checkbox"
               name="followUpRequired"
               checked={followUpRequired}

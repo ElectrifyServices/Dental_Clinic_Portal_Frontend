@@ -1,4 +1,6 @@
 import React, { useMemo } from "react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
+import { Button } from "@/components/ui";
 import { Calendar, Clock, Loader2, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
@@ -120,17 +122,20 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Est. Duration
           </label>
-          <select
+          <Select
             value={duration}
-            onChange={(e) => onDurationChange(e.target.value)}
-            className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none appearance-none font-medium"
+            onValueChange={onDurationChange}
           >
-            <option value="">Default (15m)</option>
-            <option value="15">15 Minutes</option>
-            <option value="30">30 Minutes</option>
-            <option value="45">45 Minutes</option>
-            <option value="60">1 Hour</option>
-          </select>
+            <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium">
+              <SelectValue placeholder="Default (15m)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15 Minutes</SelectItem>
+              <SelectItem value="30">30 Minutes</SelectItem>
+              <SelectItem value="45">45 Minutes</SelectItem>
+              <SelectItem value="60">1 Hour</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -162,17 +167,17 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                 const isSelected = time === slot.time24;
                 const isBooked = !slot.isAvailable || slot.isPast;
                 return (
-                  <button
+                  <Button
                     key={slot.time24}
                     type="button"
                     disabled={isBooked}
                     onClick={() => !isBooked && handleSlotClick(slot.time24)}
                     className={`
-                      relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5
+                      relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5 h-auto
                       ${isSelected
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
                         : isBooked
-                        ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50"
+                        ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
                         : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
                       }
                     `}
@@ -183,7 +188,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                     {isBooked && (
                       <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-400 border border-white" />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -216,18 +221,21 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
         <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
           Assigned Doctor
         </label>
-        <select
+        <Select
           value={doctorId}
-          onChange={handleDoctorSelectChange}
-          className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none appearance-none font-bold"
+          onValueChange={onDoctorChange}
         >
-          <option value="">-- Select Doctor --</option>
-          {doctors.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name} ({d.specialization})
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-bold">
+            <SelectValue placeholder="-- Select Doctor --" />
+          </SelectTrigger>
+          <SelectContent>
+            {doctors.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {d.name} ({d.specialization})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </section>
   );

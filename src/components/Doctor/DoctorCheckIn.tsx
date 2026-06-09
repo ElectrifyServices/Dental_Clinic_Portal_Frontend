@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import {
   Search,
@@ -207,7 +209,7 @@ export function DoctorCheckIn({
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60" />
-            <input
+            <Input
               type="text"
               placeholder="Search by patient name, treatment, or concern..."
               value={searchTerm}
@@ -335,7 +337,7 @@ export function DoctorCheckIn({
             <div className="flex items-center justify-between pt-4 border-t border-border">
               <div className="flex space-x-2">
                 {patient.status === "waiting" && (
-                  <button
+                  <Button
                     onClick={() => {
                       updatePatientStatus(patient.id, "in-consultation");
                       onSelectPatient(patient);
@@ -344,16 +346,16 @@ export function DoctorCheckIn({
                   >
                     <Stethoscope className="w-4 h-4 mr-2" />
                     Start Consultation
-                  </button>
+                  </Button>
                 )}
                 {patient.status === "in-consultation" && (
-                  <button
+                  <Button
                     onClick={() => onSelectPatient(patient)}
                     className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 font-medium text-sm transition-all duration-200 flex items-center"
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     Continue Consultation
-                  </button>
+                  </Button>
                 )}
                 {patient.status === "completed" && (
                   <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium text-sm flex items-center">

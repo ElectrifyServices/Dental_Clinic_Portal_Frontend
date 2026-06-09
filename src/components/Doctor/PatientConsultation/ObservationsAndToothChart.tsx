@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React from "react";
 import { Activity, Stethoscope } from "lucide-react";
 import { ToothChart } from "../ToothChart";
@@ -38,10 +40,10 @@ export function ObservationsAndToothChart({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
+              <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                 Detailed Observations <span className="text-destructive">*</span>
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 name="observations"
                 value={observations}
                 onChange={onChange}
@@ -62,11 +64,11 @@ export function ObservationsAndToothChart({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
+              <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                 <Stethoscope className="w-4 h-4 inline mr-2" />
                 Diagnosis <span className="text-destructive">*</span>
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 name="diagnosis"
                 value={diagnosis}
                 onChange={onChange}

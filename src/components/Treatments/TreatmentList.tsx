@@ -1,3 +1,5 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search, Plus, Clock, CheckCircle, Calendar,
@@ -197,7 +199,7 @@ export function TreatmentList({
         <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
           <div className="relative flex-1 group">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-            <input
+            <Input
               type="text"
               placeholder="Search by patient, procedure, tooth or doctor…"
               value={search}
@@ -210,7 +212,7 @@ export function TreatmentList({
             {/* Quick status tabs */}
             <div className="flex items-center bg-muted p-1 rounded-xl border border-border/50 overflow-x-auto scrollbar-none max-w-full flex-nowrap shrink-0">
               {(["all", "planned", "in-progress", "completed"] as const).map(s => (
-                <button
+                <Button
                   key={s}
                   onClick={() => handleStatusFilter(s)}
                   className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 ${
@@ -221,7 +223,7 @@ export function TreatmentList({
                   }`}
                 >
                   {s === "all" ? "All Plans" : STATUS_META[s]?.label ?? s}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -257,8 +259,8 @@ export function TreatmentList({
             <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Date Range Filter</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</label>
-                <input
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
+                <Input
                   type="date"
                   className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
                   value={advancedFilters.dateFrom?.toISOString().split("T")[0] ?? ""}
@@ -268,8 +270,8 @@ export function TreatmentList({
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</label>
-                <input
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
+                <Input
                   type="date"
                   className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
                   value={advancedFilters.dateTo?.toISOString().split("T")[0] ?? ""}

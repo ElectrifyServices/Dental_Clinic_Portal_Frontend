@@ -52,7 +52,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   const watchedProcedure = form.watch("procedure");
   const watchedDate = form.watch("date");
 
-  // Auto-generate sessions when procedure changes (only for new treatments)
+  
   useEffect(() => {
     if (watchedProcedure && treatmentTemplates[watchedProcedure as keyof typeof treatmentTemplates]) {
       if (treatmentSessions.length === 0 || !treatment?.id) {
@@ -61,7 +61,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     }
   }, [watchedProcedure]);
 
-  // Update session dates when the main treatment date changes
+  
   useEffect(() => {
     if (treatmentSessions.length > 0 && watchedDate && treatmentSessions[0]?.suggestedDate !== watchedDate) {
       updateAllSessionDates(watchedDate);
@@ -140,7 +140,6 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       );
       
       if (sessions && sessions.length > 0) {
-        /* console.log removed */
         setTreatmentSessions(sessions);
       } else {
         setTreatmentSessions([createDefaultSession(form.getValues("date"), procedure)]);
@@ -254,12 +253,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         prescriptions: prescriptions.filter((p) => p.medicine?.trim() !== ""),
         sessions: treatmentSessions,
         cost: parseFloat(String(data.cost)),
-      };
-      
-      /* console.log removed */
-      /* console.log removed */
-      /* console.log removed */
-      
+      };    
       onSave(submitData);
     };
   };

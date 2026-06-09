@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit, UserX, CheckCircle, Trash2, UserCheck } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 interface AppointmentActionMenuProps {
   appointment: any;
@@ -31,63 +32,68 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
       >
         <div className="p-1.5 space-y-0.5">
           {canCheckIn && (
-            <button 
+            <Button 
+              variant="ghost"
               onClick={() => { onCheckIn?.(appointment); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
             >
               <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
                 <UserCheck className="w-4 h-4 text-emerald-600" /> 
               </div>
               Check-in Patient
-            </button>
+            </Button>
           )}
 
-          <button 
+          <Button 
+            variant="ghost"
             onClick={() => { onEdit?.(appointment.id); onClose(); }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-3 text-muted-foreground rounded-xl transition-colors font-medium"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-3 text-muted-foreground rounded-xl transition-colors font-medium h-auto"
           >
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
               <Edit className="w-4 h-4 text-muted-foreground/60" /> 
             </div>
             Edit Appointment
-          </button>
+          </Button>
 
           {appointment.status !== 'no-show' && appointment.status !== 'checked-in' && appointment.status?.toLowerCase() !== 'completed' ? (
-            <button 
+            <Button 
+              variant="ghost"
               onClick={() => { onUpdateStatus?.(appointment.id, 'no-show'); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium h-auto"
             >
               <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                 <UserX className="w-4 h-4 text-amber-400" /> 
               </div>
               Mark No-Show
-            </button>
+            </Button>
           ) : appointment.status === 'no-show' ? (
-            <button 
+            <Button 
+              variant="ghost"
               onClick={() => { onUpdateStatus?.(appointment.id, 'scheduled'); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 flex items-center gap-3 text-primary rounded-xl transition-colors font-medium"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 flex items-center gap-3 text-primary rounded-xl transition-colors font-medium h-auto"
             >
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <CheckCircle className="w-4 h-4 text-blue-400" /> 
               </div>
               Restore Status
-            </button>
+            </Button>
           ) : null}
 
           <div className="h-px bg-muted my-1 mx-2" />
 
-          <button 
+          <Button 
+            variant="ghost"
             onClick={() => { 
               onDelete?.(appointment.id);
               onClose();
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 flex items-center gap-3 text-destructive rounded-xl transition-colors font-medium"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 flex items-center gap-3 text-destructive rounded-xl transition-colors font-medium h-auto"
           >
             <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
               <Trash2 className="w-4 h-4 text-red-400" /> 
             </div>
             Delete Record
-          </button>
+          </Button>
         </div>
       </div>
     </>

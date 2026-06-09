@@ -18,7 +18,6 @@ export function getParsedPermissions(user: any): string[] {
         return parsed;
       }
     } catch (e) {
-      /* console.error removed */
     }
   }
   

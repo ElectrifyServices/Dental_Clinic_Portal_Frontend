@@ -41,7 +41,7 @@ export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
 
   return useApiQuery<ConsentFormRecord[]>({
     queryKey: ["consentForms", body],
-    endpoint: "/consentForm/list",
+    endpoint: "/consent/list",
     method: "post",
     data: body,
   });

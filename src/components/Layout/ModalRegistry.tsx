@@ -366,7 +366,6 @@ export function ModalRegistry() {
                     patient_id: patientId
                   });
                 } catch (err) {
-                  /* console.error removed */
                   throw err;
                 }
 
@@ -686,7 +685,6 @@ export function ModalRegistry() {
               setActiveModal(null);
               showToast("EMR saved!");
             } catch (err: any) {
-              /* console.error removed */
               showToast(err?.response?.data?.message || err?.message || "Failed to save EMR", "error");
             }
           }}
@@ -860,7 +858,6 @@ export function ModalRegistry() {
               setActiveModal(null);
               setSelectedConsentForm(null);
             } catch (err: any) {
-              /* console.error removed */
               showToast(err?.response?.data?.message || err?.message || "Failed to save consent form", "error");
             }
           }}

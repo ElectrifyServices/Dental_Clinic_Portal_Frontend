@@ -158,7 +158,6 @@ export function usePatientData() {
     try {
       await updateStatusMutation({ id, status });
     } catch (e) {
-      /* console.error removed */
     }
   };
 
@@ -194,7 +193,6 @@ export function usePatientData() {
         return await updatePatientMutation({ id: patient.id, formData: payload });
       }
     } catch (e) {
-      /* console.error removed */
       throw e; // re-throw so ModalRegistry can show an error toast if needed
     }
   };
@@ -220,7 +218,6 @@ export function usePatientData() {
       await bulkImportEmployee(payload);
       refetchPatients();
     } catch (e) {
-      /* console.error removed */
       throw e;
     }
   };

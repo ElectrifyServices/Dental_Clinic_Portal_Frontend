@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { Pill, Plus, Trash2 } from "lucide-react";
 
 interface Prescription {
@@ -31,14 +34,14 @@ export function PrescriptionForm({
           <Pill className="w-5 h-5 mr-2 text-green-600" />
           Prescriptions
         </h3>
-        <button
+        <Button
           type="button"
           onClick={onAddPrescription}
           className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center text-sm font-medium transition-all duration-200 shadow-md"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Medicine
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -48,10 +51,10 @@ export function PrescriptionForm({
             className="flex flex-wrap gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm animate-in fade-in zoom-in duration-200"
           >
             <div className="flex-[2] min-w-[200px]">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Medicine Name
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.medicine}
                 onChange={(e) =>
@@ -66,9 +69,9 @@ export function PrescriptionForm({
               />
             </div>
             <div className="w-[120px] shrink-0">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Dosage
-              </label>
+              </Label>
               <select
                 value={prescription.dosage}
                 onChange={(e) =>
@@ -91,10 +94,10 @@ export function PrescriptionForm({
               </select>
             </div>
             <div className="flex-1 min-w-[120px]">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Timing
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.timing}
                 onChange={(e) =>
@@ -109,10 +112,10 @@ export function PrescriptionForm({
               />
             </div>
             <div className="flex-1 min-w-[120px]">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Frequency
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.frequency}
                 onChange={(e) =>
@@ -127,11 +130,11 @@ export function PrescriptionForm({
               />
             </div>
             <div className="w-[180px] shrink-0">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Duration
-              </label>
+              </Label>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="number"
                   value={prescription.duration}
                   onChange={(e) =>
@@ -165,10 +168,10 @@ export function PrescriptionForm({
             </div>
             <div className="w-[120px] shrink-0 flex items-center gap-2">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+                <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                   Qty
-                </label>
-                <input
+                </Label>
+                <Input
                   type="number"
                   value={prescription.qty}
                   onChange={(e) =>
@@ -180,13 +183,13 @@ export function PrescriptionForm({
                 />
               </div>
               {prescriptions.length > 1 && (
-                <button
+                <Button
                   type="button"
                   onClick={() => onRemovePrescription(prescription.id)}
                   className="p-2 mt-6 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

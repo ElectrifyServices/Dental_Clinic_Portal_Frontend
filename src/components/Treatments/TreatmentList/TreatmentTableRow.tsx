@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 ﻿import React, { useState } from "react";
 import {
   FileText, MoreVertical, Edit, Clock,
@@ -140,21 +141,21 @@ export function TreatmentTableRow({
       {/* Actions */}
       <td className="py-4 px-6">
         <div className="flex items-center justify-center gap-2">
-          <button
+          <Button
             onClick={() => onView(treatment.id)}
             className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
             title="View Details"
           >
             <FileText className="w-4 h-4" />
-          </button>
+          </Button>
 
           <div className="relative">
-            <button
+            <Button
               onClick={openMenu}
               className={`p-2 rounded-xl transition-all ${showMenu ? "bg-muted text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-muted"}`}
             >
               <MoreVertical className="w-4 h-4" />
-            </button>
+            </Button>
 
             {showMenu && createPortal(
               <>
@@ -164,15 +165,15 @@ export function TreatmentTableRow({
                   style={{ top: menuPos.top, left: menuPos.left }}
                 >
                   <div className="p-1.5">
-                    <button onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
+                    <Button onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
                       className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
                       <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
                         <Edit className="w-4 h-4" />
                       </div>
                       Edit Plan
-                    </button>
+                    </Button>
 
-                    <button onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
+                    <Button onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
                       className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
                       <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
                         <Clock className="w-4 h-4" />
@@ -185,26 +186,26 @@ export function TreatmentTableRow({
                           </span>
                         )}
                       </div>
-                    </button>
+                    </Button>
 
                     {treatment.status === "planned" && (
-                      <button onClick={() => { onStart(treatment.id); setShowMenu(false); }}
+                      <Button onClick={() => { onStart(treatment.id); setShowMenu(false); }}
                         className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-primary/10 rounded-xl flex items-center gap-3 text-primary transition-colors">
                         <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                           <Play className="w-4 h-4" />
                         </div>
                         Start Now
-                      </button>
+                      </Button>
                     )}
 
                     {treatment.status === "in-progress" && (
-                      <button onClick={() => { onComplete(treatment.id); setShowMenu(false); }}
+                      <Button onClick={() => { onComplete(treatment.id); setShowMenu(false); }}
                         className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-emerald-50 rounded-xl flex items-center gap-3 text-emerald-700 transition-colors">
                         <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                           <CheckCircle className="w-4 h-4" />
                         </div>
                         Mark Done
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

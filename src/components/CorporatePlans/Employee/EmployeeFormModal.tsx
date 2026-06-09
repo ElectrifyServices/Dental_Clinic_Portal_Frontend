@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, CheckCircle } from 'lucide-react';
-import { Modal, Button, SectionRenderer } from '../../ui';
+import { Modal, Button, SectionRenderer, Label, Input } from '../../ui';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
@@ -34,7 +34,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   const createEmployeeMutation = useCreateEmployeeMutation();
   const updateEmployeeMutation = useUpdateEmployeeMutation();
 
-  // Fetch detailed employee data from backend GET /employee/:id when editing
+
   const { data: employeeDetails, isLoading: isFetching } = useEmployeeQuery(editEmp?.id || undefined, {
     enabled: showForm && !!editEmp?.id,
   });
@@ -158,7 +158,6 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         refetch();
         setShowForm(false);
       } catch (err: any) {
-        /* console.error removed */
         setFormErrors(prev => ({
           ...prev,
           submit: err?.response?.data?.message || err?.message || "Failed to create employee on backend"
@@ -207,7 +206,6 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         refetch();
         setShowForm(false);
       } catch (err: any) {
-        /* console.error removed */
         setFormErrors(prev => ({
           ...prev,
           submit: err?.response?.data?.message || err?.message || "Failed to update employee on backend"
@@ -233,8 +231,8 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           )}
           <div className="flex justify-end gap-3 w-full">
             <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10" disabled={createEmployeeMutation.isLoading || updateEmployeeMutation.isLoading}>
-              {(createEmployeeMutation.isLoading || updateEmployeeMutation.isLoading) ? (
+            <Button onClick={handleSave} className="gap-2 shadow-lg shadow-primary/10" disabled={createEmployeeMutation.isPending || updateEmployeeMutation.isLoading}>
+              {(createEmployeeMutation.isPending || updateEmployeeMutation.isPending) ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
@@ -284,13 +282,13 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         <div className="p-4 bg-muted/30 rounded-2xl border border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
-            <label htmlFor="empActive" className="text-xs font-black uppercase tracking-widest text-foreground cursor-pointer">Active Status</label>
+            <Label htmlFor="empActive" className="text-xs font-black uppercase tracking-widest text-foreground cursor-pointer">Active Status</Label>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
+          <Label className="relative inline-flex items-center cursor-pointer">
+            <Input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
               onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
             <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
+          </Label>
         </div>
       </div>
     </Modal>

@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import {
   Search,
@@ -99,7 +101,7 @@ export function HistoryList({
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-            <input
+            <Input
               type="text"
               placeholder="Search by name, ID, diagnosis, contact..."
               value={search}
@@ -107,15 +109,15 @@ export function HistoryList({
               className="w-full pl-8 pr-8 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-muted-foreground/60"
             />
             {search && (
-              <button
+              <Button
                 onClick={() => onSearchChange("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             )}
           </div>
-          <button
+          <Button
             onClick={onToggleFilters}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors font-medium whitespace-nowrap ${showFilters || activeFilters > 0 ? "bg-primary text-white border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
           >
@@ -126,7 +128,7 @@ export function HistoryList({
                 {activeFilters}
               </span>
             )}
-          </button>
+          </Button>
         </div>
 
         {showFilters && (
@@ -136,21 +138,21 @@ export function HistoryList({
                 Date Range:
               </span>
               <div className="flex items-center gap-1.5">
-                <input
+                <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => onStartDateChange(e.target.value)}
                   className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
                 />
                 <span className="text-xs text-muted-foreground/60">to</span>
-                <input
+                <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => onEndDateChange(e.target.value)}
                   className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
                 />
                 {(startDate || endDate) && (
-                  <button
+                  <Button
                     onClick={() => {
                       onStartDateChange("");
                       onEndDateChange("");
@@ -159,7 +161,7 @@ export function HistoryList({
                     title="Clear Date Range"
                   >
                     <X className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -168,13 +170,13 @@ export function HistoryList({
                 Sort:
               </span>
               {(["newest", "oldest"] as const).map((v) => (
-                <button
+                <Button
                   key={v}
                   onClick={() => onFilterSort(v)}
                   className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors font-medium ${filterSort === v ? "bg-primary text-white border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
                 >
                   {v === "newest" ? "Newest" : "Oldest"}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -247,11 +249,11 @@ export function HistoryList({
                    </div>
                 </CardContent>
                 <CardFooter className="p-3 border-t flex justify-between bg-muted/20">
-                   <button onClick={() => onSelectRecord(item)} className="text-xs font-bold text-primary hover:text-primary/80 hover:underline flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors">
+                   <Button variant="ghost" onClick={() => onSelectRecord(item)} className="text-xs font-bold text-primary hover:text-primary/80 hover:underline flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors h-auto">
                       <Eye className="w-4 h-4" /> View Full Details
-                   </button>
+                   </Button>
                     <div className="flex gap-1 relative">
-                       <button 
+                       <Button 
                          onClick={(e) => {
                            e.stopPropagation();
                            setActiveDownloadMenuId(activeDownloadMenuId === item.id ? null : item.id);
@@ -260,11 +262,11 @@ export function HistoryList({
                          title="Download Report"
                        >
                           <FileText className="w-4 h-4" />
-                       </button>
+                       </Button>
                        
                        {activeDownloadMenuId === item.id && (
                          <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
-                           <button
+                           <Button
                              onClick={(e) => {
                                e.stopPropagation();
                                onDownloadPDF(item, 'CLINICAL');
@@ -273,8 +275,8 @@ export function HistoryList({
                              className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 flex items-center gap-2"
                            >
                              <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
-                           </button>
-                           <button
+                           </Button>
+                           <Button
                              onClick={(e) => {
                                e.stopPropagation();
                                onDownloadPDF(item, 'TREATMENT');
@@ -283,8 +285,8 @@ export function HistoryList({
                              className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 flex items-center gap-2"
                            >
                              <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                           </button>
-                           <button
+                           </Button>
+                           <Button
                              onClick={(e) => {
                                e.stopPropagation();
                                onDownloadPDF(item, 'PRESCRIPTION');
@@ -293,9 +295,9 @@ export function HistoryList({
                              className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 flex items-center gap-2"
                            >
                              <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                           </button>
+                           </Button>
                            <div className="h-px bg-muted my-1" />
-                           <button
+                           <Button
                              onClick={(e) => {
                                e.stopPropagation();
                                onDownloadPDF(item, 'FULL');
@@ -304,13 +306,13 @@ export function HistoryList({
                              className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-2"
                            >
                              <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
-                           </button>
+                           </Button>
                          </div>
                        )}
                        
-                       <button onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors" title="Delete">
+                       <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
                           <Trash2 className="w-4 h-4" />
-                       </button>
+                       </Button>
                     </div>
                 </CardFooter>
               </Card>

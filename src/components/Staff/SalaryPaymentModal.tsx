@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React, { useState } from 'react';
 import { Save, IndianRupee, Calendar, ClipboardList, ChevronDown } from 'lucide-react';
 import { Modal, Button, LabeledField, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui';
@@ -53,7 +55,6 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
         base_salary: backendData.base_salary,
       });
     } catch (err: any) {
-      /* console.error removed */
       let errMsg = "Failed to record salary payment.";
       const resData = err.response?.data || err;
 
@@ -115,12 +116,12 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
                 <div className="absolute right-2 flex items-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button
+                      <Button
                         type="button"
                         className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors flex items-center justify-center cursor-pointer"
                       >
                         <ChevronDown className="h-4 w-4 opacity-50" />
-                      </button>
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[220px]">
                       {pendingAmount > 0 && (
@@ -149,7 +150,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
             <LabeledField label="Payment Date" required>
               <div className="relative">
                 <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                <Input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
               </div>
             </LabeledField>
@@ -158,10 +159,10 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
           <LabeledField label="Payment Mode">
             <div className="grid grid-cols-3 gap-3">
               {['Cash', 'UPI', 'Bank'].map((m) => (
-                <label key={m} className={`flex items-center justify-center p-2.5 rounded-xl border-2 cursor-pointer transition-all ${formData.mode === m ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted/50 text-muted-foreground'}`}>
-                  <input type="radio" className="hidden" name="paymentMethod" value={m} checked={formData.mode === m} onChange={() => setFormData({ ...formData, mode: m })} />
+                <Label key={m} className={`flex items-center justify-center p-2.5 rounded-xl border-2 cursor-pointer transition-all ${formData.mode === m ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:bg-muted/50 text-muted-foreground'}`}>
+                  <Input type="radio" className="hidden" name="paymentMethod" value={m} checked={formData.mode === m} onChange={() => setFormData({ ...formData, mode: m })} />
                   <span className="text-xs font-black uppercase tracking-wider">{m}</span>
-                </label>
+                </Label>
               ))}
             </div>
           </LabeledField>
@@ -169,7 +170,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
           <LabeledField label="Disbursement Note (Optional)">
             <div className="relative">
               <ClipboardList className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
-              <textarea value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+              <Textarea value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 placeholder="Add transaction reference or specific notes..." rows={2}
                 className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none" />
             </div>

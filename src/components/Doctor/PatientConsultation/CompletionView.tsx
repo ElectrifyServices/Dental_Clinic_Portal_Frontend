@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 ﻿import {
   CheckCircle,
   Activity,
@@ -33,7 +34,7 @@ export function CompletionView({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-        <button
+        <Button
           onClick={() => onDownloadPDF("CLINICAL")}
           className="flex items-center justify-between p-5 bg-primary/10 border border-primary/30 rounded-2xl hover:bg-primary/10 hover:shadow-md transition-all group"
         >
@@ -49,9 +50,9 @@ export function CompletionView({
             </div>
           </div>
           <File className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => onDownloadPDF("TREATMENT")}
           className="flex items-center justify-between p-5 bg-purple-50 border border-purple-200 rounded-2xl hover:bg-purple-100 hover:shadow-md transition-all group"
         >
@@ -67,9 +68,9 @@ export function CompletionView({
             </div>
           </div>
           <File className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => onDownloadPDF("PRESCRIPTION")}
           className="flex items-center justify-between p-5 bg-emerald-50 border border-emerald-200 rounded-2xl hover:bg-emerald-100 hover:shadow-md transition-all group"
         >
@@ -85,9 +86,9 @@ export function CompletionView({
             </div>
           </div>
           <File className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => onDownloadPDF("FULL")}
           className="flex items-center justify-between p-5 bg-muted border border-border rounded-2xl hover:bg-muted hover:shadow-md transition-all group"
         >
@@ -103,16 +104,16 @@ export function CompletionView({
             </div>
           </div>
           <File className="w-5 h-5 text-muted-foreground/60 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Button>
       </div>
 
       <div className="pt-10 border-t border-border">
-        <button
+        <Button
           onClick={onClose}
           className="px-12 py-4 bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-black hover:shadow-2xl active:scale-95 transition-all shadow-xl"
         >
           Done & Close Window
-        </button>
+        </Button>
       </div>
     </div>
   );

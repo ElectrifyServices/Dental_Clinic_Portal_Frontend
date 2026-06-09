@@ -40,7 +40,7 @@ const EmptyState = ({
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: any }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div className="bg-primary/10 rounded-2xl p-6 border border-primary/30">
+    <Card className="bg-primary/5 rounded-2xl p-6 border border-primary/30 shadow-sm">
       <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
         <Heart className="w-5 h-5 mr-2" /> Medical History
       </h3>
@@ -61,8 +61,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
-    <div className="bg-destructive/10 rounded-2xl p-6 border border-destructive/20">
+    </Card>
+    <Card className="bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
       <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
@@ -86,8 +86,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
-    <div className="lg:col-span-2 bg-muted rounded-2xl p-6">
+    </Card>
+    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-6 border border-border shadow-sm">
       <h3 className="text-lg font-bold text-foreground mb-4">
         Additional Information
       </h3>
@@ -125,7 +125,7 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
+    </Card>
   </div>
 );
 
@@ -140,9 +140,9 @@ export const AppointmentsTab = ({
   <div className="space-y-4">
     <h3 className="text-lg font-bold text-foreground">Appointment History</h3>
     {patientAppointments.map((appointment) => (
-      <div
+      <Card
         key={appointment.id}
-        className="bg-muted rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
+        className="bg-card rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start">
@@ -190,7 +190,7 @@ export const AppointmentsTab = ({
             )}
           </div>
         )}
-      </div>
+      </Card>
     ))}
     {patientAppointments.length === 0 && (
       <EmptyState
@@ -239,9 +239,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "in-progress")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-primary/50 rounded-2xl p-4 border border-primary/20 shadow-sm"
+                  className="bg-primary/5 rounded-2xl p-4 border border-primary/20 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -270,7 +270,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -284,9 +284,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "planned")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 shadow-sm"
+                  className="bg-purple-50/30 rounded-2xl p-4 border border-purple-100 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -312,7 +312,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -326,9 +326,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "completed")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-green-50/30 rounded-2xl p-4 border border-green-100"
+                  className="bg-green-50/30 rounded-2xl p-4 border border-green-100 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -351,7 +351,7 @@ export const TreatmentsTab = ({
                       </p>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -396,9 +396,9 @@ export const BillingTab = ({
       )}
     </div>
     {patientInvoices.map((invoice) => (
-      <div
+      <Card
         key={invoice.id}
-        className="bg-muted rounded-2xl p-6 border border-border"
+        className="bg-card rounded-2xl p-6 border border-border shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -424,7 +424,7 @@ export const BillingTab = ({
             </span>
           </div>
         </div>
-      </div>
+      </Card>
     ))}
     {patientInvoices.length === 0 && (
       <EmptyState
@@ -541,9 +541,9 @@ export const DocumentsTab = ({
     </h3>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {patient.documents?.map((doc: any) => (
-        <div
+        <Card
           key={doc.id}
-          className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200"
+          className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm"
         >
           <img
             src={doc.url}
@@ -554,7 +554,7 @@ export const DocumentsTab = ({
           <p className="text-sm text-muted-foreground">
             {new Date(doc.date).toLocaleDateString()}
           </p>
-        </div>
+        </Card>
       ))}
     </div>
     {(!patient.documents || patient.documents.length === 0) && (
@@ -596,9 +596,9 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {familyMembers.map((member) => (
-          <div
+          <Card
             key={member.id}
-            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group"
+            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -663,7 +663,7 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 

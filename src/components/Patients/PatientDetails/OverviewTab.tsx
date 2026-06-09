@@ -39,7 +39,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Personal Information */}
-      <div className="xl:col-span-2 bg-primary/10 rounded-xl p-5 border border-primary/20">
+      <Card className="xl:col-span-2 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
         <h3 className="text-lg font-bold text-foreground mb-6 flex items-center">
           <User className="w-5 h-5 mr-2 text-primary" />
           Personal Information
@@ -118,7 +118,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Quick Stats */}
       <div className="space-y-4">

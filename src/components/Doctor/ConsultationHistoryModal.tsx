@@ -131,7 +131,6 @@ export default function ConsultationHistoryModal({
         consultationData = { ...consultationData, ...detailData };
       }
     } catch (error) {
-      /* console.error removed */
     }
 
     const matchedPatient = (patients || []).find(
@@ -203,7 +202,6 @@ export default function ConsultationHistoryModal({
         if (selectedRecord?.id === deleteConfirmId) setSelectedRecord(null);
         // History modal stays open — NO onClose() call here
       } catch (error) {
-        /* console.error removed */
         toast.error("Failed to delete consultation record");
       } finally {
         setIsDeleting(false);
@@ -232,12 +230,12 @@ export default function ConsultationHistoryModal({
       size="5xl"
       icon={
         selectedRecord ? (
-          <button
+          <Button
             onClick={() => setSelectedRecord(null)}
             className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm hover:bg-primary/20 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-          </button>
+          </Button>
         ) : (
           <FileText className="w-4 h-4" />
         )

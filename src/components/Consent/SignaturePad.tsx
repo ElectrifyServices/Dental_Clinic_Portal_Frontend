@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/Input";
 import React, { useRef, useState, useEffect } from 'react';
 import { RotateCcw, Upload, MousePointer2 } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -205,7 +206,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           </Button>
         )}
 
-        <input
+        <Input
           ref={fileInputRef}
           type="file"
           accept="image/*"

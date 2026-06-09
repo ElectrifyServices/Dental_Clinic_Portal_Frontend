@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React from "react";
 import { Save, Stethoscope } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
@@ -113,10 +115,10 @@ export function TreatmentForm({
           </div>
           <div className="space-y-6">
             <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
-              <label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                 Clinical Case Notes
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 
 type ConditionId =
@@ -293,7 +294,7 @@ export function ToothChart({
         {CONDITIONS.map((c) => {
           const isActive = activeMode === c.id;
           return (
-            <button
+            <Button
               key={c.id}
               type="button"
               onClick={() => setActiveMode(c.id)}
@@ -310,7 +311,7 @@ export function ToothChart({
               }}
             >
               {c.label}
-            </button>
+            </Button>
           );
         })}
       </div>

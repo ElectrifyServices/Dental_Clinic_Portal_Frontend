@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React from "react";
 import { Stethoscope, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/Input";
@@ -64,9 +66,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Treatment Type
-          </label>
+          </Label>
           <SearchableSelect
             value={treatmentType}
             onChange={(val: string) => {
@@ -83,9 +85,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Specific Treatment
-          </label>
+          </Label>
           <Input
             name="treatment"
             value={treatment}
@@ -95,9 +97,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="md:col-span-1 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Fee (₹)
-          </label>
+          </Label>
           <div className="relative">
             <Input
               type="number"
@@ -113,10 +115,10 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Patient Concern
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             name="patientConcern"
             value={patientConcern}
             onChange={onChange}
@@ -127,10 +129,10 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Additional Notes
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             name="notes"
             value={notes}
             onChange={onChange}

@@ -162,7 +162,7 @@ export function DoctorManagement({
         className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
         style={{ top: menuPos.top, left: menuPos.left }}
       >
-        <button
+        <Button
           onClick={() => {
             onUpdateStaff({ ...staff, isActive: !staff.isActive });
             setOpenMenuId(null);
@@ -178,9 +178,9 @@ export function DoctorManagement({
               <UserCheck className="w-4 h-4 text-emerald-500" /> Activate
             </>
           )}
-        </button>
+        </Button>
         {(staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor")) && (
-          <button
+          <Button
             onClick={() => {
               onManageSchedule(staff.id, staff.name);
               setOpenMenuId(null);
@@ -188,10 +188,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
-          </button>
+          </Button>
         )}
         {onPaySalary && (
-          <button
+          <Button
             onClick={() => {
               onPaySalary(staff.id, staff.name);
               setOpenMenuId(null);
@@ -199,10 +199,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 text-emerald-700 font-medium transition-colors"
           >
             <IndianRupee className="w-4 h-4" /> Pay Salary
-          </button>
+          </Button>
         )}
         {onViewSalaryHistory && (
-          <button
+          <Button
             onClick={() => {
               onViewSalaryHistory(staff.id, staff.name);
               setOpenMenuId(null);
@@ -210,10 +210,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <IndianRupee className="w-4 h-4 text-amber-500" /> Salary History
-          </button>
+          </Button>
         )}
         <div className="h-px bg-muted my-1 mx-2" />
-        <button
+        <Button
           onClick={() => {
             onDeleteDoctor(staff.id);
             setOpenMenuId(null);
@@ -221,7 +221,7 @@ export function DoctorManagement({
           className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
         >
           <Trash2 className="w-4 h-4" /> Remove
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -385,18 +385,18 @@ export function DoctorManagement({
             />
           </div>
           <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
-            <button
+            <Button
               onClick={() => setViewMode("grid")}
               className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode("list")}
               className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

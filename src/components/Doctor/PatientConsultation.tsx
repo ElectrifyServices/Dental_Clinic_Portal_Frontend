@@ -288,7 +288,6 @@ export function PatientConsultation({
         finalConsultationData = { ...finalConsultationData, ...detailData };
       }
     } catch (error) {
-      /* console.error removed */
     }
 
     await downloadConsultationPDF({
@@ -462,7 +461,6 @@ export function PatientConsultation({
       setIsCompleted(true);
       refetchConsultations();
     } catch (error) {
-      /* console.error removed */
     } finally {
       setLoading(false);
     }

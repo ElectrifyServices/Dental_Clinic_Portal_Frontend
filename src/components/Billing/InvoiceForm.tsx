@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/Input";
 import { useMemo } from "react";
 import {
   Save,
@@ -17,11 +18,19 @@ import {
   Card,
   CardContent,
   LabeledField,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui";
 import { PendingItems } from "./InvoiceForm/PendingItems";
 import { InvoiceItemRow } from "./InvoiceForm/InvoiceItemRow";
 import { PlanBanner } from "./InvoiceForm/PlanBanner";
 import { useFormConfig } from "../../hooks/useFormConfig";
+import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
+import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
+import { useUnbilledItemsQuery } from "../../hooks/billing/useUnbilledItemsQuery";
 import {
   invoiceSchema,
   type InvoiceFormData,
@@ -73,6 +82,45 @@ export function InvoiceForm({
   });
 
   const formData = form.watch();
+
+  const { data: rawPatientsData } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  const apiPatients = useMemo(() => {
+    return Array.isArray(rawPatientsData) 
+      ? rawPatientsData 
+      : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
+  }, [rawPatientsData]);
+
+  // const { data: rawInvoicesData } = useInvoicesQuery(
+  //   {
+  //     page: 1,
+  //     limit: 100,
+  //     filters: {
+  //       patient_id: formData.patientId ? [formData.patientId] : undefined,
+  //     },
+  //   },
+  //   {
+  //     enabled: !!formData.patientId,
+  //   }
+  // );
+
+  const { data: rawUnbilledData } = useUnbilledItemsQuery(
+    formData.patientId,
+    {
+      enabled: !!formData.patientId,
+    }
+  );
+
+  const outstandingBalance = useMemo(() => {
+    if (!rawUnbilledData) return 0;
+    const itemsList = Array.isArray(rawUnbilledData) 
+      ? rawUnbilledData 
+      : (rawUnbilledData as any)?.data?.items || (rawUnbilledData as any)?.items || (rawUnbilledData as any)?.data || [];
+    
+    if (!Array.isArray(itemsList)) return 0;
+    
+    return itemsList
+      .reduce((sum: number, item: any) => sum + (Number(item.total || item.amount || item.cost || item.rate || 0)), 0);
+  }, [rawUnbilledData]);
   const setFormData = (
     updater:
       | Partial<InvoiceFormData>
@@ -90,7 +138,7 @@ export function InvoiceForm({
     form.setValue("items", newItems as any);
 
   const activeCorporatePlan = useMemo(() => {
-    const p = patients.find(
+    const p = apiPatients.find(
       (p) => p.id === formData.patientId || p.name === formData.patientName,
     );
     return (
@@ -98,60 +146,47 @@ export function InvoiceForm({
         (cp) => cp.id === (p?.corporatePlanId || p?.companyId),
       ) || null
     );
-  }, [formData.patientId, formData.patientName, patients, corporatePlans]);
+  }, [formData.patientId, formData.patientName, apiPatients, corporatePlans]);
 
   const pendingItems = useMemo(() => {
-    if (!formData.patientName) return [];
+    if (!formData.patientId) return [];
     const list: any[] = [];
-    consultations
-      .filter((c) => c.patientName === formData.patientName && !c.isBilled)
-      .forEach((c) => {
-        const isFree = activeCorporatePlan?.freeConsultation;
+    
+    const unbilledObj = rawUnbilledData?.data?.unbilled_items || rawUnbilledData?.unbilled_items;
+    
+    if (unbilledObj) {
+      const apiConsultations = unbilledObj.consultations || [];
+      const apiTreatments = unbilledObj.treatments || [];
+      
+      apiConsultations.forEach((c: any) => {
+        const isFree = c.is_free || c.isFree || activeCorporatePlan?.freeConsultation || false;
         list.push({
           id: c.id,
-          type: "consultation",
-          description: `Consultation Fee (${new Date(c.consultationDate || c.date).toLocaleDateString("en-IN")})${isFree ? " [FREE]" : ""}`,
-          rate: isFree ? 0 : 500,
-          date: c.consultationDate || c.date,
+          type: c.type || "consultation",
+          description: c.description || `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})${isFree ? " [FREE]" : ""}`,
+          rate: isFree ? 0 : (c.amount ?? 500),
+          date: c.date,
+          doctor_name: c.doctor_name || c.doctorName,
+          status: c.status,
         });
       });
-    treatments
-      .filter(
-        (t) =>
-          t.patientName === formData.patientName &&
-          (t.status === "completed" || t.status === "in-progress"),
-      )
-      .forEach((t) => {
-        if (Array.isArray(t.sessions)) {
-          t.sessions
-            .filter(
-              (s: any) =>
-                (s.status === "completed" || s.status === "in-progress") &&
-                !s.isBilled,
-            )
-            .forEach((s: any) => {
-              list.push({
-                id: `${t.id}-${s.id}`,
-                type: "treatment-session",
-                description: `${t.procedure} - Session ${s.sessionNumber}`,
-                rate: s.cost || 0,
-                date: s.scheduledDate || s.date,
-                originalTreatmentId: t.id,
-                originalSessionId: s.id,
-              });
-            });
-        } else if (!t.isBilled) {
-          list.push({
-            id: t.id,
-            type: "treatment",
-            description: t.procedure,
-            rate: t.cost || 0,
-            date: t.date,
-          });
-        }
+      
+      apiTreatments.forEach((t: any) => {
+        const isFree = t.is_free || t.isFree || false;
+        list.push({
+          id: t.id,
+          type: t.type || "treatment",
+          description: t.description || t.procedure || "Treatment Item",
+          rate: isFree ? 0 : (t.amount ?? t.cost ?? 0),
+          date: t.date,
+          doctor_name: t.doctor_name || t.doctorName,
+          status: t.status,
+        });
       });
+    }
+    
     return list;
-  }, [formData.patientName, treatments, consultations, activeCorporatePlan]);
+  }, [formData.patientId, rawUnbilledData, activeCorporatePlan]);
 
   const invoiceCfg = useFormConfig("invoice");
   const commonServices: Array<{ name: string; rate: number }> =
@@ -269,38 +304,40 @@ export function InvoiceForm({
     >
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <LabeledField label="Patient Name *" required>
-            <select
+          <LabeledField label="Patient Name" required>
+            <Select
               value={formData.patientName}
-              onChange={(e) => {
-                const p = patients.find((p) => p.name === e.target.value);
+              onValueChange={(val) => {
+                const p = apiPatients.find((p: any) => p.name === val);
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
-                        (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                      )
+                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                    )
                     : null;
                 setFormData({
                   ...formData,
-                  patientName: e.target.value,
+                  patientName: val,
                   patientId: p?.id || "",
                   linkedItemIds: [],
                   discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
                 });
               }}
-              required
-              className="w-full px-4 py-2 border rounded-xl text-sm font-medium"
             >
-              <option value="">Select Patient</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name} ({p.id}) {p.category === "family" ? "⭐" : ""}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full px-4 py-2 border rounded-xl text-sm font-medium text-left">
+                <SelectValue placeholder="Select Patient" />
+              </SelectTrigger>
+              <SelectContent>
+                {apiPatients.map((p: any) => (
+                  <SelectItem key={p.id} value={p.name}>
+                    {p.name} {p.category === "family" ? "⭐" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </LabeledField>
-          <LabeledField label="Invoice Date *">
-            <input
+          <LabeledField label="Invoice Date" required>
+            <Input
               type="date"
               value={formData.date}
               onChange={(e) =>
@@ -310,8 +347,8 @@ export function InvoiceForm({
               className="w-full px-4 py-2 border rounded-xl text-sm"
             />
           </LabeledField>
-          <LabeledField label="Due Date *">
-            <input
+          <LabeledField label="Due Date" required>
+            <Input
               type="date"
               value={formData.dueDate}
               onChange={(e) =>
@@ -330,9 +367,29 @@ export function InvoiceForm({
           />
         )}
 
+        {outstandingBalance > 0 && (
+          <Card className="border-rose-100 bg-rose-50/50 shadow-none rounded-2xl overflow-hidden">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">
+                    Outstanding Payment Detected
+                  </p>
+                  <p className="text-xs font-bold text-rose-900 mt-0.5">
+                    This patient has a pending balance of ₹{outstandingBalance.toLocaleString()} from previous invoices.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {formData.patientName &&
           (() => {
-            const p = patients.find((p) => p.name === formData.patientName);
+            const p = apiPatients.find((p: any) => p.name === formData.patientName);
             if (["family", "staff", "complimentary"].includes(p?.category))
               return (
                 <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in">
@@ -441,7 +498,7 @@ export function InvoiceForm({
                     Complimentary Bill
                   </span>
                 </div>
-                <input
+                <Input
                   type="checkbox"
                   checked={formData.isComplimentary}
                   onChange={(e) =>
@@ -456,7 +513,7 @@ export function InvoiceForm({
                 />
               </div>
               {formData.isComplimentary && (
-                <input
+                <Input
                   type="text"
                   placeholder="Complimentary Reason..."
                   value={formData.complimentaryNote}
@@ -472,7 +529,7 @@ export function InvoiceForm({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <LabeledField label="Discount %">
-                    <input
+                    <Input
                       type="number"
                       value={formData.isComplimentary ? 100 : formData.discount}
                       disabled={formData.isComplimentary}
@@ -486,7 +543,7 @@ export function InvoiceForm({
                     />
                   </LabeledField>
                   <LabeledField label="Tax %">
-                    <input
+                    <Input
                       type="number"
                       value={formData.isComplimentary ? 0 : formData.tax}
                       disabled={formData.isComplimentary}
@@ -504,49 +561,51 @@ export function InvoiceForm({
             </CardContent>
           </Card>
 
-          <div className="bg-muted/30 rounded-2xl p-4 border border-border/50 space-y-2">
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase px-1">
-              <span>Summary</span>
-              <span>Amount</span>
-            </div>
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span className="font-bold">₹{subtotal.toLocaleString()}</span>
+          <Card className="bg-muted/30 border-border/50 shadow-none">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase px-1">
+                <span>Summary</span>
+                <span>Amount</span>
               </div>
-              <div className="flex justify-between text-sm text-destructive">
-                <span>
-                  Discount ({formData.isComplimentary ? 100 : formData.discount}
-                  %)
-                </span>
-                <span className="font-bold">
-                  -₹{manualDiscount.toLocaleString()}
-                </span>
-              </div>
-              {planDiscountResult.totalDiscount > 0 && (
-                <div className="flex justify-between text-sm text-primary">
-                  <span>Corporate Benefits</span>
+              <div className="space-y-1.5 pt-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span className="font-bold">₹{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-destructive">
+                  <span>
+                    Discount ({formData.isComplimentary ? 100 : formData.discount}
+                    %)
+                  </span>
                   <span className="font-bold">
-                    -₹{planDiscountResult.totalDiscount.toLocaleString()}
+                    -₹{manualDiscount.toLocaleString()}
                   </span>
                 </div>
-              )}
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>
-                  GST ({formData.isComplimentary ? 0 : formData.tax}%)
-                </span>
-                <span className="font-bold">₹{taxAmount.toLocaleString()}</span>
+                {planDiscountResult.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-primary">
+                    <span>Corporate Benefits</span>
+                    <span className="font-bold">
+                      -₹{planDiscountResult.totalDiscount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>
+                    GST ({formData.isComplimentary ? 0 : formData.tax}%)
+                  </span>
+                  <span className="font-bold">₹{taxAmount.toLocaleString()}</span>
+                </div>
+                <div className="pt-3 border-t border-dashed border-border flex justify-between items-center">
+                  <span className="text-sm font-black uppercase tracking-wider">
+                    Final Total
+                  </span>
+                  <span className="text-2xl font-black text-primary">
+                    ₹{(formData.isComplimentary ? 0 : total).toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <div className="pt-3 border-t border-dashed border-border flex justify-between items-center">
-                <span className="text-sm font-black uppercase tracking-wider">
-                  Final Total
-                </span>
-                <span className="text-2xl font-black text-primary">
-                  ₹{(formData.isComplimentary ? 0 : total).toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </form>
     </Modal>

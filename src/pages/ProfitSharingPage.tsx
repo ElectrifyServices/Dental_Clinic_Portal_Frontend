@@ -9,7 +9,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useAppData } from "../hooks/useAppData";
-import { MetricCard, PageHeader, Card } from "../components/ui";
+import { MetricCard, PageHeader, Card, Button, Input, DataTable } from "../components/ui";
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
 
@@ -108,41 +108,39 @@ export const ProfitSharingPage: React.FC = () => {
             { id: "lastMonth", label: "Last Month" },
             { id: "custom", label: "Custom" },
           ].map((f) => (
-            <button
+            <Button
               key={f.id}
+              variant={dateFilter === f.id ? "default" : "ghost"}
               onClick={() => setDateFilter(f.id as any)}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
-                dateFilter === f.id
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={dateFilter === f.id ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground"}
+              size="sm"
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </PageHeader>
 
       {dateFilter === "custom" && (
         <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border shadow-sm animate-in slide-in-from-top-2">
-          <input
+          <Input
             type="date"
             value={customRange.start}
             onChange={(e) =>
               setCustomRange({ ...customRange, start: e.target.value })
             }
-            className="px-3 py-2 border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="w-auto"
           />
           <span className="text-muted-foreground/60 font-medium text-sm">
             to
           </span>
-          <input
+          <Input
             type="date"
             value={customRange.end}
             onChange={(e) =>
               setCustomRange({ ...customRange, end: e.target.value })
             }
-            className="px-3 py-2 border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary"
+            className="w-auto"
           />
         </div>
       )}
@@ -237,48 +235,17 @@ export const ProfitSharingPage: React.FC = () => {
                 <div className="px-5 pb-5 border-t border-border animate-in slide-in-from-top-2">
                   {doctorTreatments.length > 0 ? (
                     <div className="overflow-x-auto mt-4">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="text-left text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider border-b border-border">
-                            <th className="pb-3">Patient</th>
-                            <th className="pb-3">Procedure</th>
-                            <th className="pb-3">Date</th>
-                            <th className="pb-3 text-right">Cost</th>
-                            <th className="pb-3 text-right">Share</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                          {doctorTreatments.map((t) => (
-                            <tr key={t.id} className="text-sm">
-                              <td className="py-4 font-semibold text-foreground">
-                                {t.patientName}
-                              </td>
-                              <td className="py-4 text-muted-foreground">
-                                {t.procedure}
-                              </td>
-                              <td className="py-4 text-muted-foreground/60 text-xs">
-                                {new Date(
-                                  t.date || t.createdAt,
-                                ).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                })}
-                              </td>
-                              <td className="py-4 font-bold text-foreground text-right">
-                                ₹{Number(t.cost).toLocaleString()}
-                              </td>
-                              <td className="py-4 font-bold text-green-600 text-right">
-                                ₹
-                                {(
-                                  (Number(t.cost) *
-                                    (Number(doctor.profitPercentage) || 40)) /
-                                  100
-                                ).toLocaleString()}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <DataTable
+                        data={doctorTreatments}
+                        columns={[
+                          { header: 'Patient', key: 'patientName', render: (t: any) => <span className="font-semibold text-foreground">{t.patientName}</span> },
+                          { header: 'Procedure', key: 'procedure', render: (t: any) => <span className="text-muted-foreground">{t.procedure}</span> },
+                          { header: 'Date', key: 'date', render: (t: any) => <span className="text-muted-foreground/60 text-xs">{new Date(t.date || t.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span> },
+                          { header: 'Cost', key: 'cost', align: 'right', render: (t: any) => <span className="font-bold text-foreground">₹{Number(t.cost).toLocaleString()}</span> },
+                          { header: 'Share', key: 'share', align: 'right', render: (t: any) => <span className="font-bold text-green-600">₹{((Number(t.cost) * docProfitPercent) / 100).toLocaleString()}</span> },
+                        ]}
+                        emptyMessage="No procedures found for this period"
+                      />
                     </div>
                   ) : (
                     <div className="py-8 text-center bg-muted rounded-xl mt-4">

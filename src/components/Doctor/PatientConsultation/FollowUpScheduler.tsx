@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import React from "react";
 import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 
@@ -75,9 +78,9 @@ export function FollowUpScheduler({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Assign Doctor
-              </label>
+              </Label>
               <select
                 value={followUpDoctorId}
                 onChange={(e) => onDoctorChange(e.target.value)}
@@ -93,10 +96,10 @@ export function FollowUpScheduler({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Preferred Date
-              </label>
-              <input
+              </Label>
+              <Input
                 type="date"
                 value={followUpDate}
                 onChange={(e) => onDateChange(e.target.value)}
@@ -109,9 +112,9 @@ export function FollowUpScheduler({
 
           {!bookedFollowUp && (
             <div className="space-y-4">
-              <label className="block text-[10px] font-bold text-primary uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-primary uppercase tracking-widest">
                 Available Slots
-              </label>
+              </Label>
               {availableSlots.length > 0 ? (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-primary/20 rounded-xl bg-card/50 custom-scrollbar">
@@ -119,7 +122,7 @@ export function FollowUpScheduler({
                       const isSelected = selectedSlot === slot.time24;
                       const isBooked = !slot.isAvailable;
                       return (
-                        <button
+                        <Button
                           key={slot.time24}
                           type="button"
                           disabled={isBooked}
@@ -140,7 +143,7 @@ export function FollowUpScheduler({
                           {isBooked && (
                             <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-400 border border-white" />
                           )}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>

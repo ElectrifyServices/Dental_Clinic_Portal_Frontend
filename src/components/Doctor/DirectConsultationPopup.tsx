@@ -8,7 +8,7 @@ import {
   Stethoscope,
   Calendar,
 } from "lucide-react";
-import { Modal, Button, Label } from "@/components/ui";
+import { Modal, Button, Label, Input, ErrorState } from "@/components/ui";
 import { TimeSlotGrid } from "./DirectConsultation/TimeSlotGrid";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
@@ -146,7 +146,6 @@ export function DirectConsultationPopup({
         setError("Patient not found in records.");
       }
     } catch (err: any) {
-      /* console.error removed */
       setError(
         err.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
         err.message ||
@@ -193,11 +192,11 @@ export function DirectConsultationPopup({
             </Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
-              <input
+              <Input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                className="pl-9"
                 placeholder="Enter name"
               />
             </div>
@@ -209,11 +208,11 @@ export function DirectConsultationPopup({
             </Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
-              <input
+              <Input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                className="pl-9"
                 placeholder="Enter phone"
               />
             </div>
@@ -274,7 +273,7 @@ export function DirectConsultationPopup({
               </Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
-                <input
+                <Input
                   type="date"
                   value={selectedDate}
                   min={todayStr}
@@ -282,7 +281,7 @@ export function DirectConsultationPopup({
                     setSelectedDate(e.target.value);
                     setSelectedTime("");
                   }}
-                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card cursor-pointer"
+                  className="pl-9"
                 />
               </div>
             </div>
@@ -309,18 +308,12 @@ export function DirectConsultationPopup({
         </div>
 
         {error && (
-          <div className="p-4 bg-destructive/5 border border-destructive/10 rounded-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-destructive leading-tight">
-                  {error}
-                </p>
-                <p className="text-[11px] text-destructive/70 mt-1">
-                  Please verify patient details or register a new record.
-                </p>
-              </div>
-            </div>
+          <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+            <ErrorState 
+              title={error}
+              message="Please verify patient details or register a new record."
+            />
+            <div className="mt-4">
             <Button
               variant="destructive"
               size="sm"
@@ -330,6 +323,7 @@ export function DirectConsultationPopup({
               <UserPlus className="w-3.5 h-3.5" />
               Register New Patient
             </Button>
+          </div>
           </div>
         )}
       </div>

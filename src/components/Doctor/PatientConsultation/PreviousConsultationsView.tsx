@@ -13,7 +13,7 @@ import {
   X,
   Filter,
 } from "lucide-react";
-import { SearchInput, Button, Loading, Card, Badge, DataTable } from "@/components/ui";
+import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, Input } from "@/components/ui";
 
 interface PreviousConsultationsViewProps {
   consultations: any;
@@ -61,13 +61,9 @@ export function PreviousConsultationsView({
   // Parse response structure dynamically to handle arrays, nested data, or wrapper objects
   const consultationsList = React.useMemo(() => {
     if (!consultations) return [];
-
-    /* console.log removed */
-
     if (Array.isArray(consultations)) {
       return consultations;
     }
-
     const anyData = consultations as any;
     // Handle standard { data: [...] }
     if (Array.isArray(anyData.data)) {
@@ -111,23 +107,23 @@ export function PreviousConsultationsView({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">From</span>
-              <input
+              <Input
                 type="date"
                 value={dateFrom}
                 max={dateTo || undefined}
                 onChange={(e) => onDateFromChange(e.target.value)}
-                className="px-3 py-1.5 border border-border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer bg-card"
+                className="w-auto h-auto px-3 py-1.5"
               />
             </div>
             <span className="text-muted-foreground text-xs font-bold">—</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">To</span>
-              <input
+              <Input
                 type="date"
                 value={dateTo}
                 min={dateFrom || undefined}
                 onChange={(e) => onDateToChange(e.target.value)}
-                className="px-3 py-1.5 border border-border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer bg-card"
+                className="w-auto h-auto px-3 py-1.5"
               />
             </div>
           </div>
@@ -149,13 +145,10 @@ export function PreviousConsultationsView({
       )}
 
       {isError && (
-        <div className="p-6 text-center bg-destructive/5 border border-destructive/10 rounded-2xl flex flex-col items-center justify-center gap-3">
-          <AlertCircle className="w-10 h-10 text-destructive" />
-          <h4 className="text-base font-bold text-destructive">Failed to load history</h4>
-          <p className="text-xs text-muted-foreground">
-            An error occurred while fetching the patient's previous consultations. Please try again.
-          </p>
-        </div>
+        <ErrorState 
+          title="Failed to load history"
+          message="An error occurred while fetching the patient's previous consultations. Please try again."
+        />
       )}
 
       {!isLoading && !isError && consultationsList.length === 0 && (

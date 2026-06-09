@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React from 'react';
 import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
 import { Input } from '@/components/ui/Input';
@@ -64,9 +66,9 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
       </div>
 
       <div>
-        <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+        <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
           Referred By
-        </label>
+        </Label>
         <Input
           type="text"
           name="referredBy"
@@ -126,10 +128,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Heart className="w-4 h-4 inline mr-2 text-red-500" />
             Medical History
-          </label>
+          </Label>
           <div className="space-y-3">
             <SearchableSelect
               isMulti
@@ -153,7 +155,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
                       <span className="truncate max-w-[200px]">{displayName}</span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           const updated = selectedMedicalHistory.filter((i) => i !== item);
@@ -163,7 +165,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </Badge>
                   );
                 })}
@@ -173,10 +175,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <AlertTriangle className="w-4 h-4 inline mr-2 text-amber-500" />
             Allergies
-          </label>
+          </Label>
           <div className="space-y-3">
             <SearchableSelect
               isMulti
@@ -203,7 +205,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
                       <span className="truncate max-w-[200px]">{displayName}</span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           const updated = selectedAllergies.filter((i) => i !== item);
@@ -213,7 +215,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </Badge>
                   );
                 })}
@@ -232,7 +234,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             </h3>
           </div>
         </div>
-        <textarea
+        <Textarea
           name="pastDentalHistory"
           value={formData.pastDentalHistory}
           onChange={handleChange}
@@ -240,24 +242,24 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           className="w-full px-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Previous dental treatments, issues, or positive/negative experiences"
         />
-        <label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
+        <Label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
           <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2 group-hover:text-primary transition-colors" />
           <p className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Upload Clinical Images / X-rays</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM)</p>
-          <input
+          <Input
             type="file"
             multiple
             accept="image/*"
             onChange={handleDentalFilesUpload}
             className="hidden"
           />
-        </label>
+        </Label>
         {formData.dentalFiles?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {formData.dentalFiles.map((file: any, index: number) => (
               <Badge key={index} variant="secondary" className="pr-1 pl-2 py-1 gap-1 border-primary/10">
                 <span className="truncate max-w-[150px]">{file.name}</span>
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     setFormData((prev: any) => ({
@@ -269,7 +271,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   className="p-0.5 hover:bg-primary/10 rounded-full text-primary"
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </Button>
               </Badge>
             ))}
           </div>
@@ -285,7 +287,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</Label>
             <Input
               type="text"
               name="previousDoctorName"
@@ -302,7 +304,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             )}
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Name</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Name</Label>
             <Input
               type="text"
               name="previousClinicName"
@@ -319,7 +321,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             )}
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</Label>
             <Input
               type="tel"
               name="previousDoctorPhone"
@@ -332,7 +334,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</Label>
             <Input
               type="date"
               name="previousLastVisitDate"
@@ -350,8 +352,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Address</label>
-          <textarea
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Address</Label>
+          <Textarea
             name="previousClinicAddress"
             value={formData.previousClinicAddress}
             onChange={handleChange}
@@ -367,7 +369,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           )}
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-1">Reason for Previous Treatment</label>
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">Reason for Previous Treatment</Label>
           <Input
             type="text"
             name="previousReason"
@@ -377,7 +379,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</label>
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</Label>
           <div className="flex flex-wrap gap-2">
             {Array.from(new Set([
               'scaling / cleaning and polishing',

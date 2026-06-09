@@ -12,7 +12,7 @@ import {
 } from '../utils/treatmentPlanUtils';
 
 export function useTreatmentData() {
-  // State for filters that will be sent in the POST body
+  
   const [filters, setFilters] = useState<TreatmentPlansFilters>({
     page: 1,
     limit: 10,
@@ -20,11 +20,11 @@ export function useTreatmentData() {
     sortOrder: 'DESC',
   });
 
-  // State for single treatment selection
+  
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
   const [shouldFetchSingle, setShouldFetchSingle] = useState(false);
 
-  // Use the hook with the current filters - sends POST request with body
+  
   const {
     data: plansRaw,
     isLoading,
@@ -32,7 +32,7 @@ export function useTreatmentData() {
     isFetching
   } = useTreatmentPlansQuery(filters);
 
-  // Hook for fetching single treatment
+  
   const {
     data: singleTreatmentRaw,
     isLoading: isLoadingSingle,
@@ -44,23 +44,17 @@ export function useTreatmentData() {
   const [localTreatments, setLocalTreatments] = useState<any[]>([]);
   const [completedConsultations, setCompletedConsultations] = useState<any[]>([]);
 
-  // Debug log to see the response structure
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-
-  // Safely extract the data array from the response
+  
   const apiTreatments = useMemo(() => {
     if (!plansRaw) return [];
 
-    // The response could contain the array directly in data, or nested inside data.data
+    
     const dataArray = Array.isArray(plansRaw.data)
       ? plansRaw.data
       : (plansRaw.data?.data || []);
 
-    // Ensure it's an array before mapping
+    
     if (!Array.isArray(dataArray)) {
-      /* console.warn removed */
       return [];
     }
 
@@ -78,10 +72,10 @@ export function useTreatmentData() {
     return Array.from(merged.values());
   }, [apiTreatments, localTreatments]);
 
-  // Selected treatment in UI format
+  
   const selectedTreatment = useMemo(() => {
     if (!singleTreatmentRaw) return null;
-    // Check if the response has the treatment data nested
+    
     const treatmentData = singleTreatmentRaw.data?.data || singleTreatmentRaw.data || singleTreatmentRaw;
     return toUiTreatment(treatmentData);
   }, [singleTreatmentRaw]);
@@ -91,39 +85,39 @@ export function useTreatmentData() {
   const markDone = useMarkTreatmentPlanDoneMutation();
   const updateStatus = useUpdateTreatmentPlanStatusMutation();
 
-  // Function to fetch a single treatment
+  
   const fetchSingleTreatment = useCallback((id: string) => {
     setSelectedTreatmentId(id);
     setShouldFetchSingle(true);
   }, []);
 
-  // Function to clear selected treatment
+  
   const clearSelectedTreatment = useCallback(() => {
     setSelectedTreatmentId(null);
     setShouldFetchSingle(false);
   }, []);
 
-  // Function to refresh single treatment
+  
   const refreshSingleTreatment = useCallback(async () => {
     if (selectedTreatmentId) {
       await refetchSingle();
     }
   }, [selectedTreatmentId, refetchSingle]);
 
-  // Function to update filters and trigger a new POST request
+  
   const updateFilters = (newFilters: Partial<TreatmentPlansFilters>) => {
     setFilters(prev => ({
       ...prev,
       ...newFilters,
-      // Reset to page 1 when filters change (except when explicitly changing page)
+      
       page: newFilters.page !== undefined ? newFilters.page :
         (newFilters.search !== undefined || newFilters.filters ? 1 : prev.page),
     }));
   };
 
-  // Handlers for TreatmentList component
+  
   const handleFiltersChange = (searchFilters: any) => {
-    // Convert the searchFilters from TreatmentList to the format expected by your API
+    
     const newFilters: TreatmentPlansFilters = {};
 
     if (searchFilters.search) {
@@ -210,7 +204,7 @@ export function useTreatmentData() {
     if (params.filters.status?.length) {
       next.filters = { ...filters.filters, status: params.filters.status };
     } else {
-      // Clear status filter but keep any other existing filters
+      
       const { status: _removed, ...restFilters } = filters.filters ?? {};
       next.filters = Object.keys(restFilters).length ? restFilters : undefined;
     }
@@ -233,9 +227,9 @@ export function useTreatmentData() {
         ...prev.filter((item) => item && item.id !== updatedUi.id),
         updatedUi,
       ]);
-      await refetch(); // Refetch to sync with server
+      await refetch(); 
       
-      // Refresh single treatment if it's the one being edited
+      
       if (selectedTreatmentId === treatment.id) {
         await refreshSingleTreatment();
       }
@@ -243,15 +237,13 @@ export function useTreatmentData() {
       return updatedUi;
     }
 
-    /* console.log removed */
-
     const created = await createPlan.mutateAsync(toApiCreatePlan(treatment));
     const createdUi = toUiTreatment(created);
     setLocalTreatments((prev) => [
       ...prev.filter((item) => item && item.id !== createdUi.id),
       createdUi,
     ]);
-    await refetch(); // Refetch to sync with server
+    await refetch(); 
     return createdUi;
   };
 
@@ -262,9 +254,9 @@ export function useTreatmentData() {
       ...prev.filter((item) => item && item.id !== updatedUi.id),
       updatedUi,
     ]);
-    await refetch(); // Refetch to sync with server
+    await refetch(); 
     
-    // Refresh single treatment if it's the one being marked
+    
     if (selectedTreatmentId === id) {
       await refreshSingleTreatment();
     }
@@ -279,9 +271,9 @@ export function useTreatmentData() {
       ...prev.filter((item) => item && item.id !== updatedUi.id),
       updatedUi,
     ]);
-    await refetch(); // Refetch to sync with server
+    await refetch(); 
     
-    // Refresh single treatment if it's the one being started
+    
     if (selectedTreatmentId === id) {
       await refreshSingleTreatment();
     }
@@ -299,7 +291,7 @@ export function useTreatmentData() {
     );
   };
 
-  // Get summary data from the response (can be nested in plansRaw.summary or plansRaw.data.summary)
+  
   const summary = plansRaw?.summary || plansRaw?.data?.summary || {
     all: 0,
     active: 0,
@@ -322,7 +314,7 @@ export function useTreatmentData() {
   };
 
   return {
-    // List data
+    
     treatments,
     setTreatments,
     completedConsultations,
@@ -333,20 +325,20 @@ export function useTreatmentData() {
     totalPages: plansRaw?.pagination?.totalPages || plansRaw?.data?.pagination?.totalPages || 1,
     currentPage: filters.page || 1,
     
-    // Single treatment data
+    
     selectedTreatment,
     isLoadingSingle,
     fetchSingleTreatment,
     clearSelectedTreatment,
     refreshSingleTreatment,
     
-    // CRUD operations
+    
     handleSaveTreatment,
     handleUpdateConsultation,
     handleMarkCompleted,
     handleStartTreatment,
     
-    // Filter management
+    
     filters,
     updateFilters,
     handleFiltersChange,
@@ -355,7 +347,7 @@ export function useTreatmentData() {
     handleSortChange,
     handleParamsChange,
     
-    // Refetch function
+    
     refetch,
   };
 }

@@ -254,7 +254,7 @@ export function InventoryList({
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
-                      <button
+                      <Button
                         onClick={() => {
                           onRestock(item);
                           setOpenMenuId(null);
@@ -262,8 +262,8 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" /> Restock
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           onConsume(item);
                           setOpenMenuId(null);
@@ -271,8 +271,8 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
                       >
                         <MinusCircle className="w-4 h-4" /> Consume
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           onAdjust(item);
                           setOpenMenuId(null);
@@ -280,8 +280,8 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
                       >
                         <SlidersHorizontal className="w-4 h-4" /> Adjust
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           onViewHistory(item);
                           setOpenMenuId(null);
@@ -289,9 +289,9 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
                       >
                         <Clock className="w-4 h-4" /> History
-                      </button>
+                      </Button>
                       <div className="h-px bg-border my-1 mx-2" />
-                      <button
+                      <Button
                         onClick={() => {
                           onEditItem(item.id);
                           setOpenMenuId(null);
@@ -299,8 +299,8 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <Edit className="w-4 h-4" /> Edit Item
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           onDeleteItem(item.id);
                           setOpenMenuId(null);
@@ -308,7 +308,7 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
                       >
                         <Trash2 className="w-4 h-4" /> Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>,

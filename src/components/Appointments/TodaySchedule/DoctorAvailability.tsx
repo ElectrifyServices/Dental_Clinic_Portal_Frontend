@@ -1,5 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { UserCheck, UserX } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 interface DoctorAvailabilityProps {
   doctors: any[];
@@ -40,15 +41,16 @@ export const DoctorAvailability: React.FC<DoctorAvailabilityProps> = ({
                   <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-tighter mt-0.5">{doctor.specialization}</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => onToggle(doctor.id)}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${available
-                    ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'
-                    : 'bg-destructive/10 text-destructive hover:bg-destructive/10 border border-destructive/20'
+                className={`w-9 h-9 p-0 rounded-xl flex items-center justify-center transition-all shadow-sm ${available
+                    ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100'
+                    : 'bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20'
                   }`}
               >
                 {available ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-              </button>
+              </Button>
             </div>
           );
         })}
