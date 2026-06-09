@@ -7,6 +7,7 @@ interface Prescription {
   timing: string;
   frequency: string;
   duration: string;
+  durationUnit?: string;
   qty: string;
 }
 
@@ -41,97 +42,98 @@ export function PrescriptionSection({
         {prescriptions.map((prescription) => (
           <div
             key={prescription.id}
-            className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 relative group transition-all hover:shadow-md"
+            className="flex flex-wrap gap-4 items-end p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 relative group transition-all hover:shadow-md animate-in fade-in zoom-in duration-200"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="md:col-span-2">
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                  Medicine Name
-                </label>
-                <input
-                  type="text"
-                  value={prescription.medicine}
-                  onChange={(e) =>
-                    onUpdatePrescription(
-                      prescription.id,
-                      "medicine",
-                      e.target.value,
-                    )
-                  }
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                  placeholder="e.g. Amoxicillin"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                  Dosage
-                </label>
-                <select
-                  value={prescription.dosage}
-                  onChange={(e) =>
-                    onUpdatePrescription(
-                      prescription.id,
-                      "dosage",
-                      e.target.value,
-                    )
-                  }
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                >
-                  <option value="">Select Dosage</option>
-                  <option value="1-0-0">1 - 0 - 0 (Morning)</option>
-                  <option value="0-1-0">0 - 1 - 0 (Afternoon)</option>
-                  <option value="0-0-1">0 - 0 - 1 (Night)</option>
-                  <option value="1-1-0">1 - 1 - 0</option>
-                  <option value="1-0-1">1 - 0 - 1</option>
-                  <option value="0-1-1">0 - 1 - 1</option>
-                  <option value="1-1-1">1 - 1 - 1</option>
-                </select>
-              </div>
+            <div className="flex-[2] min-w-[200px]">
+              <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                Medicine Name
+              </label>
+              <input
+                type="text"
+                value={prescription.medicine}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "medicine",
+                    e.target.value,
+                  )
+                }
+                className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
+                placeholder="e.g. Amoxicillin"
+              />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                  Timing
-                </label>
+            <div className="w-[140px] shrink-0">
+              <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                Dosage
+              </label>
+              <select
+                value={prescription.dosage}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "dosage",
+                    e.target.value,
+                  )
+                }
+                className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold cursor-pointer"
+              >
+                <option value="">Select Dosage</option>
+                <option value="1-0-0">1 - 0 - 0</option>
+                <option value="0-1-0">0 - 1 - 0</option>
+                <option value="0-0-1">0 - 0 - 1</option>
+                <option value="1-1-0">1 - 1 - 0</option>
+                <option value="1-0-1">1 - 0 - 1</option>
+                <option value="0-1-1">0 - 1 - 1</option>
+                <option value="1-1-1">1 - 1 - 1</option>
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                Timing
+              </label>
+              <input
+                type="text"
+                value={prescription.timing}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "timing",
+                    e.target.value,
+                  )
+                }
+                className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
+                placeholder="After food"
+              />
+            </div>
+
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                Frequency
+              </label>
+              <input
+                type="text"
+                value={prescription.frequency}
+                onChange={(e) =>
+                  onUpdatePrescription(
+                    prescription.id,
+                    "frequency",
+                    e.target.value,
+                  )
+                }
+                className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
+                placeholder="Once daily"
+              />
+            </div>
+
+            <div className="w-[180px] shrink-0">
+              <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                Duration
+              </label>
+              <div className="flex gap-2">
                 <input
-                  type="text"
-                  value={prescription.timing}
-                  onChange={(e) =>
-                    onUpdatePrescription(
-                      prescription.id,
-                      "timing",
-                      e.target.value,
-                    )
-                  }
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                  placeholder="After food"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                  Frequency
-                </label>
-                <input
-                  type="text"
-                  value={prescription.frequency}
-                  onChange={(e) =>
-                    onUpdatePrescription(
-                      prescription.id,
-                      "frequency",
-                      e.target.value,
-                    )
-                  }
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                  placeholder="3 times daily"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                  Duration
-                </label>
-                <input
-                  type="text"
+                  type="number"
                   value={prescription.duration}
                   onChange={(e) =>
                     onUpdatePrescription(
@@ -140,40 +142,59 @@ export function PrescriptionSection({
                       e.target.value,
                     )
                   }
-                  className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                  placeholder="5 days"
+                  min="1"
+                  className="w-16 px-2 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card text-center outline-none text-sm font-semibold"
+                  placeholder="5"
+                />
+                <select
+                  value={prescription.durationUnit || "Days"}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "durationUnit",
+                      e.target.value,
+                    )
+                  }
+                  className="flex-1 px-2 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold cursor-pointer"
+                >
+                  <option value="Days">Days</option>
+                  <option value="Weeks">Weeks</option>
+                  <option value="Months">Months</option>
+                  <option value="Years">Years</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="w-[120px] shrink-0 flex items-center gap-2">
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
+                  Qty
+                </label>
+                <input
+                  type="number"
+                  value={prescription.qty}
+                  onChange={(e) =>
+                    onUpdatePrescription(
+                      prescription.id,
+                      "qty",
+                      e.target.value,
+                    )
+                  }
+                  min="1"
+                  className="w-full px-3 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
+                  placeholder="10"
                 />
               </div>
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1.5 block">
-                    Qty
-                  </label>
-                  <input
-                    type="text"
-                    value={prescription.qty}
-                    onChange={(e) =>
-                      onUpdatePrescription(
-                        prescription.id,
-                        "qty",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold"
-                    placeholder="10"
-                  />
-                </div>
-                {prescriptions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => onRemovePrescription(prescription.id)}
-                    className="p-2.5 text-red-500 hover:bg-destructive/10 rounded-xl transition-all"
-                    title="Remove Medicine"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
+              {prescriptions.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onRemovePrescription(prescription.id)}
+                  className="p-2.5 text-red-500 hover:bg-destructive/10 rounded-xl transition-all duration-200 shrink-0"
+                  title="Remove Medicine"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
         ))}

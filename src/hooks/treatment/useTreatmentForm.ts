@@ -36,6 +36,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
           timing: "",
           frequency: "",
           duration: "",
+          durationUnit: "Days",
           qty: "",
           instructions: "",
         }]
@@ -232,6 +233,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         timing: "",
         frequency: "",
         duration: "",
+        durationUnit: "Days",
         qty: "",
         instructions: "",
       },

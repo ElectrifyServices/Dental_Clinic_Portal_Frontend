@@ -109,7 +109,7 @@ export function BasicInfoSection({
         <input
           type="number"
           name="cost"
-          value={formData.cost}
+          value={formData.cost === 0 ? "" : formData.cost}
           onChange={handleChange}
           className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
           placeholder="0"
