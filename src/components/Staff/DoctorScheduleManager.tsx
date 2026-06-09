@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Save, Clock, Calendar, AlertTriangle, Loader2 } from "lucide-react";
-import { Modal, Button, LabeledField, Badge } from "@/components/ui";
+import { Modal, Button, LabeledField, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
 import {
   useCreateDoctorScheduleMutation,
   mapScheduleToPayload,
@@ -161,32 +161,33 @@ function HourMinPicker({ value, onChange, optional = false }: HourMinPickerProps
 
   return (
     <div className="flex gap-1 items-center w-full">
-      <select
-        value={hStr}
-        onChange={(e) => handleHourChange(e.target.value)}
-        className="w-[60%] px-1.5 py-1.5 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card"
-      >
-        <option value="">Hour</option>
-        {hours.map((h) => (
-          <option key={h.val} value={h.val}>
-            {h.label}
-          </option>
-        ))}
-      </select>
+      <Select value={hStr || "empty"} onValueChange={handleHourChange}>
+        <SelectTrigger className="w-[60%] px-1.5 py-1.5 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card h-9">
+          <SelectValue placeholder="Hour" />
+        </SelectTrigger>
+        <SelectContent className="max-h-56">
+          <SelectItem value="empty">Hour</SelectItem>
+          {hours.map((h) => (
+            <SelectItem key={h.val} value={h.val}>
+              {h.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <span className="text-muted-foreground font-black text-xs">:</span>
-      <select
-        value={mStr}
-        disabled={!hStr}
-        onChange={(e) => handleMinChange(e.target.value)}
-        className="w-[40%] px-1.5 py-1.5 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card disabled:opacity-50"
-      >
-        <option value="">Min</option>
-        {minutes.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
+      <Select value={mStr || "empty"} onValueChange={handleMinChange} disabled={!hStr}>
+        <SelectTrigger className="w-[40%] px-1.5 py-1.5 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none bg-card disabled:opacity-50 h-9">
+          <SelectValue placeholder="Min" />
+        </SelectTrigger>
+        <SelectContent className="max-h-56">
+          <SelectItem value="empty">Min</SelectItem>
+          {minutes.map((m) => (
+            <SelectItem key={m} value={m}>
+              {m}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -442,26 +443,34 @@ export function DoctorScheduleManager({
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <LabeledField label="Slot Duration (Mins)">
-                <select
-                  value={settings.duration}
-                  onChange={(e) => handleSettingsChange("duration", Number(e.target.value))}
-                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                <Select
+                  value={String(settings.duration)}
+                  onValueChange={(val) => handleSettingsChange("duration", Number(val))}
                 >
-                  {[10, 15, 20, 30, 45, 60].map((v) => (
-                    <option key={v} value={v}>{v} Minutes</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full px-4 py-2 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none h-10 bg-card">
+                    <SelectValue placeholder="Select Duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 15, 20, 30, 45, 60].map((v) => (
+                      <SelectItem key={v} value={String(v)}>{v} Minutes</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </LabeledField>
               <LabeledField label="Buffer Time (Mins)">
-                <select
-                  value={settings.bufferTime}
-                  onChange={(e) => handleSettingsChange("bufferTime", Number(e.target.value))}
-                  className="w-full px-4 py-2 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                <Select
+                  value={String(settings.bufferTime)}
+                  onValueChange={(val) => handleSettingsChange("bufferTime", Number(val))}
                 >
-                  {[0, 5, 10, 15].map((v) => (
-                    <option key={v} value={v}>{v === 0 ? "No Buffer" : `${v} Minutes`}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full px-4 py-2 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none h-10 bg-card">
+                    <SelectValue placeholder="Select Buffer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[0, 5, 10, 15].map((v) => (
+                      <SelectItem key={v} value={String(v)}>{v === 0 ? "No Buffer" : `${v} Minutes`}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </LabeledField>
             </div>
             <p className="text-[10px] text-primary/60 font-medium mt-3">

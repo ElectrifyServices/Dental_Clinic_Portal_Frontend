@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Save, IndianRupee, Calendar, ClipboardList } from 'lucide-react';
-import { Modal, Button, LabeledField } from '@/components/ui';
+import { Save, IndianRupee, Calendar, ClipboardList, ChevronDown } from 'lucide-react';
+import { Modal, Button, LabeledField, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui';
 
 interface SalaryPaymentModalProps {
   staffId: string;
@@ -16,8 +16,8 @@ import { useModal } from '@/contexts/ModalContext';
 
 export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose, onSave }: SalaryPaymentModalProps) {
   const { showToast } = useModal();
+  const [amountValue, setAmountValue] = useState<string>(pendingAmount > 0 ? pendingAmount.toString() : '');
   const [formData, setFormData] = useState({
-    amount: pendingAmount.toString(),
     date: new Date().toISOString().split('T')[0],
     mode: 'Cash',
     note: ''
@@ -27,10 +27,17 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedAmount = parseFloat(amountValue);
+
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      showToast("Please enter or select a valid payment amount.", "error");
+      return;
+    }
+
     try {
       const res = await paySalaryMutation.mutateAsync({
         staff_id: staffId,
-        payment_amount: parseFloat(formData.amount),
+        payment_amount: parsedAmount,
         payment_date: formData.date,
         payment_mode: formData.mode.toUpperCase(),
         disbursement_note: formData.note
@@ -41,7 +48,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
       onSave({
         staffId,
         ...formData,
-        amount: parseFloat(formData.amount),
+        amount: parsedAmount,
         pending_dues: backendData.pending_dues,
         base_salary: backendData.base_salary,
       });
@@ -94,18 +101,51 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <LabeledField label="Payment Amount (₹)" required>
-              <div className="relative">
-                <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <select required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none appearance-none">
-                  <option value="">Select Amount</option>
-                  {pendingAmount > 0 && <option value={pendingAmount}>Full Due (₹{pendingAmount.toLocaleString('en-IN')})</option>}
-                  {[5000, 10000, 15000, 20000, 25000, 30000, 50000].map(amt => (
-                    <option key={amt} value={amt}>₹{amt.toLocaleString('en-IN')}</option>
-                  ))}
-                </select>
+              <div className="relative flex items-center">
+                <IndianRupee className="w-3.5 h-3.5 absolute left-3 text-muted-foreground z-10" />
+                <Input
+                  type="number"
+                  required
+                  placeholder="Enter or select amount"
+                  value={amountValue}
+                  onChange={(e) => setAmountValue(e.target.value)}
+                  className="w-full pl-9 pr-10 rounded-xl text-sm font-black h-11 focus-visible:ring-primary/20"
+                  min="1"
+                />
+                <div className="absolute right-2 flex items-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                      >
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[220px]">
+                      {pendingAmount > 0 && (
+                        <DropdownMenuItem
+                          onClick={() => setAmountValue(pendingAmount.toString())}
+                          className="cursor-pointer font-semibold"
+                        >
+                          Full Due (₹{pendingAmount.toLocaleString('en-IN')})
+                        </DropdownMenuItem>
+                      )}
+                      {[5000, 10000, 15000, 20000, 25000, 30000, 50000].map(amt => (
+                        <DropdownMenuItem
+                          key={amt}
+                          onClick={() => setAmountValue(amt.toString())}
+                          className="cursor-pointer font-semibold"
+                        >
+                          ₹{amt.toLocaleString('en-IN')}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </LabeledField>
+
             <LabeledField label="Payment Date" required>
               <div className="relative">
                 <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

@@ -118,7 +118,10 @@ export function DoctorManagement({
       s.name.toLowerCase().includes(q) ||
       s.email.toLowerCase().includes(q) ||
       (s.specialization || "").toLowerCase().includes(q);
-    const matchRole = roleFilter === "all" || s.role === roleFilter;
+    const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase().includes("doctor");
+    const matchRole = roleFilter === "all" || 
+                      (roleFilter === "doctor" && isDoctor) ||
+                      (roleFilter !== "doctor" && s.role === roleFilter);
     const matchStatus =
       statusFilter === "all" ||
       (statusFilter === "active" ? s.isActive : !s.isActive);
@@ -176,7 +179,7 @@ export function DoctorManagement({
             </>
           )}
         </button>
-        {staff.role?.toLowerCase() === "doctor" && (
+        {(staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor")) && (
           <button
             onClick={() => {
               onManageSchedule(staff.id, staff.name);
@@ -258,7 +261,8 @@ export function DoctorManagement({
       key: "role",
       header: "Role",
       render: (staff: UserType) => {
-        const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+        const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+        const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
         const rawLabel = (staff as any).originalRoleName || rm.label;
         const displayLabel = rawLabel.replace(/_/g, ' ');
         return (
@@ -426,7 +430,8 @@ export function DoctorManagement({
             </div>
           ) : (
             filtered.map((staff) => {
-              const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+              const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+              const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
               return (
                 <Card
                   key={staff.id}
