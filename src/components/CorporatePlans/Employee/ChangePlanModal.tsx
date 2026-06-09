@@ -50,7 +50,7 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
       refetch();
       setChangePlanEmp(null);
     } catch (err) {
-      console.error("Failed to change plan", err);
+      /* console.error removed */
     }
   };
 

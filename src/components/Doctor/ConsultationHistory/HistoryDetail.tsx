@@ -9,7 +9,7 @@ import { parseApiResponse } from "../../../services/parseApiResponse";
 import { useDoctorsListQuery } from "../../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 import { useUpdateAppointmentMutation } from "../../../hooks/appointments/useUpdateAppointmentMutation";
-import { SearchableSelect, Button } from "@/components/ui";
+import { SearchableSelect, Button, Label, Loading } from "@/components/ui";
 
 interface HistoryDetailProps {
   record: any;
@@ -140,7 +140,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
           }
         }
       } catch (err) {
-        console.error("Failed to load full consultation/appointment details:", err);
+        /* console.error removed */
       } finally {
         setIsLoadingFull(false);
       }
@@ -201,7 +201,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
       }));
       setEditMode(false);
     } catch (err) {
-      console.error("Failed to update appointment:", err);
+      /* console.error removed */
     } finally {
       setIsSavingAppt(false);
     }
@@ -252,12 +252,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
 
   if (isLoadingFull) {
     return (
-      <div className="flex flex-col justify-center items-center py-24 space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-muted-foreground text-sm font-semibold animate-pulse">
-          Loading detailed report...
-        </p>
-      </div>
+      <Loading type="spinner" text="Loading detailed report..." />
     );
   }
 
@@ -294,7 +289,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
         {/* Action Buttons */}
         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 border-t md:border-t-0 pt-4 md:pt-0">
           <div className="relative flex-1 md:flex-initial">
-            <button
+            <Button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowPrintMenu(!showPrintMenu);
@@ -305,59 +300,59 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                 }`}
             >
               <Printer className="w-4.5 h-4.5" /> Download Report
-            </button>
+            </Button>
             {showPrintMenu && (
               <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
-                <button
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownloadPDF(fullRecord, "CLINICAL");
                     setShowPrintMenu(false);
                   }}
-                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors bg-transparent border-transparent"
                 >
                   <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownloadPDF(fullRecord, "TREATMENT");
                     setShowPrintMenu(false);
                   }}
-                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
                 >
                   <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownloadPDF(fullRecord, "PRESCRIPTION");
                     setShowPrintMenu(false);
                   }}
-                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
                 >
                   <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
-                </button>
+                </Button>
                 <div className="h-px bg-muted my-1.5" />
-                <button
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownloadPDF(fullRecord, "FULL");
                     setShowPrintMenu(false);
                   }}
-                  className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
                 >
                   <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
-                </button>
+                </Button>
               </div>
             )}
           </div>
-          <button
+          <Button
             onClick={(e) => onDeleteClick(fullRecord.id, e)}
-            className="flex items-center justify-center gap-2 text-sm font-bold text-red-600 hover:text-white px-5 py-2.5 rounded-xl hover:bg-red-600 transition-all border border-red-200 hover:border-red-600 shadow-sm bg-white flex-1 md:flex-initial"
+            className="flex items-center justify-center gap-2 text-sm font-bold text-red-600 hover:text-white px-5 py-2.5 rounded-xl hover:bg-red-600 transition-all border border-red-200 hover:border-red-600 shadow-sm bg-white flex-1 md:flex-initial h-auto"
           >
             <Trash2 className="w-4.5 h-4.5" /> Delete
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -671,9 +666,9 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                  <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                     Assign Doctor
-                  </label>
+                  </Label>
                   <SearchableSelect
                     value={selectedDoctorId}
                     onChange={(val) => {
@@ -690,9 +685,9 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                  <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                     Preferred Date
-                  </label>
+                  </Label>
                   <input
                     type="date"
                     value={selectedDate}
@@ -707,9 +702,9 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
+                <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                   Available Slots
-                </label>
+                </Label>
                 {isLoadingSlots ? (
                   <div className="flex items-center gap-2 py-3">
                     <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
@@ -721,13 +716,13 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                       const isSelected = selectedSlot === slot.time24;
                       const isBooked = !slot.isAvailable;
                       return (
-                        <button
+                        <Button
                           key={slot.time24}
                           type="button"
                           disabled={isBooked}
                           onClick={() => !isBooked && setSelectedSlot(slot.time24)}
                           className={`
-                            relative px-3 py-2 rounded-lg text-[10px] font-black transition-all border-2 flex items-center gap-1
+                            relative px-3 py-2 rounded-lg text-[10px] font-black transition-all border-2 flex items-center gap-1 h-auto
                             ${isSelected
                               ? "bg-emerald-600 text-white border-emerald-600 shadow-md scale-105"
                               : isBooked
@@ -738,7 +733,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                         >
                           {isSelected && <CheckCircle className="w-3 h-3 text-white shrink-0" />}
                           {slot.time12}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>

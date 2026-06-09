@@ -10,7 +10,7 @@ import {
   toUiConsultation,
   toApiCreateConsultation,
   toApiUpdateConsultation,
-} from './consultation/consultationUtils';
+} from '../utils/consultationUtils';
 
 export function useConsultationData() {
   // State for filters that will be sent in the POST body
@@ -60,7 +60,7 @@ export function useConsultationData() {
 
     // Ensure it's an array before mapping
     if (!Array.isArray(dataArray)) {
-      console.warn('Expected to find an array of consultations but got:', dataArray);
+      /* console.warn removed */
       return [];
     }
 
@@ -224,7 +224,7 @@ export function useConsultationData() {
       return updatedUi;
     }
 
-    console.log("Creating consultation with data:", consultation);
+    /* console.log removed */
 
     const created = await createConsultation.mutateAsync(toApiCreateConsultation(consultation));
     const createdUi = toUiConsultation(created);
@@ -260,7 +260,7 @@ export function useConsultationData() {
 
       return updatedUi;
     } catch (error) {
-      console.error("Failed to complete consultation:", error);
+      /* console.error removed */
       throw error;
     }
   };
@@ -278,7 +278,7 @@ export function useConsultationData() {
         clearSelectedConsultation();
       }
     } catch (error) {
-      console.error("Failed to delete consultation:", error);
+      /* console.error removed */
       throw error;
     }
   };
@@ -293,7 +293,7 @@ export function useConsultationData() {
       try {
         await updateConsultation.mutateAsync({ id, status } as any);
       } catch (err) {
-        console.error("Failed to update consultation status in backend:", err);
+        /* console.error removed */
       }
     }
   }, [updateConsultation]);

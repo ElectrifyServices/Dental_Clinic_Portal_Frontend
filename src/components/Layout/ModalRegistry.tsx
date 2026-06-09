@@ -45,7 +45,7 @@ import { useConsumeInventoryItemMutation } from "../../hooks/inventory/useConsum
 import { useAdjustInventoryItemMutation } from "../../hooks/inventory/useAdjustInventoryItemMutation";
 import { useCreateConsultationMutation } from "../../hooks/consultation/useCreateConsultationMutation";
 import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdateConsultationMutation";
-import { toApiCreateConsultation, toApiUpdateConsultation } from "../../hooks/consultation/consultationUtils";
+import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/consultationUtils";
 import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
 
 export function ModalRegistry() {
@@ -366,7 +366,7 @@ export function ModalRegistry() {
                     patient_id: patientId
                   });
                 } catch (err) {
-                  console.error("Failed to check-in after registration:", err);
+                  /* console.error removed */
                   throw err;
                 }
 
@@ -686,7 +686,7 @@ export function ModalRegistry() {
               setActiveModal(null);
               showToast("EMR saved!");
             } catch (err: any) {
-              console.error("Failed to create EMR record:", err);
+              /* console.error removed */
               showToast(err?.response?.data?.message || err?.message || "Failed to save EMR", "error");
             }
           }}
@@ -860,7 +860,7 @@ export function ModalRegistry() {
               setActiveModal(null);
               setSelectedConsentForm(null);
             } catch (err: any) {
-              console.error("Failed to save consent form via API:", err);
+              /* console.error removed */
               showToast(err?.response?.data?.message || err?.message || "Failed to save consent form", "error");
             }
           }}

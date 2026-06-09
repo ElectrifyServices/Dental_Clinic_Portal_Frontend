@@ -9,7 +9,7 @@ import {
   toUiTreatment,
   toApiCreatePlan,
   toApiUpdatePlan,
-} from './treatment/treatmentPlanUtils';
+} from '../utils/treatmentPlanUtils';
 
 export function useTreatmentData() {
   // State for filters that will be sent in the POST body
@@ -45,9 +45,9 @@ export function useTreatmentData() {
   const [completedConsultations, setCompletedConsultations] = useState<any[]>([]);
 
   // Debug log to see the response structure
-  console.log("Raw plans from API:", plansRaw);
-  console.log("plansRaw?.data type:", typeof plansRaw?.data);
-  console.log("Is plansRaw?.data an array?", Array.isArray(plansRaw?.data));
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
 
   // Safely extract the data array from the response
   const apiTreatments = useMemo(() => {
@@ -60,7 +60,7 @@ export function useTreatmentData() {
 
     // Ensure it's an array before mapping
     if (!Array.isArray(dataArray)) {
-      console.warn('Expected plansRaw.data to be an array but got:', dataArray);
+      /* console.warn removed */
       return [];
     }
 
@@ -243,7 +243,7 @@ export function useTreatmentData() {
       return updatedUi;
     }
 
-    console.log("Creating treatment plan with data:", treatment);
+    /* console.log removed */
 
     const created = await createPlan.mutateAsync(toApiCreatePlan(treatment));
     const createdUi = toUiTreatment(created);

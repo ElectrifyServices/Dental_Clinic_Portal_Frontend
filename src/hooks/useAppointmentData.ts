@@ -112,7 +112,7 @@ export function useAppointmentData() {
         await markNoShow({ id });
         toast.success("Appointment marked as No-Show!");
       } catch (err: any) {
-        console.error("Failed to mark appointment as no-show:", err);
+        /* console.error removed */
         toast.error(err?.response?.data?.message || err?.message || "Failed to mark as no-show");
       }
     } else {
@@ -129,7 +129,7 @@ export function useAppointmentData() {
         await restoreStatus({ id, status: apiStatus });
         toast.success(`Appointment status updated to ${status}!`);
       } catch (err: any) {
-        console.error("Failed to update appointment status:", err);
+        /* console.error removed */
         toast.error(err?.response?.data?.message || err?.message || "Failed to update status");
       }
     }

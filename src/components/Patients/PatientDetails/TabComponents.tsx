@@ -12,6 +12,7 @@ import {
   Stethoscope,
   User,
 } from "lucide-react";
+import { Card, Button } from "@/components/ui";
 
 // --- Reusable Empty State Component ---
 const EmptyState = ({
@@ -383,12 +384,13 @@ export const BillingTab = ({
                 ₹{patient.outstandingBalance.toLocaleString()}
               </p>
             </div>
-            <button
+            <Button
               onClick={handleSendReminder}
-              className="bg-destructive text-white px-4 py-2 rounded-lg hover:bg-destructive flex items-center text-sm font-medium"
+              variant="destructive"
+              className="flex items-center text-sm font-medium h-auto"
             >
               <Send className="w-4 h-4 mr-2" /> Send Reminder
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -448,18 +450,18 @@ export const PrescriptionsTab = ({
         Prescription History
       </h3>
       {patient.prescriptionHistory?.length > 0 && (
-        <button
+        <Button
           onClick={handlePrintDocument}
-          className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary flex items-center text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-200"
+          className="flex items-center text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-200 h-auto"
         >
           <Printer className="w-4 h-4 mr-2" /> Print Document
-        </button>
+        </Button>
       )}
     </div>
     {patient.prescriptionHistory?.map((record: any) => (
-      <div
+      <Card
         key={record.id}
-        className="bg-card rounded-2xl p-4 border border-primary/20 shadow-sm hover:shadow-md transition-all duration-200 mb-4"
+        className="bg-card rounded-2xl p-4 border border-primary/20 shadow-sm hover:shadow-md transition-all duration-200 mb-4 shadow-none"
       >
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center">
@@ -513,7 +515,7 @@ export const PrescriptionsTab = ({
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     ))}
     {(!patient.prescriptionHistory ||
       patient.prescriptionHistory.length === 0) && (

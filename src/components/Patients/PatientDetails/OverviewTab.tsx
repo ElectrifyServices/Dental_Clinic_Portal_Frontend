@@ -9,6 +9,7 @@ import {
   Activity,
   UserPlus,
 } from "lucide-react";
+import { Card } from "@/components/ui";
 
 interface OverviewTabProps {
   patient: any;
@@ -19,6 +20,22 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   patient,
   patientAppointments,
 }) => {
+  const formatLastVisitDate = (visitVal?: string | number | Date) => {
+    if (!visitVal) return "No visits yet";
+    try {
+      const d = new Date(visitVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(visitVal);
+    } catch (e) {
+      return String(visitVal);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Personal Information */}
@@ -105,7 +122,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
       {/* Quick Stats */}
       <div className="space-y-4">
-        <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+        <Card className="rounded-2xl p-6 border border-border shadow-sm">
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
             <Activity className="w-5 h-5 mr-2" />
             Patient Statistics
@@ -147,20 +164,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 </span>
               </div>
               <span className="text-sm font-bold text-primary">
-                {(() => {
-                  const visitVal = patient.last_visit_date || patient.lastVisit;
-                  if (!visitVal) return "No visits yet";
-                  try {
-                    const d = new Date(visitVal);
-                    return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : visitVal;
-                  } catch(e) {
-                    return visitVal;
-                  }
-                })()}
+                {formatLastVisitDate(patient.last_visit_date || patient.lastVisit)}
               </span>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

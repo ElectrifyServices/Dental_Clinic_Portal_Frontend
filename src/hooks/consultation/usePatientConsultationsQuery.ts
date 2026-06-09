@@ -1,5 +1,5 @@
 import { useApiQuery } from "../useApiQuery";
-import { ConsultationResponse } from "./consultationTypes";
+import { ConsultationResponse } from "../../types/consultationTypes";
 
 export interface PatientConsultationsFilters {
     search?: string;

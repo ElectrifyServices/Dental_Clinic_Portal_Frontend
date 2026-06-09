@@ -9,7 +9,7 @@ import {
   PageHeader, DataTable, Pagination, SearchInput,
   FilterTabs, PlanBadge, ConfirmModal, Badge,
   DropdownMenu, DropdownMenuTrigger,
-  DropdownMenuContent, DropdownMenuItem
+  DropdownMenuContent, DropdownMenuItem, Button
 } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
@@ -228,17 +228,17 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       key: 'status', header: 'Status', render: (e: CorporateEmployee) => {
         const isExpired = e.status === 'EXPIRED';
         return (
-          <button
+          <Button
             onClick={async () => {
               if (isExpired) return;
               try {
                 await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
                 refetch();
               } catch (err) {
-                console.error("Failed to update status", err);
+                /* console.error removed */
               }
             }}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border ${isExpired
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border h-auto ${isExpired
               ? 'bg-rose-100 text-rose-700 border-rose-200 cursor-not-allowed'
               : e.isActive
                 ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200'
@@ -255,7 +255,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               <ToggleLeft className="w-4 h-4" />
             )}
             {isExpired ? 'Expired' : e.isActive ? 'Active' : 'Inactive'}
-          </button>
+          </Button>
         );
       },
     },
@@ -264,9 +264,9 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         <div className="flex items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="btn-icon">
+              <Button variant="ghost" size="icon" className="btn-icon h-8 w-8">
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => openChangePlan(e)} className="cursor-pointer">
@@ -295,30 +295,30 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         subtitle={`${totalItems} employees across ${activePlans.filter(p => p.isActive).length} active plans`}
         action={
           <div className="flex items-center gap-2">
-            <button onClick={() => { setTab('import'); setImportRows([]); setImportErrors([]); }} className="btn-secondary">
+            <Button onClick={() => { setTab('import'); setImportRows([]); setImportErrors([]); }} variant="outline" className="btn-secondary">
               <Upload className="w-4 h-4" /> Bulk Import
-            </button>
-            <button onClick={openNew} className="btn-primary">
+            </Button>
+            <Button onClick={openNew} className="btn-primary">
               <Plus className="w-4 h-4" /> Add Employee
-            </button>
+            </Button>
           </div>
         }
       >
         <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
-          <button
+          <Button
             onClick={() => setParentTab("plans")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${parentTab === "plans" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${parentTab === "plans" ? "bg-card text-primary shadow-sm hover:bg-card hover:text-primary" : ""}`}
           >
             <Building2 className="w-3.5 h-3.5" />
             Corporate Plans
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setParentTab("employees")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${parentTab === "employees" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${parentTab === "employees" ? "bg-card text-primary shadow-sm hover:bg-card hover:text-primary" : ""}`}
           >
             <Users className="w-3.5 h-3.5" />
             Employee Management
-          </button>
+          </Button>
         </div>
       </PageHeader>
 
@@ -342,13 +342,14 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
             {viewMode === 'employees' && (
               <FilterTabs tabs={planFilterTabs} active={planFilter} onChange={v => { setPlanFilter(v); setPage(1); }} />
             )}
-            <button
+            <Button
               onClick={() => { setViewMode(viewMode === 'employees' ? 'companies' : 'employees'); setSelectedCompany(null); setPage(1); }}
-              className={`btn-secondary px-3 py-2 whitespace-nowrap ${viewMode === 'companies' ? 'bg-primary/10 text-primary border-primary/50' : ''}`}
+              variant="outline"
+              className={`btn-secondary px-3 py-2 whitespace-nowrap h-11 rounded-xl ${viewMode === 'companies' ? 'bg-primary/10 text-primary border-primary/50' : ''}`}
               title={viewMode === 'employees' ? 'Switch to companies view' : 'Switch to employees view'}
             >
               <Building2 className="w-4 h-4" /> {viewMode === 'employees' ? 'Companies' : 'Employees'}
-            </button>
+            </Button>
           </div>
 
           {/* Employees View */}
@@ -357,9 +358,9 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               {selectedCompany && (
                 <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg p-3">
                   <span className="text-sm font-semibold text-blue-900">Showing: {selectedCompany}</span>
-                  <button onClick={() => setSelectedCompany(null)} className="btn-secondary text-xs ml-auto">
+                  <Button onClick={() => setSelectedCompany(null)} variant="outline" className="btn-secondary text-xs ml-auto h-7 px-2">
                     <X className="w-3 h-3" /> Clear Filter
-                  </button>
+                  </Button>
                 </div>
               )}
               <DataTable
@@ -451,7 +452,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           message={`Remove ${deleteEmp.name} from the corporate employee list? Their patient record will remain but plan association will be cleared.`}
           confirmLabel="Remove"
           variant="danger"
-          isLoading={deleteEmployeeMutation.isLoading}
+          isLoading={deleteEmployeeMutation.isPending}
           onConfirm={async () => {
             try {
               await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
@@ -460,7 +461,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
               refetch();
               setDeleteEmp(null);
             } catch (e: any) {
-              console.error("Failed to delete employee", e);
+              /* console.error removed */
               let errMsg = "Failed to remove employee.";
               const resData = e.response?.data || e;
 

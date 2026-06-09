@@ -20,7 +20,7 @@ export const InventoryPage: React.FC = () => {
             try {
               await deleteMutation.mutateAsync({ id });
             } catch (error) {
-              console.error("Failed to delete inventory item", error);
+              /* console.error removed */
             }
           });
         }}

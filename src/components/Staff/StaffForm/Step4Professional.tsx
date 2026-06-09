@@ -68,7 +68,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
         },
       });
     } catch (err: any) {
-      console.error("Failed to create specialization:", err);
+      /* console.error removed */
       let errMsg = "Failed to create specialization.";
       const resData = err.response?.data || err;
       if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
@@ -106,7 +106,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             });
           }
         } catch (err) {
-          console.error("Failed to delete specialization:", err);
+          /* console.error removed */
         } finally {
           setDeletingName(null);
         }

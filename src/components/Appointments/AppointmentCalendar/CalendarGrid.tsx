@@ -37,6 +37,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   const isTodayDate = (date: Date) => new Date().toDateString() === date.toDateString();
 
+  const handleDateClick = (date: Date, isPast: boolean, isSelected: boolean) => {
+    if (isPast) return;
+    if (isSelected) {
+      onRefetchSlots?.();
+    } else {
+      setSelectedDate(date);
+    }
+  };
+
   const getCalendarTitle = () => {
     const first = rollingDates[0];
     const last = rollingDates[rollingDates.length - 1];
@@ -97,14 +106,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             return (
               <div
                 key={index}
-                onClick={() => {
-                  if (isPast) return;
-                  if (isSelected) {
-                    onRefetchSlots?.();
-                  } else {
-                    setSelectedDate(date);
-                  }
-                }}
+                onClick={() => handleDateClick(date, isPast, isSelected)}
                 className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group
                   ${isToday ? "bg-primary text-white shadow-lg border-primary" : 
                     isSelected ? "bg-secondary text-primary border-primary/20 shadow-sm" : 

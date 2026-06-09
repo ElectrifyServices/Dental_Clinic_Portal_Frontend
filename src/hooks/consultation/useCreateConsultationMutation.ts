@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ConsultationResponse,
   CreateConsultationVariables,
-} from "./consultationTypes";
+} from "../../types/consultationTypes";
 
 export function useCreateConsultationMutation() {
   const queryClient = useQueryClient();

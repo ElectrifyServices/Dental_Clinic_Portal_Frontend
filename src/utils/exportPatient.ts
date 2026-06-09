@@ -22,7 +22,7 @@ export const exportPatientReport = async (
       }
     }
   } catch (err) {
-    console.error("Failed to fetch detailed patient for export", err);
+    /* console.error removed */
   }
 
   const patientAppointments = appointments.filter(

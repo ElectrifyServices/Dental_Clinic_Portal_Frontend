@@ -67,7 +67,7 @@ export function useStep2MedicalHistory({
         }
       }
     } catch (error) {
-      console.error("Failed to create medical history", error);
+      /* console.error removed */
     }
   };
 
@@ -86,7 +86,7 @@ export function useStep2MedicalHistory({
               setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
             }
           } catch (error) {
-            console.error("Failed to delete medical history", error);
+            /* console.error removed */
             throw error;
           }
         }
@@ -106,7 +106,7 @@ export function useStep2MedicalHistory({
         }
       }
     } catch (error) {
-      console.error("Failed to create allergy", error);
+      /* console.error removed */
     }
   };
 
@@ -125,7 +125,7 @@ export function useStep2MedicalHistory({
               setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
             }
           } catch (error) {
-            console.error("Failed to delete allergy", error);
+            /* console.error removed */
             throw error;
           }
         }

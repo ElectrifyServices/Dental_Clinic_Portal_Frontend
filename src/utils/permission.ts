@@ -18,7 +18,7 @@ export function getParsedPermissions(user: any): string[] {
         return parsed;
       }
     } catch (e) {
-      console.error("Failed to parse module_permission string", e);
+      /* console.error removed */
     }
   }
   

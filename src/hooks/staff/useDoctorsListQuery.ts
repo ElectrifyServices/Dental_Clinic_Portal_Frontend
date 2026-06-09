@@ -8,8 +8,7 @@ export function useDoctorsListQuery(search?: string) {
     endpoint: "/staff/list",
     method: "post",
     data: {
-      page: 1,
-      limit: 100,
+      all: true,
       search: search || undefined,
       filters: {
         roles: ["DOCTOR"]

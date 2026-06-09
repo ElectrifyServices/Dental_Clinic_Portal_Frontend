@@ -769,3 +769,4 @@ export {
   FormPhoneInput,
 } from "./form/index";
 export * from "./Toast";
+export * from "./Loading";

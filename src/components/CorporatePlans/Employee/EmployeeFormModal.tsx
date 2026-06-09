@@ -158,7 +158,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         refetch();
         setShowForm(false);
       } catch (err: any) {
-        console.error("Failed to create employee via API:", err);
+        /* console.error removed */
         setFormErrors(prev => ({
           ...prev,
           submit: err?.response?.data?.message || err?.message || "Failed to create employee on backend"
@@ -207,7 +207,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         refetch();
         setShowForm(false);
       } catch (err: any) {
-        console.error("Failed to update employee via API:", err);
+        /* console.error removed */
         setFormErrors(prev => ({
           ...prev,
           submit: err?.response?.data?.message || err?.message || "Failed to update employee on backend"

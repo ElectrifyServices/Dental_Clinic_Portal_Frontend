@@ -13,8 +13,9 @@ import {
   FormMessage,
   Card,
   CardContent,
+  Input,
+  Loading,
 } from "@/components/ui";
-import { Input } from "@/components/ui/Input";
 import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 import {
   inventorySchema,
@@ -126,10 +127,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
       }
     >
       {isLoading ? (
-        <div className="p-12 flex flex-col items-center justify-center space-y-4">
-          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">Loading item details...</p>
-        </div>
+        <Loading type="spinner" text="Loading item details..." />
       ) : (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

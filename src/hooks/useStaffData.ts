@@ -126,7 +126,7 @@ export function useStaffData(params?: { search?: string; role?: string }) {
     try {
       await deleteStaffMutation({ id });
     } catch (e) {
-      console.error("Delete failed", e);
+      /* console.error removed */
     }
   };
 
@@ -134,7 +134,7 @@ export function useStaffData(params?: { search?: string; role?: string }) {
     try {
       await updateStatusMutation({ id, status });
     } catch (e) {
-      console.error("Status update failed", e);
+      /* console.error removed */
     }
   };
 

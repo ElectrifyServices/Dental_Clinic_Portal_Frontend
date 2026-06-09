@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { X, Download, AlertTriangle, CheckCircle } from 'lucide-react';
-import { FileUploadZone, DataTable, Badge, PlanBadge } from '../../ui';
+import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { parseXlsx, downloadTemplate } from './importUtils';
 import { useBulkImportEmployeeMutation } from '../../../hooks/corporate/useBulkImportEmployeeMutation';
@@ -67,7 +67,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       setImportErrors([]);
       setTab('list');
     } catch (err: any) {
-      console.error("Bulk import failed:", err);
+      /* console.error removed */
       setImportErrors(prev => [
         err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
         ...prev
@@ -81,7 +81,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-foreground">Bulk Import Employees</h2>
-        <button onClick={() => setTab('list')} className="btn-secondary"><X className="w-4 h-4" /> Cancel</button>
+        <Button onClick={() => setTab('list')} variant="outline" className="gap-2"><X className="w-4 h-4" /> Cancel</Button>
       </div>
 
       <div className="card p-5 space-y-4">
@@ -92,9 +92,9 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB, EligibleDate
             </p>
           </div>
-          <button onClick={() => downloadTemplate(activePlans)} className="btn-secondary flex-shrink-0">
+          <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="flex-shrink-0 gap-2">
             <Download className="w-4 h-4" /> Template
-          </button>
+          </Button>
         </div>
         <FileUploadZone onFile={handleFile} inputRef={fileRef}
           hint="Supports .xlsx, .xls, .csv" />
@@ -120,9 +120,9 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
-            <button onClick={handleImportConfirm} className="btn-primary" disabled={importing}>
+            <Button onClick={handleImportConfirm} variant="default" className="gap-2" disabled={importing}>
               <CheckCircle className="w-4 h-4" /> Import {importRows.filter(r => r.name && r.phone && r.corporatePlanId).length} Employees
-            </button>
+            </Button>
           </div>
           <DataTable
             columns={[

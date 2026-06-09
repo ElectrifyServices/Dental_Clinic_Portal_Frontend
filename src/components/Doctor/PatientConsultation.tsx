@@ -5,8 +5,7 @@ import {
   PDFReportType,
 } from "../../utils/pdfGenerator";
 import { Modal, Button } from "@/components/ui";
-import apiClient from "../../services/apiClient";
-import { parseApiResponse } from "../../services/parseApiResponse";
+import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
 import { ObservationsAndToothChart } from "./PatientConsultation/ObservationsAndToothChart";
@@ -283,26 +282,13 @@ export function PatientConsultation({
 
   const handleDownloadPDF = async (type: PDFReportType = "FULL") => {
     let finalConsultationData = { ...consultationData };
-    let endpoint = "";
-
-    if (type === "CLINICAL") {
-      endpoint = `/consultations/${patient.id}/observations`;
-    } else if (type === "TREATMENT") {
-      endpoint = `/consultations/${patient.id}/treatment-plan`;
-    } else if (type === "PRESCRIPTION") {
-      endpoint = `/consultations/${patient.id}/prescriptions`;
-    } else {
-      endpoint = `/consultations/${patient.id}`;
-    }
-
     try {
-      const response = await apiClient.get(endpoint);
-      const parsed = parseApiResponse(response.data);
-      if (parsed.data) {
-        finalConsultationData = { ...finalConsultationData, ...parsed.data };
+      const detailData = await fetchConsultationDetail(patient.id, type);
+      if (detailData) {
+        finalConsultationData = { ...finalConsultationData, ...detailData };
       }
     } catch (error) {
-      console.error(`Failed to fetch consultation details for ${type}:`, error);
+      /* console.error removed */
     }
 
     await downloadConsultationPDF({
@@ -476,7 +462,7 @@ export function PatientConsultation({
       setIsCompleted(true);
       refetchConsultations();
     } catch (error) {
-      console.error("Failed to complete consultation", error);
+      /* console.error removed */
     } finally {
       setLoading(false);
     }

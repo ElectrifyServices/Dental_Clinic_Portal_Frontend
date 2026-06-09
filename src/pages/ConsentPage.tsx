@@ -83,7 +83,7 @@ export function ConsentPage() {
       await deleteMutation.mutateAsync({ id });
       showToast("Consent form deleted successfully");
     } catch (err: any) {
-      console.error("Failed to delete consent form via API:", err);
+      /* console.error removed */
       showToast(err?.response?.data?.message || err?.message || "Failed to delete consent form", "error");
     }
   };

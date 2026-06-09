@@ -81,7 +81,7 @@ export function TreatmentSessionManager({
 
   // FIX: API returns responseObject.data with nested structure
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
-  console.log("API response for treatment sessions:", apiResponse);
+  /* console.log removed */
   // Extract the actual data from responseObject.data
   const responseData = apiResponse?.data;
   

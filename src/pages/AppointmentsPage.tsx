@@ -91,7 +91,7 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await checkInAppointment({ id: appt.id });
     } catch (err) {
-      console.error("Failed to check-in appointment:", err);
+      /* console.error removed */
     }
     setPendingCheckInAppt(appt);
     if (existing) {

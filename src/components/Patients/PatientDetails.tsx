@@ -110,6 +110,22 @@ export function PatientDetails({
       }))
     : familyMembers;
 
+  const formatAppointmentDate = (dateVal?: string | number | Date) => {
+    if (!dateVal) return "—";
+    try {
+      const d = new Date(dateVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(dateVal);
+    } catch (e) {
+      return String(dateVal);
+    }
+  };
+
   const localPatientAppointments = appointments.filter(
     (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
   );
@@ -126,23 +142,7 @@ export function PatientDetails({
     if (rawAppointments.length > 0) {
       patientAppointments = rawAppointments.map((a: any) => {
         let dateVal = a.date_ist || a.date;
-        let formattedDate = "—";
-        if (dateVal) {
-          try {
-            const d = new Date(dateVal);
-            if (!isNaN(d.getTime())) {
-              formattedDate = d.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              });
-            } else {
-              formattedDate = dateVal;
-            }
-          } catch (e) {
-            formattedDate = dateVal;
-          }
-        }
+        let formattedDate = formatAppointmentDate(dateVal);
 
         let timeStr = a.start_time_ist || a.time || a.start_time || "";
         if (timeStr) {

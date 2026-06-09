@@ -53,7 +53,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
         base_salary: backendData.base_salary,
       });
     } catch (err: any) {
-      console.error("Failed to pay salary", err);
+      /* console.error removed */
       let errMsg = "Failed to record salary payment.";
       const resData = err.response?.data || err;
 

@@ -41,7 +41,7 @@ export const processPatientCheckIn = (
     return;
   }
 
-  console.log("Matched existing patient:", existingPatient.name);
+  /* console.log removed */
 
   const queuedPatient = {
     id: appointment.id,

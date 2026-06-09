@@ -1,5 +1,3 @@
-// hooks/consultation/consultationUtils.ts
-
 export interface UiConsultation {
   id: string;
   patientId: string;
@@ -54,6 +52,7 @@ export interface ApiConsultation {
     id?: string;
     name?: string;
   };
+  treatment_plans?: any[];
 }
 
 export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultation {

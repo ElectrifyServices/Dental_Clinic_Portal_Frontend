@@ -11,14 +11,14 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  Label,
+  Input,
+  Textarea,
+  SearchableSelect,
 } from "@/components/ui";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 import { emrSchema, type EmrFormData } from "@/lib/schemas/emr.schema";
 import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
-import styles from "./emr.module.css";
 
 interface EMRFormProps {
   onClose: () => void;
@@ -213,7 +213,7 @@ export function EMRForm({
 
           {/* ── Attachment uploader ── */}
           <div>
-            <p className={styles.fieldLabel}>Attachments</p>
+            <Label>Attachments</Label>
             <div className="border-2 border-dashed border-input rounded-2xl p-8 text-center bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer relative">
               <input
                 type="file"
@@ -235,7 +235,7 @@ export function EMRForm({
               </div>
             </div>
             {attachments.length > 0 && (
-              <div className={styles.attachmentGrid}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2 mt-3">
                 {attachments.map((_url: string, idx: number) => (
                   <div
                     key={idx}

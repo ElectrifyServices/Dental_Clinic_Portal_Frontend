@@ -129,14 +129,14 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
       clinical_objectives: s.notes || s.description || "",
     }));
 
-  console.log("🔄 Converting to API Create Plan:");
-  console.log("  - Patient ID:", formData.patientId);
-  console.log("  - Doctor ID:", formData.doctorId);
-  console.log("  - Procedure:", formData.procedure);
-  console.log("  - Tooth:", formData.tooth, "→", extractToothNumber(formData.tooth));
-  console.log("  - Sessions count:", sessions.length);
-  console.log("  - Sessions payload:", sessions);
-  console.log("  - Prescriptions count:", prescriptions.length);
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
 
   return {
     patient_id: formData.patientId,
@@ -194,11 +194,11 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       next_session_plan: s.nextPlan,
     }));
 
-  console.log("🔄 Converting to API Update Plan:");
-  console.log("  - Plan ID:", formData.id);
-  console.log("  - Sessions count:", sessions.length);
-  console.log("  - Sessions payload:", sessions);
-  console.log("  - Prescriptions count:", prescriptions.length);
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
+  /* console.log removed */
 
   const updateData: UpdateTreatmentPlanVariables = {
     id: formData.id,

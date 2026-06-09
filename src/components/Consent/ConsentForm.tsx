@@ -14,10 +14,11 @@ import {
 } from "lucide-react";
 import { Patient } from "../../types";
 import { SignaturePad } from "./SignaturePad";
-import { Modal, Button, Badge } from "@/components/ui";
+import { Modal, Button, Badge, Label, Textarea, Input, Loading } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
+import { CONSENT_TEMPLATES } from "../../constants/consent.constants";
 
 interface ConsentFormProps {
   onClose: () => void;
@@ -27,224 +28,6 @@ interface ConsentFormProps {
   doctors: any[];
   isLoading?: boolean;
 }
-
-// ─── Procedure Templates ──────────────────────────────────────────────────────
-const CONSENT_TEMPLATES: Record<
-  string,
-  {
-    description: string;
-    consentDeclaration: string;
-    risks: string[];
-    alternatives: string[];
-    responsibilities: string[];
-  }
-> = {
-  "Root Canal Treatment (Endodontics)": {
-    description:
-      "Root canal treatment is performed to remove infected or damaged pulp tissue from inside the tooth, disinfect the root canals, and seal the tooth to preserve its function.",
-    consentDeclaration:
-      "I understand the purpose, benefits, limitations, and possible complications of root canal treatment and voluntarily consent to the procedure.",
-    risks: [
-      "Pain or discomfort after treatment",
-      "Instrument separation inside canal",
-      "Incomplete healing",
-      "Need for retreatment",
-      "Tooth fracture",
-      "Need for extraction if treatment fails",
-    ],
-    alternatives: [
-      "Tooth extraction",
-      "Monitoring the condition",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Attend follow-up appointments",
-      "Maintain oral hygiene",
-      "Report persistent pain or swelling",
-      "Complete crown restoration if advised",
-    ],
-  },
-  "Tooth Extraction": {
-    description:
-      "Tooth extraction involves removal of a damaged, infected, impacted, or non-restorable tooth.",
-    consentDeclaration:
-      "I consent to the extraction of the specified tooth and any necessary supporting procedures.",
-    risks: [
-      "Bleeding",
-      "Infection",
-      "Dry socket",
-      "Swelling",
-      "Nerve injury",
-      "Sinus complications",
-      "Jaw stiffness",
-    ],
-    alternatives: [
-      "Root canal treatment",
-      "Crown restoration",
-      "Observation",
-    ],
-    responsibilities: [
-      "Follow medication instructions",
-      "Avoid smoking",
-      "Avoid rinsing for 24 hours",
-      "Attend review visits",
-    ],
-  },
-  "Dental Implant": {
-    description:
-      "Dental implant placement involves inserting a titanium implant into the jawbone to replace missing teeth.",
-    consentDeclaration:
-      "I consent to the placement of dental implants and understand that this is a surgical procedure requiring multiple stages.",
-    risks: [
-      "Implant failure",
-      "Infection",
-      "Bone loss",
-      "Nerve injury",
-      "Sinus perforation",
-      "Need for additional surgeries",
-    ],
-    alternatives: [
-      "Dental bridge",
-      "Removable denture",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Maintain excellent oral hygiene",
-      "Attend maintenance visits",
-      "Avoid smoking",
-      "Follow post-operative instructions",
-    ],
-  },
-  "Orthodontic Braces / Aligners": {
-    description:
-      "Orthodontic treatment uses braces or clear aligners to correct dental irregularities and improve bite and alignment.",
-    consentDeclaration:
-      "I consent to orthodontic treatment and understand that results depend on my cooperation in wearing appliances and attending appointments.",
-    risks: [
-      "Tooth sensitivity",
-      "Root resorption",
-      "Relapse",
-      "Soft tissue irritation",
-      "Extended treatment duration",
-    ],
-    alternatives: [
-      "No treatment",
-      "Cosmetic treatment",
-    ],
-    responsibilities: [
-      "Wear aligners as instructed",
-      "Attend appointments",
-      "Maintain oral hygiene",
-      "Avoid damaging foods",
-    ],
-  },
-  "Scaling & Root Planing": {
-    description:
-      "Scaling and root planing is a deep cleaning procedure to remove plaque and tartar from below the gumline and smooth root surfaces to promote gum healing.",
-    consentDeclaration:
-      "I consent to scaling and root planing and understand the nature of the procedure and its limitations.",
-    risks: [
-      "Gum sensitivity",
-      "Temporary bleeding",
-      "Root sensitivity",
-      "Discomfort",
-    ],
-    alternatives: [
-      "Regular scaling only",
-      "Monitoring",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Follow oral hygiene instructions",
-      "Use prescribed mouthwash",
-      "Attend maintenance visits",
-    ],
-  },
-  "Crown & Bridge": {
-    description:
-      "Crown and bridge treatment involves placing fixed prosthetic restorations to restore damaged teeth or replace missing teeth.",
-    consentDeclaration:
-      "I consent to crown and/or bridge placement and understand that natural tooth structure may be reduced as part of the procedure.",
-    risks: [
-      "Tooth sensitivity",
-      "Crown loosening",
-      "Fracture",
-      "Need for root canal treatment",
-    ],
-    alternatives: [
-      "Dental implant",
-      "Removable partial denture",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Avoid excessive force",
-      "Maintain oral hygiene",
-      "Attend review appointments",
-    ],
-  },
-  "Denture Treatment": {
-    description:
-      "Denture treatment involves fabricating and fitting removable prostheses to replace missing teeth and restore chewing function and aesthetics.",
-    consentDeclaration:
-      "I consent to denture treatment and understand that an adaptation period is expected.",
-    risks: [
-      "Sore spots",
-      "Speech difficulty",
-      "Adaptation period",
-      "Loosening over time",
-    ],
-    alternatives: [
-      "Dental implants",
-      "Fixed bridge",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Follow cleaning instructions",
-      "Attend adjustment visits",
-      "Remove dentures during sleep if advised",
-    ],
-  },
-  "Teeth Whitening": {
-    description:
-      "Teeth whitening is a cosmetic dental procedure that lightens the color of teeth using bleaching agents.",
-    consentDeclaration:
-      "I consent to teeth whitening treatment and understand that results may vary and are not guaranteed to be permanent.",
-    risks: [
-      "Tooth sensitivity",
-      "Gum irritation",
-      "Uneven whitening",
-    ],
-    alternatives: [
-      "Veneers / Smile Design",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Avoid staining foods",
-      "Follow maintenance instructions",
-    ],
-  },
-  "Veneers / Smile Design": {
-    description:
-      "Veneers are thin porcelain or composite shells bonded to the front surface of teeth to improve appearance, shape, or color.",
-    consentDeclaration:
-      "I consent to veneer placement and understand that the procedure involves irreversible removal of tooth enamel.",
-    risks: [
-      "Sensitivity",
-      "Chipping",
-      "Color mismatch",
-      "Replacement requirement",
-    ],
-    alternatives: [
-      "Teeth whitening",
-      "Orthodontic treatment",
-      "No treatment",
-    ],
-    responsibilities: [
-      "Avoid hard objects",
-      "Maintain oral hygiene",
-    ],
-  },
-};
 
 // Helper: build flat text for legacy fields
 function buildContentText(key: string) {
@@ -473,31 +256,7 @@ export function ConsentForm({
     >
       <div className="space-y-6">
         {isLoading ? (
-          <div className="animate-pulse space-y-6">
-            <div className="flex gap-2 p-1 bg-muted rounded-xl">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex-1 h-8 bg-muted-foreground/10 rounded-lg" />
-              ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="h-3 w-28 bg-muted rounded" />
-                <div className="h-10 w-full bg-muted rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-3 w-32 bg-muted rounded" />
-                <div className="h-10 w-full bg-muted rounded-xl" />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <div className="h-3 w-40 bg-muted rounded" />
-                <div className="h-10 w-full bg-muted rounded-xl" />
-              </div>
-            </div>
-            <div className="p-4 bg-muted/40 border border-border rounded-2xl flex gap-3 items-center">
-              <div className="w-5 h-5 bg-muted rounded-full shrink-0" />
-              <div className="h-3 w-3/4 bg-muted rounded" />
-            </div>
-          </div>
+          <Loading />
         ) : (
           <>
             {/* Tab Header */}
@@ -507,7 +266,7 @@ export function ConsentForm({
                 { id: "terms", label: "Legal Terms", icon: BookOpen },
                 { id: "sign", label: "Auth", icon: PenTool },
               ].map((tab) => (
-                <button
+                <Button
                   key={tab.id}
                   onClick={() => {
                     if (tab.id !== "patient" && !isPatientInfoValid()) {
@@ -516,15 +275,15 @@ export function ConsentForm({
                     }
                     setActiveTab(tab.id as any);
                   }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${
                     activeTab === tab.id
-                      ? "bg-background text-primary shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      ? "bg-background text-primary shadow-sm hover:bg-background hover:text-primary"
+                      : ""
                   }`}
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   {tab.label}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -534,9 +293,9 @@ export function ConsentForm({
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
                         Patient Name <span className="text-red-500">*</span>
-                      </label>
+                      </Label>
                       <SearchableSelect
                         value={formData.patientId}
                         onChange={(val: string) => {
@@ -561,9 +320,9 @@ export function ConsentForm({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
                         Attending Doctor <span className="text-red-500">*</span>
-                      </label>
+                      </Label>
                       <SearchableSelect
                         value={formData.doctorName}
                         onChange={(val: string) => {
@@ -585,9 +344,9 @@ export function ConsentForm({
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
                         Clinical Procedure Type <span className="text-red-500">*</span>
-                      </label>
+                      </Label>
                       <SearchableSelect
                         value={formData.treatmentType}
                         onChange={handleProcedureChange}
@@ -669,7 +428,7 @@ export function ConsentForm({
                             <summary className="text-[10px] font-bold text-muted-foreground cursor-pointer hover:text-foreground">
                               Edit risks text ↓
                             </summary>
-                            <textarea
+                            <Textarea
                               value={formData.riskDisclosure}
                               onChange={(e) =>
                                 setFormData({ ...formData, riskDisclosure: e.target.value })
@@ -701,7 +460,7 @@ export function ConsentForm({
                             <summary className="text-[10px] font-bold text-muted-foreground cursor-pointer hover:text-foreground">
                               Edit alternatives text ↓
                             </summary>
-                            <textarea
+                            <Textarea
                               value={formData.alternativeTreatments}
                               onChange={(e) =>
                                 setFormData({ ...formData, alternativeTreatments: e.target.value })
@@ -734,7 +493,7 @@ export function ConsentForm({
                           <summary className="text-[10px] font-bold text-muted-foreground cursor-pointer hover:text-foreground">
                             Edit responsibilities text ↓
                           </summary>
-                          <textarea
+                          <Textarea
                             value={formData.postTreatmentCare}
                             onChange={(e) =>
                               setFormData({ ...formData, postTreatmentCare: e.target.value })
@@ -755,12 +514,13 @@ export function ConsentForm({
                       <p className="text-xs text-muted-foreground max-w-xs">
                         Go back to the Identity step and select a Clinical Procedure Type to load the consent terms.
                       </p>
-                      <button
+                      <Button
+                        variant="link"
                         onClick={() => setActiveTab("patient")}
-                        className="mt-2 text-xs font-bold text-primary underline underline-offset-2"
+                        className="mt-2 text-xs font-bold text-primary underline underline-offset-2 p-0 h-auto"
                       >
                         ← Go to Identity
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -772,9 +532,9 @@ export function ConsentForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                           Patient Signature
-                        </label>
+                        </Label>
                         {formData.patientSignature && (
                           <Badge
                             variant="green"
@@ -795,10 +555,10 @@ export function ConsentForm({
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                         Witness Name (Optional)
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="text"
                         placeholder="Full Name of Witness"
                         value={formData.witnessName}

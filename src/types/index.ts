@@ -246,3 +246,5 @@ export interface CorporateEmployee {
   status?: string;
   patientId?: string;          // linked patient record if registered
 }
+
+export * from "./consultationTypes";

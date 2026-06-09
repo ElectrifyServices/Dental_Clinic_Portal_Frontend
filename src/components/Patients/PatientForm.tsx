@@ -88,7 +88,7 @@ export function PatientForm({
         parentId: type === "person" ? parentId : undefined,
       });
     } catch (err) {
-      console.error("Patient save failed", err);
+      /* console.error removed */
       setFormErrors({ submit: "Failed to save patient. Please try again." });
     } finally {
       setLoading(false);

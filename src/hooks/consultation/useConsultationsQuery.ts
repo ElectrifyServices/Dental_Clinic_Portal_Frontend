@@ -1,6 +1,6 @@
 // hooks/consultation/useConsultationsQuery.ts
 import { useApiQuery } from "../useApiQuery";
-import { ConsultationResponse } from "./consultationTypes";
+import { ConsultationResponse } from "../../types/consultationTypes";
 
 export interface ConsultationsFilters {
     // Pagination

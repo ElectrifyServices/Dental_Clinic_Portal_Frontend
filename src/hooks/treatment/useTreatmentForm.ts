@@ -140,7 +140,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       );
       
       if (sessions && sessions.length > 0) {
-        console.log(`Generated ${sessions.length} sessions for ${procedure}`);
+        /* console.log removed */
         setTreatmentSessions(sessions);
       } else {
         setTreatmentSessions([createDefaultSession(form.getValues("date"), procedure)]);
@@ -256,9 +256,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         cost: parseFloat(String(data.cost)),
       };
       
-      console.log("Submitting treatment plan:", submitData);
-      console.log("Sessions in submit:", treatmentSessions);
-      console.log("Prescriptions in submit:", prescriptions);
+      /* console.log removed */
+      /* console.log removed */
+      /* console.log removed */
       
       onSave(submitData);
     };

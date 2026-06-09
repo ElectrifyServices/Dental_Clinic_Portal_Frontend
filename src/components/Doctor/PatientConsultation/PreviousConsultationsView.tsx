@@ -13,7 +13,7 @@ import {
   X,
   Filter,
 } from "lucide-react";
-import { SearchInput } from "@/components/ui";
+import { SearchInput, Button, Loading, Card, Badge, DataTable } from "@/components/ui";
 
 interface PreviousConsultationsViewProps {
   consultations: any;
@@ -62,7 +62,7 @@ export function PreviousConsultationsView({
   const consultationsList = React.useMemo(() => {
     if (!consultations) return [];
 
-    console.log("Raw Patient Consultations Response:", consultations);
+    /* console.log removed */
 
     if (Array.isArray(consultations)) {
       return consultations;
@@ -132,24 +132,20 @@ export function PreviousConsultationsView({
             </div>
           </div>
           {hasActiveFilters && (
-            <button
+            <Button
               onClick={onClearFilters}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-destructive border border-destructive/30 bg-destructive/5 rounded-xl hover:bg-destructive/10 transition-all"
+              variant="destructive"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-destructive border border-destructive/30 bg-destructive/5 rounded-xl hover:bg-destructive/10 transition-all h-auto"
             >
               <X className="w-3.5 h-3.5" />
               Clear All
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-            Fetching records from database...
-          </p>
-        </div>
+        <Loading type="spinner" text="Fetching records from database..." />
       )}
 
       {isError && (
@@ -179,9 +175,9 @@ export function PreviousConsultationsView({
           {consultationsList.map((c, idx) => {
             const isExpanded = expandedId === c.id;
             return (
-              <div
+              <Card
                 key={c.id}
-                className={`border border-border rounded-2xl overflow-hidden transition-all duration-300 ${isExpanded
+                className={`border border-border rounded-2xl overflow-hidden transition-all duration-300 shadow-none ${isExpanded
                     ? "shadow-lg ring-1 ring-primary/20 bg-card"
                     : "hover:border-primary/40 bg-card/60"
                   }`}
@@ -206,9 +202,9 @@ export function PreviousConsultationsView({
                       </span>
                     </div>
                     {c.is_follow_up && (
-                      <span className="badge badge-amber text-[10px] font-bold py-0.5 px-2">
+                      <Badge variant="amber" className="text-[10px] font-bold py-0.5 px-2 rounded">
                         Follow-Up Check
-                      </span>
+                      </Badge>
                     )}
                   </div>
                   <div>
@@ -259,15 +255,16 @@ export function PreviousConsultationsView({
                           {c.tooth_findings && c.tooth_findings.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                               {c.tooth_findings.map((f, i) => (
-                                <span
+                                <Badge
                                   key={i}
+                                  variant="amber"
                                   className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold"
                                 >
                                   <span className="bg-amber-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black">
                                     {f.tooth_number}
                                   </span>
                                   {f.condition}
-                                </span>
+                                </Badge>
                               ))}
                             </div>
                           ) : (
@@ -315,45 +312,58 @@ export function PreviousConsultationsView({
                         </div>
                       )}
                       {c.treatments && c.treatments.length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
-                            <thead>
-                              <tr className="bg-muted/20 border-b border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                <th className="py-2.5 px-4">Tooth</th>
-                                <th className="py-2.5 px-4">Procedure</th>
-                                <th className="py-2.5 px-4">Sessions</th>
-                                <th className="py-2.5 px-4 text-right">Cost (₹)</th>
-                                <th className="py-2.5 px-4 text-center">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/40 text-xs font-semibold">
-                              {c.treatments.map((t, idx) => (
-                                <tr key={idx} className="hover:bg-muted/10">
-                                  <td className="py-2.5 px-4">
-                                    <span className="font-bold bg-muted px-2 py-0.5 rounded border border-border">
-                                      #{t.tooth_number || "All"}
-                                    </span>
-                                  </td>
-                                  <td className="py-2.5 px-4 font-bold text-foreground">
-                                    {t.procedure}
-                                  </td>
-                                  <td className="py-2.5 px-4">{t.sessions || 1}</td>
-                                  <td className="py-2.5 px-4 text-right font-black text-primary">
-                                    ₹{(t.est_cost || 0).toLocaleString()}
-                                  </td>
-                                  <td className="py-2.5 px-4 text-center">
-                                    <span
-                                      className={`badge ${t.is_active !== false ? "badge-green" : "badge-gray"
-                                        } text-[9px] font-bold`}
-                                    >
-                                      {t.is_active !== false ? "Active" : "Inactive"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                        <DataTable
+                          columns={[
+                            {
+                              key: "tooth_number",
+                              header: "Tooth",
+                              render: (t: any) => (
+                                <span className="font-bold bg-muted px-2 py-0.5 rounded border border-border">
+                                  #{t.tooth_number || "All"}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "procedure",
+                              header: "Procedure",
+                              render: (t: any) => (
+                                <span className="font-bold text-foreground">
+                                  {t.procedure}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "sessions",
+                              header: "Sessions",
+                              render: (t: any) => t.sessions || 1,
+                            },
+                            {
+                              key: "est_cost",
+                              header: "Cost (₹)",
+                              align: "right",
+                              render: (t: any) => (
+                                <span className="font-black text-primary">
+                                  ₹{(t.est_cost || 0).toLocaleString()}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "is_active",
+                              header: "Status",
+                              align: "center",
+                              render: (t: any) => (
+                                <Badge
+                                  variant={t.is_active !== false ? "green" : "gray"}
+                                  className="text-[9px] font-bold"
+                                >
+                                  {t.is_active !== false ? "Active" : "Inactive"}
+                                </Badge>
+                              ),
+                            },
+                          ]}
+                          data={c.treatments}
+                          rowKey={(t: any) => t.id || `${t.tooth_number}-${t.procedure}`}
+                        />
                       ) : (
                         <div className="p-4 text-center text-xs text-muted-foreground italic">
                           No individual treatment item details recorded.
@@ -370,42 +380,51 @@ export function PreviousConsultationsView({
                         </h5>
                       </div>
                       {c.prescriptions && c.prescriptions.length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
-                            <thead>
-                              <tr className="bg-muted/20 border-b border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                <th className="py-2.5 px-4">Medicine</th>
-                                <th className="py-2.5 px-4">Dosage</th>
-                                <th className="py-2.5 px-4">Timing</th>
-                                <th className="py-2.5 px-4">Frequency</th>
-                                <th className="py-2.5 px-4">Duration</th>
-                                <th className="py-2.5 px-4 text-right">Qty</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/40 text-xs font-semibold">
-                              {c.prescriptions.map((pr, idx) => (
-                                <tr key={idx} className="hover:bg-muted/10">
-                                  <td className="py-2.5 px-4 font-bold text-foreground">
-                                    {pr.medicine_name}
-                                  </td>
-                                  <td className="py-2.5 px-4 font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/50 inline-block my-1 text-[11px]">
-                                    {pr.dosage}
-                                  </td>
-                                  <td className="py-2.5 px-4 text-muted-foreground">
-                                    {pr.timing}
-                                  </td>
-                                  <td className="py-2.5 px-4">{pr.frequency}</td>
-                                  <td className="py-2.5 px-4">
-                                    {pr.duration} {pr.duration_type}
-                                  </td>
-                                  <td className="py-2.5 px-4 text-right font-bold">
-                                    {pr.qty}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                        <DataTable
+                          columns={[
+                            {
+                              key: "medicine_name",
+                              header: "Medicine",
+                              render: (pr: any) => (
+                                <span className="font-bold text-foreground">
+                                  {pr.medicine_name}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "dosage",
+                              header: "Dosage",
+                              render: (pr: any) => (
+                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/50 inline-block my-1 text-[11px]">
+                                  {pr.dosage}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "timing",
+                              header: "Timing",
+                              render: (pr: any) => pr.timing,
+                            },
+                            {
+                              key: "frequency",
+                              header: "Frequency",
+                              render: (pr: any) => pr.frequency,
+                            },
+                            {
+                              key: "duration",
+                              header: "Duration",
+                              render: (pr: any) => `${pr.duration} ${pr.duration_type}`,
+                            },
+                            {
+                              key: "qty",
+                              header: "Qty",
+                              align: "right",
+                              render: (pr: any) => <span className="font-bold">{pr.qty}</span>,
+                            },
+                          ]}
+                          data={c.prescriptions}
+                          rowKey={(pr: any) => pr.id || pr.medicine_name}
+                        />
                       ) : (
                         <div className="p-4 text-center text-xs text-muted-foreground italic bg-card">
                           No medicines prescribed in this session.
@@ -414,7 +433,7 @@ export function PreviousConsultationsView({
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })}
         </div>

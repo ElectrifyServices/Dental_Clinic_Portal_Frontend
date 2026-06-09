@@ -8,13 +8,11 @@ import {
   Stethoscope,
   Calendar,
 } from "lucide-react";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, Label } from "@/components/ui";
 import { TimeSlotGrid } from "./DirectConsultation/TimeSlotGrid";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
-
-import apiClient from "@/services/apiClient";
-import { parseApiResponse } from "@/services/parseApiResponse";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
+import { checkPatientPhoneExists } from "../../hooks/patients/usePatientPhoneExistsQuery";
 
 interface DirectConsultationPopupProps {
   onClose: () => void;
@@ -131,11 +129,10 @@ export function DirectConsultationPopup({
     setError(null);
 
     try {
-      const response = await apiClient.get(`/patient/phone-exists/${encodeURIComponent(phone.trim())}`);
-      const { data } = parseApiResponse(response.data);
+      const existsData = await checkPatientPhoneExists(phone.trim());
 
-      const exists = data?.data?.exists ?? data?.exists;
-      const patient = data?.data?.patient ?? data?.patient;
+      const exists = existsData?.data?.exists ?? existsData?.exists;
+      const patient = existsData?.data?.patient ?? existsData?.patient;
 
       if (exists && patient) {
         const doc = apiDoctors.find((d) => d.id === selectedDoctorId);
@@ -149,7 +146,7 @@ export function DirectConsultationPopup({
         setError("Patient not found in records.");
       }
     } catch (err: any) {
-      console.error("Error verifying patient:", err);
+      /* console.error removed */
       setError(
         err.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
         err.message ||
@@ -191,9 +188,9 @@ export function DirectConsultationPopup({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
               Patient Name
-            </label>
+            </Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
               <input
@@ -207,9 +204,9 @@ export function DirectConsultationPopup({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
               Phone Number
-            </label>
+            </Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
               <input
@@ -226,9 +223,9 @@ export function DirectConsultationPopup({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Assigned Doctor
-              </label>
+              </Label>
               <div className="relative">
                 <select
                   value={selectedDoctorId}
@@ -272,9 +269,9 @@ export function DirectConsultationPopup({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Consultation Date
-              </label>
+              </Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
                 <input
@@ -292,10 +289,10 @@ export function DirectConsultationPopup({
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
+            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-primary" />
               Available Slots
-            </label>
+            </Label>
             {isLoadingSlots ? (
               <div className="bg-muted/50 p-8 rounded-2xl border border-border flex flex-col items-center justify-center gap-2">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />

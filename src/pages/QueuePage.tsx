@@ -97,7 +97,7 @@ export const QueuePage: React.FC = () => {
             try {
               await updateConsultation({ id, status: s } as any);
             } catch (err) {
-              console.error("Failed to update consultation status:", err);
+              /* console.error removed */
             }
           }
         }}

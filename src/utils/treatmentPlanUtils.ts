@@ -1,5 +1,5 @@
-import { CreateTreatmentPlanVariables, TreatmentPlanResponse } from "./useCreateTreatmentPlanMutation";
-import { UpdateTreatmentPlanVariables } from "./useUpdateTreatmentPlanMutation";
+import { CreateTreatmentPlanVariables, TreatmentPlanResponse } from "../hooks/treatment/useCreateTreatmentPlanMutation";
+import { UpdateTreatmentPlanVariables } from "../hooks/treatment/useUpdateTreatmentPlanMutation";
 
 export function apiStatusToUi(status: string) {
   const map: Record<string, string> = {
@@ -79,7 +79,7 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
       qty: parseInt(p.qty) || 0,
       instructions: p.instructions ?? "",
     }));
-    console.log("Sessions in formData before conversion:", formData.sessions);
+
   // Convert sessions to CreateTreatmentSessionDto format
   const sessions = (formData.sessions ?? [])
     .filter((s: any) => s.scheduledDate) // Only include sessions with a date
@@ -103,7 +103,6 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     prescriptions,
     sessions: sessions.length > 0 ? sessions : undefined,
   };
-  console.log("Data being sent to API for create:", data);
   return data;
 }
 
@@ -121,10 +120,6 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       qty: parseInt(p.qty) || 0,
       instructions: p.instructions ?? "",
     }));
-
-  // Note: For updates, sessions are typically managed separately
-  // But if your UpdateTreatmentPlanDto also includes sessions, add them here
-  // Since your UpdateTreatmentPlanDto doesn't have sessions field, we omit them
 
   return {
     id: formData.id,

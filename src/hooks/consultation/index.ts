@@ -1,4 +1,4 @@
-export * from "./consultationTypes";
+export * from "../../types/consultationTypes";
 export * from "./useConsultationsQuery";
 export * from "./useConsultationQuery";
 export * from "./useCreateConsultationMutation";

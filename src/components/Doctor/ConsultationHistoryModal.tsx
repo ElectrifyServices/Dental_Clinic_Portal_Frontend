@@ -1,15 +1,14 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { FileText, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, ArrowLeft } from "lucide-react";
 import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
-import { Modal, Button, ConfirmModal, toast } from "@/components/ui";
+import { Modal, Button, ConfirmModal, toast, Pagination } from "@/components/ui";
 import { useConsultationsQuery } from "../../hooks/consultation/useConsultationsQuery";
 import { useDeleteConsultationMutation } from "../../hooks/consultation/useDeleteConsultationMutation";
+import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 import { useDebounce } from "../../hooks/useDebounce";
-import apiClient from "../../services/apiClient";
-import { parseApiResponse } from "../../services/parseApiResponse";
 
 // Sub-components
 import { HistoryList } from "./ConsultationHistory/HistoryList";
@@ -126,24 +125,13 @@ export default function ConsultationHistoryModal({
     let consultationData = { ...record };
     let endpoint = "";
 
-    if (type === "CLINICAL") {
-      endpoint = `/consultations/${record.id}/observations`;
-    } else if (type === "TREATMENT") {
-      endpoint = `/consultations/${record.id}/treatment-plan`;
-    } else if (type === "PRESCRIPTION") {
-      endpoint = `/consultations/${record.id}/prescriptions`;
-    } else {
-      endpoint = `/consultations/${record.id}`;
-    }
-
     try {
-      const response = await apiClient.get(endpoint);
-      const parsed = parseApiResponse(response.data);
-      if (parsed.data) {
-        consultationData = { ...consultationData, ...parsed.data };
+      const detailData = await fetchConsultationDetail(record.id, type);
+      if (detailData) {
+        consultationData = { ...consultationData, ...detailData };
       }
     } catch (error) {
-      console.error(`Failed to fetch consultation details for ${type}:`, error);
+      /* console.error removed */
     }
 
     const matchedPatient = (patients || []).find(
@@ -215,7 +203,7 @@ export default function ConsultationHistoryModal({
         if (selectedRecord?.id === deleteConfirmId) setSelectedRecord(null);
         // History modal stays open — NO onClose() call here
       } catch (error) {
-        console.error("Failed to delete consultation:", error);
+        /* console.error removed */
         toast.error("Failed to delete consultation record");
       } finally {
         setIsDeleting(false);
@@ -256,43 +244,14 @@ export default function ConsultationHistoryModal({
       }
       footer={
         !selectedRecord && totalRecords > PAGE_SIZE ? (
-          <div className="flex items-center justify-between w-full">
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              Showing {(safePage - 1) * PAGE_SIZE + 1}–
-              {Math.min(safePage * PAGE_SIZE, totalRecords)} of{" "}
-              {totalRecords}
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage === 1}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Button
-                  key={p}
-                  variant={safePage === p ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPage(p)}
-                  className="h-8 w-8 p-0 text-[10px] font-bold"
-                >
-                  {p}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
+          <div className="w-full">
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              totalItems={totalRecords}
+              perPage={PAGE_SIZE}
+              onPageChange={setPage}
+            />
           </div>
         ) : null
       }

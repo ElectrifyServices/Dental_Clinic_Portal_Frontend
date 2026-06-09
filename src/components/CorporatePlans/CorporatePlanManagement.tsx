@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Building2, Search, Info, Users } from 'lucide-react';
 import { CorporatePlan } from '../../types';
-import { Button } from '../ui';
+import { Button, PageHeader } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
@@ -40,8 +40,6 @@ export function CorporatePlanManagement({
   const { showToast, confirmDelete } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
-  // Fetch corporate form configuration data 
-  // (like benefit types, dropdown values, labels, etc.)
   const cfg = useFormConfig('corporate');
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     ((cfg as any).benefitTypes ?? []).map((b: any) => [b.value, b.label])
@@ -57,8 +55,7 @@ export function CorporatePlanManagement({
   const filter = propFilter !== undefined ? propFilter : localFilter;
   const setFilter = propOnFilterChange || setLocalFilter;
 
-  const filtered = plans; // Since backend already filters if props are passed, let's just use plans directly (or we can double check, but direct is perfectly clean!)
-
+  const filtered = plans;
   const handleDelete = (id: string) => {
     confirmDelete(
       'Delete Corporate Plan',
@@ -67,9 +64,7 @@ export function CorporatePlanManagement({
         try {
           await deletePlanMutation.mutateAsync({ id });
           onDelete(id);
-          // The global confirmDelete already shows a success toast: 'Record deleted successfully!'
         } catch (err: any) {
-          console.error("Failed to delete corporate plan via API:", err);
           showToast(err?.response?.data?.message || err?.message || "Failed to delete plan", "error");
         }
       }
@@ -82,7 +77,6 @@ export function CorporatePlanManagement({
       onToggle(plan.id);
       showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'} successfully`);
     } catch (err: any) {
-      console.error("Failed to update status", err);
       showToast(err?.response?.data?.message || err?.message || "Failed to update status");
     }
   };
@@ -95,15 +89,15 @@ export function CorporatePlanManagement({
 
   return (
     <div className="space-y-3">
-      {/* Page header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Corporate Plans</h1>
-          <p className="text-xs text-muted-foreground font-medium">
-            {activePlans} active plan{activePlans !== 1 ? 's' : ''} & {totalMembers} enrolled member{totalMembers !== 1 ? 's' : ''}
-          </p>
-        </div>
-
+      <PageHeader
+        title="Corporate Plans"
+        subtitle={`${activePlans} active plan${activePlans !== 1 ? 's' : ''} & ${totalMembers} enrolled member${totalMembers !== 1 ? 's' : ''}`}
+        action={
+          <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
+            <Plus className="w-4 h-4" /> Create New Plan
+          </Button>
+        }
+      >
         <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
           <button
             onClick={() => setTab("plans")}
@@ -120,11 +114,7 @@ export function CorporatePlanManagement({
             Employee Management
           </button>
         </div>
-
-        <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
-          <Plus className="w-4 h-4" /> Create New Plan
-        </Button>
-      </div>
+      </PageHeader>
 
       {/* Info banner */}
       <div className="flex items-start gap-3 bg-primary/5 border border-primary/10 rounded-2xl px-5 py-4">

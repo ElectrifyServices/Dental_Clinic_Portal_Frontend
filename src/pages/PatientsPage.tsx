@@ -3,7 +3,7 @@ import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
 import { PatientList } from "../components/Patients/PatientList";
-import { toast } from "../components/ui";
+import { toast, PageHeader } from "../components/ui";
 
 export const PatientsPage: React.FC = () => {
   const {
@@ -68,12 +68,10 @@ export const PatientsPage: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Patients</h1>
-          <p className="text-xs text-muted-foreground font-medium">Manage and track patient information</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Patients"
+        subtitle="Manage and track patient information"
+      />
       <PatientList
         patients={patients}
         onAddPatient={handleAddPatient}

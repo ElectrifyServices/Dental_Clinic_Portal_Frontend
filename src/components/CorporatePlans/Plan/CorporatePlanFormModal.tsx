@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, Settings2, CheckCircle } from 'lucide-react';
 import { CorporatePlan, PlanBenefit } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, LabeledField, SectionRenderer } from '../../ui';
+import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui';
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
 import { useUpdateCorporatePlanMutation } from '../../../hooks/corporate/useUpdateCorporatePlanMutation';
 import { useModal } from '../../../contexts/ModalContext';
 import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
+import { mapProcedureLabelToKey } from '@/constants/consent.constants';
 
 function parseBackendError(err: any, fallback = "An error occurred"): string {
   const data = err?.response?.data;
@@ -89,43 +90,6 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
               CUSTOM: "custom",
             };
             return typeMap[backendType] || "custom";
-          };
-
-          const mapProcedureLabelToKey = (label: string): string => {
-            const labelMap: Record<string, string> = {
-              "Consultation / Check-up": "consultation",
-              "Consultation": "consultation",
-              "follow up visit": "follow-up",
-              "X-ray review": "xray-review",
-              "Teeth Cleaning": "cleaning",
-              "Tooth Pain / Emergency": "emergency",
-              "Filling": "filling",
-              "Root Canal Treatment": "root-canal",
-              "Extraction / Wisdom Tooth": "extraction",
-              "Braces / Aligners": "orthodontics",
-              "Implants": "implants",
-              "full mouth rehabilitation": "full-mouth-rehab",
-              "Veneers/Cosmetic Dentistry": "veneers-cosmetic",
-              "Child Dentistry": "child-dentistry",
-              "Crown": "crown",
-              "Denture": "denture",
-              "Toothache": "toothache",
-              "Swelling / Infection": "swelling-infection",
-              "Broken Tooth": "broken-tooth",
-              "Trauma / Injury": "trauma-injury",
-              "other/ not sure": "other",
-              
-              // Legacy mapping fallbacks
-              "Teeth Cleaning & Scaling": "cleaning",
-              "Dental Filling": "filling",
-              "Tooth Extraction": "extraction",
-              "Root Canal": "root-canal",
-              "Crown Fitting": "crown",
-              "Orthodontics": "orthodontics",
-              "Oral Surgery": "surgery",
-              "Other": "other",
-            };
-            return labelMap[label] || label.toLowerCase();
           };
 
           const benefits = (planData.benefits || []).map((b: any) => ({
@@ -284,7 +248,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         showToast('Plan created successfully');
         setShowForm(false);
       } catch (err: any) {
-        console.error("Failed to create corporate plan via API:", err);
+        /* console.error removed */
         let errorMsg = parseBackendError(err, "Failed to create plan on backend");
 
         if (typeof errorMsg === "string") {
@@ -317,7 +281,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         showToast('Plan updated successfully');
         setShowForm(false);
       } catch (err: any) {
-        console.error("Failed to update corporate plan via API:", err);
+        /* console.error removed */
         let errorMsg = parseBackendError(err, "Failed to update plan on backend");
 
         if (typeof errorMsg === "string") {
@@ -441,10 +405,18 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                         <Settings2 className="w-3 h-3" /> {b.type === 'custom' ? 'Using Custom Label' : 'Use Custom Label'}
                       </button>
                     </div>
-                    <select value={b.type} onChange={e => updateBenefit(idx, 'type', e.target.value)}
-                      className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background appearance-none shadow-sm">
-                      {Object.entries(BENEFIT_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
+                      <SelectTrigger className="w-full px-4 py-3 border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none text-sm font-bold bg-background shadow-sm text-left">
+                        <SelectValue placeholder="Select Logic Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(BENEFIT_LABELS).map(([v, l]) => (
+                          <SelectItem key={v} value={v}>
+                            {l}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {b.type === 'custom' ? (

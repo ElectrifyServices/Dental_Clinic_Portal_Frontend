@@ -9,7 +9,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useAppData } from "../hooks/useAppData";
-import { MetricCard } from "../components/ui";
+import { MetricCard, PageHeader, Card } from "../components/ui";
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
 
@@ -98,15 +98,10 @@ export const ProfitSharingPage: React.FC = () => {
 
   return (
     <div className="space-y-3 animate-in fade-in duration-500">
-      {/* Header & Minimalist Filter */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Profit Sharing</h1>
-          <p className="text-xs text-muted-foreground font-medium">
-            Doctor earnings and revenue distribution
-          </p>
-        </div>
-
+      <PageHeader
+        title="Profit Sharing"
+        subtitle="Doctor earnings and revenue distribution"
+      >
         <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
           {[
             { id: "thisMonth", label: "This Month" },
@@ -126,7 +121,7 @@ export const ProfitSharingPage: React.FC = () => {
             </button>
           ))}
         </div>
-      </div>
+      </PageHeader>
 
       {dateFilter === "custom" && (
         <div className="flex items-center gap-3 p-4 bg-card rounded-xl border border-border shadow-sm animate-in slide-in-from-top-2">
@@ -195,9 +190,9 @@ export const ProfitSharingPage: React.FC = () => {
           const isExpanded = expandedDoctor === doctor.id;
 
           return (
-            <div
+            <Card
               key={doctor.id}
-              className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-all duration-300"
+              className="overflow-hidden transition-all duration-300"
             >
               <div
                 onClick={() => toggleDoctor(doctor.id)}
@@ -295,7 +290,7 @@ export const ProfitSharingPage: React.FC = () => {
                   )}
                 </div>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>

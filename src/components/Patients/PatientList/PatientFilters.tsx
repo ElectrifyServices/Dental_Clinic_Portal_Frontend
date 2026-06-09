@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, LayoutGrid, List } from "lucide-react";
-import { Button, SearchInput } from "@/components/ui";
+import { Button, SearchInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 
 interface PatientFiltersProps {
   searchTerm: string;
@@ -37,30 +37,37 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-          <select
+          <Select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-full"
+            onValueChange={setFilterStatus}
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="new">New</option>
-          </select>
+            <SelectTrigger className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-[160px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
 
-          <select
+          <Select
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-full"
+            onValueChange={setFilterCategory}
           >
-            <option value="all">All Categories</option>
-            <option value="regular">Regular</option>
-            <option value="family">Family</option>
-            <option value="staff">Staff</option>
-            <option value="corporate">Corporate</option>
-            <option value="vip">VIP</option>
-            <option value="complimentary">Complimentary</option>
-          </select>
+            <SelectTrigger className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-[160px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="regular">Regular</SelectItem>
+              <SelectItem value="family">Family</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="corporate">Corporate</SelectItem>
+              <SelectItem value="vip">VIP</SelectItem>
+              <SelectItem value="complimentary">Complimentary</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="h-8 w-px bg-border hidden xl:block" />

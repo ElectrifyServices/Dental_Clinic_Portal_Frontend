@@ -1,4 +1,6 @@
 import { useApiQuery } from "../useApiQuery";
+import apiClient from "@/services/apiClient";
+import { parseApiResponse } from "@/services/parseApiResponse";
 
 export interface PhoneExistsResponse {
   responseStatusList?: {
@@ -33,3 +35,10 @@ export function usePatientPhoneExistsQuery(phone: string, enabled = false) {
     },
   });
 }
+
+export async function checkPatientPhoneExists(phone: string) {
+  const response = await apiClient.get(`/patient/phone-exists/${encodeURIComponent(phone.trim())}`);
+  const parsed = parseApiResponse(response.data);
+  return parsed.data;
+}
+
