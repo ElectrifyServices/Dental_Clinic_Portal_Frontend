@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -61,7 +63,7 @@ export function LoginView({ setView }: LoginViewProps) {
                 <FormControl>
                   <div className="relative group">
                     <Mail className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
-                    <input
+                    <Input
                       {...field}
                       type="email"
                       placeholder="you@clinic.com"
@@ -84,28 +86,30 @@ export function LoginView({ setView }: LoginViewProps) {
                   <FormLabel className="text-[13px] font-semibold text-gray-600">
                     Password
                   </FormLabel>
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => setView('forgot')}
-                    className="text-[12px] text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    className="text-[12px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-medium transition-colors p-0 h-auto"
                   >
                     Forgot password?
-                  </button>
+                  </Button>
                 </div>
                 <FormControl>
                   <div className="relative group">
                     <Lock className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
-                    <input
+                    <Input
                       {...field}
                       type={showPw ? "text" : "password"}
                       placeholder="Enter your password"
                       autoComplete="current-password"
                       className="w-full pl-10 pr-11 h-11 border border-gray-200 rounded-xl text-[14px] bg-gray-50 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all duration-150"
                     />
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
                       onClick={() => setShowPw(!showPw)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-0.5"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hover:bg-transparent transition-colors p-0.5 h-auto"
                       aria-label={showPw ? "Hide password" : "Show password"}
                     >
                       {showPw ? (
@@ -113,7 +117,7 @@ export function LoginView({ setView }: LoginViewProps) {
                       ) : (
                         <Eye className="w-[15px] h-[15px]" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </FormControl>
                 <FormMessage className="text-xs text-red-500 mt-1" />
@@ -130,7 +134,7 @@ export function LoginView({ setView }: LoginViewProps) {
           )}
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
             disabled={state.isLoading || form.formState.isSubmitting}
             className="w-full h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-150 shadow-sm shadow-blue-200 mt-2"
@@ -143,7 +147,7 @@ export function LoginView({ setView }: LoginViewProps) {
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
-          </button>
+          </Button>
         </form>
       </Form>
 

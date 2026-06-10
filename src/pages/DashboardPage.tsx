@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { UserPlus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAppData } from "../hooks/useAppData";
@@ -21,11 +21,11 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+          <p className="text-xs text-muted-foreground font-medium">
             Welcome back, {state.user?.name}. Here's your clinic overview for today.
           </p>
         </div>

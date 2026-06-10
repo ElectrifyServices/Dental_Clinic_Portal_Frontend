@@ -71,7 +71,6 @@ export const translateValue = async (val: string, targetLang: string) => {
     const data = await response.json();
     return data[0].map((x: any) => x[0]).join("");
   } catch (error) {
-    console.error("Translation error:", error);
     return val;
   }
 };

@@ -1,7 +1,17 @@
 import React from "react";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import {
   AlertTriangle,
   Calendar,
@@ -60,15 +70,15 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <User className="w-12 h-12 text-primary" />
             )}
           </div>
-          <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
+          <Label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
             <Upload className="w-4 h-4" />
-            <input
+            <Input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
             />
-          </label>
+          </Label>
         </div>
         <p className="text-sm text-muted-foreground mt-2">
           Upload patient photo (optional)
@@ -163,10 +173,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Full Name *
-          </label>
+          </Label>
           <Input
             type="text"
             name="name"
@@ -186,15 +196,18 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div className="relative">
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number *
-          </label>
+          </Label>
           <Input
             type="tel"
             name="phone"
             value={formData.phone || ""}
-            onChange={handleChange}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, "");
+              setFormData((prev: any) => ({ ...prev, phone: digits }));
+            }}
             disabled={!!formData.id}
             className={
               validationErrors.phone
@@ -212,10 +225,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Mail className="w-4 h-4 inline mr-2" />
             Email Address
-          </label>
+          </Label>
           <Input
             type="email"
             name="email"
@@ -237,10 +250,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
-          </label>
+          </Label>
           <Input
             type="date"
             name="dateOfBirth"
@@ -252,69 +265,85 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Gender
-          </label>
-          <select
-            name="gender"
+          </Label>
+          <Select
             value={formData.gender || ""}
-            onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+            onValueChange={(val) => {
+              setFormData((prev: any) => ({ ...prev, gender: val }));
+            }}
           >
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
+            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectValue placeholder="Select Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Blood Group
-          </label>
-          <select
-            name="bloodGroup"
+          </Label>
+          <Select
             value={formData.bloodGroup || ""}
-            onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+            onValueChange={(val) => {
+              setFormData((prev: any) => ({ ...prev, bloodGroup: val }));
+            }}
           >
-            <option value="">Select Blood Group</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-          </select>
+            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectValue placeholder="Select Blood Group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A+">A+</SelectItem>
+              <SelectItem value="A-">A-</SelectItem>
+              <SelectItem value="B+">B+</SelectItem>
+              <SelectItem value="B-">B-</SelectItem>
+              <SelectItem value="AB+">AB+</SelectItem>
+              <SelectItem value="AB-">AB-</SelectItem>
+              <SelectItem value="O+">O+</SelectItem>
+              <SelectItem value="O-">O-</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {type === "person" && (
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Label className="block text-sm font-semibold text-muted-foreground mb-2">
               Relation
-            </label>
-            <select
-              name="relation"
+            </Label>
+            <Select
               value={formData.relation || ""}
-              onChange={(e) => {
-                const value = e.target.value;
+              onValueChange={(val) => {
                 setFormData((prev: any) => ({
                   ...prev,
-                  relation: value,
-                  customRelation: value === "OTHER" ? prev.customRelation : "",
+                  relation: val,
+                  customRelation: val === "OTHER" ? prev.customRelation : "",
                 }));
               }}
-              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
             >
-              <option value="">Select Relation</option>
-              <option value="SELF">Self</option>
-              <option value="SPOUSE">Spouse</option>
-              <option value="CHILD">Child</option>
-              <option value="PARENT">Parent</option>
-              <option value="SIBLING">Sibling</option>
-            </select>
+              <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+                <SelectValue placeholder="Select Relation" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SELF">Self</SelectItem>
+                <SelectItem value="SPOUSE">Spouse</SelectItem>
+                <SelectItem value="CHILD">Child</SelectItem>
+                <SelectItem value="PARENT">Parent</SelectItem>
+                <SelectItem value="SIBLING">Sibling</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
+                {formData.relation &&
+                  !["", "SELF", "SPOUSE", "CHILD", "PARENT", "SIBLING", "OTHER"].includes(formData.relation) && (
+                    <SelectItem value={formData.relation}>
+                      {formData.relation}
+                    </SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
             {formData.relation === "OTHER" && (
               <div className="flex mt-3">
                 <Input
@@ -330,13 +359,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   placeholder="Enter custom relation"
                   className="rounded-r-none"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={applyCustomRelation}
                   className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
                 >
                   →
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -344,11 +373,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground mb-2">
+        <Label className="block text-sm font-semibold text-muted-foreground mb-2">
           <MapPin className="w-4 h-4 inline mr-2" />
           Address
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           name="address"
           value={formData.address || ""}
           onChange={handleChange}
@@ -360,9 +389,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Occupation
-          </label>
+          </Label>
           <Input
             type="text"
             name="occupation"
@@ -373,21 +402,25 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             Marital Status
-          </label>
-          <select
-            name="maritalStatus"
+          </Label>
+          <Select
             value={formData.maritalStatus || ""}
-            onChange={handleChange}
-            className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
+            onValueChange={(val) => {
+              setFormData((prev: any) => ({ ...prev, maritalStatus: val }));
+            }}
           >
-            <option value="">Select Status</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="divorced">Divorced</option>
-            <option value="widowed">Widowed</option>
-          </select>
+            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single">Single</SelectItem>
+              <SelectItem value="married">Married</SelectItem>
+              <SelectItem value="divorced">Divorced</SelectItem>
+              <SelectItem value="widowed">Widowed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {(() => {
@@ -395,41 +428,40 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           return (
             <>
               <div>
-                <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                   Patient Category
-                </label>
-                <select
-                  name="category"
+                </Label>
+                <Select
                   value={isCorporate ? "corporate" : (formData.category?.toLowerCase() || "regular")}
-                  onChange={(e) => {
-                    const val = e.target.value;
+                  onValueChange={(val) => {
                     setFormData((prev: any) => ({
                       ...prev,
                       category: val as any,
-                      defaultDiscount:
-                        val === "family" || val === "staff"
-                          ? 100
-                          : prev.defaultDiscount,
+                      defaultDiscount: 0,
                     }));
                   }}
                   disabled={isCorporate}
-                  className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm disabled:opacity-80 disabled:bg-muted"
                 >
-                  <option value="regular">Regular</option>
-                  {isCorporate && <option value="corporate">Corporate</option>}
-                  <option value="family">Family (Doctor's House)</option>
-                  <option value="staff">Clinic Staff</option>
-                  <option value="vip">VIP</option>
-                  <option value="complimentary">Complimentary</option>
-                </select>
+                  <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between disabled:opacity-80 disabled:bg-muted">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="regular">Regular</SelectItem>
+                    {isCorporate && <SelectItem value="corporate">Corporate</SelectItem>}
+                    <SelectItem value="family">Family (Doctor's House)</SelectItem>
+                    <SelectItem value="staff">Clinic Staff</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="complimentary">Complimentary</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-semibold text-muted-foreground">
+                  <Label className="block text-sm font-semibold text-muted-foreground">
                     Default Discount (%)
-                  </label>
-                  <label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <input
+                  </Label>
+                  <Label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <Input
                       type="checkbox"
                       name="isFOC"
                       checked={formData.isFOC || false}
@@ -445,12 +477,12 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                       className="w-3.5 h-3.5 accent-primary cursor-pointer"
                     />
                     <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
-                  </label>
+                  </Label>
                 </div>
                 <Input
                   type="number"
                   name="defaultDiscount"
-                  value={isCorporate ? (formData.defaultDiscount || 0) : (formData.defaultDiscount !== undefined ? formData.defaultDiscount : 0)}
+                  value={formData.defaultDiscount || 0}
                   onChange={(e) => {
                     const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
                     setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
@@ -469,10 +501,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Name
-          </label>
+          </Label>
           <Input
             type="text"
             name="emergencyName"
@@ -482,16 +514,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Relation
-          </label>
+          </Label>
           <div className="space-y-3">
-            <select
-              name="emergencyRelation"
+            <Select
               value={formData.emergencyRelation || ""}
-              onChange={(e) => {
-                const val = e.target.value;
+              onValueChange={(val) => {
                 setFormData((prev: any) => ({
                   ...prev,
                   emergencyRelation: val,
@@ -499,36 +529,39 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     val === "Other" ? prev.customEmergencyRelation : "",
                 }));
               }}
-              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
             >
-              <option value="">Select Relation</option>
-              <option value="Father">Father</option>
-              <option value="Mother">Mother</option>
-              <option value="Brother">Brother</option>
-              <option value="Sister">Sister</option>
-              <option value="Husband">Husband</option>
-              <option value="Wife">Wife</option>
-              <option value="Guardian">Guardian</option>
-              <option value="Friend">Friend</option>
-              <option value="Other">Other</option>
-              {formData.emergencyRelation &&
-                ![
-                  "",
-                  "Father",
-                  "Mother",
-                  "Brother",
-                  "Sister",
-                  "Husband",
-                  "Wife",
-                  "Guardian",
-                  "Friend",
-                  "Other",
-                ].includes(formData.emergencyRelation) && (
-                  <option value={formData.emergencyRelation}>
-                    {formData.emergencyRelation}
-                  </option>
-                )}
-            </select>
+              <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+                <SelectValue placeholder="Select Relation" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Father">Father</SelectItem>
+                <SelectItem value="Mother">Mother</SelectItem>
+                <SelectItem value="Brother">Brother</SelectItem>
+                <SelectItem value="Sister">Sister</SelectItem>
+                <SelectItem value="Husband">Husband</SelectItem>
+                <SelectItem value="Wife">Wife</SelectItem>
+                <SelectItem value="Guardian">Guardian</SelectItem>
+                <SelectItem value="Friend">Friend</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+                {formData.emergencyRelation &&
+                  ![
+                    "",
+                    "Father",
+                    "Mother",
+                    "Brother",
+                    "Sister",
+                    "Husband",
+                    "Wife",
+                    "Guardian",
+                    "Friend",
+                    "Other",
+                  ].includes(formData.emergencyRelation) && (
+                    <SelectItem value={formData.emergencyRelation}>
+                      {formData.emergencyRelation}
+                    </SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
             {formData.emergencyRelation === "Other" && (
               <div className="flex animate-in fade-in slide-in-from-top-2">
                 <Input
@@ -555,7 +588,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   className="rounded-r-none"
                   placeholder="Enter custom relation"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     if (formData.customEmergencyRelation.trim()) {
@@ -569,17 +602,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
                 >
                   →
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
-          </label>
+          </Label>
             <Input
               type="tel"
               name="emergencyContact"

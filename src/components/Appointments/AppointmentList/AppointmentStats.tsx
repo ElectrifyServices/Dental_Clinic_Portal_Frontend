@@ -33,29 +33,29 @@ export const AppointmentStats: React.FC<AppointmentStatsProps> = () => {
   const cancelled = parseData(cancelledData) ?? 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
       <MetricCard
-        label="Total Volume"
+        label="Total"
         value={isTotalLoading ? "..." : total}
-        icon={<Calendar className="w-6 h-6" />}
+        icon={<Calendar className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="gray"
       />
       <MetricCard
         label="Upcoming"
         value={isUpcomingLoading ? "..." : upcoming}
-        icon={<Clock className="w-6 h-6" />}
+        icon={<Clock className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="primary"
       />
       <MetricCard
         label="Completed"
         value={isCompletedLoading ? "..." : completed}
-        icon={<CheckCircle className="w-6 h-6" />}
+        icon={<CheckCircle className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="emerald"
       />
       <MetricCard
         label="Cancelled"
         value={isCancelledLoading ? "..." : cancelled}
-        icon={<XCircle className="w-6 h-6" />}
+        icon={<XCircle className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="rose"
       />
     </div>

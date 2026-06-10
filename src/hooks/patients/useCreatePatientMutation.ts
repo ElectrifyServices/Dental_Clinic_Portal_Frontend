@@ -191,7 +191,6 @@ export function mapFormDataToCreatePayload(
         payload.append('consent_signature_image', file);
       }
     } catch (e) {
-      console.error("Error converting signature to file", e);
     }
   }
 

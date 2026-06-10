@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Award, IndianRupee, GraduationCap, Search, Plus, Check, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { LabeledField, SearchableSelect } from "@/components/ui";
+import { LabeledField, SearchableSelect, Label, Input } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
 import { useDeleteSpecializationMutation } from "@/hooks/specializations/useDeleteSpecializationMutation";
@@ -59,7 +60,6 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
       await queryClient.invalidateQueries({
         queryKey: ["specializations"],
       });
-
       // Auto select created specialization
       onChange({
         target: {
@@ -68,7 +68,6 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
         },
       });
     } catch (err: any) {
-      console.error("Failed to create specialization:", err);
       let errMsg = "Failed to create specialization.";
       const resData = err.response?.data || err;
       if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
@@ -106,7 +105,6 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             });
           }
         } catch (err) {
-          console.error("Failed to delete specialization:", err);
         } finally {
           setDeletingName(null);
         }
@@ -160,7 +158,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             <LabeledField label="Consultation Fee (₹)" error={errors.consultationFee?.message}>
               <div className="relative">
                 <IndianRupee className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type="number"
                   name="consultationFee"
                   value={formData.consultationFee}
@@ -174,7 +172,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             <LabeledField label="Qualification">
               <div className="relative">
                 <GraduationCap className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type="text"
                   name="qualification"
                   value={formData.qualification}
@@ -188,7 +186,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             <LabeledField label="Exp (Years)">
               <div className="relative">
                 <Award className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
+                <Input
                   type="number"
                   name="experience"
                   value={formData.experience}
@@ -201,7 +199,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
 
             <div className="md:col-span-2">
               <LabeledField label="Medical License Number">
-                <input
+                <Input
                   type="text"
                   name="licenseNumber"
                   value={formData.licenseNumber}
@@ -217,7 +215,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
         {isSupport && (
           <>
             <LabeledField label="Education Level">
-              <input
+              <Input
                 type="text"
                 name="education"
                 value={formData.education}
@@ -227,7 +225,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
               />
             </LabeledField>
             <LabeledField label="Experience (Years)">
-              <input
+              <Input
                 type="number"
                 name="experience"
                 value={formData.experience}
@@ -238,18 +236,20 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
             {formData.role === "assistant" && (
               <div className="md:col-span-2">
                 <LabeledField label="Primary Department">
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={onChange}
-                    className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                  <Select
+                    value={formData.department || ""}
+                    onValueChange={(val) => onChange({ target: { name: 'department', value: val } })}
                   >
-                    <option value="">Select Department</option>
-                    <option value="Surgery">Surgery Support</option>
-                    <option value="General">General Dentistry</option>
-                    <option value="Lab">Laboratory</option>
-                    <option value="Sterilization">Sterilization</option>
-                  </select>
+                    <SelectTrigger className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 bg-background">
+                      <SelectValue placeholder="Select Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Surgery">Surgery Support</SelectItem>
+                      <SelectItem value="General">General Dentistry</SelectItem>
+                      <SelectItem value="Lab">Laboratory</SelectItem>
+                      <SelectItem value="Sterilization">Sterilization</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </LabeledField>
               </div>
             )}
@@ -259,21 +259,23 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
         {isAdmin && (
           <>
             <LabeledField label="Department">
-              <select
-                name="department"
-                value={formData.department}
-                onChange={onChange}
-                className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20"
+              <Select
+                value={formData.department || ""}
+                onValueChange={(val) => onChange({ target: { name: 'department', value: val } })}
               >
-                <option value="">Select Department</option>
-                <option value="HR">Human Resources</option>
-                <option value="Finance">Finance / Accounting</option>
-                <option value="Operations">Operations</option>
-                <option value="IT">IT Support</option>
-              </select>
+                <SelectTrigger className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 bg-background">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="HR">Human Resources</SelectItem>
+                  <SelectItem value="Finance">Finance / Accounting</SelectItem>
+                  <SelectItem value="Operations">Operations</SelectItem>
+                  <SelectItem value="IT">IT Support</SelectItem>
+                </SelectContent>
+              </Select>
             </LabeledField>
             <LabeledField label="Designation">
-              <input
+              <Input
                 type="text"
                 name="designation"
                 value={formData.designation}
@@ -287,10 +289,10 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
       </div>
 
       <div className="pt-4 border-t border-dashed space-y-6">
-        <LabeledField label="Monthly Salary (₹) *" required error={errors.monthlySalary?.message}>
+        <LabeledField label="Monthly Salary (₹)" required error={errors.monthlySalary?.message}>
           <div className="relative">
             <IndianRupee className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
-            <input
+            <Input
               type="number"
               name="monthlySalary"
               value={formData.monthlySalary}
@@ -306,8 +308,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
           <div
             className={`p-5 rounded-2xl border transition-all ${formData.profitSharing ? "bg-primary/5 border-primary/20 shadow-inner" : "bg-muted/30 border-border"}`}
           >
-            <label className="flex items-center gap-3 cursor-pointer mb-4">
-              <input
+            <Label className="flex items-center gap-3 cursor-pointer mb-4">
+              <Input
                 type="checkbox"
                 name="profitSharing"
                 checked={formData.profitSharing}
@@ -317,13 +319,13 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
               <span className="text-sm font-black text-foreground uppercase tracking-tight">
                 Enable Performance Profit Sharing
               </span>
-            </label>
+            </Label>
             {formData.profitSharing && (
               <div className="animate-in slide-in-from-top-2 duration-300">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 px-1">
                   Sharing Percentage (%)
                 </p>
-                <input
+                <Input
                   type="number"
                   name="profitPercentage"
                   value={formData.profitPercentage}
@@ -340,8 +342,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
           </div>
         )}
 
-        <label className="flex items-center gap-3 p-4 bg-muted/20 border border-border rounded-2xl cursor-pointer hover:bg-muted/30 transition-colors">
-          <input
+        <Label className="flex items-center gap-3 p-4 bg-muted/20 border border-border rounded-2xl cursor-pointer hover:bg-muted/30 transition-colors">
+          <Input
             type="checkbox"
             name="isActive"
             checked={formData.isActive}
@@ -356,7 +358,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
               Staff member can currently access the portal
             </span>
           </div>
-        </label>
+        </Label>
       </div>
     </div>
   );

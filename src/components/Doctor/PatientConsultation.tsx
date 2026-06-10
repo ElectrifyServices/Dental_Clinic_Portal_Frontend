@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, History, ArrowLeft } from "lucide-react";
 import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
 import { Modal, Button } from "@/components/ui";
+import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
 import { ObservationsAndToothChart } from "./PatientConsultation/ObservationsAndToothChart";
@@ -13,10 +14,18 @@ import { PrescriptionForm } from "./PatientConsultation/PrescriptionForm";
 import { FollowUpScheduler } from "./PatientConsultation/FollowUpScheduler";
 import { AdditionalNotes } from "./PatientConsultation/AdditionalNotes";
 import { CompletionView } from "./PatientConsultation/CompletionView";
+import { PreviousConsultationsView } from "./PatientConsultation/PreviousConsultationsView";
+
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
+import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
+import { usePatientConsultationsQuery } from "../../hooks/consultation/usePatientConsultationsQuery";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface PatientConsultationProps {
   patient: {
     id: string;
+    patientId?: string;
+    appointmentId?: string;
     patientName: string;
     phone?: string;
     treatmentType: string;
@@ -94,6 +103,14 @@ export function PatientConsultation({
 }: PatientConsultationProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"form" | "history">("form");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyDateFrom, setHistoryDateFrom] = useState("");
+  const [historyDateTo, setHistoryDateTo] = useState("");
+  const debouncedHistorySearch = useDebounce(historySearch, 400);
+  const debouncedDateFrom = useDebounce(historyDateFrom, 300);
+  const debouncedDateTo = useDebounce(historyDateTo, 300);
   const [toothChartState, setToothChartState] = useState<
     Record<number, string>
   >(initialData?.toothChartState || {});
@@ -139,13 +156,26 @@ export function PatientConsultation({
       treatmentPlans: [] as any[],
     },
   );
+  // ── Follow-up state ────────────────────────────────────────────────────────
+  const [followUpDoctorId, setFollowUpDoctorId] = useState(
+    initialData?.followUpDoctorId || (patient.doctorId && patient.doctorId !== "1" ? patient.doctorId : "1"),
+  );
+  const [followUpDate, setFollowUpDate] = useState(
+    initialData?.followUpDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+  );
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(
+    initialData?.selectedSlot || null
+  );
 
   useEffect(() => {
     onDraftUpdate?.({
       consultationData,
       toothChartState,
+      followUpDoctorId,
+      followUpDate,
+      selectedSlot,
     });
-  }, [consultationData, toothChartState]);
+  }, [consultationData, toothChartState, followUpDoctorId, followUpDate, selectedSlot]);
 
   // Sync toothChartState with treatmentPlans
   useEffect(() => {
@@ -187,94 +217,56 @@ export function PatientConsultation({
     });
   }, [toothChartState]);
 
-  // ── Follow-up state ────────────────────────────────────────────────────────
-  const [followUpDoctorId, setFollowUpDoctorId] = useState(
-    patient.doctorId || "1",
-  );
-  const [followUpDate, setFollowUpDate] = useState(
-    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-  );
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 9; hour <= 18; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        if (hour === 18 && minute > 0) break;
-        const time24 = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-        const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        const ampm = hour >= 12 ? "PM" : "AM";
-        const time12 = `${hour12}:${minute.toString().padStart(2, "0")} ${ampm}`;
-        slots.push({ time24, time12 });
+  const { doctors: apiDoctors } = useDoctorsListQuery();
+  const formDoctors = apiDoctors && apiDoctors.length > 0 ? apiDoctors : doctors;
+
+  useEffect(() => {
+    if (formDoctors && formDoctors.length > 0) {
+      const isValid = formDoctors.some((d: any) => d.id === followUpDoctorId);
+      if (!isValid) {
+        setFollowUpDoctorId(formDoctors[0].id);
       }
     }
-    return slots;
-  };
+  }, [formDoctors, followUpDoctorId]);
 
-  const getAvailableTimeSlots = () => {
-    const selDoctor = doctors.find((d) => d.id === followUpDoctorId);
-    if (!selDoctor || !followUpDate) return [];
+  const { data: consultations, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchConsultations } = usePatientConsultationsQuery(
+    patient.patientId || patient.id,
+    {
+      search: debouncedHistorySearch || undefined,
+      dateFrom: debouncedDateFrom || undefined,
+      dateTo: debouncedDateTo || undefined,
+    }
+  );
 
-    const selDate = new Date(followUpDate);
-    const dayName = selDate
-      .toLocaleDateString("en-US", { weekday: "long" })
-      .toLowerCase();
-    const daySchedule = selDoctor.workingHours?.[dayName];
+  useEffect(() => {
+    refetchConsultations();
+  }, [patient.id, refetchConsultations]);
 
-    if (
-      !daySchedule ||
-      !daySchedule.isWorking ||
-      !doctorAvailability[followUpDoctorId]
-    )
-      return [];
+  const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
+    consultationData.followUpRequired ? followUpDoctorId : null,
+    consultationData.followUpRequired ? followUpDate : null
+  );
 
-    const allSlots = generateTimeSlots();
-    const startHour = parseInt(daySchedule.startTime.split(":")[0]);
-    const endHour = parseInt(daySchedule.endTime.split(":")[0]);
-    const endMinute = parseInt(daySchedule.endTime.split(":")[1]);
-
-    return allSlots.filter((slot) => {
-      const slotHour = parseInt(slot.time24.split(":")[0]);
-      const slotMinute = parseInt(slot.time24.split(":")[1]);
-
-      if (
-        slotHour < startHour ||
-        slotHour > endHour ||
-        (slotHour === endHour && slotMinute > endMinute)
-      )
-        return false;
-
-      if (daySchedule.breakStart && daySchedule.breakEnd) {
-        const bsH = parseInt(daySchedule.breakStart.split(":")[0]);
-        const bsM = parseInt(daySchedule.breakStart.split(":")[1]);
-        const beH = parseInt(daySchedule.breakEnd.split(":")[0]);
-        const beM = parseInt(daySchedule.breakEnd.split(":")[1]);
-        if (
-          (slotHour > bsH || (slotHour === bsH && slotMinute >= bsM)) &&
-          (slotHour < beH || (slotHour === beH && slotMinute < beM))
-        )
-          return false;
+  const availableSlots = React.useMemo(() => {
+    if (!slotsData?.data?.slots) return [];
+    return slotsData.data.slots.map((s: any) => {
+      const time24 = s.time;
+      let time12 = time24;
+      if (!time24.includes("AM") && !time24.includes("PM")) {
+        const [h, m] = time24.split(":");
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        time12 = `${hour12}:${m} ${ampm}`;
       }
-
-      const slotStart = slotHour * 60 + slotMinute;
-      const isBooked = (appointments || []).some((a) => {
-        if (a.doctorId !== followUpDoctorId || a.date !== followUpDate)
-          return false;
-        const aStart =
-          parseInt(a.time.split(":")[0]) * 60 + parseInt(a.time.split(":")[1]);
-        const aEnd = aStart + (a.duration || 15);
-        return slotStart >= aStart && slotStart < aEnd;
-      });
-
-      return !isBooked;
+      return { time24, time12, isAvailable: s.is_available };
     });
-  };
-
-  const availableSlots = getAvailableTimeSlots();
+  }, [slotsData]);
 
   const handleScheduleFollowUp = () => {
     if (!onScheduleFollowUp) return;
-    const selDoctor = doctors.find((d) => d.id === followUpDoctorId);
+    const selDoctor = formDoctors.find((d: any) => d.id === followUpDoctorId);
     onScheduleFollowUp({
       patientName: patient.patientName,
       patientPhone: patient.phone,
@@ -289,10 +281,23 @@ export function PatientConsultation({
   };
 
   const handleDownloadPDF = async (type: PDFReportType = "FULL") => {
+    let finalConsultationData = { ...consultationData };
+    try {
+      const detailData = await fetchConsultationDetail(patient.id, type);
+      if (detailData) {
+        finalConsultationData = { ...finalConsultationData, ...detailData };
+      }
+    } catch (error) {
+    }
+
     await downloadConsultationPDF({
       type,
-      patient,
-      consultationData,
+      patient: {
+        ...patient,
+        gender: patient.patientHistory?.gender || (patient as any).gender || "—",
+        bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "—",
+      },
+      consultationData: finalConsultationData,
       toothChartState,
     });
   };
@@ -391,12 +396,42 @@ export function PatientConsultation({
     setConsultationData({ ...consultationData, treatmentPlans: updatedPlans });
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!consultationData.observations.trim()) {
+      newErrors.observations = "Detailed Observations are required.";
+    }
+    if (!consultationData.diagnosis.trim()) {
+      newErrors.diagnosis = "Diagnosis is required.";
+    }
+    if (consultationData.requiresTreatment && !consultationData.treatmentPlan.trim()) {
+      newErrors.treatmentPlan = "Treatment Plan Description is required when treatment is needed.";
+    }
+    if (consultationData.followUpRequired && !selectedSlot) {
+      newErrors.followUpSlot = "Please select a follow-up time slot.";
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      // Scroll to first error field
+      const firstKey = Object.keys(newErrors)[0];
+      const el = document.querySelector(`[name="${firstKey}"]`) as HTMLElement;
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return false;
+    }
+    return true;
+  };
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
     const { name, value, type } = e.target;
+    // Clear error for this field on change
+    if (name && errors[name]) {
+      setErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
+    }
     setConsultationData((prev) => ({
       ...prev,
       [name]:
@@ -406,64 +441,134 @@ export function PatientConsultation({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    onCompleteConsultation({
-      patientId: patient.id,
-      ...consultationData,
-      toothChartState,
-      consultationDate: new Date().toISOString(),
-      doctorId: patient.doctorId || "1",
-      doctorName: patient.doctorName || "Dr. Sharma",
-      status: "completed",
-    });
-    setIsCompleted(true);
-    setLoading(false);
+    try {
+      await onCompleteConsultation({
+        id: patient.id,
+        patientId: patient.patientId || patient.id,
+        appointmentId: patient.appointmentId,
+        ...consultationData,
+        toothChartState,
+        consultationDate: new Date().toISOString(),
+        doctorId: patient.doctorId || "1",
+        doctorName: patient.doctorName || "Dr. Sharma",
+        status: "completed",
+        followUpDoctorId,
+        followUpDate,
+        followUpTime: selectedSlot,
+      });
+      setIsCompleted(true);
+      refetchConsultations();
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Modal
-      title={`Consultation: ${patient.patientName}`}
-      subtitle={patient.patientConcern || patient.treatmentType}
+      title={
+        viewMode === "history"
+          ? `Previous Consultations: ${patient.patientName}`
+          : `Consultation: ${patient.patientName}`
+      }
+      subtitle={
+        viewMode === "history"
+          ? "Complete dental checkup records and prescription history"
+          : (patient.patientConcern || patient.treatmentType)
+      }
       onClose={onClose}
       size="5xl"
-      icon={<CheckCircle className="w-5 h-5" />}
+      icon={
+        viewMode === "history" ? (
+          <History className="w-5 h-5 text-primary" />
+        ) : (
+          <CheckCircle className="w-5 h-5 text-primary" />
+        )
+      }
       footer={
-        <div className="flex justify-end space-x-4 w-full">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="text-muted-foreground"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            onClick={handleSubmit}
-            className="px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
-                Completing...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-5 h-5 mr-2" />
-                Complete Consultation
-              </>
-            )}
-          </Button>
-        </div>
+        isCompleted ? null : viewMode === "history" ? (
+          <div className="flex justify-between items-center w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setViewMode("form")}
+              className="gap-2 font-bold"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Consultation
+            </Button>
+          </div>
+        ) : (
+          <div className="flex justify-end space-x-4 w-full">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="text-muted-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              onClick={handleSubmit}
+              className="px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg font-bold"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                  Completing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Complete Consultation
+                </>
+              )}
+            </Button>
+          </div>
+        )
       }
     >
       <div id="consultation-form">
         {isCompleted ? (
           <CompletionView onDownloadPDF={handleDownloadPDF} onClose={onClose} />
+        ) : viewMode === "history" ? (
+          <PreviousConsultationsView
+            consultations={consultations}
+            isLoading={isLoadingHistory}
+            isError={isHistoryError}
+            searchVal={historySearch}
+            onSearchChange={setHistorySearch}
+            dateFrom={historyDateFrom}
+            dateTo={historyDateTo}
+            onDateFromChange={setHistoryDateFrom}
+            onDateToChange={setHistoryDateTo}
+            onClearFilters={() => {
+              setHistorySearch("");
+              setHistoryDateFrom("");
+              setHistoryDateTo("");
+            }}
+          />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
+              <div>
+                <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
+                <div className="text-sm font-black text-foreground">Phone: {patient.phone || "—"}</div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViewMode("history")}
+                className="gap-2 font-bold hover:bg-primary hover:text-white transition-all shadow-sm border-primary/30 text-primary w-full sm:w-auto justify-center"
+              >
+                <History className="w-4 h-4" />
+                Previous Consultations
+              </Button>
+            </div>
+
             <ClinicalImages
               images={consultationData.images}
               xrayFiles={consultationData.xrayFiles}
@@ -479,6 +584,7 @@ export function PatientConsultation({
               observations={consultationData.observations}
               diagnosis={consultationData.diagnosis}
               onChange={handleChange}
+              errors={errors}
             />
 
             <TreatmentPlanning
@@ -510,6 +616,9 @@ export function PatientConsultation({
                   }));
                 }
               }}
+              followUpRequired={consultationData.followUpRequired}
+              onFollowUpRequiredChange={handleChange}
+              errors={errors}
             />
 
             <FollowUpScheduler
@@ -519,12 +628,13 @@ export function PatientConsultation({
               followUpDate={followUpDate}
               selectedSlot={selectedSlot}
               availableSlots={availableSlots}
-              doctors={doctors}
+              doctors={formDoctors}
               onFollowUpRequiredChange={handleChange}
               onDoctorChange={setFollowUpDoctorId}
               onDateChange={setFollowUpDate}
               onSlotSelect={setSelectedSlot}
               onSchedule={handleScheduleFollowUp}
+              errors={errors}
             />
 
             <PrescriptionForm

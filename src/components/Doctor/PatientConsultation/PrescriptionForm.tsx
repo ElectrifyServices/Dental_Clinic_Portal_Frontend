@@ -1,4 +1,7 @@
-﻿import { Pill, Plus, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Pill, Plus, Trash2 } from "lucide-react";
 
 interface Prescription {
   id: string;
@@ -31,27 +34,27 @@ export function PrescriptionForm({
           <Pill className="w-5 h-5 mr-2 text-green-600" />
           Prescriptions
         </h3>
-        <button
+        <Button
           type="button"
           onClick={onAddPrescription}
           className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center text-sm font-medium transition-all duration-200 shadow-md"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Medicine
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
         {prescriptions.map((prescription) => (
           <div
             key={prescription.id}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm animate-in fade-in zoom-in duration-200"
+            className="flex flex-wrap gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm animate-in fade-in zoom-in duration-200"
           >
-            <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+            <div className="flex-[2] min-w-[200px]">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Medicine Name
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.medicine}
                 onChange={(e) =>
@@ -65,10 +68,10 @@ export function PrescriptionForm({
                 placeholder="e.g. Paracetamol"
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+            <div className="w-[120px] shrink-0">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Dosage
-              </label>
+              </Label>
               <select
                 value={prescription.dosage}
                 onChange={(e) =>
@@ -90,11 +93,11 @@ export function PrescriptionForm({
                 <option value="1-1-1">1 - 1 - 1</option>
               </select>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+            <div className="flex-1 min-w-[120px]">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Timing
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.timing}
                 onChange={(e) =>
@@ -108,11 +111,11 @@ export function PrescriptionForm({
                 placeholder="After meals"
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+            <div className="flex-1 min-w-[120px]">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Frequency
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={prescription.frequency}
                 onChange={(e) =>
@@ -126,12 +129,12 @@ export function PrescriptionForm({
                 placeholder="3 times daily"
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+            <div className="w-[180px] shrink-0">
+              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Duration
-              </label>
-              <div className="flex gap-1">
-                <input
+              </Label>
+              <div className="flex gap-2">
+                <Input
                   type="number"
                   value={prescription.duration}
                   onChange={(e) =>
@@ -163,29 +166,30 @@ export function PrescriptionForm({
                 </select>
               </div>
             </div>
-            <div className="md:col-span-1 flex items-center gap-2">
+            <div className="w-[120px] shrink-0 flex items-center gap-2">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
+                <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                   Qty
-                </label>
-                <input
-                  type="text"
+                </Label>
+                <Input
+                  type="number"
                   value={prescription.qty}
                   onChange={(e) =>
                     onUpdatePrescription(prescription.id, "qty", e.target.value)
                   }
+                  min="1"
                   className="w-full px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                   placeholder="10"
                 />
               </div>
               {prescriptions.length > 1 && (
-                <button
+                <Button
                   type="button"
                   onClick={() => onRemovePrescription(prescription.id)}
-                  className="p-2 mt-6 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200"
+                  className="p-2 mt-6 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -9,6 +9,7 @@ import { User } from "../types";
 import { useLoginMutation } from "../hooks/auth/useLoginMutation";
 import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
 import { AuthStorage } from "../auth/authStorage";
+import { toast } from "../components/ui";
 
 interface AuthState {
   user: User | null;
@@ -117,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       AuthStorage.save(authData, true);
 
       dispatch({ type: "LOGIN_SUCCESS", payload: normalizedUserInfo });
+      toast.success("Welcome back! Logged in successfully.");
     } catch (error: any) {
       // The API returns error messages inside responseStatusList.statusList[0].statusDesc
       const apiStatusDesc =
@@ -129,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "Login failed. Try again.";
 
       dispatch({ type: "LOGIN_FAILURE", payload: errorMessage });
+      toast.error(errorMessage);
     }
   };
 
@@ -136,10 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await logoutMutation.mutateAsync({});
     } catch (error) {
-      console.error("Logout API failed", error);
     } finally {
       AuthStorage.clear();
       dispatch({ type: "LOGOUT" });
+      toast.success("Logged out successfully.");
     }
   };
 

@@ -35,7 +35,7 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
 
   return useApiQuery<CorporatePlansResponse>({
     queryKey: ["corporatePlans", body],
-    endpoint: "/corporate/plan/list",
+    endpoint: "/corporatePlan/list",
     method: "post",
     data: body,
     options: {

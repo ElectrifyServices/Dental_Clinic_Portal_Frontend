@@ -57,7 +57,6 @@ export const AuthStorage = {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
     } catch (error) {
-      console.warn("Failed to parse user info:", error);
     }
 
     return null;
@@ -71,7 +70,6 @@ export const AuthStorage = {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
     } catch (error) {
-      console.warn("Failed to parse user info:", error);
       AuthStorage.clear(); // Clear corrupt data
     }
 

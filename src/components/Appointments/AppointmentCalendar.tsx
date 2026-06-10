@@ -22,6 +22,12 @@ interface CalendarProps {
   doctors?: Doctor[];
   onBookAppointment?: (doctorId: string, date: Date, time: string) => void;
   onEditAppointment?: (appointment: any) => void;
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+  selectedDoctorId?: string | null;
+  setSelectedDoctorId?: (id: string | null) => void;
+  selectedDate?: string;
+  setSelectedDate?: (date: string) => void;
 }
 
 export function AppointmentCalendar({
@@ -29,17 +35,45 @@ export function AppointmentCalendar({
   doctors = [],
   onBookAppointment,
   onEditAppointment,
+  searchTerm,
+  setSearchTerm,
+  selectedDoctorId,
+  setSelectedDoctorId,
+  selectedDate: propSelectedDate,
+  setSelectedDate: propSetSelectedDate,
 }: CalendarProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+  const [localSearch, setLocalSearch] = useState("");
+  const currentSearch = searchTerm !== undefined ? searchTerm : localSearch;
+  const currentSetSearch = setSearchTerm ?? setLocalSearch;
+
+  const [localDoctorId, setLocalDoctorId] = useState<string | null>(null);
+  const currentDoctorId = selectedDoctorId !== undefined ? selectedDoctorId : localDoctorId;
+  const currentSetDoctorId = setSelectedDoctorId ?? setLocalDoctorId;
+
+  const [localDate, setLocalDate] = useState(() => new Date());
+  const selectedDateObj = useMemo(() => {
+    if (propSelectedDate) {
+      return new Date(propSelectedDate);
+    }
+    return localDate;
+  }, [propSelectedDate, localDate]);
+
+  const handleSetSelectedDateObj = (date: Date) => {
+    if (propSetSelectedDate) {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      propSetSelectedDate(dateStr);
+    } else {
+      setLocalDate(date);
+    }
+  };
+
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [monthOffset, setMonthOffset] = useState(0);
 
   const formattedDate = useMemo(() => {
-    if (!selectedDate) return "";
-    return `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-  }, [selectedDate]);
+    if (!selectedDateObj) return "";
+    return `${selectedDateObj.getFullYear()}-${String(selectedDateObj.getMonth() + 1).padStart(2, "0")}-${String(selectedDateObj.getDate()).padStart(2, "0")}`;
+  }, [selectedDateObj]);
 
   const referenceDate = useMemo(() => {
     const today = new Date();
@@ -48,11 +82,12 @@ export function AppointmentCalendar({
 
   const { data: calendarDataResponse } = useAppointmentCalendarQuery(
     referenceDate.getMonth() + 1,
-    referenceDate.getFullYear()
+    referenceDate.getFullYear(),
+    currentDoctorId
   );
 
-  const { data: availableSlotsResponse, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
-    selectedDoctorId,
+  const { data: availableSlotsResponse, isLoading: isLoadingSlots, refetch: refetchAvailableSlots } = useAvailableSlotsQuery(
+    currentDoctorId,
     formattedDate
   );
 
@@ -122,7 +157,7 @@ export function AppointmentCalendar({
       const isBooked = !slot.is_available;
       
       const now = new Date();
-      const slotTime = new Date(selectedDate);
+      const slotTime = new Date(selectedDateObj);
       const [sh, sm] = time24.split(":");
       slotTime.setHours(parseInt(sh, 10), parseInt(sm, 10), 0, 0);
       
@@ -133,54 +168,56 @@ export function AppointmentCalendar({
         isPast: slotTime < now,
       };
     });
-  }, [availableSlotsResponse, selectedDate]);
+  }, [availableSlotsResponse, selectedDateObj]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-280px)] xl:overflow-hidden">
       <DoctorSidebar
         doctors={doctors}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedDoctorId={selectedDoctorId}
-        setSelectedDoctorId={setSelectedDoctorId}
+        searchTerm={currentSearch}
+        setSearchTerm={currentSetSearch}
+        selectedDoctorId={currentDoctorId}
+        setSelectedDoctorId={currentSetDoctorId}
       />
 
       <CalendarGrid
         monthOffset={monthOffset}
         setMonthOffset={setMonthOffset}
         rollingDates={rollingDates}
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
+        selectedDate={selectedDateObj}
+        setSelectedDate={handleSetSelectedDateObj}
         appointmentsByDate={calendarDataResponse?.data?.appointments_by_date || {}}
         getDayAppointmentsForDate={(date) =>
           appointments.filter(
             (a) =>
               new Date(a.date).toDateString() === date.toDateString() &&
-              (!selectedDoctorId || a.doctorId === selectedDoctorId),
+              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId)),
           )
         }
         monthNames={monthNames}
+        currentDoctorId={currentDoctorId}
+        onRefetchSlots={() => refetchAvailableSlots()}
       />
 
       <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
         <DayAgenda
-          selectedDate={selectedDate}
+          selectedDate={selectedDateObj}
           appointments={appointments.filter(
             (a) =>
-              new Date(a.date).toDateString() === selectedDate.toDateString() &&
-              (!selectedDoctorId || a.doctorId === selectedDoctorId),
+              new Date(a.date).toDateString() === selectedDateObj.toDateString() &&
+              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId)),
           )}
           onEditAppointment={onEditAppointment}
           formatTime={formatTime}
         />
         <BookingSlots
-          selectedDoctorId={selectedDoctorId}
+          selectedDoctorId={currentDoctorId}
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           availableSlots={availableSlots}
           isLoading={isLoadingSlots}
           onBookAppointment={(doctorId, time) =>
-            onBookAppointment?.(doctorId, selectedDate, time)
+            onBookAppointment?.(doctorId, selectedDateObj, time)
           }
         />
       </div>

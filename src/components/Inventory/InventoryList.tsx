@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Package,
-  AlertTriangle,
+  MoreVertical,
   Edit,
   Trash2,
   RefreshCw,
-  MoreVertical,
+  MinusCircle,
+  SlidersHorizontal,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
@@ -18,6 +21,8 @@ import {
   StatusBadge,
   MetricCard,
 } from "@/components/ui";
+import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
+import { useInventorySummaryQuery } from "../../hooks/inventory/useInventorySummaryQuery";
 
 interface InventoryItem {
   id: string;
@@ -39,6 +44,9 @@ interface InventoryListProps {
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onRestock: (item: InventoryItem) => void;
+  onConsume: (item: InventoryItem) => void;
+  onAdjust: (item: InventoryItem) => void;
+  onViewHistory: (item: InventoryItem) => void;
 }
 
 const CAT_META: Record<
@@ -65,22 +73,55 @@ export function InventoryList({
   onEditItem,
   onDeleteItem,
   onRestock,
+  onConsume,
+  onAdjust,
+  onViewHistory,
 }: InventoryListProps) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [cat, setCat] = useState("all");
+  const [lowStockFilter, setLowStockFilter] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const filtered = inventory.filter((item) => {
-    const q = search.toLowerCase();
-    return (
-      (item.name.toLowerCase().includes(q) ||
-        item.supplier.toLowerCase().includes(q)) &&
-      (cat === "all" || item.category === cat)
-    );
-  });
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
-  const lowCount = inventory.filter((i) => i.currentStock <= i.minStock).length;
+  const { data: summary } = useInventorySummaryQuery({ refetchOnMount: "always" });
+  const { data: listData, isLoading } = useInventoryListQuery({
+    search: debouncedSearch,
+    category: cat,
+    low_stock: lowStockFilter
+  }, { refetchOnMount: "always" });
+
+  let rawList: any[] = [];
+  if (Array.isArray(listData)) rawList = listData;
+  else if (Array.isArray(listData?.items)) rawList = listData.items;
+  else if (Array.isArray(listData?.data)) rawList = listData.data;
+  else if (Array.isArray(listData?.data?.items)) rawList = listData.data.items;
+  else if (Array.isArray(listData?.responseObject)) rawList = listData.responseObject;
+  
+  const filtered = rawList.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    currentStock: item.current_stock ?? item.currentStock ?? 0,
+    minStock: item.min_stock ?? item.minStock ?? 0,
+    maxStock: item.max_stock ?? item.maxStock ?? 100,
+    unit: item.unit ?? "pieces",
+    supplier: item.supplier ?? "Unknown",
+    lastRestocked: item.last_restocked ?? item.lastRestocked ?? "",
+    cost: item.unit_cost ?? item.cost ?? 0,
+    expiryDate: item.expiry_date ?? item.expiryDate ?? "",
+    batchNumber: item.batch_number ?? item.batchNumber ?? "",
+  }));
+
+  const summaryData = (summary as any)?.data || summary;
+  const lowCount = summaryData?.low_stock_count || 0;
 
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -125,7 +166,7 @@ export function InventoryList({
       key: "category",
       header: "Category",
       render: (item: InventoryItem) => {
-        const meta = CAT_META[item.category] || {
+        const meta = CAT_META[item.category?.toLowerCase()] || {
           label: item.category,
           variant: "gray",
         };
@@ -192,15 +233,6 @@ export function InventoryList({
       align: "center" as const,
       render: (item: InventoryItem) => (
         <div className="flex items-center justify-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-primary"
-            onClick={() => onRestock(item)}
-            title="Restock"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
           <div className="relative">
             <Button
               variant="ghost"
@@ -222,7 +254,44 @@ export function InventoryList({
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
-                      <button
+                      <Button
+                        onClick={() => {
+                          onRestock(item);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
+                      >
+                        <RefreshCw className="w-4 h-4" /> Restock
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          onConsume(item);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
+                      >
+                        <MinusCircle className="w-4 h-4" /> Consume
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          onAdjust(item);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
+                      >
+                        <SlidersHorizontal className="w-4 h-4" /> Adjust
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          onViewHistory(item);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
+                      >
+                        <Clock className="w-4 h-4" /> History
+                      </Button>
+                      <div className="h-px bg-border my-1 mx-2" />
+                      <Button
                         onClick={() => {
                           onEditItem(item.id);
                           setOpenMenuId(null);
@@ -230,8 +299,8 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <Edit className="w-4 h-4" /> Edit Item
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           onDeleteItem(item.id);
                           setOpenMenuId(null);
@@ -239,7 +308,7 @@ export function InventoryList({
                         className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
                       >
                         <Trash2 className="w-4 h-4" /> Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>,
@@ -252,10 +321,10 @@ export function InventoryList({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Inventory Management"
-        subtitle={`${inventory.length} total stock items recorded`}
+        subtitle={`${summaryData?.total_items || 0} total stock items recorded`}
         action={
           <Button onClick={onAddItem} className="gap-2">
             <Plus className="w-4 h-4" /> Add New Item
@@ -266,19 +335,21 @@ export function InventoryList({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           label="Total Items"
-          value={inventory.length}
+          value={summaryData?.total_items || 0}
           icon={<Package className="w-5 h-5" />}
           variant="indigo"
         />
-        <MetricCard
-          label="Low Stock Alert"
-          value={lowCount}
-          variant={lowCount > 0 ? "rose" : "emerald"}
-          icon={<AlertTriangle className="w-5 h-5" />}
-        />
+        <div onClick={() => setLowStockFilter(!lowStockFilter)} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <MetricCard
+            label={lowStockFilter ? "Showing Low Stock" : "Low Stock Alert"}
+            value={lowCount}
+            variant={lowCount > 0 ? "rose" : "emerald"}
+            icon={<AlertTriangle className="w-5 h-5" />}
+          />
+        </div>
         <MetricCard
           label="Total Categories"
-          value={Object.keys(CAT_META).length}
+          value={summaryData?.total_categories || 0}
           variant="primary"
           icon={<Package className="w-5 h-5" />}
         />

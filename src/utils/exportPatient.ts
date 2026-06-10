@@ -22,7 +22,6 @@ export const exportPatientReport = async (
       }
     }
   } catch (err) {
-    console.error("Failed to fetch detailed patient for export", err);
   }
 
   const patientAppointments = appointments.filter(
@@ -117,10 +116,10 @@ export const exportPatientReport = async (
         </style>
       </head>
       <body>
-        <div class="watermark">DENTALCARE PRO</div>
+        <div class="watermark">OPAL SMILES</div>
         
         <div class="header">
-          <h1>🦷 DentalCare Pro</h1>
+          <h1>🦷 Opal Smiles Dental Studio</h1>
           <p>Advanced Multispeciality Dental Clinic & Implant Centre</p>
           <p>#102, C Block, South Extension, New Delhi | Ph: 9204972991</p>
         </div>

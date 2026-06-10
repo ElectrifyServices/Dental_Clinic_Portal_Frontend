@@ -70,7 +70,7 @@ export function PatientForm({
     }
   }, [patient]);
 
-  const [showOtherTreatment, setShowOtherTreatment] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +88,6 @@ export function PatientForm({
         parentId: type === "person" ? parentId : undefined,
       });
     } catch (err) {
-      console.error("Patient save failed", err);
       setFormErrors({ submit: "Failed to save patient. Please try again." });
     } finally {
       setLoading(false);
@@ -170,14 +169,14 @@ export function PatientForm({
       }
     >
       <div className="space-y-8">
-        <div className="flex items-center gap-12 pb-6 border-b border-border">
+        <div className="flex items-center gap-6 md:gap-12 pb-6 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap -mx-6 px-6">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },
             { num: 3, label: "Consent" },
             { num: 4, label: "Review" },
           ].map((s) => (
-            <div key={s.num} className="flex items-center gap-3 relative">
+            <div key={s.num} className="flex items-center gap-3 relative shrink-0">
               {getStepIndicator(s.num)}
               <span
                 className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? "text-primary" : "text-muted-foreground/60"}`}
@@ -214,6 +213,7 @@ export function PatientForm({
               formData={formData}
               setFormData={setFormData}
               handleChange={handleChange}
+              validationErrors={validationErrors}
               matchedCorporateEmp={matchedCorporateEmp}
               corporatePlans={corporatePlans}
               medicalSearch={medicalSearch}
@@ -225,8 +225,6 @@ export function PatientForm({
               selectedAllergies={selectedAllergies}
               setSelectedAllergies={setSelectedAllergies}
               handleDentalFilesUpload={handleDentalFilesUpload}
-              showOtherTreatment={showOtherTreatment}
-              setShowOtherTreatment={setShowOtherTreatment}
             />
           )}
           {step === 3 && (

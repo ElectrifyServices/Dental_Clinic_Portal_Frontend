@@ -1,6 +1,9 @@
-﻿import React from "react";
-import { Calendar } from "lucide-react";
+import React, { useMemo } from "react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
+import { Button } from "@/components/ui";
+import { Calendar, Clock, Loader2, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 
 interface ScheduleFieldsProps {
   date: string;
@@ -14,6 +17,16 @@ interface ScheduleFieldsProps {
   onDoctorChange: (val: string) => void;
 }
 
+function convert12to24(time12: string): string {
+  if (!time12) return "";
+  const [timePart, modifier] = time12.split(" ");
+  if (!modifier) return time12;
+  let [hours, minutes] = timePart.split(":");
+  if (hours === "12") hours = "00";
+  if (modifier?.toUpperCase() === "PM") hours = String(parseInt(hours, 10) + 12);
+  return `${hours.padStart(2, "0")}:${minutes}`;
+}
+
 export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
   date,
   time,
@@ -25,9 +38,45 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
   onDurationChange,
   onDoctorChange,
 }) => {
+  const { data: slotsResponse, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
+    doctorId || null,
+    date || null
+  );
+
+  const slots = useMemo(() => {
+    if (!slotsResponse?.data?.slots) return [];
+    const now = new Date();
+    return slotsResponse.data.slots.map((slot) => {
+      const time24 = convert12to24(slot.time);
+      const [h, m] = time24.split(":");
+      const slotTime = new Date(date);
+      slotTime.setHours(parseInt(h || "0"), parseInt(m || "0"), 0, 0);
+      const isPast = slotTime < now;
+      return {
+        time12: slot.time,
+        time24,
+        isAvailable: slot.is_available,
+        isPast,
+      };
+    });
+  }, [slotsResponse, date]);
+
+  const hasSlots = slots.length > 0;
+
+  const handleSlotClick = (time24: string) => {
+    const syntheticEvent = {
+      target: { name: "time", value: time24 },
+    } as React.ChangeEvent<HTMLInputElement>;
+    onTimeChange(syntheticEvent);
+  };
+
+  const handleDoctorSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onDoctorChange(e.target.value);
+  };
+
   return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-2 mb-4">
+    <section className="space-y-3">
+      <div className="flex items-center gap-2 mb-2">
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <Calendar className="w-4 h-4 text-primary" />
         </div>
@@ -37,67 +86,156 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
         <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Date — editable */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Date
           </label>
           <Input
             type="date"
+            name="date"
             value={date}
             onChange={onDateChange}
             required
-            disabled
-            className="h-11 rounded-xl bg-muted/50 border-border opacity-70 cursor-not-allowed"
+            className="h-11 rounded-xl border-border"
           />
         </div>
+
+        {/* Time — editable */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Time
           </label>
           <Input
             type="time"
+            name="time"
             value={time}
             onChange={onTimeChange}
             required
-            disabled
-            className="h-11 rounded-xl bg-muted/50 border-border opacity-70 cursor-not-allowed"
+            className="h-11 rounded-xl border-border"
           />
         </div>
+
+        {/* Duration */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Est. Duration
           </label>
-          <select
+          <Select
             value={duration}
-            onChange={(e) => onDurationChange(e.target.value)}
-            className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none appearance-none font-medium"
+            onValueChange={onDurationChange}
           >
-            <option value="">Default (15m)</option>
-            <option value="15">15 Minutes</option>
-            <option value="30">30 Minutes</option>
-            <option value="45">45 Minutes</option>
-            <option value="60">1 Hour</option>
-          </select>
+            <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium">
+              <SelectValue placeholder="Default (15m)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15 Minutes</SelectItem>
+              <SelectItem value="30">30 Minutes</SelectItem>
+              <SelectItem value="45">45 Minutes</SelectItem>
+              <SelectItem value="60">1 Hour</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
+      {/* Available Slots Section */}
+      {doctorId && date && (
+        <div className="space-y-3 p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">
+              Available Slots
+            </span>
+            {isLoadingSlots && (
+              <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin ml-1" />
+            )}
+          </div>
+
+          {isLoadingSlots ? (
+            <div className="flex gap-2 flex-wrap">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-8 w-20 rounded-xl bg-emerald-100 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : hasSlots ? (
+            <div className="flex gap-2 flex-wrap max-h-40 overflow-y-auto p-1.5 custom-scrollbar">
+               {slots.map((slot) => {
+                const isSelected = time === slot.time24;
+                const isBooked = !slot.isAvailable || slot.isPast;
+                return (
+                  <Button
+                    key={slot.time24}
+                    type="button"
+                    disabled={isBooked}
+                    onClick={() => !isBooked && handleSlotClick(slot.time24)}
+                    className={`
+                      relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5 h-auto
+                      ${isSelected
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
+                        : isBooked
+                        ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
+                        : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
+                      }
+                    `}
+                    title={slot.isPast ? "Time slot has passed" : isBooked ? "Already booked" : `Select ${slot.time12}`}
+                  >
+                    {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
+                    {slot.time12}
+                    {isBooked && (
+                      <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-400 border border-white" />
+                    )}
+                  </Button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[10px] text-emerald-600/60 font-medium italic py-1">
+              No slots available for this doctor on selected date.
+            </p>
+          )}
+
+          <p className="text-[9px] text-emerald-600/50 font-medium flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-200 border border-emerald-300" />
+              Available
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-600" />
+              Selected
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm inline-block bg-red-100 border border-red-200" />
+              Booked
+            </span>
+            <span className="ml-auto">Click slot to auto-fill time, or enter manually above.</span>
+          </p>
+        </div>
+      )}
+
+      {/* Assigned Doctor — editable */}
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
           Assigned Doctor
         </label>
-        <select
+        <Select
           value={doctorId}
-          onChange={(e) => onDoctorChange(e.target.value)}
-          disabled
-          className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-muted/50 opacity-70 cursor-not-allowed outline-none appearance-none font-bold"
+          onValueChange={onDoctorChange}
         >
-          {doctors.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name} ({d.specialization})
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-bold">
+            <SelectValue placeholder="-- Select Doctor --" />
+          </SelectTrigger>
+          <SelectContent>
+            {doctors.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {d.name} ({d.specialization})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </section>
   );

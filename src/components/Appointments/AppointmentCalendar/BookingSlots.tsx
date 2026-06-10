@@ -28,7 +28,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
             <h3 className="text-sm font-bold text-foreground tracking-tight">Available Slots</h3>
           </div>
 
-          <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar pr-1">
+          <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar p-1">
             {isLoading ? (
               <div className="col-span-3 py-6 text-center">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Loading slots...</p>
@@ -37,7 +37,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
               availableSlots.map((slot, idx) => {
                 const isDisabled = slot.isBooked || slot.isPast;
                 return (
-                  <button
+                  <Button
                     key={idx}
                     disabled={isDisabled}
                     onClick={() => setSelectedTime(slot.time24)}
@@ -48,9 +48,9 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
                   >
                     {slot.time12}
                     {slot.isBooked && (
-                      <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
+                      <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
                     )}
-                  </button>
+                  </Button>
                 );
               })
             ) : (

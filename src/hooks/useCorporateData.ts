@@ -8,8 +8,14 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<any[]>('corporateEmployees', []);
 
+  const isEnabled = useMemo(() => {
+    const path = window.location.pathname;
+    const allowed = path.includes('/corporate-plans') || path.includes('/patients') || path.includes('/billing') || path.includes('/patient-queue') || path.includes('/appointments') || path.includes('/dashboard');
+    return allowed;
+  }, []);
+
   const { data: apiPlansData, refetch: refetchPlans, isLoading: isPlansLoading } = useCorporatePlansQuery({
-    enabled: true,
+    enabled: isEnabled,
     ...params
   });
 
@@ -42,8 +48,30 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
 
     const mapProcedureLabelToKey = (label: string): string => {
       const labelMap: Record<string, string> = {
+        "Consultation / Check-up": "consultation",
         "Consultation": "consultation",
+        "follow up visit": "follow-up",
+        "X-ray review": "xray-review",
         "Teeth Cleaning": "cleaning",
+        "Tooth Pain / Emergency": "emergency",
+        "Filling": "filling",
+        "Root Canal Treatment": "root-canal",
+        "Extraction / Wisdom Tooth": "extraction",
+        "Braces / Aligners": "orthodontics",
+        "Implants": "implants",
+        "full mouth rehabilitation": "full-mouth-rehab",
+        "Veneers/Cosmetic Dentistry": "veneers-cosmetic",
+        "Child Dentistry": "child-dentistry",
+        "Crown": "crown",
+        "Denture": "denture",
+        "Toothache": "toothache",
+        "Swelling / Infection": "swelling-infection",
+        "Broken Tooth": "broken-tooth",
+        "Trauma / Injury": "trauma-injury",
+        "other/ not sure": "other",
+        
+        // Legacy mapping fallbacks
+        "Teeth Cleaning & Scaling": "cleaning",
         "Dental Filling": "filling",
         "Tooth Extraction": "extraction",
         "Root Canal": "root-canal",
@@ -158,5 +186,6 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
     handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees,
     handleDeleteCorporateEmployee, handleUpdateCorporateEmployee,
     isPlansLoading,
+    refetchCorporate: refetchPlans,
   };
 }

@@ -6,11 +6,11 @@ import { TenantProvider } from "./contexts/TenantContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { LoginForm } from "./components/Auth/LoginForm";
+import { getParsedPermissions } from "./utils/permission";
 
 import { DashboardPage } from "./pages/DashboardPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { PatientsPage } from "./pages/PatientsPage";
-import { QueuePage } from "./pages/QueuePage";
 import { TreatmentsPage } from "./pages/TreatmentsPage";
 import { BillingPage } from "./pages/BillingPage";
 import { StaffPage } from "./pages/StaffPage";
@@ -20,6 +20,7 @@ import { ConsentPage } from "./pages/ConsentPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { CorporatePlansPage } from "./pages/CorporatePlansPage";
+import ConsultationPage from "./pages/ConsultationPage";
 
 const PERMISSION_MAP: Record<string, string[]> = {
   dashboard: ["DASHBOARD"],
@@ -37,9 +38,30 @@ const PERMISSION_MAP: Record<string, string[]> = {
   "corporate-plans": ["CORPORATE_PLANS"],
 };
 
+function getDefaultRedirect(userPermissions: string[]): string {
+  if (!userPermissions || userPermissions.length === 0) return "/dashboard";
+
+  const hasAll = userPermissions.some((p) => p.toUpperCase() === "ALL");
+  if (hasAll || userPermissions.some((p) => p.toUpperCase() === "DASHBOARD")) {
+    return "/dashboard";
+  }
+
+  // Find the first route in PERMISSION_MAP that matches userPermissions
+  for (const [route, allowedPerms] of Object.entries(PERMISSION_MAP)) {
+    const hasAccess = allowedPerms.some((p) =>
+      userPermissions.some((up) => up.toUpperCase() === p.toUpperCase())
+    );
+    if (hasAccess) {
+      return `/${route}`;
+    }
+  }
+
+  return "/dashboard";
+}
+
 function GuardedRoute({ path, element }: { path: string; element: React.ReactElement }) {
   const { state } = useAuth();
-  const userPermissions: string[] = (state.user as any)?.module_permission || [];
+  const userPermissions = getParsedPermissions(state.user);
 
   // If user has ALL permission (e.g. SUPER_ADMIN), allow access to every route
   const hasAll = userPermissions.some((p) => p.toUpperCase() === "ALL");
@@ -53,7 +75,7 @@ function GuardedRoute({ path, element }: { path: string; element: React.ReactEle
         userPermissions.some((up) => up.toUpperCase() === p.toUpperCase())
       );
       if (!hasAccess) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to={getDefaultRedirect(userPermissions)} replace />;
       }
     }
   }
@@ -63,14 +85,18 @@ function GuardedRoute({ path, element }: { path: string; element: React.ReactEle
 function ProtectedRoutes() {
   const { state } = useAuth();
   if (!state.isAuthenticated) return <Navigate to="/login" replace />;
+
+  const userPermissions = getParsedPermissions(state.user);
+  const defaultPath = getDefaultRedirect(userPermissions);
+
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route index element={<Navigate to={defaultPath} replace />} />
         <Route path="/dashboard" element={<GuardedRoute path="/dashboard" element={<DashboardPage />} />} />
         <Route path="/appointments" element={<GuardedRoute path="/appointments" element={<AppointmentsPage />} />} />
         <Route path="/patients" element={<GuardedRoute path="/patients" element={<PatientsPage />} />} />
-        <Route path="/patient-queue" element={<GuardedRoute path="/patient-queue" element={<QueuePage />} />} />
+        <Route path="/patient-queue" element={<GuardedRoute path="/patient-queue" element={<ConsultationPage />} />} />
         <Route path="/treatments" element={<GuardedRoute path="/treatments" element={<TreatmentsPage />} />} />
         <Route path="/billing" element={<GuardedRoute path="/billing" element={<BillingPage />} />} />
         <Route path="/staff" element={<GuardedRoute path="/staff" element={<StaffPage />} />} />
@@ -80,7 +106,7 @@ function ProtectedRoutes() {
         <Route path="/reports" element={<GuardedRoute path="/reports" element={<ReportsPage />} />} />
         <Route path="/inventory" element={<GuardedRoute path="/inventory" element={<InventoryPage />} />} />
         <Route path="/corporate-plans" element={<GuardedRoute path="/corporate-plans" element={<CorporatePlansPage />} />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to={defaultPath} replace />} />
       </Route>
     </Routes>
   );
@@ -88,9 +114,12 @@ function ProtectedRoutes() {
 
 function AuthRouter() {
   const { state } = useAuth();
-  if (state.isAuthenticated) return <Navigate to="/dashboard" replace />;
+  const userPermissions = getParsedPermissions(state.user);
+  if (state.isAuthenticated) return <Navigate to={getDefaultRedirect(userPermissions)} replace />;
   return <LoginForm />;
 }
+
+import { Toaster } from "./components/ui/Toast";
 
 export default function App() {
   return (
@@ -104,6 +133,7 @@ export default function App() {
                 <Route path="/*" element={<ProtectedRoutes />} />
               </Routes>
             </BrowserRouter>
+            <Toaster />
           </ModalProvider>
         </AppProvider>
       </AuthProvider>

@@ -6,18 +6,26 @@ interface EMRRecord {
   id: string;
   patientId: string;
   patientName: string;
+  latestRecordTitle?: string;
+  totalRecords?: number;
+  lastDoctorName?: string;
+  lastVisitDate?: string;
   date: string;
-  type: 'consultation' | 'prescription' | 'lab-report' | 'x-ray' | 'treatment-note' | 'billing-record' | 'appointment-visit';
+  type: string;
   title: string;
   content: string;
   attachments?: string[];
-  doctorId: string;
+  doctorId?: string;
   doctorName: string;
   timeline?: any[];
 }
 
 interface EMRListProps {
   records: EMRRecord[];
+  search: string;
+  onSearchChange: (val: string) => void;
+  typeFilter: string;
+  onTypeFilterChange: (val: string) => void;
   onAddRecord: () => void;
   onViewRecord: (record: EMRRecord) => void;
   onExportRecord: (record: EMRRecord) => void;
@@ -26,75 +34,83 @@ interface EMRListProps {
 const TYPE_META: Record<string, { label: string; icon: React.ReactNode; variant: 'blue' | 'green' | 'violet' | 'amber' | 'indigo' | 'gray' }> = {
   consultation: { label: 'Consultation', icon: <Stethoscope className="w-3.5 h-3.5" />, variant: 'blue' },
   prescription: { label: 'Prescription', icon: <Pill className="w-3.5 h-3.5" />, variant: 'green' },
-  'lab-report': { label: 'Lab Report', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },
-  'x-ray': { label: 'X-Ray', icon: <Camera className="w-3.5 h-3.5" />, variant: 'amber' },
+  'treatment-plan': { label: 'Treatment Plan', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },
   'treatment-note': { label: 'Treatment Note', icon: <FileText className="w-3.5 h-3.5" />, variant: 'indigo' },
+  'clinical-observation': { label: 'Clinical Obs.', icon: <FileText className="w-3.5 h-3.5" />, variant: 'blue' },
+  'dental-chart-record': { label: 'Dental Chart', icon: <FileText className="w-3.5 h-3.5" />, variant: 'amber' },
+  'x-ray': { label: 'X-Ray', icon: <Camera className="w-3.5 h-3.5" />, variant: 'amber' },
+  'cbct-scan': { label: 'CBCT Scan', icon: <Camera className="w-3.5 h-3.5" />, variant: 'amber' },
+  'intraoral-photo': { label: 'Intraoral Photo', icon: <Camera className="w-3.5 h-3.5" />, variant: 'amber' },
+  'lab-report': { label: 'Lab Report', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },
+  'procedure-record': { label: 'Procedure', icon: <FileText className="w-3.5 h-3.5" />, variant: 'indigo' },
+  'surgery-record': { label: 'Surgery', icon: <FileText className="w-3.5 h-3.5" />, variant: 'indigo' },
+  'implant-record': { label: 'Implant', icon: <FileText className="w-3.5 h-3.5" />, variant: 'indigo' },
+  'follow-up-note': { label: 'Follow-up', icon: <FileText className="w-3.5 h-3.5" />, variant: 'blue' },
+  'medical-history-update': { label: 'Medical History', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },
   'billing-record': { label: 'Billing Record', icon: <CreditCard className="w-3.5 h-3.5" />, variant: 'gray' },
+  'insurance-document': { label: 'Insurance Doc', icon: <CreditCard className="w-3.5 h-3.5" />, variant: 'gray' },
   'appointment-visit': { label: 'Visit', icon: <Calendar className="w-3.5 h-3.5" />, variant: 'blue' },
+  'referral-letter': { label: 'Referral Letter', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },
+  'discharge-summary': { label: 'Discharge Sum.', icon: <FileText className="w-3.5 h-3.5" />, variant: 'gray' },
+  'other-document': { label: 'Other Doc', icon: <FileText className="w-3.5 h-3.5" />, variant: 'gray' },
 };
 
 const TYPE_FILTERS = [
   { key: 'all', label: 'All' },
-  { key: 'consultation', label: 'Consultation' },
-  { key: 'prescription', label: 'Prescription' },
-  { key: 'lab-report', label: 'Lab Report' },
-  { key: 'x-ray', label: 'X-Ray' },
-  { key: 'treatment-note', label: 'Treatment Note' }
+  { key: 'previous-prescriptions', label: 'Previous Prescriptions' },
+  { key: 'blood-reports', label: 'Blood Reports' },
+  { key: 'ecg-reports', label: 'ECG Reports' },
+  { key: 'physician-clearance', label: 'Physician Clearance' },
+  { key: 'xrays-imaging', label: 'X-Rays / Imaging' },
+  { key: 'discharge-summary', label: 'Discharge Summary' },
+  { key: 'other', label: 'Other' }
 ];
 
-export function EMRList({ records, onAddRecord, onViewRecord, onExportRecord }: EMRListProps) {
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-
-  const filtered = records.filter(r => {
-    const q = search.toLowerCase();
-    const matchSearch = r.patientName.toLowerCase().includes(q) || r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q);
-    const matchType = typeFilter === 'all' || r.type === typeFilter;
-    return matchSearch && matchType;
-  });
-
+export function EMRList({
+  records,
+  search,
+  onSearchChange,
+  typeFilter,
+  onTypeFilterChange,
+  onAddRecord,
+  onViewRecord,
+  onExportRecord,
+}: EMRListProps) {
   const columns = [
     {
       key: 'patient',
       header: 'Patient',
       render: (r: EMRRecord) => (
-        <div className="font-semibold text-foreground">{r.patientName}</div>
+        <div className="font-semibold text-foreground">{r.patientName || '-'}</div>
       )
     },
     {
-      key: 'title',
-      header: 'Title',
+      key: 'latestRecord',
+      header: 'Latest Record',
       render: (r: EMRRecord) => (
-        <div className="max-w-xs">
-          <div className="font-medium text-foreground truncate">{r.title}</div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate">{r.content}</div>
-        </div>
+        <span className="text-muted-foreground font-medium">{r.latestRecordTitle || '-'}</span>
       )
     },
     {
-      key: 'type',
-      header: 'Type',
-      render: (r: EMRRecord) => {
-        const tm = TYPE_META[r.type] || TYPE_META.consultation;
-        return (
-          <StatusBadge variant={tm.variant} className="flex items-center gap-1 w-fit">
-            {tm.icon}
-            {tm.label}
-          </StatusBadge>
-        );
-      }
-    },
-    {
-      key: 'doctor',
-      header: 'Doctor',
-      render: (r: EMRRecord) => <span className="text-muted-foreground">{r.doctorName}</span>
-    },
-    {
-      key: 'date',
-      header: 'Date',
+      key: 'totalRecords',
+      header: 'Total Records',
       render: (r: EMRRecord) => (
-        <span className="text-muted-foreground whitespace-nowrap">
-          {r.date ? new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+        <span className="text-muted-foreground font-medium">{r.totalRecords ?? '-'}</span>
+      )
+    },
+    {
+      key: 'lastDoctor',
+      header: 'Last Doctor',
+      render: (r: EMRRecord) => (
+        <span className="text-muted-foreground font-medium">{r.lastDoctorName || '-'}</span>
+      )
+    },
+    {
+      key: 'lastVisit',
+      header: 'Last Visit',
+      render: (r: EMRRecord) => (
+        <span className="text-muted-foreground whitespace-nowrap font-medium">
+          {r.lastVisitDate || '-'}
         </span>
       )
     },
@@ -115,11 +131,13 @@ export function EMRList({ records, onAddRecord, onViewRecord, onExportRecord }: 
     }
   ];
 
+  const totalRecordsCount = records.reduce((sum, r) => sum + (r.totalRecords || 1), 0);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Medical Records"
-        subtitle={`${records.length} records across all patients`}
+        subtitle={`${totalRecordsCount} records across all patients`}
         action={
           <Button onClick={onAddRecord} className="gap-2">
             <Plus className="w-4 h-4" /> Add Record
@@ -130,20 +148,20 @@ export function EMRList({ records, onAddRecord, onViewRecord, onExportRecord }: 
       <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
-          onChange={setSearch}
+          onChange={onSearchChange}
           placeholder="Search by patient, title or content…"
           className="flex-1"
         />
         <FilterTabs
           tabs={TYPE_FILTERS}
           active={typeFilter}
-          onChange={setTypeFilter}
+          onChange={onTypeFilterChange}
         />
       </div>
 
       <DataTable
         columns={columns}
-        data={filtered}
+        data={records}
         rowKey={(r) => r.id}
         emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
         emptyTitle="No records found"

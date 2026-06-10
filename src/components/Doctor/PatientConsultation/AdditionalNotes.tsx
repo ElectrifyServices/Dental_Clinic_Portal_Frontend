@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 ﻿import React from "react";
 import { MessageSquare } from "lucide-react";
 
@@ -9,11 +11,11 @@ interface AdditionalNotesProps {
 export function AdditionalNotes({ consultationNotes, onChange }: AdditionalNotesProps) {
   return (
     <div className="px-6">
-      <label className="block text-sm font-semibold text-muted-foreground mb-2">
+      <Label className="block text-sm font-semibold text-muted-foreground mb-2">
         <MessageSquare className="w-4 h-4 inline mr-2" />
         Additional Consultation Notes
-      </label>
-      <textarea
+      </Label>
+      <Textarea
         name="consultationNotes"
         value={consultationNotes}
         onChange={onChange}

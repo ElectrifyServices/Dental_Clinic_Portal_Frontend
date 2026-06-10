@@ -286,6 +286,23 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       if (email && !/\S+@\S+\.\S+/.test(email))
         errors.email = "Please enter a valid email address";
     }
+    if (stepNumber === 2) {
+      const prevDocName = form.getValues("previousDoctorName")?.trim();
+      const prevClinicName = form.getValues("previousClinicName")?.trim();
+      const prevPhone = form.getValues("previousDoctorPhone")?.trim();
+      const prevAddress = form.getValues("previousClinicAddress")?.trim();
+      const prevDate = form.getValues("previousLastVisitDate")?.trim();
+      const prevReason = form.getValues("previousReason")?.trim();
+
+      const anyFilled = prevDocName || prevClinicName || prevPhone || prevAddress || prevDate || prevReason;
+      
+      if (anyFilled) {
+        if (!prevDocName) errors.previousDoctorName = "Previous Doctor Name is required";
+        if (!prevClinicName) errors.previousClinicName = "Clinic Name is required";
+        if (!prevAddress) errors.previousClinicAddress = "Clinic Address is required";
+        if (!prevDate) errors.previousLastVisitDate = "Last Visit Date is required";
+      }
+    }
     if (stepNumber === 3) {
       const age = calculateAge(form.getValues("dateOfBirth") ?? "");
       if (age > 0 && age < 18) {
@@ -301,16 +318,26 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     return errors;
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const modalContainers = document.querySelectorAll(".overflow-y-auto");
+    modalContainers.forEach((el) => {
+      el.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
+
   const handleNext = (step: number, setStep: (s: number) => void) => {
     const errors = validateStep(step);
     setValidationErrors(errors);
     if (Object.keys(errors).length === 0) {
       setStep(step + 1);
+      setTimeout(scrollToTop, 50);
     }
   };
 
   const handlePrevious = (step: number, setStep: (s: number) => void) => {
     setStep(step - 1);
+    setTimeout(scrollToTop, 50);
   };
 
   const applyCustomRelation = () => {

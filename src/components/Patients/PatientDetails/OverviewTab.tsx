@@ -9,6 +9,7 @@ import {
   Activity,
   UserPlus,
 } from "lucide-react";
+import { Card } from "@/components/ui";
 
 interface OverviewTabProps {
   patient: any;
@@ -19,10 +20,26 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   patient,
   patientAppointments,
 }) => {
+  const formatLastVisitDate = (visitVal?: string | number | Date) => {
+    if (!visitVal) return "No visits yet";
+    try {
+      const d = new Date(visitVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(visitVal);
+    } catch (e) {
+      return String(visitVal);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Personal Information */}
-      <div className="xl:col-span-2 bg-primary/10 rounded-xl p-5 border border-primary/20">
+      <Card className="xl:col-span-2 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
         <h3 className="text-lg font-bold text-foreground mb-6 flex items-center">
           <User className="w-5 h-5 mr-2 text-primary" />
           Personal Information
@@ -101,11 +118,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Quick Stats */}
       <div className="space-y-4">
-        <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+        <Card className="rounded-2xl p-6 border border-border shadow-sm">
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
             <Activity className="w-5 h-5 mr-2" />
             Patient Statistics
@@ -119,10 +136,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 </span>
               </div>
               <span className="text-xl font-bold text-primary">
-                {
-                  patientAppointments.filter((a) => a.status === "completed")
-                    .length
-                }
+                {patient.total_visits ?? patient.totalVisits ?? patientAppointments.filter((a) => a.status === "completed").length}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
@@ -133,13 +147,28 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 </span>
               </div>
               <span className="text-sm font-bold text-primary">
-                {patient.createdAt
-                  ? new Date(patient.createdAt).toLocaleDateString()
+                {patient.created_at || patient.createdAt
+                  ? new Date(patient.created_at || patient.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                   : "New Registration"}
               </span>
             </div>
+            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl">
+              <div className="flex items-center">
+                <Calendar className="w-5 h-5 text-primary mr-3" />
+                <span className="text-sm text-muted-foreground">
+                  Last Visit
+                </span>
+              </div>
+              <span className="text-sm font-bold text-primary">
+                {formatLastVisitDate(patient.last_visit_date || patient.lastVisit)}
+              </span>
+            </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

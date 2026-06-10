@@ -28,13 +28,19 @@ export const CorporatePlansPage: React.FC = () => {
     corporatePlans, corporateEmployees,
     handleSaveCorporatePlan, handleDeleteCorporatePlan, handleToggleCorporatePlan,
     handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees, handleChangeEmployeePlan,
-    isPlansLoading,
+    isPlansLoading, refetchCorporate,
   } = useAppData({
     corporateSearch: debouncedSearch,
     corporateStatus: filter === 'all' ? undefined : filter.toUpperCase(),
   });
   const { confirmDelete } = useModal();
   const [tab, setTab] = useState<'plans' | 'employees'>('plans');
+
+  useEffect(() => {
+    if (refetchCorporate) {
+      refetchCorporate();
+    }
+  }, [refetchCorporate]);
 
   // Fetch employee list to get the exact count dynamically from backend API
   const { data: employeesData } = useEmployeesQuery({ page: 1, limit: 1 });
@@ -45,24 +51,7 @@ export const CorporatePlansPage: React.FC = () => {
   const employees = corporateEmployees;
 
   return (
-    <div className="space-y-5">
-      {/* Tab bar */}
-      <div className="flex gap-0.5 bg-muted p-1 rounded-xl w-fit">
-        {TABS.map(t => {
-          const Icon = t.icon;
-          const active = tab === t.key;
-          return (
-            <button key={t.key} onClick={() => setTab(t.key as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                active ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-              <Icon className="w-4 h-4" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
+    <div className="space-y-3">
       {tab === 'plans' ? (
         <CorporatePlanManagement
           plans={plans}
@@ -74,6 +63,8 @@ export const CorporatePlansPage: React.FC = () => {
           filter={filter}
           onFilterChange={setFilter}
           isLoading={isPlansLoading}
+          tab={tab}
+          setTab={setTab}
         />
       ) : (
         <EmployeeManagement
@@ -83,6 +74,8 @@ export const CorporatePlansPage: React.FC = () => {
           onDelete={handleDeleteEmployee}
           onBulkSave={handleBulkSaveEmployees}
           onChangePlan={handleChangeEmployeePlan}
+          parentTab={tab}
+          setParentTab={setTab}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+import { Label } from "@/components/ui/Label";
 import { useState } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle2 } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
@@ -71,12 +72,12 @@ export function InvoicePaymentModal({
         </div>
 
         <div className="space-y-3">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
             Select Payment Method
-          </label>
+          </Label>
           <div className="grid grid-cols-1 gap-3">
             {PAYMENT_METHODS.map((pm) => (
-              <button
+              <Button
                 key={pm.id}
                 onClick={() => setMethod(pm.id)}
                 className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
@@ -105,7 +106,7 @@ export function InvoicePaymentModal({
                 {method === pm.id && (
                   <CheckCircle2 className="w-5 h-5 text-primary" />
                 )}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

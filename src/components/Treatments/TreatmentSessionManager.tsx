@@ -1,369 +1,729 @@
-import { useState } from "react";
-import { Calendar, Clock, Plus } from "lucide-react";
-import { Modal, Button, ContentCard } from "@/components/ui";
+import { useState, useMemo } from "react";
+import {
+  Calendar, Clock, Plus, CheckCircle, Loader2, ChevronDown, ChevronUp,
+  FileText, IndianRupee, Activity, X,
+  TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
+  Stethoscope, BadgeCheck, Timer, Sparkle, Sparkles,
+} from "lucide-react";
+import { Modal, Button, Badge, Label, Input, Textarea } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 
-interface TreatmentSession {
-  id: string;
-  sessionNumber: number;
-  date: string;
-  status: "scheduled" | "completed" | "in-progress" | "cancelled" | "planned";
-  notes: string;
-  appointmentId?: string;
-  duration: number;
-  cost: number;
-}
+import {
+  useTreatmentSessionsQuery,
+  useAddTreatmentSessionMutation,
+  useUpdateTreatmentSessionMutation,
+  useCompleteTreatmentSessionMutation,
+  TreatmentSessionResponse,
+} from "../../hooks/treatment/useTreatmentSessionHooks";
+import { useModal } from "../../contexts/ModalContext";
 
 interface TreatmentSessionManagerProps {
   treatmentId: string;
   patientName: string;
   procedure: string;
-  sessions: TreatmentSession[];
-  onScheduleAppointment: (sessionData: any) => void;
-  onUpdateSessions: (updatedSessions: TreatmentSession[]) => void;
+  toothNumber?: number;
+  doctorName?: string;
   onClose: () => void;
 }
+
+const STATUS_CONFIG: Record<string, {
+  label: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+  badgeVariant: string;
+  icon: any;
+}> = {
+  SCHEDULED: {
+    label: "Scheduled",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-700",
+    borderColor: "border-amber-200",
+    badgeVariant: "amber",
+    icon: CalendarDays,
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    borderColor: "border-blue-200",
+    badgeVariant: "blue",
+    icon: Activity,
+  },
+  COMPLETED: {
+    label: "Completed",
+    bgColor: "bg-emerald-50",
+    textColor: "text-emerald-700",
+    borderColor: "border-emerald-200",
+    badgeVariant: "green",
+    icon: CheckCircle,
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    borderColor: "border-red-200",
+    badgeVariant: "red",
+    icon: X,
+  },
+};
 
 export function TreatmentSessionManager({
   treatmentId,
   patientName,
   procedure,
-  sessions: initialSessions,
-  onScheduleAppointment,
-  onUpdateSessions,
+  toothNumber,
+  doctorName,
   onClose,
 }: TreatmentSessionManagerProps) {
-  const [sessions, setSessions] = useState<TreatmentSession[]>(
-    Array.isArray(initialSessions) ? initialSessions : [],
-  );
-  const [showNewSession, setShowNewSession] = useState(false);
+  const { showToast } = useModal();
+
+
+  // FIX: API returns responseObject.data with nested structure
+  const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
+  // Extract the actual data from responseObject.data
+  const responseData = apiResponse?.data;
+  const addSession      = useAddTreatmentSessionMutation();
+  const updateSession   = useUpdateTreatmentSessionMutation();
+  const completeSession = useCompleteTreatmentSessionMutation();
+  const [showNewSession,        setShowNewSession]        = useState(false);
+  const [expandedSessions,      setExpandedSessions]      = useState<Set<string>>(new Set());
+  const [completingId,          setCompletingId]          = useState<string | null>(null);
+  const [editingClinicalNotes,  setEditingClinicalNotes]  = useState<string | null>(null);
+  const [editNotes,             setEditNotes]             = useState("");
+
   const [newSession, setNewSession] = useState({
     date: "",
-    time: "09:00",
-    notes: "",
+    time: "09:00 AM",
     duration: 45,
     cost: 0,
+    clinical_objectives: "",
   });
 
-  const handleAddSession = () => {
-    const session: TreatmentSession = {
-      id: Date.now().toString(),
-      sessionNumber: sessions.length + 1,
-      date: newSession.date,
-      status: "scheduled",
-      notes: newSession.notes,
-      duration: newSession.duration,
-      cost: newSession.cost,
-    };
-    const updatedSessions = [...sessions, session];
-    setSessions(updatedSessions);
-    onUpdateSessions(updatedSessions);
-    onScheduleAppointment({
-      patientName,
-      date: newSession.date,
-      time: newSession.time,
-      type: `${procedure} - Session ${session.sessionNumber}`,
-      duration: newSession.duration,
-      fee: newSession.cost,
-      notes: `Treatment Session ${session.sessionNumber}: ${newSession.notes}`,
-      treatmentId,
-      sessionId: session.id,
-    });
-    setShowNewSession(false);
-    setNewSession({
-      date: "",
-      time: "09:00",
-      notes: "",
-      duration: 45,
-      cost: 0,
+  const [completeForm, setCompleteForm] = useState({
+    work_done: "",
+    session_findings: "",
+    next_session_plan: "",
+  });
+
+  // ─── Derived — extract from responseData ───────────────────────────────────
+
+  const sessions: TreatmentSessionResponse[] = useMemo(() => responseData?.sessions ?? [], [responseData]);
+  const totalSessions    = responseData?.total ?? 0;
+  const completedCount   = responseData?.completed ?? 0;
+  const projectedRevenue = responseData?.projected_revenue ?? 0;
+  const sessionProgress  = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
+
+  const groupedSessions = useMemo(() => ({
+    upcoming:   sessions.filter(s => s.status === "SCHEDULED"),
+    inProgress: sessions.filter(s => s.status === "IN_PROGRESS"),
+    completed:  sessions.filter(s => s.status === "COMPLETED"),
+    cancelled:  sessions.filter(s => s.status === "CANCELLED"),
+  }), [sessions]);
+
+  const currentSession = sessions.find(s => s.status === "IN_PROGRESS");
+
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Date TBD";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      weekday: "short", day: "2-digit", month: "short", year: "numeric",
     });
   };
 
-  const handleUpdateSessionStatus = (
+  const formatTime = (timeString?: string) => {
+    if (!timeString) return "TBD";
+    // If time is already formatted like "09:00 AM", return as is
+    if (timeString.includes("AM") || timeString.includes("PM")) {
+      return timeString;
+    }
+    // If it's ISO string, extract time
+    try {
+      return new Date(timeString).toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return timeString;
+    }
+  };
+
+  const toggleExpand = (sessionId: string) => {
+    setExpandedSessions(prev => {
+      const next = new Set(prev);
+      next.has(sessionId) ? next.delete(sessionId) : next.add(sessionId);
+      return next;
+    });
+  };
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleAddSession = async () => {
+    if (!newSession.date) { showToast("Please select a date", "error"); return; }
+    if (newSession.cost <= 0) { showToast("Please enter a valid session fee", "error"); return; }
+
+    try {
+      await addSession.mutateAsync({
+        planId:              treatmentId,
+        visit_date:          newSession.date,
+        start_time:          newSession.time,
+        duration_min:        newSession.duration,
+        session_fee:         newSession.cost,
+        clinical_objectives: newSession.clinical_objectives,
+      });
+      showToast("Session scheduled successfully!");
+      setShowNewSession(false);
+      setNewSession({ date: "", time: "09:00 AM", duration: 45, cost: 0, clinical_objectives: "" });
+      refetch();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? "Failed to schedule session", "error");
+    }
+  };
+
+  const handleUpdateStatus = async (
     sessionId: string,
-    newStatus: TreatmentSession["status"],
+    newStatus: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
   ) => {
-    const updatedSessions = sessions.map((s) =>
-      s.id === sessionId ? { ...s, status: newStatus } : s,
-    );
-    setSessions(updatedSessions);
-    onUpdateSessions(updatedSessions);
+    if (newStatus === "COMPLETED") { setCompletingId(sessionId); return; }
+    try {
+      await updateSession.mutateAsync({ planId: treatmentId, sessionId, status: newStatus });
+      showToast(`Session updated to ${STATUS_CONFIG[newStatus]?.label}`);
+      refetch();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? "Failed to update", "error");
+    }
   };
 
-  const totalCost = sessions.reduce((sum, s) => sum + (s.cost || 0), 0);
-  const completedSessions = sessions.filter(
-    (s) => s.status === "completed",
-  ).length;
+  const handleCompleteSession = async (sessionId: string) => {
+    if (!completeForm.work_done && !completeForm.session_findings) {
+      showToast("Please add work done or findings", "error");
+      return;
+    }
+    try {
+      await completeSession.mutateAsync({ planId: treatmentId, sessionId, ...completeForm });
+      showToast(completedCount + 1 >= totalSessions
+        ? "All sessions completed! Treatment plan done!"
+        : "Session completed!");
+      setCompletingId(null);
+      setCompleteForm({ work_done: "", session_findings: "", next_session_plan: "" });
+      refetch();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? "Failed to complete", "error");
+    }
+  };
 
-  return (
-    <Modal
-      title="Session Management"
-      subtitle={`${patientName} • ${procedure}`}
-      onClose={onClose}
-      size="5xl"
-      icon={<Clock className="w-5 h-5" />}
-      footer={
-        <div className="flex justify-end w-full">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="font-black uppercase tracking-widest text-[10px]"
-          >
-            Close Manager
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ContentCard className="bg-primary/5 border-primary/10">
-            <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
-              Total Sessions
-            </p>
-            <p className="text-3xl font-black text-primary tracking-tighter">
-              {sessions.length}
-            </p>
-          </ContentCard>
-          <ContentCard className="bg-emerald-50/50 border-emerald-100">
-            <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1">
-              Completed
-            </p>
-            <p className="text-3xl font-black text-emerald-600 tracking-tighter">
-              {completedSessions}
-            </p>
-          </ContentCard>
-          <ContentCard className="bg-indigo-50/50 border-indigo-100">
-            <p className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest mb-1">
-              Projected Revenue
-            </p>
-            <p className="text-3xl font-black text-indigo-600 tracking-tighter">
-              ₹{totalCost.toLocaleString()}
-            </p>
-          </ContentCard>
-        </div>
+  const handleUpdateClinicalNotes = async (sessionId: string) => {
+    try {
+      await updateSession.mutateAsync({
+        planId: treatmentId, sessionId, clinical_objectives: editNotes,
+      });
+      showToast("Clinical objectives updated!");
+      setEditingClinicalNotes(null);
+      refetch();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? "Failed to update", "error");
+    }
+  };
 
-        <div className="flex items-center justify-between px-2">
-          <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em] flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-primary" />
-            </div>
-            Session Timeline
-          </h3>
-          <Button
-            onClick={() => setShowNewSession(true)}
-            className="shadow-lg shadow-primary/20"
-          >
-            <Plus className="w-4 h-4" /> Add Next Session
-          </Button>
-        </div>
+  // ─── Session Card ──────────────────────────────────────────────────────────
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {sessions.map((session) => (
-            <ContentCard
-              key={session.id}
-              className={`border-border/50 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5`}
-              bodyClassName="p-6"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center font-black text-sm text-foreground">
-                    {session.sessionNumber}
+  const SessionCard = ({ session }: { session: TreatmentSessionResponse }) => {
+    const cfg       = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.SCHEDULED;
+    const StatusIcon = cfg.icon;
+    const isCompleting = completingId === session.id;
+    const isExpanded   = expandedSessions.has(session.id);
+    const isEditing    = editingClinicalNotes === session.id;
+
+    // Get appointment info if available
+    const hasAppointment = !!session.appointment;
+    const appointmentTime = session.appointment?.start_time 
+      ? formatTime(session.appointment.start_time)
+      : session.start_time;
+
+    return (
+      <div className="relative">
+        <div className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${
+          session.status === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
+        }`}>
+          {/* Card header */}
+          <div className="p-5 cursor-pointer hover:bg-muted/5 transition-colors" onClick={() => toggleExpand(session.id)}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <div className={`w-10 h-10 rounded-xl ${cfg.bgColor} flex items-center justify-center`}>
+                    <StatusIcon className={`w-5 h-5 ${cfg.textColor}`} />
                   </div>
                   <div>
-                    <h4 className="font-black text-foreground text-sm uppercase tracking-tight">
-                      Session {session.sessionNumber}
-                    </h4>
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-0.5">
-                      {new Date(session.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+                    <h4 className="font-black text-foreground">Session {session.visit_number}</h4>
+                    <p className="text-xs text-muted-foreground">{formatDate(session.visit_date)}</p>
                   </div>
+                  <Badge variant={cfg.badgeVariant as any} className="ml-auto">{cfg.label}</Badge>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <select
-                    value={session.status}
-                    onChange={(e) =>
-                      handleUpdateSessionStatus(
-                        session.id,
-                        e.target.value as any,
-                      )
-                    }
-                    className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-border/50 bg-muted/20 cursor-pointer outline-none hover:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all"
-                  >
-                    <option value="planned">PLANNED</option>
-                    <option value="scheduled">SCHEDULED</option>
-                    <option value="in-progress">IN PROGRESS</option>
-                    <option value="completed">COMPLETED</option>
-                    <option value="cancelled">CANCELLED</option>
-                  </select>
-                  <div className="text-sm font-black text-foreground tracking-tighter">
-                    ₹{session.cost.toLocaleString()}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span className="font-medium">{appointmentTime || "TBD"} • {session.duration_min ?? 45} min</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <IndianRupee className="w-4 h-4" />
+                    <span className="font-medium">₹{Number(session.session_fee).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ClipboardList className="w-4 h-4" />
+                    <span className="truncate text-xs">{session.clinical_objectives || "No objectives set"}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-muted/30 rounded-2xl p-4 border border-border/50">
-                <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
-                  {session.notes || "No clinical objectives specified."}
-                </p>
-                <div className="flex items-center justify-between mt-4 text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest border-t border-border/50 pt-3">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" /> {session.duration} MIN
-                  </span>
-                  {session.appointmentId && (
-                    <span className="text-primary/60">
-                      ID: {session.appointmentId.slice(-6).toUpperCase()}
+              <div className="flex items-center gap-2 shrink-0">
+                {session.status !== "COMPLETED" && session.status !== "CANCELLED" && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={session.status}
+                      onValueChange={(val) => handleUpdateStatus(session.id, val as any)}
+                      disabled={updateSession.isPending}
+                    >
+                      <SelectTrigger className={`text-[10px] h-auto font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                        <SelectItem value="COMPLETED">Complete</SelectItem>
+                        <SelectItem value="CANCELLED">Cancel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {isExpanded
+                  ? <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+              </div>
+            </div>
+          </div>
+
+          {/* Expanded content */}
+          {isExpanded && (
+            <div className="border-t p-5 bg-muted/10 space-y-4">
+              {/* Clinical objectives — editable */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-wider flex items-center gap-2">
+                    <ClipboardList className="w-3 h-3" /> Clinical Objectives
+                  </p>
+                  {!isEditing && session.status !== "COMPLETED" && (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingClinicalNotes(session.id);
+                        setEditNotes(session.clinical_objectives ?? "");
+                      }}
+                      className="text-[10px] font-semibold text-primary hover:underline"
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl border border-primary/20 text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                      placeholder="Clinical objectives..."
+                      autoFocus
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="ghost" onClick={() => setEditingClinicalNotes(null)} className="text-xs px-3 py-1 rounded-lg bg-muted hover:bg-muted/80 h-auto">Cancel</Button>
+                      <Button onClick={() => handleUpdateClinicalNotes(session.id)} className="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary/90">Save</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {session.clinical_objectives || "No clinical objectives specified."}
+                  </p>
+                )}
+              </div>
+
+              {/* Post-session doctor notes */}
+              {session.work_done && (
+                <div>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <BadgeCheck className="w-3 h-3" /> Work Performed
+                  </p>
+                  <p className="text-sm leading-relaxed">{session.work_done}</p>
+                </div>
+              )}
+
+              {session.session_findings && (
+                <div>
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <Stethoscope className="w-3 h-3" /> Clinical Findings
+                  </p>
+                  <p className="text-sm leading-relaxed">{session.session_findings}</p>
+                </div>
+              )}
+
+              {session.next_session_plan && (
+                <div>
+                  <p className="text-[10px] font-black text-purple-600 uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <Sparkle className="w-3 h-3" /> Next Session Plan
+                  </p>
+                  <p className="text-sm leading-relaxed">{session.next_session_plan}</p>
+                </div>
+              )}
+
+              {session.appointment_id && (
+                <div className="pt-2 flex items-center gap-2">
+                  <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">Appointment linked:</span>
+                  <span className="text-[9px] font-mono text-primary/60">{session.appointment_id.slice(-8).toUpperCase()}</span>
+                  {session.appointment && (
+                    <span className="text-[9px] text-muted-foreground/50 ml-2">
+                      ({session.appointment.status})
                     </span>
                   )}
                 </div>
-              </div>
-            </ContentCard>
-          ))}
+              )}
 
-          {sessions.length === 0 && (
-            <div className="col-span-full text-center py-24 bg-muted/20 rounded-[3rem] border-2 border-dashed border-border/50">
-              <Calendar className="w-16 h-16 text-muted-foreground/10 mx-auto mb-6" />
-              <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em]">
-                No sessions found
-              </h3>
-              <p className="text-xs text-muted-foreground/60 mt-2 font-medium">
-                Click "Add Next Session" to begin treatment planning.
-              </p>
+              {session.completed_at && (
+                <div className="pt-1 text-right">
+                  <span className="text-[9px] text-muted-foreground/50">
+                    Completed {new Date(session.completed_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {showNewSession && (
-          <div className="mt-8 p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <Calendar className="w-5 h-5 text-white" />
+        {/* Complete session modal — shown inline above the card */}
+        {isCompleting && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setCompletingId(null)}>
+            <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg">Complete Session {session.visit_number}</h3>
+                  <p className="text-sm text-muted-foreground">Record what was done today</p>
+                </div>
               </div>
-              <h3 className="text-sm font-black text-primary uppercase tracking-[0.2em]">
-                Plan New Session
-              </h3>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                  Target Date
-                </label>
-                <input
-                  type="date"
-                  value={newSession.date}
-                  onChange={(e) =>
-                    setNewSession({ ...newSession, date: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                  min={new Date().toISOString().split("T")[0]}
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Describe the procedures performed..."
+                    value={completeForm.work_done}
+                    onChange={(e) => setCompleteForm(p => ({ ...p, work_done: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Observations, measurements, patient response..."
+                    value={completeForm.session_findings}
+                    onChange={(e) => setCompleteForm(p => ({ ...p, session_findings: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Next Session Plan</Label>
+                  <Textarea
+                    rows={2}
+                    placeholder="Recommended follow-up..."
+                    value={completeForm.next_session_plan}
+                    onChange={(e) => setCompleteForm(p => ({ ...p, next_session_plan: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                  Available Slots
-                </label>
-                <select
-                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setNewSession({ ...newSession, time: e.target.value });
-                    }
-                  }}
-                  defaultValue=""
+
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setCompletingId(null)} className="flex-1">Cancel</Button>
+                <Button
+                  onClick={() => handleCompleteSession(session.id)}
+                  disabled={completeSession.isPending || (!completeForm.work_done && !completeForm.session_findings)}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2"
                 >
-                  <option value="" disabled>Select slot</option>
-                  <option value="09:00">09:00 AM</option>
-                  <option value="10:00">10:00 AM</option>
-                  <option value="11:30">11:30 AM</option>
-                  <option value="14:00">02:00 PM</option>
-                  <option value="16:00">04:00 PM</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  value={newSession.time}
-                  onChange={(e) =>
-                    setNewSession({ ...newSession, time: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                  Duration (min)
-                </label>
-                <input
-                  type="number"
-                  value={newSession.duration}
-                  onChange={(e) =>
-                    setNewSession({
-                      ...newSession,
-                      duration: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                  min="15"
-                  step="15"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                  Session Fee (₹)
-                </label>
-                <input
-                  type="number"
-                  value={newSession.cost}
-                  onChange={(e) =>
-                    setNewSession({
-                      ...newSession,
-                      cost: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-primary/10 rounded-xl text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all"
-                  min="0"
-                />
+                  {completeSession.isPending
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <CheckCircle className="w-4 h-4" />}
+                  Complete Session
+                </Button>
               </div>
             </div>
-            <div className="mb-8 space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-1">
-                Session Clinical Objectives
-              </label>
-              <textarea
-                value={newSession.notes}
-                onChange={(e) =>
-                  setNewSession({ ...newSession, notes: e.target.value })
-                }
-                rows={2}
-                className="w-full px-4 py-3 bg-white border border-primary/10 rounded-xl text-sm font-medium text-foreground focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none"
-                placeholder="Enter clinical goals for this session..."
-              />
-            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setShowNewSession(false)}
-                className="font-black uppercase tracking-widest text-[10px]"
-              >
-                Discard
-              </Button>
-              <Button
-                onClick={handleAddSession}
-                disabled={!newSession.date}
-                className="px-10 shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
-              >
-                Confirm & Schedule Session
+  // ─── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <Modal
+      title="Treatment Sessions"
+      subtitle={`${patientName} • ${procedure}${toothNumber ? ` • Tooth #${toothNumber}` : ""}`}
+      onClose={onClose}
+      size="5xl"
+      icon={<Calendar className="w-5 h-5" />}
+      footer={
+        <div className="flex justify-end w-full">
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </div>
+      }
+    >
+      <div className="space-y-8">
+
+        {/* Stats dashboard */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/10">
+            <div className="flex items-center justify-between mb-2">
+              <Calendar className="w-5 h-5 text-primary/60" />
+              <span className="text-2xl font-black text-primary">{totalSessions}</span>
+            </div>
+            <p className="text-[10px] font-black text-primary/60 uppercase tracking-wider">Total Sessions</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 rounded-2xl p-4 border border-emerald-200">
+            <div className="flex items-center justify-between mb-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <span className="text-2xl font-black text-emerald-600">{completedCount}</span>
+            </div>
+            <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-wider">Completed</p>
+            <div className="mt-2 h-1.5 bg-emerald-200 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${sessionProgress}%` }} />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/30 rounded-2xl p-4 border border-indigo-200">
+            <div className="flex items-center justify-between mb-2">
+              <TrendingUp className="w-5 h-5 text-indigo-600" />
+              <span className="text-2xl font-black text-indigo-600">₹{Number(projectedRevenue).toLocaleString()}</span>
+            </div>
+            <p className="text-[10px] font-black text-indigo-600/60 uppercase tracking-wider">Projected Revenue</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/30 rounded-2xl p-4 border border-blue-200">
+            <div className="flex items-center justify-between mb-2">
+              <Activity className="w-5 h-5 text-blue-600" />
+              <span className="text-2xl font-black text-blue-600">{groupedSessions.inProgress.length}</span>
+            </div>
+            <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-wider">In Progress</p>
+          </div>
+        </div>
+
+        {/* Active session highlight */}
+        {currentSession && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200">
+            <div className="flex items-center gap-3 mb-3">
+              <Sparkles className="w-5 h-5 text-blue-600" />
+              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Currently Active Session</span>
+            </div>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h3 className="font-black text-lg">Session {currentSession.visit_number}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(currentSession.visit_date)} at {formatTime(currentSession.start_time)}
+                </p>
+              </div>
+              <Button onClick={() => handleUpdateStatus(currentSession.id, "COMPLETED")} className="bg-blue-600 hover:bg-blue-700 gap-2">
+                <CheckCircle className="w-4 h-4" /> Mark Complete
               </Button>
             </div>
           </div>
         )}
+
+        {/* Timeline header + add button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Clock8 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-black text-lg">Session Timeline</h3>
+              {doctorName && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <UserRound className="w-3 h-3" /> {doctorName}
+                </p>
+              )}
+            </div>
+          </div>
+          <Button onClick={() => setShowNewSession(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Session
+          </Button>
+        </div>
+
+        {/* Sessions list */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : sessions.length > 0 ? (
+          <div className="space-y-6">
+            {groupedSessions.inProgress.length > 0 && (
+              <div>
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
+                </h4>
+                <div className="space-y-3">
+                  {groupedSessions.inProgress.map(s => <SessionCard key={s.id} session={s} />)}
+                </div>
+              </div>
+            )}
+
+            {groupedSessions.upcoming.length > 0 && (
+              <div>
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
+                </h4>
+                <div className="space-y-3">
+                  {groupedSessions.upcoming.map(s => <SessionCard key={s.id} session={s} />)}
+                </div>
+              </div>
+            )}
+
+            {groupedSessions.completed.length > 0 && (
+              <div>
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
+                </h4>
+                <div className="space-y-3">
+                  {groupedSessions.completed.map(s => <SessionCard key={s.id} session={s} />)}
+                </div>
+              </div>
+            )}
+
+            {groupedSessions.cancelled.length > 0 && (
+              <div>
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
+                </h4>
+                <div className="space-y-3">
+                  {groupedSessions.cancelled.map(s => <SessionCard key={s.id} session={s} />)}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed">
+            <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+            <h3 className="font-semibold text-muted-foreground">No Sessions Scheduled</h3>
+            <p className="text-sm text-muted-foreground/60 mt-1">Click "Add Session" to create the first session</p>
+          </div>
+        )}
+
+        {/* Add session modal */}
+        {showNewSession && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowNewSession(false)}>
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                    <Plus className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-xl">Schedule New Session</h3>
+                    <p className="text-sm text-muted-foreground">Add details for the upcoming appointment</p>
+                  </div>
+                </div>
+                <Button variant="ghost" onClick={() => setShowNewSession(false)} className="p-2 hover:bg-muted rounded-full h-auto">
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="date"
+                    value={newSession.date}
+                    onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Start Time</Label>
+                  <Select
+                    value={newSession.time}
+                    onValueChange={(val) => setNewSession({ ...newSession, time: val })}
+                  >
+                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
+                  <Select
+                    value={newSession.duration.toString()}
+                    onValueChange={(val) => setNewSession({ ...newSession, duration: parseInt(val) })}
+                  >
+                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[15, 30, 45, 60, 90, 120].map(d => (
+                        <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">Session Fee (₹) <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="number"
+                    value={newSession.cost || ""}
+                    onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
+                    min="0"
+                    step="500"
+                    placeholder="Enter amount"
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
+                <Textarea
+                  value={newSession.clinical_objectives}
+                  onChange={(e) => setNewSession({ ...newSession, clinical_objectives: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                  placeholder="Describe the goals for this session..."
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
+                <Button
+                  onClick={handleAddSession}
+                  disabled={!newSession.date || !newSession.cost || addSession.isPending}
+                  className="flex-1 gap-2"
+                >
+                  {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Schedule Session
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </Modal>
   );

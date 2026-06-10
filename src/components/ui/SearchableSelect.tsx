@@ -2,6 +2,7 @@ import * as React from "react";
 import { Search, Check, X, Plus, ChevronDown, Trash2 } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
 import { cn } from "@/lib/utils";
+import { Button } from "./Button";
 
 type OptionType = string | { label: string; value: string };
 
@@ -19,6 +20,7 @@ interface SearchableSelectProps {
   onDeleteOption?: (value: string) => Promise<void> | void;
   isDeletingValue?: string | null;
   isMulti?: boolean;
+  className?: string;
 }
 
 export function SearchableSelect({
@@ -35,6 +37,7 @@ export function SearchableSelect({
   onDeleteOption,
   isDeletingValue = null,
   isMulti = false,
+  className,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -84,12 +87,13 @@ export function SearchableSelect({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
           disabled={disabled || isLoading}
           className={cn(
             "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer",
-            !value && "text-muted-foreground"
+            !value && "text-muted-foreground",
+            className
           )}
         >
           <span className="truncate">
@@ -100,7 +104,7 @@ export function SearchableSelect({
                 : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : value) || placeholder}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-1.5 min-w-[240px]">
         <div className="relative flex items-center border-b border-border pb-1.5 mb-1.5">
@@ -115,13 +119,13 @@ export function SearchableSelect({
             className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {searchQuery && (
-            <button
+            <Button
               type="button"
               onClick={() => setSearchQuery("")}
               className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
             >
               <X className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -145,14 +149,14 @@ export function SearchableSelect({
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"
                   )}
                 >
-                  <button
+                  <Button
                     type="button"
                     onClick={() => handleSelect(optValue)}
                     className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer"
                   >
                     <span className="truncate pr-2">{optLabel}</span>
                     {isSelected && <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
-                  </button>
+                  </Button>
                   {onDeleteOption && (
                     <button
                       type="button"

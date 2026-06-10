@@ -2,7 +2,7 @@
   "tenantId": "default",
   "version": "1.0.0",
   "branding": {
-    "clinicName": "DentalCare Pro",
+    "clinicName": "Opal Smiles Dental Studio",
     "tagline": "Your Smile, Our Priority",
     "primaryColor": "blue",
     "currency": "INR",
@@ -146,8 +146,8 @@
     ]
   },
   "support": {
-    "email": "support@dentalcarepro.com",
+    "email": "support@opalsmiles.com",
     "phone": "+91-1800-DENTAL",
-    "website": "https://dentalcarepro.com"
+    "website": "https://opalsmiles.com"
   }
 }

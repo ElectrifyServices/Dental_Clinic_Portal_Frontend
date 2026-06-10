@@ -1,11 +1,16 @@
-import { useState } from "react";
-import { Plus, Eye, Trash2, Shield, CheckCircle, Clock } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical } from "lucide-react";
 
 interface ConsentFormListProps {
   forms: any[];
+  search: string;
+  onSearchChange: (val: string) => void;
   onAddForm: () => void;
   onViewForm: (id: string) => void;
+  onEditForm: (id: string) => void;
   onDeleteForm: (id: string) => void;
+  filters: { status: string; procedure: string; doctor: string; date: string };
+  onFilterChange: (key: string, value: string) => void;
+  doctorsList: { id: string; name: string }[];
 }
 
 import {
@@ -14,24 +19,159 @@ import {
   SearchInput,
   ContentCard,
   Badge,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  DataTable,
 } from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/DropdownMenu";
 
 export function ConsentFormList({
   forms,
+  search,
+  onSearchChange,
   onAddForm,
   onViewForm,
+  onEditForm,
   onDeleteForm,
+  filters,
+  onFilterChange,
+  doctorsList,
 }: ConsentFormListProps) {
-  const [search, setSearch] = useState("");
-
-  const filtered = forms.filter(
-    (f) =>
-      f.patientName?.toLowerCase().includes(search.toLowerCase()) ||
-      f.treatmentType?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const columns = [
+    {
+      key: "patient",
+      header: "Patient",
+      render: (form: any) => (
+        <>
+          <div className="font-bold text-foreground text-sm">
+            {form.patientName}
+          </div>
+          {form.patientId && (
+            <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
+              #{form.patientId.slice(-6)}
+            </div>
+          )}
+        </>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "consentType",
+      header: "Consent Type",
+      render: (form: any) => (
+        <div className="font-bold text-foreground text-sm uppercase tracking-tight">
+          {form.treatmentType}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "doctor",
+      header: "Doctor",
+      render: (form: any) => (
+        <div className="font-semibold text-muted-foreground text-sm">
+          {form.doctorName}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "created",
+      header: "Created",
+      render: (form: any) => (
+        <div className="text-sm font-medium text-muted-foreground">
+          {form.createdDate
+            ? new Date(form.createdDate).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+            : "-"}
+        </div>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      key: "signed",
+      header: "Signed",
+      render: (form: any) => {
+        const statusUpper = form.status?.toUpperCase() || "";
+        const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
+        return (
+          <div className={`text-sm font-medium ${isSigned ? 'text-muted-foreground' : 'text-amber-600 font-semibold'}`}>
+            {isSigned && form.signedDate
+              ? new Date(form.signedDate).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              : "Pending"}
+          </div>
+        );
+      },
+      className: "px-6 py-4",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (form: any) => {
+        const statusUpper = form.status?.toUpperCase() || "";
+        const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
+        const isDraft = statusUpper === "DRAFT";
+        return isSigned ? (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10">
+            <CheckCircle className="w-3 h-3" /> Signed
+          </Badge>
+        ) : isDraft ? (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-blue-500/10 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
+            <Clock className="w-3 h-3" /> Draft
+          </Badge>
+        ) : (
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10">
+            <Clock className="w-3 h-3" /> Pending
+          </Badge>
+        );
+      },
+      className: "px-6 py-4",
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right" as const,
+      render: (form: any) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors outline-none">
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={() => onViewForm(form.id)} className="cursor-pointer gap-2">
+              <Eye className="w-4 h-4 text-primary" /> View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditForm(form.id)} className="cursor-pointer gap-2">
+              <Edit className="w-4 h-4 text-blue-600" /> Edit Form
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDeleteForm(form.id)} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+              <Trash2 className="w-4 h-4" /> Delete Form
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      className: "px-6 py-4",
+    },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Consent Forms"
         subtitle={`${forms.length} authorized consent documents on record`}
@@ -42,13 +182,89 @@ export function ConsentFormList({
         }
       />
 
-      <SearchInput
-        placeholder="Search by patient or treatment type…"
-        value={search}
-        onChange={setSearch}
-      />
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <SearchInput
+            placeholder="Search by patient or treatment type…"
+            value={search}
+            onChange={onSearchChange}
+          />
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+          <Select
+            value={filters.status}
+            onValueChange={(val) => onFilterChange("status", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Status</SelectItem>
+              <SelectItem value="DRAFT">Draft</SelectItem>
+              <SelectItem value="PENDING_SIGNATURE">Pending Signature</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+            </SelectContent>
+          </Select>
 
-      {filtered.length === 0 ? (
+          <Select
+            value={filters.procedure}
+            onValueChange={(val) => onFilterChange("procedure", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[240px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Procedures" />
+            </SelectTrigger>
+            <SelectContent className="max-h-56">
+              <SelectItem value="All">All Procedures</SelectItem>
+              <SelectItem value="GENERAL_DENTISTRY">General Dentistry</SelectItem>
+              <SelectItem value="TOOTH_EXTRACTION_OR_ORAL_SURGERY">Tooth Extraction / Oral Surgery</SelectItem>
+              <SelectItem value="ROOT_CANAL_TREATMENT_ENDODONTICS">Root Canal Treatment (Endodontics)</SelectItem>
+              <SelectItem value="DENTAL_IMPLANTS">Dental Implants</SelectItem>
+              <SelectItem value="ORTHODONTIC_BRACES_OR_CLEAR_ALIGNERS">Orthodontic Braces / Clear Aligners</SelectItem>
+              <SelectItem value="SCALING_AND_ROOT_PLANING">Scaling and Root Planing</SelectItem>
+              <SelectItem value="CROWN_AND_BRIDGE">Crown and Bridge</SelectItem>
+              <SelectItem value="COMPLETE_PARTIAL_DENTURE">Complete / Partial Denture</SelectItem>
+              <SelectItem value="PEDIATRIC_DENTAL_TREATMENT">Pediatric Dental Treatment</SelectItem>
+              <SelectItem value="TEETH_WHITENING">Teeth Whitening</SelectItem>
+              <SelectItem value="COSMETIC_DENTISTRY_OR_VENEERS">Cosmetic Dentistry / Veneers</SelectItem>
+              <SelectItem value="SEDATION_OR_ANESTHESIA_CONSENT">Sedation / Anesthesia Consent</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.doctor}
+            onValueChange={(val) => onFilterChange("doctor", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Doctors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Doctors</SelectItem>
+              {doctorsList.map((doc) => (
+                <SelectItem key={doc.id} value={doc.id}>
+                  {doc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.date}
+            onValueChange={(val) => onFilterChange("date", val)}
+          >
+            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
+              <SelectValue placeholder="All Time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Time</SelectItem>
+              <SelectItem value="TODAY">Today</SelectItem>
+              <SelectItem value="THIS_WEEK">This Week</SelectItem>
+              <SelectItem value="THIS_MONTH">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {forms.length === 0 ? (
         <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
           <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
           <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
@@ -63,101 +279,11 @@ export function ConsentFormList({
           bodyClassName="p-0 overflow-hidden"
           className="rounded-3xl border-border/50"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Patient
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Treatment Type
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Date Signed
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filtered.map((form) => (
-                  <tr
-                    key={form.id}
-                    className="hover:bg-muted/50 transition-colors group"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-foreground text-sm">
-                        {form.patientName}
-                      </div>
-                      {form.patientId && (
-                        <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
-                          #{form.patientId.slice(-6)}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-foreground text-sm uppercase tracking-tight">
-                        {form.treatmentType}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {form.date
-                          ? new Date(form.date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "Pending"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {form.signature ? (
-                        <Badge
-                          // variant="green"
-                          className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10"
-                        >
-                          <CheckCircle className="w-3 h-3" /> Signed
-                        </Badge>
-                      ) : (
-                        <Badge
-                          // variant="amber"
-                          className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10"
-                        >
-                          <Clock className="w-3 h-3" /> Pending
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary hover:bg-primary/10"
-                          onClick={() => onViewForm(form.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => onDeleteForm(form.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={forms}
+            rowKey={(row) => row.id}
+          />
         </ContentCard>
       )}
     </div>

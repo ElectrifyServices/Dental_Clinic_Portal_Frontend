@@ -1,6 +1,32 @@
-﻿import React from "react";
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import React from "react";
 import { Stethoscope, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+
+const TREATMENT_OPTIONS = [
+  "Consultation / Check-up",
+  "follow up visit",
+  "X-ray review",
+  "Teeth Cleaning",
+  "Tooth Pain / Emergency",
+  "Filling",
+  "Root Canal Treatment",
+  "Extraction / Wisdom Tooth",
+  "Braces / Aligners",
+  "Implants",
+  "full mouth rehabilitation",
+  "Veneers/Cosmetic Dentistry",
+  "Child Dentistry",
+  "Crown",
+  "Denture",
+  "Toothache",
+  "Swelling / Infection",
+  "Broken Tooth",
+  "Trauma / Injury",
+  "other/ not sure"
+];
 
 interface TreatmentFieldsProps {
   treatment: string;
@@ -14,6 +40,7 @@ interface TreatmentFieldsProps {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => void;
+  onTreatmentTypeChange?: (val: string) => void;
 }
 
 export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
@@ -22,12 +49,12 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
   fee,
   patientConcern,
   notes,
-  appointmentTypes,
   onChange,
+  onTreatmentTypeChange,
 }) => {
   return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-2 mb-4">
+    <section className="space-y-3">
+      <div className="flex items-center gap-2 mb-2">
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <Stethoscope className="w-4 h-4 text-primary" />
         </div>
@@ -37,29 +64,30 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
         <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Treatment Type
-          </label>
-          <select
-            name="treatmentType"
+          </Label>
+          <SearchableSelect
             value={treatmentType}
-            onChange={onChange}
-            className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium"
-          >
-            <option value="">General Consultation</option>
-            {appointmentTypes.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+            onChange={(val: string) => {
+              if (onTreatmentTypeChange) {
+                onTreatmentTypeChange(val);
+              } else {
+                onChange({
+                  target: { name: "treatmentType", value: val }
+                } as any);
+              }
+            }}
+            options={TREATMENT_OPTIONS.map(opt => ({ label: opt, value: opt }))}
+            placeholder="Select Treatment Type..."
+          />
         </div>
         <div className="md:col-span-2 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Specific Treatment
-          </label>
+          </Label>
           <Input
             name="treatment"
             value={treatment}
@@ -69,9 +97,9 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="md:col-span-1 space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Fee (₹)
-          </label>
+          </Label>
           <div className="relative">
             <Input
               type="number"
@@ -85,12 +113,12 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Patient Concern
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             name="patientConcern"
             value={patientConcern}
             onChange={onChange}
@@ -101,10 +129,10 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Additional Notes
-          </label>
-          <textarea
+          </Label>
+          <Textarea
             name="notes"
             value={notes}
             onChange={onChange}

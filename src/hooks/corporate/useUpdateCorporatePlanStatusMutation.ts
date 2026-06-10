@@ -9,7 +9,7 @@ export interface UpdateCorporatePlanStatusVariables {
 export function useUpdateCorporatePlanStatusMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, UpdateCorporatePlanStatusVariables>({
-    getEndpoint: (variables) => `/corporate/plan/status/${variables.id}`,
+    getEndpoint: (variables) => `/corporatePlan/status/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({ status: variables.status }),
     options: {

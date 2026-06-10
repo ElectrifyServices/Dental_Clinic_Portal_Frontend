@@ -1,3 +1,4 @@
+import { Label } from "@/components/ui/Label";
 import React from "react";
 import { ClipboardCheck, PenTool, AlertTriangle, Camera, Upload } from "lucide-react";
 import { SignaturePad } from "../../Consent/SignaturePad";
@@ -45,8 +46,8 @@ export const Step3Consent: React.FC<Step3Props> = ({
               <Camera className="w-4 h-4 text-primary" />
               Patient Consent Form
             </h4>
-            <label className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:bg-muted/30 hover:border-primary/50 transition-all block group relative bg-background">
-              <input 
+            <Label className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:bg-muted/30 hover:border-primary/50 transition-all block group relative bg-background">
+              <Input 
                 type="file" 
                 accept="image/*,.pdf" 
                 onChange={handleConsentFormUpload} 
@@ -91,7 +92,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                   <p className="text-[11px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
                 </div>
               )}
-            </label>
+            </Label>
           </div>
 
           {/* Signature Section */}
@@ -130,9 +131,9 @@ export const Step3Consent: React.FC<Step3Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-muted-foreground mb-2">
+                  <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                     Guardian Full Name *
-                  </label>
+                  </Label>
                   <Input
                     type="text"
                     name="guardianName"

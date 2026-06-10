@@ -1,3 +1,6 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Printer } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
@@ -48,18 +51,18 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
     >
       <div className="space-y-6">
         <div className="flex bg-muted p-1 rounded-xl w-fit">
-          <button
+          <Button
             onClick={() => setPrintLanguage("en")}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${printLanguage === "en" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             ENGLISH
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setPrintLanguage("gu")}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${printLanguage === "gu" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             ગુજરાતી (GUJ)
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -69,10 +72,10 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
             </h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                   BP (mmHg)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={previewData.bp}
                   onChange={(e) =>
@@ -82,10 +85,10 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                   Weight (Kg)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={previewData.weight}
                   onChange={(e) =>
@@ -96,10 +99,10 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Clinical Complaints / Observation
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 rows={3}
                 value={previewData.complaints}
                 onChange={(e) =>
@@ -115,10 +118,10 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
               Diagnosis & Advice
             </h4>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Diagnosis
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={previewData.diagnosis}
                 onChange={(e) =>
@@ -128,10 +131,10 @@ export const PrescriptionPrintModal: React.FC<PrescriptionPrintModalProps> = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Advice / Instructions
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 rows={3}
                 value={previewData.advice}
                 onChange={(e) =>

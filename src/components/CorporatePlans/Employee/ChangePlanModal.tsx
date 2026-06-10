@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
-import { Modal, Button, Badge, LabeledField } from '../../ui';
+import { Modal, Button, Badge, LabeledField, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { useUpdateEmployeeMutation } from '../../../hooks/corporate/useUpdateEmployeeMutation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,7 +50,6 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
       refetch();
       setChangePlanEmp(null);
     } catch (err) {
-      console.error("Failed to change plan", err);
     }
   };
 
@@ -67,10 +66,10 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
           <Button variant="outline" onClick={() => setChangePlanEmp(null)}>Cancel</Button>
           <Button 
             onClick={handleChangePlan} 
-            disabled={!newPlanId || newPlanId === changePlanEmp.corporatePlanId || updateEmployeeMutation.isLoading}
+            disabled={!newPlanId || newPlanId === changePlanEmp.corporatePlanId || updateEmployeeMutation.isPending}
             className="gap-2 shadow-lg shadow-primary/10"
           >
-            {updateEmployeeMutation.isLoading ? (
+            {updateEmployeeMutation.isPending ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <><CheckCircle className="w-4 h-4" /> Confirm Plan Update</>
@@ -107,16 +106,16 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
           </div>
 
           <LabeledField label="Target Health Plan Selection" required>
-            <select 
-              value={newPlanId} 
-              onChange={e => setNewPlanId(e.target.value)} 
-              className="w-full px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm appearance-none"
-            >
-              <option value="">Select a new plan…</option>
-              {activePlans.filter(p => p.isActive).map(p => (
-                <option key={p.id} value={p.id}>{p.name} — {p.companyName} ({p.code})</option>
-              ))}
-            </select>
+            <Select value={newPlanId} onValueChange={setNewPlanId}>
+              <SelectTrigger className="w-full px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-sm appearance-none h-auto">
+                <SelectValue placeholder="Select a new plan…" />
+              </SelectTrigger>
+              <SelectContent>
+                {activePlans.filter(p => p.isActive).map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.name} — {p.companyName} ({p.code})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </LabeledField>
         </div>
 

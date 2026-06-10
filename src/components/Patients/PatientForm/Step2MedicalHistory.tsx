@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
 import React from 'react';
 import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +13,7 @@ interface Step2Props {
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  validationErrors?: { [key: string]: string };
   matchedCorporateEmp: any;
   corporatePlans: any[];
   medicalSearch: string;
@@ -22,23 +25,20 @@ interface Step2Props {
   selectedAllergies: string[];
   setSelectedAllergies: (val: string[]) => void;
   handleDentalFilesUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  showOtherTreatment: boolean;
-  setShowOtherTreatment: (val: boolean) => void;
 }
 
 export const Step2MedicalHistory: React.FC<Step2Props> = ({
   formData,
   setFormData,
   handleChange,
+  validationErrors = {},
   matchedCorporateEmp,
   corporatePlans,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
   selectedAllergies,
   setSelectedAllergies,
-  handleDentalFilesUpload,
-  showOtherTreatment,
-  setShowOtherTreatment
+  handleDentalFilesUpload
 }) => {
   const {
     medicalHistories,
@@ -66,9 +66,9 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
       </div>
 
       <div>
-        <label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+        <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
           Referred By
-        </label>
+        </Label>
         <Input
           type="text"
           name="referredBy"
@@ -128,10 +128,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <Heart className="w-4 h-4 inline mr-2 text-red-500" />
             Medical History
-          </label>
+          </Label>
           <div className="space-y-3">
             <SearchableSelect
               isMulti
@@ -155,7 +155,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
                       <span className="truncate max-w-[200px]">{displayName}</span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           const updated = selectedMedicalHistory.filter((i) => i !== item);
@@ -165,7 +165,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </Badge>
                   );
                 })}
@@ -175,10 +175,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
             <AlertTriangle className="w-4 h-4 inline mr-2 text-amber-500" />
             Allergies
-          </label>
+          </Label>
           <div className="space-y-3">
             <SearchableSelect
               isMulti
@@ -205,7 +205,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
                       <span className="truncate max-w-[200px]">{displayName}</span>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           const updated = selectedAllergies.filter((i) => i !== item);
@@ -215,7 +215,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </Badge>
                   );
                 })}
@@ -234,7 +234,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             </h3>
           </div>
         </div>
-        <textarea
+        <Textarea
           name="pastDentalHistory"
           value={formData.pastDentalHistory}
           onChange={handleChange}
@@ -242,24 +242,24 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           className="w-full px-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Previous dental treatments, issues, or positive/negative experiences"
         />
-        <label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
+        <Label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
           <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2 group-hover:text-primary transition-colors" />
           <p className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Upload Clinical Images / X-rays</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM)</p>
-          <input
+          <Input
             type="file"
             multiple
             accept="image/*"
             onChange={handleDentalFilesUpload}
             className="hidden"
           />
-        </label>
+        </Label>
         {formData.dentalFiles?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {formData.dentalFiles.map((file: any, index: number) => (
               <Badge key={index} variant="secondary" className="pr-1 pl-2 py-1 gap-1 border-primary/10">
                 <span className="truncate max-w-[150px]">{file.name}</span>
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     setFormData((prev: any) => ({
@@ -271,7 +271,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   className="p-0.5 hover:bg-primary/10 rounded-full text-primary"
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </Button>
               </Badge>
             ))}
           </div>
@@ -287,27 +287,41 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</Label>
             <Input
               type="text"
               name="previousDoctorName"
               value={formData.previousDoctorName}
               onChange={handleChange}
+              className={validationErrors.previousDoctorName ? "border-destructive bg-destructive/5" : ""}
               placeholder="Doctor or Clinic name"
             />
+            {validationErrors.previousDoctorName && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousDoctorName}
+              </p>
+            )}
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Name</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Name</Label>
             <Input
               type="text"
               name="previousClinicName"
               value={formData.previousClinicName}
               onChange={handleChange}
+              className={validationErrors.previousClinicName ? "border-destructive bg-destructive/5" : ""}
               placeholder="Clinic Name"
             />
+            {validationErrors.previousClinicName && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousClinicName}
+              </p>
+            )}
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</Label>
             <Input
               type="tel"
               name="previousDoctorPhone"
@@ -320,29 +334,42 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</label>
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</Label>
             <Input
               type="date"
               name="previousLastVisitDate"
               value={formData.previousLastVisitDate}
               onChange={handleChange}
+              className={validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : ""}
               max={new Date().toISOString().split("T")[0]}
             />
+            {validationErrors.previousLastVisitDate && (
+              <p className="text-destructive text-[10px] mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.previousLastVisitDate}
+              </p>
+            )}
           </div>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Address</label>
-          <textarea
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">Clinic Address</Label>
+          <Textarea
             name="previousClinicAddress"
             value={formData.previousClinicAddress}
             onChange={handleChange}
             rows={2}
-            className="w-full px-4 py-2 text-sm border border-input rounded-md focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary ${validationErrors.previousClinicAddress ? "border-destructive bg-destructive/5" : "border-input"}`}
             placeholder="Complete Address"
           />
+          {validationErrors.previousClinicAddress && (
+            <p className="text-destructive text-[10px] mt-1 flex items-center">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {validationErrors.previousClinicAddress}
+            </p>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-1">Reason for Previous Treatment</label>
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">Reason for Previous Treatment</Label>
           <Input
             type="text"
             name="previousReason"
@@ -352,9 +379,26 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</label>
+          <Label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</Label>
           <div className="flex flex-wrap gap-2">
-            {Array.from(new Set(['Root Canal', 'Extraction', 'Braces', 'Implant', 'Crown', 'Filling', 'Surgery', ...(formData.previousTreatments || [])])).map((treatment) => (
+            {Array.from(new Set([
+              'scaling / cleaning and polishing',
+              'root canal treatment',
+              're-rct',
+              'filling',
+              'crown and bridge',
+              'implant',
+              'removal of implant',
+              'veneer',
+              'smile makeover',
+              'full mouth rehabilitation',
+              'braces/aligners',
+              'tooth extraction/ removal',
+              'wisdom tooth removal',
+              'teeth whitening',
+              'paediatric dental treatment',
+              ...(formData.previousTreatments || [])
+            ])).map((treatment) => (
               <Badge
                 key={treatment}
                 onClick={() => {
@@ -369,51 +413,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 {treatment}
               </Badge>
             ))}
-            <Badge
-              onClick={() => setShowOtherTreatment(!showOtherTreatment)}
-              variant={showOtherTreatment ? "default" : "outline"}
-              className="cursor-pointer text-xs border-dashed"
-            >
-              + Other
-            </Badge>
           </div>
-          {showOtherTreatment && (
-            <div className="flex mt-2">
-              <Input
-                type="text"
-                placeholder="Enter other treatment"
-                className="rounded-r-none h-8 text-xs"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const val = (e.target as HTMLInputElement).value.trim();
-                    if (val && !formData.previousTreatments.includes(val)) {
-                      setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
-                      (e.target as HTMLInputElement).value = '';
-                      setShowOtherTreatment(false);
-                    }
-                  }
-                }}
-                autoFocus
-              />
-              <Button
-                type="button"
-                size="xs"
-                className="px-3 bg-primary text-white rounded-l-none rounded-r-md text-[10px] font-bold h-8 hover:bg-primary/95"
-                onClick={() => {
-                  const input = (document.querySelector('input[placeholder="Enter other treatment"]') as HTMLInputElement);
-                  const val = input?.value?.trim();
-                  if (val && !formData.previousTreatments.includes(val)) {
-                    setFormData((prev: any) => ({ ...prev, previousTreatments: [...prev.previousTreatments, val] }));
-                    input.value = '';
-                    setShowOtherTreatment(false);
-                  }
-                }}
-              >
-                ADD
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 

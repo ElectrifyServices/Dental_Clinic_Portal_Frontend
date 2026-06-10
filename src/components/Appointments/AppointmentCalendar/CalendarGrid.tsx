@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui";
 
 interface CalendarGridProps {
   monthOffset: number;
@@ -11,6 +12,8 @@ interface CalendarGridProps {
   appointmentsByDate?: Record<string, number>;
   getDayAppointmentsForDate: (date: Date) => any[];
   monthNames: string[];
+  currentDoctorId?: string | null;
+  onRefetchSlots?: () => void;
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -22,6 +25,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   appointmentsByDate = {},
   getDayAppointmentsForDate,
   monthNames,
+  currentDoctorId,
+  onRefetchSlots,
 }) => {
   const isPastActualDate = (date: Date) => {
     const today = new Date();
@@ -33,6 +38,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   const isTodayDate = (date: Date) => new Date().toDateString() === date.toDateString();
 
+  const handleDateClick = (date: Date, isPast: boolean, isSelected: boolean) => {
+    if (isPast) return;
+    if (isSelected) {
+      onRefetchSlots?.();
+    } else {
+      setSelectedDate(date);
+    }
+  };
+
   const getCalendarTitle = () => {
     const first = rollingDates[0];
     const last = rollingDates[rollingDates.length - 1];
@@ -43,9 +57,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   return (
-    <div className="xl:col-span-6 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
+    <Card className="xl:col-span-6 flex flex-col overflow-hidden h-[500px] xl:h-full shadow-sm">
+      <CardContent className="p-6 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -83,7 +98,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
           {rollingDates.map((date, index) => {
             const dayAppointments = getDayAppointmentsForDate(date);
-            const countToDisplay = dayAppointments.length;
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+            const apiCount = Object.entries(appointmentsByDate).find(([key]) => key.startsWith(dateStr))?.[1] || 0;
+            const countToDisplay = currentDoctorId ? dayAppointments.length : Math.max(apiCount as number, dayAppointments.length);
             const isSelected = selectedDate.toDateString() === date.toDateString();
             const isToday = isTodayDate(date);
             const isPast = isPastActualDate(date);
@@ -91,7 +108,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             return (
               <div
                 key={index}
-                onClick={() => !isPast && setSelectedDate(date)}
+                onClick={() => handleDateClick(date, isPast, isSelected)}
                 className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group
                   ${isToday ? "bg-primary text-white shadow-lg border-primary" : 
                     isSelected ? "bg-secondary text-primary border-primary/20 shadow-sm" : 
@@ -116,6 +133,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           })}
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

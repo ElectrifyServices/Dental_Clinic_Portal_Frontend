@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui";
 import { Mail } from "lucide-react";
 
 interface ForgotSentViewProps {
@@ -31,13 +32,14 @@ export function ForgotSentView({ setView, resetEmail, setResetEmail }: ForgotSen
         </p>
       </div>
 
-      <button
+      <Button
+        variant="outline"
         type="button"
         onClick={() => { setView('login'); setResetEmail(''); }}
         className="w-full h-11 bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 rounded-xl font-semibold text-[14px] transition-all duration-150"
       >
         Back to Login
-      </button>
+      </Button>
     </div>
   );
 }

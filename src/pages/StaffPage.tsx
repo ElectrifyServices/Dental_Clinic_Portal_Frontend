@@ -16,7 +16,7 @@ export const StaffPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { staffMembers, handleDeleteStaff, handleUpdateStaffStatus } = useAppData({
+  const { staffMembers, handleDeleteStaff, handleUpdateStaffStatus, refetchStaff } = useAppData({
     search: debouncedSearch,
     role: roleFilter,
   });
@@ -24,6 +24,12 @@ export const StaffPage: React.FC = () => {
     search: debouncedSearch,
     role: roleFilter,
   });
+
+  useEffect(() => {
+    if (refetchStaff) {
+      refetchStaff();
+    }
+  }, [refetchStaff]);
   const {
     setActiveModal, setSelectedItemId, setSelectedStaffForSalary,
     confirmDelete,

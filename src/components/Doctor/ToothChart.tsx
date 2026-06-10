@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 
 type ConditionId =
@@ -293,7 +294,7 @@ export function ToothChart({
         {CONDITIONS.map((c) => {
           const isActive = activeMode === c.id;
           return (
-            <button
+            <Button
               key={c.id}
               type="button"
               onClick={() => setActiveMode(c.id)}
@@ -310,19 +311,20 @@ export function ToothChart({
               }}
             >
               {c.label}
-            </button>
+            </Button>
           );
         })}
       </div>
 
       {/* Chart */}
       <div
+        className="scrollbar-thin"
         style={{
           background: "#fff",
           border: "0.5px solid #e0e0e0",
           borderRadius: 12,
           padding: "1rem",
-          overflow: "hidden",
+          overflowX: "auto",
         }}
       >
         <div
@@ -350,7 +352,7 @@ export function ToothChart({
         >
           Maxilla (upper)
         </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: 540 }}>
           {UPPER_TEETH.map((num) => (
             <ToothCell
               key={num}
@@ -371,7 +373,7 @@ export function ToothChart({
             opacity: 0.2,
           }}
         >
-          <div style={{ flex: 1, height: 0.5, background: "#444" }} />
+          <div style={{ flex: 1, minWidth: 200, height: 0.5, background: "#444" }} />
           <div
             style={{
               width: 4,
@@ -380,10 +382,10 @@ export function ToothChart({
               background: "#444",
             }}
           />
-          <div style={{ flex: 1, height: 0.5, background: "#444" }} />
+          <div style={{ flex: 1, minWidth: 200, height: 0.5, background: "#444" }} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 2 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: 540 }}>
           {LOWER_TEETH.map((num) => (
             <ToothCell
               key={num}

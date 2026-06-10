@@ -8,11 +8,16 @@ import {
   Pill,
   IndianRupee,
   Clock,
+  Activity,
+  CheckCircle2,
+  Clock as ClockIcon,
+  CalendarDays,
 } from "lucide-react";
 import { Modal, Button, ContentCard, Badge } from "@/components/ui";
+import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
 
 interface TreatmentViewerProps {
-  treatment: any;
+  treatmentId: string; // Changed from treatment: any to treatmentId
   onClose: () => void;
   onEditTreatment: (id: string) => void;
   onMarkCompleted: (id: string) => void;
@@ -20,19 +25,64 @@ interface TreatmentViewerProps {
 }
 
 export function TreatmentViewer({
-  treatment,
+  treatmentId,
   onClose,
   onEditTreatment,
   onMarkCompleted,
   onStartTreatment,
 }: TreatmentViewerProps) {
-  if (!treatment) return null;
+  
+  // Fetch treatment data using the ID
+  const { data: treatmentData, isLoading, error } = useTreatmentPlanQuery(treatmentId, {
+    enabled: !!treatmentId
+  });
 
+  const treatment = treatmentData?.data; // Adjust based on your API response structure
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Modal
+        title="Loading Treatment..."
+        onClose={onClose}
+        size="5xl"
+        icon={<Stethoscope className="w-5 h-5 animate-pulse" />}
+      >
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading treatment details...</p>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Modal
+        title="Error Loading Treatment"
+        onClose={onClose}
+        size="5xl"
+        icon={<Stethoscope className="w-5 h-5 text-red-500" />}
+      >
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">Failed to load treatment details</p>
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (!treatment) return null;
   const handleDownload = () => {
     const printContent = `
       <html>
         <head>
-          <title>Treatment Plan - ${treatment.patientName}</title>
+          <title>Treatment Plan - ${treatment.patient?.name || treatment.patientName}</title>
           <style>
             body { font-family: 'Inter', sans-serif; margin: 40px; color: #1e293b; line-height: 1.6; }
             .header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid #3b82f6; padding-bottom: 20px; }
@@ -40,31 +90,76 @@ export function TreatmentViewer({
             h1, h2, h3 { color: #0f172a; margin-top: 0; }
             .prescription-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
             .med-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 4px solid #10b981; }
+            .session-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+            .session-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+            .status-scheduled { background: #fef3c7; color: #d97706; }
+            .status-completed { background: #d1fae5; color: #059669; }
+            .status-in-progress { background: #dbeafe; color: #2563eb; }
             .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>TREATMENT PLAN & PROGRESS</h1>
-            <p style="font-weight: bold; color: #3b82f6;">DentalCare Pro - Advanced Dental Solutions</p>
+            <p style="font-weight: bold; color: #3b82f6;">Opal Smiles Dental Studio - Advanced Dental Solutions</p>
           </div>
           
           <div class="section">
             <h3>Patient Information</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <p><strong>Patient:</strong> ${treatment.patientName}</p>
+              <p><strong>Patient:</strong> ${treatment.patient?.name || treatment.patientName}</p>
               <p><strong>Procedure:</strong> ${treatment.procedure}</p>
-              <p><strong>Tooth:</strong> ${treatment.tooth}</p>
-              <p><strong>Doctor:</strong> ${treatment.doctorName}</p>
-              <p><strong>Date:</strong> ${new Date(treatment.date).toLocaleDateString()}</p>
-              <p><strong>Status:</strong> ${treatment.status.toUpperCase()}</p>
+              <p><strong>Tooth:</strong> ${treatment.tooth_number}</p>
+              <p><strong>Doctor:</strong> ${treatment.doctor?.name || treatment.doctorName}</p>
+              <p><strong>Date:</strong> ${new Date(treatment.treatment_date).toLocaleDateString()}</p>
+              <p><strong>Status:</strong> ${treatment.status}</p>
             </div>
           </div>
 
           <div class="section">
             <h3>Clinical Notes</h3>
-            <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.notes || "No notes available."}</p>
+            <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.clinical_notes || "No notes available."}</p>
           </div>
+
+          ${
+            treatment.sessions?.length > 0
+              ? `
+          <div class="section">
+            <h3>Treatment Sessions</h3>
+            ${treatment.sessions
+              .map(
+                (session: any) => `
+              <div class="session-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <h4 style="margin: 0;">Session ${session.visit_number}</h4>
+                  <span class="session-status status-${session.status?.toLowerCase()}">${session.status}</span>
+                </div>
+                <p><strong>Date:</strong> ${new Date(session.visit_date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> ${session.start_time} (${session.duration_min} mins)</p>
+                <p><strong>Fee:</strong> ₹${parseInt(session.session_fee).toLocaleString()}</p>
+                ${
+                  session.work_done
+                    ? `<p><strong>Work Done:</strong> ${session.work_done}</p>`
+                    : ""
+                }
+                ${
+                  session.session_findings
+                    ? `<p><strong>Findings:</strong> ${session.session_findings}</p>`
+                    : ""
+                }
+                ${
+                  session.next_session_plan
+                    ? `<p><strong>Next Session Plan:</strong> ${session.next_session_plan}</p>`
+                    : ""
+                }
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+          `
+              : ""
+          }
 
           <div class="section">
             <h3>Prescribed Medications</h3>
@@ -73,9 +168,11 @@ export function TreatmentViewer({
                 .map(
                   (p: any) => `
                 <div class="med-card">
-                  <p><strong>${p.medicine}</strong></p>
+                  <p><strong>${p.medicine_name}</strong></p>
                   <p style="font-size: 13px; margin: 5px 0;">Dosage: ${p.dosage} | Timing: ${p.timing}</p>
-                  <p style="font-size: 13px; margin: 5px 0;">Freq: ${p.frequency} | Dur: ${p.duration}</p>
+                  <p style="font-size: 13px; margin: 5px 0;">Freq: ${p.frequency}/day | Dur: ${p.duration} ${p.duration_type}</p>
+                  <p style="font-size: 13px; margin: 5px 0;">Quantity: ${p.qty} units</p>
+                  ${p.instructions ? `<p style="font-size: 13px; margin: 5px 0;"><strong>Instructions:</strong> ${p.instructions}</p>` : ""}
                 </div>
               `,
                 )
@@ -93,24 +190,60 @@ export function TreatmentViewer({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `treatment-plan-${treatment.patientName}.html`;
+    a.download = `treatment-plan-${treatment.patient?.name || treatment.patientName}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const statusVariant = (treatment.status === 'completed' ? 'green' : treatment.status === 'in-progress' ? 'blue' : 'amber') as any;
+  const getSessionStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      SCHEDULED: "amber",
+      IN_PROGRESS: "blue",
+      COMPLETED: "green",
+      CANCELLED: "red",
+    };
+    return variants[status?.toUpperCase()] || "default";
+  };
+
+  const getSessionStatusIcon = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case "COMPLETED":
+        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case "IN_PROGRESS":
+        return <Activity className="w-4 h-4 text-blue-500" />;
+      case "SCHEDULED":
+        return <CalendarDays className="w-4 h-4 text-amber-500" />;
+      default:
+        return <ClockIcon className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const statusVariant = (
+    treatment.status === "COMPLETED"
+      ? "green"
+      : treatment.status === "IN_PROGRESS"
+      ? "blue"
+      : "amber"
+  ) as any;
+
+  // Calculate session progress
+  const totalSessions = treatment.sessions?.length || 0;
+  const completedSessions =
+    treatment.sessions?.filter((s: any) => s.status === "COMPLETED").length || 0;
+  const sessionProgress =
+    totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
 
   return (
     <Modal
       title={treatment.procedure}
-      subtitle={`${treatment.patientName} • Tooth ${treatment.tooth}`}
+      subtitle={`${treatment.patient?.name || treatment.patientName} • Tooth ${treatment.tooth_number}`}
       onClose={onClose}
       size="5xl"
       icon={<Stethoscope className="w-5 h-5" />}
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {treatment.status === "planned" && (
+            {treatment.status === "PLANNED" && (
               <Button
                 onClick={() => {
                   onStartTreatment(treatment.id);
@@ -121,7 +254,7 @@ export function TreatmentViewer({
                 Start Treatment
               </Button>
             )}
-            {treatment.status === "in-progress" && (
+            {treatment.status === "IN_PROGRESS" && (
               <Button
                 onClick={() => {
                   onMarkCompleted(treatment.id);
@@ -136,13 +269,16 @@ export function TreatmentViewer({
               variant="outline"
               onClick={() => {
                 onEditTreatment(treatment.id);
-                onClose();
               }}
             >
               Edit Plan
             </Button>
           </div>
-          <Button variant="ghost" onClick={handleDownload} className="gap-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            onClick={handleDownload}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
             <Download className="w-4 h-4" /> Download Report
           </Button>
         </div>
@@ -150,67 +286,267 @@ export function TreatmentViewer({
     >
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ContentCard 
-            title="Patient Overview" 
+          <ContentCard
+            title="Patient Overview"
             icon={<User className="w-5 h-5" />}
             className="bg-primary/5 border-primary/10"
           >
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Name</span>
-                <span className="text-sm font-black text-foreground">{treatment.patientName}</span>
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
+                  Name
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {treatment.patient?.name}
+                </span>
               </div>
               <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Tooth</span>
-                <span className="text-sm font-black text-foreground">#{treatment.tooth}</span>
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
+                  Phone
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {treatment.patient?.phone || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
+                  Tooth
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  #{treatment.tooth_number}
+                </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Doctor</span>
-                <span className="text-sm font-black text-foreground">{treatment.doctorName}</span>
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
+                  Doctor
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {treatment.doctor?.name || treatment.doctor?.staff?.name || treatment.doctorName || (treatment.doctor as any)?.personal_profile?.staff?.name || "—"}
+                </span>
               </div>
             </div>
           </ContentCard>
 
-          <ContentCard 
-            title="Timeline & Status" 
+          <ContentCard
+            title="Timeline & Status"
             icon={<Calendar className="w-5 h-5" />}
             className="bg-emerald-50/50 border-emerald-100"
           >
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
-                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Started</span>
-                <span className="text-sm font-black text-foreground">{new Date(treatment.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
+                  Treatment Date
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {new Date(treatment.treatment_date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
               </div>
               <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
-                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Next Visit</span>
-                <span className="text-sm font-black text-foreground">{treatment.nextAppointment ? new Date(treatment.nextAppointment).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}</span>
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
+                  Next Visit
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {treatment.next_appointment
+                    ? new Date(treatment.next_appointment).toLocaleDateString(
+                        "en-IN",
+                        { day: "2-digit", month: "short", year: "numeric" }
+                      )
+                    : "—"}
+                </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">Status</span>
-                <Badge variant={statusVariant} className="font-black text-[9px] uppercase tracking-widest px-2.5 h-5">{treatment.status}</Badge>
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
+                  Status
+                </span>
+                <Badge
+                  variant={statusVariant}
+                  className="font-black text-[9px] uppercase tracking-widest px-2.5 h-5"
+                >
+                  {treatment.status?.replace("_", " ")}
+                </Badge>
               </div>
             </div>
           </ContentCard>
 
-          <ContentCard 
-            title="Financial Status" 
+          <ContentCard
+            title="Financial Status"
             icon={<IndianRupee className="w-5 h-5" />}
             className="bg-indigo-50/50 border-indigo-100"
           >
             <div className="mt-2">
-              <p className="text-3xl font-black text-indigo-900 tracking-tighter">₹{treatment.cost.toLocaleString()}</p>
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-1">Total Procedure Fee</p>
+              <p className="text-3xl font-black text-indigo-900 tracking-tighter">
+                ₹{parseInt(treatment.est_cost).toLocaleString()}
+              </p>
+              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-1">
+                Total Procedure Fee
+              </p>
             </div>
           </ContentCard>
         </div>
 
-        <ContentCard 
-          title="Clinical Notes & Progression" 
+        {/* Sessions Section */}
+        {treatment.sessions?.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+                <Activity className="w-4 h-4 text-blue-500" /> Treatment Sessions
+              </h3>
+              {totalSessions > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {completedSessions}/{totalSessions} completed
+                  </span>
+                  <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                      style={{ width: `${sessionProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="space-y-3">
+              {treatment.sessions
+                .sort(
+                  (a: any, b: any) =>
+                    (a.visit_number || 0) - (b.visit_number || 0)
+                )
+                .map((session: any) => (
+                  <ContentCard
+                    key={session.id}
+                    className={`border-l-4 hover:shadow-md transition-all ${
+                      session.status === "COMPLETED"
+                        ? "border-l-emerald-500"
+                        : session.status === "IN_PROGRESS"
+                        ? "border-l-blue-500"
+                        : "border-l-amber-500"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
+                            {session.visit_number}
+                          </div>
+                          <div>
+                            <p className="font-bold text-foreground">
+                              Session {session.visit_number}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {session.clinical_objectives || "No objectives set"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ml-11">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-muted-foreground">
+                                Date
+                              </p>
+                              <p className="text-xs font-semibold">
+                                {new Date(session.visit_date).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  }
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-muted-foreground">
+                                Time
+                              </p>
+                              <p className="text-xs font-semibold">
+                                {session.start_time} ({session.duration_min} min)
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-muted-foreground">
+                                Fee
+                              </p>
+                              <p className="text-xs font-semibold">
+                                ₹{parseInt(session.session_fee).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {getSessionStatusIcon(session.status)}
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-muted-foreground">
+                                Status
+                              </p>
+                              <Badge
+                                variant={getSessionStatusBadge(session.status)}
+                                className="text-[9px] px-2 h-5"
+                              >
+                                {session.status?.replace("_", " ") || "SCHEDULED"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Additional session details */}
+                        {(session.work_done || session.session_findings || session.next_session_plan) && (
+                          <div className="mt-4 ml-11 p-3 bg-muted/30 rounded-lg border border-border/50">
+                            {session.work_done && (
+                              <div className="mb-2">
+                                <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
+                                  Work Done
+                                </p>
+                                <p className="text-sm">{session.work_done}</p>
+                              </div>
+                            )}
+                            {session.session_findings && (
+                              <div className="mb-2">
+                                <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
+                                  Clinical Findings
+                                </p>
+                                <p className="text-sm">{session.session_findings}</p>
+                              </div>
+                            )}
+                            {session.next_session_plan && (
+                              <div>
+                                <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
+                                  Next Session Plan
+                                </p>
+                                <p className="text-sm">{session.next_session_plan}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </ContentCard>
+                ))}
+            </div>
+          </div>
+        )}
+
+        <ContentCard
+          title="Clinical Notes & Progression"
           icon={<FileText className="w-5 h-5 text-primary" />}
           className="border-border/50"
         >
           <div className="bg-muted/30 rounded-2xl p-6 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
-            {treatment.notes || "No detailed clinical notes provided for this treatment plan."}
+            {treatment.clinical_notes ||
+              "No detailed clinical notes provided for this treatment plan."}
           </div>
         </ContentCard>
 
@@ -221,9 +557,9 @@ export function TreatmentViewer({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {treatment.prescriptions.map((p: any) => (
-                <ContentCard 
+                <ContentCard
                   key={p.id}
-                  title={p.medicine}
+                  title={p.medicine_name}
                   subtitle={p.dosage}
                   className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
                 >
@@ -232,40 +568,24 @@ export function TreatmentViewer({
                       <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}
+                      <Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}{" "}
+                      {p.duration_type}
                     </div>
                     <div className="flex items-center gap-2">
-                      <FileText className="w-3 h-3 text-emerald-400" /> {p.frequency}
+                      <Activity className="w-3 h-3 text-emerald-400" /> {p.frequency}/day
                     </div>
                     <div className="flex items-center gap-2">
                       <Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units
                     </div>
                   </div>
-                </ContentCard>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {treatment.images?.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-              <Camera className="w-4 h-4 text-blue-500" /> Diagnostic Media
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {treatment.images.map((img: string, i: number) => (
-                <div
-                  key={i}
-                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-xl"
-                  onClick={() => window.open(img, "_blank")}
-                >
-                  <img src={img} alt="Diagnostic" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center text-primary transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                      <Download className="w-5 h-5" />
+                  {p.instructions && (
+                    <div className="mt-3 pt-3 border-t border-emerald-100/50">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-bold">Instructions:</span> {p.instructions}
+                      </p>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </ContentCard>
               ))}
             </div>
           </div>

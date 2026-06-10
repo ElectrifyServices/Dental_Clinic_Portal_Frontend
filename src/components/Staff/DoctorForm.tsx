@@ -11,7 +11,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, Loading } from "@/components/ui";
 import { Step1Personal } from "./StaffForm/Step1Personal";
 import { Step2Role } from "./StaffForm/Step2Role";
 import { Step3Documentation, REQUIRED_DOCS } from "./StaffForm/Step3Documentation";
@@ -30,10 +30,9 @@ import {
 } from "@/lib/schemas/staff.schema";
 import { useCreateStaffMutation } from "../../hooks/staff/useCreateStaffMutation";
 import { useUpdateStaffMutation } from "../../hooks/staff/useUpdateStaffMutation";
-import { useRolesQuery } from "@/hooks/roles/useRolesQuery";
+import { useRolesQuery, fetchRolesList } from "@/hooks/roles/useRolesQuery";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useSingleStaffQuery } from "../../hooks/staff/useSingleStaffQuery";
-import apiClient from "@/services/apiClient";
 import { useModal } from "@/contexts/ModalContext";
 
 interface DoctorFormProps {
@@ -122,7 +121,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             }
           }
         } catch (e) {
-          console.error("Failed to parse permissions", e);
+          // Failed to parse permissions
         }
 
         const profile = s.personal_profile || {};
@@ -143,15 +142,15 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           profitSharing: profile.profit_sharing || doctor.profitSharing || false,
           profitPercentage: profile.profit_sharing_percentage || doctor.profitPercentage || 0,
           licenseNumber: profile.license_number || doctor.licenseNumber || '',
-          monthlySalary: sal || doctor.monthlySalary || '',
-          salaryPaid: s.salaryPaid || doctor.salaryPaid || '0',
-          salaryPending: s.salaryPending || doctor.salaryPending || sal || '0',
+          monthlySalary: String(sal ?? doctor.monthlySalary ?? ''),
+          salaryPaid: String(s.salaryPaid ?? doctor.salaryPaid ?? '0'),
+          salaryPending: String(s.salaryPending ?? doctor.salaryPending ?? sal ?? '0'),
           education: profile.education || doctor.education || '',
-          experience: exp || doctor.experience || '',
+          experience: String(exp ?? doctor.experience ?? ''),
           department: profile.department || doctor.department || '',
           designation: profile.designation || doctor.designation || '',
           qualification: profile.qualification || doctor.qualification || '',
-          consultationFee: profile.consultation_fee !== undefined ? String(profile.consultation_fee) : doctor.consultationFee || '',
+          consultationFee: String(profile.consultation_fee ?? doctor.consultationFee ?? ''),
           isActive: s.status === 'ACTIVE',
           avatar: s.profile_picture || doctor.avatar || doctor.image || '',
         });
@@ -250,10 +249,10 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       if (!currentApiRoles) {
         // Fallback fetch if React Query failed or returned undefined (e.g., due to QuotaExceededError)
         try {
-          const res = await apiClient.post("/role/list", { all: true });
-          currentApiRoles = res.data?.responseObject ?? res.data;
+          const fallbackRoles = await fetchRolesList();
+          currentApiRoles = fallbackRoles;
         } catch (e) {
-          console.error("Fallback role fetch failed", e);
+          // Fallback role fetch failed
         }
       }
 
@@ -360,8 +359,6 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           // Otherwise, multer will throw an "Unexpected field" error.
           if (fieldName) {
             formDataObj.append(fieldName, doc.file);
-          } else {
-            console.warn(`Skipping upload for ${doc.type} because backend mapping is missing.`);
           }
         }
       });
@@ -376,6 +373,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
       // Explicitly invalidate staff list so UI refreshes immediately
       await queryClient.invalidateQueries({ queryKey: ["staff"] });
+      if (doctor?.id) {
+        await queryClient.invalidateQueries({ queryKey: ["singleStaff", doctor.id] });
+      }
 
       // Strip large files/base64 before saving to local state
       const cleanData = { ...data };
@@ -407,7 +407,6 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         timeSlots: doctor?.timeSlots || { duration: 30, bufferTime: 5 },
       });
     } catch (error: any) {
-      console.error("Error creating staff:", error);
 
       let errMsg = "Failed to save staff. Please check the details.";
 
@@ -593,8 +592,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             <Button
               onClick={
                 currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
-                  console.error("Form Validation Failed:", errs);
-                  // You can optionally show a toast here
+                  const errorMsg = Object.values(errs)
+                    .map((err: any) => err.message)
+                    .filter(Boolean)
+                    .join(", ");
+                  showToast(errorMsg || "Please fill all required fields correctly.", "error");
                 })
               }
               disabled={isSaving}
@@ -621,9 +623,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     >
       <div className="space-y-6 relative min-h-[400px]">
         {isFetching && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
-            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading staff details from API...</p>
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50 rounded-2xl transition-all duration-300">
+            <Loading type="spinner" text="Loading staff details from API..." />
           </div>
         )}
         <div className="flex items-center justify-between px-2">
@@ -640,7 +641,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     <Icon className="w-4 h-4" />
                   </div>
                   <span
-                    className={`text-[9px] font-black uppercase tracking-widest ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}
+                    className={`text-[9px] font-black uppercase tracking-widest hidden sm:block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}
                   >
                     {s.title}
                   </span>

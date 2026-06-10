@@ -1,4 +1,5 @@
-﻿import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Trash2 } from "lucide-react";
 
 interface DeleteConfirmModalProps {
   onCancel: () => void;
@@ -21,18 +22,26 @@ export function DeleteConfirmModal({
           cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
             className="px-4 py-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition text-sm font-medium"
           >
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onConfirm();
+            }}
             className="px-4 py-2 rounded-lg bg-destructive text-white hover:bg-destructive transition text-sm font-medium"
           >
             Yes, Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>

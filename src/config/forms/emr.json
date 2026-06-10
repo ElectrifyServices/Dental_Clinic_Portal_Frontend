@@ -29,13 +29,13 @@
           "required": true,
           "colSpan": 6,
           "options": [
-            { "value": "consultation",    "label": "Consultation" },
-            { "value": "prescription",    "label": "Prescription" },
-            { "value": "lab-report",      "label": "Lab Report" },
-            { "value": "x-ray",           "label": "X-Ray / Imaging" },
-            { "value": "treatment-note",  "label": "Treatment Note" },
-            { "value": "progress-note",   "label": "Progress Note" },
-            { "value": "discharge",       "label": "Discharge Summary" }
+            { "value": "previous-prescriptions", "label": "Previous Prescriptions" },
+            { "value": "blood-reports",          "label": "Blood Reports" },
+            { "value": "ecg-reports",            "label": "ECG Reports" },
+            { "value": "physician-clearance",    "label": "Physician Clearance Letter" },
+            { "value": "xrays-imaging",          "label": "X-rays / Medical Imaging" },
+            { "value": "discharge-summary",      "label": "Hospital Discharge Summary" },
+            { "value": "other",                  "label": "other" }
           ]
         },
         {

@@ -9,7 +9,7 @@ export function useCreateStaffMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, CreateStaffVariables>({
-    endpoint: "/staff/create",
+    endpoint: "/staff",
     method: "post",
     transformRequest: (variables) => variables.formData,
     headers: {
@@ -21,4 +21,4 @@ export function useCreateStaffMutation() {
       },
     },
   });
-}
+} 

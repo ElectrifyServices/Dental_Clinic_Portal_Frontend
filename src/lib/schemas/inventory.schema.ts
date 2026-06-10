@@ -24,10 +24,22 @@ export type InventoryFormData = z.infer<typeof inventorySchema>;
 
 export const restockSchema = z.object({
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
-  purchasePrice: z.coerce.number().min(0, 'Price cannot be negative'),
-  supplier: z.string().optional(),
-  invoiceNo: z.string().optional(),
-  date: z.string().min(1, 'Date is required'),
+  reason: z.string().optional(),
+  reference_id: z.string().optional(),
 });
-
 export type RestockFormData = z.infer<typeof restockSchema>;
+
+export const consumeSchema = z.object({
+  quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
+  reason: z.string().min(1, 'Reason is required'),
+  reference_id: z.string().optional(),
+});
+export type ConsumeFormData = z.infer<typeof consumeSchema>;
+
+export const adjustSchema = z.object({
+  quantity: z.coerce.number(), // Can be positive or negative
+  reason: z.string().min(1, 'Reason is required'),
+  reference_id: z.string().optional(),
+});
+export type AdjustFormData = z.infer<typeof adjustSchema>;
+

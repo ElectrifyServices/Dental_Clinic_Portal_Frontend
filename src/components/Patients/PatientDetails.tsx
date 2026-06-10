@@ -110,6 +110,22 @@ export function PatientDetails({
       }))
     : familyMembers;
 
+  const formatAppointmentDate = (dateVal?: string | number | Date) => {
+    if (!dateVal) return "—";
+    try {
+      const d = new Date(dateVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(dateVal);
+    } catch (e) {
+      return String(dateVal);
+    }
+  };
+
   const localPatientAppointments = appointments.filter(
     (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
   );
@@ -125,32 +141,46 @@ export function PatientDetails({
 
     if (rawAppointments.length > 0) {
       patientAppointments = rawAppointments.map((a: any) => {
-        // Prefer start_time_ist (already IST formatted like "02:35 pm"), fallback to ISO
+        let dateVal = a.date_ist || a.date;
+        let formattedDate = formatAppointmentDate(dateVal);
+
         let timeStr = a.start_time_ist || a.time || a.start_time || "";
-        if (timeStr && timeStr.includes("T")) {
-          try {
-            timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          } catch(e) {}
+        if (timeStr) {
+          if (timeStr.includes("T")) {
+            try {
+              timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch(e) {}
+          } else if (timeStr.match(/^\d{2}:\d{2}$/) || timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+            try {
+              const [h, m] = timeStr.split(":");
+              let hr = parseInt(h, 10);
+              const ampm = hr >= 12 ? "PM" : "AM";
+              hr = hr % 12 || 12;
+              timeStr = `${String(hr).padStart(2, '0')}:${m} ${ampm}`;
+            } catch(e) {}
+          }
         }
-        // Doctor name from nested personalProfile.staff.name
+
         const doctorName =
           a.personalProfile?.staff?.name ||
           a.doctorName ||
           a.doctor_name ||
           a.doctor ||
           "Assigned Doctor";
+
         return {
           id: a.id,
           treatmentType: a.specific_treatment || a.treatmentType || a.type || "General Checkup",
           type: a.type || a.treatmentType,
-          date: a.date_ist || a.date,
+          date: formattedDate,
           time: timeStr,
           doctorName,
           doctor: doctorName,
           status: (a.status || "scheduled").toLowerCase().replace(/_/g, '-'),
-          cost: a.treatment_cost,
-          concern: a.concern,
-          notes: a.notes,
+          cost: a.treatment_cost || a.cost || 0,
+          concern: a.concern || "",
+          notes: a.notes || "",
+          duration: a.duration || 15,
         };
       });
     } else if (historyData?.responseObject?.data) {
@@ -219,7 +249,7 @@ export function PatientDetails({
       win.document.write(
         getPrescriptionHTML({
           t,
-          localizedClinicName: "DentalCare Pro Clinic",
+          localizedClinicName: "Opal Smiles Dental Studio",
           localizedDoctorName: "Dr. Rajesh Sharma",
           localizedDoctorDegrees: "BDS, MDS",
           localizedPatientName: patient.name,
@@ -254,7 +284,7 @@ export function PatientDetails({
   return (
     <Modal
       title={patient.name}
-      subtitle={`Member ID: ${patient.id} • Registered ${new Date(patient.registrationDate || Date.now()).toLocaleDateString()}`}
+      subtitle={`Member ID: ${patient.id} • Registered ${new Date(patient.created_at || patient.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`}
       onClose={onClose}
       size="5xl"
       icon={

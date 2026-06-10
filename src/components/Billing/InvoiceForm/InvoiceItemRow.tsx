@@ -1,6 +1,9 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { Trash2, Check } from 'lucide-react';
 import { InvoiceItem } from '../../../types';
+import { Button } from '@/components/ui';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;
@@ -22,7 +25,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       isLinked ? 'bg-indigo-50 border-indigo-100' : 'bg-muted/30 border-border/50 hover:border-border'
     }`}>
       <div className="col-span-12 md:col-span-5">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Service Description</label>
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Service Description</Label>
         {isLinked ? (
           <div className="w-full px-3 py-2 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-sm flex items-center border border-indigo-200">
             <Check className="w-4 h-4 mr-2" />
@@ -49,7 +52,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
               <option value="custom">Custom Service...</option>
             </select>
             {(!commonServices.some(s => s.name === item.description) && !isLinked) && (
-              <input
+              <Input
                 type="text"
                 placeholder="Enter custom service description"
                 value={item.description}
@@ -62,8 +65,8 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       </div>
 
       <div className="col-span-3 md:col-span-2">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Qty</label>
-        <input
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Qty</Label>
+        <Input
           type="number"
           min="1"
           value={item.quantity}
@@ -73,8 +76,8 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       </div>
 
       <div className="col-span-4 md:col-span-2">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Rate (₹)</label>
-        <input
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Rate (₹)</Label>
+        <Input
           type="number"
           value={item.rate}
           readOnly={isLinked}
@@ -86,21 +89,21 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       </div>
 
       <div className="col-span-4 md:col-span-2">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Total (₹)</label>
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Total (₹)</Label>
         <div className="w-full px-3 py-2 bg-muted/50 border border-border/50 rounded-lg text-sm font-black text-right text-foreground">
           {(item.amount || 0).toLocaleString()}
         </div>
       </div>
 
       <div className="col-span-1 text-center pb-1">
-        <button
+        <Button
           type="button"
           onClick={() => onRemove(item.id)}
           className="p-2 text-red-500 hover:bg-destructive/10 rounded-lg transition-all"
           title="Remove Item"
         >
           <Trash2 className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

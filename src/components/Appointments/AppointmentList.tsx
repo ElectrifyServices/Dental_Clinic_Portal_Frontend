@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AppointmentTableRow } from "./AppointmentList/AppointmentTableRow";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
 interface AppointmentListProps {
   appointments?: any[];
@@ -14,23 +15,29 @@ interface AppointmentListProps {
   onCheckInPatient?: (appointment: any) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
+  searchValue?: string;
+  onSearchChange?: (val: string) => void;
+  apptFilter?: string;
+  onFilterChange?: (filter: string) => void;
 }
 
 const STATUS_VARIANTS: Record<string, any> = {
   completed: "green",
   "in-progress": "blue",
-  "checked-in": "purple",
+  "checked-in": "green",
   confirmed: "indigo",
   scheduled: "gray",
   cancelled: "red",
   "no-show": "amber",
+  "follow-up": "violet",
+  follow_up: "violet",
+  FOLLOW_UP: "violet",
 };
 
 const TYPE_FILTERS = [
   { id: "all", label: "All Appointments" },
   { id: "today", label: "Today" },
   { id: "week", label: "This Week" },
-  { id: "no-show", label: "No Show" },
 ];
 
 const PER_PAGE = 10;
@@ -43,21 +50,33 @@ export function AppointmentList({
   onCheckInPatient,
   selectedDate,
   setSelectedDate,
+  searchValue,
+  onSearchChange,
+  apptFilter,
+  onFilterChange,
 }: AppointmentListProps) {
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [localSearch, setLocalSearch] = useState("");
+  const searchTerm = searchValue !== undefined ? searchValue : localSearch;
+  const setSearchTerm = onSearchChange ?? setLocalSearch;
+
+  const [localFilter, setLocalFilter] = useState("all");
+  const filter = apptFilter !== undefined ? apptFilter : localFilter;
+  const setFilter = onFilterChange ?? setLocalFilter;
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
+  const { doctors } = useDoctorsListQuery();
+
   const today = new Date();
   const filtered = propAppointments.filter((a) => {
-    const name = (a.patientName || a.patient || "").toLowerCase();
+    const ptName = a.patientName || (a.patient && a.patient.name) || (typeof a.patient === 'string' ? a.patient : "");
+    const name = String(ptName || "").toLowerCase();
     const searchMatch =
-      name.includes(search.toLowerCase()) ||
+      name.includes(searchTerm.toLowerCase()) ||
       (a.treatmentType || a.type || "")
         .toLowerCase()
-        .includes(search.toLowerCase());
+        .includes(searchTerm.toLowerCase());
     let dateMatch = true;
     if (selectedDate) {
       const aDate = new Date(a.date);
@@ -73,7 +92,6 @@ export function AppointmentList({
       const diff = (new Date(a.date).getTime() - today.getTime()) / 86400000;
       return searchMatch && diff >= 0 && diff <= 7;
     }
-    if (filter === "no-show") return searchMatch && dateMatch && a.status === "no-show";
     return searchMatch && dateMatch;
   });
 
@@ -96,9 +114,9 @@ export function AppointmentList({
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search patient, treatment or doctor..."
-              value={search}
+              value={searchTerm}
               onChange={(e) => {
-                setSearch(e.target.value);
+                setSearchTerm(e.target.value);
                 setPage(1);
               }}
               className="pl-10 h-10 rounded-2xl bg-card border-border"
@@ -119,7 +137,8 @@ export function AppointmentList({
         </div>
         <div className="flex bg-muted p-1 rounded-2xl border border-border self-start">
           {TYPE_FILTERS.map((f) => (
-            <button
+            <Button
+              variant={filter === f.id ? "default" : "ghost"}
               key={f.id}
               onClick={() => {
                 setFilter(f.id);
@@ -127,12 +146,12 @@ export function AppointmentList({
               }}
               className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${
                 filter === f.id
-                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5"
-                  : "text-muted-foreground/60 hover:text-primary"
+                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5 hover:bg-card"
+                  : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
               }`}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -144,7 +163,7 @@ export function AppointmentList({
               <tr className="bg-muted/50 border-b border-border">
                 {[
                   "Patient Details",
-                  "Treatment",
+                  "Doctor",
                   "Schedule",
                   "Total Fee",
                   "Current Status",
@@ -174,6 +193,7 @@ export function AppointmentList({
                   <AppointmentTableRow
                     key={a.id}
                     appointment={a}
+                    doctors={doctors}
                     statusVariants={STATUS_VARIANTS}
                     formatTime={formatTime}
                     onOpenMenu={(e, id) => {
@@ -220,13 +240,14 @@ export function AppointmentList({
               <div className="flex gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (p) => (
-                    <button
+                    <Button
+                      variant={p === page ? "default" : "ghost"}
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md" : "text-muted-foreground/60 hover:bg-muted"}`}
+                      className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md hover:bg-primary/90" : "text-muted-foreground/60 hover:bg-muted"}`}
                     >
                       {p}
-                    </button>
+                    </Button>
                   ),
                 )}
               </div>

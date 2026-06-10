@@ -2,14 +2,14 @@ import { useApiQuery } from "../useApiQuery";
 import { getFileUrl } from "../../services/apiClient";
 import { useMemo } from "react";
 
-export function useDoctorsListQuery() {
+export function useDoctorsListQuery(search?: string) {
   const query = useApiQuery<any>({
-    queryKey: ["doctorsList"],
+    queryKey: ["doctorsList", search],
     endpoint: "/staff/list",
     method: "post",
     data: {
-      page: 1,
-      limit: 100,
+      all: true,
+      search: search || undefined,
       filters: {
         roles: ["DOCTOR"]
       }

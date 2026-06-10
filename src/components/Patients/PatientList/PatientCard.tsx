@@ -78,7 +78,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         return "bg-emerald-100 text-emerald-700 hover:bg-emerald-100";
       case "staff":
       case "clinic_staff":
-        return "bg-indigo-100 text-indigo-700 hover:bg-indigo-100";
+        return "bg-indigo-100 text-indigo-700 hover:bg-indigo-100"; 
       case "complimentary":
         return "bg-pink-100 text-pink-700 hover:bg-pink-100";
       default:
@@ -131,8 +131,8 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                   </Badge>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground/60 font-bold mt-0.5 uppercase tracking-tight truncate">
-                {patient.id}
+              <p className="text-[10px] text-blue-600 font-bold mt-0.5 uppercase tracking-tight truncate">
+                {patient.patient_code || patient.id}
               </p>
               <Badge
                 variant={getStatusVariant(patient.status || "active")}
@@ -207,7 +207,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="bg-primary/30 border border-primary/10 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-primary leading-none mb-0.5">
-              {patient.totalVisits || 0}
+              {patient.total_visits !== undefined ? patient.total_visits : (patient.totalVisits || 0)}
             </p>
             <p className="text-[8px] font-black text-primary uppercase tracking-wider">
               Visits
@@ -239,7 +239,16 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               <span className="text-[10px] font-bold">Registered</span>
             </div>
             <span className="text-[10px] font-black text-foreground">
-              {patient.registeredDate || "1/5/2026"}
+              {(() => {
+                const regVal = patient.created_at || patient.createdAt || patient.registeredDate;
+                if (!regVal) return "—";
+                try {
+                  const d = new Date(regVal);
+                  return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : regVal;
+                } catch (e) {
+                  return regVal;
+                }
+              })()}
             </span>
           </div>
           <div className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded-lg">
@@ -248,7 +257,16 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               <span className="text-[10px] font-bold">Last Visit</span>
             </div>
             <span className="text-[10px] font-black text-foreground truncate ml-2 text-right">
-              {patient.lastVisit || "No visits yet"}
+              {(() => {
+                const visitVal = patient.last_visit_date || patient.lastVisit;
+                if (!visitVal) return "No visits yet";
+                try {
+                  const d = new Date(visitVal);
+                  return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : visitVal;
+                } catch (e) {
+                  return visitVal;
+                }
+              })()}
             </span>
           </div>
         </div>
@@ -295,23 +313,22 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </div>
         <Button
           variant="ghost"
-          className={`w-full mt-2 h-8 font-black text-[10px] gap-1.5 ${
-                patient.status === "inactive"
-                  ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                  : "bg-orange-50 text-orange-600 hover:bg-orange-100"
-              }`}
-              onClick={() => onToggleStatus(patient.id, patient.status)}
-            >
-              {patient.status === "inactive" ? (
-                <>
-                  <UserCheck className="w-3.5 h-3.5" /> ACTIVATE
-                </>
-              ) : (
-                <>
-                  <PowerOff className="w-3.5 h-3.5" /> DEACTIVATE
-                </>
-              )}
-            </Button>
+          className={`w-full mt-2 h-8 font-black text-[10px] gap-1.5 ${patient.status === "inactive"
+              ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+              : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+            }`}
+          onClick={() => onToggleStatus(patient.id, patient.status)}
+        >
+          {patient.status === "inactive" ? (
+            <>
+              <UserCheck className="w-3.5 h-3.5" /> ACTIVATE
+            </>
+          ) : (
+            <>
+              <PowerOff className="w-3.5 h-3.5" /> DEACTIVATE
+            </>
+          )}
+        </Button>
       </CardContent>
     </Card>
   );

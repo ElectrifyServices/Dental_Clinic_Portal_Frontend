@@ -3,11 +3,12 @@ import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 
 // Query for fetching Allergies
-export const useAllergiesQuery = () => {
+export const useAllergiesQuery = (options?: any) => {
   return useApiQuery<any>({
     queryKey: ["allergies"],
     endpoint: "/patientMedical/allergies",
     method: "get",
+    options,
   });
 };
 

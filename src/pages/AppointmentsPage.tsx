@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Button } from "@/components/ui/Button";
 import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
@@ -7,6 +8,8 @@ import { AppointmentList } from "../components/Appointments/AppointmentList";
 import { AppointmentStats } from "../components/Appointments/AppointmentList/AppointmentStats";
 import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 import { useCheckInAppointmentMutation } from "../hooks/appointments/useCheckInAppointmentMutation";
+import { useDebounce } from "../hooks/useDebounce";
+import { toast } from "../components/ui";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -16,6 +19,15 @@ export const AppointmentsPage: React.FC = () => {
     patients,
     handleDeleteAppointment,
     handleUpdateAppointmentStatus,
+    apptSearch,
+    setApptSearch,
+    selectedDate,
+    setSelectedDate,
+    apptFilter,
+    setApptFilter,
+    selectedDoctorId,
+    setSelectedDoctorId,
+    refetchAppointments,
   } = useAppData();
   const {
     setActiveModal,
@@ -23,16 +35,19 @@ export const AppointmentsPage: React.FC = () => {
     confirmDelete,
     setPendingCheckInAppt,
     setSelectedPatientId,
-    showToast,
   } = useModal();
 
-  const [viewMode, setViewMode] = useState("calendar");
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  });
+  useEffect(() => {
+    if (refetchAppointments) {
+      refetchAppointments();
+    }
+  }, [refetchAppointments]);
 
-  const { doctors: activeDoctors } = useDoctorsListQuery();
+  const [viewMode, setViewMode] = useState("calendar");
+  const [specialistSearch, setSpecialistSearch] = useState("");
+  const debouncedSpecialistSearch = useDebounce(specialistSearch, 500);
+
+  const { doctors: activeDoctors } = useDoctorsListQuery(debouncedSpecialistSearch);
 
   const isMatchingDate = (dateStr: string) => {
     if (!selectedDate) return true;
@@ -66,7 +81,8 @@ export const AppointmentsPage: React.FC = () => {
   const { mutateAsync: checkInAppointment } = useCheckInAppointmentMutation();
 
   const handleCheckInPatient = async (appt: any) => {
-    const sName = (appt.patientName || appt.patient || "").toLowerCase().trim();
+    const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
+    const sName = String(rawName).toLowerCase().trim();
     const sPhone = (appt.patientPhone || appt.phone || "").trim();
     const existing = patients.find(
       (p: any) =>
@@ -76,51 +92,54 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await checkInAppointment({ id: appt.id });
     } catch (err) {
-      console.error("Failed to check-in appointment:", err);
+      /* console.error removed */
     }
     setPendingCheckInAppt(appt);
     if (existing) {
       setSelectedPatientId(existing.id);
       setActiveModal("patientForm");
-      showToast("Please verify patient details before check-in");
+      toast.success("Please verify patient details before check-in");
     } else {
       setActiveModal("patientNotFound");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/50 shadow-sm">
+    <div className="space-y-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Appointments
           </h1>
-          <p className="text-muted-foreground font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             Schedule and manage patient visits
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
-          <button
+        <div className="flex items-center justify-between w-full md:w-auto gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl">
+          <Button
+            variant={viewMode === "calendar" ? "default" : "ghost"}
             onClick={() => setViewMode("calendar")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
           >
-            <LayoutGrid className="w-4 h-4" />
-            Calendar
-          </button>
-          <button
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="truncate">Calendar</span>
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
             onClick={() => setViewMode("list")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
           >
-            <ListFilter className="w-4 h-4" />
-            List View ({listCount})
-          </button>
-          <button
+            <ListFilter className="w-3.5 h-3.5" />
+            <span className="truncate">List View ({listCount})</span>
+          </Button>
+          <Button
+            variant={viewMode === "no-show" ? "default" : "ghost"}
             onClick={() => setViewMode("no-show")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm" : "text-muted-foreground hover:text-red-500"}`}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm" : "text-muted-foreground hover:text-red-500 hover:bg-muted/50"}`}
           >
-            <AlertTriangle className="w-4 h-4" />
-            No Show ({noShowCount})
-          </button>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span className="truncate">No Show ({noShowCount})</span>
+          </Button>
         </div>
       </div>
 
@@ -132,6 +151,12 @@ export const AppointmentsPage: React.FC = () => {
             onNewAppointment={handleNewAppointment}
             appointments={[...appointments, ...(noShowAppointments || [])]}
             doctors={activeDoctors}
+            searchTerm={specialistSearch}
+            setSearchTerm={setSpecialistSearch}
+            selectedDoctorId={selectedDoctorId}
+            setSelectedDoctorId={setSelectedDoctorId}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
             onBookAppointment={(
               doctorId: string,
               date: Date,
@@ -165,6 +190,10 @@ export const AppointmentsPage: React.FC = () => {
             onCheckInPatient={handleCheckInPatient}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            searchValue={apptSearch}
+            onSearchChange={setApptSearch}
+            apptFilter={apptFilter}
+            onFilterChange={setApptFilter}
           />
         )}
       </div>

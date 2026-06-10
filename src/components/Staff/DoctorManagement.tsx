@@ -118,7 +118,10 @@ export function DoctorManagement({
       s.name.toLowerCase().includes(q) ||
       s.email.toLowerCase().includes(q) ||
       (s.specialization || "").toLowerCase().includes(q);
-    const matchRole = roleFilter === "all" || s.role === roleFilter;
+    const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase().includes("doctor");
+    const matchRole = roleFilter === "all" || 
+                      (roleFilter === "doctor" && isDoctor) ||
+                      (roleFilter !== "doctor" && s.role === roleFilter);
     const matchStatus =
       statusFilter === "all" ||
       (statusFilter === "active" ? s.isActive : !s.isActive);
@@ -159,7 +162,7 @@ export function DoctorManagement({
         className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
         style={{ top: menuPos.top, left: menuPos.left }}
       >
-        <button
+        <Button
           onClick={() => {
             onUpdateStaff({ ...staff, isActive: !staff.isActive });
             setOpenMenuId(null);
@@ -175,9 +178,9 @@ export function DoctorManagement({
               <UserCheck className="w-4 h-4 text-emerald-500" /> Activate
             </>
           )}
-        </button>
-        {staff.role === "doctor" && (
-          <button
+        </Button>
+        {(staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor")) && (
+          <Button
             onClick={() => {
               onManageSchedule(staff.id, staff.name);
               setOpenMenuId(null);
@@ -185,10 +188,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
-          </button>
+          </Button>
         )}
         {onPaySalary && (
-          <button
+          <Button
             onClick={() => {
               onPaySalary(staff.id, staff.name);
               setOpenMenuId(null);
@@ -196,10 +199,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 text-emerald-700 font-medium transition-colors"
           >
             <IndianRupee className="w-4 h-4" /> Pay Salary
-          </button>
+          </Button>
         )}
         {onViewSalaryHistory && (
-          <button
+          <Button
             onClick={() => {
               onViewSalaryHistory(staff.id, staff.name);
               setOpenMenuId(null);
@@ -207,10 +210,10 @@ export function DoctorManagement({
             className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <IndianRupee className="w-4 h-4 text-amber-500" /> Salary History
-          </button>
+          </Button>
         )}
         <div className="h-px bg-muted my-1 mx-2" />
-        <button
+        <Button
           onClick={() => {
             onDeleteDoctor(staff.id);
             setOpenMenuId(null);
@@ -218,7 +221,7 @@ export function DoctorManagement({
           className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
         >
           <Trash2 className="w-4 h-4" /> Remove
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -258,8 +261,10 @@ export function DoctorManagement({
       key: "role",
       header: "Role",
       render: (staff: UserType) => {
-        const rm = ROLE_META[staff.role] || ROLE_META.assistant;
-        const displayLabel = (staff as any).originalRoleName || rm.label;
+        const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+        const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
+        const rawLabel = (staff as any).originalRoleName || rm.label;
+        const displayLabel = rawLabel.replace(/_/g, ' ');
         return (
           <Badge
             variant={rm.variant}
@@ -353,7 +358,7 @@ export function DoctorManagement({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         title="Staff Directory"
         subtitle={`${staffMembers.length} team members recorded`}
@@ -364,33 +369,34 @@ export function DoctorManagement({
         }
       />
 
-      <div className="flex flex-col xl:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search by name, email or role…"
           className="flex-1 w-full"
         />
-        <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
-          <FilterTabs
-            tabs={ROLE_FILTERS}
-            active={roleFilter}
-            onChange={setRoleFilter}
-          />
-          <div className="h-8 w-px bg-muted hidden md:block" />
-          <div className="flex items-center bg-muted p-1 rounded-xl border border-border">
-            <button
+        <div className="flex flex-row items-center justify-between gap-4 w-full lg:w-auto overflow-hidden">
+          <div className="overflow-x-auto scrollbar-none flex-1">
+            <FilterTabs
+              tabs={ROLE_FILTERS}
+              active={roleFilter}
+              onChange={setRoleFilter}
+            />
+          </div>
+          <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
+            <Button
               onClick={() => setViewMode("grid")}
               className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setViewMode("list")}
               className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -424,7 +430,8 @@ export function DoctorManagement({
             </div>
           ) : (
             filtered.map((staff) => {
-              const rm = ROLE_META[staff.role] || ROLE_META.assistant;
+              const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+              const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
               return (
                 <Card
                   key={staff.id}
@@ -488,7 +495,7 @@ export function DoctorManagement({
                           variant={rm.variant}
                           className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
                         >
-                          {(staff as any).originalRoleName || rm.label}
+                          {((staff as any).originalRoleName || rm.label).replace(/_/g, ' ')}
                         </Badge>
                         <Badge
                           variant={staff.isActive ? "green" : "gray"}

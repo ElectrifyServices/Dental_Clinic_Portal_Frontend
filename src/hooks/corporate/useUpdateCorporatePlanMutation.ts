@@ -16,7 +16,7 @@ export interface UpdateCorporatePlanVariables {
 
 export function useUpdateCorporatePlanMutation() {
   return useApiMutation<CreateCorporatePlanResponse, UpdateCorporatePlanVariables>({
-    getEndpoint: (variables) => `/corporate/plan/${variables.id}`,
+    getEndpoint: (variables) => `/corporatePlan/${variables.id}`,
     method: "put",
     transformRequest: ({ id: _id, ...rest }) => rest,
   });

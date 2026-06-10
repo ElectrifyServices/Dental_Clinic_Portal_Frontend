@@ -1,7 +1,10 @@
+import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 ﻿import React, { useState } from 'react';
 import { Building2, Check, ChevronDown, X, Info, Tag } from 'lucide-react';
 import { CorporatePlan } from '../../types';
 import { COLOR_MAP, getPlanBenefitSummary } from '../../utils/corporatePlan';
+import { Button } from '../ui';
 
 interface Props {
   plans: CorporatePlan[];
@@ -30,7 +33,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
     <div className="space-y-3">
       {/* Selector */}
       <div className="relative">
-        <button type="button" onClick={() => setOpen(!open)}
+        <Button type="button" onClick={() => setOpen(!open)}
           className="w-full flex items-center justify-between px-3.5 py-2.5 bg-card border border-border rounded-xl text-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary transition-all">
           <div className="flex items-center gap-2 min-w-0">
             <Building2 className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
@@ -45,12 +48,12 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
           </div>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
             {selected && (
-              <button type="button" onClick={e => { e.stopPropagation(); onChange('', '', ''); }}
-                className="p-0.5 hover:bg-muted rounded"><X className="w-3.5 h-3.5 text-muted-foreground/60" /></button>
+              <Button type="button" onClick={e => { e.stopPropagation(); onChange('', '', ''); }}
+                className="p-0.5 hover:bg-muted rounded"><X className="w-3.5 h-3.5 text-muted-foreground/60" /></Button>
             )}
             <ChevronDown className={`w-4 h-4 text-muted-foreground/60 transition-transform ${open ? 'rotate-180' : ''}`} />
           </div>
-        </button>
+        </Button>
 
         {open && (
           <div className="absolute z-50 top-full mt-1.5 w-full bg-card rounded-xl border border-border shadow-xl overflow-hidden">
@@ -59,7 +62,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
                 const c = COLOR_MAP[plan.color] ?? COLOR_MAP.blue;
                 const isSel = plan.id === selectedPlanId;
                 return (
-                  <button key={plan.id} type="button"
+                  <Button key={plan.id} type="button"
                     onClick={() => { onChange(plan.id, plan.name, memberId); setOpen(false); }}
                     className={`w-full text-left px-4 py-3 border-b border-border last:border-0 hover:bg-muted flex items-start justify-between gap-3 ${isSel ? 'bg-primary/10' : ''}`}>
                     <div className="min-w-0">
@@ -71,7 +74,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
                       <p className="text-xs text-primary mt-0.5 truncate">{getPlanBenefitSummary(plan)}</p>
                     </div>
                     {isSel && <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -83,8 +86,8 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
       {selected && cc && (
         <div className="space-y-2">
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1">Employee/Member ID <span className="font-normal text-muted-foreground/60">(optional)</span></label>
-            <input type="text" value={memberId} onChange={e => onChange(selectedPlanId, selected.name, e.target.value)}
+            <Label className="block text-xs font-semibold text-muted-foreground mb-1">Employee/Member ID <span className="font-normal text-muted-foreground/60">(optional)</span></Label>
+            <Input type="text" value={memberId} onChange={e => onChange(selectedPlanId, selected.name, e.target.value)}
               placeholder="e.g. EMP-12345"
               className="w-full px-3.5 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>

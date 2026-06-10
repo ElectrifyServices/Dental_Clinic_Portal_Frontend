@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
 import { PatientList } from "../components/Patients/PatientList";
+import { toast, PageHeader } from "../components/ui";
 
 export const PatientsPage: React.FC = () => {
   const {
@@ -11,10 +12,17 @@ export const PatientsPage: React.FC = () => {
     patientSearch, setPatientSearch,
     patientStatus, setPatientStatus,
     patientCategory, setPatientCategory,
+    refetchPatients,
   } = useAppData();
+
+  useEffect(() => {
+    if (refetchPatients) {
+      refetchPatients();
+    }
+  }, [refetchPatients]);
   const {
     setActiveModal, setSelectedPatientId, setPatientFormType,
-    setParentPatientId, confirmDelete, showToast,
+    setParentPatientId, confirmDelete,
   } = useModal();
 
   const handleExportPatient = (id: string) =>
@@ -43,7 +51,7 @@ export const PatientsPage: React.FC = () => {
     const p = patients.find((x: any) => x.id === id);
     if (p) {
       await handleUpdatePatientStatus(id, status === "active" ? "ACTIVE" : "INACTIVE");
-      showToast(`Patient marked as ${status}!`);
+      toast.success(`Patient marked as ${status}!`);
     }
   };
 
@@ -59,11 +67,11 @@ export const PatientsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Patients</h1>
-        <p className="text-muted-foreground mt-1">Manage and track patient information</p>
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        title="Patients"
+        subtitle="Manage and track patient information"
+      />
       <PatientList
         patients={patients}
         onAddPatient={handleAddPatient}

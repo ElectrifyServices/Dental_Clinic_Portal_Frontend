@@ -11,12 +11,14 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  Label,
+  Input,
+  Textarea,
+  SearchableSelect,
 } from "@/components/ui";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 import { emrSchema, type EmrFormData } from "@/lib/schemas/emr.schema";
-import styles from "./emr.module.css";
+import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 
 interface EMRFormProps {
   onClose: () => void;
@@ -26,13 +28,13 @@ interface EMRFormProps {
 }
 
 const RECORD_TYPE_OPTIONS = [
-  { value: "consultation", label: "Consultation" },
-  { value: "prescription", label: "Prescription" },
-  { value: "lab-report", label: "Lab Report" },
-  { value: "x-ray", label: "X-Ray" },
-  { value: "treatment-note", label: "Treatment Note" },
-  { value: "billing-record", label: "Billing Record" },
-  { value: "appointment-visit", label: "Appointment Visit" },
+  { value: "previous-prescriptions", label: "Previous Prescriptions" },
+  { value: "blood-reports", label: "Blood Reports" },
+  { value: "ecg-reports", label: "ECG Reports" },
+  { value: "physician-clearance", label: "Physician Clearance Letter" },
+  { value: "xrays-imaging", label: "X-rays / Medical Imaging" },
+  { value: "discharge-summary", label: "Hospital Discharge Summary" },
+  { value: "other", label: "other" },
 ] as const;
 
 export function EMRForm({
@@ -46,17 +48,20 @@ export function EMRForm({
   const [attachments, setAttachments] = useState<string[]>(
     record?.attachments ?? [],
   );
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const patientNames = useMemo(
-    () => allPatients.map((p) => (typeof p === "string" ? p : p.name)),
-    [allPatients],
-  );
+  const { data: rawPatientsData } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  const apiPatients = useMemo(() => {
+    return Array.isArray(rawPatientsData) 
+      ? rawPatientsData 
+      : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
+  }, [rawPatientsData]);
 
   const form = useForm<EmrFormData>({
     resolver: zodResolver(emrSchema) as any,
     defaultValues: {
       patientName: record?.patientName ?? "",
-      type: record?.type ?? "consultation",
+      type: record?.type ?? "previous-prescriptions",
       title: record?.title ?? "",
       content: record?.content ?? "",
       date: record?.date ?? new Date().toISOString().split("T")[0],
@@ -65,7 +70,9 @@ export function EMRForm({
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const urls = Array.from(e.target.files ?? []).map((f) =>
+    const filesList = Array.from(e.target.files ?? []);
+    setSelectedFiles((prev) => [...prev, ...filesList]);
+    const urls = filesList.map((f) =>
       URL.createObjectURL(f),
     );
     setAttachments((prev) => [...prev, ...urls]);
@@ -75,15 +82,13 @@ export function EMRForm({
     onSave({
       ...data,
       attachments,
+      files: selectedFiles,
       id: record?.id || Date.now().toString(),
-      patientId: Date.now().toString(),
+      patientId: record?.patientId || "",
       doctorId: "1",
       doctorName: "Dr. Sharma",
     });
   };
-
-  const selectCls =
-    "form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all";
 
   return (
     <Modal
@@ -116,14 +121,12 @@ export function EMRForm({
                     Patient <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <select {...field} className={selectCls}>
-                      <option value="">Select patient...</option>
-                      {patientNames.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={apiPatients.map((p: any) => ({ label: p.name, value: p.name }))}
+                      placeholder="Select patient..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,13 +143,12 @@ export function EMRForm({
                     Record Type <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <select {...field} className={selectCls}>
-                      {RECORD_TYPE_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={RECORD_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+                      placeholder="Select Record Type..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -211,9 +213,9 @@ export function EMRForm({
 
           {/* ── Attachment uploader ── */}
           <div>
-            <p className={styles.fieldLabel}>Attachments</p>
+            <Label>Attachments</Label>
             <div className="border-2 border-dashed border-input rounded-2xl p-8 text-center bg-muted/30 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer relative">
-              <input
+              <Input
                 type="file"
                 multiple
                 accept="image/*,.pdf,.doc,.docx"
@@ -233,7 +235,7 @@ export function EMRForm({
               </div>
             </div>
             {attachments.length > 0 && (
-              <div className={styles.attachmentGrid}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2 mt-3">
                 {attachments.map((_url: string, idx: number) => (
                   <div
                     key={idx}

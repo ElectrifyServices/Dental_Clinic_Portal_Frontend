@@ -87,6 +87,7 @@ export interface Patient {
   barcode?: string;
   isPerson?: boolean;
   registeredDate?: string;
+  patient_code?: string;
 }
 
 export interface Appointment {
@@ -245,3 +246,5 @@ export interface CorporateEmployee {
   status?: string;
   patientId?: string;          // linked patient record if registered
 }
+
+export * from "./consultationTypes";

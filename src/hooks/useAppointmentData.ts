@@ -1,26 +1,58 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAppointmentsListQuery } from './appointments/useAppointmentsListQuery';
 import { useDeleteAppointmentMutation } from './appointments/useDeleteAppointmentMutation';
 import { useMarkNoShowMutation } from './appointments/useMarkNoShowMutation';
 import { useRestoreAppointmentStatusMutation } from './appointments/useRestoreAppointmentStatusMutation';
+import { useDebounce } from './useDebounce';
+import { toast } from '../components/ui';
 
 export function useAppointmentData() {
+  const queryClient = useQueryClient();
   const [apptSearch, setApptSearch] = useState('');
-  const [apptFilters, setApptFilters] = useState<any>({});
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [apptFilter, setApptFilter] = useState('all');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+
+  const debouncedSearch = useDebounce(apptSearch, 500);
+
+  const apptFilters = useMemo(() => {
+    const f: any = {};
+    if (selectedDate && apptFilter !== 'week' && apptFilter !== 'all') {
+      f.date = [selectedDate];
+    }
+    if (apptFilter === 'today') {
+      const d = new Date();
+      f.date = [`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`];
+    }
+    if (selectedDoctorId) {
+      f.doctor_id = [selectedDoctorId];
+    }
+    return f;
+  }, [selectedDate, apptFilter, selectedDoctorId]);
+
+  const isEnabled = useMemo(() => {
+    const path = window.location.pathname;
+    const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/corporate-plans') || path.includes('/consent') || path.includes('/treatments');
+    return !isExcluded;
+  }, []);
 
   const { data: apiResponse } = useAppointmentsListQuery({
     page: 1,
     limit: 1000,
-    search: apptSearch || undefined,
+    search: debouncedSearch || undefined,
     filters: apptFilters,
-  });
+  }, { enabled: isEnabled });
 
   const { data: noShowApiResponse } = useAppointmentsListQuery({
     page: 1,
     limit: 1000,
-    search: apptSearch || undefined,
+    search: debouncedSearch || undefined,
     filters: { ...apptFilters, list_no_show: ["true"] },
-  });
+  }, { enabled: isEnabled });
 
   const { mutateAsync: deleteAppointment } = useDeleteAppointmentMutation();
   const { mutateAsync: markNoShow } = useMarkNoShowMutation();
@@ -48,7 +80,7 @@ export function useAppointmentData() {
       patientPhone: a.patient_phone || a.patientPhone,
       doctorName: a.doctor?.name || a.doctorName || "Doctor",
       date: a.date,
-      time: a.start_time || a.time,
+      time: a.start_time_ist || a.start_time || a.time,
       treatment: a.specific_treatment || a.treatment || "",
       treatmentType: a.treatment_type || a.treatmentType || "",
       fee: a.treatment_cost || a.cost || a.fee || 0,
@@ -71,19 +103,16 @@ export function useAppointmentData() {
   };
 
   const handleDeleteAppointment = async (id: string) => {
-    try {
-      await deleteAppointment({ id });
-    } catch (err) {
-      console.error("Failed to delete appointment:", err);
-    }
+    await deleteAppointment({ id });
   };
 
   const handleUpdateAppointmentStatus = async (id: string, status: string) => {
     if (status === 'no-show') {
       try {
         await markNoShow({ id });
-      } catch (err) {
-        console.error("Failed to mark appointment as no-show:", err);
+        toast.success("Appointment marked as No-Show!");
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || err?.message || "Failed to mark as no-show");
       }
     } else {
       try {
@@ -97,11 +126,16 @@ export function useAppointmentData() {
         };
         const apiStatus = statusMap[status] || status.toUpperCase().replace(/-/g, '_');
         await restoreStatus({ id, status: apiStatus });
-      } catch (err) {
-        console.error("Failed to update appointment status:", err);
+        toast.success(`Appointment status updated to ${status}!`);
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || err?.message || "Failed to update status");
       }
     }
   };
+
+  const refetchAppointments = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+  }, [queryClient]);
 
   return {
     appointments,
@@ -109,10 +143,16 @@ export function useAppointmentData() {
     apptSearch,
     setApptSearch,
     apptFilters,
-    setApptFilters,
+    selectedDate,
+    setSelectedDate,
+    apptFilter,
+    setApptFilter,
+    selectedDoctorId,
+    setSelectedDoctorId,
     handleSaveAppointment,
     handleDeleteAppointment,
     handleUpdateAppointmentStatus,
+    refetchAppointments,
   };
 }
 

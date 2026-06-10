@@ -38,7 +38,7 @@ export interface CreateCorporatePlanResponse {
 
 export function useCreateCorporatePlanMutation() {
   return useApiMutation<CreateCorporatePlanResponse, CreateCorporatePlanVariables>({
-    endpoint: "/corporate/plan/create",
+    endpoint: "/corporatePlan",
     method: "post",
   });
 }

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
+import { getParsedPermissions } from "../../utils/permission";
 
 /** Maps screen IDs to their Lucide icon component. */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -61,7 +63,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
-  const rawModulePerms: string[] = (state.user as any)?.module_permission || [];
+  const rawModulePerms = getParsedPermissions(state.user);
   const hasAll =
     perms.includes("all") ||
     role === "superadmin" ||
@@ -151,7 +153,7 @@ export function Sidebar() {
     `}
     >
       {/* Collapse toggle */}
-      <button
+      <Button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute top-[68px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center bg-card border border-border rounded-full shadow-md hover:bg-muted transition-all group"
       >
@@ -160,7 +162,7 @@ export function Sidebar() {
         ) : (
           <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
         )}
-      </button>
+      </Button>
 
       {/* Logo - Compact */}
       <div className="flex items-center h-16 px-4 border-b border-border flex-shrink-0">

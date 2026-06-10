@@ -1,4 +1,6 @@
-﻿import React from "react";
+import { Textarea } from "@/components/ui/Textarea";
+import { Label } from "@/components/ui/Label";
+import React from "react";
 import { Activity, Stethoscope } from "lucide-react";
 import { ToothChart } from "../ToothChart";
 
@@ -8,6 +10,7 @@ interface ObservationsAndToothChartProps {
   observations: string;
   diagnosis: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  errors?: Record<string, string>;
 }
 
 export function ObservationsAndToothChart({
@@ -15,7 +18,8 @@ export function ObservationsAndToothChart({
   onChartChange,
   observations,
   diagnosis,
-  onChange
+  onChange,
+  errors = {},
 }: ObservationsAndToothChartProps) {
   return (
     <div className="px-6">
@@ -36,34 +40,52 @@ export function ObservationsAndToothChart({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
-                Detailed Observations *
-              </label>
-              <textarea
+              <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+                Detailed Observations <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
                 name="observations"
                 value={observations}
                 onChange={onChange}
                 required
                 rows={4}
-                className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 ${
+                  errors.observations
+                    ? "border-destructive focus:ring-destructive/30 bg-destructive/5"
+                    : "border-border focus:ring-primary"
+                }`}
                 placeholder="Record your clinical observations and examination findings..."
               />
+              {errors.observations && (
+                <p className="mt-1.5 text-xs font-semibold text-destructive flex items-center gap-1">
+                  <span>⚠</span> {errors.observations}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-2">
+              <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                 <Stethoscope className="w-4 h-4 inline mr-2" />
-                Diagnosis *
-              </label>
-              <textarea
+                Diagnosis <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
                 name="diagnosis"
                 value={diagnosis}
                 onChange={onChange}
                 required
                 rows={4}
-                className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 ${
+                  errors.diagnosis
+                    ? "border-destructive focus:ring-destructive/30 bg-destructive/5"
+                    : "border-border focus:ring-primary"
+                }`}
                 placeholder="Enter your diagnosis based on examination..."
               />
+              {errors.diagnosis && (
+                <p className="mt-1.5 text-xs font-semibold text-destructive flex items-center gap-1">
+                  <span>⚠</span> {errors.diagnosis}
+                </p>
+              )}
             </div>
           </div>
         </div>

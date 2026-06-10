@@ -12,6 +12,7 @@ import {
   Stethoscope,
   User,
 } from "lucide-react";
+import { Card, Button } from "@/components/ui";
 
 // --- Reusable Empty State Component ---
 const EmptyState = ({
@@ -39,7 +40,7 @@ const EmptyState = ({
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: any }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div className="bg-primary/10 rounded-2xl p-6 border border-primary/30">
+    <Card className="bg-primary/5 rounded-2xl p-6 border border-primary/30 shadow-sm">
       <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
         <Heart className="w-5 h-5 mr-2" /> Medical History
       </h3>
@@ -60,8 +61,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
-    <div className="bg-destructive/10 rounded-2xl p-6 border border-destructive/20">
+    </Card>
+    <Card className="bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
       <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
@@ -85,8 +86,8 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
-    <div className="lg:col-span-2 bg-muted rounded-2xl p-6">
+    </Card>
+    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-6 border border-border shadow-sm">
       <h3 className="text-lg font-bold text-foreground mb-4">
         Additional Information
       </h3>
@@ -124,7 +125,7 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
           </div>
         )}
       </div>
-    </div>
+    </Card>
   </div>
 );
 
@@ -139,33 +140,57 @@ export const AppointmentsTab = ({
   <div className="space-y-4">
     <h3 className="text-lg font-bold text-foreground">Appointment History</h3>
     {patientAppointments.map((appointment) => (
-      <div
+      <Card
         key={appointment.id}
-        className="bg-muted rounded-2xl p-6 border border-border"
+        className="bg-card rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Calendar className="w-5 h-5 text-muted-foreground/60 mr-3" />
+        <div className="flex items-start justify-between">
+          <div className="flex items-start">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 mt-0.5">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <p className="font-semibold text-foreground">
+              <p className="font-bold text-foreground text-base">
                 {appointment.treatmentType || appointment.type}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(appointment.date).toLocaleDateString()} at{" "}
-                {appointment.time}
+              <p className="text-xs text-primary font-bold mt-1">
+                {appointment.date} • {appointment.time} • {appointment.duration || 15} mins
               </p>
-              <p className="text-sm text-muted-foreground">
-                with {appointment.doctorName || appointment.doctor}
+              <p className="text-xs text-muted-foreground/80 mt-1 font-semibold">
+                Doctor: Dr. {appointment.doctorName || appointment.doctor}
               </p>
             </div>
           </div>
-          <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(appointment.status)}`}
-          >
-            {appointment.status.toUpperCase()}
-          </span>
+          <div className="text-right flex flex-col items-end gap-2">
+            <span
+              className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${getStatusColor(appointment.status)}`}
+            >
+              {appointment.status.toUpperCase()}
+            </span>
+            {appointment.cost > 0 && (
+              <p className="font-bold text-foreground text-sm">
+                ₹{appointment.cost.toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Concern or clinical notes */}
+        {(appointment.concern || appointment.notes) && (
+          <div className="mt-2 pt-3 border-t border-border space-y-2">
+            {appointment.concern && (
+              <div className="text-xs text-muted-foreground/80">
+                <span className="font-bold text-foreground/80">Concern:</span> {appointment.concern}
+              </div>
+            )}
+            {appointment.notes && (
+              <div className="text-xs text-muted-foreground/80 bg-card/60 p-2.5 rounded-xl border border-border/50">
+                <span className="font-bold text-foreground/80">Clinical Notes:</span> {appointment.notes}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     ))}
     {patientAppointments.length === 0 && (
       <EmptyState
@@ -214,9 +239,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "in-progress")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-primary/50 rounded-2xl p-4 border border-primary/20 shadow-sm"
+                  className="bg-primary/5 rounded-2xl p-4 border border-primary/20 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -245,7 +270,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -259,9 +284,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "planned")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 shadow-sm"
+                  className="bg-purple-50/30 rounded-2xl p-4 border border-purple-100 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -287,7 +312,7 @@ export const TreatmentsTab = ({
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -301,9 +326,9 @@ export const TreatmentsTab = ({
             {patientTreatments
               .filter((t) => t.status === "completed")
               .map((treatment) => (
-                <div
+                <Card
                   key={treatment.id}
-                  className="bg-green-50/30 rounded-2xl p-4 border border-green-100"
+                  className="bg-green-50/30 rounded-2xl p-4 border border-green-100 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -326,7 +351,7 @@ export const TreatmentsTab = ({
                       </p>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
           </div>
         </div>
@@ -359,20 +384,21 @@ export const BillingTab = ({
                 ₹{patient.outstandingBalance.toLocaleString()}
               </p>
             </div>
-            <button
+            <Button
               onClick={handleSendReminder}
-              className="bg-destructive text-white px-4 py-2 rounded-lg hover:bg-destructive flex items-center text-sm font-medium"
+              variant="destructive"
+              className="flex items-center text-sm font-medium h-auto"
             >
               <Send className="w-4 h-4 mr-2" /> Send Reminder
-            </button>
+            </Button>
           </div>
         </div>
       )}
     </div>
     {patientInvoices.map((invoice) => (
-      <div
+      <Card
         key={invoice.id}
-        className="bg-muted rounded-2xl p-6 border border-border"
+        className="bg-card rounded-2xl p-6 border border-border shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -398,7 +424,7 @@ export const BillingTab = ({
             </span>
           </div>
         </div>
-      </div>
+      </Card>
     ))}
     {patientInvoices.length === 0 && (
       <EmptyState
@@ -424,18 +450,18 @@ export const PrescriptionsTab = ({
         Prescription History
       </h3>
       {patient.prescriptionHistory?.length > 0 && (
-        <button
+        <Button
           onClick={handlePrintDocument}
-          className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary flex items-center text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-200"
+          className="flex items-center text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-200 h-auto"
         >
           <Printer className="w-4 h-4 mr-2" /> Print Document
-        </button>
+        </Button>
       )}
     </div>
     {patient.prescriptionHistory?.map((record: any) => (
-      <div
+      <Card
         key={record.id}
-        className="bg-card rounded-2xl p-4 border border-primary/20 shadow-sm hover:shadow-md transition-all duration-200 mb-4"
+        className="bg-card rounded-2xl p-4 border border-primary/20 shadow-sm hover:shadow-md transition-all duration-200 mb-4 shadow-none"
       >
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center">
@@ -489,7 +515,7 @@ export const PrescriptionsTab = ({
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     ))}
     {(!patient.prescriptionHistory ||
       patient.prescriptionHistory.length === 0) && (
@@ -515,9 +541,9 @@ export const DocumentsTab = ({
     </h3>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {patient.documents?.map((doc: any) => (
-        <div
+        <Card
           key={doc.id}
-          className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200"
+          className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm"
         >
           <img
             src={doc.url}
@@ -528,7 +554,7 @@ export const DocumentsTab = ({
           <p className="text-sm text-muted-foreground">
             {new Date(doc.date).toLocaleDateString()}
           </p>
-        </div>
+        </Card>
       ))}
     </div>
     {(!patient.documents || patient.documents.length === 0) && (
@@ -570,9 +596,9 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {familyMembers.map((member) => (
-          <div
+          <Card
             key={member.id}
-            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group"
+            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -637,7 +663,7 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
