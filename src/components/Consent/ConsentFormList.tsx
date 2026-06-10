@@ -200,8 +200,7 @@ export function ConsentFormList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Status</SelectItem>
-              <SelectItem value="DRAFT">Draft</SelectItem>
-              <SelectItem value="PENDING_SIGNATURE">Pending Signature</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="COMPLETED">Completed</SelectItem>
             </SelectContent>
           </Select>

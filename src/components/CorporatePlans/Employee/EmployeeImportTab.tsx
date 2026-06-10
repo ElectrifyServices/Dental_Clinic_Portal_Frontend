@@ -4,6 +4,7 @@ import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { parseXlsx, downloadTemplate } from './importUtils';
 import { useBulkImportEmployeeMutation } from '../../../hooks/corporate/useBulkImportEmployeeMutation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeImportTabProps {
   plans: CorporatePlan[];
@@ -17,7 +18,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  
+  const queryClient = useQueryClient();
   const bulkImportMutation = useBulkImportEmployeeMutation();
 
   const handleFile = async (file: File) => {
@@ -61,6 +62,10 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         setImporting(false);
         return; // Do not redirect to list
       }
+      
+      queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
       
       onBulkSave(valid as CorporateEmployee[]);
       setImportRows([]);

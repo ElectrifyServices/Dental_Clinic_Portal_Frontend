@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
 import { useInventorySummaryQuery } from "../../hooks/inventory/useInventorySummaryQuery";
+import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryCategoriesQuery";
 
 interface InventoryItem {
   id: string;
@@ -59,13 +60,7 @@ const CAT_META: Record<
   medicines: { label: "Medicines", variant: "violet" },
 };
 
-const CATEGORIES = [
-  { key: "all", label: "All Items" },
-  { key: "instruments", label: "Instruments" },
-  { key: "materials", label: "Materials" },
-  { key: "consumables", label: "Consumables" },
-  { key: "medicines", label: "Medicines" },
-];
+// Removed hardcoded CATEGORIES
 
 export function InventoryList({
   inventory,
@@ -98,6 +93,21 @@ export function InventoryList({
     low_stock: lowStockFilter
   }, { refetchOnMount: "always" });
 
+  const { data: categoriesData } = useInventoryCategoriesQuery();
+  
+  let dynamicCategories: any[] = [];
+  if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
+  else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
+  else if (Array.isArray(categoriesData?.items)) dynamicCategories = categoriesData.items;
+  else if (Array.isArray(categoriesData?.responseObject)) dynamicCategories = categoriesData.responseObject;
+  else if (Array.isArray(categoriesData?.responseObject?.data)) dynamicCategories = categoriesData.responseObject.data;
+  else if (categoriesData?.responseObject && Array.isArray(categoriesData?.responseObject?.categories)) dynamicCategories = categoriesData.responseObject.categories;
+  
+  const filterTabs = [
+    { key: "all", label: "All Items" },
+    ...dynamicCategories.map((c: any) => ({ key: c.name, label: c.name }))
+  ];
+
   let rawList: any[] = [];
   if (Array.isArray(listData)) rawList = listData;
   else if (Array.isArray(listData?.items)) rawList = listData.items;
@@ -108,7 +118,7 @@ export function InventoryList({
   const filtered = rawList.map((item: any) => ({
     id: item.id,
     name: item.name,
-    category: item.category,
+    category: item.category?.id || item.category_id || item.category,
     currentStock: item.current_stock ?? item.currentStock ?? 0,
     minStock: item.min_stock ?? item.minStock ?? 0,
     maxStock: item.max_stock ?? item.maxStock ?? 100,
@@ -116,7 +126,7 @@ export function InventoryList({
     supplier: item.supplier ?? "Unknown",
     lastRestocked: item.last_restocked ?? item.lastRestocked ?? "",
     cost: item.unit_cost ?? item.cost ?? 0,
-    expiryDate: item.expiry_date ?? item.expiryDate ?? "",
+    expiryDate: item.expiry_date && !isNaN(Date.parse(item.expiry_date)) ? new Date(item.expiry_date).toISOString().split('T')[0] : item.expiryDate ?? "",
     batchNumber: item.batch_number ?? item.batchNumber ?? "",
   }));
 
@@ -255,6 +265,7 @@ export function InventoryList({
                   >
                     <div className="p-1.5 space-y-0.5">
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onRestock(item);
                           setOpenMenuId(null);
@@ -264,6 +275,7 @@ export function InventoryList({
                         <RefreshCw className="w-4 h-4" /> Restock
                       </Button>
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onConsume(item);
                           setOpenMenuId(null);
@@ -273,6 +285,7 @@ export function InventoryList({
                         <MinusCircle className="w-4 h-4" /> Consume
                       </Button>
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onAdjust(item);
                           setOpenMenuId(null);
@@ -282,6 +295,7 @@ export function InventoryList({
                         <SlidersHorizontal className="w-4 h-4" /> Adjust
                       </Button>
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onViewHistory(item);
                           setOpenMenuId(null);
@@ -292,6 +306,7 @@ export function InventoryList({
                       </Button>
                       <div className="h-px bg-border my-1 mx-2" />
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onEditItem(item.id);
                           setOpenMenuId(null);
@@ -301,6 +316,7 @@ export function InventoryList({
                         <Edit className="w-4 h-4" /> Edit Item
                       </Button>
                       <Button
+                        variant="ghost"
                         onClick={() => {
                           onDeleteItem(item.id);
                           setOpenMenuId(null);
@@ -372,7 +388,7 @@ export function InventoryList({
           placeholder="Search by item name or supplier…"
           className="flex-1"
         />
-        <FilterTabs tabs={CATEGORIES} active={cat} onChange={setCat} />
+        <FilterTabs tabs={filterTabs} active={cat} onChange={setCat} />
       </div>
 
       <DataTable

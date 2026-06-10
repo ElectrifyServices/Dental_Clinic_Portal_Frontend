@@ -6,7 +6,7 @@ export interface EMRListParams {
   search?: string;
   filters?: {
     record_type?: string[];
-    patient_id?: string;
+    patient_id?: string | string[];
   };
 }
 
@@ -26,7 +26,9 @@ export function useEMRListQuery(params: EMRListParams = {}, options?: any) {
       body.filters.record_type = params.filters.record_type;
     }
     if (params.filters.patient_id) {
-      body.filters.patient_id = params.filters.patient_id;
+      body.filters.patient_id = Array.isArray(params.filters.patient_id) 
+        ? params.filters.patient_id 
+        : [params.filters.patient_id];
     }
   }
 

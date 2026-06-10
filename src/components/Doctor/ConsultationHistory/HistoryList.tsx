@@ -209,111 +209,116 @@ export function HistoryList({
             {pageData.map((item, idx) => (
               <Card key={item.id} className="flex flex-col hover:shadow-md transition-shadow">
                 <CardHeader className="p-4 pb-3 border-b">
-                   <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3 min-w-0">
-                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${avatarColor(item.id)}`}>
-                            {initials(item.patient?.name)}
-                         </div>
-                         <div className="min-w-0">
-                            <CardTitle className="text-base truncate">{item.patient?.name || "Unknown Patient"}</CardTitle>
-                            <CardDescription className="text-xs truncate">ID: {item.patient?.id?.split('-')[0] || "—"}</CardDescription>
-                         </div>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${avatarColor(item.id)}`}>
+                        {initials(item.patient?.name)}
                       </div>
-                      <span className="text-[9px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0 border border-green-200">
-                         {item.status || "COMPLETED"}
-                      </span>
-                   </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">{item.patient?.name || "Unknown Patient"}</CardTitle>
+                        <CardDescription className="text-xs truncate">ID: {item.patient?.id?.split('-')[0] || "—"}</CardDescription>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0 border border-green-200">
+                      {item.status || "COMPLETED"}
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4 flex-1 space-y-3">
-                   <div className="flex items-center gap-2 text-sm text-foreground">
-                      <Stethoscope className="w-4 h-4 text-primary shrink-0" />
-                      <span className="font-semibold truncate">Dr. {item.doctor?.name || "Unknown"}</span>
-                   </div>
-                   <p className="text-xs text-muted-foreground line-clamp-2 h-8">
-                     {item.diagnosis_desc ? (
-                       <><span className="font-semibold text-foreground">Diagnosis:</span> {item.diagnosis_desc}</>
-                     ) : (
-                       <span className="italic">No diagnosis recorded</span>
-                     )}
-                   </p>
-                   <div className="flex justify-between items-center text-xs text-muted-foreground pt-3 border-t border-border">
-                      <span className="flex items-center gap-1.5 font-medium">
-                         <Activity className="w-3.5 h-3.5" />
-                         {fmtShort(item.created_at)}
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <Stethoscope className="w-4 h-4 text-primary shrink-0" />
+                    <span className="font-semibold truncate">Dr. {item.doctor?.name || "Unknown"}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2 h-8">
+                    {item.diagnosis_desc ? (
+                      <><span className="font-semibold text-foreground">Diagnosis:</span> {item.diagnosis_desc}</>
+                    ) : (
+                      <span className="italic">No diagnosis recorded</span>
+                    )}
+                  </p>
+                  <div className="flex justify-between items-center text-xs text-muted-foreground pt-3 border-t border-border">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Activity className="w-3.5 h-3.5" />
+                      {fmtShort(item.created_at)}
+                    </span>
+                    {item.total_estimated_cost > 0 && (
+                      <span className="font-bold text-foreground bg-muted px-2 py-0.5 rounded-md">
+                        ₹{item.total_estimated_cost}
                       </span>
-                      {item.total_estimated_cost > 0 && (
-                         <span className="font-bold text-foreground bg-muted px-2 py-0.5 rounded-md">
-                            ₹{item.total_estimated_cost}
-                         </span>
-                      )}
-                   </div>
+                    )}
+                  </div>
                 </CardContent>
                 <CardFooter className="p-3 border-t flex justify-between bg-muted/20">
-                   <Button variant="ghost" onClick={() => onSelectRecord(item)} className="text-xs font-bold text-primary hover:text-primary/80 hover:underline flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors h-auto">
-                      <Eye className="w-4 h-4" /> View Full Details
-                   </Button>
-                    <div className="flex gap-1 relative">
-                       <Button 
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           setActiveDownloadMenuId(activeDownloadMenuId === item.id ? null : item.id);
-                         }} 
-                         className={`p-1.5 rounded-md transition-colors ${activeDownloadMenuId === item.id ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} 
-                         title="Download Report"
-                       >
-                          <FileText className="w-4 h-4" />
-                       </Button>
-                       
-                       {activeDownloadMenuId === item.id && (
-                         <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onDownloadPDF(item, 'CLINICAL');
-                               setActiveDownloadMenuId(null);
-                             }}
-                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 flex items-center gap-2"
-                           >
-                             <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
-                           </Button>
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onDownloadPDF(item, 'TREATMENT');
-                               setActiveDownloadMenuId(null);
-                             }}
-                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 flex items-center gap-2"
-                           >
-                             <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                           </Button>
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onDownloadPDF(item, 'PRESCRIPTION');
-                               setActiveDownloadMenuId(null);
-                             }}
-                             className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 flex items-center gap-2"
-                           >
-                             <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                           </Button>
-                           <div className="h-px bg-muted my-1" />
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               onDownloadPDF(item, 'FULL');
-                               setActiveDownloadMenuId(null);
-                             }}
-                             className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-2"
-                           >
-                             <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
-                           </Button>
-                         </div>
-                       )}
-                       
-                       <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
-                          <Trash2 className="w-4 h-4" />
-                       </Button>
-                    </div>
+                  <Button variant="ghost" onClick={() => onSelectRecord(item)} className="text-xs font-bold text-primary hover:text-primary/80 hover:underline flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors h-auto">
+                    <Eye className="w-4 h-4" /> View Full Details
+                  </Button>
+                  <div className="flex gap-1 relative">
+                    <Button
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDownloadMenuId(activeDownloadMenuId === item.id ? null : item.id);
+                      }}
+                      className={`h-auto p-1.5 rounded-md transition-colors ${activeDownloadMenuId === item.id ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
+                      title="Download Report"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </Button>
+
+                    {activeDownloadMenuId === item.id && (
+                      <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'CLINICAL');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'TREATMENT');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'PRESCRIPTION');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                        </Button>
+                        <div className="h-px bg-muted my-1" />
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadPDF(item, 'FULL');
+                            setActiveDownloadMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
+                        </Button>
+                      </div>
+                    )}
+
+                    <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))}

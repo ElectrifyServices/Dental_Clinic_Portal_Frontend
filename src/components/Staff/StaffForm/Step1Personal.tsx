@@ -81,8 +81,10 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           <div className="relative">
             <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input type="tel" name="phone" value={formData.phone}
+              maxLength={10}
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/\D/g, '');
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                e.target.value = val;
                 onChange(e);
               }}
               required
@@ -111,6 +113,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 placeholder="••••••••"
               />
               <Button
+                variant="ghost"
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPassword((v) => !v)}
@@ -133,6 +136,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 placeholder="••••••••"
               />
               <Button
+                variant="ghost"
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowConfirmPassword((v) => !v)}

@@ -16,7 +16,7 @@ export const staffSchema = z.object({
   profitSharing: z.boolean().default(false),
   profitPercentage: z.number().min(0).max(100).default(0),
   licenseNumber: z.string().optional(),
-  monthlySalary: z.string().optional(),
+  monthlySalary: z.string().min(1, 'Monthly salary is required'),
   salaryPaid: z.string().optional(),
   salaryPending: z.string().optional(),
   education: z.string().optional(),

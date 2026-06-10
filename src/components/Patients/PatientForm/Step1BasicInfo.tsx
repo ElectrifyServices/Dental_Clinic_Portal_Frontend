@@ -55,7 +55,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   handleImageUpload,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Avatar moved to Step 3 */}
        <div className="text-center">
         <div className="relative inline-block">
@@ -171,11 +171,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
-            Full Name *
+            Full Name <span className="text-destructive">*</span>
           </Label>
           <Input
             type="text"
@@ -196,16 +196,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div className="relative">
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Phone className="w-4 h-4 inline mr-2" />
-            Phone Number *
+            Phone Number <span className="text-destructive">*</span>
           </Label>
           <Input
             type="tel"
             name="phone"
+            maxLength={10}
             value={formData.phone || ""}
             onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
               setFormData((prev: any) => ({ ...prev, phone: digits }));
             }}
             disabled={!!formData.id}
@@ -225,7 +226,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Mail className="w-4 h-4 inline mr-2" />
             Email Address
           </Label>
@@ -250,7 +251,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
           </Label>
@@ -265,7 +266,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             Gender
           </Label>
           <Select
@@ -286,7 +287,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             Blood Group
           </Label>
           <Select
@@ -313,7 +314,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
         {type === "person" && (
           <div>
-            <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+            <Label className="block text-sm font-semibold text-muted-foreground mb-1">
               Relation
             </Label>
             <Select
@@ -373,7 +374,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       </div>
 
       <div>
-        <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+        <Label className="block text-sm font-semibold text-muted-foreground mb-1">
           <MapPin className="w-4 h-4 inline mr-2" />
           Address
         </Label>
@@ -387,9 +388,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             Occupation
           </Label>
           <Input
@@ -402,7 +403,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             Marital Status
           </Label>
           <Select
@@ -499,9 +500,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         })()}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Name
           </Label>
@@ -509,12 +510,15 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             type="text"
             name="emergencyName"
             value={formData.emergencyName || ""}
-            onChange={handleChange}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+              setFormData((prev: any) => ({ ...prev, emergencyName: cleaned }));
+            }}
             placeholder="Emergency contact person name"
           />
         </div>
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
             Emergency Contact Relation
           </Label>
@@ -609,16 +613,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
           </Label>
             <Input
               type="tel"
               name="emergencyContact"
+              maxLength={10}
               value={formData.emergencyContact || ""}
               onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '');
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
                 setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
               }}
               placeholder="Emergency contact phone number"

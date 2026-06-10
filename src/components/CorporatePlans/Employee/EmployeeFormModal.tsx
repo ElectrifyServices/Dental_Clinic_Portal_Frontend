@@ -30,6 +30,16 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   const [form, setForm] = useState<Partial<CorporateEmployee>>(EMPTY_EMP());
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
+  const todayStr = React.useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  const isDateInPast = React.useMemo(() => {
+    if (!form.eligible_date) return false;
+    return form.eligible_date < todayStr;
+  }, [form.eligible_date, todayStr]);
+  
   const empCfg = useFormConfig('employee');
   const createEmployeeMutation = useCreateEmployeeMutation();
   const updateEmployeeMutation = useUpdateEmployeeMutation();
@@ -155,12 +165,21 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         };
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        queryClient.invalidateQueries({ queryKey: ["companies"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {
+        const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                         err?.response?.data?.statusDesc ||
+                         err?.response?.data?.message ||
+                         err?.status?.statusDesc ||
+                         err?.message ||
+                         "Failed to create employee on backend";
+        const msg = Array.isArray(apiError) ? apiError.join(', ') : apiError;
         setFormErrors(prev => ({
           ...prev,
-          submit: err?.response?.data?.message || err?.message || "Failed to create employee on backend"
+          submit: msg
         }));
       }
     } else {
@@ -203,12 +222,21 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         };
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        queryClient.invalidateQueries({ queryKey: ["companies"] });
         refetch();
         setShowForm(false);
       } catch (err: any) {
+        const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                         err?.response?.data?.statusDesc ||
+                         err?.response?.data?.message ||
+                         err?.status?.statusDesc ||
+                         err?.message ||
+                         "Failed to update employee on backend";
+        const msg = Array.isArray(apiError) ? apiError.join(', ') : apiError;
         setFormErrors(prev => ({
           ...prev,
-          submit: err?.response?.data?.message || err?.message || "Failed to update employee on backend"
+          submit: msg
         }));
       }
     }
@@ -279,16 +307,24 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
             cols={2}
           />
         )}
-        <div className="p-4 bg-muted/30 rounded-2xl border border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
-            <Label htmlFor="empActive" className="text-xs font-black uppercase tracking-widest text-foreground cursor-pointer">Active Status</Label>
+        <div className="p-4 bg-muted/30 rounded-2xl border border-border flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
+              <Label htmlFor="empActive" className={`text-xs font-black uppercase tracking-widest ${isDateInPast ? 'text-muted-foreground cursor-not-allowed' : 'text-foreground cursor-pointer'}`}>Active Status</Label>
+            </div>
+            <Label className={`relative inline-flex items-center ${isDateInPast ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+              <Input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
+                disabled={isDateInPast}
+                onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
+              <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </Label>
           </div>
-          <Label className="relative inline-flex items-center cursor-pointer">
-            <Input type="checkbox" id="empActive" checked={form.isActive !== false} className="sr-only peer"
-              onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
-            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </Label>
+          {isDateInPast && (
+            <p className="text-[10px] text-rose-500 font-semibold">
+              * Cannot change status when eligibility date is in the past.
+            </p>
+          )}
         </div>
       </div>
     </Modal>

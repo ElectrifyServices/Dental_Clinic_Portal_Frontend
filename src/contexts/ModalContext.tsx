@@ -119,6 +119,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             setConfirmConfig((prev: any) => ({ ...prev, show: false, isLoading: false }));
             const apiError = 
               error?.response?.data?.message || 
+              error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
               error?.status?.statusDesc || 
               error?.response?.data?.status?.statusDesc || 
               error?.message || 

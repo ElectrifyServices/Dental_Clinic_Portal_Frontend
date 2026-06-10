@@ -91,13 +91,13 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
 
   const TIMELINE_FILTERS = [
     { key: "all", label: "All History" },
-    { key: "previous-prescriptions", label: "Prescriptions" },
-    { key: "blood-reports", label: "Blood Reports" },
-    { key: "ecg-reports", label: "ECG Reports" },
-    { key: "physician-clearance", label: "Physician Clearance" },
-    { key: "xrays-imaging", label: "X-Rays / Imaging" },
-    { key: "discharge-summary", label: "Discharge" },
-    { key: "other", label: "Other" },
+    { key: "CONSULTATION", label: "Consultation" },
+    { key: "PRESCRIPTION", label: "Prescription" },
+    { key: "LAB_REPORT", label: "Lab Report" },
+    { key: "X_RAY", label: "X-Ray" },
+    { key: "TREATMENT_NOTE", label: "Treatment Note" },
+    { key: "BILLING_RECORD", label: "Billing Record" },
+    { key: "APPOINTMENT_VISIT", label: "Appointment Visit" },
   ];
 
   const filteredTimeline = React.useMemo(() => {

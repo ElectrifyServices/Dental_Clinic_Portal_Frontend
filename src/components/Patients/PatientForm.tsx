@@ -56,17 +56,38 @@ export function PatientForm({
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
   const [allergySearch, setAllergySearch] = useState("");
-  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<
-    string[]
-  >(patient?.medicalHistory || []);
+  const extractIds = (field: any, idKeys: string[]) => {
+    if (!field) return [];
+    if (typeof field === "string") return field.split('\n').filter(Boolean);
+    if (Array.isArray(field)) {
+      return field.map((item: any) => {
+        if (typeof item === "object" && item !== null) {
+          for (const key of idKeys) {
+            if (item[key]) return item[key];
+          }
+          return "";
+        }
+        return String(item);
+      }).filter(Boolean);
+    }
+    return [];
+  };
+
+  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<string[]>(
+    extractIds(patient?.medicalHistories || patient?.medical_histories || patient?.medicalHistory, ['history_id', 'medical_history_id', 'id', 'name'])
+  );
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
-    patient?.allergies || [],
+    extractIds(patient?.allergies, ['allergy_id', 'id', 'allergy_name', 'name'])
   );
 
   React.useEffect(() => {
     if (patient) {
-      if (patient.medicalHistory) setSelectedMedicalHistory(patient.medicalHistory);
-      if (patient.allergies) setSelectedAllergies(patient.allergies);
+      setSelectedMedicalHistory(
+        extractIds(patient.medicalHistories || patient.medical_histories || patient.medicalHistory, ['history_id', 'medical_history_id', 'id', 'name'])
+      );
+      setSelectedAllergies(
+        extractIds(patient.allergies, ['allergy_id', 'id', 'allergy_name', 'name'])
+      );
     }
   }, [patient]);
 
@@ -168,8 +189,8 @@ export function PatientForm({
         </div>
       }
     >
-      <div className="space-y-8">
-        <div className="flex items-center gap-6 md:gap-12 pb-6 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap -mx-6 px-6">
+      <div className="space-y-4">
+        <div className="flex items-center gap-4 md:gap-6 pb-4 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap -mx-6 px-6">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },

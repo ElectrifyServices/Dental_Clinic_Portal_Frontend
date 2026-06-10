@@ -4,36 +4,13 @@ export const emrSchema = z.object({
   patientName: z.string().min(1, 'Patient is required'),
   type: z.enum(
     [
-      // New record types
-      'previous-prescriptions',
-      'blood-reports',
-      'ecg-reports',
-      'physician-clearance',
-      'xrays-imaging',
-      'discharge-summary',
-      'other',
-
-      // Legacy types for compatibility
-      'consultation',
-      'prescription',
-      'treatment-plan',
-      'treatment-note',
-      'clinical-observation',
-      'dental-chart-record',
-      'x-ray',
-      'cbct-scan',
-      'intraoral-photo',
-      'lab-report',
-      'procedure-record',
-      'surgery-record',
-      'implant-record',
-      'follow-up-note',
-      'medical-history-update',
-      'billing-record',
-      'insurance-document',
-      'appointment-visit',
-      'referral-letter',
-      'other-document'
+      'CONSULTATION',
+      'PRESCRIPTION',
+      'LAB_REPORT',
+      'X_RAY',
+      'TREATMENT_NOTE',
+      'BILLING_RECORD',
+      'APPOINTMENT_VISIT'
     ],
     { message: 'Please select a record type' },
   ),

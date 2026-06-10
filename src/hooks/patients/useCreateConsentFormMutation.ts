@@ -5,11 +5,11 @@ export function useCreateConsentFormMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, FormData>({
-    endpoint: "/consentForm/create",
+    endpoint: "/consent",
     method: "post",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["consentForms"] });
+        queryClient.invalidateQueries({ queryKey: ["consent"] });
       },
     },
   });

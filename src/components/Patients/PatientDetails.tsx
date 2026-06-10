@@ -92,6 +92,7 @@ export function PatientDetails({
   const resolvedFamilyMembers = (otherFamilyMembers.length > 0 || apiData)
     ? otherFamilyMembers.map((m: any) => ({
         id: m.id,
+        patientCode: m.patient_code || m.patientCode || m.id,
         name: m.name,
         // If it's the primary patient, we label them as PRIMARY, otherwise use their relation
         relation: m.id === apiData?.primary?.id 
@@ -284,7 +285,7 @@ export function PatientDetails({
   return (
     <Modal
       title={patient.name}
-      subtitle={`Member ID: ${patient.id} • Registered ${new Date(patient.created_at || patient.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`}
+      subtitle={`Patient Code: ${patient.patient_code || patient.patientCode || patient.id} • Registered ${new Date(patient.created_at || patient.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`}
       onClose={onClose}
       size="5xl"
       icon={

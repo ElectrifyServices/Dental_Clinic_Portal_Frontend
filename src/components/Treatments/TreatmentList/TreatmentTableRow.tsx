@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   FileText, MoreVertical, Edit, Clock,
   Play, CheckCircle, Calendar,
@@ -20,12 +20,12 @@ export function TreatmentTableRow({
   treatment, statusMeta, onView, onEdit, onManageSessions, onStart, onComplete,
 }: TreatmentTableRowProps) {
   const [showMenu, setShowMenu] = useState(false);
-  const [menuPos, setMenuPos]   = useState({ top: 0, left: 0 });
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
   const openMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const menuHeight  = 220;
+    const menuHeight = 220;
     const windowHeight = window.innerHeight;
     let top = rect.bottom + 4;
     if (rect.bottom + menuHeight > windowHeight) {
@@ -36,13 +36,13 @@ export function TreatmentTableRow({
     setShowMenu(v => !v);
   };
 
-  const sm   = statusMeta[treatment.status] || statusMeta.planned;
+  const sm = statusMeta[treatment.status] || statusMeta.planned;
   const cost = Number(treatment.cost) < 100_000_000 ? Number(treatment.cost) : 0;
 
   // Session progress from already-mapped sessions array on the UI treatment object
-  const sessions: any[]         = treatment.sessions ?? [];
-  const totalSessions            = sessions.length;
-  const completedSessions        = sessions.filter((s: any) => s.status === "completed").length;
+  const sessions: any[] = treatment.sessions ?? [];
+  const totalSessions = sessions.length;
+  const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
 
   // FIX: next session date — use plan's nextAppointment (set by backend when session is scheduled)
   // Fall back to finding the earliest SCHEDULED session date
@@ -118,13 +118,12 @@ export function TreatmentTableRow({
               {sessions.slice(0, 6).map((s: any, i: number) => (
                 <div
                   key={i}
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    s.status === "completed"
+                  className={`w-1.5 h-1.5 rounded-full ${s.status === "completed"
                       ? "bg-emerald-500"
                       : s.status === "in-progress" || s.status === "in_progress"
-                      ? "bg-primary animate-pulse"
-                      : "bg-border"
-                  }`}
+                        ? "bg-primary animate-pulse"
+                        : "bg-border"
+                    }`}
                 />
               ))}
               {totalSessions > 6 && (
@@ -142,6 +141,7 @@ export function TreatmentTableRow({
       <td className="py-4 px-6">
         <div className="flex items-center justify-center gap-2">
           <Button
+            variant="ghost"
             onClick={() => onView(treatment.id)}
             className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
             title="View Details"
@@ -151,6 +151,7 @@ export function TreatmentTableRow({
 
           <div className="relative">
             <Button
+              variant="ghost"
               onClick={openMenu}
               className={`p-2 rounded-xl transition-all ${showMenu ? "bg-muted text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-muted"}`}
             >
@@ -165,7 +166,7 @@ export function TreatmentTableRow({
                   style={{ top: menuPos.top, left: menuPos.left }}
                 >
                   <div className="p-1.5">
-                    <Button onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
+                    <Button variant="ghost" onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
                       className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
                       <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
                         <Edit className="w-4 h-4" />
@@ -173,7 +174,7 @@ export function TreatmentTableRow({
                       Edit Plan
                     </Button>
 
-                    <Button onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
+                    <Button variant="ghost" onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
                       className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
                       <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
                         <Clock className="w-4 h-4" />
@@ -189,7 +190,7 @@ export function TreatmentTableRow({
                     </Button>
 
                     {treatment.status === "planned" && (
-                      <Button onClick={() => { onStart(treatment.id); setShowMenu(false); }}
+                      <Button variant="ghost" onClick={() => { onStart(treatment.id); setShowMenu(false); }}
                         className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-primary/10 rounded-xl flex items-center gap-3 text-primary transition-colors">
                         <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                           <Play className="w-4 h-4" />
@@ -199,7 +200,7 @@ export function TreatmentTableRow({
                     )}
 
                     {treatment.status === "in-progress" && (
-                      <Button onClick={() => { onComplete(treatment.id); setShowMenu(false); }}
+                      <Button variant="ghost" onClick={() => { onComplete(treatment.id); setShowMenu(false); }}
                         className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-emerald-50 rounded-xl flex items-center gap-3 text-emerald-700 transition-colors">
                         <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                           <CheckCircle className="w-4 h-4" />

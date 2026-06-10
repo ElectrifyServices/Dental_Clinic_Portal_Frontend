@@ -92,6 +92,7 @@ export function SessionPlannerSection({
                 )}
                 <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => onRemoveSession(session.id)}
                   className="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                   disabled={sessions.length === 1 && session.isRequired}

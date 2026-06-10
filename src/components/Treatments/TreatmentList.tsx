@@ -4,11 +4,10 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search, Plus, Clock, CheckCircle, Calendar,
   Stethoscope, ChevronLeft, ChevronRight,
-  Filter, X, Loader2,
+  Filter, X, Loader2, FileText, Edit, Play, MoreVertical
 } from "lucide-react";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
-import { TreatmentTableRow } from "./TreatmentList/TreatmentTableRow";
-import { ContentCard, Button } from "@/components/ui";
+import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -37,10 +36,10 @@ const STATUS_META: Record<string, { label: string; cls: string; icon: React.Reac
 
 // FIX: UI statuses ("in-progress") → API enums ("IN_PROGRESS")
 const UI_TO_API_STATUS: Record<string, string> = {
-  planned:      "PLANNED",
-  "in-progress":"IN_PROGRESS",
-  completed:    "COMPLETED",
-  cancelled:    "CANCELLED",
+  planned: "PLANNED",
+  "in-progress": "IN_PROGRESS",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -94,10 +93,10 @@ export function TreatmentList({
   onMarkCompleted,
   onStartTreatment,
 }: TreatmentListProps) {
-  const [search,              setSearch]              = useState("");
-  const [statusFilter,        setStatusFilter]        = useState<string[]>([]);   // UI values
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);   // UI values
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [advancedFilters,     setAdvancedFilters]     = useState<AdvancedFilters>({});
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({});
 
   // Debounce ref so search doesn't fire on every keystroke
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -106,20 +105,20 @@ export function TreatmentList({
   const notify = useCallback((
     overrides: Partial<{ page: number; search: string; statusFilter: string[]; adv: AdvancedFilters }>
   ) => {
-    const s  = overrides.search       !== undefined ? overrides.search       : search;
+    const s = overrides.search !== undefined ? overrides.search : search;
     const sf = overrides.statusFilter !== undefined ? overrides.statusFilter : statusFilter;
-    const p  = overrides.page         !== undefined ? overrides.page         : currentPage;
+    const p = overrides.page !== undefined ? overrides.page : currentPage;
     const adv = overrides.adv ?? advancedFilters;
 
     // FIX: convert UI status array → API enum array before sending
     const apiStatuses = sf.map(st => UI_TO_API_STATUS[st]).filter(Boolean);
 
     onParamsChange({
-      page:    p,
-      search:  s,
+      page: p,
+      search: s,
       filters: apiStatuses.length ? { status: apiStatuses } : {},
       startDate: adv.dateFrom,
-      endDate:   adv.dateTo,
+      endDate: adv.dateTo,
     });
   }, [search, statusFilter, currentPage, advancedFilters, onParamsChange]);
 
@@ -165,6 +164,190 @@ export function TreatmentList({
     !!advancedFilters.dateFrom || !!advancedFilters.dateTo,
   ].filter(Boolean).length;
 
+  const columns = [
+    {
+      key: "patient",
+      header: "Patient & Procedure",
+      render: (treatment: any) => (
+        <div>
+          <div className="font-bold text-foreground">{treatment.patientName}</div>
+          <div className="text-[11px] font-bold text-primary mt-0.5 uppercase tracking-wider">
+            {treatment.procedure}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "tooth",
+      header: "Tooth",
+      render: (treatment: any) => (
+        <span className="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-bold border border-border">
+          {treatment.tooth && treatment.tooth !== "—" ? treatment.tooth : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "doctor",
+      header: "Doctor",
+      render: (treatment: any) => (
+        <div className="text-sm font-semibold text-muted-foreground">{treatment.doctorName || "—"}</div>
+      ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      render: (treatment: any) => (
+        <div className="text-sm font-medium text-muted-foreground">
+          {treatment.date
+            ? new Date(treatment.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+            : "—"}
+        </div>
+      ),
+    },
+    {
+      key: "cost",
+      header: "Cost",
+      align: "right" as const,
+      render: (treatment: any) => {
+        const cost = Number(treatment.cost) < 100_000_000 ? Number(treatment.cost) : 0;
+        return <div className="text-sm font-bold text-foreground">₹{cost.toLocaleString()}</div>;
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (treatment: any) => {
+        const sm = STATUS_META[treatment.status] || STATUS_META.planned;
+        return (
+          <span className={`${sm.cls} flex items-center gap-1.5 w-fit px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border`}>
+            {sm.icon}{sm.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "nextSession",
+      header: "Next Session",
+      render: (treatment: any) => {
+        const sessions = treatment.sessions ?? [];
+        const totalSessions = sessions.length;
+        const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
+
+        const nextApptRaw = treatment.nextAppointment ||
+          sessions
+            .filter((s: any) => s.status === "scheduled" || s.status === "in-progress")
+            .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]?.date;
+
+        const nextApptLabel = nextApptRaw
+          ? new Date(nextApptRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
+          : null;
+
+        return (
+          <div className="space-y-1.5">
+            {nextApptLabel ? (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                <span className="text-xs font-bold text-foreground">{nextApptLabel}</span>
+              </div>
+            ) : (
+              <span className="text-xs font-bold text-muted-foreground/40">—</span>
+            )}
+
+            {totalSessions > 0 && (
+              <div className="flex items-center gap-1">
+                {sessions.slice(0, 6).map((s: any, i: number) => (
+                  <div
+                    key={i}
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      s.status === "completed"
+                        ? "bg-emerald-500"
+                        : s.status === "in-progress" || s.status === "in_progress"
+                        ? "bg-primary animate-pulse"
+                        : "bg-border"
+                    }`}
+                  />
+                ))}
+                {totalSessions > 6 && (
+                  <span className="text-[9px] text-muted-foreground/50">+{totalSessions - 6}</span>
+                )}
+                <span className="text-[9px] font-black text-muted-foreground/50 ml-1">
+                  {completedSessions}/{totalSessions}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right" as const,
+      render: (treatment: any) => {
+        const sessions = treatment.sessions ?? [];
+        const totalSessions = sessions.length;
+        const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="p-2 h-8 w-8 rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-muted">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl">
+              <DropdownMenuItem onClick={() => onViewTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
+                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
+                </div>
+                View Details
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onEditTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
+                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                  <Edit className="w-4 h-4" />
+                </div>
+                Edit Plan
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onManageSessions(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
+                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="flex-1 flex items-center justify-between">
+                  Sessions
+                  {totalSessions > 0 && (
+                    <span className="text-[9px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
+                      {completedSessions}/{totalSessions}
+                    </span>
+                  )}
+                </div>
+              </DropdownMenuItem>
+
+              {treatment.status === "planned" && (
+                <DropdownMenuItem onClick={() => onStartTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-primary/10 rounded-xl flex items-center gap-3 text-primary cursor-pointer">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Play className="w-4 h-4" />
+                  </div>
+                  Start Now
+                </DropdownMenuItem>
+              )}
+
+              {treatment.status === "in-progress" && (
+                <DropdownMenuItem onClick={() => onMarkCompleted(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-emerald-50 rounded-xl flex items-center gap-3 text-emerald-700 cursor-pointer">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  Mark Done
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="space-y-6">
 
@@ -193,7 +376,6 @@ export function TreatmentList({
       </div>
 
       <TreatmentStats totals={totals} isLoading={isLoading} />
-
       {/* Filter bar */}
       <div className="space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
@@ -214,13 +396,13 @@ export function TreatmentList({
               {(["all", "planned", "in-progress", "completed"] as const).map(s => (
                 <Button
                   key={s}
+                  variant="ghost"
                   onClick={() => handleStatusFilter(s)}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 ${
-                    (s === "all" && statusFilter.length === 0) ||
-                    (s !== "all" && statusFilter.includes(s))
+                  className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 ${(s === "all" && statusFilter.length === 0) ||
+                      (s !== "all" && statusFilter.includes(s))
                       ? "bg-card text-primary shadow-sm border border-border"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
                 >
                   {s === "all" ? "All Plans" : STATUS_META[s]?.label ?? s}
                 </Button>
@@ -228,7 +410,6 @@ export function TreatmentList({
             </div>
 
             <div className="flex items-center gap-2 ml-auto lg:ml-0">
-              {/* Advanced filters toggle */}
               <Button
                 variant="outline"
                 size="sm"
@@ -252,8 +433,6 @@ export function TreatmentList({
             </div>
           </div>
         </div>
-
-        {/* Advanced filters panel */}
         {showAdvancedFilters && (
           <div className="bg-card p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
             <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Date Range Filter</h3>
@@ -284,8 +463,6 @@ export function TreatmentList({
           </div>
         )}
       </div>
-
-      {/* Table */}
       <ContentCard
         bodyClassName="p-0 overflow-hidden"
         className="rounded-3xl"
@@ -314,21 +491,20 @@ export function TreatmentList({
           ) : null
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                {["Patient & Procedure", "Tooth", "Doctor", "Date", "Cost", "Status", "Next Session", "Actions"].map((h, i) => (
-                  <th key={h} className={`px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest ${i === 4 ? "text-right" : i === 7 ? "text-center" : ""}`}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {isLoading ? (
-                // Skeleton rows
-                Array.from({ length: 5 }).map((_, i) => (
+        {isLoading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  {["Patient & Procedure", "Tooth", "Doctor", "Date", "Cost", "Status", "Next Session", "Actions"].map((h, i) => (
+                    <th key={h} className={`px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest ${i === 4 || i === 7 ? "text-right" : ""}`}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-6 py-4">
@@ -336,38 +512,20 @@ export function TreatmentList({
                       </td>
                     ))}
                   </tr>
-                ))
-              ) : treatments.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-20 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-20 h-20 bg-muted rounded-[2rem] flex items-center justify-center mb-4 ring-8 ring-muted/20">
-                        <Stethoscope className="w-10 h-10 text-muted-foreground/40" />
-                      </div>
-                      <h3 className="text-sm font-black text-foreground uppercase tracking-widest">No treatments found</h3>
-                      <p className="text-xs font-medium text-muted-foreground/60 mt-1 max-w-[200px]">
-                        {search || statusFilter.length ? "Adjust your search or clear filters." : "Create a new treatment plan."}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                treatments.map(t => (
-                  <TreatmentTableRow
-                    key={t.id}
-                    treatment={t}
-                    statusMeta={STATUS_META}
-                    onView={onViewTreatment}
-                    onEdit={onEditTreatment}
-                    onManageSessions={onManageSessions}
-                    onStart={onStartTreatment}
-                    onComplete={onMarkCompleted}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={treatments}
+            rowKey={(r) => r.id}
+            emptyIcon={<Stethoscope className="w-10 h-10" />}
+            emptyTitle="No treatments found"
+            emptySubtitle={search || statusFilter.length ? "Adjust your search or clear filters." : "Create a new treatment plan."}
+          />
+        )}
       </ContentCard>
     </div>
   );

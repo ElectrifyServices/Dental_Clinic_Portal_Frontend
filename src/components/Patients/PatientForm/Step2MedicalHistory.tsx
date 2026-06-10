@@ -56,8 +56,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   });
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-3">
+    <div className="space-y-3">
+      <div className="text-center mb-2">
         <div className="w-12 h-12 bg-gradient-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
           <Heart className="w-6 h-6 text-destructive" />
         </div>
@@ -126,13 +126,13 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Heart className="w-4 h-4 inline mr-2 text-red-500" />
             Medical History
           </Label>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <SearchableSelect
               isMulti
               value={selectedMedicalHistory}
@@ -157,12 +157,14 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                       <span className="truncate max-w-[200px]">{displayName}</span>
                       <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => {
                           const updated = selectedMedicalHistory.filter((i) => i !== item);
                           setSelectedMedicalHistory(updated);
                           setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
                         }}
-                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
                         <X className="w-3 h-3" />
                       </Button>
@@ -175,11 +177,11 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
 
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <AlertTriangle className="w-4 h-4 inline mr-2 text-amber-500" />
             Allergies
           </Label>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <SearchableSelect
               isMulti
               value={selectedAllergies}
@@ -207,12 +209,14 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                       <span className="truncate max-w-[200px]">{displayName}</span>
                       <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => {
                           const updated = selectedAllergies.filter((i) => i !== item);
                           setSelectedAllergies(updated);
                           setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
                         }}
-                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5 transition-colors"
+                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
                         <X className="w-3 h-3" />
                       </Button>
@@ -261,6 +265,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                 <span className="truncate max-w-[150px]">{file.name}</span>
                 <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => {
                     setFormData((prev: any) => ({
                       ...prev,
@@ -278,8 +284,8 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         )}
       </div>
 
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
             Previous Dentist / Doctor Details
@@ -325,9 +331,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <Input
               type="tel"
               name="previousDoctorPhone"
+              maxLength={10}
               value={formData.previousDoctorPhone}
               onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '');
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
                 setFormData((prev: any) => ({ ...prev, previousDoctorPhone: digits }));
               }}
               placeholder="Digits only"
@@ -379,7 +386,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           />
         </div>
         <div>
-          <Label className="block text-sm font-semibold text-muted-foreground mb-2">Previous Treatments</Label>
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Treatments</Label>
           <div className="flex flex-wrap gap-2">
             {Array.from(new Set([
               'scaling / cleaning and polishing',
@@ -417,7 +424,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
         <div>
           <h4 className="text-sm font-bold text-amber-900 mb-1">Important Medical Notice</h4>

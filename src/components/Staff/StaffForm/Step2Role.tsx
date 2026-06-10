@@ -13,7 +13,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui";
+import { Badge, Loading } from "@/components/ui";
 import { useRolesQuery } from "@/hooks/roles/useRolesQuery";
 
 interface Step2Props {
@@ -40,7 +40,6 @@ const ROLES = [
     color: "text-blue-600",
     bg: "bg-blue-50",
   },
-
   {
     value: "receptionist",
     label: "Receptionist",
@@ -49,7 +48,6 @@ const ROLES = [
     color: "text-emerald-600",
     bg: "bg-emerald-50",
   },
-
   {
     value: "staff",
     label: "Staff",
@@ -67,70 +65,60 @@ const PERMISSIONS = [
     description: "View dashboard overview",
     icon: BarChart3,
   },
-
   {
     id: "appointments",
     label: "Appointments",
     description: "Manage appointments & schedules",
     icon: Calendar,
   },
-
   {
     id: "patients",
     label: "Patients",
     description: "Access patient profiles",
     icon: User,
   },
-
   {
     id: "consultation",
     label: "Consultation",
     description: "Clinical consultation access",
     icon: Stethoscope,
   },
-
   {
     id: "treatments",
     label: "Treatments",
     description: "Create & manage treatments",
     icon: Stethoscope,
   },
-
   {
     id: "medical_records",
     label: "Medical Records",
     description: "Access EMR & records",
     icon: FileText,
   },
-
   {
     id: "consent_forms",
     label: "Consent Forms",
     description: "Manage patient consent forms",
     icon: FileText,
   },
-
   {
     id: "billing",
     label: "Billing",
     description: "Handle invoices & payments",
     icon: DollarSign,
   },
-
   {
     id: "inventory",
     label: "Inventory",
     description: "Track clinic supplies",
     icon: Package,
   },
-
   {
     id: "reports",
     label: "Reports",
     description: "View analytics & reports",
     icon: BarChart3,
   },
-
   {
     id: "staff_management",
     label: "Staff Management",
@@ -194,48 +182,48 @@ export function Step2Role({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {isLoading ? (
-          <div className="col-span-2 py-8 flex flex-col items-center justify-center text-muted-foreground">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-sm font-bold">Loading Roles...</p>
+          <div className="col-span-2 py-8 flex flex-col items-center justify-center">
+            <Loading type="spinner" text="Loading Roles..." />
           </div>
         ) : (
           rolesList.map((role) => {
             const Icon = role.icon;
+            const isActive = formData.role === role.value;
 
-          const isActive = formData.role === role.value;
+            return (
+              <Button
+                key={role.value}
+                type="button"
+                variant="ghost"
+                onClick={() => onChange(role.value)}
+                className={`h-auto w-full p-4 border-2 rounded-2xl text-left transition-all relative overflow-hidden group block hover:bg-transparent ${isActive
+                  ? "border-primary bg-card shadow-xl shadow-primary/5"
+                  : "border-border bg-card hover:border-muted-foreground/20"
+                  }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div
+                    className={`w-10 h-10 rounded-xl ${role.bg} flex items-center justify-center transition-transform group-hover:scale-110`}
+                  >
+                    <Icon className={`w-5 h-5 ${role.color}`} />
+                  </div>
 
-          return (
-            <Button
-              key={role.value}
-              type="button"
-              onClick={() => onChange(role.value)}
-              className={`p-4 border-2 rounded-2xl text-left transition-all relative overflow-hidden group ${isActive
-                ? "border-primary bg-card shadow-xl shadow-primary/5"
-                : "border-border bg-card hover:border-muted-foreground/20"
-                }`}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div
-                  className={`w-10 h-10 rounded-xl ${role.bg} flex items-center justify-center transition-transform group-hover:scale-110`}
-                >
-                  <Icon className={`w-5 h-5 ${role.color}`} />
+                  <h4 className="font-black text-foreground uppercase text-xs tracking-wider">
+                    {role.label}
+                  </h4>
                 </div>
 
-                <h4 className="font-black text-foreground uppercase text-xs tracking-wider">
-                  {role.label}
-                </h4>
-              </div>
+                <p className="text-[11px] text-muted-foreground font-medium leading-tight">
+                  {role.description}
+                </p>
 
-              <p className="text-[11px] text-muted-foreground font-medium leading-tight">
-                {role.description}
-              </p>
-
-              {isActive && (
-                <div className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-pulse" />
-              )}
-            </Button>
-          );
-        }))}
+                {isActive && (
+                  <div className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                )}
+              </Button>
+            );
+          })
+        )}
       </div>
 
       {/* PERMISSIONS */}

@@ -180,6 +180,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     try {
       await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
       queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
       onDelete(deleteEmp.id);
       refetch();
       setDeleteEmp(null);
@@ -240,6 +242,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           : <span className="text-xs text-muted-foreground/60">No plan</span>;
       },
     },
+    /*
     {
       key: 'patient', header: 'Patient Link', render: (e: CorporateEmployee) => (
         e.patientId
@@ -247,6 +250,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
           : <Badge variant="gray">Not yet</Badge>
       ),
     },
+    */
     {
       key: 'status', header: 'Status', render: (e: CorporateEmployee) => {
         const isExpired = e.status === 'EXPIRED';
@@ -346,7 +350,7 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         {plans.filter(p => p.isActive).slice(0, 4).map(plan => (
           <div key={plan.id} className="kpi-card">
             <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-            <p className="text-xl font-bold text-foreground mt-2">{byPlan[plan.id] || 0}</p>
+            <p className="text-xl font-bold text-foreground mt-2">{plan.currentMembers || 0}</p>
             <p className="text-xs text-muted-foreground/60">{plan.companyName}</p>
           </div>
         ))}

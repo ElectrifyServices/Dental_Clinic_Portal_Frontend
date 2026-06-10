@@ -28,6 +28,7 @@ import {
   Badge,
   Card,
   CardContent,
+  Loading,
 } from "@/components/ui";
 
 interface DoctorManagementProps {
@@ -163,11 +164,12 @@ export function DoctorManagement({
         style={{ top: menuPos.top, left: menuPos.left }}
       >
         <Button
+          variant="ghost"
           onClick={() => {
             onUpdateStaff({ ...staff, isActive: !staff.isActive });
             setOpenMenuId(null);
           }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
+          className="w-full justify-start px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
         >
           {staff.isActive ? (
             <>
@@ -181,44 +183,48 @@ export function DoctorManagement({
         </Button>
         {(staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor")) && (
           <Button
+            variant="ghost"
             onClick={() => {
               onManageSchedule(staff.id, staff.name);
               setOpenMenuId(null);
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
+            className="w-full justify-start px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <Calendar className="w-4 h-4 text-blue-500" /> Manage Schedule
           </Button>
         )}
         {onPaySalary && (
           <Button
+            variant="ghost"
             onClick={() => {
               onPaySalary(staff.id, staff.name);
               setOpenMenuId(null);
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 text-emerald-700 font-medium transition-colors"
+            className="w-full justify-start px-3 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 rounded-xl flex items-center gap-2.5 text-emerald-600 font-medium transition-colors dark:hover:bg-emerald-950/20"
           >
             <IndianRupee className="w-4 h-4" /> Pay Salary
           </Button>
         )}
         {onViewSalaryHistory && (
           <Button
+            variant="ghost"
             onClick={() => {
               onViewSalaryHistory(staff.id, staff.name);
               setOpenMenuId(null);
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
+            className="w-full justify-start px-3 py-2 text-sm hover:bg-muted rounded-xl flex items-center gap-2.5 text-muted-foreground font-medium transition-colors"
           >
             <IndianRupee className="w-4 h-4 text-amber-500" /> Salary History
           </Button>
         )}
         <div className="h-px bg-muted my-1 mx-2" />
         <Button
+          variant="ghost"
           onClick={() => {
             onDeleteDoctor(staff.id);
             setOpenMenuId(null);
           }}
-          className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
+          className="w-full justify-start px-3 py-2 text-sm hover:bg-destructive/10 hover:text-destructive rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors dark:hover:bg-destructive/20"
         >
           <Trash2 className="w-4 h-4" /> Remove
         </Button>
@@ -334,8 +340,8 @@ export function DoctorManagement({
         <div className="flex items-center justify-center gap-1">
           <Button
             variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-primary"
+            size="icon-sm"
+            className="text-primary hover:bg-primary/10 hover:text-primary transition-all"
             onClick={() => onEditDoctor(staff.id)}
           >
             <Edit className="w-4 h-4" />
@@ -343,8 +349,8 @@ export function DoctorManagement({
           <div className="relative">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground/60"
+              size="icon-sm"
+              className="text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
               onClick={(e) => openMenu(e, staff.id)}
             >
               <MoreVertical className="w-4 h-4" />
@@ -386,14 +392,16 @@ export function DoctorManagement({
           </div>
           <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
             <Button
+              variant="ghost"
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
+              className={`h-7 w-7 p-0 rounded-lg transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-primary hover:bg-card hover:text-primary" : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted-foreground/10"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
             <Button
+              variant="ghost"
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-card shadow-sm text-primary" : "text-muted-foreground/60 hover:text-muted-foreground"}`}
+              className={`h-7 w-7 p-0 rounded-lg transition-all ${viewMode === "list" ? "bg-card shadow-sm text-primary hover:bg-card hover:text-primary" : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted-foreground/10"}`}
             >
               <List className="w-4 h-4" />
             </Button>
@@ -402,12 +410,9 @@ export function DoctorManagement({
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 bg-card rounded-2xl border border-border shadow-sm">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider animate-pulse">
-            Fetching staff directory...
-          </p>
-        </div>
+        <Card className="flex flex-col items-center justify-center py-24 rounded-2xl">
+          <Loading type="spinner" text="Fetching staff directory..." />
+        </Card>
       ) : viewMode === "list" ? (
         <DataTable
           columns={columns}
@@ -465,8 +470,8 @@ export function DoctorManagement({
                       <div className="flex gap-1 bg-muted/30 rounded-xl p-1 border border-border/50">
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                          size="icon-sm"
+                          className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                           onClick={() => onEditDoctor(staff.id)}
                         >
                           <Edit className="w-4 h-4" />
@@ -474,8 +479,8 @@ export function DoctorManagement({
                         <div className="relative">
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                            size="icon-sm"
+                            className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                             onClick={(e) => openMenu(e, staff.id)}
                           >
                             <MoreVertical className="w-4 h-4" />

@@ -35,7 +35,7 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
   const onSubmit = (data: AdjustFormData) => {
     onSave({
       id: item.id,
-      quantity: data.quantity,
+      quantity_delta: data.quantity,
       reason: data.reason,
     });
   };
