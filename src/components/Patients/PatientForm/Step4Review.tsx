@@ -208,60 +208,31 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                 Medical Status
               </h4>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-destructive/5 border border-destructive/10 rounded-xl">
-                    <span className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest block mb-1">
-                      Allergies
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {formData.allergies
+                <div className="p-3 bg-destructive/5 border border-destructive/10 rounded-xl">
+                  <span className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest block mb-1">
+                    Allergies
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.allergies
+                      .split("\n")
+                      .filter((a: string) => a.trim()).length > 0 ? (
+                      formData.allergies
                         .split("\n")
-                        .filter((a: string) => a.trim()).length > 0 ? (
-                        formData.allergies
-                          .split("\n")
-                          .filter((a: string) => a.trim())
-                          .map((a: string) => (
-                            <Badge
-                              key={a}
-                              variant="destructive"
-                              className="text-[10px] px-2 py-0"
-                            >
-                              {getAllergyName(a)}
-                            </Badge>
-                          ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">
-                          None reported
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-3 bg-secondary/20 border border-secondary rounded-xl">
-                    <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-1">
-                      Medical Conditions
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {formData.medicalHistory
-                        .split("\n")
-                        .filter((m: string) => m.trim()).length > 0 ? (
-                        formData.medicalHistory
-                          .split("\n")
-                          .filter((m: string) => m.trim())
-                          .map((m: string) => (
-                            <Badge
-                              key={m}
-                              variant="secondary"
-                              className="text-[10px] px-2 py-0"
-                            >
-                              {getMedicalHistoryName(m)}
-                            </Badge>
-                          ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">
-                          No conditions
-                        </span>
-                      )}
-                    </div>
+                        .filter((a: string) => a.trim())
+                        .map((a: string) => (
+                          <Badge
+                            key={a}
+                            variant="destructive"
+                            className="text-[10px] px-2 py-0"
+                          >
+                            {getAllergyName(a)}
+                          </Badge>
+                        ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground/60">
+                        None reported
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-4 bg-primary/5 border-2 border-primary/20 border-l-primary border-l-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:bg-primary/10">
@@ -339,14 +310,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                         {formData.previousClinicAddress || "—"}
                       </p>
                     </div>
-                    <div className="col-span-2 space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                        Reason for Treatment
-                      </span>
-                      <p className="font-semibold text-foreground text-sm">
-                        {formData.previousReason || "—"}
-                      </p>
-                    </div>
+
                     {formData.previousTreatments?.length > 0 && (
                       <div className="col-span-2 space-y-1">
                         <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block mb-1">

@@ -57,8 +57,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   handleImageUpload,
 }) => {
   const [showCamera, setShowCamera] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startCamera = async () => {
     try {
@@ -105,9 +107,12 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   return (
     <div className="space-y-4">
       {/* Avatar moved to Step 3 */}
-       <div className="text-center">
+      <div className="text-center">
         <div className="relative inline-block">
-          <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+          <div
+            onClick={() => setShowPhotoOptions(true)}
+            className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 relative group"
+          >
             {formData.avatar ? (
               <img
                 src={formData.avatar}
@@ -117,29 +122,75 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             ) : (
               <User className="w-12 h-12 text-primary" />
             )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
           </div>
           <button
             type="button"
-            onClick={startCamera}
-            className="absolute bottom-0 left-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white"
-            title="Take photo from camera"
+            onClick={() => setShowPhotoOptions(true)}
+            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white"
+            title="Update photo"
           >
             <Camera className="w-4 h-4" />
           </button>
-          <Label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
-            <Upload className="w-4 h-4" />
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </Label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              handleImageUpload(e);
+              setShowPhotoOptions(false);
+            }}
+            className="hidden"
+          />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Upload photo or click via camera
+          Click to update photo
         </p>
       </div>
+
+      {showPhotoOptions && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-black text-foreground uppercase tracking-wider">Select Photo Source</h4>
+              <button type="button" onClick={() => setShowPhotoOptions(false)} className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPhotoOptions(false);
+                  startCamera();
+                }}
+                className="flex flex-col items-center justify-center gap-3 p-4 border border-border hover:border-primary hover:bg-primary/5 rounded-2xl transition-all duration-150 group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-foreground text-center">Take Photo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPhotoOptions(false);
+                  fileInputRef.current?.click();
+                }}
+                className="flex flex-col items-center justify-center gap-3 p-4 border border-border hover:border-primary hover:bg-primary/5 rounded-2xl transition-all duration-150 group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-foreground text-center">Choose File</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCamera && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -173,7 +224,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       {matchedCorporateEmp &&
         (() => {
           let plan = null;
-          
+
           if (matchedCorporateEmp.corporate_plan) {
             const cp = matchedCorporateEmp.corporate_plan;
             plan = {
@@ -192,7 +243,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           }
 
           return (
-            <Card 
+            <Card
               onClick={acceptCorporateEmployee}
               className="mx-6 overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
             >
@@ -546,24 +597,6 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   <Label className="block text-sm font-semibold text-muted-foreground">
                     Default Discount (%)
                   </Label>
-                  <Label className={`flex items-center gap-1.5 cursor-pointer bg-primary/5 px-2 py-0.5 rounded border border-primary/20 hover:bg-primary/10 transition-colors ${isCorporate ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <Input
-                      type="checkbox"
-                      name="isFOC"
-                      checked={formData.isFOC || false}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          isFOC: checked,
-                          defaultDiscount: checked ? 100 : 0,
-                        }));
-                      }}
-                      disabled={isCorporate}
-                      className="w-3.5 h-3.5 accent-primary cursor-pointer"
-                    />
-                    <span className="text-[10px] font-bold text-primary tracking-wide uppercase">FOC (Free)</span>
-                  </Label>
                 </div>
                 <Input
                   type="number"
@@ -573,10 +606,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
                     setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
                   }}
-                  disabled={isCorporate || formData.isFOC}
+                  disabled={isCorporate}
                   min="0"
                   max="100"
-                  placeholder="e.g. 100 for full free"
+                  placeholder="e.g. 10 for 10% discount"
                   className="disabled:opacity-80 disabled:bg-muted"
                 />
               </div>
@@ -702,17 +735,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Phone className="w-4 h-4 inline mr-2" />
             Emergency Contact Number
           </Label>
-            <Input
-              type="tel"
-              name="emergencyContact"
-              maxLength={10}
-              value={formData.emergencyContact || ""}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
-              }}
-              placeholder="Emergency contact phone number"
-            />
+          <Input
+            type="tel"
+            name="emergencyContact"
+            maxLength={10}
+            value={formData.emergencyContact || ""}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
+            }}
+            placeholder="Emergency contact phone number"
+          />
         </div>
       </div>
     </div>

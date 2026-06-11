@@ -19,6 +19,7 @@ import {
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui";
 import { Patient } from "@/types";
 
 interface PatientCardProps {
@@ -31,6 +32,19 @@ interface PatientCardProps {
   onToggleStatus: (id: string, currentStatus: string) => void;
   onToggleCategory: (id: string, currentCategory: string) => void;
 }
+
+const SimpleTooltip: React.FC<{ children: React.ReactNode; content: React.ReactNode }> = ({ children, content }) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent className="text-xs py-1 px-2 font-semibold">
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 export const PatientCard: React.FC<PatientCardProps> = ({
   patient,
@@ -99,89 +113,112 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   const age = calculateAge(patient.dateOfBirth);
 
   return (
-    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit">
-      <CardContent className="p-4 sm:p-5">
-        {/* Header Section - More compact */}
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
-          <div className="flex gap-3">
-            <div className="relative shrink-0">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
-                {patient.avatar ? (
-                  <img
-                    src={patient.avatar}
-                    alt={patient.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
-                )}
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                <User className="w-2.5 h-2.5 text-white" />
+    <TooltipProvider>
+      <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit">
+        <CardContent className="p-4 sm:p-5">
+          {/* Header Section - More compact */}
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+            <div className="flex gap-3">
+              <SimpleTooltip content="Patient Avatar">
+                <div className="relative shrink-0 cursor-help">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
+                    {patient.avatar ? (
+                      <img
+                        src={patient.avatar}
+                        alt={patient.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    <User className="w-2.5 h-2.5 text-white" />
+                  </div>
+                </div>
+              </SimpleTooltip>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <SimpleTooltip content={`Name: ${patient.name || "Unknown"}`}>
+                    <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate cursor-help">
+                      {(patient.name || "Unknown").toLowerCase()}
+                    </h3>
+                  </SimpleTooltip>
+                  {patient.category && (
+                    <SimpleTooltip content={`Category: ${patient.category.toUpperCase()}`}>
+                      <Badge className={`border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap cursor-help ${getCategoryStyles(patient.category)}`}>
+                        {patient.category.toUpperCase()}
+                      </Badge>
+                    </SimpleTooltip>
+                  )}
+                </div>
+                <SimpleTooltip content={`Patient ID: ${patient.patient_code || patient.id}`}>
+                  <p className="text-[10px] text-blue-600 font-bold mt-0.5 uppercase tracking-tight truncate cursor-help inline-block">
+                    {patient.patient_code || patient.id}
+                  </p>
+                </SimpleTooltip>
+                <div>
+                  <SimpleTooltip content={`Status: ${(patient.status || "active").toUpperCase()}`}>
+                    <Badge
+                      variant={getStatusVariant(patient.status || "active")}
+                      className="mt-1.5 text-[9px] font-black px-2 py-0 cursor-help inline-flex"
+                    >
+                      <span className="flex items-center gap-1">
+                        {getStatusIcon(patient.status || "active")}
+                        {(patient.status || "active").toUpperCase()}
+                      </span>
+                    </Badge>
+                  </SimpleTooltip>
+                </div>
               </div>
             </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate">
-                  {(patient.name || "Unknown").toLowerCase()}
-                </h3>
-                {patient.category && (
-                  <Badge className={`border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap ${getCategoryStyles(patient.category)}`}>
-                    {patient.category.toUpperCase()}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-[10px] text-blue-600 font-bold mt-0.5 uppercase tracking-tight truncate">
-                {patient.patient_code || patient.id}
-              </p>
-              <Badge
-                variant={getStatusVariant(patient.status || "active")}
-                className="mt-1.5 text-[9px] font-black px-2 py-0"
-              >
-                <span className="flex items-center gap-1">
-                  {getStatusIcon(patient.status || "active")}
-                  {(patient.status || "active").toUpperCase()}
-                </span>
-              </Badge>
+            <div className="flex sm:flex-col gap-1.5 shrink-0">
+              <SimpleTooltip content="Export Patient Data">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                  onClick={() => onExport(patient.id)}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </Button>
+              </SimpleTooltip>
+              <SimpleTooltip content="Print Patient Barcode">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/10"
+                  onClick={() => onPrintBarcode(patient)}
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                </Button>
+              </SimpleTooltip>
             </div>
           </div>
-          <div className="flex sm:flex-col gap-1.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-              onClick={() => onExport(patient.id)}
-            >
-              <Download className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/10"
-              onClick={() => onPrintBarcode(patient)}
-            >
-              <QrCode className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
 
-        {/* Contact Info - Compact Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0">
-            <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-            <span className="font-bold truncate">{patient.phone}</span>
+          {/* Contact Info - Compact Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
+            <SimpleTooltip content={`Phone: ${patient.phone || "N/A"}`}>
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
+                <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+                <span className="font-bold truncate">{patient.phone}</span>
+              </div>
+            </SimpleTooltip>
+            <SimpleTooltip content={`Email: ${patient.email || "N/A"}`}>
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+                <span className="font-bold truncate">{patient.email}</span>
+              </div>
+            </SimpleTooltip>
+            <SimpleTooltip content={`Address: ${patient.address || "N/A"}`}>
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 sm:col-span-2 cursor-help">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+                <span className="font-bold truncate">
+                  {patient.address || "N/A"}
+                </span>
+              </div>
+            </SimpleTooltip>
           </div>
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0">
-            <Mail className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-            <span className="font-bold truncate">{patient.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 sm:col-span-2">
-            <MapPin className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-            <span className="font-bold truncate">
-              {patient.address || "N/A"}
-            </span>
-          </div>
-        </div>
 
         {/* Medical Alerts - Slimmed down */}
         <div className="mb-4 p-2.5 bg-orange-50/50 border border-orange-100 rounded-xl">
@@ -331,5 +368,6 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </Button>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 };

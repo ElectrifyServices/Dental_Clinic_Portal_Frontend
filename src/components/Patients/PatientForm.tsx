@@ -117,7 +117,7 @@ export function PatientForm({
 
   const getStepIndicator = (stepNumber: number) => {
     if (stepNumber < step) {
-      return <CheckCircle className="w-6 h-6 text-primary" />;
+      return <CheckCircle className="w-6 h-6 text-emerald-500" />;
     } else if (stepNumber === step) {
       return (
         <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
@@ -148,9 +148,9 @@ export function PatientForm({
         <div className="flex justify-between items-center w-full">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
-            className="text-muted-foreground"
+            className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
           >
             {step === 1 ? "Cancel" : "Previous Step"}
           </Button>
@@ -190,27 +190,33 @@ export function PatientForm({
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-4 md:gap-6 pb-4 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap -mx-6 px-6">
+        <div className="flex items-center justify-between pb-4 border-b border-border px-2">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },
             { num: 3, label: "Consent" },
             { num: 4, label: "Review" },
-          ].map((s) => (
-            <div key={s.num} className="flex items-center gap-3 relative shrink-0">
-              {getStepIndicator(s.num)}
-              <span
-                className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? "text-primary" : "text-muted-foreground/60"}`}
-              >
-                {s.label}
-              </span>
-              {s.num < 4 && (
-                <div
-                  className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? "bg-primary" : "bg-muted"}`}
-                />
-              )}
-            </div>
-          ))}
+          ].map((s, i, arr) => {
+            const isActive = step === s.num;
+            const isDone = step > s.num;
+            return (
+              <React.Fragment key={s.num}>
+                <div className="flex items-center gap-2 shrink-0">
+                  {getStepIndicator(s.num)}
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest hidden sm:inline-block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground/60"}`}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {i < arr.length - 1 && (
+                  <div
+                    className={`flex-1 h-[2px] rounded-full mx-4 transition-all duration-300 ${isDone ? "bg-emerald-500" : "bg-gray-200"}`}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         <form onSubmit={handleSubmit}>
