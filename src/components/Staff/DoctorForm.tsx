@@ -648,7 +648,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                 </div>
                 {i < STEPS.length - 1 && (
                   <div
-                    className={`flex-1 h-0.5 rounded-full mx-2 ${isDone ? "bg-emerald-500" : "bg-muted"}`}
+                    className={`flex-1 h-[2px] rounded-full mx-2 mt-5 self-start transition-all duration-300 ${isDone ? "bg-emerald-500" : "bg-gray-200"}`}
                   />
                 )}
               </React.Fragment>

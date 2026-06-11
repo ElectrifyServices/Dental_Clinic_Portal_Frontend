@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   Upload,
   User,
+  Camera,
+  X,
 } from "lucide-react";
 
 interface Step1Props {
@@ -54,6 +56,52 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   applyCustomRelation,
   handleImageUpload,
 }) => {
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 320, facingMode: "user" }
+      });
+      setCameraStream(stream);
+      setShowCamera(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (err) {
+      alert("Unable to access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 320;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.translate(320, 0);
+        ctx.scale(-1, 1); // mirror capture
+        ctx.drawImage(videoRef.current, 0, 0, 320, 320);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        setFormData((prev: any) => ({ ...prev, avatar: dataUrl }));
+        stopCamera();
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Avatar moved to Step 3 */}
@@ -70,6 +118,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <User className="w-12 h-12 text-primary" />
             )}
           </div>
+          <button
+            type="button"
+            onClick={startCamera}
+            className="absolute bottom-0 left-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white"
+            title="Take photo from camera"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
           <Label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white">
             <Upload className="w-4 h-4" />
             <Input
@@ -80,10 +136,39 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             />
           </Label>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Upload patient photo (optional)
+        <p className="text-xs text-muted-foreground mt-2">
+          Upload photo or click via camera
         </p>
       </div>
+
+      {showCamera && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-black text-foreground uppercase tracking-wider">Capture Patient Photo</h4>
+              <button type="button" onClick={stopCamera} className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="aspect-square w-full bg-black rounded-xl overflow-hidden relative border border-border">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover scale-x-[-1]"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>
+                Cancel
+              </Button>
+              <Button type="button" className="flex-1 gap-1.5" onClick={capturePhoto}>
+                <Camera className="w-4 h-4" /> Capture
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {matchedCorporateEmp &&
         (() => {

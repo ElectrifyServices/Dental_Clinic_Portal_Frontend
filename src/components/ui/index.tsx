@@ -31,101 +31,68 @@ import {
 } from "./Card";
 export * from "./DropdownMenu";
 
-// ─── PageHeader ──────────────────────────────────────────────────────────────
+// ─── PageHeader ───────────────────────────────────────────────────────────────
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
   children?: React.ReactNode;
 }
-export function PageHeader({
-  title,
-  subtitle,
-  action,
-  children,
-}: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-muted-foreground font-medium">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-foreground tracking-tight leading-tight">{title}</h1>
+        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
       {children}
-      {action && <div className="flex items-center gap-2">{action}</div>}
+      {action && <div className="flex items-center gap-2 flex-shrink-0">{action}</div>}
     </div>
   );
 }
 
-// ─── KpiCard ─────────────────────────────────────────────────────────────────
+// ─── KpiCard ──────────────────────────────────────────────────────────────────
 interface KpiCardProps {
   label: string;
   value: string | number;
-  /** Optional Tailwind text-color class for the value; defaults to text-foreground */
   colorClass?: string;
   icon?: React.ReactNode;
   sub?: React.ReactNode;
   subPositive?: boolean;
 }
-export function KpiCard({
-  label,
-  value,
-  colorClass = "text-foreground",
-  icon,
-  sub,
-  subPositive,
-}: KpiCardProps) {
+export function KpiCard({ label, value, colorClass = "text-foreground", icon, sub, subPositive }: KpiCardProps) {
   return (
     <div className="kpi-card flex items-start justify-between">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
           {label}
         </p>
-        <p className={cn("text-2xl font-bold", colorClass)}>{value}</p>
+        <p className={cn("text-[32px] font-bold leading-none", colorClass)}>{value}</p>
         {sub && (
-          <p
-            className={cn(
-              "text-xs mt-1 font-medium",
-              subPositive !== false ? "text-emerald-600" : "text-destructive",
-            )}
-          >
+          <p className={cn("text-xs mt-2 font-medium", subPositive !== false ? "text-emerald-600" : "text-destructive")}>
             {sub}
           </p>
         )}
       </div>
-      {icon && (
-        <div className="text-muted-foreground/40 flex-shrink-0 ml-3">
-          {icon}
-        </div>
-      )}
+      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4">{icon}</div>}
     </div>
   );
 }
 
-// ─── StatusBadge ─────────────────────────────────────────────────────────────
-type StatusBadgeVariant =
-  | "green"
-  | "blue"
-  | "amber"
-  | "red"
-  | "gray"
-  | "violet"
-  | "indigo";
+// ─── StatusBadge ──────────────────────────────────────────────────────────────
+type StatusBadgeVariant = "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo";
 interface StatusBadgeProps {
   variant?: StatusBadgeVariant;
   children: React.ReactNode;
   className?: string;
 }
-export function StatusBadge({
-  variant = "gray",
-  children,
-  className = "",
-}: StatusBadgeProps) {
+export function StatusBadge({ variant = "gray", children, className = "" }: StatusBadgeProps) {
   return (
     <span className={cn(`badge badge-${variant}`, className)}>{children}</span>
   );
 }
 
-// ─── Modal ───────────────────────────────────────────────────────────────────
+// ─── Modal ────────────────────────────────────────────────────────────────────
 interface ModalProps {
   title: string;
   subtitle?: string;
@@ -136,69 +103,57 @@ interface ModalProps {
   icon?: React.ReactNode;
 }
 const MODAL_SIZES: Record<string, string> = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
+  sm:  "max-w-sm",
+  md:  "max-w-md",
+  lg:  "max-w-lg",
+  xl:  "max-w-xl",
   "2xl": "max-w-2xl",
   "3xl": "max-w-3xl",
   "4xl": "max-w-4xl",
   "5xl": "max-w-5xl",
   "6xl": "max-w-6xl",
   "7xl": "max-w-7xl",
-  "8xl": "max-w-8xl",
-  "9xl": "max-w-9xl",
 };
 
-export function Modal({
-  title,
-  subtitle,
-  onClose,
-  children,
-  footer,
-  size = "lg",
-  icon,
-}: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "flex flex-col p-0 gap-0 max-h-[calc(100vh-5rem)] overflow-hidden",
+          "flex flex-col p-0 gap-0 max-h-[calc(100vh-4rem)] overflow-hidden rounded-modal",
           MODAL_SIZES[size],
         )}
       >
-        <DialogHeader className="sticky top-0 z-20 bg-card/95 backdrop-blur-md border-b border-border/50 p-6 flex-row items-center justify-between space-y-0">
-          <div className="flex items-center gap-2">
+        <DialogHeader className="sticky top-0 z-20 bg-card border-b border-border px-6 py-4 flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
             <div>
-              <DialogTitle className="text-lg font-semibold tracking-tight leading-tight">
+              <DialogTitle className="text-lg font-semibold text-foreground leading-snug">
                 {title}
               </DialogTitle>
               {subtitle ? (
-                <DialogDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 break-words">
+                <DialogDescription className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[1px] mt-0.5">
                   {subtitle}
                 </DialogDescription>
               ) : (
-                <DialogDescription className="sr-only">
-                  Modal dialog for {title}
-                </DialogDescription>
+                <DialogDescription className="sr-only">Modal dialog for {title}</DialogDescription>
               )}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </DialogHeader>
-        <div className="modal-body p-6 overflow-y-auto flex-1 scrollbar-hide">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">{children}</div>
         {footer && (
-          <DialogFooter className="p-6 border-t border-border bg-card/95 backdrop-blur-md sticky bottom-0 z-20">
+          <DialogFooter className="px-6 py-4 border-t border-border bg-muted/40 sticky bottom-0 z-20">
             {footer}
           </DialogFooter>
         )}
@@ -217,49 +172,33 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
-export function ConfirmModal({
-  title,
-  message,
-  confirmLabel = "Confirm",
-  variant = "danger",
-  isLoading = false,
-  onConfirm,
-  onCancel,
-}: ConfirmModalProps) {
+export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant = "danger", isLoading = false, onConfirm, onCancel }: ConfirmModalProps) {
   return (
     <Modal
       title={title}
-      onClose={isLoading ? () => { } : onCancel}
+      onClose={isLoading ? () => {} : onCancel}
       size="sm"
       icon={<AlertTriangle className="w-4 h-4" />}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button
-            variant={variant === "danger" ? "destructive" : "default"}
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
+          <Button variant={variant === "danger" ? "destructive" : "default"} onClick={onConfirm} disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing...
+                Processing…
               </span>
-            ) : (
-              confirmLabel
-            )}
+            ) : confirmLabel}
           </Button>
         </>
       }
     >
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
     </Modal>
   );
 }
 
-// ─── ContentCard ─────────────────────────────────────────────────────────────
+// ─── ContentCard ──────────────────────────────────────────────────────────────
 interface ContentCardProps {
   title?: string;
   subtitle?: string;
@@ -270,35 +209,25 @@ interface ContentCardProps {
   className?: string;
   bodyClassName?: string;
 }
-
-export function ContentCard({
-  title,
-  subtitle,
-  children,
-  footer,
-  icon,
-  action,
-  className,
-  bodyClassName,
-}: ContentCardProps) {
+export function ContentCard({ title, subtitle, children, footer, icon, action, className, bodyClassName }: ContentCardProps) {
   return (
-    <Card className={cn("overflow-hidden flex flex-col h-full", className)}>
+    <Card className={cn("overflow-hidden flex flex-col", className)}>
       {(title || icon) && (
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50 mb-6">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border mb-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
                 {icon}
               </div>
             )}
             <div>
               {title && (
-                <CardTitle className="text-lg font-semibold tracking-tight leading-tight">
+                <CardTitle className="text-lg font-semibold leading-snug">
                   {title}
                 </CardTitle>
               )}
               {subtitle && (
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">
+                <CardDescription className="text-[11px] font-semibold uppercase tracking-[1px] mt-0.5">
                   {subtitle}
                 </CardDescription>
               )}
@@ -307,11 +236,11 @@ export function ContentCard({
           {action && <div>{action}</div>}
         </CardHeader>
       )}
-      <CardContent className={cn("flex-1", bodyClassName)}>
+      <CardContent className={cn("flex-1 pt-5", bodyClassName)}>
         {children}
       </CardContent>
       {footer && (
-        <CardFooter className="pt-4 border-t border-border mt-auto">
+        <CardFooter className="pt-4 border-t border-border mt-auto bg-muted/30">
           {footer}
         </CardFooter>
       )}
@@ -319,7 +248,7 @@ export function ContentCard({
   );
 }
 
-// ─── MetricCard ──────────────────────────────────────────────────────────────
+// ─── MetricCard ───────────────────────────────────────────────────────────────
 interface MetricCardProps {
   label: string;
   value: string | number;
@@ -328,69 +257,42 @@ interface MetricCardProps {
   trend?: string | { value: string; isUp: boolean };
   className?: string;
 }
-
-export function MetricCard({
-  label,
-  value,
-  icon,
-  variant = "gray",
-  trend,
-  className,
-}: MetricCardProps) {
+export function MetricCard({ label, value, icon, variant = "gray", trend, className }: MetricCardProps) {
   const variants = {
-    primary: "bg-primary/10 text-primary ring-primary/5",
-    emerald: "bg-emerald-50 text-emerald-600 ring-emerald-500/5",
-    amber: "bg-amber-50 text-amber-600 ring-amber-500/5",
-    rose: "bg-rose-50 text-rose-600 ring-rose-500/5",
-    indigo: "bg-indigo-50 text-indigo-600 ring-indigo-500/5",
-    gray: "bg-muted text-muted-foreground ring-muted-foreground/5",
+    primary: "bg-primary/10 text-primary",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber:   "bg-amber-50  text-amber-600",
+    rose:    "bg-rose-50   text-rose-600",
+    indigo:  "bg-indigo-50 text-indigo-600",
+    gray:    "bg-muted     text-muted-foreground",
   };
 
   return (
-    <Card
-      className={cn(
-        "p-4 md:p-6 hover:shadow-lg transition-all duration-300",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-3 md:gap-4">
-        <div
-          className={cn(
-            "w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center ring-4 md:ring-8 flex-shrink-0",
-            variants[variant],
-          )}
-        >
-          {icon}
-        </div>
+    <Card className={cn("p-5 md:p-6 hover:shadow-card-hover transition-shadow duration-200", className)}>
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] md:text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-none mb-1 md:mb-1.5 truncate">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             {label}
           </p>
-          <div className="flex items-baseline gap-1 md:gap-2">
-            <h4 className="text-lg md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
-              {value}
-            </h4>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[32px] font-bold text-foreground leading-none">{value}</span>
             {trend && (
-              <span
-                className={cn(
-                  "text-[9px] md:text-[10px] font-bold",
-                  typeof trend === "object"
-                    ? trend.isUp
-                      ? "text-emerald-600"
-                      : "text-destructive"
-                    : "text-emerald-600",
-                )}
-              >
+              <span className={cn("text-xs font-semibold",
+                typeof trend === "object"
+                  ? trend.isUp ? "text-emerald-600" : "text-destructive"
+                  : "text-emerald-600",
+              )}>
                 {typeof trend === "object" ? (
                   <span className="flex items-center gap-0.5">
                     {trend.isUp ? "↑" : "↓"} {trend.value}
                   </span>
-                ) : (
-                  trend
-                )}
+                ) : trend}
               </span>
             )}
           </div>
+        </div>
+        <div className={cn("w-11 h-11 rounded-md flex items-center justify-center flex-shrink-0", variants[variant])}>
+          {icon}
         </div>
       </div>
     </Card>
@@ -413,16 +315,11 @@ interface DataTableProps<T> {
   emptySubtitle?: string;
   rowKey: (row: T) => string;
   footer?: React.ReactNode;
+  renderExpandedRow?: (row: T) => React.ReactNode;
+  expandedRowIds?: Set<string>;
+  onRowClick?: (row: T) => void;
 }
-export function DataTable<T>({
-  columns,
-  data,
-  emptyIcon,
-  emptyTitle,
-  emptySubtitle,
-  rowKey,
-  footer,
-}: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick }: DataTableProps<T>) {
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
@@ -430,11 +327,7 @@ export function DataTable<T>({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={col.className}
-                  style={{ textAlign: col.align || "left" }}
-                >
+                <th key={col.key} className={col.className} style={{ textAlign: col.align || "left" }}>
                   {col.header}
                 </th>
               ))}
@@ -444,22 +337,14 @@ export function DataTable<T>({
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length}>
-                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     {emptyIcon && (
-                      <div className="text-muted-foreground/40">
+                      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center text-muted-foreground/50">
                         {emptyIcon}
                       </div>
                     )}
-                    {emptyTitle && (
-                      <p className="text-sm font-semibold text-foreground">
-                        {emptyTitle}
-                      </p>
-                    )}
-                    {emptySubtitle && (
-                      <p className="text-xs text-muted-foreground">
-                        {emptySubtitle}
-                      </p>
-                    )}
+                    {emptyTitle && <p className="text-sm font-semibold text-foreground">{emptyTitle}</p>}
+                    {emptySubtitle && <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed">{emptySubtitle}</p>}
                   </div>
                 </td>
               </tr>
@@ -467,26 +352,29 @@ export function DataTable<T>({
               data.map((row, idx) => {
                 const key = rowKey(row) || `row-${idx}`;
                 return (
-                  <tr key={key}>
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        style={{ textAlign: col.align || "left" }}
-                        className={col.className}
-                      >
-                        {col.render(row, idx)}
-                      </td>
-                    ))}
-                  </tr>
+                  <React.Fragment key={key}>
+                    <tr onClick={() => onRowClick?.(row)} className={onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""}>
+                      {columns.map((col) => (
+                        <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
+                          {col.render(row, idx)}
+                        </td>
+                      ))}
+                    </tr>
+                    {renderExpandedRow && expandedRowIds?.has(key) && (
+                      <tr>
+                        <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">
+                          {renderExpandedRow(row)}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })
             )}
           </tbody>
         </table>
       </div>
-      {footer && (
-        <div className="border-t border-border bg-muted/30">{footer}</div>
-      )}
+      {footer && <div className="border-t border-border bg-muted/30">{footer}</div>}
     </div>
   );
 }
@@ -499,13 +387,7 @@ interface PaginationProps {
   perPage: number;
   onPageChange: (p: number) => void;
 }
-export function Pagination({
-  page,
-  totalPages,
-  totalItems,
-  perPage,
-  onPageChange,
-}: PaginationProps) {
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange }: PaginationProps) {
   if (totalPages <= 1) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
@@ -515,13 +397,13 @@ export function Pagination({
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <p className="text-xs text-muted-foreground">
-        Showing {start}–{end} of {totalItems}
+        Showing <span className="font-semibold text-foreground">{start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
       </p>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted disabled:opacity-40"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition-colors"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
@@ -535,10 +417,10 @@ export function Pagination({
               <button
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  "w-7 h-7 text-xs rounded-lg font-medium transition-colors",
+                  "w-8 h-8 text-xs rounded-md font-medium transition-colors",
                   p === page
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground hover:bg-muted",
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {p}
@@ -549,7 +431,7 @@ export function Pagination({
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
-          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted disabled:opacity-40"
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 transition-colors"
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -565,15 +447,10 @@ interface SearchInputProps {
   placeholder?: string;
   className?: string;
 }
-export function SearchInput({
-  value,
-  onChange,
-  placeholder = "Search…",
-  className = "",
-}: SearchInputProps) {
+export function SearchInput({ value, onChange, placeholder = "Search…", className = "" }: SearchInputProps) {
   return (
     <div className={cn("relative", className)}>
-      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <input
         type="search"
         name="search-query-input"
@@ -589,10 +466,7 @@ export function SearchInput({
 }
 
 // ─── FilterTabs ───────────────────────────────────────────────────────────────
-interface FilterTab {
-  key: string;
-  label: string;
-}
+interface FilterTab { key: string; label: string; }
 interface FilterTabsProps {
   tabs: FilterTab[];
   active: string;
@@ -602,11 +476,8 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
   return (
     <div className="filter-tabs">
       {tabs.map((t) => (
-        <button
-          key={t.key}
-          onClick={() => onChange(t.key)}
-          className={active === t.key ? "filter-tab-active" : "filter-tab"}
-        >
+        <button key={t.key} onClick={() => onChange(t.key)}
+          className={active === t.key ? "filter-tab-active" : "filter-tab"}>
           {t.label}
         </button>
       ))}
@@ -614,19 +485,14 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
   );
 }
 
-// ─── LabeledField (legacy label-wrapper, kept for non-RHF contexts) ─────────
+// ─── LabeledField ─────────────────────────────────────────────────────────────
 interface LabeledFieldProps {
   label: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
 }
-export function LabeledField({
-  label,
-  required,
-  error,
-  children,
-}: LabeledFieldProps) {
+export function LabeledField({ label, required, error, children }: LabeledFieldProps) {
   return (
     <div>
       <label className="form-label">
@@ -647,13 +513,7 @@ interface FileUploadZoneProps {
   hint?: string;
   inputRef?: React.RefObject<HTMLInputElement>;
 }
-export function FileUploadZone({
-  onFile,
-  accept = ".xlsx,.xls,.csv",
-  label = "Click to upload or drag & drop",
-  hint,
-  inputRef,
-}: FileUploadZoneProps) {
+export function FileUploadZone({ onFile, accept = ".xlsx,.xls,.csv", label = "Click to upload or drag & drop", hint, inputRef }: FileUploadZoneProps) {
   const defaultRef = React.useRef<HTMLInputElement>(null);
   const ref = inputRef || defaultRef;
 
@@ -668,20 +528,11 @@ export function FileUploadZone({
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
       onClick={() => ref.current?.click()}
-      className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+      className="border-2 border-dashed border-border rounded-md p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-150"
     >
-      <input
-        ref={ref}
-        type="file"
-        accept={accept}
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = "";
-        }}
-      />
-      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+      <input ref={ref} type="file" accept={accept} className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
+      <Upload className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
       <p className="text-sm font-medium text-foreground">{label}</p>
       {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
@@ -691,48 +542,34 @@ export function FileUploadZone({
 // ─── StatusDot ────────────────────────────────────────────────────────────────
 export function StatusDot({ active }: { active: boolean }) {
   return (
-    <span
-      className={cn(
-        "inline-block w-2 h-2 rounded-full",
-        active ? "bg-emerald-500" : "bg-muted-foreground/30",
-      )}
-    />
+    <span className={cn("inline-block w-2 h-2 rounded-full", active ? "bg-success" : "bg-muted-foreground/30")} />
   );
 }
 
 // ─── PlanBadge ────────────────────────────────────────────────────────────────
-interface PlanBadgeProps {
-  name: string;
-  code: string;
-  color?: string;
-}
+interface PlanBadgeProps { name: string; code: string; color?: string; }
 const PLAN_COLOR_CLASSES: Record<string, string> = {
-  blue: "bg-primary/10 text-primary border-primary/30",
-  violet: "bg-violet-100 text-violet-800 border-violet-200",
-  emerald: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  rose: "bg-rose-100 text-rose-800 border-rose-200",
-  amber: "bg-amber-100 text-amber-800 border-amber-200",
-  cyan: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  indigo: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  teal: "bg-teal-100 text-teal-800 border-teal-200",
+  blue:   "bg-primary/10 text-primary border-primary/30",
+  violet: "bg-violet-100 text-violet-700 border-violet-200",
+  emerald:"bg-emerald-100 text-emerald-700 border-emerald-200",
+  rose:   "bg-rose-100    text-rose-700    border-rose-200",
+  amber:  "bg-amber-100   text-amber-700   border-amber-200",
+  cyan:   "bg-cyan-100    text-cyan-700    border-cyan-200",
+  indigo: "bg-indigo-100  text-indigo-700  border-indigo-200",
+  teal:   "bg-teal-100    text-teal-700    border-teal-200",
 };
 export function PlanBadge({ name, code, color = "blue" }: PlanBadgeProps) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-sm font-semibold text-foreground">{name}</span>
-      <span
-        className={cn(
-          "text-[10px] font-bold px-1.5 py-0.5 rounded border",
-          PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue,
-        )}
-      >
+      <span className="text-sm font-medium text-foreground">{name}</span>
+      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
         {code}
       </span>
     </div>
   );
 }
 
-// ─── Exports ─────────────────────────────────────────────────────────────────
+// ─── Exports ──────────────────────────────────────────────────────────────────
 export * from "./Button";
 export * from "./Input";
 export * from "./Card";

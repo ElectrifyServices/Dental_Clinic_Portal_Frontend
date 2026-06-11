@@ -36,21 +36,11 @@ const DOC_REQUIREMENTS: Record<string, string[]> = {
 };
 
 export const REQUIRED_DOCS: Record<string, string[]> = {
-  doctor: [
-    'Aadhaar / Identity Proof', 'Educational Degree Documents', 'Medical Council Registration', 'PAN Card', 'Bank Details / Passbook'
-  ],
-  receptionist: [
-    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook'
-  ],
-  assistant: [
-    'Aadhaar / Identity Proof', 'Vaccination Proof (Hep-B/COVID)'
-  ],
-  admin: [
-    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook', 'Signed Employment Contract'
-  ],
-  super_admin: [
-    'Aadhaar / Identity Proof', 'PAN Card', 'Bank Details / Passbook', 'Signed Employment Contract'
-  ]
+  doctor: [],
+  receptionist: [],
+  assistant: [],
+  admin: [],
+  super_admin: []
 };
 
 export function Step3Documentation({ role, documents, onUpload, onRemove }: Step3Props) {

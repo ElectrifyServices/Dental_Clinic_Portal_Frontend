@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Trash2, Settings2, CheckCircle } from 'lucide-react';
+import { Building2, Plus, Trash2, Settings2, CheckCircle, Users, Banknote } from 'lucide-react';
 import { CorporatePlan, PlanBenefit } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
 import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading } from '../../ui';
@@ -116,7 +116,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             validTo: planData.valid_till ? planData.valid_till.split('T')[0] : editing.validTo,
             maxMembers: planData.max_member || editing.maxMembers,
             isActive: planData.status === "ACTIVE",
-            color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color
+            color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color,
+            planCategory: (planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any,
+            annualFee: planData.annual_fee ?? editing.annualFee,
+            maxDependents: planData.max_dependents ?? editing.maxDependents ?? 0,
           });
         } else {
           setForm({
@@ -129,7 +132,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             validTo: editing.validTo,
             maxMembers: editing.maxMembers,
             isActive: editing.isActive,
-            color: editing.color
+            color: editing.color,
+            planCategory: editing.planCategory || 'corporate',
+            annualFee: editing.annualFee,
+            maxDependents: editing.maxDependents ?? 0,
           });
         }
       } else {
@@ -234,6 +240,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           enrollment_cap: form.maxMembers || 0,
           theme_color: mapColorToHex(form.color),
           benefits: buildBenefitsPayload(form.benefits),
+          plan_category: (form.planCategory?.toUpperCase() || 'CORPORATE') as 'CORPORATE' | 'INDIVIDUAL',
+          annual_fee: form.planCategory === 'individual' ? (form.annualFee || 1000) : undefined,
+          max_dependents: form.maxDependents || 0,
         };
 
         const apiResponse = await createPlanMutation.mutateAsync(transformedBody);
@@ -244,6 +253,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           currentMembers: 0,
           createdAt: new Date().toISOString(),
           createdBy: 'Super Admin',
+          planCategory: form.planCategory || 'corporate',
+          annualFee: form.annualFee,
+          maxDependents: form.maxDependents || 0,
         };
         onSave(plan);
         showToast('Plan created successfully');
@@ -272,6 +284,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           enrollment_cap: form.maxMembers || 0,
           theme_color: mapColorToHex(form.color),
           benefits: buildBenefitsPayload(form.benefits),
+          plan_category: (form.planCategory?.toUpperCase() || 'CORPORATE') as 'CORPORATE' | 'INDIVIDUAL',
+          annual_fee: form.planCategory === 'individual' ? (form.annualFee || 1000) : undefined,
+          max_dependents: form.maxDependents || 0,
         };
 
         await updatePlanMutation.mutateAsync(transformedBody);
@@ -357,6 +372,67 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                   className={`w-9 h-9 rounded-xl ${planColorDots[c] ?? 'bg-gray-400'} transition-all shadow-md ${form.color === c ? 'ring-2 ring-offset-4 ring-primary scale-110' : 'opacity-30 hover:opacity-100'}`} />
               ))}
             </div>
+          </LabeledField>
+
+          {/* Plan Category */}
+          <LabeledField label="Plan Category">
+            <div className="flex gap-3 pt-1">
+              {(['corporate', 'individual'] as const).map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setForm(prev => ({
+                    ...prev,
+                    planCategory: cat,
+                    companyName: cat === 'individual' ? 'Individual' : (prev.companyName === 'Individual' ? '' : prev.companyName),
+                  }))}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl border-2 text-sm font-bold transition-all ${
+                    form.planCategory === cat
+                      ? cat === 'individual'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700'
+                        : 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-border text-muted-foreground hover:border-primary/40'
+                  }`}
+                >
+                  {cat === 'corporate' ? <Building2 className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+                  {cat === 'corporate' ? 'Corporate Plan' : 'Individual Yearly Plan'}
+                </button>
+              ))}
+            </div>
+          </LabeledField>
+
+          {/* Individual-only: Annual Fee */}
+          {form.planCategory === 'individual' && (
+            <LabeledField label="Annual Fee (₹)">
+              <div className="relative">
+                <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.annualFee ?? 1000}
+                  onChange={e => setForm(prev => ({ ...prev, annualFee: parseFloat(e.target.value) || 0 }))}
+                  className="pl-10 w-full px-4 py-3 border border-border rounded-2xl text-sm font-bold bg-background shadow-sm"
+                  placeholder="1000"
+                />
+              </div>
+            </LabeledField>
+          )}
+
+          {/* Max Dependents (all plans) */}
+          <LabeledField label="Max Additional Pax per Member (0 = self only)">
+            <div className="relative">
+              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="number"
+                min="0"
+                max="20"
+                value={form.maxDependents ?? 0}
+                onChange={e => setForm(prev => ({ ...prev, maxDependents: parseInt(e.target.value) || 0 }))}
+                className="pl-10 w-full px-4 py-3 border border-border rounded-2xl text-sm font-bold bg-background shadow-sm"
+                placeholder="0"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 ml-1">Each enrolled member can add up to this many family members / dependents.</p>
           </LabeledField>
         </section>
 

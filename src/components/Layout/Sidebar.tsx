@@ -22,38 +22,36 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { getParsedPermissions } from "../../utils/permission";
 
-/** Maps screen IDs to their Lucide icon component. */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  dashboard: Home,
-  appointments: Calendar,
-  patients: Users,
+  dashboard:       Home,
+  appointments:    Calendar,
+  patients:        Users,
   "patient-queue": Activity,
-  treatments: Stethoscope,
-  emr: FileText,
-  consent: Shield,
-  billing: CreditCard,
-  inventory: Package,
-  reports: BarChart3,
-  staff: UserCheck,
-  "profit-sharing": DollarSign,
-  "corporate-plans": Building2,
+  treatments:      Stethoscope,
+  emr:             FileText,
+  consent:         Shield,
+  billing:         CreditCard,
+  inventory:       Package,
+  reports:         BarChart3,
+  staff:           UserCheck,
+  "profit-sharing":DollarSign,
+  "corporate-plans":Building2,
 };
 
-/** Maps screen IDs to backend module_permission keys. */
 const PERMISSION_MAP: Record<string, string[]> = {
-  dashboard: ["DASHBOARD"],
-  appointments: ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
-  patients: ["PATIENTS"],
+  dashboard:       ["DASHBOARD"],
+  appointments:    ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
+  patients:        ["PATIENTS"],
   "patient-queue": ["CONSULTATION"],
-  treatments: ["TREATMENTS"],
-  emr: ["MEDICAL_RECORDS"],
-  consent: ["CONSENT_FORMS"],
-  billing: ["BILLING"],
-  inventory: ["INVENTORY"],
-  reports: ["ANALYTICS"],
-  staff: ["STAFF"],
-  "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS"],
+  treatments:      ["TREATMENTS"],
+  emr:             ["MEDICAL_RECORDS"],
+  consent:         ["CONSENT_FORMS"],
+  billing:         ["BILLING"],
+  inventory:       ["INVENTORY"],
+  reports:         ["ANALYTICS"],
+  staff:           ["STAFF"],
+  "profit-sharing":["PROFIT_SHARING"],
+  "corporate-plans":["CORPORATE_PLANS"],
 };
 
 export function Sidebar() {
@@ -69,7 +67,6 @@ export function Sidebar() {
     role === "superadmin" ||
     rawModulePerms.some((p) => p.toUpperCase() === "ALL");
 
-  // Build flat item list from tenant sidebar config, filtering disabled screens
   const allItems = tenant.sidebar.groups.flatMap((group) =>
     group.items
       .filter((id) => tenant.screens[id]?.enabled !== false)
@@ -82,190 +79,153 @@ export function Sidebar() {
   );
 
   const canAccess = (item: (typeof allItems)[0]) => {
-    // If user has ALL permission (e.g. SUPER_ADMIN), grant access to everything
     if (hasAll) return true;
-
-    // Check dynamic module_permission from backend
     if (Array.isArray(rawModulePerms) && rawModulePerms.length > 0) {
-      const allowedModulesForScreen = PERMISSION_MAP[item.id];
-      if (allowedModulesForScreen) {
-        return allowedModulesForScreen.some((p) =>
-          rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase())
+      const allowed = PERMISSION_MAP[item.id];
+      if (allowed) {
+        return allowed.some((p) =>
+          rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase()),
         );
       }
-      // Screen not in permission map — allow by default
       return true;
     }
-
-    // Fallback role checks (used only when module_permission is not provided)
     if (item.group === "superadmin") return role === "superadmin";
     if (item.id === "patient-queue") return role === "doctor";
     if (item.group === "admin") {
-      if (role === "receptionist")
-        return ["billing", "consent"].includes(item.id);
+      if (role === "receptionist") return ["billing", "consent"].includes(item.id);
       return false;
     }
     return true;
   };
 
   const visible = allItems.filter(canAccess);
-  // Only render groups that have at least one visible item
   const visibleGroups = tenant.sidebar.groups.filter((g) =>
     visible.some((i) => i.group === g.id),
   );
 
-  // Determine active group color from current URL
   const currentId = location.pathname.replace(/^\//, "") || "dashboard";
-  const activeItem = allItems.find((i) => i.id === currentId);
-  const activeGroup = activeItem?.group || "main";
-
-  const getThemeColor = (group: string) => {
-    switch (group) {
-      case "clinical":
-        return "emerald";
-      case "admin":
-        return "amber";
-      case "superadmin":
-        return "violet";
-      default:
-        return tenant.branding.primaryColor || "blue";
-    }
-  };
-
-  const themeColor = getThemeColor(activeGroup);
-  const themeClassesMap: Record<string, string> = {
-    blue: "bg-primary text-primary",
-    emerald: "bg-emerald-600 text-emerald-600",
-    amber: "bg-amber-500 text-amber-500",
-    violet: "bg-violet-600 text-violet-600",
-    rose: "bg-rose-600 text-rose-600",
-  };
-
-  const themeClasses = themeClassesMap[themeColor] || themeClassesMap.blue;
 
   return (
     <aside
-      className={`
-      relative hidden md:flex md:flex-col flex-shrink-0
-      ${collapsed ? "md:w-[60px]" : "md:w-[240px]"}
-      bg-card border-r border-border h-screen sticky top-0
-      transition-all duration-300 overflow-visible
-    `}
+      className={[
+        "relative hidden md:flex md:flex-col flex-shrink-0",
+        collapsed ? "md:w-[68px]" : "md:w-[260px]",
+        "bg-card border-r border-border h-screen sticky top-0",
+        "transition-all duration-300 overflow-visible",
+      ].join(" ")}
     >
-      {/* Collapse toggle */}
-      <Button
+      {/* ── Collapse toggle ─────────────────────────────────────── */}
+      <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-[68px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center bg-card border border-border rounded-full shadow-md hover:bg-muted transition-all group"
+        className="absolute top-[72px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center
+                   bg-card border border-border rounded-full shadow-sm
+                   hover:bg-muted text-muted-foreground hover:text-foreground
+                   transition-all duration-150"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        {collapsed ? (
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-        ) : (
-          <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
-        )}
-      </Button>
+        {collapsed
+          ? <ChevronRight className="w-3.5 h-3.5" />
+          : <ChevronLeft  className="w-3.5 h-3.5" />}
+      </button>
 
-      {/* Logo - Compact */}
+      {/* ── Logo / Brand ────────────────────────────────────────── */}
       <div className="flex items-center h-16 px-4 border-b border-border flex-shrink-0">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md transition-colors duration-500 ${themeClasses.split(" ")[0]}`}
-          >
-            <Stethoscope className="w-4.5 h-4.5 text-white" />
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center flex-shrink-0 shadow-nav">
+            <Stethoscope className="w-[18px] h-[18px] text-white" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-foreground text-[14px] block leading-none tracking-tight">
+              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate">
                 {tenant.branding.clinicName}
               </span>
-              <span
-                className={`text-[8px] font-bold uppercase tracking-widest mt-1 block transition-colors duration-500 ${themeClasses.split(" ")[1]}`}
-              >
-                {visibleGroups.find((g) => g.id === activeGroup)?.label ??
-                  activeGroup}
+              <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
+                Dental Management
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Nav - Scrollable */}
-      <nav className="flex-1 flex flex-col py-4 px-2 space-y-4 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-        {visibleGroups.map((group) => (
-          <div key={group.id} className="space-y-1">
-            {!collapsed && (
-              <p
-                className={`text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-1 transition-colors duration-500
-                ${
-                  activeGroup === group.id
-                    ? group.id === "clinical"
-                      ? "text-emerald-600"
-                      : group.id === "admin"
-                        ? "text-amber-500"
-                        : group.id === "superadmin"
-                          ? "text-violet-600"
-                          : "text-primary"
-                    : "text-muted-foreground"
-                }
-              `}
-              >
-                {group.label}
+      {/* ── Nav ─────────────────────────────────────────────────── */}
+      <nav className="flex-1 flex flex-col py-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <div className={collapsed ? "px-2 space-y-4" : "px-3 space-y-6"}>
+          {visibleGroups.map((group) => {
+            const groupItems = visible.filter((i) => i.group === group.id);
+            return (
+              <div key={group.id}>
+                {/* Section header */}
+                {!collapsed && (
+                  <p className="text-[11px] font-semibold uppercase tracking-[1.5px] text-muted-foreground px-2 mb-2">
+                    {group.label}
+                  </p>
+                )}
+
+                {/* Nav items */}
+                <div className="space-y-0.5">
+                  {groupItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentId === item.id;
+
+                    return (
+                      <NavLink
+                        key={item.id}
+                        to={`/${item.id}`}
+                        title={collapsed ? item.label : undefined}
+                        className={[
+                          // base layout
+                          "relative overflow-hidden w-full flex items-center rounded-md",
+                          "text-[13px] font-medium transition-all duration-150 outline-none",
+                          collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
+                          // active / inactive
+                          isActive
+                            ? "bg-primary text-white shadow-nav"
+                            : "text-muted-foreground hover:bg-accent hover:text-primary",
+                        ].join(" ")}
+                      >
+                        {/* Left indicator — visible on active */}
+                        {isActive && !collapsed && (
+                          <span className="absolute left-0 top-[18%] bottom-[18%] w-[3px] bg-white/50 rounded-r-full" />
+                        )}
+
+                        <Icon
+                          className={[
+                            "flex-shrink-0 transition-transform duration-150",
+                            collapsed ? "w-5 h-5" : "w-4 h-4",
+                            isActive ? "" : "opacity-70",
+                          ].join(" ")}
+                        />
+                        {!collapsed && (
+                          <span className="truncate">{item.label}</span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ── Bottom user hint (expanded only) ────────────────────── */}
+      {!collapsed && (
+        <div className="px-3 py-3 border-t border-border flex-shrink-0">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-md bg-muted/50">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {state.user?.name?.[0] ?? "U"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-foreground truncate leading-tight">
+                {state.user?.name}
               </p>
-            )}
-            <div className="space-y-0.5">
-              {visible
-                .filter((i) => i.group === group.id)
-                .map((item) => {
-                  const Icon = item.icon;
-
-                  const getActiveStyle = (isActive: boolean) => {
-                    switch (group.id) {
-                      case "clinical":
-                        return isActive
-                          ? "bg-emerald-600 text-white shadow-lg scale-[1.02]"
-                          : "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 hover:scale-[1.02]";
-                      case "admin":
-                        return isActive
-                          ? "bg-amber-500 text-white shadow-lg scale-[1.02]"
-                          : "text-muted-foreground hover:bg-amber-50 hover:text-amber-700 hover:scale-[1.02]";
-                      case "superadmin":
-                        return isActive
-                          ? "bg-violet-600 text-white shadow-lg scale-[1.02]"
-                          : "text-muted-foreground hover:bg-violet-50 hover:text-violet-700 hover:scale-[1.02]";
-                      default:
-                        return isActive
-                          ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]"
-                          : "text-muted-foreground hover:bg-primary/10 hover:text-primary hover:scale-[1.02]";
-                    }
-                  };
-
-                  return (
-                    <NavLink
-                      key={item.id}
-                      to={`/${item.id}`}
-                      title={collapsed ? item.label : undefined}
-                      className={({ isActive }) =>
-                        `w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] font-semibold
-                      transition-all duration-200 group border border-transparent
-                      ${getActiveStyle(isActive)}`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <Icon
-                            className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive ? "scale-110" : "opacity-70 group-hover:opacity-100 group-hover:scale-110"}`}
-                          />
-                          {!collapsed && (
-                            <span className="truncate">{item.label}</span>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  );
-                })}
+              <p className="text-[10px] text-muted-foreground capitalize truncate">
+                {state.user?.role}
+              </p>
             </div>
           </div>
-        ))}
-      </nav>
+        </div>
+      )}
     </aside>
   );
 }

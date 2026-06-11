@@ -1,74 +1,68 @@
-/**
- * corporate.module.css — Corporate Plans module CSS overrides
- *
- * Import: import styles from './corporate.module.css';
- */
-
-/* ─── Plan card ────────────────────────────────────────────────────── */
+/* ── Plan card ────────────────────────────────────────────────── */
 .planCard {
-  border-radius: 2rem;
+  border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid var(--border, #e5e7eb);
-  background: var(--background, #fff);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  transition: box-shadow 250ms ease, transform 250ms ease;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--card));
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+  transition: box-shadow 200ms ease, transform 200ms ease;
 }
 
 .planCard:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
   transform: translateY(-1px);
 }
 
-/* ─── Benefit node container ───────────────────────────────────────── */
+/* ── Benefit node ─────────────────────────────────────────────── */
 .benefitNode {
-  border-radius: 1.5rem;
-  padding: 1.5rem 2rem;
-  border: 1px solid var(--border, #e5e7eb);
-  background: rgba(var(--muted), 0.08);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--muted));
   position: relative;
 }
 
 .benefitNodeLabel {
   position: absolute;
-  top: -0.75rem;
-  left: 1.5rem;
-  padding: 0.2rem 0.75rem;
-  background: var(--background, #fff);
-  border: 1px solid var(--border, #e5e7eb);
+  top: -0.625rem;
+  left: 1.25rem;
+  padding: 0.15rem 0.625rem;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
   border-radius: 9999px;
-  font-size: 0.55rem;
-  font-weight: 900;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--primary, #2563eb);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  letter-spacing: 0.08em;
+  color: rgb(var(--primary));
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
-/* ─── Color swatch ─────────────────────────────────────────────────── */
+/* ── Color swatch ─────────────────────────────────────────────── */
 .colorSwatch {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.12);
   transition: all 150ms ease;
-  opacity: 0.35;
+  opacity: 0.45;
 }
 
-.colorSwatch:hover  { opacity: 0.85; }
-.colorSwatchActive  { opacity: 1; outline: 2px solid var(--primary, #2563eb); outline-offset: 3px; transform: scale(1.1); }
+.colorSwatch:hover   { opacity: 0.85; }
+.colorSwatchActive   { opacity: 1; outline: 2px solid rgb(var(--primary)); outline-offset: 3px; transform: scale(1.1); }
 
-/* ─── Employee plan badge ──────────────────────────────────────────── */
+/* ── Employee plan badge ──────────────────────────────────────── */
 .employeePlanBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.625rem;
   border-radius: 9999px;
-  font-size: 0.6rem;
-  font-weight: 900;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   border: 1px solid currentColor;
-  opacity: 0.85;
+  opacity: 0.9;
 }

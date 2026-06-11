@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/Input";
 import { useMemo } from "react";
+import { getDependentByPatientId } from "../../hooks/corporate/dependentStorage";
 import {
   Save,
   Plus,
@@ -137,15 +138,28 @@ export function InvoiceForm({
   const setItems = (newItems: InvoiceItem[]) =>
     form.setValue("items", newItems as any);
 
-  const activeCorporatePlan = useMemo(() => {
+  const { activeCorporatePlan, dependentOf } = useMemo(() => {
     const p = apiPatients.find(
       (p) => p.id === formData.patientId || p.name === formData.patientName,
     );
-    return (
-      corporatePlans.find(
-        (cp) => cp.id === (p?.corporatePlanId || p?.companyId),
-      ) || null
-    );
+
+    // Direct plan lookup (primary member or individually enrolled patient)
+    const directPlan = corporatePlans.find(
+      (cp) => cp.id === (p?.corporatePlanId || p?.companyId),
+    ) || null;
+
+    if (directPlan) return { activeCorporatePlan: directPlan, dependentOf: undefined };
+
+    // Dependent lookup: check if this patient is a registered dependent
+    if (formData.patientId) {
+      const dep = getDependentByPatientId(formData.patientId);
+      if (dep?.corporatePlanId) {
+        const depPlan = corporatePlans.find(cp => cp.id === dep.corporatePlanId) || null;
+        if (depPlan) return { activeCorporatePlan: depPlan, dependentOf: dep.primaryMemberName };
+      }
+    }
+
+    return { activeCorporatePlan: null, dependentOf: undefined };
   }, [formData.patientId, formData.patientName, apiPatients, corporatePlans]);
 
   const pendingItems = useMemo(() => {
@@ -364,6 +378,7 @@ export function InvoiceForm({
           <PlanBanner
             plan={activeCorporatePlan}
             savings={planDiscountResult.totalDiscount}
+            dependentOf={dependentOf}
           />
         )}
 

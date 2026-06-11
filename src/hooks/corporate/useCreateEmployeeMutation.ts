@@ -14,6 +14,7 @@ export interface CreateEmployeeVariables {
   corporate_plan_id: string;
   eligible_date: string;
   status: string;
+  coverage_type?: 'SELF' | 'FAMILY';
 }
 
 export interface CreateEmployeeResponse {

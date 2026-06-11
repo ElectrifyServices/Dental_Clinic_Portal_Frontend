@@ -2,9 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus, Trash2, Edit2, Upload, Building2,
   Users, Phone, Mail, Search, X, ToggleLeft, ToggleRight,
-  MoreHorizontal, ArrowRightLeft
+  MoreHorizontal, ArrowRightLeft, UserPlus
 } from 'lucide-react';
-import { CorporateEmployee, CorporatePlan } from '../../types';
+import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
   PageHeader, DataTable, Pagination, SearchInput,
   FilterTabs, PlanBadge, ConfirmModal, Badge,
@@ -21,7 +21,10 @@ import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
+import { IndividualMemberFormModal } from './Employee/IndividualMemberFormModal';
+import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
+import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -57,9 +60,14 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
 
   const { showToast } = useModal();
   const [showForm, setShowForm] = useState(false);
+  const [showIndividualForm, setShowIndividualForm] = useState(false);
   const [editEmp, setEditEmp] = useState<CorporateEmployee | null>(null);
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
+  const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
+  const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+
+
 
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
 
@@ -82,6 +90,15 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       corporate_plan_id: planFilter === 'all' ? undefined : [planFilter],
     }
   });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      refetch();
+    };
+    window.addEventListener('plan_dependents_changed', handleStorageChange);
+    return () => window.removeEventListener('plan_dependents_changed', handleStorageChange);
+  }, [refetch, queryClient]);
 
   const apiEmployees: CorporateEmployee[] = useMemo(() => {
     let arr: any[] = [];
@@ -109,6 +126,8 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       isActive: e.status === 'ACTIVE',
       status: e.status,
       patientId: e.patient_id || undefined,
+      coverageType: (e.coverage_type?.toLowerCase() || 'self') as CoverageType,
+      dependents: getDependentsByMember(e.id),
     }));
 
     if (planFilter !== 'all') {
@@ -235,11 +254,23 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       ),
     },
     {
-      key: 'plan', header: 'Corporate Plan', render: (e: CorporateEmployee) => {
+      key: 'plan', header: 'Plan', render: (e: CorporateEmployee) => {
         const plan = activePlans.find(p => p.id === e.corporatePlanId);
         return plan
           ? <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
           : <span className="text-xs text-muted-foreground/60">No plan</span>;
+      },
+    },
+    {
+      key: 'coverage', header: 'Coverage', render: (e: CorporateEmployee) => {
+        const depCount = e.dependents?.length ?? 0;
+        return depCount > 0 ? (
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full w-fit">
+            <Users className="w-3.5 h-3.5" /> Family ({depCount})
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground font-medium">Self</span>
+        );
       },
     },
     /*
@@ -286,22 +317,25 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       },
     },
     {
-      key: 'actions', header: 'Action', align: 'right' as const, render: (e: CorporateEmployee) => (
+      key: 'actions', header: 'Action', align: 'right' as const, render: (e_emp: CorporateEmployee) => (
         <div className="flex items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="btn-icon h-8 w-8">
+              <Button variant="ghost" size="icon" className="btn-icon h-8 w-8" onClick={(ev) => ev.stopPropagation()}>
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onSelect={() => openEdit(e)}>
+              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); openEdit(e_emp); }}>
                 <Edit2 className="w-4 h-4 mr-2" /> Edit Details
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => openChangePlan(e)}>
+              <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); openChangePlan(e_emp); }}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setDeleteEmp(e)} className="text-destructive">
+              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); setAddDependentEmp(e_emp); }}>
+                <UserPlus className="w-4 h-4 mr-2" /> Add Member
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); setDeleteEmp(e_emp); }} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -311,6 +345,60 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     },
   ];
 
+  const handleRowClick = (emp: CorporateEmployee) => {
+    const newExpanded = new Set(expandedRowIds);
+    if (newExpanded.has(emp.id)) {
+      newExpanded.delete(emp.id);
+    } else {
+      newExpanded.add(emp.id);
+    }
+    setExpandedRowIds(newExpanded);
+  };
+
+  const renderExpandedRow = (emp: CorporateEmployee) => {
+    if (!emp.dependents || emp.dependents.length === 0) {
+      return (
+        <div className="p-4 text-center text-muted-foreground text-sm">
+          No family members added yet.
+        </div>
+      );
+    }
+    return (
+      <div className="p-4 bg-muted/20 border-l-2 border-primary/40">
+        <h4 className="text-sm font-semibold mb-3">Family Members ({emp.dependents.length})</h4>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+              <tr>
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Relation</th>
+                <th className="px-4 py-2">Contact</th>
+                <th className="px-4 py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {emp.dependents.map((dep, idx) => (
+                <tr key={dep.id} className={idx !== emp.dependents!.length - 1 ? "border-b border-border/50" : ""}>
+                  <td className="px-4 py-2 font-medium">{dep.name}</td>
+                  <td className="px-4 py-2 text-muted-foreground">{dep.relationship}</td>
+                  <td className="px-4 py-2 text-muted-foreground">
+                    {dep.phone && <div className="flex items-center gap-1"><Phone className="w-3 h-3"/> {dep.phone}</div>}
+                    {dep.email && <div className="flex items-center gap-1"><Mail className="w-3 h-3"/> {dep.email}</div>}
+                  </td>
+                  <td className="px-4 py-2">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${dep.isActive !== false ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+                      {dep.isActive !== false ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-3">
       <PageHeader
@@ -318,8 +406,11 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         subtitle={`${totalItems} employees across ${activePlans.filter(p => p.isActive).length} active plans`}
         action={
           <div className="flex items-center gap-2">
-            <Button onClick={() => { setTab('import'); setImportRows([]); setImportErrors([]); }} variant="outline" className="btn-secondary">
+            <Button onClick={() => { setTab('import'); }} variant="outline" className="btn-secondary">
               <Upload className="w-4 h-4" /> Bulk Import
+            </Button>
+            <Button onClick={() => setShowIndividualForm(true)} variant="outline" className="gap-1.5 text-teal-700 border-teal-300 hover:bg-teal-50">
+              <UserPlus className="w-4 h-4" /> Register Member
             </Button>
             <Button onClick={openNew} className="btn-primary">
               <Plus className="w-4 h-4" /> Add Employee
@@ -393,6 +484,9 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
                 emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
                 emptyTitle="No employees found"
                 emptySubtitle="Add employees individually or import from Excel"
+                onRowClick={handleRowClick}
+                expandedRowIds={expandedRowIds}
+                renderExpandedRow={renderExpandedRow}
                 footer={
                   <Pagination page={page} totalPages={totalPages} totalItems={totalItems}
                     perPage={PER_PAGE} onPageChange={setPage} />
@@ -461,12 +555,28 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         refetch={refetch}
       />
 
+      <IndividualMemberFormModal
+        showForm={showIndividualForm}
+        setShowForm={setShowIndividualForm}
+        individualPlans={plans.filter(p => p.planCategory === 'individual' && p.isActive)}
+        onSave={() => { refetch(); }}
+      />
+
       <ChangePlanModal
         changePlanEmp={changePlanEmp}
         setChangePlanEmp={setChangePlanEmp}
         activePlans={activePlans}
         refetch={refetch}
       />
+
+      {addDependentEmp && showForm === false && (
+        <EmployeeDependentFormModal
+          showForm={!!addDependentEmp}
+          setShowForm={(val) => { if (!val) setAddDependentEmp(null); }}
+          employee={addDependentEmp}
+          onSave={() => { setAddDependentEmp(null); refetch(); }}
+        />
+      )}
 
       {/* Delete confirm */}
       {deleteEmp && (

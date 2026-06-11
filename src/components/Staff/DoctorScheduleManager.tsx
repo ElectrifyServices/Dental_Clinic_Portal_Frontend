@@ -81,49 +81,6 @@ function formatTo12Hr(t: string): string {
   return `${String(displayHour).padStart(2, "0")}:${mStr} ${ampm}`;
 }
 
-/**
- * Calculate end time given a start time, slot count, slot duration and buffer.
- * Total time = slots × duration + (slots - 1) × buffer
- */
-function calcEndTime(startTime: string, slots: number, duration: number, buffer: number): string {
-  if (!startTime || slots <= 0) return "";
-  const totalMins = slots * duration + (slots - 1) * buffer;
-  return minsToTime(timeToMins(startTime) + totalMins);
-}
-
-/**
- * Derive how many full slots fit in the usable window (excluding break time).
- */
-function calcSlotCount(
-  startTime: string,
-  endTime: string,
-  breakStart: string | undefined,
-  breakEnd: string | undefined,
-  duration: number,
-  buffer: number,
-): number {
-  if (!startTime || !endTime) return 0;
-  const step = duration + buffer;
-  if (step <= 0) return 0;
-
-  const start = timeToMins(startTime);
-  const end   = timeToMins(endTime);
-  const bS = breakStart ? timeToMins(breakStart) : null;
-  const bE = breakEnd   ? timeToMins(breakEnd)   : null;
-
-  let count = 0;
-  let cur   = start;
-  while (cur + duration <= end) {
-    // Skip break window if the slot overlaps/intersects with it
-    if (bS !== null && bE !== null && cur < bE && cur + duration > bS) {
-      cur = bE;
-      continue;
-    }
-    count++;
-    cur += step;
-  }
-  return count;
-}
 
 interface HourMinPickerProps {
   value: string;
@@ -204,8 +161,6 @@ export function DoctorScheduleManager({
 }: DoctorScheduleManagerProps) {
   const [schedule, setSchedule] = useState<WorkingHours>(EMPTY_SCHEDULE);
   const [settings, setSettings] = useState({ duration: 30, bufferTime: 5 });
-  // Per-day slot counts (UI-only — drives end_time calculation)
-  const [slotCounts, setSlotCounts] = useState<Record<string, number>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
@@ -228,22 +183,6 @@ export function DoctorScheduleManager({
       if (parsed) {
         setSchedule(parsed.workingHours);
         setSettings({ duration: parsed.slotDuration, bufferTime: parsed.bufferTime });
-
-        // Derive initial slot counts from API data
-        const derived: Record<string, number> = {};
-        for (const [key, day] of Object.entries(parsed.workingHours)) {
-          if (day.isWorking && day.startTime && day.endTime) {
-            derived[key] = calcSlotCount(
-              day.startTime,
-              day.endTime,
-              day.breakStart,
-              day.breakEnd,
-              parsed.slotDuration,
-              parsed.bufferTime,
-            );
-          }
-        }
-        setSlotCounts(derived);
       }
     }
     
@@ -255,75 +194,25 @@ export function DoctorScheduleManager({
   const { mutateAsync: createSchedule, isPending } =
     useCreateDoctorScheduleMutation();
 
-  // ── Slot count handler — updates end_time automatically ──────────────────
-  const handleSlotCountChange = (dayKey: string, rawValue: string) => {
-    const count = Math.max(1, parseInt(rawValue, 10) || 1);
-    setSlotCounts((prev) => ({ ...prev, [dayKey]: count }));
-
-    const day = schedule[dayKey];
-    if (!day?.startTime) return;
-
-    const newEnd = calcEndTime(day.startTime, count, settings.duration, settings.bufferTime);
-    setSchedule((prev) => ({
-      ...prev,
-      [dayKey]: { ...prev[dayKey], endTime: newEnd },
-    }));
-  };
-
-  // ── Start time handler — keeps slot count locked, recalculates end_time ──
+  // ── Start time handler ──
   const handleStartTimeChange = (dayKey: string, newStart: string) => {
-    const count = slotCounts[dayKey] ?? 0;
-    let newEnd = schedule[dayKey]?.endTime ?? "";
-    if (count > 0 && newStart) {
-      newEnd = calcEndTime(newStart, count, settings.duration, settings.bufferTime);
-    }
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], startTime: newStart, endTime: newEnd },
+      [dayKey]: { ...prev[dayKey], startTime: newStart },
     }));
   };
 
-  // ── End time handler — derives slot count from time window ────────────────
+  // ── End time handler ──
   const handleEndTimeChange = (dayKey: string, newEnd: string) => {
-    const day = schedule[dayKey];
     setSchedule((prev) => ({
       ...prev,
       [dayKey]: { ...prev[dayKey], endTime: newEnd },
     }));
-    // Recompute slot count from new window
-    if (day?.startTime && newEnd) {
-      const derived = calcSlotCount(
-        day.startTime,
-        newEnd,
-        day.breakStart,
-        day.breakEnd,
-        settings.duration,
-        settings.bufferTime,
-      );
-      setSlotCounts((prev) => ({ ...prev, [dayKey]: derived }));
-    }
   };
 
-  // ── When global settings change, recompute all end times from slot counts ─
+  // ── When global settings change ──
   const handleSettingsChange = (field: "duration" | "bufferTime", value: number) => {
-    const newSettings = { ...settings, [field]: value };
-    setSettings(newSettings);
-
-    // Recompute end times for all working days that have a slot count set
-    setSchedule((prev) => {
-      const updated = { ...prev };
-      for (const dayKey of Object.keys(updated)) {
-        const day = updated[dayKey];
-        const count = slotCounts[dayKey] ?? 0;
-        if (day.isWorking && day.startTime && count > 0) {
-          updated[dayKey] = {
-            ...day,
-            endTime: calcEndTime(day.startTime, count, newSettings.duration, newSettings.bufferTime),
-          };
-        }
-      }
-      return updated;
-    });
+    setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
   // ── Generic day field handler (isWorking, breakStart, breakEnd) ───────────
@@ -476,7 +365,7 @@ export function DoctorScheduleManager({
               </LabeledField>
             </div>
             <p className="text-[10px] text-primary/60 font-medium mt-3">
-              💡 Slot duration &amp; buffer apply to all days. Set "No. of Slots" per day to auto-calculate end time.
+              💡 Slot duration &amp; buffer apply to all days. Slots are automatically calculated based on operating hours and breaks.
             </p>
           </div>
 
@@ -489,7 +378,6 @@ export function DoctorScheduleManager({
               {DAYS.map((day) => {
                 const isWorking = schedule[day.key]?.isWorking ?? false;
                 const slots     = generateTimeSlots(day.key);
-                const slotCount = slotCounts[day.key] ?? slots.length;
 
                 return (
                   <div
@@ -542,31 +430,9 @@ export function DoctorScheduleManager({
                             />
                           </LabeledField>
 
-                          <LabeledField label="No. of Slots">
-                            <div className="relative flex items-center">
-                              <Button
-                                type="button"
-                                onClick={() => handleSlotCountChange(day.key, String(Math.max(1, (slotCount || 1) - 1)))}
-                                className="absolute left-1.5 w-6 h-6 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors z-10 font-bold"
-                              >
-                                -
-                              </Button>
-                              <Input
-                                type="number"
-                                min={1}
-                                max={100}
-                                value={slotCount || ""}
-                                placeholder="10"
-                                onChange={(e) => handleSlotCountChange(day.key, e.target.value)}
-                                className="w-full text-center px-8 py-1.5 border-2 border-primary/30 rounded-xl text-xs font-black text-primary bg-primary/5 focus:outline-none focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              />
-                              <Button
-                                type="button"
-                                onClick={() => handleSlotCountChange(day.key, String((slotCount || 1) + 1))}
-                                className="absolute right-1.5 w-6 h-6 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors z-10 font-bold"
-                              >
-                                +
-                              </Button>
+                          <LabeledField label="Calculated Slots">
+                            <div className="w-full text-center px-4 py-1.5 border border-border rounded-xl text-xs font-black text-primary bg-primary/5 h-9 flex items-center justify-center">
+                              {slots.length} Slot{slots.length !== 1 ? 's' : ''}
                             </div>
                           </LabeledField>
                         </div>
@@ -576,37 +442,14 @@ export function DoctorScheduleManager({
                           <LabeledField label="Break Start (optional)">
                             <HourMinPicker
                               value={schedule[day.key]?.breakStart ?? ""}
-                              onChange={(val) => {
-                                handleDayChange(day.key, "breakStart", val);
-                                // Recompute slot count after break change
-                                const day_ = schedule[day.key];
-                                if (day_?.startTime && day_?.endTime) {
-                                  const derived = calcSlotCount(
-                                    day_.startTime, day_.endTime,
-                                    val, day_.breakEnd,
-                                    settings.duration, settings.bufferTime,
-                                  );
-                                  setSlotCounts((p) => ({ ...p, [day.key]: derived }));
-                                }
-                              }}
+                              onChange={(val) => handleDayChange(day.key, "breakStart", val)}
                               optional
                             />
                           </LabeledField>
                           <LabeledField label="Break End (optional)">
                             <HourMinPicker
                               value={schedule[day.key]?.breakEnd ?? ""}
-                              onChange={(val) => {
-                                handleDayChange(day.key, "breakEnd", val);
-                                const day_ = schedule[day.key];
-                                if (day_?.startTime && day_?.endTime) {
-                                  const derived = calcSlotCount(
-                                    day_.startTime, day_.endTime,
-                                    day_.breakStart, val,
-                                    settings.duration, settings.bufferTime,
-                                  );
-                                  setSlotCounts((p) => ({ ...p, [day.key]: derived }));
-                                }
-                              }}
+                              onChange={(val) => handleDayChange(day.key, "breakEnd", val)}
                               optional
                             />
                           </LabeledField>

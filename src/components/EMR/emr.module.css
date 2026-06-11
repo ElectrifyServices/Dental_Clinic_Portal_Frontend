@@ -1,50 +1,44 @@
-/**
- * emr.module.css — EMR module CSS overrides
- *
- * Tailwind handles base styling. Add module-specific overrides here.
- * Import in EMR components: import styles from './emr.module.css';
- * Use as: className={styles.fieldLabel}
- */
-
-/* ─── Form field overrides ─────────────────────────────────────────── */
+/* ── Form field label ─────────────────────────────────────────── */
 .fieldLabel {
-  font-size: 0.65rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted-foreground, #6b7280);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgb(var(--muted-foreground));
   margin-left: 0.125rem;
   margin-bottom: 0.375rem;
   display: block;
 }
 
+/* ── Form field input ─────────────────────────────────────────── */
 .fieldInput {
   border-radius: 0.75rem;
   font-size: 0.875rem;
-  border-color: var(--border, #e5e7eb);
-  background: var(--background, #fff);
+  border-color: rgb(var(--border));
+  background: rgb(var(--card));
+  color: rgb(var(--foreground));
 }
 
 .fieldInput:focus {
-  ring-color: rgba(var(--primary), 0.2);
+  outline: none;
+  border-color: rgb(var(--primary));
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-/* ─── Record type badge ────────────────────────────────────────────── */
+/* ── Record type badge ────────────────────────────────────────── */
 .recordTypeBadge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.625rem;
+  padding: 0.2rem 0.625rem;
   border-radius: 9999px;
-  font-size: 0.625rem;
-  font-weight: 900;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: rgba(var(--primary), 0.08);
-  color: var(--primary, #2563eb);
-  border: 1px solid rgba(var(--primary), 0.15);
+  letter-spacing: 0.06em;
+  background: rgb(var(--secondary));
+  color: rgb(var(--primary));
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
-/* ─── Attachment preview ───────────────────────────────────────────── */
+/* ── Attachment grid ──────────────────────────────────────────── */
 .attachmentGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
@@ -56,6 +50,6 @@
   aspect-ratio: 1;
   border-radius: 0.75rem;
   overflow: hidden;
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid rgb(var(--border));
   object-fit: cover;
 }

@@ -1,4 +1,22 @@
 // ─── Corporate Plan Types ────────────────────────────────────────────────────
+export type PlanCategory = 'corporate' | 'individual';
+export type CoverageType = 'self' | 'family';
+
+export interface PlanDependent {
+  id: string;
+  memberId: string;           // FK → CorporateEmployee.id
+  name: string;
+  relationship: string;       // e.g. 'Spouse', 'Child', 'Parent' — free text
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+  phone?: string;
+  email?: string;
+  isActive?: boolean;
+  patientId?: string;         // set when this dependent registers as a patient
+  corporatePlanId?: string;   // copied from primary member at time of creation
+  primaryMemberName?: string; // copied from primary member at time of creation
+}
+
 export type PlanBenefitType =
   | 'flat_discount'        // X% off all services
   | 'treatment_discount'   // X% off specific treatments
@@ -33,6 +51,9 @@ export interface CorporatePlan {
   createdBy: string;
   color: string;
   status?: string;
+  planCategory?: PlanCategory;  // 'corporate' (default) | 'individual'
+  annualFee?: number;            // for individual plans (e.g. 1000)
+  maxDependents?: number;        // 0 = self only; admin configures per plan
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -82,6 +103,7 @@ export interface Patient {
   corporatePlanName?: string;
   corporateMemberId?: string;
   planEnrolledAt?: string;
+  primaryMemberId?: string;      // CorporateEmployee.id when this patient is a dependent
   // Legacy field kept for compatibility
   companyId?: string;
   barcode?: string;
@@ -245,6 +267,8 @@ export interface CorporateEmployee {
   isActive: boolean;
   status?: string;
   patientId?: string;          // linked patient record if registered
+  coverageType?: CoverageType; // 'self' | 'family'
+  dependents?: PlanDependent[];
 }
 
 export * from "./consultationTypes";

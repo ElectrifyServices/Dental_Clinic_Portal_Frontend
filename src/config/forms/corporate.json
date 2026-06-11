@@ -2,8 +2,8 @@
   "formId": "corporate",
   "version": "1.0.0",
   "title": {
-    "create": "Corporate Plan Design",
-    "edit": "Update Corporate Plan"
+    "create": "Create Plan",
+    "edit": "Update Plan"
   },
   "submitLabel": {
     "create": "Launch New Plan",

@@ -16,6 +16,7 @@ export interface UpdateEmployeeVariables {
   corporate_plan_id?: string;
   eligible_date?: string;
   status?: string;
+  coverage_type?: 'SELF' | 'FAMILY';
 }
 
 export function useUpdateEmployeeMutation() {
