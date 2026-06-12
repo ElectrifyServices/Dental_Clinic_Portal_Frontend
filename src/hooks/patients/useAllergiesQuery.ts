@@ -17,7 +17,7 @@ export const useCreateAllergyMutation = () => {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, { allergy_name: string; is_custom: boolean }>({
-    endpoint: "/patientMedical/allergies/create",
+    endpoint: "/patientMedical/allergies",
     method: "post",
     options: {
       onSuccess: () => {

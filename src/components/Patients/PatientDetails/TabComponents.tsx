@@ -40,29 +40,7 @@ const EmptyState = ({
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: any }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <Card className="bg-primary/5 rounded-2xl p-6 border border-primary/30 shadow-sm">
-      <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
-        <Heart className="w-5 h-5 mr-2" /> Medical History
-      </h3>
-      <div className="space-y-3">
-        {(patient?.medicalHistoryNames || patient?.medicalHistory || []).length > 0 ? (
-          (patient.medicalHistoryNames || patient.medicalHistory).map((condition: string, index: number) => (
-            <div
-              key={index}
-              className="bg-card rounded-xl p-4 border border-primary/30 shadow-sm"
-            >
-              <p className="text-primary font-medium">{condition}</p>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <Heart className="w-12 h-12 text-blue-300 mx-auto mb-3" />
-            <p className="text-primary">No medical history recorded</p>
-          </div>
-        )}
-      </div>
-    </Card>
-    <Card className="bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
+    <Card className="lg:col-span-2 bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
       <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>

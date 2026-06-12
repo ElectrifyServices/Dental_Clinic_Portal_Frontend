@@ -52,7 +52,7 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
         const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
         time12 = `${hour12}:${m} ${ampm}`;
       }
-      return { time24, time12, isAvailable: s.is_available };
+      return { time24, time12, appointmentCount: s.appointment_count || 0 };
     });
   }, [slotsData]);
 
@@ -737,25 +737,21 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                   <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-3 border border-purple-100 rounded-lg bg-white shadow-inner">
                     {availableSlots.map((slot) => {
                       const isSelected = selectedSlot === slot.time24;
-                      const isBooked = !slot.isAvailable;
                       return (
                         <Button
                           key={slot.time24}
                           type="button"
-                          disabled={isBooked}
-                          onClick={() => !isBooked && setSelectedSlot(slot.time24)}
+                          onClick={() => setSelectedSlot(slot.time24)}
                           className={`
                             relative px-3 py-2 rounded-lg text-[10px] font-black transition-all border-2 flex items-center gap-1 h-auto
                             ${isSelected
                               ? "bg-emerald-600 text-white border-emerald-600 shadow-md scale-105"
-                              : isBooked
-                                ? "bg-red-50/60 text-red-300 border-red-50/20 cursor-not-allowed line-through opacity-45"
-                                : "bg-emerald-50 text-emerald-800 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-400 cursor-pointer"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-400 cursor-pointer"
                             }
                           `}
                         >
                           {isSelected && <CheckCircle className="w-3 h-3 text-white shrink-0" />}
-                          {slot.time12}
+                          {slot.time12} ({slot.appointmentCount})
                         </Button>
                       );
                     })}

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui";
 import { Patient } from "@/types";
+import { toTitleCase } from "@/utils/stringUtils";
 
 interface PatientCardProps {
   patient: Patient;
@@ -124,8 +125,8 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
                     {patient.avatar ? (
                       <img
-                        src={patient.avatar}
-                        alt={patient.name}
+                         src={patient.avatar}
+                        alt={toTitleCase(patient.name)}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -139,9 +140,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               </SimpleTooltip>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <SimpleTooltip content={`Name: ${patient.name || "Unknown"}`}>
+                  <SimpleTooltip content={`Name: ${toTitleCase(patient.name || "Unknown")}`}>
                     <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate cursor-help">
-                      {(patient.name || "Unknown").toLowerCase()}
+                      {toTitleCase(patient.name || "Unknown")}
                     </h3>
                   </SimpleTooltip>
                   {patient.category && (
@@ -232,10 +233,6 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">ALLERGIES:</span>{" "}
               {patient.allergyNames?.join(", ") || patient.allergies?.join(", ") || "None"}
-            </p>
-            <p className="text-[10px] font-medium text-orange-800 leading-tight">
-              <span className="font-black">CONDITIONS:</span>{" "}
-              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || "None"}
             </p>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
-import { SearchableSelect } from "@/components/ui";
+import { SearchableSelect, DataTable } from "@/components/ui";
 
 interface TreatmentPlan {
   id: string;
@@ -11,9 +11,20 @@ interface TreatmentPlan {
   procedure: string;
   sessions: number;
   cost: number;
-  isActive: boolean;
+  isActive?: boolean;
   status: string;
+  condition?: string;
+  planDate?: string;
 }
+
+const conditionLabels: Record<string, string> = {
+  caries: "Caries",
+  missing: "Missing",
+  restored: "Restored",
+  endo: "Endo / RCT",
+  crown: "Crown",
+  extract: "For Extraction",
+};
 
 interface TreatmentPlanningProps {
   requiresTreatment: boolean;
@@ -48,15 +59,102 @@ export function TreatmentPlanning({
 }: TreatmentPlanningProps) {
   const totalPlannedCost = treatmentPlans.reduce((sum, p) => sum + (p.cost || 0), 0);
 
+  const columns = [
+    {
+      key: "tooth",
+      header: "Tooth",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan) => (
+        <span className="font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-lg">
+          #{plan.tooth} {plan.condition ? `(${conditionLabels[plan.condition] || plan.condition})` : ""}
+        </span>
+      ),
+    },
+    {
+      key: "procedure",
+      header: "Procedure",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <SearchableSelect
+          value={plan.procedure}
+          onChange={(val) => onUpdatePlan(index, "procedure", val)}
+          options={[
+            "Dental Filling",
+            "Root Canal Treatment",
+            "Crown Placement",
+            "Tooth Extraction",
+            "Teeth Cleaning",
+            "Orthodontic Treatment",
+            "Dental Implant"
+          ]}
+          placeholder="Select Procedure"
+          searchPlaceholder="Search procedure..."
+          className="h-9 font-semibold text-xs rounded-lg border-purple-200"
+        />
+      ),
+    },
+    {
+      key: "sessions",
+      header: "Sessions",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <Input
+          type="number"
+          min="1"
+          value={plan.sessions}
+          onChange={(e) => onUpdatePlan(index, "sessions", parseInt(e.target.value) || 1)}
+          className="w-16 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+        />
+      ),
+    },
+    {
+      key: "cost",
+      header: "Est. Cost (₹)",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <Input
+          type="number"
+          min="0"
+          value={plan.cost === 0 ? "" : plan.cost}
+          onChange={(e) => onUpdatePlan(index, "cost", parseInt(e.target.value) || 0)}
+          className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+          placeholder="Cost"
+        />
+      ),
+    },
+    {
+      key: "planDate",
+      header: "Plan Date",
+      align: "center" as const,
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider text-center",
+      render: (plan: TreatmentPlan, index: number) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        const todayStr = `${year}-${month}-${day}`;
+        return (
+          <Input
+            type="date"
+            value={plan.planDate || ""}
+            onChange={(e) => onUpdatePlan(index, "planDate", e.target.value)}
+            min={todayStr}
+            className="w-full min-w-[130px] px-2 py-1 text-xs border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-card"
+          />
+        );
+      },
+    },
+  ];
+
   return (
-    <div className="px-6 space-y-6">
-      <div className="bg-purple-50 rounded-2xl p-6 border border-purple-200 shadow-sm">
-        <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
+    <div className="px-6 space-y-4">
+      <div className="bg-purple-50 rounded-2xl p-4 border border-purple-200 shadow-sm">
+        <h3 className="text-lg font-bold text-purple-900 mb-2 flex items-center">
           <Stethoscope className="w-5 h-5 mr-2" />
           Treatment Planning
         </h3>
 
-        <div className="flex items-center mb-4">
+        <div className="flex items-center mb-2">
           <Input
             type="checkbox"
             name="requiresTreatment"
@@ -71,73 +169,11 @@ export function TreatmentPlanning({
 
         {requiresTreatment && (
           <div className="mt-4 animate-in fade-in slide-in-from-top-2">
-            <div className="overflow-x-auto rounded-xl border border-purple-100">
-              <table className="w-full text-left border-collapse bg-card">
-                <thead>
-                  <tr className="bg-purple-100/50">
-                    <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider">Tooth</th>
-                    <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider">Procedure</th>
-                    <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider">Sessions</th>
-                    <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider">Est. Cost (₹)</th>
-                    <th className="py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider text-center">Active</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {treatmentPlans.map((plan, index) => (
-                    <tr key={plan.id} className="border-b border-purple-50 hover:bg-purple-50/50 transition-colors">
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-lg">#{plan.tooth}</span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <SearchableSelect
-                          value={plan.procedure}
-                          onChange={(val) => onUpdatePlan(index, "procedure", val)}
-                          options={[
-                            "Dental Filling",
-                            "Root Canal Treatment",
-                            "Crown Placement",
-                            "Tooth Extraction",
-                            "Teeth Cleaning",
-                            "Orthodontic Treatment",
-                            "Dental Implant"
-                          ]}
-                          placeholder="Select Procedure"
-                          searchPlaceholder="Search procedure..."
-                          className="h-9 font-semibold text-xs rounded-lg border-purple-200"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={plan.sessions}
-                          onChange={(e) => onUpdatePlan(index, "sessions", parseInt(e.target.value) || 1)}
-                          className="w-16 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={plan.cost === 0 ? "" : plan.cost}
-                          onChange={(e) => onUpdatePlan(index, "cost", parseInt(e.target.value) || 0)}
-                          className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                          placeholder="Cost"
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Input
-                          type="checkbox"
-                          checked={plan.isActive}
-                          onChange={(e) => onUpdatePlan(index, "isActive", e.target.checked)}
-                          className="w-5 h-5 text-purple-600 border-purple-300 rounded focus:ring-purple-500 cursor-pointer"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={treatmentPlans}
+              rowKey={(plan) => plan.id}
+            />
 
             {treatmentPlans.length === 0 && (
               <div className="text-center py-6 text-purple-400 italic text-sm">
@@ -160,7 +196,7 @@ export function TreatmentPlanning({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label className="block text-sm font-semibold text-muted-foreground mb-2">
-            Treatment Plan Description <span className="text-destructive">*</span>
+            Treatment Plan Description
           </Label>
           <Textarea
             name="treatmentPlan"

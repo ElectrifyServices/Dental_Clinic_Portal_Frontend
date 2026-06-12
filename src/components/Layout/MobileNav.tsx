@@ -152,10 +152,12 @@ export function MobileNav() {
             <div className="flex items-center justify-between mb-5 border-b border-border/50 pb-3">
               <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">All Modules</h4>
               <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setMenuOpen(false)}
-                className="p-1.5 hover:bg-muted rounded-full text-muted-foreground transition-colors"
+                className="rounded-full text-muted-foreground hover:text-foreground"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </Button>
             </div>
 
@@ -193,10 +195,9 @@ export function MobileNav() {
                 key={item.id}
                 to={`/${item.id}`}
                 className={({ isActive }) =>
-                  `flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-colors ${
-                    isActive
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground"
+                  `flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-colors ${isActive
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
                   }`
                 }
               >
@@ -209,10 +210,11 @@ export function MobileNav() {
           })}
 
           <Button
+            variant="ghost"
             onClick={() => setMenuOpen(!menuOpen)}
-            className={`flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-colors outline-none ${
+            className={`flex flex-col h-auto items-center px-3 py-1.5 rounded-xl min-w-0 gap-0 ${
               menuOpen
-                ? "text-primary bg-primary/10"
+                ? "text-primary bg-primary/10 hover:bg-primary/10 hover:text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

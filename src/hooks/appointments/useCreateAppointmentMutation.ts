@@ -26,7 +26,7 @@ export function useCreateAppointmentMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<CreateAppointmentResponse, CreateAppointmentPayload>({
-    endpoint: "/appointment/create",
+    endpoint: "/appointment",
     method: "post",
     options: {
       onSuccess: () => {

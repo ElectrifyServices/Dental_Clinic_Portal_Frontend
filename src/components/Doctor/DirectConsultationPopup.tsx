@@ -105,14 +105,14 @@ export function DirectConsultationPopup({
       return {
         time24,
         time12,
-        isBooked: !slot.is_available,
+        appointmentCount: slot.appointment_count || 0,
         isPast,
       };
     });
   }, [slotsData, selectedDate, todayStr]);
 
   useEffect(() => {
-    const firstAvailable = allSlots.find((s) => !s.isBooked && !s.isPast);
+    const firstAvailable = allSlots.find((s) => !s.isPast);
     if (firstAvailable) {
       setSelectedTime(firstAvailable.time12);
     } else {

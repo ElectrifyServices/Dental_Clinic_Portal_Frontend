@@ -5,8 +5,8 @@ import { Activity, Stethoscope } from "lucide-react";
 import { ToothChart } from "../ToothChart";
 
 interface ObservationsAndToothChartProps {
-  toothChartState: Record<number, string>;
-  onChartChange: (state: Record<number, string>) => void;
+  toothChartState: Record<number, string[]>;
+  onChartChange: (state: Record<number, string[]>) => void;
   observations: string;
   diagnosis: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -23,8 +23,8 @@ export function ObservationsAndToothChart({
 }: ObservationsAndToothChartProps) {
   return (
     <div className="px-6">
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
           <Activity className="w-6 h-6 text-primary" />
           <div>
             <h3 className="text-lg font-bold text-foreground">Clinical Observations & Tooth Chart</h3>
@@ -32,7 +32,7 @@ export function ObservationsAndToothChart({
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3">
           <ToothChart
             initialState={toothChartState as any}
             onChartChange={onChartChange}
@@ -41,13 +41,12 @@ export function ObservationsAndToothChart({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label className="block text-sm font-semibold text-muted-foreground mb-2">
-                Detailed Observations <span className="text-destructive">*</span>
+                Detailed Observations
               </Label>
               <Textarea
                 name="observations"
                 value={observations}
                 onChange={onChange}
-                required
                 rows={4}
                 className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 ${
                   errors.observations
@@ -66,13 +65,12 @@ export function ObservationsAndToothChart({
             <div>
               <Label className="block text-sm font-semibold text-muted-foreground mb-2">
                 <Stethoscope className="w-4 h-4 inline mr-2" />
-                Diagnosis <span className="text-destructive">*</span>
+                Diagnosis
               </Label>
               <Textarea
                 name="diagnosis"
                 value={diagnosis}
                 onChange={onChange}
-                required
                 rows={4}
                 className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 ${
                   errors.diagnosis

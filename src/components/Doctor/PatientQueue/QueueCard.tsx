@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
+import { toTitleCase } from "@/utils/stringUtils";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -75,17 +76,7 @@ export function QueueCard({
   const gender = fullPatient?.gender || "";
   
   const [showAllAllergies, setShowAllAllergies] = useState(false);
-  const [showAllMedHistory, setShowAllMedHistory] = useState(false);
   
-  const medHistory: string[] = fullPatient?.medicalHistoryNames?.length
-    ? Array.isArray(fullPatient.medicalHistoryNames)
-      ? fullPatient.medicalHistoryNames
-      : fullPatient.medicalHistoryNames.split("\n").filter(Boolean)
-    : fullPatient?.medicalHistory
-    ? Array.isArray(fullPatient.medicalHistory)
-      ? fullPatient.medicalHistory
-      : fullPatient.medicalHistory.split("\n").filter(Boolean)
-    : [];
   const allergies: string[] = fullPatient?.allergyNames?.length
     ? Array.isArray(fullPatient.allergyNames)
       ? fullPatient.allergyNames
@@ -106,8 +97,8 @@ export function QueueCard({
               <User className="w-5.5 h-5.5" />
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
-              <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 truncate" title={patient.patientName}>
-                {patient.patientName}
+              <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 truncate" title={toTitleCase(patient.patientName)}>
+                {toTitleCase(patient.patientName)}
               </h3>
               {gender && (
                 <span className="text-xs text-gray-500 font-semibold block mb-2">
@@ -166,7 +157,7 @@ export function QueueCard({
         </div>
 
         {/* Medical Alerts */}
-        {(medHistory.length > 0 || allergies.length > 0) && (
+        {allergies.length > 0 && (
           <div className="p-3 bg-red-50/40 rounded-xl border border-red-100/60">
             <div className="flex items-center mb-2">
               <AlertTriangle className="w-3.5 h-3.5 text-red-500 mr-1.5" />
@@ -175,42 +166,22 @@ export function QueueCard({
               </span>
             </div>
             <div className="space-y-1">
-              {allergies.length > 0 && (
-                <div className="text-[11px] text-red-600 font-bold leading-tight">
-                  <strong>Allergies:</strong>{" "}
-                  {showAllAllergies
-                    ? allergies.join(", ")
-                    : allergies.slice(0, 3).join(", ")}
-                  {allergies.length > 3 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setShowAllAllergies(!showAllAllergies)}
-                      className="cursor-pointer hover:underline text-red-800 ml-1 h-auto p-0 text-[11px] font-bold"
-                    >
-                      {showAllAllergies ? "(less)" : `+${allergies.length - 3} more`}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {medHistory.length > 0 && (
-                <div className="text-[11px] text-amber-700 font-bold leading-tight">
-                  <strong>Conditions:</strong>{" "}
-                  {showAllMedHistory
-                    ? medHistory.join(", ")
-                    : medHistory.slice(0, 2).join(", ")}
-                  {medHistory.length > 2 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setShowAllMedHistory(!showAllMedHistory)}
-                      className="cursor-pointer hover:underline text-amber-900 ml-1 h-auto p-0 text-[11px] font-bold"
-                    >
-                      {showAllMedHistory ? "(less)" : `+${medHistory.length - 2} more`}
-                    </Button>
-                  )}
-                </div>
-              )}
+              <div className="text-[11px] text-red-600 font-bold leading-tight">
+                <strong>Allergies:</strong>{" "}
+                {showAllAllergies
+                  ? allergies.join(", ")
+                  : allergies.slice(0, 3).join(", ")}
+                {allergies.length > 3 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowAllAllergies(!showAllAllergies)}
+                    className="cursor-pointer hover:underline text-red-800 ml-1 h-auto p-0 text-[11px] font-bold"
+                  >
+                    {showAllAllergies ? "(less)" : `+${allergies.length - 3} more`}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}

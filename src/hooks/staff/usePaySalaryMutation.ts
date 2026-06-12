@@ -12,7 +12,7 @@ interface PaySalaryPayload {
 export function usePaySalaryMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, PaySalaryPayload>({
-    endpoint: "/staffPaymentHistory/create",
+    endpoint: "/staffPaymentHistory",
     method: "post",
     options: {
       onSuccess: () => {

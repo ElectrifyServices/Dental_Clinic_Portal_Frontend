@@ -1,6 +1,7 @@
 import { Eye, Edit, Trash2, Users } from "lucide-react";
 import { Badge, Button, DataTable } from "@/components/ui";
 import { Patient } from "@/types";
+import { toTitleCase } from "@/utils/stringUtils";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -36,7 +37,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
             {patient.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-bold text-foreground text-sm">{patient.name}</div>
+            <div className="font-bold text-foreground text-sm">{toTitleCase(patient.name)}</div>
             <div className="text-[10px] text-blue-600 font-bold font-mono tracking-tighter">
               {patient.patient_code || patient.id}
             </div>

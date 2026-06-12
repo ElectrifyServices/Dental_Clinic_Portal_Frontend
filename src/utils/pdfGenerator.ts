@@ -30,24 +30,41 @@ export const downloadConsultationPDF = async ({
   `;
 
   // Safely extract doctor details from API payload structure (e.g. responseObject.data or directly)
-  const doctorObj = consultationData.doctor ||
-    consultationData.data?.doctor ||
-    consultationData.data?.data?.doctor ||
-    consultationData.responseObject?.data?.doctor ||
-    consultationData.responseObject?.doctor;
+
+  let doctorObj = {};
+  if (consultationData.responseObject?.data?.doctor) {
+    doctorObj = consultationData.responseObject.data.doctor;
+  } else if (consultationData.data?.doctor) {
+    doctorObj = consultationData.data.doctor;
+  } else if (consultationData.doctor) {
+    doctorObj = consultationData.doctor;
+  } else if (consultationData.responseObject?.doctor) {
+    doctorObj = consultationData.responseObject.doctor;
+  }
+
   const doctorName = doctorObj?.name || patient.doctorName || "";
+  const doctorEmail = doctorObj?.email || "";
+  const doctorPhone = doctorObj?.phone || "";
   const displayDoctorName = doctorName ? (doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`) : "—";
   const specialization = doctorObj?.personal_profile?.specialization?.name ||
     doctorObj?.specialization?.name ||
     doctorObj?.specialization ||
     "Dentistry";
 
+  console.log("Extracted doctor:", { doctorName, doctorEmail, doctorPhone, doctorObj });
+
+
   // Safely extract patient details from API payload structure
-  const patientObj = consultationData.patient ||
-    consultationData.data?.patient ||
-    consultationData.data?.data?.patient ||
-    consultationData.responseObject?.data?.patient ||
-    consultationData.responseObject?.patient;
+let patientObj = {};
+if (consultationData.responseObject?.data?.patient) {
+  patientObj = consultationData.responseObject.data.patient;
+} else if (consultationData.data?.patient) {
+  patientObj = consultationData.data.patient;
+} else if (consultationData.patient) {
+  patientObj = consultationData.patient;
+} else if (consultationData.responseObject?.patient) {
+  patientObj = consultationData.responseObject.patient;
+}
   const patientName = patientObj?.name || patient.patientName || "—";
   const patientId = patientObj?.id || patient.id || "—";
   const displayPatientId = patientId === "—" ? "—" : patientId.split('-')[0];
@@ -131,20 +148,28 @@ export const downloadConsultationPDF = async ({
   );
 
   const getHeader = () => `
-    <div style="padding: 35px 50px 25px; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); color: white; border-bottom: 4px solid #f59e0b;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="padding: 20px 40px 15px; border-bottom: 2px solid #1e3a8a;">
+      <div style="text-align: center;">
+        <div style="font-size: 20px; font-weight: 800; color: #1e3a8a; text-transform:uppercase; letter-spacing: -0.5px;">Opal Smiles Dental Studio</div>
+         <div style="font-size:12px; color: #1f2937; font-weight:600; margin-top:4px; text-transform:uppercase; letter-spacing:1px;">Multi-Speciality Dental Clinic & Hospital</div>
+        <div style="font-size: 10px; color: #4b5563; margin-top: 5px;">#102, C Block, South Extension - 1, New Delhi</div>
+        <div style="font-size: 10px; color: #4b5563;">Phone: 9204972991 / 9934004494</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
         <div>
-          <div style="font-size:32px; font-weight:850; letter-spacing:-0.75px; color:#ffffff; font-family:'Outfit', sans-serif;">OPAL SMILE</div>
-          <div style="font-size:12px; color:#93c5fd; font-weight:600; margin-top:4px; text-transform:uppercase; letter-spacing:1px;">Multi-Speciality Dental Clinic & Hospital</div>
+          <div style="font-size: 13px; font-weight: 700; color: #1f2937;">${displayDoctorName}</div>
+<div style="font-size: 13px; font-weight: 500; color: #1f2937;">${specialization}</div>     
+          <div style="font-size: 13px; font-weight: 500; color: #1f2937;">Hospital Registration Board</div>
+
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:16px; font-weight:800; color:#ffffff;">${displayDoctorName}</div>
-          <div style="font-size:11px; color:#93c5fd; font-weight:500; margin-top:2px;">${specialization}</div>
-          <div style="font-size:10px; color:#60a5fa; margin-top:1px;">Hospital Registration Board</div>
+        <div style="text-align: right;">
+          <div style="font-size: 13px; font-weight: 500; color: #1f2937;">${doctorEmail}</div>
+          <div style="font-size: 13px; font-weight: 500; color: #1f2937;">${doctorPhone}</div>
         </div>
       </div>
     </div>
   `;
+
 
   const getPatientInfo = (title: string) => `
     <div style="padding: 12px 50px; background:#f1f5f9; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
@@ -153,11 +178,11 @@ export const downloadConsultationPDF = async ({
         <span><strong>Report Date:</strong> ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</span>
       </div>
     </div>
-    <div style="padding: 25px 50px 15px;">
+    <div style="padding: 20px 40px 10px;">
       <div style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; padding:20px; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="flex:1; min-width:0; padding-right:10px;">
           <div style="font-size:9px; font-weight:850; color:#64748b; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">Patient Name</div>
-          <div style="font-size:14px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${patientName}</div>
+          <div style="font-size:14px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:visible; text-overflow:ellipsis;">${patientName}</div>
         </div>
         <div style="flex:1; min-width:0; padding-right:10px;">
           <div style="font-size:9px; font-weight:850; color:#64748b; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">Patient ID</div>
@@ -176,7 +201,7 @@ export const downloadConsultationPDF = async ({
   `;
 
   const getClinicalSection = () => `
-    <div style="padding: 10px 50px 20px;">
+    <div style="padding: 10px 30px 10px;">
       ${patientConcern ? `
         <div style="margin-bottom:15px; background:#f8fafc; border-left:4px solid #f59e0b; padding:12px 18px; border-radius:4px;">
           <div style="font-size:10px; font-weight:850; color:#b45309; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Chief Complaint / Concern</div>
@@ -193,7 +218,7 @@ export const downloadConsultationPDF = async ({
             <div style="margin-top:14px;">
                <div style="font-size:10px; font-weight:850; color:#1e3a8a; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">Tooth Chart Findings</div>
                <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                 ${Object.entries(finalToothChart).map(([num, cond]) => `<span style="font-size:11px; padding:3px 10px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-weight:700;">Tooth #${num}: ${cond}</span>`).join('')}
+                 ${Object.entries(finalToothChart).map(([num, cond]) => `<span style="font-size:11px; padding: 8px; border-radius:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-weight:700;">Tooth #${num}: ${cond}</span>`).join('')}
                </div>
             </div>
           ` : ''}
@@ -212,7 +237,7 @@ export const downloadConsultationPDF = async ({
     const xrayFiles = consultationData.xrayFiles || consultationData.data?.xrayFiles || [];
     if (!xrayFiles || xrayFiles.length === 0) return "";
     return `
-      <div style="padding: 10px 50px 20px;">
+      <div style="padding: 10px 30px 10px;">
         <div style="font-size:11px; font-weight:850; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; border-bottom:1.5px solid #e2e8f0; padding-bottom:6px;">Diagnostic Imaging (X-Ray)</div>
         <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:15px; width:100%;">
           ${xrayFiles.map((url: string, i: number) => `
@@ -262,7 +287,7 @@ export const downloadConsultationPDF = async ({
     }
 
     return `
-      <div style="padding: 10px 50px 20px;">
+      <div style="padding: 10px 30px 10px;">
         <div style="font-size:11px; font-weight:850; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid #e2e8f0; padding-bottom:6px;">Treatment Planning & Procedures</div>
         ${treatmentsHtml}
         
@@ -284,7 +309,7 @@ export const downloadConsultationPDF = async ({
   };
 
   const getPrescriptionSection = () => `
-    <div style="padding: 10px 50px 20px;">
+    <div style="padding: 10px 30px 10px;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:1.5px solid #e2e8f0; padding-bottom:6px;">
         <div style="font-size:14px; font-weight:800; color:#1e3a8a;">Rx</div>
         <div style="font-size:11px; font-weight:850; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
@@ -297,6 +322,9 @@ export const downloadConsultationPDF = async ({
             <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase;">Dosage</th>
             <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase;">Freq</th>
             <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase;">Duration</th>
+ <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase;">QTY</th>
+
+
           </tr>
         </thead>
         <tbody>
@@ -307,7 +335,9 @@ export const downloadConsultationPDF = async ({
               <td style="padding:10px 14px; font-size:12px; color:#475569;">${p.dosage || "-"} (${p.timing || "-"})</td>
               <td style="padding:10px 14px; font-size:12px; color:#475569;">${p.frequency || "-"}</td>
               <td style="padding:10px 14px; font-size:12px; color:#475569;">${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || 'Days'}` : '-'}</td>
-            </tr>
+          
+  <td style="padding:10px 14px; font-size:12px; color:#475569;">${p.qty || "-"}</td>
+</tr>
           `).join("")}
         </tbody>
       </table>
@@ -323,7 +353,7 @@ export const downloadConsultationPDF = async ({
               ⚠️ Scheduled Follow-Up: ${new Date(followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
             </div>
           ` : ''}
-          <div style="font-size:10px; color:#94a3b8; font-style:italic;">This is a computer-generated report from OPAL SMILE Hospital Management System.</div>
+          <div style="font-size:10px; color:#94a3b8; font-style:italic;">This is a computer-generated report from Opal Smiles Dental Studio.</div>
           <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Generated: ${new Date().toLocaleString("en-IN")}</div>
         </div>
         <div style="text-align:center;">
@@ -416,97 +446,155 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
 
-  const htmlContent = `
-    <div style="width:794px; background:#fff; padding: 40px 50px; color: #1f2937;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px;">
-        <div>
-          <div style="font-size:28px; font-weight:800; color:#1e3a8a; letter-spacing:-0.5px;">OPAL SMILE</div>
-          <div style="font-size:12px; color:#6b7280; font-weight:500; margin-top:4px;">Multi-Speciality Dental Clinic & Hospital</div>
+const htmlContent = `
+  <html>
+    <head>
+      <title>Invoice - ${invoice.id}</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body { 
+          font-family: 'Inter', sans-serif; 
+          background: #fff;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+        }
+        .invoice-container {
+          max-width: 900px;
+          width: 100%;
+          margin: 40px auto;
+          padding: 0 20px;
+        }
+        .hospital-header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid #3b82f6; padding-bottom: 20px; }
+        .hospital-name { font-size: 24px; font-weight: 800; }
+        .hospital-sub { font-size: 12px; font-weight: 600; color: #3b82f6; }
+        .hospital-address { font-size: 11px; color: #64748b; }
+        .hospital-contact { font-size: 10px; color: #94a3b8; }
+        .doctor-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: #f8fafc; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
+        .info-row:last-child { border-bottom: none; }
+        .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .med-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .med-table th { background: #f1f5f9; padding: 12px; text-align: left; font-weight: 700; font-size: 11px; border-bottom: 2px solid #e2e8f0; }
+        .med-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+        .med-table td:nth-child(2) { text-align: center; }
+        .med-table td:nth-child(3), .med-table td:nth-child(4) { text-align: right; }
+        .med-table th:nth-child(2) { text-align: center; }
+        .med-table th:nth-child(3), .med-table th:nth-child(4) { text-align: right; }
+        .totals { display: flex; justify-content: flex-end; margin-bottom: 30px; }
+        .totals-box { width: 300px; }
+        .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .grand-total { display: flex; justify-content: space-between; padding: 15px 0; margin-top: 10px; border-top: 2px solid #3b82f6; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+        @media print {
+          body { margin: 0; padding: 0; }
+          .invoice-container { margin: 0 auto; padding: 20px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="invoice-container">
+        <div class="hospital-header">
+          <div class="hospital-name">OPAL SMILES DENTAL STUDIO</div>
+          <div class="hospital-sub">MULTI-SPECIALITY DENTAL CLINIC & HOSPITAL</div>
+          <div class="hospital-address">#102, C Block, South Extension - 1, New Delhi</div>
+          <div class="hospital-contact">Phone: 9204972991 / 9934004454</div>
         </div>
-        <div style="text-align:right;">
-          <div style="font-size:24px; font-weight:800; color:#111827;">INVOICE</div>
-          <div style="font-size:14px; color:#6b7280; font-weight:700; margin-top:4px;">#${invoice.id}</div>
-        </div>
-      </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; margin-bottom:40px;">
-        <div>
-          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">Bill To</div>
-          <div style="font-size:16px; font-weight:700; color:#111827;">${invoice.patientName}</div>
-          <div style="font-size:13px; color:#4b5563; margin-top:4px;">${patient?.phone || '—'}</div>
-          <div style="font-size:13px; color:#4b5563;">Patient ID: ${invoice.patientId || '—'}</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:8px;">Invoice Details</div>
-          <div style="font-size:13px; color:#4b5563;"><strong>Date:</strong> ${new Date(invoice.date).toLocaleDateString('en-IN')}</div>
-          <div style="font-size:13px; color:#4b5563;"><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString('en-IN')}</div>
-          <div style="font-size:13px; color:#4b5563;"><strong>Doctor:</strong> ${invoice.doctor || '—'}</div>
-        </div>
-      </div>
-
-      <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
-        <thead>
-          <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
-            <th style="padding:12px 15px; text-align:left; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Description</th>
-            <th style="padding:12px 15px; text-align:center; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Qty</th>
-            <th style="padding:12px 15px; text-align:right; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Rate</th>
-            <th style="padding:12px 15px; text-align:right; font-size:10px; font-weight:700; color:#475569; text-transform:uppercase;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${invoice.items.map((item: any) => `
-            <tr style="border-bottom:1px solid #f1f5f9;">
-              <td style="padding:12px 15px; font-size:13px; font-weight:600; color:#1e293b;">${item.description}</td>
-              <td style="padding:12px 15px; font-size:13px; text-align:center; color:#475569;">${item.quantity}</td>
-              <td style="padding:12px 15px; font-size:13px; text-align:right; color:#475569;">₹${item.rate.toLocaleString()}</td>
-              <td style="padding:12px 15px; font-size:13px; text-align:right; font-weight:700; color:#111827;">₹${item.amount.toLocaleString()}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      <div style="display:flex; justify-content:flex-end;">
-        <div style="width:300px; space-y:10px;">
-          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-            <span style="font-size:13px; color:#64748b;">Subtotal</span>
-            <span style="font-size:13px; font-weight:700; color:#111827;">₹${invoice.subtotal.toLocaleString()}</span>
-          </div>
-          ${invoice.discount > 0 ? `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-              <span style="font-size:13px; color:#64748b;">Discount</span>
-              <span style="font-size:13px; font-weight:700; color:#ef4444;">-₹${invoice.discount.toLocaleString()}</span>
-            </div>
-          ` : ''}
-          ${invoice.tax > 0 ? `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9;">
-              <span style="font-size:13px; color:#64748b;">Tax (GST 18%)</span>
-              <span style="font-size:13px; font-weight:700; color:#111827;">₹${invoice.tax.toLocaleString()}</span>
-            </div>
-          ` : ''}
-          <div style="display:flex; justify-content:space-between; padding:15px 0; margin-top:10px; border-top:2px solid #1e3a8a;">
-            <span style="font-size:16px; font-weight:800; color:#1e3a8a; text-transform:uppercase;">Grand Total</span>
-            <span style="font-size:20px; font-weight:800; color:#1e3a8a;">₹${invoice.total.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:60px; border-top:1px solid #e2e8f0; padding-top:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="doctor-row">
           <div>
-            <div style="font-size:10px; color:#94a3b8; font-style:italic;">Thank you for your business.</div>
-            <div style="font-size:10px; color:#94a3b8; margin-top:4px;">Payments are due within 7 days.</div>
+            <strong>Dr. ${invoice.doctor || "Staff"}</strong><br/>
+            <span style="font-size: 12px;">Dentistry</span>
           </div>
-          <div style="text-align:center;">
-            <div style="width:180px; border-top:1px solid #1e293b; padding-top:10px;">
-              <div style="font-size:13px; font-weight:700; color:#1e293b;">Authorized Signatory</div>
-              <div style="font-size:10px; color:#64748b;">OPAL SMILE Clinic</div>
+          <div style="text-align: right;">
+            <span style="font-size: 11px; font-weight: 600;">Hospital Registration Board</span><br/>
+            <span style="font-size: 10px; color: #64748b;">clinic@opalsmiles.com</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin: 25px 0;">
+          <h2 style="font-size: 20px; letter-spacing: 2px;">INVOICE</h2>
+          <p style="font-size: 13px; color: #475569; margin-top: 5px;">Invoice #${invoice.id}</p>
+          <p style="font-size: 12px; color: #475569;">Date: ${new Date(invoice.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+        </div>
+
+        <div class="patient-grid">
+          <div>
+            <div class="info-row"><span style="font-size: 11px; font-weight: 800;">BILL TO</span><span><strong>${invoice.patientName}</strong></span></div>
+            <div class="info-row"><span style="font-size: 11px; font-weight: 800;">PATIENT ID</span><span><strong>${invoice.patientId || '—'}</strong></span></div>
+          </div>
+          <div>
+            <div class="info-row"><span style="font-size: 11px; font-weight: 800;">CONTACT</span><span><strong>${patient?.phone || '—'}</strong></span></div>
+            <div class="info-row"><span style="font-size: 11px; font-weight: 800;">DUE DATE</span><span><strong>${new Date(invoice.dueDate).toLocaleDateString('en-IN')}</strong></span></div>
+          </div>
+        </div>
+
+        <table class="med-table">
+          <thead>
+            <tr>
+              <th>DESCRIPTION</th>
+              <th style="text-align:center;">QTY</th>
+              <th style="text-align:right;">RATE</th>
+              <th style="text-align:right;">AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoice.items.map((item: any) => `
+              <tr>
+                <td style="font-weight:600;">${item.description}</td>
+                <td style="text-align:center;">${item.quantity}</td>
+                <td style="text-align:right;">₹${item.rate.toLocaleString()}</td>
+                <td style="text-align:right; font-weight:700;">₹${item.amount.toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="totals-box">
+            <div class="total-row">
+              <span style="font-size: 14px;">Subtotal</span>
+              <span style="font-size: 14px; font-weight:700;">₹${invoice.subtotal.toLocaleString()}</span>
+            </div>
+            ${invoice.discount > 0 ? `
+              <div class="total-row">
+                <span style="font-size: 14px;">Discount</span>
+                <span style="font-size: 14px; font-weight:700; color:#ef4444;">-₹${invoice.discount.toLocaleString()}</span>
+              </div>
+            ` : ''}
+            <div class="grand-total">
+              <span style="font-size: 16px; font-weight:800;">GRAND TOTAL</span>
+              <span style="font-size: 20px; font-weight:800; color:#3b82f6;">₹${invoice.total.toLocaleString()}</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  `;
 
+        <div class="signature-section">
+          <div>
+            <span style="font-size: 11px; font-style:italic;">Thank you for your business.</span><br/>
+            <span style="font-size: 11px; font-style:italic;">Payments are due within 7 days.</span>
+          </div>
+          <div style="text-align: center;">
+            <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; width: 220px;">
+              <div style="font-size: 13px; font-weight:700;">Authorized Signatory</div>
+              <div style="font-size: 10px; color: #64748b;">OPAL SMILES Dental Clinic & Hospital</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Confidential information. Generated on ${new Date().toLocaleDateString()}</p>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
   pdfContainer.innerHTML = htmlContent;
   document.body.appendChild(pdfContainer);
 
