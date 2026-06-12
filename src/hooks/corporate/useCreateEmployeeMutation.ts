@@ -1,4 +1,5 @@
 import { useApiMutation } from "../useApiMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface CreateEmployeeVariables {
   name: string;
@@ -13,6 +14,7 @@ export interface CreateEmployeeVariables {
   corporate_plan_id: string;
   eligible_date: string;
   status: string;
+  coverage_type?: 'SELF' | 'FAMILY';
 }
 
 export interface CreateEmployeeResponse {
@@ -34,8 +36,14 @@ export interface CreateEmployeeResponse {
 }
 
 export function useCreateEmployeeMutation() {
+  const queryClient = useQueryClient();
   return useApiMutation<CreateEmployeeResponse, CreateEmployeeVariables>({
-    endpoint: "/employee/create",
+    endpoint: "/employee",
     method: "post",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
+      },
+    },
   });
 }

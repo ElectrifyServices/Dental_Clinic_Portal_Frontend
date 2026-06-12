@@ -12,16 +12,26 @@ import {
   FormControl,
   FormMessage,
   Card,
-  CardContent,
   Input,
   Loading,
+  ConfirmModal,
+  CardContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui";
 import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 import {
   inventorySchema,
   type InventoryFormData,
 } from "@/lib/schemas/inventory.schema";
-import styles from "./inventory.module.css";
+import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryCategoriesQuery";
+import { useCreateInventoryCategoryMutation } from "../../hooks/inventory/useCreateInventoryCategoryMutation";
+import { useDeleteInventoryCategoryMutation } from "../../hooks/inventory/useDeleteInventoryCategoryMutation";
+import { SearchableSelect } from "../ui/SearchableSelect";
+import { useState } from "react";
 
 interface InventoryFormProps {
   onClose: () => void;
@@ -30,14 +40,7 @@ interface InventoryFormProps {
   isLoading?: boolean;
 }
 
-const CATEGORY_OPTIONS = [
-  { value: "instruments", label: "Instruments" },
-  { value: "materials", label: "Materials" },
-  { value: "medicines", label: "Medicines" },
-  { value: "equipment", label: "Equipment" },
-  { value: "consumables", label: "Consumables" },
-  { value: "other", label: "Other" },
-] as const;
+// Remove hardcoded CATEGORY_OPTIONS
 
 const UNIT_OPTIONS = [
   "pieces",
@@ -56,21 +59,44 @@ const UNIT_OPTIONS = [
 export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFormProps) {
   const formTitle = useFormTitle("inventory", item ? "edit" : "create");
   const submitLabel = useSubmitLabel("inventory", item ? "edit" : "create");
+  const { data: categoriesData, isLoading: isLoadingCategories } = useInventoryCategoriesQuery();
+
+
+  const createCategoryMutation = useCreateInventoryCategoryMutation();
+
+  const deleteCategoryMutation = useDeleteInventoryCategoryMutation();
+  const [isDeletingCategory, setIsDeletingCategory] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string | null>(null);
+
+  let dynamicCategories: any[] = [];
+  if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
+  else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
+  else if (Array.isArray(categoriesData?.items)) dynamicCategories = categoriesData.items;
+  else if (Array.isArray(categoriesData?.responseObject)) dynamicCategories = categoriesData.responseObject;
+  else if (Array.isArray(categoriesData?.responseObject?.data)) dynamicCategories = categoriesData.responseObject.data;
+  else if (categoriesData?.responseObject && Array.isArray(categoriesData?.responseObject?.categories)) dynamicCategories = categoriesData.responseObject.categories;
+
+  const categoryOptions = dynamicCategories.map((c: any) => ({
+    label: c?.name || c?.value || c?.label || "Unknown",
+    value: c?.id || c?._id || c?.categoryId || c?.category_id || "Unknown",
+    id: c?.id || c?._id || c?.categoryId || c?.category_id || Math.random().toString()
+  })).filter((c: any) => c.value !== "Unknown");
 
   const form = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema) as any,
     defaultValues: {
       name: item?.name ?? "",
-      category: item?.category?.toLowerCase() ?? "instruments",
+      category: item?.category ?? "",
       description: item?.description ?? "",
       currentStock: item?.currentStock ?? 0,
       minStock: item?.minStock ?? 0,
       maxStock: item?.maxStock ?? 100,
-      unit: item?.unit?.toLowerCase() ?? "pieces",
+      unit: typeof item?.unit === 'string' ? item.unit.toLowerCase() : "pieces",
       warranty: item?.warranty ?? "",
       supplier: item?.supplier ?? "",
       cost: item?.cost ?? 0,
-      expiryDate: (item?.expiryDate ?? "").split("T")[0],
+      expiryDate: typeof item?.expiryDate === 'string' ? item.expiryDate.split("T")[0] : "",
       batchNumber: item?.batchNumber ?? "",
     },
   });
@@ -79,16 +105,16 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
     if (item) {
       form.reset({
         name: item.name ?? "",
-        category: item.category?.toLowerCase() ?? "instruments",
+        category: item.category ?? "",
         description: item.description ?? "",
         currentStock: item.currentStock ?? 0,
         minStock: item.minStock ?? 0,
         maxStock: item.maxStock ?? 100,
-        unit: item.unit?.toLowerCase() ?? "pieces",
+        unit: typeof item.unit === 'string' ? item.unit.toLowerCase() : "pieces",
         warranty: item.warranty ?? "",
         supplier: item.supplier ?? "",
         cost: item.cost ?? 0,
-        expiryDate: (item.expiryDate ?? "").split("T")[0],
+        expiryDate: typeof item.expiryDate === 'string' ? item.expiryDate.split("T")[0] : "",
         batchNumber: item.batchNumber ?? "",
       });
     }
@@ -134,7 +160,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Basic Info ─────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Basic Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -160,13 +186,38 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                         Category <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <select {...field} className={selectCls}>
-                          {CATEGORY_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {o.label}
-                            </option>
-                          ))}
-                        </select>
+                        <SearchableSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={categoryOptions}
+                          placeholder="Select category..."
+                          searchPlaceholder="Search categories..."
+                          isLoading={isLoadingCategories}
+                          onCreateOption={async (val) => {
+                            try {
+                              const res = await createCategoryMutation.mutateAsync({ name: val });
+                              const newId = res?.id || res?.data?.id || res?.responseObject?.id || res?.categoryId;
+                              if (newId) {
+                                field.onChange(newId);
+                              } else {
+                                // Fallback just in case
+                                field.onChange(val);
+                              }
+                            } catch (e) {
+                              console.error(e);
+                            }
+                          }}
+                          isCreating={createCategoryMutation.isPending}
+                          createLabel="Add new category"
+                          onDeleteOption={(val) => {
+                            const cat = categoryOptions.find((c: any) => c.value === val);
+                            if (cat?.id) {
+                              setDeleteId(cat.id);
+                              setDeleteName(val);
+                            }
+                          }}
+                          isDeletingValue={isDeletingCategory}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -192,7 +243,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Stock Info ──────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Stock Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -268,15 +319,20 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                       <FormLabel>
                         Unit <span className="text-destructive">*</span>
                       </FormLabel>
-                      <FormControl>
-                        <select {...field} className={selectCls}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
                           {UNIT_OPTIONS.map((u) => (
-                            <option key={u} value={u}>
+                            <SelectItem key={u} value={u}>
                               {u}
-                            </option>
+                            </SelectItem>
                           ))}
-                        </select>
-                      </FormControl>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -327,7 +383,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Purchase Info ───────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Purchase Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -381,6 +437,35 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           </Card>
         </form>
       </Form>
+      )}
+
+      {deleteId && deleteName && (
+        <ConfirmModal
+          title="Delete Category"
+          message={`Are you sure you want to delete the category "${deleteName}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          variant="danger"
+          isLoading={deleteCategoryMutation.isPending || isDeletingCategory !== null}
+          onConfirm={async () => {
+            setIsDeletingCategory(deleteName);
+            try {
+              await deleteCategoryMutation.mutateAsync({ id: deleteId });
+              if (form.getValues().category === deleteName) {
+                form.setValue("category", "");
+              }
+              setDeleteId(null);
+              setDeleteName(null);
+            } catch (e) {
+              console.error(e);
+            } finally {
+              setIsDeletingCategory(null);
+            }
+          }}
+          onCancel={() => {
+            setDeleteId(null);
+            setDeleteName(null);
+          }}
+        />
       )}
     </Modal>
   );

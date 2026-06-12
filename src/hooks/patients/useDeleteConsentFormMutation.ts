@@ -9,11 +9,11 @@ export function useDeleteConsentFormMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, DeleteConsentFormVariables>({
-    getEndpoint: (variables) => `/consentForm/${variables.id}`,
+    getEndpoint: (variables) => `/consent/${variables.id}`,
     method: "delete",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["consentForms"] });
+        queryClient.invalidateQueries({ queryKey: ["consent"] });
       },
     },
   });

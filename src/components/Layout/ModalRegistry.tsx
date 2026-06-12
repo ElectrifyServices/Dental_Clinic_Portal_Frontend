@@ -157,22 +157,29 @@ export function ModalRegistry() {
   const mappedInventoryItem = useMemo(() => {
     if (!currentInvItemId) return null;
     const raw: any = apiInventoryItem;
-    if (!raw) return inventory.find((i: any) => i.id === currentInvItemId);
+    if (!raw) return (inventory || []).find((i: any) => i.id === currentInvItemId);
 
     const itemData = raw.data || raw;
+    if (!itemData) return null;
+
+    const rawExpiry = itemData.expiry_date ?? itemData.expiryDate;
+    const safeExpiry = typeof rawExpiry === 'string' ? rawExpiry.split("T")[0] : "";
+
+    const cat = itemData.category?.id || itemData.category_id || itemData.category || "instruments";
+    const categoryString = typeof cat === 'string' ? cat.toLowerCase() : "instruments";
 
     return {
       id: itemData.id,
       name: itemData.name,
-      category: itemData.category?.toLowerCase() || "instruments",
+      category: categoryString,
       currentStock: itemData.current_stock ?? itemData.currentStock ?? 0,
       minStock: itemData.min_stock ?? itemData.minStock ?? 0,
       maxStock: itemData.max_stock ?? itemData.maxStock ?? 100,
-      unit: itemData.unit?.toLowerCase() || "pieces",
+      unit: typeof itemData.unit === 'string' ? itemData.unit.toLowerCase() : "pieces",
       supplier: itemData.supplier ?? "Unknown",
       lastRestocked: itemData.last_restocked ?? itemData.lastRestocked ?? "",
       cost: itemData.unit_cost ?? itemData.cost ?? 0,
-      expiryDate: (itemData.expiry_date ?? itemData.expiryDate ?? "").split("T")[0],
+      expiryDate: safeExpiry,
       batchNumber: itemData.batch_number ?? itemData.batchNumber ?? "",
       description: itemData.description ?? "",
       warranty: itemData.warranty ?? "",
@@ -885,21 +892,23 @@ export function ModalRegistry() {
           }}
           onSave={async (i: any) => {
             try {
+              const payload: any = {
+                name: i.name,
+                category_id: i.category,
+                description: i.description || "",
+                current_stock: Number(i.currentStock) || 0,
+                min_stock: Number(i.minStock) || 0,
+                max_stock: Number(i.maxStock) || 100,
+                unit: i.unit ? i.unit.toUpperCase() : "PIECES",
+                batch_number: i.batchNumber || "",
+                unit_cost: Number(i.cost) || 0,
+                supplier: i.supplier || "",
+                warranty: i.warranty || "",
+              };
+              if (i.expiryDate && !isNaN(Date.parse(i.expiryDate))) {
+                payload.expiry_date = new Date(i.expiryDate).toISOString();
+              }
               if (!selectedItemId) {
-                const payload = {
-                  name: i.name,
-                  category: i.category ? i.category.toUpperCase() : "INSTRUMENTS",
-                  description: i.description || "",
-                  current_stock: Number(i.currentStock) || 0,
-                  min_stock: Number(i.minStock) || 0,
-                  max_stock: Number(i.maxStock) || 100,
-                  unit: i.unit ? i.unit.toUpperCase() : "PIECES",
-                  batch_number: i.batchNumber || "",
-                  expiry_date: i.expiryDate || "",
-                  unit_cost: Number(i.cost) || 0,
-                  supplier: i.supplier || "",
-                  warranty: i.warranty || "",
-                };
                 const res = await createInventoryMutation(payload);
                 if (res?.id) i.id = res.id;
               } else {
@@ -982,7 +991,7 @@ export function ModalRegistry() {
             try {
               await adjustInventoryMutation({
                 id: ui.id,
-                quantity: ui.quantity,
+                quantity_delta: ui.quantity_delta,
                 reason: ui.reason,
                 reference_id: ui.reference_id,
               });

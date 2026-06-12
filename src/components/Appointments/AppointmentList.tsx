@@ -1,9 +1,18 @@
 import { useState } from "react";
-import { Search, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar as CalendarIcon,
+  Stethoscope,
+  MoreVertical,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { AppointmentTableRow } from "./AppointmentList/AppointmentTableRow";
+import { Badge } from "@/components/ui/Badge";
+import { DataTable } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
@@ -42,6 +51,14 @@ const TYPE_FILTERS = [
 
 const PER_PAGE = 10;
 
+const formatTime = (t: string) => {
+  if (!t || t.includes("AM") || t.includes("PM")) return t || "—";
+  const [h, m] = t.split(":");
+  let hr = parseInt(h);
+  const ap = hr >= 12 ? "PM" : "AM";
+  return `${hr % 12 || 12}:${m} ${ap}`;
+};
+
 export function AppointmentList({
   appointments: propAppointments = [],
   onEditAppointment,
@@ -70,7 +87,10 @@ export function AppointmentList({
 
   const today = new Date();
   const filtered = propAppointments.filter((a) => {
-    const ptName = a.patientName || (a.patient && a.patient.name) || (typeof a.patient === 'string' ? a.patient : "");
+    const ptName =
+      a.patientName ||
+      (a.patient && a.patient.name) ||
+      (typeof a.patient === "string" ? a.patient : "");
     const name = String(ptName || "").toLowerCase();
     const searchMatch =
       name.includes(searchTerm.toLowerCase()) ||
@@ -80,14 +100,11 @@ export function AppointmentList({
     let dateMatch = true;
     if (selectedDate) {
       const aDate = new Date(a.date);
-      const aDateString = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, '0')}-${String(aDate.getDate()).padStart(2, '0')}`;
-      dateMatch = (aDateString === selectedDate);
+      const aDateString = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, "0")}-${String(aDate.getDate()).padStart(2, "0")}`;
+      dateMatch = aDateString === selectedDate;
     }
-
     if (filter === "today")
-      return (
-        searchMatch && new Date(a.date).toDateString() === today.toDateString()
-      );
+      return searchMatch && new Date(a.date).toDateString() === today.toDateString();
     if (filter === "week") {
       const diff = (new Date(a.date).getTime() - today.getTime()) / 86400000;
       return searchMatch && diff >= 0 && diff <= 7;
@@ -98,16 +115,196 @@ export function AppointmentList({
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const formatTime = (t: string) => {
-    if (!t || t.includes("AM") || t.includes("PM")) return t || "—";
-    const [h, m] = t.split(":");
-    let hr = parseInt(h);
-    const ap = hr >= 12 ? "PM" : "AM";
-    return `${hr % 12 || 12}:${m} ${ap}`;
-  };
+  const columns = [
+    {
+      key: "patient",
+      header: "Patient Details",
+      render: (a: any) => {
+        const ptNameRaw =
+          a.patientName ||
+          (a.patient && a.patient.name) ||
+          (typeof a.patient === "string" ? a.patient : "?");
+        const patientName = String(
+          ptNameRaw && ptNameRaw !== "[object Object]" ? ptNameRaw : "?"
+        );
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-primary font-bold shadow-sm uppercase">
+              {patientName.charAt(0)}
+            </div>
+            <div>
+              <div className="font-semibold text-foreground leading-tight mb-0.5 capitalize">
+                {patientName}
+              </div>
+              <div className="text-[10px] text-muted-foreground font-medium">
+                {a.patientPhone || a.phone || "No Phone"}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "doctor",
+      header: "Doctor",
+      render: (a: any) => {
+        const doc = doctors?.find(
+          (d: any) => d.id === a.doctor_id || d.id === a.doctorId
+        );
+        let doctorName = doc ? doc.name : a.doctorName || a.doctor || "";
+        if (doctorName && typeof doctorName === "string") {
+          doctorName = doctorName.replace(/^(Dr\.\s+|Dr\s+)/i, "");
+        }
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+              <Stethoscope className="w-4 h-4 text-muted-foreground/60" />
+            </div>
+            <div>
+              <div className="font-semibold text-foreground text-xs">
+                Dr. {doctorName}
+              </div>
+              <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+                {a.treatmentType || a.type}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "schedule",
+      header: "Schedule",
+      render: (a: any) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
+            <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
+            {a.date
+              ? new Date(a.date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                })
+              : "—"}
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
+            {formatTime(a.time)}{" "}
+            <span className="text-muted-foreground/40 mx-1">•</span>{" "}
+            {a.duration || 15} min
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "fee",
+      header: "Total Fee",
+      align: "right" as const,
+      render: (a: any) => (
+        <div className="font-semibold text-foreground text-sm">
+          ₹{(a.fee || 0).toLocaleString()}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Current Status",
+      render: (a: any) => (
+        <Badge
+          variant={
+            STATUS_VARIANTS[a.status] ||
+            STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
+            STATUS_VARIANTS[
+              (a.status || "").toLowerCase().replace("_", "-")
+            ] ||
+            "gray"
+          }
+          className="text-[10px] px-3 py-0.5 font-medium"
+        >
+          {String(a.status || "")
+            .replace("_", " ")
+            .replace("-", " ")}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "center" as const,
+      render: (a: any) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const menuHeight = 240;
+            const windowHeight = window.innerHeight;
+            let top = rect.bottom + 8;
+            if (rect.bottom + menuHeight > windowHeight) {
+              top = rect.top - menuHeight;
+              if (top < 0) top = 10;
+            }
+            setMenuPos({ top, left: rect.right - 200 });
+            setOpenMenuId(a.id === openMenuId ? null : a.id);
+          }}
+        >
+          <MoreVertical className="w-4 h-4" />
+        </Button>
+      ),
+    },
+  ];
+
+  const paginationFooter =
+    totalPages > 1 ? (
+      <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border">
+        <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
+          Showing {(page - 1) * PER_PAGE + 1}–
+          {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}{" "}
+          entries
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-xl border-border"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </Button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                variant={p === page ? "default" : "ghost"}
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${
+                  p === page
+                    ? "bg-primary text-white shadow-md hover:bg-primary/90"
+                    : "text-muted-foreground/60 hover:bg-muted"
+                }`}
+              >
+                {p}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-xl border-border"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        </div>
+      </div>
+    ) : undefined;
 
   return (
     <div className="space-y-6">
+      {/* Filters row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-1 items-center gap-4 max-w-2xl">
           <div className="relative flex-1 max-w-md">
@@ -128,7 +325,7 @@ export function AppointmentList({
               value={selectedDate}
               onChange={(e) => {
                 setSelectedDate?.(e.target.value);
-                setFilter("all"); // reset other filters if user picks a date manually
+                setFilter("all");
                 setPage(1);
               }}
               className="h-10 rounded-2xl bg-card border-border"
@@ -156,115 +353,17 @@ export function AppointmentList({
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                {[
-                  "Patient Details",
-                  "Doctor",
-                  "Schedule",
-                  "Total Fee",
-                  "Current Status",
-                  "Actions",
-                ].map((h, i) => (
-                  <th
-                    key={h}
-                    className={`px-6 py-5 font-semibold text-muted-foreground/60 uppercase tracking-widest text-[10px] ${i === 3 ? "text-right" : i === 5 ? "text-center" : ""}`}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-24 text-center">
-                    <Clock className="w-12 h-12 text-muted-foreground/10 mx-auto mb-4" />
-                    <p className="text-muted-foreground/60 font-semibold uppercase tracking-widest text-[10px]">
-                      No records found
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                paginated.map((a) => (
-                  <AppointmentTableRow
-                    key={a.id}
-                    appointment={a}
-                    doctors={doctors}
-                    statusVariants={STATUS_VARIANTS}
-                    formatTime={formatTime}
-                    onOpenMenu={(e, id) => {
-                      e.stopPropagation();
-                      const rect = (
-                        e.currentTarget as HTMLElement
-                      ).getBoundingClientRect();
-                      const menuHeight = 240; // Estimated height for appointment menu (has more items)
-                      const windowHeight = window.innerHeight;
+      {/* Table */}
+      <DataTable
+        columns={columns}
+        data={paginated}
+        rowKey={(a) => a.id}
+        emptyIcon={<Clock className="w-6 h-6" />}
+        emptyTitle="No records found"
+        footer={paginationFooter}
+      />
 
-                      let top = rect.bottom + 8;
-                      if (rect.bottom + menuHeight > windowHeight) {
-                        top = rect.top - menuHeight;
-                        if (top < 0) top = 10;
-                      }
-
-                      setMenuPos({ top, left: rect.right - 200 });
-                      setOpenMenuId(id === openMenuId ? null : id);
-                    }}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border">
-            <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
-              Showing {(page - 1) * PER_PAGE + 1}–
-              {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}{" "}
-              entries
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-xl border-border"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-              </Button>
-              <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (p) => (
-                    <Button
-                      variant={p === page ? "default" : "ghost"}
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${p === page ? "bg-primary text-white shadow-md hover:bg-primary/90" : "text-muted-foreground/60 hover:bg-muted"}`}
-                    >
-                      {p}
-                    </Button>
-                  ),
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-xl border-border"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
+      {/* Portal action menu */}
       {openMenuId &&
         createPortal(
           <AppointmentActionMenu
@@ -276,7 +375,7 @@ export function AppointmentList({
             onClose={() => setOpenMenuId(null)}
             pos={menuPos}
           />,
-          document.body,
+          document.body
         )}
     </div>
   );

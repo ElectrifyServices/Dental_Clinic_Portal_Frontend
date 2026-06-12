@@ -86,8 +86,25 @@ export function CorporatePlanCard({ plan, BENEFIT_LABELS, isUpdatingStatus, onEd
             <h3 className="text-lg font-bold text-foreground tracking-tight leading-tight truncate">{plan.name}</h3>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${c.bg} ${c.text} ${c.border}`}>{plan.code}</span>
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${STATUS_BADGE[status]}`}>{STATUS_LABEL[status]}</span>
+            {/* Category badge */}
+            {plan.planCategory === 'individual' ? (
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest bg-teal-100 text-teal-700 border-teal-200">Individual</span>
+            ) : (
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest bg-blue-100 text-blue-700 border-blue-200">Corporate</span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground font-bold leading-tight">{plan.companyName}</p>
+          {/* Annual fee + pax info */}
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            {plan.annualFee != null && plan.planCategory === 'individual' && (
+              <span className="text-[10px] font-black text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">₹{plan.annualFee.toLocaleString()}/year</span>
+            )}
+            {(plan.maxDependents ?? 0) > 0 && (
+              <span className="flex items-center gap-1 text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+                <Users className="w-3 h-3" />+{plan.maxDependents} pax
+              </span>
+            )}
+          </div>
           {plan.description && <p className="text-xs text-muted-foreground/60 mt-1 font-medium leading-relaxed line-clamp-2">{plan.description}</p>}
         </div>
 

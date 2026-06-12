@@ -292,9 +292,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       const prevPhone = form.getValues("previousDoctorPhone")?.trim();
       const prevAddress = form.getValues("previousClinicAddress")?.trim();
       const prevDate = form.getValues("previousLastVisitDate")?.trim();
-      const prevReason = form.getValues("previousReason")?.trim();
-
-      const anyFilled = prevDocName || prevClinicName || prevPhone || prevAddress || prevDate || prevReason;
+      const anyFilled = prevDocName || prevClinicName || prevPhone || prevAddress || prevDate;
       
       if (anyFilled) {
         if (!prevDocName) errors.previousDoctorName = "Previous Doctor Name is required";

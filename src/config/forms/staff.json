@@ -2,10 +2,13 @@
   "formId": "staff",
   "version": "1.0.0",
   "title": {
-    "create": "Staff Onboarding",
-    "edit": "Update Staff Member"
+    "create": "Team Onboarding",
+    "edit": "Update Team Member"
   },
-  "submitLabel": { "create": "Register Member", "edit": "Save Changes" },
+  "submitLabel": {
+    "create": "Register Member",
+    "edit": "Save Changes"
+  },
   "cancelLabel": "Cancel",
   "steps": [
     {
@@ -38,7 +41,7 @@
               "name": "email",
               "label": "Email Address",
               "type": "email",
-              "required": true,
+              "required": false,
               "placeholder": "doctor@clinic.com",
               "colSpan": 6
             },
@@ -81,10 +84,22 @@
               "defaultValue": "doctor",
               "colSpan": 12,
               "options": [
-                { "value": "admin",        "label": "Admin — Full access to all modules" },
-                { "value": "doctor",       "label": "Doctor — Clinical modules + patient management" },
-                { "value": "receptionist", "label": "Receptionist — Front desk, appointments & billing" },
-                { "value": "assistant",    "label": "Assistant — Limited clinical support access" }
+                {
+                  "value": "admin",
+                  "label": "Admin — Full access to all modules"
+                },
+                {
+                  "value": "doctor",
+                  "label": "Doctor — Clinical modules + patient management"
+                },
+                {
+                  "value": "receptionist",
+                  "label": "Receptionist — Front desk, appointments & billing"
+                },
+                {
+                  "value": "assistant",
+                  "label": "Assistant — Limited clinical support access"
+                }
               ]
             }
           ]
@@ -136,16 +151,46 @@
               "placeholder": "Select specialization",
               "colSpan": 6,
               "options": [
-                { "value": "General Dentistry",    "label": "General Dentistry" },
-                { "value": "Orthodontics",         "label": "Orthodontics" },
-                { "value": "Oral Surgery",         "label": "Oral Surgery" },
-                { "value": "Endodontics",          "label": "Endodontics (Root Canal)" },
-                { "value": "Periodontics",         "label": "Periodontics (Gum Care)" },
-                { "value": "Prosthodontics",       "label": "Prosthodontics (Dentures)" },
-                { "value": "Pedodontics",          "label": "Pedodontics (Children)" },
-                { "value": "Oral Medicine",        "label": "Oral Medicine & Radiology" },
-                { "value": "Cosmetic Dentistry",   "label": "Cosmetic Dentistry" },
-                { "value": "Implantology",         "label": "Implantology" }
+                {
+                  "value": "General Dentistry",
+                  "label": "General Dentistry"
+                },
+                {
+                  "value": "Orthodontics",
+                  "label": "Orthodontics"
+                },
+                {
+                  "value": "Oral Surgery",
+                  "label": "Oral Surgery"
+                },
+                {
+                  "value": "Endodontics",
+                  "label": "Endodontics (Root Canal)"
+                },
+                {
+                  "value": "Periodontics",
+                  "label": "Periodontics (Gum Care)"
+                },
+                {
+                  "value": "Prosthodontics",
+                  "label": "Prosthodontics (Dentures)"
+                },
+                {
+                  "value": "Pedodontics",
+                  "label": "Pedodontics (Children)"
+                },
+                {
+                  "value": "Oral Medicine",
+                  "label": "Oral Medicine & Radiology"
+                },
+                {
+                  "value": "Cosmetic Dentistry",
+                  "label": "Cosmetic Dentistry"
+                },
+                {
+                  "value": "Implantology",
+                  "label": "Implantology"
+                }
               ]
             },
             {
@@ -160,7 +205,10 @@
               "label": "Years of Experience",
               "type": "number",
               "placeholder": "e.g. 5",
-              "validation": { "min": 0, "max": 60 },
+              "validation": {
+                "min": 0,
+                "max": 60
+              },
               "colSpan": 4
             },
             {
@@ -182,7 +230,9 @@
               "label": "Consultation Fee (₹)",
               "type": "number",
               "placeholder": "500",
-              "validation": { "min": 0 },
+              "validation": {
+                "min": 0
+              },
               "colSpan": 4
             },
             {
@@ -190,7 +240,9 @@
               "label": "Monthly Salary (₹)",
               "type": "number",
               "placeholder": "0",
-              "validation": { "min": 0 },
+              "validation": {
+                "min": 0
+              },
               "colSpan": 4
             },
             {
@@ -198,7 +250,10 @@
               "label": "Profit Share %",
               "type": "number",
               "defaultValue": 0,
-              "validation": { "min": 0, "max": 100 },
+              "validation": {
+                "min": 0,
+                "max": 100
+              },
               "colSpan": 4
             }
           ]

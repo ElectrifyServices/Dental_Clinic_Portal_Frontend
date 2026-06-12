@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Plus, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 
 interface Prescription {
   id: string;
@@ -70,26 +71,29 @@ export function PrescriptionSection({
               <Label className="block text-[10px] font-bold text-emerald-800 mb-1.5 uppercase tracking-widest">
                 Dosage
               </Label>
-              <select
+              <Select
                 value={prescription.dosage}
-                onChange={(e) =>
+                onValueChange={(val) =>
                   onUpdatePrescription(
                     prescription.id,
                     "dosage",
-                    e.target.value,
+                    val,
                   )
                 }
-                className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold cursor-pointer"
               >
-                <option value="">Select Dosage</option>
-                <option value="1-0-0">1 - 0 - 0</option>
-                <option value="0-1-0">0 - 1 - 0</option>
-                <option value="0-0-1">0 - 0 - 1</option>
-                <option value="1-1-0">1 - 1 - 0</option>
-                <option value="1-0-1">1 - 0 - 1</option>
-                <option value="0-1-1">0 - 1 - 1</option>
-                <option value="1-1-1">1 - 1 - 1</option>
-              </select>
+                <SelectTrigger className="w-full px-4 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card text-sm font-semibold h-11 bg-background">
+                  <SelectValue placeholder="Select Dosage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-0-0">1 - 0 - 0</SelectItem>
+                  <SelectItem value="0-1-0">0 - 1 - 0</SelectItem>
+                  <SelectItem value="0-0-1">0 - 0 - 1</SelectItem>
+                  <SelectItem value="1-1-0">1 - 1 - 0</SelectItem>
+                  <SelectItem value="1-0-1">1 - 0 - 1</SelectItem>
+                  <SelectItem value="0-1-1">0 - 1 - 1</SelectItem>
+                  <SelectItem value="1-1-1">1 - 1 - 1</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex-1 min-w-[120px]">
@@ -149,22 +153,26 @@ export function PrescriptionSection({
                   className="w-16 px-2 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card text-center outline-none text-sm font-semibold"
                   placeholder="5"
                 />
-                <select
+                <Select
                   value={prescription.durationUnit || "Days"}
-                  onChange={(e) =>
+                  onValueChange={(val) =>
                     onUpdatePrescription(
                       prescription.id,
                       "durationUnit",
-                      e.target.value,
+                      val,
                     )
                   }
-                  className="flex-1 px-2 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card outline-none text-sm font-semibold cursor-pointer"
                 >
-                  <option value="Days">Days</option>
-                  <option value="Weeks">Weeks</option>
-                  <option value="Months">Months</option>
-                  <option value="Years">Years</option>
-                </select>
+                  <SelectTrigger className="flex-1 px-3 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-card text-sm font-semibold h-11 bg-background">
+                    <SelectValue placeholder="Days" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Days">Days</SelectItem>
+                    <SelectItem value="Weeks">Weeks</SelectItem>
+                    <SelectItem value="Months">Months</SelectItem>
+                    <SelectItem value="Years">Years</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -191,6 +199,7 @@ export function PrescriptionSection({
               {prescriptions.length > 1 && (
                 <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => onRemovePrescription(prescription.id)}
                   className="p-2.5 text-red-500 hover:bg-destructive/10 rounded-xl transition-all duration-200 shrink-0"
                   title="Remove Medicine"

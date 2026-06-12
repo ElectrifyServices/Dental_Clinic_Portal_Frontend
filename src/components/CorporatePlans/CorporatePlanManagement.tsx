@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/Input";
 import React, { useState } from 'react';
-import { Plus, Building2, Search, Info, Users } from 'lucide-react';
-import { CorporatePlan } from '../../types';
+import { Plus, Building2, Search, Info, Users, UserPlus } from 'lucide-react';
+import { CorporatePlan, PlanCategory } from '../../types';
 import { Button, PageHeader, Loading } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
@@ -50,13 +50,18 @@ export function CorporatePlanManagement({
   const [editing, setEditing] = useState<CorporatePlan | null>(null);
   const [localSearch, setLocalSearch] = useState('');
   const [localFilter, setLocalFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | PlanCategory>('all');
 
   const search = propSearch !== undefined ? propSearch : localSearch;
   const setSearch = propOnSearchChange || setLocalSearch;
   const filter = propFilter !== undefined ? propFilter : localFilter;
   const setFilter = propOnFilterChange || setLocalFilter;
 
-  const filtered = plans;
+  const filtered = plans.filter(p => {
+    if (categoryFilter === 'corporate') return !p.planCategory || p.planCategory === 'corporate';
+    if (categoryFilter === 'individual') return p.planCategory === 'individual';
+    return true;
+  });
   const handleDelete = (id: string) => {
     confirmDelete(
       'Delete Corporate Plan',
@@ -91,11 +96,12 @@ export function CorporatePlanManagement({
   return (
     <div className="space-y-3">
       <PageHeader
-        title="Corporate Plans"
+        title="Plans"
         subtitle={`${activePlans} active plan${activePlans !== 1 ? 's' : ''} & ${totalMembers} enrolled member${totalMembers !== 1 ? 's' : ''}`}
         action={
           <Button onClick={openNew} className="gap-2 shadow-lg shadow-primary/10">
-            <Plus className="w-4 h-4" /> Create New Plan
+            {categoryFilter === 'individual' ? <UserPlus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {categoryFilter === 'individual' ? 'Create Individual Plan' : 'Create New Plan'}
           </Button>
         }
       >
@@ -134,6 +140,19 @@ export function CorporatePlanManagement({
           <Input type="text" placeholder="Search plans, companies" value={search} onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" />
         </div>
+        {/* Category filter */}
+        <div className="flex p-1 bg-muted rounded-xl border border-border">
+          {([
+            { value: 'all', label: 'All' },
+            { value: 'corporate', label: 'Corporate' },
+            { value: 'individual', label: 'Individual' },
+          ] as { value: 'all' | PlanCategory; label: string }[]).map(c => (
+            <Button key={c.value} variant={categoryFilter === c.value ? "default" : "ghost"} onClick={() => setCategoryFilter(c.value)}
+              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${categoryFilter === c.value ? "shadow-sm" : ""}`}>
+              {c.label}
+            </Button>
+          ))}
+        </div>
         <div className="flex p-1 bg-muted rounded-xl border border-border">
           {(['all', 'active', 'inactive'] as const).map(f => (
             <Button key={f} variant={filter === f ? "default" : "ghost"} onClick={() => setFilter(f)}
@@ -160,7 +179,7 @@ export function CorporatePlanManagement({
               key={plan.id}
               plan={plan}
               BENEFIT_LABELS={BENEFIT_LABELS}
-              isUpdatingStatus={updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
+              isUpdatingStatus={updateStatusMutation.isPending || (updateStatusMutation as any).isPending}
               onEdit={openEdit}
               onDelete={handleDelete}
               onToggle={() => handleToggle(plan)}

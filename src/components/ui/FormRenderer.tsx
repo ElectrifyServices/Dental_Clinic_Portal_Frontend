@@ -16,17 +16,27 @@
 import React from 'react';
 import type { FormField, SelectOption } from '../../config/forms/schema';
 import { SearchableSelect } from './SearchableSelect';
+import { Label } from "./Label";
+import { Input } from "./Input";
+import { Textarea } from "./Textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
 
 // Inline label + error wrapper (replaces the deleted ./FormField module)
 function FormFieldWrapper({
   label, error, className, children,
-}: { label?: string; error?: string; className?: string; children: React.ReactNode }) {
+}: { label?: React.ReactNode; error?: string; className?: string; children: React.ReactNode }) {
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
+        <Label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">
           {label}
-        </label>
+        </Label>
       )}
       {children}
       {error && <p className="text-xs text-red-500 mt-1 font-medium">{error}</p>}
@@ -80,7 +90,13 @@ export function FormRenderer({
 }: FormRendererProps) {
   const isDisabled = disabledProp ?? field.disabled ?? false;
   const isRequired = field.required ?? false;
-  const label = isRequired ? `${field.label} *` : field.label;
+  const label = isRequired ? (
+    <>
+      {field.label} <span className="text-destructive font-black">*</span>
+    </>
+  ) : (
+    field.label
+  );
   const options = dynamicOptions ?? field.options ?? [];
 
   // Compose the input class
@@ -100,8 +116,13 @@ export function FormRenderer({
     const { type } = e.target as HTMLInputElement;
     const raw = e.target.value;
     let parsed: any = raw;
-    if (type === 'number') parsed = raw === '' ? '' : Number(raw);
-    if (type === 'checkbox') parsed = (e.target as HTMLInputElement).checked;
+    if (field.type === 'phone') {
+      parsed = raw.replace(/\D/g, '').slice(0, 10);
+    } else if (type === 'number') {
+      parsed = raw === '' ? '' : Number(raw);
+    } else if (type === 'checkbox') {
+      parsed = (e.target as HTMLInputElement).checked;
+    }
     onChange(field.name, parsed);
   };
 
@@ -111,7 +132,7 @@ export function FormRenderer({
       // ── Textarea ──────────────────────────────────────────────────────────
       case 'textarea':
         return (
-          <textarea
+          <Textarea
             name={field.name}
             value={value ?? ''}
             onChange={handleInput}
@@ -138,27 +159,28 @@ export function FormRenderer({
       // ── Select ────────────────────────────────────────────────────────────
       case 'select':
         return (
-          <select
-            name={field.name}
+          <Select
             value={value ?? ''}
-            onChange={handleInput}
-            required={isRequired}
+            onValueChange={(val) => onChange(field.name, val)}
             disabled={isDisabled}
-            className={`${inputCls} appearance-none`}
           >
-            {!isRequired && <option value="">— Select —</option>}
-            {options.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className={inputCls}>
+              <SelectValue placeholder={field.placeholder ?? "Select option..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         );
 
       // ── Single Checkbox ───────────────────────────────────────────────────
       case 'checkbox':
         return (
-          <label className="flex items-center gap-3 py-1 cursor-pointer select-none">
+          <Label className="flex items-center gap-3 py-1 cursor-pointer select-none">
             <input
               type="checkbox"
               name={field.name}
@@ -168,7 +190,7 @@ export function FormRenderer({
               className="w-4 h-4 accent-primary rounded"
             />
             <span className="text-sm font-medium text-foreground">{field.hint ?? field.label}</span>
-          </label>
+          </Label>
         );
 
       // ── Radio group ───────────────────────────────────────────────────────
@@ -176,7 +198,7 @@ export function FormRenderer({
         return (
           <div className="flex flex-wrap gap-3 pt-1">
             {options.map(opt => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+              <Label key={opt.value} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
                   name={field.name}
@@ -187,7 +209,7 @@ export function FormRenderer({
                   className="w-4 h-4 accent-primary"
                 />
                 <span className="text-sm font-medium">{opt.label}</span>
-              </label>
+              </Label>
             ))}
           </div>
         );
@@ -196,7 +218,7 @@ export function FormRenderer({
       case 'file':
         return (
           <div>
-            <input
+            <Input
               type="file"
               name={field.name}
               onChange={e => onChange(field.name, e.target.files)}
@@ -211,14 +233,14 @@ export function FormRenderer({
 
       // ── Hidden ────────────────────────────────────────────────────────────
       case 'hidden':
-        return <input type="hidden" name={field.name} value={value ?? ''} />;
+        return <Input type="hidden" name={field.name} value={value ?? ''} />;
 
       // ── All standard text-like inputs (text, email, phone, number, date, time, password) ──
       default: {
         const htmlType =
           field.type === 'phone' ? 'tel' : field.type;
         return (
-          <input
+          <Input
             type={htmlType}
             name={field.name}
             value={value ?? ''}
@@ -230,7 +252,7 @@ export function FormRenderer({
             min={field.validation?.min}
             max={field.validation?.max}
             minLength={field.validation?.minLength}
-            maxLength={field.validation?.maxLength}
+            maxLength={field.type === 'phone' ? 10 : field.validation?.maxLength}
             className={inputCls}
           />
         );

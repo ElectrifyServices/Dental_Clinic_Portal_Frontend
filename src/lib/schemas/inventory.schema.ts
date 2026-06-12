@@ -2,9 +2,7 @@ import { z } from 'zod';
 
 export const inventorySchema = z.object({
   name: z.string().min(1, 'Item name is required'),
-  category: z.enum(['instruments', 'materials', 'medicines', 'equipment', 'consumables', 'other'], {
-    message: 'Please select a category',
-  }),
+  category: z.string().min(1, 'Please select a category'),
   description: z.string().optional(),
   currentStock: z.coerce.number().min(0, 'Stock cannot be negative'),
   minStock: z.coerce.number().min(0, 'Min stock cannot be negative'),

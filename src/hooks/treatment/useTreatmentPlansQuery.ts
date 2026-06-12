@@ -136,7 +136,8 @@ export function useTreatmentPlansQuery(
     data: requestBody, // Send data in the request body
     options: {
       enabled: options?.enabled ?? true,
-      staleTime: 30 * 1000,
+      staleTime: 0,
+      refetchOnMount: 'always',
     },
   });
 }

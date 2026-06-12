@@ -1,6 +1,13 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import React from "react";
 import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 
@@ -81,18 +88,22 @@ export function FollowUpScheduler({
               <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Assign Doctor
               </Label>
-              <select
+              <Select
                 value={followUpDoctorId}
-                onChange={(e) => onDoctorChange(e.target.value)}
+                onValueChange={onDoctorChange}
                 disabled={!!bookedFollowUp}
-                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               >
-                {doctors.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({d.specialization})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="rounded-xl text-sm border-primary/30">
+                  <SelectValue placeholder="Select doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name} ({d.specialization})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

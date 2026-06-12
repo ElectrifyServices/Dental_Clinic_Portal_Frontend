@@ -88,6 +88,7 @@ export function SearchableSelect({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
+          variant="outline"
           type="button"
           disabled={disabled || isLoading}
           className={cn(
@@ -119,13 +120,13 @@ export function SearchableSelect({
             className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {searchQuery && (
-            <Button
+            <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
+              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-colors"
             >
               <X className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           )}
         </div>
 
@@ -149,14 +150,14 @@ export function SearchableSelect({
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"
                   )}
                 >
-                  <Button
+                  <button
                     type="button"
                     onClick={() => handleSelect(optValue)}
-                    className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer"
+                    className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none"
                   >
                     <span className="truncate pr-2">{optLabel}</span>
                     {isSelected && <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
-                  </Button>
+                  </button>
                   {onDeleteOption && (
                     <button
                       type="button"

@@ -57,13 +57,13 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode; variant:
 
 const TYPE_FILTERS = [
   { key: 'all', label: 'All' },
-  { key: 'previous-prescriptions', label: 'Previous Prescriptions' },
-  { key: 'blood-reports', label: 'Blood Reports' },
-  { key: 'ecg-reports', label: 'ECG Reports' },
-  { key: 'physician-clearance', label: 'Physician Clearance' },
-  { key: 'xrays-imaging', label: 'X-Rays / Imaging' },
-  { key: 'discharge-summary', label: 'Discharge Summary' },
-  { key: 'other', label: 'Other' }
+  { key: 'CONSULTATION', label: 'Consultation' },
+  { key: 'PRESCRIPTION', label: 'Prescription' },
+  { key: 'LAB_REPORT', label: 'Lab Report' },
+  { key: 'X_RAY', label: 'X-Ray' },
+  { key: 'TREATMENT_NOTE', label: 'Treatment Note' },
+  { key: 'BILLING_RECORD', label: 'Billing Record' },
+  { key: 'APPOINTMENT_VISIT', label: 'Appointment Visit' }
 ];
 
 export function EMRList({
@@ -123,9 +123,9 @@ export function EMRList({
           <Button variant="outline" size="icon-sm" onClick={() => onViewRecord(r)} title="View">
             <Eye className="w-4 h-4 text-primary" />
           </Button>
-          <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Export">
+          {/* <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Export">
             <Download className="w-4 h-4 text-muted-foreground" />
-          </Button>
+          </Button> */}
         </div>
       )
     }

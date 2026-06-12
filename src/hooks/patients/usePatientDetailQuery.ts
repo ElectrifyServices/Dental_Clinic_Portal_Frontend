@@ -19,6 +19,10 @@ export function normalizePatient(payload: any) {
 
   const prevDental = p.previous_dental || {};
 
+  // Medical History
+  const rawMedHistory = p.medical_histories || p.medical_history || p.medicalHistories || [];
+  const rawAllergies = p.allergies || [];
+
   return {
     ...p,
     id: p.id,
@@ -50,10 +54,10 @@ export function normalizePatient(payload: any) {
     defaultDiscount: p.discount_percentage !== undefined ? p.discount_percentage : (p.defaultDiscount || 0),
     
     // Medical History
-    medicalHistory: (p.medicalHistories || []).map((m: any) => m.history_id || m.medical_history_id || m.id),
-    allergies: (p.allergies || []).map((a: any) => a.allergy_id || a.id),
-    medicalHistoryNames: (p.medicalHistories || []).map((m: any) => m.history?.name || m.name || ''),
-    allergyNames: (p.allergies || []).map((a: any) => a.allergy?.name || a.name || ''),
+    medicalHistory: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
+    allergies: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
+    medicalHistoryNames: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history?.name || m.name || m.condition || m.history_name || '') : m).filter(Boolean),
+    allergyNames: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy?.name || a.name || a.allergen || '') : a).filter(Boolean),
     pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
     
     // Previous Dentist (nested in previous_dental)

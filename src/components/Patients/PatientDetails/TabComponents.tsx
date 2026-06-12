@@ -614,7 +614,7 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
                       {member.relation || "Relation N/A"}
                     </span>
                     <span className="text-xs text-muted-foreground/60 font-medium">
-                      ID: {member.id}
+                      ID: {member.patientCode || member.patient_code || member.id}
                     </span>
                   </div>
                 </div>

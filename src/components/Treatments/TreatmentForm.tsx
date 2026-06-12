@@ -82,30 +82,34 @@ export function TreatmentForm({
       }
     >
       <form className="space-y-8 py-2">
-        <BasicInfoSection
-          formData={formData}
-          handleChange={handleChange}
-          allPatients={allPatients}
-          doctors={doctors}
-          procedures={procedures}
-          teeth={teeth}
-          pendingPlans={pendingPlans}
-          onLoadPlan={handleLoadPlan}
-          isEdit={!!treatment}
-        />
+        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
+          <BasicInfoSection
+            formData={formData}
+            handleChange={handleChange}
+            allPatients={allPatients}
+            doctors={doctors}
+            procedures={procedures}
+            teeth={teeth}
+            pendingPlans={pendingPlans}
+            onLoadPlan={handleLoadPlan}
+            isEdit={!!treatment}
+          />
+        </div>
 
         <div className="h-px bg-border/50" />
 
-        <SessionPlannerSection
-          sessions={treatmentSessions}
-          onAddSession={addSession}
-          onRemoveSession={removeSession}
-          onUpdateSession={updateSession}
-          baseDate={formData.date}
-        />
+        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
+          <SessionPlannerSection
+            sessions={treatmentSessions}
+            onAddSession={addSession}
+            onRemoveSession={removeSession}
+            onUpdateSession={updateSession}
+            baseDate={formData.date}
+          />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-          <div className="space-y-6">
+          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
             <PrescriptionSection
               prescriptions={prescriptions}
               onAddPrescription={addPrescription}
@@ -113,20 +117,18 @@ export function TreatmentForm({
               onUpdatePrescription={updatePrescription}
             />
           </div>
-          <div className="space-y-6">
-            <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
-              <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-                Clinical Case Notes
-              </Label>
-              <Textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={6}
-                className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
-                placeholder="Enter detailed treatment observations, history, and special instructions..."
-              />
-            </div>
+          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
+            <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              Clinical Case Notes
+            </Label>
+            <Textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows={6}
+              className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
+              placeholder="Enter detailed treatment observations, history, and special instructions..."
+            />
           </div>
         </div>
 

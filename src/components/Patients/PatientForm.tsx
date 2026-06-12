@@ -56,17 +56,38 @@ export function PatientForm({
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
   const [allergySearch, setAllergySearch] = useState("");
-  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<
-    string[]
-  >(patient?.medicalHistory || []);
+  const extractIds = (field: any, idKeys: string[]) => {
+    if (!field) return [];
+    if (typeof field === "string") return field.split('\n').filter(Boolean);
+    if (Array.isArray(field)) {
+      return field.map((item: any) => {
+        if (typeof item === "object" && item !== null) {
+          for (const key of idKeys) {
+            if (item[key]) return item[key];
+          }
+          return "";
+        }
+        return String(item);
+      }).filter(Boolean);
+    }
+    return [];
+  };
+
+  const [selectedMedicalHistory, setSelectedMedicalHistory] = useState<string[]>(
+    extractIds(patient?.medicalHistories || patient?.medical_histories || patient?.medicalHistory, ['history_id', 'medical_history_id', 'id', 'name'])
+  );
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
-    patient?.allergies || [],
+    extractIds(patient?.allergies, ['allergy_id', 'id', 'allergy_name', 'name'])
   );
 
   React.useEffect(() => {
     if (patient) {
-      if (patient.medicalHistory) setSelectedMedicalHistory(patient.medicalHistory);
-      if (patient.allergies) setSelectedAllergies(patient.allergies);
+      setSelectedMedicalHistory(
+        extractIds(patient.medicalHistories || patient.medical_histories || patient.medicalHistory, ['history_id', 'medical_history_id', 'id', 'name'])
+      );
+      setSelectedAllergies(
+        extractIds(patient.allergies, ['allergy_id', 'id', 'allergy_name', 'name'])
+      );
     }
   }, [patient]);
 
@@ -96,7 +117,7 @@ export function PatientForm({
 
   const getStepIndicator = (stepNumber: number) => {
     if (stepNumber < step) {
-      return <CheckCircle className="w-6 h-6 text-primary" />;
+      return <CheckCircle className="w-6 h-6 text-emerald-500" />;
     } else if (stepNumber === step) {
       return (
         <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
@@ -127,9 +148,9 @@ export function PatientForm({
         <div className="flex justify-between items-center w-full">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
-            className="text-muted-foreground"
+            className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
           >
             {step === 1 ? "Cancel" : "Previous Step"}
           </Button>
@@ -168,28 +189,34 @@ export function PatientForm({
         </div>
       }
     >
-      <div className="space-y-8">
-        <div className="flex items-center gap-6 md:gap-12 pb-6 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap -mx-6 px-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between pb-4 border-b border-border px-2">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },
             { num: 3, label: "Consent" },
             { num: 4, label: "Review" },
-          ].map((s) => (
-            <div key={s.num} className="flex items-center gap-3 relative shrink-0">
-              {getStepIndicator(s.num)}
-              <span
-                className={`text-xs font-bold uppercase tracking-widest ${step === s.num ? "text-primary" : "text-muted-foreground/60"}`}
-              >
-                {s.label}
-              </span>
-              {s.num < 4 && (
-                <div
-                  className={`absolute -right-8 w-4 h-0.5 ${step > s.num ? "bg-primary" : "bg-muted"}`}
-                />
-              )}
-            </div>
-          ))}
+          ].map((s, i, arr) => {
+            const isActive = step === s.num;
+            const isDone = step > s.num;
+            return (
+              <React.Fragment key={s.num}>
+                <div className="flex items-center gap-2 shrink-0">
+                  {getStepIndicator(s.num)}
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest hidden sm:inline-block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground/60"}`}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {i < arr.length - 1 && (
+                  <div
+                    className={`flex-1 h-[2px] rounded-full mx-4 transition-all duration-300 ${isDone ? "bg-emerald-500" : "bg-gray-200"}`}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         <form onSubmit={handleSubmit}>

@@ -13,10 +13,19 @@ export function InventoryHistoryViewer({ itemId, itemName, onClose }: InventoryH
   const { data: movementsResponse, isLoading } = useInventoryMovementsQuery(itemId);
 
   let movements: InventoryMovement[] = [];
-  if (Array.isArray(movementsResponse)) {
-    movements = movementsResponse;
-  } else if (movementsResponse && Array.isArray((movementsResponse as any).data)) {
-    movements = (movementsResponse as any).data;
+  const res: any = movementsResponse;
+  if (Array.isArray(res)) {
+    movements = res;
+  } else if (res?.movements && Array.isArray(res.movements)) {
+    movements = res.movements;
+  } else if (res?.data && Array.isArray(res.data)) {
+    movements = res.data;
+  } else if (res?.data?.movements && Array.isArray(res.data.movements)) {
+    movements = res.data.movements;
+  } else if (res?.responseObject && Array.isArray(res.responseObject)) {
+    movements = res.responseObject;
+  } else if (res?.responseObject?.movements && Array.isArray(res.responseObject.movements)) {
+    movements = res.responseObject.movements;
   }
 
   const getMovementDetails = (type: string) => {

@@ -67,7 +67,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div className="md:col-span-2 space-y-1.5">
           <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
-            Treatment Type
+            Appointment Type
           </Label>
           <SearchableSelect
             value={treatmentType}
@@ -81,7 +81,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
               }
             }}
             options={TREATMENT_OPTIONS.map(opt => ({ label: opt, value: opt }))}
-            placeholder="Select Treatment Type..."
+            placeholder="Select Appointment Type..."
           />
         </div>
         <div className="md:col-span-2 space-y-1.5">

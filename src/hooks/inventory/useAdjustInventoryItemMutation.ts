@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export interface AdjustInventoryItemPayload {
   id: string;
-  quantity: number;
+  quantity_delta: number;
   reason?: string;
   reference_id?: string;
 }

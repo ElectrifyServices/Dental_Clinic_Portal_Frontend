@@ -12,7 +12,7 @@ export interface CreateEMRVariables {
 export function useCreateEMRMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, FormData>({
-    endpoint: "/medicalRecord/create",
+    endpoint: "/medicalRecord",
     method: "post",
     options: {
       onSuccess: () => {

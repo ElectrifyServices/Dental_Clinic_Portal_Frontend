@@ -7,59 +7,74 @@
 
 @layer base {
   :root {
-    /* Brand palette (RGB triplets) */
-    --brand-50: 239 246 255;
+    /* ── Brand reference (backwards compat) ───────────────────────── */
+    --brand-50:  239 246 255;
     --brand-100: 219 234 254;
     --brand-200: 191 219 254;
-    --brand-500: 59 130 246;
-    --brand-600: 37 99 235;
-    --brand-700: 29 78 216;
-    --brand-800: 30 64 175;
+    --brand-500:  59 130 246;
+    --brand-600:  37  99 235;
+    --brand-700:  29  78 216;
+    --brand-800:  30  64 175;
 
-    /* Centralized Color System */
-    --primary: 37 99 235;
-    /* blue-600 (Dental Professional Blue) */
-    --primary-foreground: 255 255 255;
-    --secondary: 241 245 249;
-    /* slate-100 */
-    --secondary-foreground: 30 64 175;
-    /* brand-800 */
-    --ternary: 20 184 166;
-    /* teal-500 (Dental Accent) */
+    /* ── Surface & Layout ─────────────────────────────────────────── */
+    --background:  247 249 252;   /* #F7F9FC — page bg, makes cards pop  */
+    --card:        255 255 255;   /* #FFFFFF — card bg                   */
+    --card-bg:     255 255 255;
+    --surface:     247 249 252;
+    --popover:     255 255 255;
+
+    /* ── Text ─────────────────────────────────────────────────────── */
+    --foreground:        16  24  40;   /* #101828 — primary text          */
+    --card-foreground:   16  24  40;
+    --popover-foreground:16  24  40;
+    --accent-foreground: 16  24  40;
+
+    /* ── Muted ────────────────────────────────────────────────────── */
+    --muted:            247 249 252;   /* #F7F9FC                         */
+    --muted-foreground: 152 162 179;   /* #98A2B3                         */
+
+    /* ── Primary ──────────────────────────────────────────────────── */
+    --primary:           37  99 235;   /* #2563EB                         */
+    --primary-foreground:255 255 255;
+
+    /* ── Secondary / tonal hover ──────────────────────────────────── */
+    --secondary:         239 246 255;  /* #EFF6FF — sidebar hover, tonal  */
+    --secondary-foreground:37 99 235;  /* primary on secondary            */
+
+    /* ── Accent (alias for secondary in this system) ─────────────── */
+    --accent:            239 246 255;  /* #EFF6FF                         */
+
+    /* ── Ternary (teal) ───────────────────────────────────────────── */
+    --ternary:            20 184 166;
     --ternary-foreground: 255 255 255;
-    --card-bg: 255 255 255;
-    --surface: 248 250 252;
-    --border: 226 232 240;
 
-    /* Shadcn UI compat */
-    --background: 255 255 255;
-    --foreground: 30 64 175;
-    /* brand-800 (Professional Navy) */
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139;
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-    --accent: 241 245 249;
-    --accent-foreground: 15 23 42;
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-    --ring: 59 130 246;
-    --input: 226 232 240;
+    /* ── Semantic states ──────────────────────────────────────────── */
+    --success:    18 183 106;          /* #12B76A                         */
+    --warning:   247 144   9;          /* #F79009                         */
+    --destructive:240  68  56;         /* #F04438                         */
+    --destructive-foreground:255 255 255;
 
-    /* Radius scale */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius: 0.625rem;
+    /* ── Borders & Dividers ───────────────────────────────────────── */
+    --border:   221 227 235;           /* #DDE3EB                         */
+    --input:    221 227 235;
+    --divider:  234 236 240;           /* #EAECF0                         */
 
-    /* Typography scale */
-    --fs-xs: 0.75rem;
-    --fs-sm: 0.875rem;
+    /* ── Focus ring ───────────────────────────────────────────────── */
+    --ring: 37 99 235;                 /* #2563EB                         */
+
+    /* ── Radius scale ─────────────────────────────────────────────── */
+    --radius-sm:    0.5rem;            /*  8px */
+    --radius-md:    0.75rem;           /* 12px — inputs, buttons          */
+    --radius-lg:    1rem;              /* 16px — cards                    */
+    --radius-modal: 1.25rem;           /* 20px — modals                   */
+    --radius:       0.75rem;           /* default                         */
+
+    /* ── Typography ───────────────────────────────────────────────── */
+    --fs-xs:   0.75rem;
+    --fs-sm:   0.875rem;
     --fs-base: 1rem;
-    --fs-lg: 1.125rem;
-    --fs-xl: 1.25rem;
+    --fs-lg:   1.125rem;
+    --fs-xl:   1.25rem;
   }
 
   * {
@@ -69,111 +84,192 @@
   }
 
   html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter var', 'Inter', system-ui, -apple-system, sans-serif;
     @apply font-sans;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-sm font-normal;
+    line-height: 1.5;
   }
+
+  /* ── Typography Scale ─────────────────────────────────────────── */
+  h1 { @apply text-2xl font-bold leading-tight tracking-tight; }    /* 24px / 700 */
+  h2 { @apply text-xl  font-semibold leading-snug; }                /* 20px / 600 */
+  h3 { @apply text-lg  font-semibold leading-snug; }                /* 18px / 600 */
+  h4 { @apply text-base font-semibold; }                            /* 16px / 600 */
+  p  { @apply text-sm font-normal text-foreground; }                /* 14px / 400 */
 }
 
 @layer components {
-  /* ── Buttons ───────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     BUTTONS
+  ───────────────────────────────────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-xl hover:bg-primary/80 active:scale-[0.98] transition-all duration-150 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-primary-foreground
+           bg-primary rounded-md
+           hover:bg-primary-hover
+           active:scale-[0.98]
+           transition-all duration-150
+           shadow-sm hover:shadow-md
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-foreground bg-background border border-border rounded-xl hover:bg-muted active:scale-[0.98] transition-all duration-150 shadow-sm disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-foreground
+           bg-card border border-border rounded-md
+           hover:bg-muted hover:border-border/80
+           active:scale-[0.98]
+           transition-all duration-150
+           shadow-sm
+           disabled:opacity-50;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-destructive-foreground bg-destructive rounded-xl hover:bg-destructive/80 active:scale-[0.98] transition-all duration-150 shadow-md disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-destructive-foreground
+           bg-destructive rounded-md
+           hover:opacity-90
+           active:scale-[0.98]
+           transition-all duration-150
+           shadow-sm
+           disabled:opacity-50;
   }
 
   .btn-icon {
-    @apply p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all duration-150;
+    @apply p-2 text-muted-foreground
+           hover:text-foreground hover:bg-muted
+           rounded-md transition-all duration-150;
   }
 
   .btn-icon-blue {
-    @apply p-1.5 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors duration-150;
+    @apply p-2 text-primary
+           hover:text-primary/80 hover:bg-primary/10
+           rounded-md transition-colors duration-150;
   }
 
   .btn-icon-red {
-    @apply p-1.5 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-lg transition-colors duration-150;
+    @apply p-2 text-destructive
+           hover:text-destructive/80 hover:bg-destructive/10
+           rounded-md transition-colors duration-150;
   }
 
-  /* ── Cards ─────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     CARDS
+  ───────────────────────────────────────────────────────────────── */
   .card {
-    @apply bg-card rounded-xl border border-border shadow-sm;
+    @apply bg-card rounded-lg border border-border shadow-card;
   }
 
   .card-hover {
-    @apply bg-card rounded-xl border border-border shadow-sm hover:shadow-md hover:border-border/80 transition-all duration-200;
+    @apply bg-card rounded-lg border border-border shadow-card
+           hover:shadow-card-hover hover:border-border/80
+           transition-all duration-200;
   }
 
   .kpi-card {
-    @apply bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-card rounded-lg border border-border p-6 shadow-card
+           hover:shadow-card-hover transition-shadow duration-200;
   }
 
-  /* ── Forms ─────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     FORMS
+  ───────────────────────────────────────────────────────────────── */
   .form-input {
-    @apply w-full px-3 py-2 text-sm border border-input rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-150;
+    @apply w-full h-12 px-3 py-2
+           text-sm text-foreground
+           bg-card border border-border rounded-md
+           placeholder:text-muted-foreground
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+           transition-all duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .form-label {
-    @apply block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide;
+    @apply block text-xs font-medium text-muted-foreground mb-1.5;
   }
 
-  /* ── Page layout ────────────────────────────────────────────────────────── */
+  .form-section-label {
+    @apply block text-[11px] font-semibold text-muted-foreground
+           uppercase tracking-[1.5px] mb-3;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     PAGE LAYOUT
+  ───────────────────────────────────────────────────────────────── */
   .page-title {
-    @apply text-xl font-bold text-foreground;
+    @apply text-2xl font-bold text-foreground leading-tight tracking-tight;
   }
 
   .page-subtitle {
     @apply text-sm text-muted-foreground mt-0.5;
   }
 
-  /* ── Tables ─────────────────────────────────────────────────────────────── */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     TABLES
+  ───────────────────────────────────────────────────────────────── */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table thead tr {
-    @apply border-b border-border bg-muted;
+    @apply border-b-2 border-border bg-muted/60;
   }
 
   .data-table thead th {
-    @apply px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap;
+    @apply px-4 py-3
+           text-left text-xs font-semibold text-muted-foreground
+           uppercase tracking-wide whitespace-nowrap;
   }
 
   .data-table tbody tr {
-    @apply border-b border-border hover:bg-muted/50 transition-colors duration-100;
+    @apply border-b border-divider
+           hover:bg-secondary/40 transition-colors duration-100;
+  }
+
+  .data-table tbody tr:last-child {
+    @apply border-b-0;
   }
 
   .data-table tbody td {
-    @apply px-4 py-3 text-sm text-foreground;
+    @apply px-4 py-3.5 text-sm font-normal text-foreground;
   }
 
-  /* ── Badges ─────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     BADGES
+  ───────────────────────────────────────────────────────────────── */
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border;
+    @apply inline-flex items-center gap-1
+           px-2.5 py-0.5 rounded-full
+           text-xs font-semibold border;
   }
 
-  .badge-green { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
-  .badge-blue { @apply bg-blue-50 text-blue-700 border-blue-200; }
-  .badge-amber { @apply bg-amber-50 text-amber-700 border-amber-200; }
-  .badge-red { @apply bg-red-50 text-red-700 border-red-200; }
-  .badge-gray { @apply bg-muted text-muted-foreground border-border; }
+  .badge-green  { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
+  .badge-blue   { @apply bg-blue-50   text-blue-700   border-blue-200;   }
+  .badge-amber  { @apply bg-amber-50  text-amber-700  border-amber-200;  }
+  .badge-red    { @apply bg-red-50    text-red-700    border-red-200;    }
+  .badge-gray   { @apply bg-muted text-muted-foreground border-border;   }
+  .badge-violet { @apply bg-violet-50 text-violet-700 border-violet-200; }
 
-  /* ── Modals ─────────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     MODALS
+  ───────────────────────────────────────────────────────────────── */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto;
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50
+           flex items-center justify-center p-4 overflow-y-auto;
   }
 
   .modal-box {
-    @apply bg-card rounded-2xl shadow-2xl my-6;
+    @apply bg-card rounded-modal shadow-modal my-6;
   }
 
   .modal-header {
@@ -181,7 +277,7 @@
   }
 
   .modal-title {
-    @apply text-base font-bold text-foreground;
+    @apply text-lg font-semibold text-foreground;
   }
 
   .modal-body {
@@ -192,81 +288,85 @@
     @apply flex justify-end gap-3 px-6 py-4 border-t border-border;
   }
 
-  /* ── Filter Bar & Tabs ─────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     FILTER BAR & TABS
+  ───────────────────────────────────────────────────────────────── */
   .filter-bar {
-    @apply flex flex-wrap items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm;
+    @apply flex flex-wrap items-center gap-4
+           bg-card p-4 rounded-lg border border-border shadow-card;
   }
 
   .search-input {
-    @apply w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-muted text-foreground placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all;
+    @apply w-full pl-10 pr-4 py-2.5
+           text-sm border border-border rounded-md
+           bg-card text-foreground
+           placeholder:text-muted-foreground
+           focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary
+           transition-all;
   }
 
   .filter-tabs {
-    @apply flex items-center bg-muted p-1 rounded-xl border border-border;
+    @apply flex items-center bg-muted p-1 rounded-md border border-border gap-0.5;
   }
 
   .filter-tab {
-    @apply px-4 py-1.5 text-xs font-semibold text-muted-foreground rounded-lg hover:text-foreground transition-colors;
+    @apply px-4 py-1.5 text-xs font-medium text-muted-foreground
+           rounded-sm hover:text-foreground hover:bg-card/60
+           transition-colors duration-150;
   }
 
   .filter-tab-active {
-    @apply px-4 py-1.5 text-xs font-bold text-primary bg-card shadow-sm rounded-lg border border-border;
+    @apply px-4 py-1.5 text-xs font-semibold text-primary
+           bg-card shadow-sm rounded-sm border border-border/60;
   }
 
-  .page-header {
-    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
-  }
-
-  /* ── Utilities ──────────────────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────────────────────
+     UTILITIES
+  ───────────────────────────────────────────────────────────────── */
   .divider-horizontal {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-6;
+    @apply h-px w-full bg-divider my-6;
   }
 
   .glass-panel {
-    @apply bg-card/70 backdrop-blur-md border border-border/20 shadow-xl;
+    @apply bg-card/80 backdrop-blur-md border border-border/40 shadow-card;
+  }
+
+  /* Section divider with label */
+  .section-heading {
+    @apply flex items-center gap-3 mb-4;
+  }
+  .section-heading::before,
+  .section-heading::after {
+    content: '';
+    @apply flex-1 h-px bg-divider;
   }
 }
 
 @layer utilities {
+  /* ── Scrollbars ─────────────────────────────────────────────── */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-  /* Custom scrollbar to fix corner clipping and asymmetry */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 8px;
-  }
+  .custom-scrollbar::-webkit-scrollbar       { width: 5px; height: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.4);
+    background-color: rgba(152, 162, 179, 0.35);
     border-radius: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(148, 163, 184, 0.7);
+    background-color: rgba(152, 162, 179, 0.6);
   }
 
-  /* Global scrollbar styling so cards/modals look consistent and rounded */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 8px;
-  }
+  ::-webkit-scrollbar       { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
   ::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.3);
+    background-color: rgba(152, 162, 179, 0.3);
     border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(148, 163, 184, 0.6);
+    background-color: rgba(152, 162, 179, 0.55);
   }
 }

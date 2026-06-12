@@ -11,7 +11,7 @@ export function useUpdateInventoryItemMutation() {
 
   return useApiMutation<any, UpdateInventoryItemPayload>({
     getEndpoint: (variables) => `/inventory/${variables.id}`,
-    method: "put",
+    method: "patch",
     options: {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ["inventory"] });

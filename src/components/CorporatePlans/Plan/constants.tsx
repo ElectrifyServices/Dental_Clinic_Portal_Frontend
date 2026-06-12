@@ -1,6 +1,6 @@
 import React from 'react';
 import { Percent, Tag, Gift, Star, CheckCircle, Settings2 } from 'lucide-react';
-import { PlanBenefitType, PlanBenefit } from '../../../types';
+import { PlanBenefitType, PlanBenefit, PlanCategory } from '../../../types';
 import { TREATMENT_LABELS } from '../../../utils/corporatePlan';
 
 export const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
@@ -35,6 +35,9 @@ export const mkForm = () => ({
   validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
   maxMembers: undefined as number | undefined,
   isActive: true, color: 'blue',
+  planCategory: 'corporate' as PlanCategory,
+  annualFee: undefined as number | undefined,
+  maxDependents: 0,
 });
 
 export function autoDesc(b: PlanBenefit): string {

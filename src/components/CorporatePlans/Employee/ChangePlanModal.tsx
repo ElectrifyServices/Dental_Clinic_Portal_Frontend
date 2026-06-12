@@ -47,6 +47,8 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
 
       await updateEmployeeMutation.mutateAsync(transformedBody);
       queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
       refetch();
       setChangePlanEmp(null);
     } catch (err) {

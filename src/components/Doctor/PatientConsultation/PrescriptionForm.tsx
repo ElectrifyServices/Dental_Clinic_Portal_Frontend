@@ -1,6 +1,7 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { Pill, Plus, Trash2 } from "lucide-react";
 
 interface Prescription {
@@ -72,26 +73,23 @@ export function PrescriptionForm({
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Dosage
               </Label>
-              <select
-                value={prescription.dosage}
-                onChange={(e) =>
-                  onUpdatePrescription(
-                    prescription.id,
-                    "dosage",
-                    e.target.value,
-                  )
-                }
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
+              <Select
+                value={prescription.dosage || ""}
+                onValueChange={(value) => onUpdatePrescription(prescription.id, "dosage", value)}
               >
-                <option value="">Select</option>
-                <option value="1-0-0">1 - 0 - 0</option>
-                <option value="0-1-0">0 - 1 - 0</option>
-                <option value="0-0-1">0 - 0 - 1</option>
-                <option value="1-1-0">1 - 1 - 0</option>
-                <option value="1-0-1">1 - 0 - 1</option>
-                <option value="0-1-1">0 - 1 - 1</option>
-                <option value="1-1-1">1 - 1 - 1</option>
-              </select>
+                <SelectTrigger className="w-full h-10 px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-0-0">1 - 0 - 0</SelectItem>
+                  <SelectItem value="0-1-0">0 - 1 - 0</SelectItem>
+                  <SelectItem value="0-0-1">0 - 0 - 1</SelectItem>
+                  <SelectItem value="1-1-0">1 - 1 - 0</SelectItem>
+                  <SelectItem value="1-0-1">1 - 0 - 1</SelectItem>
+                  <SelectItem value="0-1-1">0 - 1 - 1</SelectItem>
+                  <SelectItem value="1-1-1">1 - 1 - 1</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex-1 min-w-[120px]">
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
@@ -148,22 +146,20 @@ export function PrescriptionForm({
                   className="w-16 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-center"
                   placeholder="5"
                 />
-                <select
+                <Select
                   value={prescription.durationUnit || "Days"}
-                  onChange={(e) =>
-                    onUpdatePrescription(
-                      prescription.id,
-                      "durationUnit",
-                      e.target.value,
-                    )
-                  }
-                  className="flex-1 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-sm"
+                  onValueChange={(value) => onUpdatePrescription(prescription.id, "durationUnit", value)}
                 >
-                  <option value="Days">Days</option>
-                  <option value="Weeks">Weeks</option>
-                  <option value="Months">Months</option>
-                  <option value="Years">Years</option>
-                </select>
+                  <SelectTrigger className="flex-1 h-10 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Days">Days</SelectItem>
+                    <SelectItem value="Weeks">Weeks</SelectItem>
+                    <SelectItem value="Months">Months</SelectItem>
+                    <SelectItem value="Years">Years</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="w-[120px] shrink-0 flex items-center gap-2">
@@ -185,6 +181,7 @@ export function PrescriptionForm({
               {prescriptions.length > 1 && (
                 <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => onRemovePrescription(prescription.id)}
                   className="p-2 mt-6 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
                 >

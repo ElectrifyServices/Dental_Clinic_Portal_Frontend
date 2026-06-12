@@ -52,3 +52,76 @@ export const demoInventory = [
 ];
 
 export const demoCorporatePlans = [];
+
+// Demo seed: individual yearly plan
+export const demoIndividualPlan = {
+  id: 'demo-ind-plan-001',
+  name: 'Annual Wellness Plan',
+  companyName: 'Individual',
+  code: 'AWP2025',
+  description: 'Yearly individual wellness plan with free consultations and treatment discounts for you and your family.',
+  benefits: [
+    { id: 'b1', type: 'free_consultations', value: 3, description: '3 Free Consultations/year' },
+    { id: 'b2', type: 'flat_discount', value: 15, description: '15% off all treatments' },
+  ],
+  validFrom: '2025-01-01',
+  validTo: '2025-12-31',
+  maxMembers: 100,
+  currentMembers: 0,
+  isActive: true,
+  createdAt: '2025-01-01T00:00:00.000Z',
+  createdBy: 'admin',
+  color: 'teal',
+  status: 'ACTIVE',
+  planCategory: 'individual' as const,
+  annualFee: 1000,
+  maxDependents: 2,
+};
+
+// Demo seed: corporate plan with family coverage
+export const demoCorporateFamilyPlan = {
+  id: 'demo-corp-family-001',
+  name: 'TechCorp Premium Family',
+  companyName: 'TechCorp Solutions',
+  code: 'TCP-FAM',
+  description: 'Premium corporate plan with family coverage for TechCorp employees.',
+  benefits: [
+    { id: 'b3', type: 'flat_discount', value: 25, description: '25% off all treatments' },
+    { id: 'b4', type: 'free_consultations', value: 4, description: '4 Free Consultations/year' },
+  ],
+  validFrom: '2025-01-01',
+  validTo: '2025-12-31',
+  maxMembers: 200,
+  currentMembers: 1,
+  isActive: true,
+  createdAt: '2025-01-01T00:00:00.000Z',
+  createdBy: 'admin',
+  color: 'blue',
+  status: 'ACTIVE',
+  planCategory: 'corporate' as const,
+  maxDependents: 3,
+};
+
+// Demo seed: dependents for demo member
+export const demoPlanDependents = [
+  {
+    id: 'dep-001',
+    memberId: 'demo-emp-001',
+    name: 'Priya Mehta',
+    relationship: 'Spouse',
+    dateOfBirth: '1990-06-15',
+    gender: 'female' as const,
+    phone: '9876500001',
+    patientId: undefined,
+  },
+  {
+    id: 'dep-002',
+    memberId: 'demo-emp-001',
+    name: 'Aryan Mehta',
+    relationship: 'Child',
+    dateOfBirth: '2015-03-22',
+    gender: 'male' as const,
+    phone: undefined,
+    patientId: undefined,
+  },
+];

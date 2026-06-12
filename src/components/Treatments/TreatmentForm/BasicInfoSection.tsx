@@ -56,8 +56,10 @@ export function BasicInfoSection({
                 {pendingPlans.map((plan) => (
                   <Button
                     key={plan.id}
+                    variant="link"
+                    size="xs"
                     onClick={() => onLoadPlan(plan)}
-                    className="text-xs text-yellow-700 dark:text-yellow-500 hover:underline block mt-1"
+                    className="text-xs text-yellow-700 dark:text-yellow-500 hover:text-yellow-800 dark:hover:text-yellow-400 hover:underline block mt-1 p-0 h-auto font-semibold"
                   >
                     {plan.procedure} (₹{plan.cost})
                   </Button>
@@ -149,4 +151,4 @@ export function BasicInfoSection({
       </div>
     </div>
   );
-}
+}

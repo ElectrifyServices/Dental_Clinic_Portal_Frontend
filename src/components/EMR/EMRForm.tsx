@@ -28,13 +28,13 @@ interface EMRFormProps {
 }
 
 const RECORD_TYPE_OPTIONS = [
-  { value: "previous-prescriptions", label: "Previous Prescriptions" },
-  { value: "blood-reports", label: "Blood Reports" },
-  { value: "ecg-reports", label: "ECG Reports" },
-  { value: "physician-clearance", label: "Physician Clearance Letter" },
-  { value: "xrays-imaging", label: "X-rays / Medical Imaging" },
-  { value: "discharge-summary", label: "Hospital Discharge Summary" },
-  { value: "other", label: "other" },
+  { value: "CONSULTATION", label: "Consultation" },
+  { value: "PRESCRIPTION", label: "Prescription" },
+  { value: "LAB_REPORT", label: "Lab Report" },
+  { value: "X_RAY", label: "X-Ray" },
+  { value: "TREATMENT_NOTE", label: "Treatment Note" },
+  { value: "BILLING_RECORD", label: "Billing Record" },
+  { value: "APPOINTMENT_VISIT", label: "Appointment Visit" },
 ] as const;
 
 export function EMRForm({
@@ -61,7 +61,7 @@ export function EMRForm({
     resolver: zodResolver(emrSchema) as any,
     defaultValues: {
       patientName: record?.patientName ?? "",
-      type: record?.type ?? "previous-prescriptions",
+      type: record?.type ?? "CONSULTATION",
       title: record?.title ?? "",
       content: record?.content ?? "",
       date: record?.date ?? new Date().toISOString().split("T")[0],

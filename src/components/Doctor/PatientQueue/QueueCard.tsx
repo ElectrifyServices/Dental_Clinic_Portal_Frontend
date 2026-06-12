@@ -10,6 +10,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -72,6 +73,9 @@ export function QueueCard({
   const waitingTime = useWaitingTime(patient.checkInTime);
   const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
   const gender = fullPatient?.gender || "";
+  
+  const [showAllAllergies, setShowAllAllergies] = useState(false);
+  const [showAllMedHistory, setShowAllMedHistory] = useState(false);
   
   const medHistory: string[] = fullPatient?.medicalHistoryNames?.length
     ? Array.isArray(fullPatient.medicalHistoryNames)
@@ -173,14 +177,38 @@ export function QueueCard({
             <div className="space-y-1">
               {allergies.length > 0 && (
                 <div className="text-[11px] text-red-600 font-bold leading-tight">
-                  <strong>Allergies:</strong> {allergies.slice(0, 3).join(", ")}
-                  {allergies.length > 3 && ` +${allergies.length - 3} more`}
+                  <strong>Allergies:</strong>{" "}
+                  {showAllAllergies
+                    ? allergies.join(", ")
+                    : allergies.slice(0, 3).join(", ")}
+                  {allergies.length > 3 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setShowAllAllergies(!showAllAllergies)}
+                      className="cursor-pointer hover:underline text-red-800 ml-1 h-auto p-0 text-[11px] font-bold"
+                    >
+                      {showAllAllergies ? "(less)" : `+${allergies.length - 3} more`}
+                    </Button>
+                  )}
                 </div>
               )}
               {medHistory.length > 0 && (
                 <div className="text-[11px] text-amber-700 font-bold leading-tight">
-                  <strong>Conditions:</strong> {medHistory.slice(0, 2).join(", ")}
-                  {medHistory.length > 2 && ` +${medHistory.length - 2} more`}
+                  <strong>Conditions:</strong>{" "}
+                  {showAllMedHistory
+                    ? medHistory.join(", ")
+                    : medHistory.slice(0, 2).join(", ")}
+                  {medHistory.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setShowAllMedHistory(!showAllMedHistory)}
+                      className="cursor-pointer hover:underline text-amber-900 ml-1 h-auto p-0 text-[11px] font-bold"
+                    >
+                      {showAllMedHistory ? "(less)" : `+${medHistory.length - 2} more`}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

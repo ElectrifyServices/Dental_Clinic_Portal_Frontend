@@ -12,6 +12,9 @@ export interface UpdateCorporatePlanVariables {
   enrollment_cap?: number;
   theme_color?: string;
   benefits: CreatePlanBenefitVariables[];
+  plan_category?: 'CORPORATE' | 'INDIVIDUAL';
+  annual_fee?: number;
+  max_dependents?: number;
 }
 
 export function useUpdateCorporatePlanMutation() {

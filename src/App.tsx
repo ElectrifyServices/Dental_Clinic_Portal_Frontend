@@ -120,6 +120,7 @@ function AuthRouter() {
 }
 
 import { Toaster } from "./components/ui/Toast";
+import { OfflineDetector } from "./components/ui/OfflineDetector";
 
 export default function App() {
   return (
@@ -134,6 +135,7 @@ export default function App() {
               </Routes>
             </BrowserRouter>
             <Toaster />
+            <OfflineDetector />
           </ModalProvider>
         </AppProvider>
       </AuthProvider>

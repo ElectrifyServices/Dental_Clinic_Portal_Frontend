@@ -10,6 +10,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Card } from "@/components/ui";
+import { PlanCoverageCard } from "./PlanCoverageCard";
 
 interface OverviewTabProps {
   patient: any;
@@ -120,8 +121,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </Card>
 
-      {/* Quick Stats */}
+      {/* Quick Stats + Plan Coverage */}
       <div className="space-y-4">
+        <PlanCoverageCard patient={patient} />
         <Card className="rounded-2xl p-6 border border-border shadow-sm">
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center">
             <Activity className="w-5 h-5 mr-2" />

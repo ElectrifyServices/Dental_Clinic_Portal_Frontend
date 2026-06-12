@@ -117,6 +117,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
+                        variant="ghost"
                         type="button"
                         className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors flex items-center justify-center cursor-pointer"
                       >
