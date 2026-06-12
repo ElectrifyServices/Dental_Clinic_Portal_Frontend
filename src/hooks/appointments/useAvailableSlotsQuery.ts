@@ -2,7 +2,7 @@ import { useApiQuery } from "../useApiQuery";
 
 export interface AvailableSlot {
   time: string;
-  is_available: boolean;
+  appointment_count: number;
 }
 
 export interface AvailableSlotsData {

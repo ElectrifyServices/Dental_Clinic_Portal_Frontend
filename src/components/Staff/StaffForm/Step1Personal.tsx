@@ -139,13 +139,14 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 placeholder="••••••••"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleGenerate}
-                  className="text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-lg transition-colors"
+                  className="text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 h-auto px-2 py-1 rounded-lg"
                 >
                   Generate
-                </button>
+                </Button>
                 <Button
                   variant="ghost"
                   type="button"

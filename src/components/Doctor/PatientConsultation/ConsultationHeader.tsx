@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
-﻿import { X, Stethoscope, User } from "lucide-react";
+import { X, Stethoscope, User } from "lucide-react";
+import { toTitleCase } from "@/utils/stringUtils";
 
 interface Patient {
   id: string;
@@ -50,7 +51,7 @@ export function ConsultationHeader({
                 Patient Consultation
               </h2>
               <p className="text-muted-foreground">
-                {patient.patientName} - {patient.treatmentType}
+                {toTitleCase(patient.patientName)} - {patient.treatmentType}
               </p>
             </div>
           </div>
@@ -93,7 +94,7 @@ export function ConsultationHeader({
                 Patient Name
               </p>
               <p className="text-lg font-bold text-blue-900">
-                {patient.patientName}
+                {toTitleCase(patient.patientName)}
               </p>
               <div className="flex gap-4 mt-2">
                 <div>
@@ -144,25 +145,14 @@ export function ConsultationHeader({
                 Medical Alerts & History
               </p>
               {patient.patientHistory &&
-              (patient.patientHistory.allergies.length > 0 ||
-                patient.patientHistory.medicalHistory.length > 0) ? (
+              patient.patientHistory.allergies.length > 0 ? (
                 <div className="bg-destructive/10 p-3 rounded-xl border border-destructive/20 space-y-1">
-                  {patient.patientHistory.allergies.length > 0 && (
-                    <div className="text-[11px] text-destructive">
-                      <strong className="uppercase text-[9px] mr-1">
-                        Allergies:
-                      </strong>{" "}
-                      {patient.patientHistory.allergies.join(", ")}
-                    </div>
-                  )}
-                  {patient.patientHistory.medicalHistory.length > 0 && (
-                    <div className="text-[11px] text-destructive">
-                      <strong className="uppercase text-[9px] mr-1">
-                        History:
-                      </strong>{" "}
-                      {patient.patientHistory.medicalHistory.join(", ")}
-                    </div>
-                  )}
+                  <div className="text-[11px] text-destructive">
+                    <strong className="uppercase text-[9px] mr-1">
+                      Allergies:
+                    </strong>{" "}
+                    {patient.patientHistory.allergies.join(", ")}
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm font-medium text-blue-400 italic">

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 interface Slot {
   time24: string;
   time12: string;
-  isBooked: boolean;
+  appointmentCount: number;
   isPast: boolean;
 }
 
@@ -26,17 +26,17 @@ export function TimeSlotGrid({
           {slots.map((slot) => (
             <Button
               key={slot.time24}
-              disabled={slot.isBooked || slot.isPast}
+              disabled={slot.isPast}
               onClick={() => onSelectTime(slot.time12)}
               className={`py-2.5 px-2 text-xs font-bold rounded-full border transition-all flex items-center justify-center ${
-                slot.isBooked || slot.isPast
+                slot.isPast
                   ? "bg-muted text-muted-foreground/60 border-border cursor-not-allowed opacity-60"
                   : selectedTime === slot.time12
                     ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-primary shadow-md transform scale-105"
                     : "bg-green-50/50 text-green-700 border-green-200 hover:border-green-400 hover:bg-green-50"
               }`}
             >
-              {slot.time12}
+              {slot.time12} ({slot.appointmentCount})
             </Button>
           ))}
         </div>

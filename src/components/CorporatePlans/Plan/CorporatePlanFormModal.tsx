@@ -378,9 +378,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           <LabeledField label="Plan Category">
             <div className="flex gap-3 pt-1">
               {(['corporate', 'individual'] as const).map(cat => (
-                <button
+                <Button
                   key={cat}
                   type="button"
+                  variant="outline"
                   onClick={() => setForm(prev => ({
                     ...prev,
                     planCategory: cat,
@@ -389,14 +390,14 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl border-2 text-sm font-bold transition-all ${
                     form.planCategory === cat
                       ? cat === 'individual'
-                        ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-blue-500 bg-blue-50 text-blue-700'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700 hover:bg-teal-50 hover:text-teal-700'
+                        : 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700'
                       : 'border-border text-muted-foreground hover:border-primary/40'
                   }`}
                 >
                   {cat === 'corporate' ? <Building2 className="w-4 h-4" /> : <Users className="w-4 h-4" />}
                   {cat === 'corporate' ? 'Corporate Plan' : 'Individual Yearly Plan'}
-                </button>
+                </Button>
               ))}
             </div>
           </LabeledField>

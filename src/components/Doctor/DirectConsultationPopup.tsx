@@ -8,7 +8,18 @@ import {
   Stethoscope,
   Calendar,
 } from "lucide-react";
-import { Modal, Button, Label, Input, ErrorState } from "@/components/ui";
+import {
+  Modal,
+  Button,
+  Label,
+  Input,
+  ErrorState,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 import { TimeSlotGrid } from "./DirectConsultation/TimeSlotGrid";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
@@ -94,14 +105,14 @@ export function DirectConsultationPopup({
       return {
         time24,
         time12,
-        isBooked: !slot.is_available,
+        appointmentCount: slot.appointment_count || 0,
         isPast,
       };
     });
   }, [slotsData, selectedDate, todayStr]);
 
   useEffect(() => {
-    const firstAvailable = allSlots.find((s) => !s.isBooked && !s.isPast);
+    const firstAvailable = allSlots.find((s) => !s.isPast);
     if (firstAvailable) {
       setSelectedTime(firstAvailable.time12);
     } else {
@@ -225,46 +236,30 @@ export function DirectConsultationPopup({
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Assigned Doctor
               </Label>
-              <div className="relative">
-                <select
-                  value={selectedDoctorId}
-                  onChange={(e) => {
-                    setSelectedDoctorId(e.target.value);
-                    setSelectedTime("");
-                  }}
-                  className="w-full pl-4 pr-10 py-2.5 border border-border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none bg-card cursor-pointer"
-                >
-                  <option value="" disabled>
-                    Choose a doctor
-                  </option>
-                  {!apiDoctors ? (
-                    <option value="" disabled>Loading doctors...</option>
-                  ) : apiDoctors.length === 0 ? (
-                    <option value="" disabled>No doctors found</option>
+              <Select
+                value={selectedDoctorId}
+                onValueChange={(val) => {
+                  setSelectedDoctorId(val);
+                  setSelectedTime("");
+                }}
+              >
+                <SelectTrigger className="w-full rounded-xl text-sm font-bold">
+                  <SelectValue placeholder="Choose a doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {!apiDoctors || apiDoctors.length === 0 ? (
+                    <SelectItem value="_none" disabled>
+                      {!apiDoctors ? "Loading doctors..." : "No doctors found"}
+                    </SelectItem>
                   ) : (
                     apiDoctors.map((doc) => (
-                      <option key={doc.id} value={doc.id}>
+                      <SelectItem key={doc.id} value={doc.id}>
                         {doc.name} - {doc.specialization}
-                      </option>
+                      </SelectItem>
                     ))
                   )}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground/60">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">

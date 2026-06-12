@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { User, CheckCircle, Users, Plus, Trash2, UserPlus } from 'lucide-react';
-import { Modal, Button, SectionRenderer, Label, Input } from '../../ui';
+import {
+  Modal,
+  Button,
+  SectionRenderer,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui';
 import { CorporateEmployee, CorporatePlan, PlanDependent, CoverageType } from '../../../types';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
@@ -400,19 +411,20 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Coverage Type</Label>
               <div className="flex gap-3">
                 {(['self', 'family'] as CoverageType[]).map(ct => (
-                  <button
+                  <Button
                     key={ct}
                     type="button"
+                    variant="outline"
                     onClick={() => setForm(prev => ({ ...prev, coverageType: ct }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
                       form.coverageType === ct
-                        ? 'border-primary bg-primary/10 text-primary'
+                        ? 'border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary'
                         : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
                   >
                     <Users className="w-4 h-4" />
                     {ct === 'self' ? 'Self Only' : '+ Family Members'}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -541,15 +553,19 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                       </div>
                       <div>
                         <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Gender</Label>
-                        <select
+                        <Select
                           value={addDepForm.gender}
-                          onChange={e => setAddDepForm(p => ({ ...p, gender: e.target.value as any }))}
-                          className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium"
+                          onValueChange={value => setAddDepForm(p => ({ ...p, gender: value as any }))}
                         >
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
+                          <SelectTrigger className="rounded-xl text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="flex gap-2 pt-1">

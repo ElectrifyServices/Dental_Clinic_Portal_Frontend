@@ -27,7 +27,6 @@ import {
   inventorySchema,
   type InventoryFormData,
 } from "@/lib/schemas/inventory.schema";
-import styles from "./inventory.module.css";
 import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryCategoriesQuery";
 import { useCreateInventoryCategoryMutation } from "../../hooks/inventory/useCreateInventoryCategoryMutation";
 import { useDeleteInventoryCategoryMutation } from "../../hooks/inventory/useDeleteInventoryCategoryMutation";
@@ -161,7 +160,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Basic Info ─────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Basic Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -244,7 +243,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Stock Info ──────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Stock Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -384,7 +383,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Purchase Info ───────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className={styles.sectionHeading}>Purchase Information</p>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}

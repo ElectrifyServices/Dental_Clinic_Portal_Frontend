@@ -99,7 +99,7 @@ export function mapFormDataToCreatePayload(
   if (formData.phone) payload.append('phone', formData.phone);
   if (formData.email) payload.append('email', formData.email);
   if (formData.dateOfBirth) payload.append('date_of_birth', formData.dateOfBirth);
-  
+
   if (formData.gender) payload.append('gender', GENDER_MAP[formData.gender] ?? formData.gender.toUpperCase());
   if (formData.bloodGroup) payload.append('blood_group', BLOOD_GROUP_MAP[formData.bloodGroup] ?? formData.bloodGroup);
   if (formData.address) payload.append('address', formData.address);
@@ -147,7 +147,7 @@ export function mapFormDataToCreatePayload(
   if (formData.previousLastVisitDate) payload.append('last_visit_date', formData.previousLastVisitDate);
   if (formData.previousClinicAddress) payload.append('clinic_address', formData.previousClinicAddress);
   if (formData.previousReason) payload.append('reason_for_treatment', formData.previousReason);
-  
+
   if (formData.previousTreatments?.length) {
     formData.previousTreatments.forEach((pt: string) => payload.append('previous_treatments', pt));
   }
@@ -214,7 +214,7 @@ export function useCreatePatientMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<CreatePatientResponse, FormData>({
-    endpoint: "/patient/create",
+    endpoint: "/patient",
     method: "post",
     options: {
       onSuccess: () => {

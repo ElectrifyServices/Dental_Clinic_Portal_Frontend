@@ -1,8 +1,15 @@
+import React, { useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Pill, Plus, Trash2 } from "lucide-react";
+import {
+  useMedicinesQuery,
+  useCreateMedicineMutation,
+  useDeleteMedicineMutation,
+} from "@/hooks/patients/useMedicinesQuery";
 
 interface Prescription {
   id: string;
@@ -28,6 +35,67 @@ export function PrescriptionForm({
   onRemovePrescription,
   onUpdatePrescription,
 }: PrescriptionFormProps) {
+  const [search, setSearch] = useState("");
+  const { data: rawMedicines, isLoading } = useMedicinesQuery({ page: 1, limit: 30, search });
+
+  const { mutateAsync: createMedicine, isPending: isCreating } = useCreateMedicineMutation();
+  const { mutateAsync: deleteMedicine } = useDeleteMedicineMutation();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const medicinesList = React.useMemo(() => {
+    if (!rawMedicines) return [];
+    let list: any[] = [];
+    if (Array.isArray(rawMedicines)) {
+      list = rawMedicines;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data?.data)) {
+      list = (rawMedicines as any).responseObject.data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data)) {
+      list = (rawMedicines as any).responseObject.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject)) {
+      list = (rawMedicines as any).responseObject;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data?.data)) {
+      list = (rawMedicines as any).data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).data)) {
+      list = (rawMedicines as any).data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).list)) {
+      list = (rawMedicines as any).list;
+    } else if (rawMedicines && Array.isArray((rawMedicines as any).medicines)) {
+      list = (rawMedicines as any).medicines;
+    }
+    return list;
+  }, [rawMedicines]);
+
+  const selectOptions = React.useMemo(() => {
+    return medicinesList.map((m: any) => ({
+      label: m.name || m.label || m,
+      value: m.name || m.value || m,
+    }));
+  }, [medicinesList]);
+
+  const handleCreateMedicine = async (name: string) => {
+    try {
+      await createMedicine({
+        name,
+        description: "Advanced fever and pain relief medication for dental pain",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteMedicine = async (name: string) => {
+    const found = medicinesList.find((m: any) => m.name === name);
+    const id = found?.id || found?._id || name;
+    setDeletingId(name);
+    try {
+      await deleteMedicine(id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="px-6">
       <div className="flex items-center justify-between mb-4">
@@ -49,27 +117,35 @@ export function PrescriptionForm({
         {prescriptions.map((prescription) => (
           <div
             key={prescription.id}
-            className="flex flex-wrap gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm animate-in fade-in zoom-in duration-200"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-4 items-end p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm animate-in fade-in zoom-in duration-200"
           >
-            <div className="flex-[2] min-w-[200px]">
+            <div className="col-span-1 sm:col-span-2 md:col-span-4">
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Medicine Name
               </Label>
-              <Input
-                type="text"
+              <SearchableSelect
                 value={prescription.medicine}
-                onChange={(e) =>
+                onChange={(value) =>
                   onUpdatePrescription(
                     prescription.id,
                     "medicine",
-                    e.target.value,
+                    value,
                   )
                 }
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
-                placeholder="e.g. Paracetamol"
+                options={selectOptions}
+                placeholder="Select or Search Medicine..."
+                searchPlaceholder="Search medicine name..."
+                onSearchChange={setSearch}
+                isLoading={isLoading}
+                onCreateOption={handleCreateMedicine}
+                createLabel="Create Medicine"
+                isCreating={isCreating}
+                onDeleteOption={handleDeleteMedicine}
+                isDeletingValue={deletingId}
+                className="w-full h-10 border-green-200 focus:ring-green-500"
               />
             </div>
-            <div className="w-[120px] shrink-0">
+            <div className="col-span-1 md:col-span-2">
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Dosage
               </Label>
@@ -88,10 +164,11 @@ export function PrescriptionForm({
                   <SelectItem value="1-0-1">1 - 0 - 1</SelectItem>
                   <SelectItem value="0-1-1">0 - 1 - 1</SelectItem>
                   <SelectItem value="1-1-1">1 - 1 - 1</SelectItem>
+                  <SelectItem value="2-1-1">2 - 1 - 1</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1 min-w-[120px]">
+            <div className="col-span-1 md:col-span-2">
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Timing
               </Label>
@@ -105,33 +182,15 @@ export function PrescriptionForm({
                     e.target.value,
                   )
                 }
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
+                className="w-full h-10 px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                 placeholder="After meals"
               />
             </div>
-            <div className="flex-1 min-w-[120px]">
-              <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
-                Frequency
-              </Label>
-              <Input
-                type="text"
-                value={prescription.frequency}
-                onChange={(e) =>
-                  onUpdatePrescription(
-                    prescription.id,
-                    "frequency",
-                    e.target.value,
-                  )
-                }
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
-                placeholder="3 times daily"
-              />
-            </div>
-            <div className="w-[180px] shrink-0">
+            <div className="col-span-1 md:col-span-2">
               <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                 Duration
               </Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Input
                   type="number"
                   value={prescription.duration}
@@ -143,7 +202,7 @@ export function PrescriptionForm({
                     )
                   }
                   min="1"
-                  className="w-16 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-center"
+                  className="w-16 h-10 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card text-center"
                   placeholder="5"
                 />
                 <Select
@@ -162,7 +221,7 @@ export function PrescriptionForm({
                 </Select>
               </div>
             </div>
-            <div className="w-[120px] shrink-0 flex items-center gap-2">
+            <div className="col-span-1 md:col-span-2 flex items-end gap-2">
               <div className="flex-1">
                 <Label className="block text-xs font-bold text-green-700 mb-1.5 uppercase tracking-wider">
                   Qty
@@ -174,7 +233,7 @@ export function PrescriptionForm({
                     onUpdatePrescription(prescription.id, "qty", e.target.value)
                   }
                   min="1"
-                  className="w-full px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
+                  className="w-full h-10 px-2 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 bg-card"
                   placeholder="10"
                 />
               </div>
@@ -183,7 +242,7 @@ export function PrescriptionForm({
                   type="button"
                   variant="ghost"
                   onClick={() => onRemovePrescription(prescription.id)}
-                  className="p-2 mt-6 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
+                  className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

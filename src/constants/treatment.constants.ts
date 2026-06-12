@@ -61,4 +61,5 @@ export const dosageMappings: Record<
   "1-0-1": { timing: "After Food", frequency: "Twice daily" },
   "0-1-1": { timing: "After Food", frequency: "Twice daily" },
   "1-1-1": { timing: "After Food", frequency: "Thrice daily" },
+  "2-1-1": { timing: "After Food", frequency: "Four times daily" },
 };

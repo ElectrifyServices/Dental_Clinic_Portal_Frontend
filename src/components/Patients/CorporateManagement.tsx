@@ -15,7 +15,16 @@ import {
   CreditCard,
   Gift,
 } from "lucide-react";
-import { Modal, Button, ContentCard } from "@/components/ui";
+import {
+  Modal,
+  Button,
+  ContentCard,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import * as XLSX from "xlsx";
 
@@ -636,18 +645,18 @@ export function CorporateManagement({
                   <Label className="block text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
                     Target Corporate Plan
                   </Label>
-                  <select
-                    value={selectedCompanyId}
-                    onChange={(e) => setSelectedCompanyId(e.target.value)}
-                    className="w-full md:w-1/3 px-4 py-3 bg-muted border border-border rounded-xl font-bold text-sm focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
-                  >
-                    <option value="">Select Company</option>
-                    {corporatePlans.map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                    <SelectTrigger className="w-full md:w-1/3 rounded-xl text-sm font-bold">
+                      <SelectValue placeholder="Select Company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {corporatePlans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="border border-border rounded-2xl overflow-x-auto">
@@ -714,21 +723,19 @@ export function CorporateManagement({
                               />
                             </td>
                             <td className="px-6 py-3">
-                              <select
+                              <Select
                                 value={p.gender}
-                                onChange={(e) =>
-                                  handleBulkChange(
-                                    idx,
-                                    "gender",
-                                    e.target.value,
-                                  )
-                                }
-                                className="bg-transparent text-sm font-bold text-foreground outline-none"
+                                onValueChange={(val) => handleBulkChange(idx, "gender", val)}
                               >
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                              </select>
+                                <SelectTrigger className="h-8 text-sm font-bold border-none bg-transparent shadow-none px-0">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="male">Male</SelectItem>
+                                  <SelectItem value="female">Female</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
                             <td className="px-6 py-3">
                               <Input
@@ -994,20 +1001,19 @@ export function CorporateManagement({
                           </td>
                           <td className="px-6 py-4">
                             {isEditing ? (
-                              <select
+                              <Select
                                 value={tempEmpData.gender}
-                                onChange={(e) =>
-                                  setTempEmpData({
-                                    ...tempEmpData,
-                                    gender: e.target.value,
-                                  })
-                                }
-                                className="px-3 py-1 border border-primary/20 rounded-lg text-xs font-bold"
+                                onValueChange={(val) => setTempEmpData({ ...tempEmpData, gender: val })}
                               >
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                              </select>
+                                <SelectTrigger className="h-7 text-xs font-bold rounded-lg border-primary/20 px-3 py-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="male">Male</SelectItem>
+                                  <SelectItem value="female">Female</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
                             ) : (
                               <span className="px-3 py-1 bg-muted text-muted-foreground text-[10px] font-black rounded-lg uppercase tracking-widest border border-border">
                                 {emp.gender}

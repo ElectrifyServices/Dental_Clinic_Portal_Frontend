@@ -17,7 +17,7 @@ export const useCreateMedicalHistoryMutation = () => {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, { name: string; is_custom: boolean }>({
-    endpoint: "/patientMedical/medical-histories/create",
+    endpoint: "/patientMedical/medical-histories",
     method: "post",
     options: {
       onSuccess: () => {

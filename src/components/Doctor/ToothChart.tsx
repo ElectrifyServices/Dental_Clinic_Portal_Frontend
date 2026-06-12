@@ -20,17 +20,17 @@ interface Condition {
 
 interface ToothSVGProps {
   num: number;
-  conditionId: ConditionId | undefined;
+  conditionIds: ConditionId[] | undefined;
 }
 
 interface ToothCellProps {
   num: number;
-  conditionId: ConditionId | undefined;
+  conditionIds: ConditionId[] | undefined;
   isLower: boolean;
   onClick: () => void;
 }
 
-type ToothState = Record<number, ConditionId>;
+type ToothState = Record<number, ConditionId[]>;
 
 const CONDITIONS: Condition[] = [
   {
@@ -105,10 +105,11 @@ function getCondition(id: ConditionId | undefined): Condition {
   return CONDITIONS.find((c) => c.id === id) ?? CONDITIONS[0];
 }
 
-function ToothSVG({ num, conditionId }: ToothSVGProps) {
+function ToothSVG({ num, conditionIds }: ToothSVGProps) {
   const type = getToothType(num);
-  const cond = getCondition(conditionId);
-  const missing = conditionId === "missing";
+  const activeConditionId = conditionIds && conditionIds.length > 0 ? conditionIds[conditionIds.length - 1] : "normal";
+  const cond = getCondition(activeConditionId);
+  const missing = conditionIds?.includes("missing");
   const { fill, stroke } = cond;
 
   let crownPath = "";
@@ -177,14 +178,14 @@ function ToothSVG({ num, conditionId }: ToothSVGProps) {
   );
 }
 
-function ToothCell({ num, conditionId, isLower, onClick }: ToothCellProps) {
-  const cond = getCondition(conditionId);
-  const isMarked = conditionId !== undefined && conditionId !== "normal";
+function ToothCell({ num, conditionIds, isLower, onClick }: ToothCellProps) {
+  const isMarked = conditionIds !== undefined && conditionIds.length > 0 && !conditionIds.includes("normal");
+  const lastCond = conditionIds && conditionIds.length > 0 ? getCondition(conditionIds[conditionIds.length - 1]) : getCondition("normal");
 
   return (
     <div
       onClick={onClick}
-      title={`Tooth ${num}${isMarked ? ` — ${cond.label}` : ""}`}
+      title={`Tooth ${num}${isMarked ? ` — ${conditionIds!.map(id => getCondition(id).label).join(", ")}` : ""}`}
       style={{
         display: "flex",
         flexDirection: isLower ? "column-reverse" : "column",
@@ -200,12 +201,12 @@ function ToothCell({ num, conditionId, isLower, onClick }: ToothCellProps) {
       }
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
-      <ToothSVG num={num} conditionId={conditionId} />
+      <ToothSVG num={num} conditionIds={conditionIds} />
       <span
         style={{
           fontSize: 9,
           fontWeight: isMarked ? 600 : 500,
-          color: isMarked ? cond.textColor : "#888780",
+          color: isMarked ? lastCond.textColor : "#888780",
           lineHeight: 1,
           margin: "2px 0",
           textAlign: "center",
@@ -238,24 +239,37 @@ export function ToothChart({
       if (activeMode === "normal") {
         delete next[num];
       } else {
-        next[num] = activeMode;
+        const current = next[num] || [];
+        if (current.includes(activeMode)) {
+          next[num] = current.filter((id) => id !== activeMode);
+          if (next[num].length === 0) {
+            delete next[num];
+          }
+        } else {
+          next[num] = [...current, activeMode];
+        }
       }
       return next;
     });
   };
 
-  const removeTooth = (num: number): void => {
+  const removeFinding = (num: number, cid: ConditionId): void => {
     setToothState((prev) => {
       const next: ToothState = { ...prev };
-      delete next[num];
+      if (next[num]) {
+        next[num] = next[num].filter((id) => id !== cid);
+        if (next[num].length === 0) {
+          delete next[num];
+        }
+      }
       return next;
     });
   };
 
-  const findings: [string, ConditionId][] = (
-    Object.entries(toothState) as [string, ConditionId][]
+  const findings: [string, ConditionId[]][] = (
+    Object.entries(toothState) as [string, ConditionId[]][]
   )
-    .filter(([, v]) => v !== "normal")
+    .filter(([, v]) => v && v.length > 0 && !v.includes("normal"))
     .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
   return (
@@ -357,7 +371,7 @@ export function ToothChart({
             <ToothCell
               key={num}
               num={num}
-              conditionId={toothState[num]}
+              conditionIds={toothState[num]}
               isLower={false}
               onClick={() => clickTooth(num)}
             />
@@ -390,7 +404,7 @@ export function ToothChart({
             <ToothCell
               key={num}
               num={num}
-              conditionId={toothState[num]}
+              conditionIds={toothState[num]}
               isLower={true}
               onClick={() => clickTooth(num)}
             />
@@ -434,7 +448,7 @@ export function ToothChart({
         }}
       >
         {CONDITIONS.filter((c) => c.id !== "normal").map((c) => {
-          const count = Object.values(toothState).filter(
+          const count = Object.values(toothState).flatMap(v => v || []).filter(
             (v) => v === c.id,
           ).length;
           return (
@@ -489,38 +503,40 @@ export function ToothChart({
             Findings
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {findings.map(([num, cid]) => {
-              const c = getCondition(cid);
-              return (
-                <span
-                  key={num}
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 500,
-                    padding: "3px 10px",
-                    borderRadius: 999,
-                    background: c.fill,
-                    color: c.textColor,
-                    border: `1px solid ${c.stroke}`,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  #{num} — {c.label}
+            {findings.map(([num, cids]) => {
+              return cids.map((cid) => {
+                const c = getCondition(cid);
+                return (
                   <span
-                    onClick={() => removeTooth(parseInt(num))}
+                    key={`${num}-${cid}`}
                     style={{
-                      cursor: "pointer",
-                      opacity: 0.6,
-                      fontSize: 13,
-                      lineHeight: 1,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      padding: "3px 10px",
+                      borderRadius: 999,
+                      background: c.fill,
+                      color: c.textColor,
+                      border: `1px solid ${c.stroke}`,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                     }}
                   >
-                    ×
+                    #{num} — {c.label}
+                    <span
+                      onClick={() => removeFinding(parseInt(num), cid)}
+                      style={{
+                        cursor: "pointer",
+                        opacity: 0.6,
+                        fontSize: 13,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </span>
                   </span>
-                </span>
-              );
+                );
+              });
             })}
           </div>
         </div>

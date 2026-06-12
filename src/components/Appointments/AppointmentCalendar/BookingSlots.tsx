@@ -35,7 +35,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
               </div>
             ) : availableSlots.length > 0 ? (
               availableSlots.map((slot, idx) => {
-                const isDisabled = slot.isBooked || slot.isPast;
+                const isDisabled = slot.isPast;
                 return (
                   <Button
                     key={idx}
@@ -46,10 +46,7 @@ export const BookingSlots: React.FC<BookingSlotsProps> = ({
                         isDisabled ? "bg-muted text-muted-foreground/20 border-transparent cursor-not-allowed" :
                           "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200 hover:bg-emerald-100"}`}
                   >
-                    {slot.time12}
-                    {slot.isBooked && (
-                      <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-white" />
-                    )}
+                    {slot.time12} ({slot.appointmentCount})
                   </Button>
                 );
               })

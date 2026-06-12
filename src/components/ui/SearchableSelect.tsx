@@ -21,6 +21,7 @@ interface SearchableSelectProps {
   isDeletingValue?: string | null;
   isMulti?: boolean;
   className?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export function SearchableSelect({
@@ -38,6 +39,7 @@ export function SearchableSelect({
   isDeletingValue = null,
   isMulti = false,
   className,
+  onSearchChange,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -46,6 +48,7 @@ export function SearchableSelect({
   React.useEffect(() => {
     if (!isOpen) {
       setSearchQuery("");
+      onSearchChange?.("");
     }
   }, [isOpen]);
 
@@ -116,13 +119,19 @@ export function SearchableSelect({
             autoComplete="off"
             placeholder={searchPlaceholder}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              onSearchChange?.(e.target.value);
+            }}
             className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                onSearchChange?.("");
+              }}
               className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-colors"
             >
               <X className="h-3.5 w-3.5" />

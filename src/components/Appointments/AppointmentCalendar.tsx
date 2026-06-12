@@ -154,7 +154,7 @@ export function AppointmentCalendar({
 
     return availableSlotsResponse.data.slots.map((slot) => {
       const time24 = convert12to24(slot.time);
-      const isBooked = !slot.is_available;
+      const appointmentCount = slot.appointment_count || 0;
       
       const now = new Date();
       const slotTime = new Date(selectedDateObj);
@@ -164,7 +164,7 @@ export function AppointmentCalendar({
       return {
         time24,
         time12: slot.time,
-        isBooked,
+        appointmentCount,
         isPast: slotTime < now,
       };
     });

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { treatmentSchema, type TreatmentFormData } from "@/lib/schemas/treatment.schema";
 import { treatmentTemplates } from "@/constants/treatment-template.constants";
 import type { Prescription, TreatmentSession } from "@/types/treatment.types";
+import { dosageMappings } from "@/constants/treatment.constants";
 
 export function useTreatmentForm(treatment?: any, patients?: any[], allTreatments?: any[]) {
   const form = useForm<TreatmentFormData>({
@@ -218,7 +219,35 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
 
   const updatePrescription = (id: string, field: string, value: string) => {
     setPrescriptions((prev) =>
-      prev.map((p) => p.id === id ? { ...p, [field]: value } : p)
+      prev.map((p) => {
+        if (p.id === id) {
+          const updated = { ...p, [field]: value };
+          if (field === "dosage" && dosageMappings[value]) {
+            updated.timing = dosageMappings[value].timing;
+            updated.frequency = dosageMappings[value].frequency;
+          }
+          
+          const dosageStr = updated.dosage || "";
+          const durationVal = parseFloat(updated.duration) || 0;
+          const durationUnit = updated.durationUnit || "Days";
+          let multiplier = 1;
+          if (durationUnit === "Weeks") multiplier = 7;
+          else if (durationUnit === "Months") multiplier = 30;
+          else if (durationUnit === "Years") multiplier = 365;
+
+          const parts = dosageStr.split("-");
+          let dosageSum = 0;
+          if (parts.length === 3) {
+            dosageSum = parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0);
+          }
+          
+          if (dosageSum > 0 && durationVal > 0) {
+            updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
+          }
+          return updated;
+        }
+        return p;
+      })
     );
   };
 

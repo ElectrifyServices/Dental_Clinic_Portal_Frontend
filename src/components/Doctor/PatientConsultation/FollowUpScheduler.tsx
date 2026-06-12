@@ -1,6 +1,13 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import React from "react";
 import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 
@@ -10,7 +17,7 @@ interface FollowUpSchedulerProps {
   followUpDoctorId: string;
   followUpDate: string;
   selectedSlot: string | null;
-  availableSlots: { time24: string; time12: string; isAvailable: boolean }[];
+  availableSlots: { time24: string; time12: string; appointmentCount: number }[];
   doctors: any[];
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDoctorChange: (id: string) => void;
@@ -81,18 +88,22 @@ export function FollowUpScheduler({
               <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                 Assign Doctor
               </Label>
-              <select
+              <Select
                 value={followUpDoctorId}
-                onChange={(e) => onDoctorChange(e.target.value)}
+                onValueChange={onDoctorChange}
                 disabled={!!bookedFollowUp}
-                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               >
-                {doctors.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({d.specialization})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="rounded-xl text-sm border-primary/30">
+                  <SelectValue placeholder="Select doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name} ({d.specialization})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -120,29 +131,22 @@ export function FollowUpScheduler({
                   <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-primary/20 rounded-xl bg-card/50 custom-scrollbar">
                     {availableSlots.map((slot) => {
                       const isSelected = selectedSlot === slot.time24;
-                      const isBooked = !slot.isAvailable;
                       return (
                         <Button
                           key={slot.time24}
                           type="button"
-                          disabled={isBooked}
-                          onClick={() => !isBooked && onSlotSelect(slot.time24)}
+                          onClick={() => onSlotSelect(slot.time24)}
                           className={`
                             relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5
                             ${isSelected
                               ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
-                              : isBooked
-                              ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50"
                               : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
                             }
                           `}
-                          title={isBooked ? "Already booked" : `Select ${slot.time12}`}
+                          title={`Select ${slot.time12}`}
                         >
                           {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />}
-                          {slot.time12}
-                          {isBooked && (
-                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-400 border border-white" />
-                          )}
+                          {slot.time12} ({slot.appointmentCount})
                         </Button>
                       );
                     })}
@@ -156,10 +160,6 @@ export function FollowUpScheduler({
                     <span className="flex items-center gap-1">
                       <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-600" />
                       Selected
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-sm inline-block bg-red-100 border border-red-200" />
-                      Booked
                     </span>
                   </p>
                 </div>

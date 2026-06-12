@@ -99,7 +99,7 @@ export function useCreateDoctorScheduleMutation() {
 
   return useApiMutation<any, CreateDoctorScheduleVariables>({
     getEndpoint: (variables) =>
-      `/doctorSchedule/create/${variables.doctorId}`,
+      `/doctorSchedule/${variables.doctorId}`,
     method: "post",
     transformRequest: (variables) => variables.payload,
     options: {

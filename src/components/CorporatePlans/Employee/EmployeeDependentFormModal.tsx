@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Modal, Button, Label, Input } from '../../ui';
+import {
+  Modal,
+  Button,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui';
 import { CorporateEmployee, PlanDependent } from '../../../types';
 import { addDependent, notifyDependentChange } from '../../../hooks/corporate/dependentStorage';
 import { useModal } from '../../../contexts/ModalContext';
@@ -72,19 +82,22 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, on
 
           <div>
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Relationship *</Label>
-            <select
+            <Select
               required
               value={formData.relationship || ''}
-              onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium"
+              onValueChange={(value) => setFormData({ ...formData, relationship: value })}
             >
-              <option value="">Select relationship</option>
-              <option value="Spouse">Spouse</option>
-              <option value="Child">Child</option>
-              <option value="Parent">Parent</option>
-              <option value="Sibling">Sibling</option>
-              <option value="Other">Other</option>
-            </select>
+              <SelectTrigger className="rounded-xl text-sm">
+                <SelectValue placeholder="Select relationship" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Spouse">Spouse</SelectItem>
+                <SelectItem value="Child">Child</SelectItem>
+                <SelectItem value="Parent">Parent</SelectItem>
+                <SelectItem value="Sibling">Sibling</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -120,27 +133,35 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, on
 
           <div>
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Gender</Label>
-            <select
+            <Select
               value={formData.gender || 'male'}
-              onChange={(e) => setFormData({ ...formData, gender: e.target.value as any })}
-              className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium"
+              onValueChange={(value) => setFormData({ ...formData, gender: value as any })}
             >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+              <SelectTrigger className="rounded-xl text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Status</Label>
-            <select
+            <Select
               value={formData.isActive ? 'active' : 'inactive'}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'active' })}
-              className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium"
+              onValueChange={(value) => setFormData({ ...formData, isActive: value === 'active' })}
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              <SelectTrigger className="rounded-xl text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

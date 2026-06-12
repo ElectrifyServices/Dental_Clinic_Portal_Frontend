@@ -55,7 +55,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
       return {
         time12: slot.time,
         time24,
-        isAvailable: slot.is_available,
+        appointmentCount: slot.appointment_count || 0,
         isPast,
       };
     });
@@ -164,33 +164,30 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
           ) : hasSlots ? (
             <div className="flex gap-2 flex-wrap max-h-40 overflow-y-auto p-1.5 custom-scrollbar">
                {slots.map((slot) => {
-                const isSelected = time === slot.time24;
-                const isBooked = !slot.isAvailable || slot.isPast;
-                return (
-                  <Button
-                    key={slot.time24}
-                    type="button"
-                    disabled={isBooked}
-                    onClick={() => !isBooked && handleSlotClick(slot.time24)}
-                    className={`
-                      relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5 h-auto
-                      ${isSelected
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
-                        : isBooked
-                        ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
-                        : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
-                      }
-                    `}
-                    title={slot.isPast ? "Time slot has passed" : isBooked ? "Already booked" : `Select ${slot.time12}`}
-                  >
-                    {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
-                    {slot.time12}
-                    {isBooked && (
-                      <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-400 border border-white" />
-                    )}
-                  </Button>
-                );
-              })}
+                 const isSelected = time === slot.time24;
+                 const isDisabled = slot.isPast;
+                 return (
+                   <Button
+                     key={slot.time24}
+                     type="button"
+                     disabled={isDisabled}
+                     onClick={() => !isDisabled && handleSlotClick(slot.time24)}
+                     className={`
+                       relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5 h-auto
+                       ${isSelected
+                         ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
+                         : isDisabled
+                         ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
+                         : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
+                       }
+                     `}
+                     title={slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
+                   >
+                     {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
+                     {slot.time12} ({slot.appointmentCount})
+                   </Button>
+                 );
+               })}
             </div>
           ) : (
             <p className="text-[10px] text-emerald-600/60 font-medium italic py-1">
@@ -206,10 +203,6 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
             <span className="flex items-center gap-1">
               <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-600" />
               Selected
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-sm inline-block bg-red-100 border border-red-200" />
-              Booked
             </span>
             <span className="ml-auto">Click slot to auto-fill time, or enter manually above.</span>
           </p>

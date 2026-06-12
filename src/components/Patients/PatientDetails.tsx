@@ -29,6 +29,7 @@ import {
 } from "./PatientDetails/PrintTemplates";
 import { usePatientAppointmentHistoryQuery } from "../../hooks/patients/usePatientAppointmentHistoryQuery";
 import { usePatientFamilyTreeQuery } from "../../hooks/patients/usePatientFamilyTreeQuery";
+import { toTitleCase } from "@/utils/stringUtils";
 
 interface PatientDetailsProps {
   patient: any;
@@ -253,7 +254,7 @@ export function PatientDetails({
           localizedClinicName: "Opal Smiles Dental Studio",
           localizedDoctorName: "Dr. Rajesh Sharma",
           localizedDoctorDegrees: "BDS, MDS",
-          localizedPatientName: patient.name,
+          localizedPatientName: toTitleCase(patient.name),
           previewData,
           localizedGender: patient.gender,
           localizedData: previewData,
@@ -284,7 +285,7 @@ export function PatientDetails({
 
   return (
     <Modal
-      title={patient.name}
+      title={toTitleCase(patient.name)}
       subtitle={`Patient Code: ${patient.patient_code || patient.patientCode || patient.id} • Registered ${new Date(patient.created_at || patient.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`}
       onClose={onClose}
       size="5xl"
@@ -315,9 +316,9 @@ export function PatientDetails({
             </Button>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground font-black uppercase tracking-widest text-[10px]"
+            className="font-bold uppercase tracking-wider text-xs"
           >
             Close Profile
           </Button>

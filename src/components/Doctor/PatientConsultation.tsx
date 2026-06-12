@@ -112,7 +112,7 @@ export function PatientConsultation({
   const debouncedDateFrom = useDebounce(historyDateFrom, 300);
   const debouncedDateTo = useDebounce(historyDateTo, 300);
   const [toothChartState, setToothChartState] = useState<
-    Record<number, string>
+    Record<number, string[]>
   >(initialData?.toothChartState || {});
 
   const [consultationData, setConsultationData] = useState<ConsultationData>(
@@ -179,31 +179,43 @@ export function PatientConsultation({
 
   // Sync toothChartState with treatmentPlans
   useEffect(() => {
-    const selectedToothNums = Object.keys(toothChartState).map(Number);
+    const pairs = Object.entries(toothChartState).flatMap(([toothNum, conditions]) => {
+      const condArray = Array.isArray(conditions) ? conditions : [conditions];
+      return condArray
+        .filter((c) => c !== "normal")
+        .map((cond) => ({
+          tooth: toothNum,
+          condition: cond,
+        }));
+    });
 
     setConsultationData((prev) => {
       const existingPlans = prev.treatmentPlans || [];
       const filteredPlans = existingPlans.filter((plan: any) =>
-        selectedToothNums.includes(parseInt(plan.tooth)),
+        pairs.some((pair) => pair.tooth === plan.tooth && pair.condition === plan.condition),
       );
 
-      const newTeeth = selectedToothNums.filter(
-        (num) => !filteredPlans.find((p: any) => parseInt(p.tooth) === num),
+      const newPairs = pairs.filter(
+        (pair) => !filteredPlans.some((p: any) => p.tooth === pair.tooth && p.condition === pair.condition),
       );
 
-      const newPlans = newTeeth.map((num) => ({
-        id: `plan-${num}-${Date.now()}`,
-        tooth: num.toString(),
+      const newPlans = newPairs.map((pair) => ({
+        id: `plan-${pair.tooth}-${pair.condition}-${Date.now()}`,
+        tooth: pair.tooth,
+        condition: pair.condition,
         procedure: "",
         sessions: 1,
         cost: 0,
         isActive: true,
+        planDate: new Date().toISOString().split("T")[0],
         status: "planned",
       }));
 
-      const updatedPlans = [...filteredPlans, ...newPlans].sort(
-        (a, b) => parseInt(a.tooth) - parseInt(b.tooth),
-      );
+      const updatedPlans = [...filteredPlans, ...newPlans].sort((a, b) => {
+        const toothDiff = parseInt(a.tooth) - parseInt(b.tooth);
+        if (toothDiff !== 0) return toothDiff;
+        return a.condition.localeCompare(b.condition);
+      });
 
       if (JSON.stringify(updatedPlans) === JSON.stringify(existingPlans)) {
         return prev;
@@ -260,7 +272,7 @@ export function PatientConsultation({
         const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
         time12 = `${hour12}:${m} ${ampm}`;
       }
-      return { time24, time12, isAvailable: s.is_available };
+      return { time24, time12, appointmentCount: s.appointment_count || 0 };
     });
   }, [slotsData]);
 
@@ -340,6 +352,7 @@ export function PatientConsultation({
       "1-0-1": { timing: "After Food", frequency: "Twice daily" },
       "0-1-1": { timing: "After Food", frequency: "Twice daily" },
       "1-1-1": { timing: "After Food", frequency: "Thrice daily" },
+      "2-1-1": { timing: "After Food", frequency: "Four times daily" },
     };
 
     setConsultationData((prev) => ({
@@ -350,6 +363,24 @@ export function PatientConsultation({
           if (field === "dosage" && dosageMappings[value]) {
             updated.timing = dosageMappings[value].timing;
             updated.frequency = dosageMappings[value].frequency;
+          }
+          
+          const dosageStr = updated.dosage || "";
+          const durationVal = parseFloat(updated.duration) || 0;
+          const durationUnit = updated.durationUnit || "Days";
+          let multiplier = 1;
+          if (durationUnit === "Weeks") multiplier = 7;
+          else if (durationUnit === "Months") multiplier = 30;
+          else if (durationUnit === "Years") multiplier = 365;
+
+          const parts = dosageStr.split("-");
+          let dosageSum = 0;
+          if (parts.length === 3) {
+            dosageSum = parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0);
+          }
+          
+          if (dosageSum > 0 && durationVal > 0) {
+            updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
           }
           return updated;
         }
@@ -398,12 +429,6 @@ export function PatientConsultation({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!consultationData.observations.trim()) {
-      newErrors.observations = "Detailed Observations are required.";
-    }
-    if (!consultationData.diagnosis.trim()) {
-      newErrors.diagnosis = "Diagnosis is required.";
-    }
     if (consultationData.requiresTreatment && !consultationData.treatmentPlan.trim()) {
       newErrors.treatmentPlan = "Treatment Plan Description is required when treatment is needed.";
     }
@@ -552,7 +577,7 @@ export function PatientConsultation({
             }}
           />
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
               <div>
                 <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>

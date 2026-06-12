@@ -110,11 +110,11 @@
            h-10 px-4
            text-sm font-semibold text-primary-foreground
            bg-primary rounded-md
-           hover:bg-primary-hover
-           active:scale-[0.98]
-           transition-all duration-150
-           shadow-sm hover:shadow-md
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           hover:bg-primary-hover hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-sm hover:shadow-md hover:shadow-primary/10
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
 
   .btn-secondary {
@@ -122,11 +122,11 @@
            h-10 px-4
            text-sm font-semibold text-foreground
            bg-card border border-border rounded-md
-           hover:bg-muted hover:border-border/80
-           active:scale-[0.98]
-           transition-all duration-150
-           shadow-sm
-           disabled:opacity-50;
+           hover:bg-muted hover:border-border/80 hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-sm hover:shadow-md
+           disabled:opacity-50 disabled:transform-none;
   }
 
   .btn-danger {
@@ -134,47 +134,49 @@
            h-10 px-4
            text-sm font-semibold text-destructive-foreground
            bg-destructive rounded-md
-           hover:opacity-90
-           active:scale-[0.98]
-           transition-all duration-150
-           shadow-sm
-           disabled:opacity-50;
+           hover:opacity-95 hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-sm hover:shadow-md hover:shadow-destructive/10
+           disabled:opacity-50 disabled:transform-none;
   }
 
   .btn-icon {
     @apply p-2 text-muted-foreground
-           hover:text-foreground hover:bg-muted
-           rounded-md transition-all duration-150;
+           hover:text-foreground hover:bg-muted hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
   }
 
   .btn-icon-blue {
     @apply p-2 text-primary
-           hover:text-primary/80 hover:bg-primary/10
-           rounded-md transition-colors duration-150;
+           hover:text-primary/80 hover:bg-primary/10 hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
   }
 
   .btn-icon-red {
     @apply p-2 text-destructive
-           hover:text-destructive/80 hover:bg-destructive/10
-           rounded-md transition-colors duration-150;
+           hover:text-destructive/80 hover:bg-destructive/10 hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
   }
 
   /* ─────────────────────────────────────────────────────────────────
      CARDS
   ───────────────────────────────────────────────────────────────── */
   .card {
-    @apply bg-card rounded-lg border border-border shadow-card;
+    @apply bg-card rounded-lg border border-border shadow-card
+           transition-all duration-300 ease-out;
   }
 
   .card-hover {
     @apply bg-card rounded-lg border border-border shadow-card
-           hover:shadow-card-hover hover:border-border/80
-           transition-all duration-200;
+           hover:shadow-card-hover hover:border-border/80 hover:-translate-y-1 hover:scale-[1.005]
+           transition-all duration-300 ease-out;
   }
 
   .kpi-card {
     @apply bg-card rounded-lg border border-border p-6 shadow-card
-           hover:shadow-card-hover transition-shadow duration-200;
+           hover:shadow-card-hover hover:-translate-y-1 hover:scale-[1.01]
+           transition-all duration-300 ease-out;
   }
 
   /* ─────────────────────────────────────────────────────────────────
@@ -185,8 +187,8 @@
            text-sm text-foreground
            bg-card border border-border rounded-md
            placeholder:text-muted-foreground
-           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-           transition-all duration-150
+           focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary
+           transition-all duration-200 ease-out
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
@@ -233,7 +235,8 @@
 
   .data-table tbody tr {
     @apply border-b border-divider
-           hover:bg-secondary/40 transition-colors duration-100;
+           hover:bg-secondary/40 hover:scale-[1.002]
+           transition-all duration-150 ease-out;
   }
 
   .data-table tbody tr:last-child {
