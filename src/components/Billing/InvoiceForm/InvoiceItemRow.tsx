@@ -1,9 +1,16 @@
-import { Label } from "@/components/ui/Label";
-import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { Trash2, Check } from 'lucide-react';
 import { InvoiceItem } from '../../../types';
-import { Button } from '@/components/ui';
+import {
+  Button,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;
@@ -33,10 +40,9 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            <select
+            <Select
               value={commonServices.some(s => s.name === item.description) ? item.description : (item.description ? 'custom' : '')}
-              onChange={(e) => {
-                const value = e.target.value;
+              onValueChange={(value) => {
                 if (value === 'custom') {
                   onUpdate(item.id, 'description', '');
                 } else {
@@ -45,12 +51,17 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
                   if (s) onUpdate(item.id, 'rate', s.rate);
                 }
               }}
-              className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
             >
-              <option value="">Select Service</option>
-              {commonServices.map(s => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
-              <option value="custom">Custom Service...</option>
-            </select>
+              <SelectTrigger className="w-full rounded-lg text-sm">
+                <SelectValue placeholder="Select Service" />
+              </SelectTrigger>
+              <SelectContent>
+                {commonServices.map(s => (
+                  <SelectItem key={s.id || s.name} value={s.name}>{s.name}</SelectItem>
+                ))}
+                <SelectItem value="custom">Custom Service...</SelectItem>
+              </SelectContent>
+            </Select>
             {(!commonServices.some(s => s.name === item.description) && !isLinked) && (
               <Input
                 type="text"

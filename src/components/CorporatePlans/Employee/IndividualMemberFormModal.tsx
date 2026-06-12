@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { UserPlus, CheckCircle, Users, Plus, Trash2, User } from 'lucide-react';
-import { Modal, Button, Label, Input } from '../../ui';
+import {
+  Modal,
+  Button,
+  Label,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui';
 import { CorporatePlan, CoverageType } from '../../../types';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
@@ -181,12 +191,16 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
             </div>
             <div>
               <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Gender</Label>
-              <select value={form.gender} onChange={e => setForm(p => ({ ...p, gender: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
+              <Select value={form.gender} onValueChange={value => setForm(p => ({ ...p, gender: value as any }))}>
+                <SelectTrigger className="rounded-xl text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Enrollment Date</Label>
@@ -199,15 +213,18 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
         {/* Plan Selection */}
         <div>
           <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Plan</Label>
-          <select value={form.planId} onChange={e => setForm(p => ({ ...p, planId: e.target.value, coverageType: 'self' }))}
-            className="w-full px-3 py-2 border border-border rounded-xl text-sm bg-background font-medium">
-            <option value="">Select individual plan...</option>
-            {individualPlans.filter(p => p.isActive).map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} — ₹{p.annualFee?.toLocaleString() ?? '1,000'}/year{p.maxDependents ? ` (+${p.maxDependents} pax)` : ''}
-              </option>
-            ))}
-          </select>
+          <Select value={form.planId} onValueChange={value => setForm(p => ({ ...p, planId: value, coverageType: 'self' }))}>
+            <SelectTrigger className="rounded-xl text-sm">
+              <SelectValue placeholder="Select individual plan..." />
+            </SelectTrigger>
+            <SelectContent>
+              {individualPlans.filter(p => p.isActive).map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name} — ₹{p.annualFee?.toLocaleString() ?? '1,000'}/year{p.maxDependents ? ` (+${p.maxDependents} pax)` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.planId && <p className="text-red-500 text-[10px] mt-1">{errors.planId}</p>}
           {selectedPlan && (
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -227,17 +244,20 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Coverage</Label>
               <div className="flex gap-3">
                 {(['self', 'family'] as CoverageType[]).map(ct => (
-                  <button key={ct} type="button"
+                  <Button
+                    key={ct}
+                    type="button"
+                    variant="outline"
                     onClick={() => setForm(p => ({ ...p, coverageType: ct }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
                       form.coverageType === ct
-                        ? 'border-primary bg-primary/10 text-primary'
+                        ? 'border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary'
                         : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
                   >
                     <Users className="w-4 h-4" />
                     {ct === 'self' ? 'Self Only' : '+ Family Members'}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

@@ -182,13 +182,14 @@ export function QueueCard({
                     ? allergies.join(", ")
                     : allergies.slice(0, 3).join(", ")}
                   {allergies.length > 3 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setShowAllAllergies(!showAllAllergies)}
-                      className="cursor-pointer hover:underline text-red-800 ml-1 bg-transparent border-none p-0 outline-none"
+                      className="cursor-pointer hover:underline text-red-800 ml-1 h-auto p-0 text-[11px] font-bold"
                     >
                       {showAllAllergies ? "(less)" : `+${allergies.length - 3} more`}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -199,13 +200,14 @@ export function QueueCard({
                     ? medHistory.join(", ")
                     : medHistory.slice(0, 2).join(", ")}
                   {medHistory.length > 2 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setShowAllMedHistory(!showAllMedHistory)}
-                      className="cursor-pointer hover:underline text-amber-900 ml-1 bg-transparent border-none p-0 outline-none"
+                      className="cursor-pointer hover:underline text-amber-900 ml-1 h-auto p-0 text-[11px] font-bold"
                     >
                       {showAllMedHistory ? "(less)" : `+${medHistory.length - 2} more`}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}

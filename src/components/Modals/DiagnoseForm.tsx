@@ -2,6 +2,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 ﻿import React from 'react';
 import { X } from 'lucide-react';
 
@@ -43,11 +50,16 @@ export const DiagnoseForm: React.FC<DiagnoseFormProps> = ({ patient, onClose, on
                </div>
                <div>
                  <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2 block">Follow-up Needed?</Label>
-                 <select className="w-full px-4 py-3 rounded-2xl bg-muted border-border focus:bg-card focus:ring-4 focus:ring-primary transition-all outline-none">
-                   <option>No</option>
-                   <option>Yes (Next Week)</option>
-                   <option>Yes (Next Month)</option>
-                 </select>
+                 <Select defaultValue="No">
+                   <SelectTrigger className="w-full rounded-2xl">
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="No">No</SelectItem>
+                     <SelectItem value="Yes (Next Week)">Yes (Next Week)</SelectItem>
+                     <SelectItem value="Yes (Next Month)">Yes (Next Month)</SelectItem>
+                   </SelectContent>
+                 </Select>
                </div>
             </div>
 

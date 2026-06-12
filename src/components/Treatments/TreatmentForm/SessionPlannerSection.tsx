@@ -2,6 +2,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { Calendar, Plus, Trash2, Clock, DollarSign, FileText } from "lucide-react";
 
 interface SessionPlannerSectionProps {
@@ -131,58 +138,53 @@ export function SessionPlannerSection({
                     <Clock className="w-3 h-3" />
                     Start Time
                   </Label>
-                  <select
+                  <Select
                     value={session.startTime || "09:00"}
-                    onChange={(e) =>
-                      onUpdateSession(session.id, {
-                        startTime: e.target.value,
-                        start_time: e.target.value,
-                      })
+                    onValueChange={(val) =>
+                      onUpdateSession(session.id, { startTime: val, start_time: val })
                     }
-                    className="w-full px-3 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background outline-none text-sm"
                   >
-                    <option value="09:00">09:00 AM</option>
-                    <option value="09:30">09:30 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="10:30">10:30 AM</option>
-                    <option value="11:00">11:00 AM</option>
-                    <option value="11:30">11:30 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="12:30">12:30 PM</option>
-                    <option value="13:00">01:00 PM</option>
-                    <option value="13:30">01:30 PM</option>
-                    <option value="14:00">02:00 PM</option>
-                    <option value="14:30">02:30 PM</option>
-                    <option value="15:00">03:00 PM</option>
-                    <option value="15:30">03:30 PM</option>
-                    <option value="16:00">04:00 PM</option>
-                    <option value="16:30">04:30 PM</option>
-                    <option value="17:00">05:00 PM</option>
-                  </select>
+                    <SelectTrigger className="rounded-xl text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"].map((t) => {
+                        const [h, m] = t.split(":").map(Number);
+                        const ampm = h < 12 ? "AM" : "PM";
+                        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                        return (
+                          <SelectItem key={t} value={t}>
+                            {String(h12).padStart(2, "0")}:{String(m).padStart(2, "0")} {ampm}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     Duration (min)
                   </Label>
-                  <select
-                    value={session.duration || 45}
-                    onChange={(e) =>
-                      onUpdateSession(session.id, {
-                        duration: parseInt(e.target.value),
-                        duration_min: parseInt(e.target.value),
-                      })
+                  <Select
+                    value={String(session.duration || 45)}
+                    onValueChange={(val) =>
+                      onUpdateSession(session.id, { duration: parseInt(val), duration_min: parseInt(val) })
                     }
-                    className="w-full px-3 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background outline-none text-sm"
                   >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="60">1 hour</option>
-                    <option value="90">1.5 hours</option>
-                    <option value="120">2 hours</option>
-                    <option value="180">3 hours</option>
-                  </select>
+                    <SelectTrigger className="rounded-xl text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                      <SelectItem value="90">1.5 hours</SelectItem>
+                      <SelectItem value="120">2 hours</SelectItem>
+                      <SelectItem value="180">3 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -211,18 +213,22 @@ export function SessionPlannerSection({
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
                     Status
                   </Label>
-                  <select
+                  <Select
                     value={session.status || "scheduled"}
-                    onChange={(e) =>
-                      onUpdateSession(session.id, { status: e.target.value })
+                    onValueChange={(val) =>
+                      onUpdateSession(session.id, { status: val })
                     }
-                    className="w-full px-3 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background outline-none text-sm capitalize"
                   >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                    <SelectTrigger className="rounded-xl text-sm capitalize">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

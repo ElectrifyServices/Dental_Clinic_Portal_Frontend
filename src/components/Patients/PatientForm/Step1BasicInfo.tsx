@@ -126,14 +126,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               <Camera className="w-6 h-6 text-white" />
             </div>
           </div>
-          <button
+          <Button
             type="button"
             onClick={() => setShowPhotoOptions(true)}
-            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white"
+            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white h-auto"
             title="Update photo"
           >
             <Camera className="w-4 h-4" />
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -155,38 +155,34 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-black text-foreground uppercase tracking-wider">Select Photo Source</h4>
-              <button type="button" onClick={() => setShowPhotoOptions(false)} className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+              <Button type="button" variant="ghost" onClick={() => setShowPhotoOptions(false)} className="p-1 h-auto hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
+              <Button
                 type="button"
-                onClick={() => {
-                  setShowPhotoOptions(false);
-                  startCamera();
-                }}
-                className="flex flex-col items-center justify-center gap-3 p-4 border border-border hover:border-primary hover:bg-primary/5 rounded-2xl transition-all duration-150 group"
+                variant="outline"
+                onClick={() => { setShowPhotoOptions(false); startCamera(); }}
+                className="flex flex-col items-center justify-center gap-3 p-4 h-auto border border-border hover:border-primary hover:bg-primary/5 rounded-2xl group"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Camera className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-bold text-foreground text-center">Take Photo</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
-                onClick={() => {
-                  setShowPhotoOptions(false);
-                  fileInputRef.current?.click();
-                }}
-                className="flex flex-col items-center justify-center gap-3 p-4 border border-border hover:border-primary hover:bg-primary/5 rounded-2xl transition-all duration-150 group"
+                variant="outline"
+                onClick={() => { setShowPhotoOptions(false); fileInputRef.current?.click(); }}
+                className="flex flex-col items-center justify-center gap-3 p-4 h-auto border border-border hover:border-primary hover:bg-primary/5 rounded-2xl group"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Upload className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-bold text-foreground text-center">Choose File</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -197,9 +193,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-black text-foreground uppercase tracking-wider">Capture Patient Photo</h4>
-              <button type="button" onClick={stopCamera} className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+              <Button type="button" variant="ghost" onClick={stopCamera} className="p-1 h-auto hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="aspect-square w-full bg-black rounded-xl overflow-hidden relative border border-border">
               <video
