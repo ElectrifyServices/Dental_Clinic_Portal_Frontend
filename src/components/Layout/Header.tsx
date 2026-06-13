@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import logo from "../../logo.png";
 import {
   Bell,
   LogOut,
@@ -59,15 +60,15 @@ export function Header() {
   };
 
   return (
-    <header className="bg-card border-b border-border px-4 sm:px-6 h-16 flex items-center justify-between sticky top-0 z-40 flex-shrink-0 shadow-[0_1px_0_0_rgb(var(--border))]">
+    <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center justify-between sticky top-0 z-40 flex-shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
       {/* ── Left ────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         {/* Mobile logo */}
-        <div className="flex md:hidden items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shadow-sm">
-            <Stethoscope className="w-4 h-4 text-white" />
+        <div className="flex md:hidden items-center gap-2.5 group/logo cursor-pointer">
+          <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-bold text-foreground text-sm">{tenant.branding.clinicName}</span>
+          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors">{tenant.branding.clinicName}</span>
         </div>
 
         {/* Today's Schedule shortcut */}

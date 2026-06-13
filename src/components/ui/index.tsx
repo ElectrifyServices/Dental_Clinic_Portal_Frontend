@@ -3,6 +3,7 @@
  * Import from '@/components/ui' in any component.
  */
 import React from "react";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -121,7 +122,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "flex flex-col p-0 gap-0 max-h-[calc(100vh-4rem)] overflow-hidden rounded-modal",
+          "flex flex-col p-0 gap-0 max-h-[calc(100vh-4rem)] overflow-hidden rounded-modal border border-border/80 bg-card/95 backdrop-blur-lg shadow-[0_20px_50px_rgba(0,0,0,0.15)]",
           MODAL_SIZES[size],
         )}
       >
@@ -354,13 +355,20 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
                 const key = rowKey(row) || `row-${idx}`;
                 return (
                   <React.Fragment key={key}>
-                    <tr onClick={() => onRowClick?.(row)} className={onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""}>
+                    <motion.tr
+                      key={key}
+                      onClick={() => onRowClick?.(row)}
+                      className={onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
+                    >
                       {columns.map((col) => (
                         <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
                           {col.render(row, idx)}
                         </td>
                       ))}
-                    </tr>
+                    </motion.tr>
                     {renderExpandedRow && expandedRowIds?.has(key) && (
                       <tr>
                         <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">

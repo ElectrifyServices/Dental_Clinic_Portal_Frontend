@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import logo from "../../logo.png";
 import {
   Home,
   Calendar,
@@ -109,9 +110,9 @@ export function Sidebar() {
   return (
     <aside
       className={[
-        "relative hidden md:flex md:flex-col flex-shrink-0",
+        "relative hidden md:flex md:flex-col flex-shrink-0 z-30",
         collapsed ? "md:w-[68px]" : "md:w-[260px]",
-        "bg-card border-r border-border h-screen sticky top-0",
+        "bg-card border-r border-border/60 shadow-[4px_0_24px_rgba(15,23,42,0.015)] h-screen sticky top-0",
         "transition-all duration-300 overflow-visible",
       ].join(" ")}
     >
@@ -130,14 +131,14 @@ export function Sidebar() {
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
-      <div className="flex items-center h-16 px-4 border-b border-border flex-shrink-0">
+      <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center flex-shrink-0 shadow-nav">
-            <Stethoscope className="w-[18px] h-[18px] text-white" />
+          <div className="w-9 h-9 rounded-md bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate">
+              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate group-hover/logo:text-primary transition-colors">
                 {tenant.branding.clinicName}
               </span>
               <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
@@ -175,15 +176,24 @@ export function Sidebar() {
                         title={collapsed ? item.label : undefined}
                         className={[
                           // base layout
-                          "relative overflow-hidden w-full flex items-center rounded-md",
+                          "relative overflow-hidden w-full flex items-center rounded-md group",
                           "text-[13px] font-medium transition-all duration-150 outline-none",
                           collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                           // active / inactive
                           isActive
-                            ? "bg-primary/10 text-primary font-bold shadow-sm"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                            ? "text-primary font-bold z-10"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground z-10",
                         ].join(" ")}
                       >
+                        {/* Background pill indicator — animated */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-active-pill"
+                            className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+
                         {/* Right indicator — animated */}
                         {isActive && !collapsed && (
                           <motion.div
@@ -197,13 +207,15 @@ export function Sidebar() {
 
                         <Icon
                           className={[
-                            "flex-shrink-0 transition-transform duration-150",
+                            "flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
                             collapsed ? "w-5 h-5" : "w-4 h-4",
                             isActive ? "" : "opacity-70",
                           ].join(" ")}
                         />
                         {!collapsed && (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">
+                            {item.label}
+                          </span>
                         )}
                       </NavLink>
                     );
