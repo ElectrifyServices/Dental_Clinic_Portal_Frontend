@@ -46,6 +46,10 @@ export const ConsultationPage: React.FC = () => {
         patientConcern: c.patientConcern || c.observations || "",
         checkInTime: new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: status,
+        slotDurationMins: c.slotDurationMins,
+        specificTreatment: c.specificTreatment,
+        appointmentNotes: c.appointmentNotes,
+        appointmentCost: c.appointmentCost,
       };
     });
   }, [consultations]);
@@ -89,6 +93,26 @@ export const ConsultationPage: React.FC = () => {
     const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
     setSelectedPatientForDiagnose({
       ...p,
+      phone: p.patientPhone,
+      patientHistory: bg
+        ? {
+          medicalHistory: bg.medicalHistory || [],
+          allergies: bg.allergies || [],
+          gender: bg.gender || "",
+          dateOfBirth: bg.dateOfBirth || "",
+          bloodGroup: bg.bloodGroup || "",
+        }
+        : undefined,
+    });
+    setActiveModal("diagnoseForm");
+  };
+
+  const handleEditConsultation = (p: any) => {
+    const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
+    setSelectedPatientForDiagnose({
+      ...p,
+      consultationId: p.id,
+      isEditMode: true,
       phone: p.patientPhone,
       patientHistory: bg
         ? {
@@ -243,6 +267,7 @@ export const ConsultationPage: React.FC = () => {
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
+        onEditConsultation={handleEditConsultation}
         onUpdatePatientStatus={handleUpdatePatientStatus}
         onDirectConsultation={handleDirectConsultation}
         onRegisterNew={handleRegisterNew}

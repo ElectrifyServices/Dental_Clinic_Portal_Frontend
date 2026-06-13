@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import logo from "../../logo.png";
 import {
   Home,
   Calendar,
@@ -23,35 +25,35 @@ import { useTenant } from "../../contexts/TenantContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  dashboard:       Home,
-  appointments:    Calendar,
-  patients:        Users,
+  dashboard: Home,
+  appointments: Calendar,
+  patients: Users,
   "patient-queue": Activity,
-  treatments:      Stethoscope,
-  emr:             FileText,
-  consent:         Shield,
-  billing:         CreditCard,
-  inventory:       Package,
-  reports:         BarChart3,
-  staff:           UserCheck,
-  "profit-sharing":DollarSign,
-  "corporate-plans":Building2,
+  treatments: Stethoscope,
+  emr: FileText,
+  consent: Shield,
+  billing: CreditCard,
+  inventory: Package,
+  reports: BarChart3,
+  staff: UserCheck,
+  "profit-sharing": DollarSign,
+  "corporate-plans": Building2,
 };
 
 const PERMISSION_MAP: Record<string, string[]> = {
-  dashboard:       ["DASHBOARD"],
-  appointments:    ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
-  patients:        ["PATIENTS"],
+  dashboard: ["DASHBOARD"],
+  appointments: ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
+  patients: ["PATIENTS"],
   "patient-queue": ["CONSULTATION"],
-  treatments:      ["TREATMENTS"],
-  emr:             ["MEDICAL_RECORDS"],
-  consent:         ["CONSENT_FORMS"],
-  billing:         ["BILLING"],
-  inventory:       ["INVENTORY"],
-  reports:         ["ANALYTICS"],
-  staff:           ["STAFF"],
-  "profit-sharing":["PROFIT_SHARING"],
-  "corporate-plans":["CORPORATE_PLANS"],
+  treatments: ["TREATMENTS"],
+  emr: ["MEDICAL_RECORDS"],
+  consent: ["CONSENT_FORMS"],
+  billing: ["BILLING"],
+  inventory: ["INVENTORY"],
+  reports: ["ANALYTICS"],
+  staff: ["STAFF"],
+  "profit-sharing": ["PROFIT_SHARING"],
+  "corporate-plans": ["CORPORATE_PLANS"],
 };
 
 export function Sidebar() {
@@ -108,9 +110,9 @@ export function Sidebar() {
   return (
     <aside
       className={[
-        "relative hidden md:flex md:flex-col flex-shrink-0",
+        "relative hidden md:flex md:flex-col flex-shrink-0 z-30",
         collapsed ? "md:w-[68px]" : "md:w-[260px]",
-        "bg-card border-r border-border h-screen sticky top-0",
+        "bg-card border-r border-border/60 shadow-[4px_0_24px_rgba(15,23,42,0.015)] h-screen sticky top-0",
         "transition-all duration-300 overflow-visible",
       ].join(" ")}
     >
@@ -125,18 +127,18 @@ export function Sidebar() {
       >
         {collapsed
           ? <ChevronRight className="w-3.5 h-3.5" />
-          : <ChevronLeft  className="w-3.5 h-3.5" />}
+          : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
-      <div className="flex items-center h-16 px-4 border-b border-border flex-shrink-0">
+      <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-md bg-primary flex items-center justify-center flex-shrink-0 shadow-nav">
-            <Stethoscope className="w-[18px] h-[18px] text-white" />
+          <div className="w-9 h-9 rounded-md bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate">
+              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate group-hover/logo:text-primary transition-colors">
                 {tenant.branding.clinicName}
               </span>
               <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
@@ -174,29 +176,46 @@ export function Sidebar() {
                         title={collapsed ? item.label : undefined}
                         className={[
                           // base layout
-                          "relative overflow-hidden w-full flex items-center rounded-md",
+                          "relative overflow-hidden w-full flex items-center rounded-md group",
                           "text-[13px] font-medium transition-all duration-150 outline-none",
                           collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                           // active / inactive
                           isActive
-                            ? "bg-primary text-white shadow-nav"
-                            : "text-muted-foreground hover:bg-accent hover:text-primary",
+                            ? "text-primary font-bold z-10"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground z-10",
                         ].join(" ")}
                       >
-                        {/* Left indicator — visible on active */}
+                        {/* Background pill indicator — animated */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-active-pill"
+                            className="absolute inset-0 bg-primary/10 rounded-md -z-10"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+
+                        {/* Right indicator — animated */}
                         {isActive && !collapsed && (
-                          <span className="absolute left-0 top-[18%] bottom-[18%] w-[3px] bg-white/50 rounded-r-full" />
+                          <motion.div
+                            layoutId="sidebar-active-indicator"
+                            className="absolute right-0 top-1.5 bottom-1.5 w-[4px] bg-primary rounded-l-full"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          />
                         )}
 
                         <Icon
                           className={[
-                            "flex-shrink-0 transition-transform duration-150",
+                            "flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
                             collapsed ? "w-5 h-5" : "w-4 h-4",
                             isActive ? "" : "opacity-70",
                           ].join(" ")}
                         />
                         {!collapsed && (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">
+                            {item.label}
+                          </span>
                         )}
                       </NavLink>
                     );

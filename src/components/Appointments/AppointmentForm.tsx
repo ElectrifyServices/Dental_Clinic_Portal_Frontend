@@ -269,10 +269,11 @@ export function AppointmentForm({
             onDurationChange={(val) => form.setValue("duration", val)}
             onDoctorChange={(val) => {
               form.setValue("doctorId", val);
-              form.setValue(
-                "doctorName",
-                doctors.find((d: any) => d.id === val)?.name,
-              );
+              const selectedDoctor = doctors.find((d: any) => d.id === val);
+              form.setValue("doctorName", selectedDoctor?.name);
+              if (selectedDoctor && selectedDoctor.consultationFee) {
+                form.setValue("fee", Number(selectedDoctor.consultationFee), { shouldValidate: true });
+              }
             }}
           />
           <TreatmentFields

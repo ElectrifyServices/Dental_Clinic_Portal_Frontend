@@ -43,6 +43,7 @@ import { useUpdateInventoryItemMutation } from "../../hooks/inventory/useUpdateI
 import { useRestockInventoryItemMutation } from "../../hooks/inventory/useRestockInventoryItemMutation";
 import { useConsumeInventoryItemMutation } from "../../hooks/inventory/useConsumeInventoryItemMutation";
 import { useAdjustInventoryItemMutation } from "../../hooks/inventory/useAdjustInventoryItemMutation";
+import { useConsultationQuery } from "../../hooks/consultation/useConsultationQuery";
 import { useCreateConsultationMutation } from "../../hooks/consultation/useCreateConsultationMutation";
 import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdateConsultationMutation";
 import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/consultationUtils";
@@ -88,6 +89,101 @@ export function ModalRegistry() {
     confirmConfig,
     setConfirmConfig,
   } = useModal();
+
+  const { data: editConsultationRaw, isLoading: isEditLoading } = useConsultationQuery(
+    selectedPatientForDiagnose?.consultationId,
+    { enabled: !!selectedPatientForDiagnose?.isEditMode && !!selectedPatientForDiagnose?.consultationId }
+  );
+
+  const editConsultationData = useMemo(() => {
+    if (!editConsultationRaw) return null;
+    const data = editConsultationRaw.data || editConsultationRaw;
+    
+    // Map to toothChartState format
+    const toothChartState: any = {};
+    const toothFindingsRaw = data.tooth_findings || data.toothFindings || [];
+    const availableConditionsByTooth: any = {};
+
+    toothFindingsRaw.forEach((tf: any) => {
+      if (!toothChartState[tf.tooth_number]) {
+        toothChartState[tf.tooth_number] = [];
+        availableConditionsByTooth[tf.tooth_number] = [];
+      }
+      let mappedCond = tf.condition.toLowerCase();
+      if (mappedCond === 'endo_rct') mappedCond = 'endo';
+      else if (mappedCond === 'for_extraction') mappedCond = 'extract';
+      else if (mappedCond === 'healthy') mappedCond = 'normal';
+      
+      toothChartState[tf.tooth_number].push(mappedCond);
+      availableConditionsByTooth[tf.tooth_number].push(mappedCond);
+    });
+
+    const treatments = (data.treatment_plans || data.treatments || []).map((t: any) => {
+      let condition = '';
+      if (availableConditionsByTooth[t.tooth_number] && availableConditionsByTooth[t.tooth_number].length > 0) {
+        condition = availableConditionsByTooth[t.tooth_number].shift();
+      }
+      return {
+        id: t.id || `plan-${t.tooth_number}-${Date.now()}`,
+        tooth: t.tooth_number?.toString() || "",
+        condition: condition,
+        procedure: t.procedure || "",
+        sessions: t.sessions?.length || t.total_sessions || 1,
+        cost: t.est_cost || 0,
+        isActive: t.is_active ?? true,
+        planDate: t.treatment_date ? t.treatment_date.split('T')[0] : new Date().toISOString().split('T')[0],
+      };
+    });
+
+    const prescriptions = (data.prescriptions || []).map((p: any) => {
+      let dUnit = "Days";
+      if (p.duration_type) {
+         dUnit = p.duration_type.charAt(0).toUpperCase() + p.duration_type.slice(1).toLowerCase();
+      }
+      return {
+        id: p.id || Math.random().toString(),
+        medicine: p.medicine_id || p.medicine_name || "",
+        medicineName: p.medicine_name || "",
+        dosage: p.dosage || "",
+        timing: p.timing || "",
+        frequency: p.frequency || "",
+        duration: p.duration?.toString() || "1",
+        durationUnit: dUnit,
+        qty: p.qty?.toString() || "1",
+        instructions: p.instructions || ""
+      };
+    });
+
+    return {
+      toothChartState,
+      consultationData: {
+        observations: data.observations_desc || data.observations || "",
+        diagnosis: data.diagnosis_desc || data.diagnosis || "",
+        treatmentPlan: data.treatment_plan_desc || data.treatmentPlan || "",
+        treatmentCost: data.total_estimated_cost || data.treatmentCost || 0,
+        followUpRequired: data.is_follow_up || data.followUpRequired || false,
+        consultationNotes: data.additional_notes || data.consultationNotes || "",
+        requiresTreatment: treatments.length > 0,
+        treatmentPlans: treatments,
+        prescriptions: prescriptions.length > 0 ? prescriptions : [
+          {
+            id: "1",
+            medicine: "",
+            dosage: "",
+            timing: "",
+            frequency: "",
+            duration: "",
+            durationUnit: "Days",
+            qty: "",
+          }
+        ],
+        images: [],
+        xrayFiles: [],
+        labFiles: [],
+        selectedTeeth: []
+      }
+    };
+  }, [editConsultationRaw]);
 
   const {
     patients,
@@ -315,11 +411,11 @@ export function ModalRegistry() {
               toast.success(isNew ? "Appointment created successfully!" : "Appointment updated successfully!");
             } catch (error: any) {
               const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
-                          error?.response?.data?.statusDesc ||
-                          error?.response?.data?.message ||
-                          error?.status?.statusDesc ||
-                          error?.message ||
-                          "Failed to save appointment";
+                error?.response?.data?.statusDesc ||
+                error?.response?.data?.message ||
+                error?.status?.statusDesc ||
+                error?.message ||
+                "Failed to save appointment";
               toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
             }
           }}
@@ -393,7 +489,7 @@ export function ModalRegistry() {
         />
       )}
 
-      {activeModal === "diagnoseForm" && selectedPatientForDiagnose && (
+      {activeModal === "diagnoseForm" && selectedPatientForDiagnose && (!selectedPatientForDiagnose.isEditMode || editConsultationData) && (
         <PatientConsultation
           patient={selectedPatientForDiagnose}
           doctors={activeDoctors}
@@ -401,10 +497,11 @@ export function ModalRegistry() {
           appointments={appointments}
           bookedFollowUp={bookedFollowUp}
           initialData={
-            draftConsultations[
-            selectedPatientForDiagnose.patientId ||
-            selectedPatientForDiagnose.id
-            ]
+            selectedPatientForDiagnose.isEditMode 
+              ? editConsultationData 
+              : draftConsultations[
+                  selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id
+                ]
           }
           onDraftUpdate={(d: any) =>
             handleDraftUpdate(
@@ -425,16 +522,19 @@ export function ModalRegistry() {
           onCompleteConsultation={async (d: any) => {
             try {
               // Map tooth chart state to tooth_findings array
-              const tooth_findings = Object.entries(d.toothChartState || {}).map(([toothNum, condition]) => {
-                const condStr = typeof condition === 'string' ? condition.toLowerCase() : '';
-                let mappedCondition = condStr.toUpperCase();
-                if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
-                else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
-                else if (condStr === 'normal') mappedCondition = 'HEALTHY';
-                return {
-                  tooth_number: parseInt(toothNum),
-                  condition: mappedCondition
-                };
+              const tooth_findings = Object.entries(d.toothChartState || {}).flatMap(([toothNum, conditions]) => {
+                if (!Array.isArray(conditions)) return [];
+                return conditions.map((cond: string) => {
+                  const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
+                  let mappedCondition = condStr.toUpperCase();
+                  if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
+                  else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
+                  else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+                  return {
+                    tooth_number: parseInt(toothNum),
+                    condition: mappedCondition
+                  };
+                });
               });
 
               // Map treatment plans to treatments array
@@ -443,14 +543,15 @@ export function ModalRegistry() {
                 procedure: tp.procedure,
                 total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
                 est_cost: parseFloat(tp.cost) || 0,
-                is_active: tp.isActive ?? true
+                treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0]
               }));
 
               // Map prescriptions array
               const prescriptions = (d.prescriptions || [])
                 .filter((p: any) => p.medicine)
                 .map((p: any) => ({
-                  medicine_name: p.medicine,
+                  medicine_id: p.medicine,
+                  // medicine_name: p.medicineName || undefined,
                   dosage: p.dosage,
                   timing: p.timing,
                   frequency: p.frequency,
@@ -465,6 +566,7 @@ export function ModalRegistry() {
                 : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
 
               const apiPayload: any = {
+                id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
                 patientId: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id,
                 appointmentId: selectedPatientForDiagnose.appointmentId,
                 doctorId: validDoctorId,

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { ConfirmModal } from "@/components/ui";
 import { Pill, Plus, Trash2 } from "lucide-react";
 import {
   useMedicinesQuery,
@@ -14,6 +15,7 @@ import {
 interface Prescription {
   id: string;
   medicine: string;
+  medicineName?: string;
   dosage: string;
   timing: string;
   frequency: string;
@@ -36,7 +38,14 @@ export function PrescriptionForm({
   onUpdatePrescription,
 }: PrescriptionFormProps) {
   const [search, setSearch] = useState("");
-  const { data: rawMedicines, isLoading } = useMedicinesQuery({ page: 1, limit: 30, search });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: rawMedicines, isLoading } = useMedicinesQuery({ page: 1, limit: 30, search: debouncedSearch });
 
   const { mutateAsync: createMedicine, isPending: isCreating } = useCreateMedicineMutation();
   const { mutateAsync: deleteMedicine } = useDeleteMedicineMutation();
@@ -68,27 +77,38 @@ export function PrescriptionForm({
   const selectOptions = React.useMemo(() => {
     return medicinesList.map((m: any) => ({
       label: m.name || m.label || m,
-      value: m.name || m.value || m,
+      value: m.id || m._id || m.value || m.name || m,
     }));
   }, [medicinesList]);
 
   const handleCreateMedicine = async (name: string) => {
     try {
-      await createMedicine({
+      const res = await createMedicine({
         name,
         description: "Advanced fever and pain relief medication for dental pain",
       });
+      return res?.id || res?.data?.id || res?.responseObject?.id || res?.data?.data?.id || name;
     } catch (err) {
       console.error(err);
+      return name;
     }
   };
 
-  const handleDeleteMedicine = async (name: string) => {
+  const [confirmDeleteName, setConfirmDeleteName] = useState<string | null>(null);
+
+  const handleDeleteClick = (name: string) => {
+    setConfirmDeleteName(name);
+  };
+
+  const handleDeleteMedicine = async () => {
+    if (!confirmDeleteName) return;
+    const name = confirmDeleteName;
     const found = medicinesList.find((m: any) => m.name === name);
     const id = found?.id || found?._id || name;
     setDeletingId(name);
     try {
       await deleteMedicine(id);
+      setConfirmDeleteName(null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -125,13 +145,17 @@ export function PrescriptionForm({
               </Label>
               <SearchableSelect
                 value={prescription.medicine}
-                onChange={(value) =>
-                  onUpdatePrescription(
-                    prescription.id,
-                    "medicine",
-                    value,
-                  )
-                }
+                displayValue={prescription.medicineName || prescription.medicine}
+                onChange={(value) => {
+                  onUpdatePrescription(prescription.id, "medicine", value);
+                  const opt = selectOptions.find((o) => o.value === value);
+                  if (opt) {
+                    onUpdatePrescription(prescription.id, "medicineName", opt.label);
+                  } else {
+                    // if it's a newly created one, value might be the ID. But we know the name was what the user typed in search!
+                    if (search) onUpdatePrescription(prescription.id, "medicineName", search);
+                  }
+                }}
                 options={selectOptions}
                 placeholder="Select or Search Medicine..."
                 searchPlaceholder="Search medicine name..."
@@ -140,7 +164,7 @@ export function PrescriptionForm({
                 onCreateOption={handleCreateMedicine}
                 createLabel="Create Medicine"
                 isCreating={isCreating}
-                onDeleteOption={handleDeleteMedicine}
+                onDeleteOption={handleDeleteClick}
                 isDeletingValue={deletingId}
                 className="w-full h-10 border-green-200 focus:ring-green-500"
               />
@@ -251,6 +275,18 @@ export function PrescriptionForm({
           </div>
         ))}
       </div>
+
+      {confirmDeleteName && (
+        <ConfirmModal
+          title="Delete Medicine"
+          message={`Are you sure you want to delete "${confirmDeleteName}"? This action cannot be undone.`}
+          confirmLabel="Delete"
+          variant="danger"
+          isLoading={!!deletingId}
+          onConfirm={handleDeleteMedicine}
+          onCancel={() => setConfirmDeleteName(null)}
+        />
+      )}
     </div>
   );
 }
