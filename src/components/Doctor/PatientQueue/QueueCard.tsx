@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   FileText,
   CheckCircle,
+  IndianRupee,
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
@@ -61,6 +62,7 @@ interface QueueCardProps {
   getStatusIcon: (s: string) => JSX.Element;
   onUpdatePatientStatus: (id: string, s: string) => void;
   onSelectPatient: (p: any) => void;
+  onEditConsultation?: (p: any) => void;
 }
 
 export function QueueCard({
@@ -70,6 +72,7 @@ export function QueueCard({
   getStatusIcon,
   onUpdatePatientStatus,
   onSelectPatient,
+  onEditConsultation,
 }: QueueCardProps) {
   const waitingTime = useWaitingTime(patient.checkInTime);
   const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
@@ -128,11 +131,13 @@ export function QueueCard({
 
         {/* Contact & Concern */}
         <div className="space-y-2.5 text-sm">
-          <div className="flex items-center justify-between py-0.5">
-            <span className="flex items-center text-gray-500 text-xs font-semibold">
-              <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" /> Phone
+          <div className="flex items-start justify-between py-0.5 gap-2">
+            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+              <Clock className="w-3.5 h-3.5 mr-2 text-gray-400" /> Slot Duration
             </span>
-            <span className="font-bold text-gray-900 font-mono">{patient.patientPhone || "—"}</span>
+            <span className="font-bold text-gray-900 text-right leading-tight">
+              {patient.slotDurationMins ? `${patient.slotDurationMins} mins` : "—"}
+            </span>
           </div>
 
           <div className="flex items-start justify-between py-0.5 gap-2">
@@ -144,6 +149,24 @@ export function QueueCard({
             </span>
           </div>
 
+          <div className="flex items-start justify-between py-0.5 gap-2">
+            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+              <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
+            </span>
+            <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
+              {patient.specificTreatment || "—"}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between py-0.5 gap-2">
+            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+              <IndianRupee className="w-3.5 h-3.5 mr-2 text-gray-400" /> Cost
+            </span>
+            <span className="font-bold text-gray-900 text-right leading-tight">
+              {patient.appointmentCost ? `₹${patient.appointmentCost}` : "—"}
+            </span>
+          </div>
+
           {patient.patientConcern && (
             <div className="border-t border-gray-50 pt-2.5 mt-1">
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
@@ -151,6 +174,17 @@ export function QueueCard({
               </div>
               <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 line-clamp-2">
                 {patient.patientConcern}
+              </div>
+            </div>
+          )}
+
+          {patient.appointmentNotes && (
+            <div className="border-t border-gray-50 pt-2.5 mt-1">
+              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
+                <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Notes
+              </div>
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 line-clamp-2">
+                {patient.appointmentNotes}
               </div>
             </div>
           )}
@@ -214,9 +248,20 @@ export function QueueCard({
               </Button>
             )}
             {patient.status === "COMPLETED" && (
-              <div className="w-full py-2 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10">
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                Consultation Completed
+              <div className="flex gap-2">
+                <div className="flex-1 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  Consultation Completed
+                </div>
+                {onEditConsultation && (
+                  <Button
+                    onClick={() => onEditConsultation(patient)}
+                    variant="outline"
+                    className="h-10 px-4 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 rounded-xl font-bold shadow-sm"
+                  >
+                    Edit
+                  </Button>
+                )}
               </div>
             )}
           </div>

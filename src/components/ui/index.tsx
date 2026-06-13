@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
+import { Label } from "./Label";
 import {
   Dialog,
   DialogContent,
@@ -62,19 +63,19 @@ interface KpiCardProps {
 }
 export function KpiCard({ label, value, colorClass = "text-foreground", icon, sub, subPositive }: KpiCardProps) {
   return (
-    <div className="kpi-card flex items-start justify-between">
+    <div className="kpi-card flex items-start justify-between group cursor-pointer">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 transition-colors duration-200 group-hover:text-primary/80">
           {label}
         </p>
-        <p className={cn("text-[32px] font-bold leading-none", colorClass)}>{value}</p>
+        <p className={cn("text-[32px] font-bold leading-none transition-transform duration-300 group-hover:translate-x-0.5", colorClass)}>{value}</p>
         {sub && (
           <p className={cn("text-xs mt-2 font-medium", subPositive !== false ? "text-emerald-600" : "text-destructive")}>
             {sub}
           </p>
         )}
       </div>
-      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4">{icon}</div>}
+      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
     </div>
   );
 }
@@ -178,7 +179,7 @@ export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant
       title={title}
       onClose={isLoading ? () => {} : onCancel}
       size="sm"
-      icon={<AlertTriangle className="w-4 h-4" />}
+      icon={<AlertTriangle className={cn("w-4 h-4 animate-pulse", variant === "danger" ? "text-destructive" : "text-primary")} />}
       footer={
         <>
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
@@ -259,23 +260,23 @@ interface MetricCardProps {
 }
 export function MetricCard({ label, value, icon, variant = "gray", trend, className }: MetricCardProps) {
   const variants = {
-    primary: "bg-primary/10 text-primary",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber:   "bg-amber-50  text-amber-600",
-    rose:    "bg-rose-50   text-rose-600",
-    indigo:  "bg-indigo-50 text-indigo-600",
-    gray:    "bg-muted     text-muted-foreground",
+    primary: "bg-primary/10 text-primary group-hover:bg-primary/20",
+    emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
+    amber:   "bg-amber-50  text-amber-600 group-hover:bg-amber-100",
+    rose:    "bg-rose-50   text-rose-600 group-hover:bg-rose-100",
+    indigo:  "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
+    gray:    "bg-muted     text-muted-foreground group-hover:bg-muted/80",
   };
 
   return (
-    <Card className={cn("p-5 md:p-6 hover:shadow-card-hover transition-shadow duration-200", className)}>
+    <Card className={cn("p-5 md:p-6 hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 transition-all duration-300 ease-out cursor-pointer group", className)}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200 group-hover:text-primary/80">
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-[32px] font-bold text-foreground leading-none">{value}</span>
+            <span className="text-[32px] font-bold text-foreground leading-none transition-transform duration-300 group-hover:translate-x-0.5">{value}</span>
             {trend && (
               <span className={cn("text-xs font-semibold",
                 typeof trend === "object"
@@ -291,7 +292,7 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
             )}
           </div>
         </div>
-        <div className={cn("w-11 h-11 rounded-md flex items-center justify-center flex-shrink-0", variants[variant])}>
+        <div className={cn("w-11 h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105", variants[variant])}>
           {icon}
         </div>
       </div>
@@ -495,10 +496,10 @@ interface LabeledFieldProps {
 export function LabeledField({ label, required, error, children }: LabeledFieldProps) {
   return (
     <div>
-      <label className="form-label">
+      <Label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
-      </label>
+      </Label>
       {children}
       {error && <p className="text-destructive text-xs mt-1">{error}</p>}
     </div>
@@ -528,13 +529,13 @@ export function FileUploadZone({ onFile, accept = ".xlsx,.xls,.csv", label = "Cl
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
       onClick={() => ref.current?.click()}
-      className="border-2 border-dashed border-border rounded-md p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-150"
+      className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 hover:scale-[1.005] hover:shadow-sm transition-all duration-250 ease-out group"
     >
       <input ref={ref} type="file" accept={accept} className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
-      <Upload className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
-      <p className="text-sm font-medium text-foreground">{label}</p>
-      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
+      <Upload className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3 transition-transform duration-300 group-hover:-translate-y-1 group-hover:text-primary/80" />
+      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{label}</p>
+      {hint && <p className="text-xs text-muted-foreground mt-1.5">{hint}</p>}
     </div>
   );
 }

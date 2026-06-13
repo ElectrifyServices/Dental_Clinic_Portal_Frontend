@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Home,
   Calendar,
@@ -23,35 +24,35 @@ import { useTenant } from "../../contexts/TenantContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  dashboard:       Home,
-  appointments:    Calendar,
-  patients:        Users,
+  dashboard: Home,
+  appointments: Calendar,
+  patients: Users,
   "patient-queue": Activity,
-  treatments:      Stethoscope,
-  emr:             FileText,
-  consent:         Shield,
-  billing:         CreditCard,
-  inventory:       Package,
-  reports:         BarChart3,
-  staff:           UserCheck,
-  "profit-sharing":DollarSign,
-  "corporate-plans":Building2,
+  treatments: Stethoscope,
+  emr: FileText,
+  consent: Shield,
+  billing: CreditCard,
+  inventory: Package,
+  reports: BarChart3,
+  staff: UserCheck,
+  "profit-sharing": DollarSign,
+  "corporate-plans": Building2,
 };
 
 const PERMISSION_MAP: Record<string, string[]> = {
-  dashboard:       ["DASHBOARD"],
-  appointments:    ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
-  patients:        ["PATIENTS"],
+  dashboard: ["DASHBOARD"],
+  appointments: ["APPPOINTMENT", "APPOINTMENT", "APPOINTMENTS"],
+  patients: ["PATIENTS"],
   "patient-queue": ["CONSULTATION"],
-  treatments:      ["TREATMENTS"],
-  emr:             ["MEDICAL_RECORDS"],
-  consent:         ["CONSENT_FORMS"],
-  billing:         ["BILLING"],
-  inventory:       ["INVENTORY"],
-  reports:         ["ANALYTICS"],
-  staff:           ["STAFF"],
-  "profit-sharing":["PROFIT_SHARING"],
-  "corporate-plans":["CORPORATE_PLANS"],
+  treatments: ["TREATMENTS"],
+  emr: ["MEDICAL_RECORDS"],
+  consent: ["CONSENT_FORMS"],
+  billing: ["BILLING"],
+  inventory: ["INVENTORY"],
+  reports: ["ANALYTICS"],
+  staff: ["STAFF"],
+  "profit-sharing": ["PROFIT_SHARING"],
+  "corporate-plans": ["CORPORATE_PLANS"],
 };
 
 export function Sidebar() {
@@ -125,7 +126,7 @@ export function Sidebar() {
       >
         {collapsed
           ? <ChevronRight className="w-3.5 h-3.5" />
-          : <ChevronLeft  className="w-3.5 h-3.5" />}
+          : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
@@ -179,13 +180,19 @@ export function Sidebar() {
                           collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
                           // active / inactive
                           isActive
-                            ? "bg-primary text-white shadow-nav"
-                            : "text-muted-foreground hover:bg-accent hover:text-primary",
+                            ? "bg-primary/10 text-primary font-bold shadow-sm"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                         ].join(" ")}
                       >
-                        {/* Left indicator — visible on active */}
+                        {/* Right indicator — animated */}
                         {isActive && !collapsed && (
-                          <span className="absolute left-0 top-[18%] bottom-[18%] w-[3px] bg-white/50 rounded-r-full" />
+                          <motion.div
+                            layoutId="sidebar-active-indicator"
+                            className="absolute right-0 top-1.5 bottom-1.5 w-[4px] bg-primary rounded-l-full"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          />
                         )}
 
                         <Icon

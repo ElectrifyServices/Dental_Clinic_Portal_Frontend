@@ -21,6 +21,10 @@ export interface UiConsultation {
   appointmentTime?: string;
   patientConcern?: string;
   treatmentType?: string;
+  slotDurationMins?: number;
+  specificTreatment?: string;
+  appointmentNotes?: string;
+  appointmentCost?: number;
 }
 
 export interface ApiConsultation {
@@ -53,6 +57,18 @@ export interface ApiConsultation {
     name?: string;
   };
   treatment_plans?: any[];
+  appointment?: {
+    id?: string;
+    date?: string;
+    start_time?: string;
+    end_time?: string;
+    slot_duration_mins?: number;
+    specific_treatment?: string;
+    treatment_cost?: number;
+    concern?: string;
+    notes?: string;
+    treatment_type?: string;
+  };
 }
 
 export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultation {
@@ -78,6 +94,13 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
     prescriptions: apiConsultation.prescriptions,
     createdAt: apiConsultation.created_at,
     updatedAt: apiConsultation.updated_at,
+    patientConcern: apiConsultation.appointment?.concern || '',
+    treatmentType: apiConsultation.appointment?.treatment_type || '',
+    slotDurationMins: apiConsultation.appointment?.slot_duration_mins,
+    specificTreatment: apiConsultation.appointment?.specific_treatment || '',
+    appointmentNotes: apiConsultation.appointment?.notes || '',
+    appointmentCost: apiConsultation.appointment?.treatment_cost,
+    appointmentTime: apiConsultation.appointment?.start_time ? new Date(apiConsultation.appointment.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '',
   };
 }
 

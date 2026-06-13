@@ -38,6 +38,7 @@ interface PatientQueueProps {
   doctorName: string;
   queuedPatients: QueuedPatient[];
   onSelectPatient: (patient: QueuedPatient) => void;
+  onEditConsultation?: (patient: QueuedPatient) => void;
   onUpdatePatientStatus: (patientId: string, status: string) => void;
   onDirectConsultation: (
     name: string,
@@ -62,6 +63,7 @@ export function PatientQueue({
   doctorName,
   queuedPatients,
   onSelectPatient,
+  onEditConsultation,
   onUpdatePatientStatus,
   onDirectConsultation,
   onRegisterNew,
@@ -275,6 +277,7 @@ export function PatientQueue({
               getStatusIcon={getStatusIcon}
               onUpdatePatientStatus={onUpdatePatientStatus}
               onSelectPatient={onSelectPatient}
+              onEditConsultation={onEditConsultation}
             />
           );
         })}

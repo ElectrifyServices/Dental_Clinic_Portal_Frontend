@@ -14,7 +14,7 @@ interface SearchableSelectProps {
   searchPlaceholder?: string;
   isLoading?: boolean;
   disabled?: boolean;
-  onCreateOption?: (value: string) => Promise<void> | void;
+  onCreateOption?: (value: string) => Promise<string | void> | void;
   createLabel?: string;
   isCreating?: boolean;
   onDeleteOption?: (value: string) => Promise<void> | void;
@@ -22,6 +22,7 @@ interface SearchableSelectProps {
   isMulti?: boolean;
   className?: string;
   onSearchChange?: (query: string) => void;
+  displayValue?: string;
 }
 
 export function SearchableSelect({
@@ -40,6 +41,7 @@ export function SearchableSelect({
   isMulti = false,
   className,
   onSearchChange,
+  displayValue,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -82,7 +84,9 @@ export function SearchableSelect({
 
   const handleCreate = async () => {
     if (onCreateOption && searchQuery.trim()) {
-      await onCreateOption(searchQuery.trim());
+      const query = searchQuery.trim();
+      const createdValue = await onCreateOption(query);
+      handleSelect(typeof createdValue === 'string' ? createdValue : query);
       setIsOpen(false);
     }
   };
@@ -95,7 +99,7 @@ export function SearchableSelect({
           type="button"
           disabled={disabled || isLoading}
           className={cn(
-            "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer",
+            "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm hover:border-border/80 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer transition-all duration-200 ease-out",
             !value && "text-muted-foreground",
             className
           )}
@@ -105,7 +109,7 @@ export function SearchableSelect({
               ? "Loading..."
               : isMulti
                 ? (Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder)
-                : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : value) || placeholder}
+                : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : displayValue || value) || placeholder}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </Button>
@@ -123,7 +127,7 @@ export function SearchableSelect({
               setSearchQuery(e.target.value);
               onSearchChange?.(e.target.value);
             }}
-            className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground transition-all duration-200 focus:pl-10"
           />
           {searchQuery && (
             <button
@@ -132,7 +136,7 @@ export function SearchableSelect({
                 setSearchQuery("");
                 onSearchChange?.("");
               }}
-              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-colors"
+              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-all duration-150"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -140,7 +144,7 @@ export function SearchableSelect({
         </div>
 
         <div 
-          className="max-h-60 overflow-y-auto space-y-0.5"
+          className="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar"
           onWheelCapture={(e) => e.stopPropagation()}
           onTouchMoveCapture={(e) => e.stopPropagation()}
         >
@@ -155,14 +159,14 @@ export function SearchableSelect({
                 <div
                   key={optValue || i}
                   className={cn(
-                    "w-full flex items-center justify-between group text-xs font-semibold hover:bg-muted/50 rounded-lg transition-colors",
+                    "w-full flex items-center justify-between group text-xs font-semibold hover:bg-muted/70 rounded-lg transition-all duration-150 active:scale-[0.99]",
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"
                   )}
                 >
                   <button
                     type="button"
                     onClick={() => handleSelect(optValue)}
-                    className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none"
+                    className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none transition-colors duration-150"
                   >
                     <span className="truncate pr-2">{optLabel}</span>
                     {isSelected && <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
@@ -176,7 +180,7 @@ export function SearchableSelect({
                         onDeleteOption(optValue);
                       }}
                       disabled={isDeletingValue === optValue}
-                      className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors flex-shrink-0"
+                      className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
                     >
                       {isDeletingValue === optValue ? (
                         <div className="w-3.5 h-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
