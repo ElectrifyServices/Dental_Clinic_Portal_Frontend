@@ -335,14 +335,15 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             </Button>
           </div>
           <div className="flex gap-1.5">
-            <Button
+{/* This button can be enabled in the future, so for now it's just been commented out. */}
+            {/* <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 bg-destructive/10 text-destructive hover:bg-destructive/10"
               onClick={() => onDelete(patient.id)}
             >
               <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
         <Button

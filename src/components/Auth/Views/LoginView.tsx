@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -150,6 +150,26 @@ export function LoginView({ setView }: LoginViewProps) {
           </Button>
         </form>
       </Form>
+
+      {/* Demo Mode This is just for demo purposes right now, it will be deleted later. */}
+      <div className="mt-6 pt-5 border-t border-gray-100">
+        <p className="text-center text-[11px] text-gray-400 mb-3 uppercase tracking-widest font-semibold">No backend? Try demo</p>
+        <button
+          type="button"
+          onClick={() => {
+            form.setValue('email', 'demo@clinic.com');
+            form.setValue('password', 'demo');
+            form.handleSubmit(onSubmit)();
+          }}
+          className="w-full h-10 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 text-amber-700 text-[13px] font-semibold hover:bg-amber-100 transition-all duration-150"
+        >
+          <Zap className="w-4 h-4" />
+          Enter Demo Mode
+        </button>
+        <p className="text-center text-[10px] text-gray-400 mt-2">
+          Uses local demo data · No internet required
+        </p>
+      </div>
 
     </div>
   );

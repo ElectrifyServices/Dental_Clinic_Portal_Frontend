@@ -35,6 +35,8 @@ export interface PlanBenefit {
   description: string;
 }
 
+export type CorporatePlanTier = 'platinum' | 'gold' | 'silver' | 'premium' | 'standard' | 'basic';
+
 export interface CorporatePlan {
   id: string;
   name: string;
@@ -54,6 +56,7 @@ export interface CorporatePlan {
   planCategory?: PlanCategory;  // 'corporate' (default) | 'individual'
   annualFee?: number;            // for individual plans (e.g. 1000)
   maxDependents?: number;        // 0 = self only; admin configures per plan
+  planTier?: CorporatePlanTier;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 

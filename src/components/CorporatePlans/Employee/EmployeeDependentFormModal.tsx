@@ -63,7 +63,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, on
   return (
     <Modal
       title={`Add Family Member for ${employee.name}`}
-      subtitle="Register a dependent under this corporate plan"
+      subtitle="Add a family member to this membership"
       onClose={() => setShowForm(false)}
       size="md"
     >

@@ -16,6 +16,7 @@ export function useUpdateStaffStatusMutation() {
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["staff"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard", "schedule", "team-availability"] });
       },
     },
   });

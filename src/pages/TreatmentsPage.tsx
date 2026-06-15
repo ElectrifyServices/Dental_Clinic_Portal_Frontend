@@ -1,9 +1,6 @@
 import React from "react";
 import { useModal } from "../contexts/ModalContext";
 import { TreatmentList } from "../components/Treatments/TreatmentList";
-import { TreatmentForm } from "../components/Treatments/TreatmentForm";
-import { TreatmentViewer } from "../components/Treatments/TreatmentViewer";
-import { TreatmentSessionManager } from "../components/Treatments/TreatmentSessionManager";
 import { useTreatmentData } from "../hooks/useTreatmentData";
 
 export const TreatmentsPage: React.FC = () => {
@@ -103,45 +100,6 @@ export const TreatmentsPage: React.FC = () => {
         onMarkCompleted={wrappedHandleMarkCompleted}
         onStartTreatment={wrappedHandleStartTreatment}
       />
-
-      {/* Create / Edit form */}
-      {activeModal === "treatmentForm" && (!selectedItemId || selectedTreatment) && (
-        <TreatmentForm
-          treatment={selectedItemId ? selectedTreatment : undefined}
-          patients={[]}
-          doctors={[]}
-          onClose={() => setActiveModal(null)}
-          onSave={wrappedHandleSaveTreatment}
-          isSaving={false}
-        />
-      )}
-
-      {/* View modal */}
-      {activeModal === "treatmentViewer" && selectedItemId && (
-        <TreatmentViewer
-          treatmentId={selectedItemId}
-          onClose={() => setActiveModal(null)}
-          onEditTreatment={(id) => {
-            setSelectedItemId(id);
-            setActiveModal("treatmentForm");
-          }}
-          onMarkCompleted={wrappedHandleMarkCompleted}
-          onStartTreatment={wrappedHandleStartTreatment}
-        />
-      )}
-
-      {/* Session manager */}
-      {activeModal === "sessionManager" && selectedTreatment && (
-        <TreatmentSessionManager
-          treatmentId={selectedTreatment.id}
-          patientName={selectedTreatment.patientName}
-          procedure={selectedTreatment.procedure}
-          sessions={selectedTreatment.sessions}
-          onClose={() => setActiveModal(null)}
-          onScheduleAppointment={() => {}}
-          onUpdateSessions={() => {}}
-        />
-      )}
     </div>
   );
 };

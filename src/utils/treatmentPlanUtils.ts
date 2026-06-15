@@ -70,7 +70,7 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   const prescriptions = (formData.prescriptions ?? [])
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({
-      medicine_name: p.medicine,
+      medicine_id: p.medicine,
       dosage: p.dosage,
       timing: p.timing,
       frequency: p.frequency,
@@ -111,7 +111,7 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({
       id: p.id?.startsWith("new-") ? undefined : p.id,
-      medicine_name: p.medicine,
+      medicine_id: p.medicine,
       dosage: p.dosage,
       timing: p.timing,
       frequency: p.frequency,

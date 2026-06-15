@@ -201,6 +201,7 @@ export function ModalRegistry() {
     handleSaveInvoice,
     handleSaveTreatment,
     handleSaveStaff,
+    handleUpdateStaffStatus,
     handleSaveEMR,
     handleSaveConsentForm,
     handleSaveInventoryItem,
@@ -817,12 +818,25 @@ export function ModalRegistry() {
           appointments={appointments}
           doctors={activeDoctors}
           doctorAvailability={doctorAvailability}
-          onToggleDoctorAvailability={(id: string) =>
-            setDoctorAvailability((prev: Record<string, boolean>) => ({
-              ...prev,
-              [id]: !prev[id],
-            }))
-          }
+          onToggleDoctorAvailability={async (id: string) => {
+            const doc = staffMembers.find((s: any) => s.id === id);
+            const currentIsActive = doc ? (doc.status === "ACTIVE" || doc.isActive) : !!doctorAvailability[id];
+            const newStatus = currentIsActive ? "INACTIVE" : "ACTIVE";
+            try {
+              setDoctorAvailability((prev: Record<string, boolean>) => ({
+                ...prev,
+                [id]: newStatus === "ACTIVE",
+              }));
+              await handleUpdateStaffStatus(id, newStatus);
+              toast.success(`Doctor status updated to ${newStatus}`);
+            } catch (err: any) {
+              setDoctorAvailability((prev: Record<string, boolean>) => ({
+                ...prev,
+                [id]: currentIsActive,
+              }));
+              toast.error(err?.message || "Failed to update doctor status");
+            }
+          }}
         />
       )}
 

@@ -2,7 +2,7 @@ import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
 export interface CreateTreatmentPrescriptionVariables {
-  medicine_name: string;
+  medicine_id: string;
   dosage: string;
   timing: string;
   frequency: string;

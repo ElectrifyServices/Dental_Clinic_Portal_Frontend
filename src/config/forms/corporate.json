@@ -2,37 +2,37 @@
   "formId": "corporate",
   "version": "1.0.0",
   "title": {
-    "create": "Create Plan",
-    "edit": "Update Plan"
+    "create": "Create Membership Plan",
+    "edit": "Edit Membership Plan"
   },
   "submitLabel": {
-    "create": "Launch New Plan",
-    "edit": "Apply Plan Updates"
+    "create": "Save Plan",
+    "edit": "Save Changes"
   },
   "benefitTypes": [
     {
       "value": "flat_discount",
-      "label": "Flat % Discount (All Services)"
+      "label": "Percentage Discount (All Treatments)"
     },
     {
       "value": "treatment_discount",
-      "label": "Treatment-Specific % Discount"
+      "label": "Treatment-Specific Discount"
     },
     {
       "value": "free_consultations",
-      "label": "Free Consultations (per year)"
+      "label": "Free Consultations"
     },
     {
       "value": "free_treatments",
-      "label": "Free Specific Treatments"
+      "label": "Free Treatments"
     },
     {
       "value": "capped_discount",
-      "label": "Capped % Discount (max ₹)"
+      "label": "Discount with Maximum Limit"
     },
     {
       "value": "custom",
-      "label": "Custom Defined Benefit"
+      "label": "Custom Benefit"
     }
   ],
   "planColors": [
@@ -76,50 +76,50 @@
       "fields": [
         {
           "name": "name",
-          "label": "Official Plan Name",
+          "label": "Plan Name",
           "type": "text",
           "required": true,
-          "placeholder": "e.g. Gold Executive Plan"
+          "placeholder": "e.g. Gold Family Plan"
         },
         {
           "name": "companyName",
-          "label": "Target Organization",
+          "label": "Company Name",
           "type": "text",
           "required": true,
           "placeholder": "e.g. Google India Pvt Ltd"
         },
         {
           "name": "code",
-          "label": "Unique Plan Code",
+          "label": "Plan Code",
           "type": "text",
           "required": true,
-          "placeholder": "e.g. GOOG-PREM-2024"
+          "placeholder": "e.g. GOLD-2024"
         },
         {
           "name": "validFrom",
-          "label": "Launch Date",
+          "label": "Start Date",
           "type": "date",
           "required": true
         },
         {
           "name": "validTo",
-          "label": "Expiry Date",
+          "label": "End Date",
           "type": "date",
           "required": true
         },
         {
           "name": "maxMembers",
-          "label": "Enrollment Cap",
+          "label": "Max Members (optional)",
           "type": "number",
-          "required": true,
-          "placeholder": "No limit set"
+          "required": false,
+          "placeholder": "Leave blank for no limit"
         },
         {
           "name": "description",
-          "label": "Internal Description / Scope Summary",
+          "label": "Description",
           "type": "textarea",
           "required": false,
-          "placeholder": "Detailed summary of coverage and eligibility criteria…",
+          "placeholder": "What does this plan include?",
           "rows": 2,
           "colSpan": 3
         },
@@ -133,44 +133,44 @@
     },
     {
       "id": "benefitLogic",
-      "title": "Plan Benefit Logic",
+      "title": "Benefits",
       "fields": [
         {
           "name": "benefitType",
-          "label": "Logic Type",
+          "label": "Benefit Type",
           "type": "select"
         },
         {
           "name": "customName",
-          "label": "Benefit Label (Manual Entry)",
+          "label": "Benefit Name",
           "type": "text",
           "placeholder": "e.g. Lab Charges, X-Ray"
         },
         {
           "name": "value",
-          "label": "Discount Rate (%)",
+          "label": "Discount %",
           "type": "number"
         },
         {
           "name": "allocationCount",
-          "label": "Allocation Caount",
+          "label": "Number of Sessions",
           "type": "number"
         },
         {
           "name": "cap",
-          "label": "Maximum Cap (₹)",
+          "label": "Maximum Amount (₹)",
           "type": "number"
         },
         {
           "name": "treatmentTypes",
-          "label": "Target Clinical Procedures",
+          "label": "Applicable Treatments",
           "type": "checkbox"
         },
         {
           "name": "description",
-          "label": "Auto-Generated Display Description",
+          "label": "Benefit Description",
           "type": "text",
-          "placeholder": "Patient-facing benefit description"
+          "placeholder": "Shown to patients at billing"
         }
       ]
     }

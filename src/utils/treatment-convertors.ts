@@ -185,12 +185,6 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       next_session_plan: s.nextPlan,
     }));
 
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-  /* console.log removed */
-
   const updateData: UpdateTreatmentPlanVariables = {
     id: formData.id,
     tooth_number: extractToothNumber(formData.tooth),

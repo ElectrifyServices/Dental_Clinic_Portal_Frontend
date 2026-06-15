@@ -1,6 +1,12 @@
 import { useApiQuery } from "../useApiQuery";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
+import { AuthStorage } from "../../auth/authStorage";
+
+const getAuthHeaders = () => {
+  const user = AuthStorage.getUser();
+  return user?.id ? { "x-staff-id": user.id } : {};
+};
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -9,7 +15,7 @@ export interface TreatmentSessionResponse {
   plan_id: string;
   appointment_id?: string;
   visit_number: number;
-  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   visit_date?: string;
   start_time?: string;
   duration_min?: number;
@@ -28,6 +34,7 @@ export interface TreatmentSessionResponse {
     doctor: { id: string; staff: { name: string } };
   };
   appointment?: { id: string; status: string; date: string; start_time: string };
+  prescriptions?: any[];
 }
 
 export interface SessionsResponse {
@@ -92,6 +99,7 @@ export function useAddTreatmentSessionMutation() {
   return useApiMutation<TreatmentSessionResponse, AddSessionVariables>({
     getEndpoint: (variables) => `/treatment/${variables.planId}/sessions`,
     method: "post",
+    headers: getAuthHeaders,
     transformRequest: ({ planId: _planId, ...rest }) => rest,
     options: {
       onSuccess: (_data, variables) => {
@@ -119,7 +127,7 @@ export interface UpdateSessionVariables {
   work_done?: string;
   session_findings?: string;
   next_session_plan?: string;
-  status?: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status?: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 }
 
 export function useUpdateTreatmentSessionMutation() {
@@ -129,6 +137,7 @@ export function useUpdateTreatmentSessionMutation() {
     getEndpoint: (variables) =>
       `/treatment/${variables.planId}/sessions/${variables.sessionId}`,
     method: "patch",
+    headers: getAuthHeaders,
     transformRequest: ({ planId: _p, sessionId: _s, ...rest }) => rest,
     options: {
       onSuccess: (_data, variables) => {
@@ -148,6 +157,7 @@ export interface CompleteSessionVariables {
   work_done?: string;
   session_findings?: string;
   next_session_plan?: string;
+  prescriptions?: any[];
 }
 
 export function useCompleteTreatmentSessionMutation() {
@@ -157,6 +167,7 @@ export function useCompleteTreatmentSessionMutation() {
     getEndpoint: (variables) =>
       `/treatment/${variables.planId}/sessions/${variables.sessionId}/complete`,
     method: "patch",
+    headers: getAuthHeaders,
     transformRequest: ({ planId: _p, sessionId: _s, ...rest }) => rest,
     options: {
       onSuccess: (_data, variables) => {

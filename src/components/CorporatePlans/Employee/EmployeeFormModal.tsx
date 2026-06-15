@@ -341,7 +341,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
   return (
     <Modal
-      title={editEmp ? (empCfgAny.title?.edit ?? 'Edit Employee') : (empCfgAny.title?.create ?? 'Add Employee')}
+      title={editEmp ? (empCfgAny.title?.edit ?? 'Edit Member') : (empCfgAny.title?.create ?? 'Add Member')}
       onClose={() => setShowForm(false)}
       size="2xl"
       icon={<User className="w-4 h-4" />}
@@ -359,7 +359,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <CheckCircle className="w-4 h-4" /> {editEmp ? (empCfgAny.submitLabel?.edit ?? 'Update Details') : (empCfgAny.submitLabel?.create ?? 'Register Employee')}
+                  <CheckCircle className="w-4 h-4" /> {editEmp ? (empCfgAny.submitLabel?.edit ?? 'Save Changes') : (empCfgAny.submitLabel?.create ?? 'Register Member')}
                 </>
               )}
             </Button>

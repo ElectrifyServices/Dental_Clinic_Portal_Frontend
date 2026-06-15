@@ -112,16 +112,19 @@ export function Sidebar() {
       className={[
         "relative hidden md:flex md:flex-col flex-shrink-0 z-30",
         collapsed ? "md:w-[68px]" : "md:w-[260px]",
-        "bg-card border-r border-border/60 shadow-[4px_0_24px_rgba(15,23,42,0.015)] h-screen sticky top-0",
+        "bg-white border-r border-border/60 shadow-[4px_0_24px_rgba(15,23,42,0.06)] h-screen sticky top-0",
         "transition-all duration-300 overflow-visible",
       ].join(" ")}
     >
+      {/* Colorful top accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-indigo-500" />
+
       {/* ── Collapse toggle ─────────────────────────────────────── */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute top-[72px] -right-3.5 z-50 w-7 h-7 flex items-center justify-center
-                   bg-card border border-border rounded-full shadow-sm
-                   hover:bg-muted text-muted-foreground hover:text-foreground
+                   bg-white border border-border rounded-full shadow-md
+                   hover:bg-primary/5 hover:border-primary/30 text-slate-400 hover:text-primary
                    transition-all duration-150"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
@@ -131,17 +134,17 @@ export function Sidebar() {
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
-      <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer">
+      <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer mt-[3px]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-md bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+          <div className="w-9 h-9 rounded-xl bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-200 transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-foreground text-[14px] block leading-tight tracking-tight truncate group-hover/logo:text-primary transition-colors">
+              <span className="font-black text-slate-800 text-[14px] block leading-tight tracking-tight truncate">
                 {tenant.branding.clinicName}
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground block mt-0.5">
+              <span className="text-[11px] font-semibold text-primary block mt-0.5">
                 Dental Management
               </span>
             </div>
@@ -151,14 +154,14 @@ export function Sidebar() {
 
       {/* ── Nav ─────────────────────────────────────────────────── */}
       <nav className="flex-1 flex flex-col py-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        <div className={collapsed ? "px-2 space-y-4" : "px-3 space-y-6"}>
+        <div className={collapsed ? "px-2 space-y-4" : "px-3 space-y-5"}>
           {visibleGroups.map((group) => {
             const groupItems = visible.filter((i) => i.group === group.id);
             return (
               <div key={group.id}>
                 {/* Section header */}
                 {!collapsed && (
-                  <p className="text-[11px] font-semibold uppercase tracking-[1.5px] text-muted-foreground px-2 mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[2px] text-primary/60 px-2 mb-1.5">
                     {group.label}
                   </p>
                 )}
@@ -170,54 +173,65 @@ export function Sidebar() {
                     const isActive = currentId === item.id;
 
                     return (
-                      <NavLink
+                      <Button
                         key={item.id}
-                        to={`/${item.id}`}
-                        title={collapsed ? item.label : undefined}
+                        asChild
+                        variant="ghost"
                         className={[
-                          // base layout
-                          "relative overflow-hidden w-full flex items-center rounded-md group",
-                          "text-[13px] font-medium transition-all duration-150 outline-none",
-                          collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2.5",
-                          // active / inactive
+                          "w-full justify-start rounded-xl text-[13px] font-medium transition-all duration-200 outline-none select-none relative overflow-hidden group/btn",
+                          collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : "h-10 px-3 gap-3",
                           isActive
-                            ? "text-primary font-bold z-10"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground z-10",
+                            ? "text-white font-semibold hover:text-white hover:bg-transparent"
+                            : "text-slate-600 hover:text-primary hover:bg-primary/5",
                         ].join(" ")}
                       >
-                        {/* Background pill indicator — animated */}
-                        {isActive && (
-                          <motion.div
-                            layoutId="sidebar-active-pill"
-                            className="absolute inset-0 bg-primary/10 rounded-md -z-10"
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
+                        <NavLink
+                          to={`/${item.id}`}
+                          title={collapsed ? item.label : undefined}
+                        >
+                          {/* Active pill background with framer-motion */}
+                          {isActive && (
+                            <motion.div
+                              layoutId="sidebar-active-pill"
+                              className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-sm shadow-primary/15"
+                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                            />
+                          )}
 
-                        {/* Right indicator — animated */}
-                        {isActive && !collapsed && (
-                          <motion.div
-                            layoutId="sidebar-active-indicator"
-                            className="absolute right-0 top-1.5 bottom-1.5 w-[4px] bg-primary rounded-l-full"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                          />
-                        )}
+                          {/* Icon wrapper */}
+                          <div className={[
+                            "flex-shrink-0 flex items-center justify-center transition-all duration-200 z-10",
+                            !collapsed ? "w-7 h-7 rounded-lg" : "",
+                            isActive && !collapsed
+                              ? "bg-white/15"
+                              : !isActive && !collapsed
+                                ? "bg-slate-100 group-hover/btn:bg-primary/10"
+                                : "",
+                          ].join(" ")}>
+                            <Icon className={[
+                              "transition-transform duration-200 group-hover/btn:scale-110 z-10",
+                              collapsed ? "w-5 h-5" : "w-3.5 h-3.5",
+                              isActive ? "text-white" : "text-slate-500 group-hover/btn:text-primary",
+                            ].join(" ")} />
+                          </div>
 
-                        <Icon
-                          className={[
-                            "flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                            collapsed ? "w-5 h-5" : "w-4 h-4",
-                            isActive ? "" : "opacity-70",
-                          ].join(" ")}
-                        />
-                        {!collapsed && (
-                          <span className="truncate transition-transform duration-200 group-hover:translate-x-0.5">
-                            {item.label}
-                          </span>
-                        )}
-                      </NavLink>
+                          {!collapsed && (
+                            <span className="truncate transition-transform duration-200 group-hover/btn:translate-x-0.5 z-10">
+                              {item.label}
+                            </span>
+                          )}
+
+                          {/* Active dot in collapsed mode */}
+                          {isActive && collapsed && (
+                            <motion.div
+                              layoutId="sidebar-active-dot"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full z-10"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                            />
+                          )}
+                        </NavLink>
+                      </Button>
                     );
                   })}
                 </div>
@@ -227,21 +241,27 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* ── Bottom user hint (expanded only) ────────────────────── */}
-      {!collapsed && (
-        <div className="px-3 py-3 border-t border-border flex-shrink-0">
-          <div className="flex items-center gap-2.5 px-2 py-2 rounded-md bg-muted/50">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+      {/* ── Bottom user chip ────────────────────────────────────── */}
+      {!collapsed ? (
+        <div className="px-3 py-3 border-t border-border/60 flex-shrink-0">
+          <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-sm shadow-primary/20">
               {state.user?.name?.[0] ?? "U"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-foreground truncate leading-tight">
+              <p className="text-xs font-bold text-slate-800 truncate leading-tight">
                 {state.user?.name}
               </p>
-              <p className="text-[10px] text-muted-foreground capitalize truncate">
+              <p className="text-[10px] text-slate-500 capitalize truncate">
                 {state.user?.role}
               </p>
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="px-2 py-3 border-t border-border/60 flex-shrink-0 flex justify-center">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-black shadow-sm shadow-primary/20">
+            {state.user?.name?.[0] ?? "U"}
           </div>
         </div>
       )}
