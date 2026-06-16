@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CheckCheck,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -72,7 +73,7 @@ export function Header() {
         </div>
 
         {/* Today's Schedule shortcut */}
-        <div className="hidden sm:flex items-center">
+        <div className="hidden sm:flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -81,6 +82,15 @@ export function Header() {
           >
             <Calendar className="w-3.5 h-3.5 text-primary" />
             Today's Schedule
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveModal("quickRegister")}
+            className="gap-2 text-foreground"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            Register Member
           </Button>
         </div>
       </div>

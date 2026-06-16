@@ -449,11 +449,6 @@ export function EmployeeManagement({
         subtitle={`${totalItems} member${totalItems !== 1 ? 's' : ''} across ${plans.filter(p => p.isActive).length} active plan${plans.filter(p => p.isActive).length !== 1 ? 's' : ''}`}
         action={
           <div className="flex items-center gap-2">
-            {/* {onGoToRegister && (
-              <Button onClick={onGoToRegister} variant="outline" className="gap-2">
-                <Zap className="w-4 h-4" /> Quick Register
-              </Button>
-            )} */}
             <Button onClick={() => setTab('import')} variant="outline" className="gap-2">
               <Upload className="w-4 h-4" /> Import
             </Button>

@@ -29,6 +29,7 @@ import { RestockForm } from "../Inventory/RestockForm";
 import { ConsumeForm } from "../Inventory/ConsumeForm";
 import { AdjustForm } from "../Inventory/AdjustForm";
 import { InventoryHistoryViewer } from "../Inventory/InventoryHistoryViewer";
+import { QuickRegistrationModal } from "../CorporatePlans/QuickRegistration/QuickRegistrationModal";
 import { ConfirmModal, Modal, Button, toast } from "../ui";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
@@ -1177,6 +1178,10 @@ export function ModalRegistry() {
             . Please register the patient before checking in.
           </p>
         </Modal>
+      )}
+
+      {activeModal === "quickRegister" && (
+        <QuickRegistrationModal />
       )}
 
       {confirmConfig.show && (

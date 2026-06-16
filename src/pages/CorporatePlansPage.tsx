@@ -5,7 +5,7 @@ import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagem
 import { QuickRegistrationFlow } from '../components/CorporatePlans/QuickRegistration/QuickRegistrationFlow';
 import { useAppData } from '../hooks/useAppData';
 
-export type MembershipTab = 'plans' | 'register' | 'members';
+export type MembershipTab = 'plans' | 'members';
 
 const TABS: {
   key: MembershipTab;
@@ -14,18 +14,15 @@ const TABS: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
     { key: 'plans', label: 'Membership Plans', sub: 'Create & manage plans', icon: CreditCard },
-    // { key: 'register', label: 'Quick Registration', sub: 'Enrol a member fast', icon: Zap },
     { key: 'members', label: 'Members', sub: 'View enrolled members', icon: Users },
   ];
 
 const TAB_ACCENT: Record<MembershipTab, string> = {
   plans: 'border-blue-500 text-blue-600',
-  register: 'border-amber-500 text-amber-600',
   members: 'border-violet-500 text-violet-600',
 };
 const TAB_ICON_ACTIVE: Record<MembershipTab, string> = {
   plans: 'bg-blue-50 text-blue-600 border-blue-100',
-  register: 'bg-amber-50 text-amber-600 border-amber-100',
   members: 'bg-violet-50 text-violet-600 border-violet-100',
 };
 const STAT_COLORS = [
@@ -139,16 +136,8 @@ export const CorporatePlansPage: React.FC = () => {
           filter={filter}
           onFilterChange={setFilter}
           isLoading={isPlansLoading}
-          onGoToRegister={() => setActiveTab('register')}
         />
       )}
-
-      {/* {activeTab === 'register' && (
-        <QuickRegistrationFlow
-          plans={corporatePlans}
-          onRegistered={() => setActiveTab('members')}
-        />
-      )} */}
 
       {activeTab === 'members' && (
         <EmployeeManagement
@@ -158,7 +147,6 @@ export const CorporatePlansPage: React.FC = () => {
           onDelete={handleDeleteEmployee}
           onBulkSave={handleBulkSaveEmployees}
           onChangePlan={handleChangeEmployeePlan}
-          onGoToRegister={() => setActiveTab('register')}
         />
       )}
     </div>
