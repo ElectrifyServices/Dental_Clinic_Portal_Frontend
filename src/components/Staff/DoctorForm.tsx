@@ -61,6 +61,17 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     enabled: !!doctor?.id,
   });
 
+  const normalizePermissions = (perms: string[]): string[] => {
+    return perms.map((p: string) => {
+      const norm = p.toLowerCase();
+      if (norm === 'staff_management' || norm === 'staff') return 'staff';
+      if (norm === 'analytics' || norm === 'reports') return 'reports';
+      if (norm === 'corporate_plans' || norm === 'membership') return 'membership';
+      if (norm === 'appointment' || norm === 'appointments' || norm === 'apppointment') return 'appointments';
+      return norm;
+    });
+  };
+
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema) as any,
     defaultValues: {
@@ -71,7 +82,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       specialization: doctor?.specialization ?? "",
       password: "",
       confirmPassword: "",
-      permissions: doctor?.permissions ?? [
+      permissions: normalizePermissions(doctor?.permissions ?? [
         "dashboard",
         "appointments",
         "patients",
@@ -79,7 +90,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "treatments",
         "medical_records",
         "consent_forms",
-      ],
+      ]),
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
       documents: doctor?.documents ?? [],
       profitSharing: doctor?.profitSharing ?? false,
@@ -98,12 +109,12 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       avatar: doctor?.avatar ?? doctor?.image ?? "",
     },
   });
-
+ 
   React.useEffect(() => {
     if (doctor) {
       if (singleStaffData) {
         const s = singleStaffData.data || singleStaffData;
-
+ 
         let normalizedRole = 'staff';
         let rawRole = s.role?.name || s.role_id || s.role || 'staff';
         if (rawRole.toLowerCase().includes('super')) normalizedRole = 'super_admin';
@@ -111,23 +122,23 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         else if (rawRole.toLowerCase().includes('doctor')) normalizedRole = 'doctor';
         else if (rawRole.toLowerCase().includes('receptionist')) normalizedRole = 'receptionist';
         else if (rawRole.toLowerCase().includes('assistant')) normalizedRole = 'assistant';
-
+ 
         let permissions: string[] = [];
         try {
           if (s.module_permission) {
             const rawPerms = typeof s.module_permission === 'string' ? JSON.parse(s.module_permission) : s.module_permission;
             if (Array.isArray(rawPerms)) {
-              permissions = rawPerms.map((p: string) => p.toLowerCase());
+              permissions = normalizePermissions(rawPerms);
             }
           }
         } catch (e) {
           // Failed to parse permissions
         }
-
+ 
         const profile = s.personal_profile || {};
         const exp = profile.experience_years !== undefined ? String(profile.experience_years) : '';
         const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
-
+ 
         form.reset({
           name: s.name || doctor.name || "",
           email: s.email || doctor.email || "",
@@ -136,7 +147,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
           confirmPassword: "",
-          permissions: permissions.length > 0 ? permissions : doctor.permissions || ['dashboard'],
+          permissions: permissions.length > 0 ? permissions : normalizePermissions(doctor.permissions || ['dashboard']),
           uniqueId: s.emp_id || doctor.uniqueId || s.id.slice(0, 8),
           documents: s.documents || doctor.documents || [],
           profitSharing: profile.profit_sharing || doctor.profitSharing || false,
@@ -163,7 +174,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           specialization: doctor.specialization ?? "",
           password: "",
           confirmPassword: "",
-          permissions: doctor.permissions ?? [
+          permissions: normalizePermissions(doctor.permissions ?? [
             "dashboard",
             "appointments",
             "patients",
@@ -171,7 +182,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             "treatments",
             "medical_records",
             "consent_forms",
-          ],
+          ]),
           uniqueId: doctor.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
           documents: doctor.documents ?? [],
           profitSharing: doctor.profitSharing ?? false,
@@ -323,7 +334,15 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       formDataObj.append("personal_profile", JSON.stringify(personalProfile));
 
       const perms = (data.role === "admin" || data.role === "super_admin") ? ["all"] : data.permissions;
-      formDataObj.append("module_permission", JSON.stringify(perms.map(p => p.toUpperCase())));
+      formDataObj.append("module_permission", JSON.stringify(perms.map(p => {
+        const up = p.toUpperCase();
+        if (up === 'APPOINTMENTS') return 'APPOINTMENT';
+        if (up === 'REPORTS') return 'ANALYTICS';
+        if (up === 'STAFF') return 'STAFF';
+        if (up === 'MEMBERSHIP') return 'MEMBERSHIP';
+        if (up === 'PROFIT_SHARING') return 'PROFIT_SHARING';
+        return up;
+      })));
 
       if (avatarFile) {
         formDataObj.append("profile_picture", avatarFile);

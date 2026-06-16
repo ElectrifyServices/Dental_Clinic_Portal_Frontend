@@ -347,12 +347,13 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
               </div>
             )}
           </div>
-          <Button
+          {/* This button can be enabled in the future, so for now it's just been commented out. */}
+          {/* <Button
             onClick={(e) => onDeleteClick(fullRecord.id, e)}
             className="flex items-center justify-center gap-2 text-sm font-bold text-red-600 hover:text-white px-5 py-2.5 rounded-xl hover:bg-red-600 transition-all border border-red-200 hover:border-red-600 shadow-sm bg-white flex-1 md:flex-initial h-auto"
           >
             <Trash2 className="w-4.5 h-4.5" /> Delete
-          </Button>
+          </Button> */}
         </div>
         </CardContent>
       </Card>

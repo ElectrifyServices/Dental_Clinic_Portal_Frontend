@@ -1,6 +1,6 @@
 import React from 'react';
 import { Percent, Tag, Gift, Star, CheckCircle, Settings2 } from 'lucide-react';
-import { PlanBenefitType, PlanBenefit, PlanCategory } from '../../../types';
+import { PlanBenefitType, PlanBenefit, PlanCategory, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS } from '../../../utils/corporatePlan';
 
 export const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
@@ -38,6 +38,7 @@ export const mkForm = () => ({
   planCategory: 'corporate' as PlanCategory,
   annualFee: undefined as number | undefined,
   maxDependents: 0,
+  planTier: undefined as CorporatePlanTier | undefined,
 });
 
 export function autoDesc(b: PlanBenefit): string {

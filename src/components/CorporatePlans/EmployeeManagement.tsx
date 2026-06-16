@@ -1,27 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Plus, Trash2, Edit2, Upload, Building2,
-  Users, Phone, Mail, Search, X, ToggleLeft, ToggleRight,
-  MoreHorizontal, ArrowRightLeft, UserPlus
+  Plus, Trash2, Edit2, Upload, Building2, User,
+  Users, Phone, Search,
+  MoreHorizontal, ArrowRightLeft,
+  UserPlus, Zap,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
-  PageHeader, DataTable, Pagination, SearchInput,
-  FilterTabs, PlanBadge, ConfirmModal, Badge,
-  DropdownMenu, DropdownMenuTrigger,
-  DropdownMenuContent, DropdownMenuItem, Button
+  PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
 import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
-import { useActivePlansQuery } from '../../hooks/corporate/useActivePlansQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
-
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
-import { IndividualMemberFormModal } from './Employee/IndividualMemberFormModal';
 import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
@@ -33,82 +30,87 @@ interface EmployeeManagementProps {
   onDelete: (id: string) => void;
   onBulkSave: (emps: CorporateEmployee[]) => void;
   onChangePlan: (empId: string, newPlanId: string, newPlanName: string) => void;
-  parentTab: 'plans' | 'employees';
-  setParentTab: (tab: 'plans' | 'employees') => void;
+  onGoToRegister?: () => void;
 }
 
-import { parseXlsx, downloadTemplate } from './Employee/importUtils';
-export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkSave, onChangePlan, parentTab, setParentTab }: EmployeeManagementProps) {
+const PER_PAGE = 15;
+
+export function EmployeeManagement({
+  employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
+}: EmployeeManagementProps) {
   const queryClient = useQueryClient();
+  const { showToast } = useModal();
+
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
+  const updateStatusMutation = useUpdateEmployeeStatusMutation();
 
   const [tab, setTab] = useState<'list' | 'import'>('list');
-  const [viewMode, setViewMode] = useState<'employees' | 'companies'>('employees');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [planFilter, setPlanFilter] = useState('all');
-  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
+  const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
+  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
-  const PER_PAGE = 15;
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [search]);
-
-  const { showToast } = useModal();
   const [showForm, setShowForm] = useState(false);
-  const [showIndividualForm, setShowIndividualForm] = useState(false);
   const [editEmp, setEditEmp] = useState<CorporateEmployee | null>(null);
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(handler);
+  }, [search]);
 
+  const queryFilters = useMemo(() => {
+    const filters: any = {};
 
-  const updateStatusMutation = useUpdateEmployeeStatusMutation();
+    if (planTypeFilter === 'corporate') {
+      const corpPlanIds = plans.filter(p => p.planCategory !== 'individual').map(p => p.id);
+      filters.corporate_plan_id = corpPlanIds.length > 0 ? corpPlanIds : ['none'];
+    } else if (planTypeFilter === 'individual') {
+      const indPlanIds = plans.filter(p => p.planCategory === 'individual').map(p => p.id);
+      filters.corporate_plan_id = indPlanIds.length > 0 ? indPlanIds : ['none'];
+    }
 
-  const activePlans = useMemo(() => {
-    return plans; // Fallback to props directly, which is always up-to-date
-  }, [plans]);
+    if (selectedPlanFilter !== 'all') {
+      filters.corporate_plan_id = [selectedPlanFilter];
+    }
 
-  // Filters
-  const planFilterTabs = [
-    { key: 'all', label: 'All Plans' },
-    ...activePlans.filter(p => p.isActive).map(p => ({ key: p.id, label: p.code })),
-  ];
+    if (selectedCompanyFilter !== 'all') {
+      filters.company_name = [selectedCompanyFilter];
+    }
+
+    return filters;
+  }, [planTypeFilter, selectedPlanFilter, selectedCompanyFilter, plans]);
 
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
     page,
     limit: PER_PAGE,
-    filters: {
-      company_name: selectedCompany ? [selectedCompany] : undefined,
-      corporate_plan_id: planFilter === 'all' ? undefined : [planFilter],
-    }
+    filters: queryFilters,
   });
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       refetch();
     };
-    window.addEventListener('plan_dependents_changed', handleStorageChange);
-    return () => window.removeEventListener('plan_dependents_changed', handleStorageChange);
+    window.addEventListener('plan_dependents_changed', handler);
+    return () => window.removeEventListener('plan_dependents_changed', handler);
   }, [refetch, queryClient]);
 
-  const apiEmployees: CorporateEmployee[] = useMemo(() => {
+  const apiMembers: CorporateEmployee[] = useMemo(() => {
     let arr: any[] = [];
     if (Array.isArray(employeesData)) arr = employeesData;
-    else if (employeesData && Array.isArray(employeesData.data)) arr = employeesData.data;
-    else if (employeesData?.data && Array.isArray(employeesData.data.data)) arr = employeesData.data.data;
-    else if (employeesData?.data?.employees && Array.isArray(employeesData.data.employees)) arr = employeesData.data.employees;
-    else if (employeesData?.employees && Array.isArray(employeesData.employees)) arr = employeesData.employees;
+    else if (Array.isArray(employeesData?.data)) arr = employeesData.data;
+    else if (Array.isArray(employeesData?.data?.data)) arr = employeesData.data.data;
+    else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
+    else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    let mapped = arr.map((e: any) => ({
+    return arr.map((e: any) => ({
       id: e.id,
       employeeId: e.emp_id || '',
       name: e.name,
@@ -118,9 +120,9 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       dateOfBirth: e.date_of_birth,
       designation: e.designation,
       department: e.department,
-      companyName: e.company_name || 'Unknown',
+      companyName: e.company_name || '',
       corporatePlanId: e.corporate_plan?.id || e.corporate_plan_id || '',
-      corporatePlanName: e.corporate_plan?.plan_name || activePlans.find(p => p.id === (e.corporate_plan?.id || e.corporate_plan_id))?.name || '',
+      corporatePlanName: e.corporate_plan?.plan_name || plans.find(p => p.id === (e.corporate_plan?.id || e.corporate_plan_id))?.name || '',
       enrolledAt: e.created_at || new Date().toISOString(),
       eligible_date: e.eligible_date,
       isActive: e.status === 'ACTIVE',
@@ -129,213 +131,260 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
       coverageType: (e.coverage_type?.toLowerCase() || 'self') as CoverageType,
       dependents: getDependentsByMember(e.id),
     }));
+  }, [employeesData, plans]);
 
-    if (planFilter !== 'all') {
-      mapped = mapped.filter(e => e.corporatePlanId === planFilter);
+  const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: PER_PAGE, total: 0, totalPages: 1 };
+  const totalPages = pagination.totalPages || 1;
+  const totalItems = pagination.total || 0;
+
+  const planTypeTabs = [
+    { key: 'all', label: 'All Members' },
+    { key: 'corporate', label: 'Corporate Plans' },
+    { key: 'individual', label: 'Individual Plans' },
+  ];
+
+  const handlePlanTypeChange = (val: string) => {
+    setPlanTypeFilter(val as any);
+    setSelectedPlanFilter('all');
+    setSelectedCompanyFilter('all');
+    setPage(1);
+  };
+
+  const availablePlanOptions = useMemo(() => {
+    let filteredPlans = plans.filter(p => p.isActive);
+    if (planTypeFilter === 'corporate') {
+      filteredPlans = filteredPlans.filter(p => p.planCategory !== 'individual');
+    } else if (planTypeFilter === 'individual') {
+      filteredPlans = filteredPlans.filter(p => p.planCategory === 'individual');
     }
+    return [
+      { value: 'all', label: 'All Plans' },
+      ...filteredPlans.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }))
+    ];
+  }, [plans, planTypeFilter]);
 
-    return mapped;
-  }, [employeesData, activePlans, planFilter]);
+  const availableCompanyOptions = useMemo(() => {
+    const companies = Array.from(new Set(
+      plans
+        .filter(p => p.isActive && p.planCategory !== 'individual' && p.companyName && p.companyName !== 'Individual')
+        .map(p => p.companyName!)
+    ));
+    return [
+      { value: 'all', label: 'All Companies' },
+      ...companies.map(c => ({ value: c, label: c }))
+    ];
+  }, [plans]);
 
-  const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 };
-  const totalPages = planFilter !== 'all' ? Math.ceil(apiEmployees.length / PER_PAGE) || 1 : pagination.totalPages || 1;
-  const totalItems = planFilter !== 'all' ? apiEmployees.length : pagination.total || 0;
-
-  const { data: companiesData } = useCompaniesQuery();
-
-  // Group by company
-  const companiesList = useMemo(() => {
-    let arr: any[] = [];
-    if (Array.isArray(companiesData)) arr = companiesData;
-    else if (companiesData && Array.isArray(companiesData.data)) arr = companiesData.data;
-    else if (companiesData?.data && Array.isArray(companiesData.data.data)) arr = companiesData.data.data;
-
-    if (arr.length > 0) {
-      return arr.map((c: any) => ({
-        name: c.company_name || c.name || 'Unknown',
-        count: Number(c.employee_count || c.count || c.total || c._count?.employees || 0),
-      })).sort((a, b) => b.count - a.count);
-    }
-
-    return [];
-  }, [companiesData]);
-
-  // Stats
-  const byPlan = useMemo(() => {
-    const m: Record<string, number> = {};
-    let arr: any[] = [];
-    if (Array.isArray(companiesData)) arr = companiesData;
-    else if (companiesData && Array.isArray(companiesData.data)) arr = companiesData.data;
-    else if (companiesData?.data && Array.isArray(companiesData.data.data)) arr = companiesData.data.data;
-
-    if (arr.length > 0) {
-      arr.forEach((company: any) => {
-        if (company.employees && Array.isArray(company.employees)) {
-          company.employees.forEach((emp: any) => {
-            const planId = emp.corporate_plan?.id || emp.corporate_plan_id;
-            if (planId) {
-              m[planId] = (m[planId] || 0) + 1;
-            }
-          });
-        }
-      });
-      return m;
-    }
-
-    // Fallback to currently visible employees if companies data is unavailable
-    apiEmployees.forEach(e => {
-      if (e.corporatePlanId) m[e.corporatePlanId] = (m[e.corporatePlanId] || 0) + 1;
-    });
-    return m;
-  }, [companiesData, apiEmployees]);
-
-  // ── Modals ──
-  const openNew = () => { setEditEmp(null); setShowForm(true); };
-  const openEdit = (e: CorporateEmployee) => { setEditEmp(e); setShowForm(true); };
-  const openChangePlan = (e: CorporateEmployee) => { setChangePlanEmp(e); };
-
-  const handleDeleteEmployee = async () => {
+  const handleDelete = async () => {
     if (!deleteEmp) return;
     try {
       await deleteEmployeeMutation.mutateAsync({ id: deleteEmp.id });
-      queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ['corporatePlans'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
       onDelete(deleteEmp.id);
       refetch();
       setDeleteEmp(null);
     } catch (e: any) {
-      const resData = e.response?.data || e;
-      const statusDesc = resData?.responseStatusList?.statusList?.[0]?.statusDesc;
-      let errMsg = "Failed to remove employee.";
-
-      if (statusDesc) {
-        errMsg = statusDesc;
-      } else if (resData?.statusDesc) {
-        errMsg = resData.statusDesc;
-      } else if (resData?.message) {
-        errMsg = resData.message;
-      } else if (e.message) {
-        errMsg = e.message;
-      }
-      showToast(errMsg, "error");
+      const d = e.response?.data || e;
+      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || e.message || 'Failed to remove member';
+      showToast(msg, 'error');
     }
   };
 
-  // ── Table columns ──
+  const handleRowClick = (emp: CorporateEmployee) => {
+    setExpandedRowIds(prev => {
+      const next = new Set(prev);
+      next.has(emp.id) ? next.delete(emp.id) : next.add(emp.id);
+      return next;
+    });
+  };
+
+  const renderExpandedRow = (emp: CorporateEmployee) => {
+    if (!emp.dependents?.length) {
+      return (
+        <div className="p-4 text-center text-muted-foreground text-sm">
+          No family members added yet.
+        </div>
+      );
+    }
+
+    const dependentColumns = [
+      {
+        key: 'name',
+        header: 'Name',
+        render: (dep: any) => <span className="font-bold text-foreground text-sm">{dep.name}</span>,
+      },
+      {
+        key: 'relationship',
+        header: 'Relation',
+        render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship}</span>,
+      },
+      {
+        key: 'contact',
+        header: 'Contact',
+        render: (dep: any) => dep.phone ? (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Phone className="w-3 h-3 opacity-60" /> {dep.phone}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/40 italic">—</span>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        render: (dep: any) => (
+          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${dep.isActive !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-muted text-muted-foreground'}`}>
+            {dep.isActive !== false ? 'Active' : 'Inactive'}
+          </span>
+        ),
+      },
+    ];
+
+    return (
+      <div className="p-4 bg-muted/20 border-l-2 border-primary/40">
+        <h4 className="text-sm font-semibold mb-3">Family Members ({emp.dependents.length})</h4>
+        <DataTable
+          columns={dependentColumns}
+          data={emp.dependents}
+          rowKey={dep => dep.id}
+        />
+      </div>
+    );
+  };
+
+  // Avatar colour cycling
+  const AVATAR_COLORS = [
+    'from-blue-500 to-blue-700',
+    'from-violet-500 to-purple-700',
+    'from-emerald-500 to-teal-600',
+    'from-rose-500 to-pink-700',
+    'from-amber-400 to-orange-600',
+    'from-indigo-500 to-violet-700',
+    'from-teal-500 to-emerald-600',
+    'from-cyan-500 to-blue-600',
+  ];
+  const avatarGrad = (name: string) =>
+    AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+
+  // ── Table columns ─────────────────────────────────────────────────────────
   const columns = [
     {
-      key: 'employee', header: 'Employee', render: (e: CorporateEmployee) => (
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+      key: 'member', header: 'Member',
+      render: (e: CorporateEmployee) => (
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${avatarGrad(e.name)} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
             {e.name[0]?.toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-foreground text-sm">{e.name}</div>
-            {e.employeeId && <div className="text-xs text-muted-foreground/60 font-mono">{e.employeeId}</div>}
+            <div className="font-bold text-foreground text-sm">{e.name}</div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              <Phone className="w-3 h-3 opacity-60" /> {e.phone}
+            </div>
           </div>
         </div>
       ),
     },
     {
-      key: 'contact', header: 'Contact', render: (e: CorporateEmployee) => (
-        <div>
-          <div className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3 text-muted-foreground/60" />{e.phone}</div>
-          {e.email && <div className="text-xs text-muted-foreground/60 flex items-center gap-1 mt-0.5"><Mail className="w-3 h-3" />{e.email}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'company', header: 'Company / Role', render: (e: CorporateEmployee) => (
-        <div>
-          <div className="text-sm font-medium text-foreground">{e.companyName}</div>
-          {e.designation && <div className="text-xs text-muted-foreground/60">{e.designation}{e.department ? ` · ${e.department}` : ''}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'plan', header: 'Plan', render: (e: CorporateEmployee) => {
-        const plan = activePlans.find(p => p.id === e.corporatePlanId);
+      key: 'plan', header: 'Plan',
+      render: (e: CorporateEmployee) => {
+        const plan = plans.find(p => p.id === e.corporatePlanId);
         return plan
           ? <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-          : <span className="text-xs text-muted-foreground/60">No plan</span>;
+          : <span className="text-xs text-muted-foreground/60 italic">No plan</span>;
       },
     },
     {
-      key: 'coverage', header: 'Coverage', render: (e: CorporateEmployee) => {
-        const depCount = e.dependents?.length ?? 0;
-        return depCount > 0 ? (
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full w-fit">
-            <Users className="w-3.5 h-3.5" /> Family ({depCount})
+      key: 'type', header: 'Type',
+      render: (e: CorporateEmployee) => {
+        const plan = plans.find(p => p.id === e.corporatePlanId);
+        const isInd = plan?.planCategory === 'individual' || e.companyName === 'Individual';
+        return (
+          <span className={`inline-flex items-center gap-1 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide border ${
+            isInd
+              ? 'bg-teal-50 text-teal-700 border-teal-200'
+              : 'bg-blue-50 text-blue-700 border-blue-200'
+          }`}>
+            {isInd ? <User className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
+            {isInd ? 'Personal' : 'Company'}
           </span>
-        ) : (
-          <span className="text-xs text-muted-foreground font-medium">Self</span>
         );
       },
     },
-    /*
     {
-      key: 'patient', header: 'Patient Link', render: (e: CorporateEmployee) => (
-        e.patientId
-          ? <Badge variant="green">Registered</Badge>
-          : <Badge variant="gray">Not yet</Badge>
+      key: 'company', header: 'Company',
+      render: (e: CorporateEmployee) => (
+        <span className="text-xs text-muted-foreground">
+          {e.companyName === 'Individual' ? <span className="italic opacity-40">—</span> : e.companyName}
+        </span>
       ),
     },
-    */
     {
-      key: 'status', header: 'Status', render: (e: CorporateEmployee) => {
+      key: 'family', header: 'Family',
+      render: (e: CorporateEmployee) => {
+        const count = e.dependents?.length ?? 0;
+        return count > 0 ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-full">
+            <Users className="w-3 h-3" /> +{count}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/50 italic">Self</span>
+        );
+      },
+    },
+    {
+      key: 'status', header: 'Status',
+      render: (e: CorporateEmployee) => {
         const isExpired = e.status === 'EXPIRED';
         return (
           <Button
-            onClick={async () => {
+            onClick={async (ev) => {
+              ev.stopPropagation();
               if (isExpired) return;
               try {
                 await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
                 refetch();
-              } catch (err) {
-              }
+              } catch {}
             }}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors border h-auto ${isExpired
-              ? 'bg-rose-100 text-rose-700 border-rose-200 cursor-not-allowed'
-              : e.isActive
-                ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200'
-                : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-              }`}
-            disabled={isExpired || updateStatusMutation.isLoading || (updateStatusMutation as any).isPending}
-            title={isExpired ? "Expired! Please update the eligibility date to change status." : ""}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
+              isExpired
+                ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                : e.isActive
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+            }`}
+            disabled={isExpired || (updateStatusMutation as any).isPending}
           >
-            {isExpired ? (
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            ) : e.isActive ? (
-              <ToggleRight className="w-4 h-4" />
-            ) : (
-              <ToggleLeft className="w-4 h-4" />
-            )}
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              isExpired ? 'bg-rose-500' : e.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+            }`} />
             {isExpired ? 'Expired' : e.isActive ? 'Active' : 'Inactive'}
           </Button>
         );
       },
     },
     {
-      key: 'actions', header: 'Action', align: 'right' as const, render: (e_emp: CorporateEmployee) => (
+      key: 'actions', header: '', align: 'right' as const,
+      render: (e: CorporateEmployee) => (
         <div className="flex items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="btn-icon h-8 w-8" onClick={(ev) => ev.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={ev => ev.stopPropagation()}>
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); openEdit(e_emp); }}>
-                <Edit2 className="w-4 h-4 mr-2" /> Edit Details
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setEditEmp(e); setShowForm(true); }}>
+                <Edit2 className="w-4 h-4 mr-2 text-primary" /> Edit Member
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); openChangePlan(e_emp); }}>
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setChangePlanEmp(e); }}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); setAddDependentEmp(e_emp); }}>
-                <UserPlus className="w-4 h-4 mr-2" /> Add Member
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
+                <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(ev) => { ev.stopPropagation(); setDeleteEmp(e_emp); }} className="text-destructive">
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setDeleteEmp(e); }} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -345,200 +394,118 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
     },
   ];
 
-  const handleRowClick = (emp: CorporateEmployee) => {
-    const newExpanded = new Set(expandedRowIds);
-    if (newExpanded.has(emp.id)) {
-      newExpanded.delete(emp.id);
-    } else {
-      newExpanded.add(emp.id);
-    }
-    setExpandedRowIds(newExpanded);
-  };
-
-  const renderExpandedRow = (emp: CorporateEmployee) => {
-    if (!emp.dependents || emp.dependents.length === 0) {
-      return (
-        <div className="p-4 text-center text-muted-foreground text-sm">
-          No family members added yet.
-        </div>
-      );
-    }
-    return (
-      <div className="p-4 bg-muted/20 border-l-2 border-primary/40">
-        <h4 className="text-sm font-semibold mb-3">Family Members ({emp.dependents.length})</h4>
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Relation</th>
-                <th className="px-4 py-2">Contact</th>
-                <th className="px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {emp.dependents.map((dep, idx) => (
-                <tr key={dep.id} className={idx !== emp.dependents!.length - 1 ? "border-b border-border/50" : ""}>
-                  <td className="px-4 py-2 font-medium">{dep.name}</td>
-                  <td className="px-4 py-2 text-muted-foreground">{dep.relationship}</td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {dep.phone && <div className="flex items-center gap-1"><Phone className="w-3 h-3"/> {dep.phone}</div>}
-                    {dep.email && <div className="flex items-center gap-1"><Mail className="w-3 h-3"/> {dep.email}</div>}
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${dep.isActive !== false ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
-                      {dep.isActive !== false ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <PageHeader
-        title="Employee Management"
-        subtitle={`${totalItems} employees across ${activePlans.filter(p => p.isActive).length} active plans`}
+        title="Members"
+        subtitle={`${totalItems} member${totalItems !== 1 ? 's' : ''} across ${plans.filter(p => p.isActive).length} active plan${plans.filter(p => p.isActive).length !== 1 ? 's' : ''}`}
         action={
           <div className="flex items-center gap-2">
-            <Button onClick={() => { setTab('import'); }} variant="outline" className="btn-secondary">
-              <Upload className="w-4 h-4" /> Bulk Import
+            {/* {onGoToRegister && (
+              <Button onClick={onGoToRegister} variant="outline" className="gap-2">
+                <Zap className="w-4 h-4" /> Quick Register
+              </Button>
+            )} */}
+            <Button onClick={() => setTab('import')} variant="outline" className="gap-2">
+              <Upload className="w-4 h-4" /> Import
             </Button>
-            <Button onClick={() => setShowIndividualForm(true)} variant="outline" className="gap-1.5 text-teal-700 border-teal-300 hover:bg-teal-50">
-              <UserPlus className="w-4 h-4" /> Register Member
-            </Button>
-            <Button onClick={openNew} className="btn-primary">
-              <Plus className="w-4 h-4" /> Add Employee
+            <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Member
             </Button>
           </div>
         }
-      >
-        <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-2xl">
-          <Button
-            onClick={() => setParentTab("plans")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${parentTab === "plans" ? "bg-card text-primary shadow-sm hover:bg-card hover:text-primary" : ""}`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            Corporate Plans
-          </Button>
-          <Button
-            onClick={() => setParentTab("employees")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${parentTab === "employees" ? "bg-card text-primary shadow-sm hover:bg-card hover:text-primary" : ""}`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            Employee Management
-          </Button>
-        </div>
-      </PageHeader>
+      />
 
-      {/* Plan summary KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {plans.filter(p => p.isActive).slice(0, 4).map(plan => (
-          <div key={plan.id} className="kpi-card">
-            <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-            <p className="text-xl font-bold text-foreground mt-2">{plan.currentMembers || 0}</p>
-            <p className="text-xs text-muted-foreground/60">{plan.companyName}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Tab: List / Import */}
       {tab === 'list' ? (
         <>
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-            <SearchInput value={search} onChange={v => { setSearch(v); setPage(1); }}
-              placeholder={viewMode === 'employees' ? "Search by name, phone, employee ID…" : "Search companies…"} className="flex-1" />
-            {viewMode === 'employees' && (
-              <FilterTabs tabs={planFilterTabs} active={planFilter} onChange={v => { setPlanFilter(v); setPage(1); }} />
-            )}
-            <Button
-              onClick={() => { setViewMode(viewMode === 'employees' ? 'companies' : 'employees'); setSelectedCompany(null); setPage(1); }}
-              variant="outline"
-              className={`btn-secondary px-3 py-2 whitespace-nowrap h-11 rounded-xl ${viewMode === 'companies' ? 'bg-primary/10 text-primary border-primary/50' : ''}`}
-              title={viewMode === 'employees' ? 'Switch to companies view' : 'Switch to employees view'}
-            >
-              <Building2 className="w-4 h-4" /> {viewMode === 'employees' ? 'Companies' : 'Employees'}
-            </Button>
-          </div>
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
+            <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full">
+              <SearchInput
+                value={search}
+                onChange={val => { setSearch(val); setPage(1); }}
+                placeholder="Search by name, phone…"
+                className="w-full sm:max-w-xs"
+              />
 
-          {/* Employees View */}
-          {viewMode === 'employees' ? (
-            <>
-              {selectedCompany && (
-                <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg p-3">
-                  <span className="text-sm font-semibold text-blue-900">Showing: {selectedCompany}</span>
-                  <Button onClick={() => setSelectedCompany(null)} variant="outline" className="btn-secondary text-xs ml-auto h-7 px-2">
-                    <X className="w-3 h-3" /> Clear Filter
-                  </Button>
+              <FilterTabs
+                tabs={planTypeTabs}
+                active={planTypeFilter}
+                onChange={handlePlanTypeChange}
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
+              {/* Plan Select */}
+              <div className="w-full sm:w-48">
+                <Select
+                  value={selectedPlanFilter}
+                  onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
+                >
+                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                    <SelectValue placeholder="Filter by Plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePlanOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Company Select - only for corporate or all */}
+              {planTypeFilter !== 'individual' && (
+                <div className="w-full sm:w-48">
+                  <Select
+                    value={selectedCompanyFilter}
+                    onValueChange={val => { setSelectedCompanyFilter(val); setPage(1); }}
+                  >
+                    <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                      <SelectValue placeholder="Filter by Company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCompanyOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
-              <DataTable
-                columns={columns}
-                data={apiEmployees}
-                rowKey={e => e.id}
-                emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
-                emptyTitle="No employees found"
-                emptySubtitle="Add employees individually or import from Excel"
-                onRowClick={handleRowClick}
-                expandedRowIds={expandedRowIds}
-                renderExpandedRow={renderExpandedRow}
-                footer={
-                  <Pagination page={page} totalPages={totalPages} totalItems={totalItems}
-                    perPage={PER_PAGE} onPageChange={setPage} />
-                }
-              />
-            </>
-          ) : (
-            /* Companies View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {companiesList
-                .filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
-                .map(company => (
-                  <div key={company.name}
-                    onClick={() => { setSelectedCompany(company.name); setViewMode('employees'); setPage(1); }}
-                    className="card p-5 cursor-pointer hover:shadow-md hover:border-primary/50 transition-all group">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-1">Company</p>
-                        <p className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{company.name}</p>
-                      </div>
-                      <Building2 className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Total Employees</p>
-                          <p className="text-2xl font-bold text-primary">{company.count}</p>
-                        </div>
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-semibold">
-                          View details →
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
             </div>
-          )}
+          </div>
+
+          <DataTable
+            columns={columns}
+            data={apiMembers}
+            rowKey={e => e.id}
+            emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
+            emptyTitle="No members found"
+            emptySubtitle="Use Add Member to add your first member"
+            onRowClick={handleRowClick}
+            expandedRowIds={expandedRowIds}
+            renderExpandedRow={renderExpandedRow}
+            footer={
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                perPage={PER_PAGE}
+                onPageChange={setPage}
+              />
+            }
+          />
         </>
       ) : (
-        /* Import tab */
         <EmployeeImportTab
           plans={plans}
-          activePlans={activePlans}
-          setTab={(t) => {
-            setTab(t);
-            if (t === 'list') setViewMode('employees');
-          }}
-          onBulkSave={(emps) => {
-            onBulkSave(emps);
-            setTab('list');
-            setViewMode('employees');
-          }}
+          activePlans={plans}
+          setTab={t => { setTab(t); }}
+          onBulkSave={emps => { onBulkSave(emps); setTab('list'); }}
         />
       )}
 
@@ -546,47 +513,35 @@ export function EmployeeManagement({ employees, plans, onSave, onDelete, onBulkS
         showForm={showForm}
         setShowForm={setShowForm}
         editEmp={editEmp}
-        activePlans={activePlans}
-        onSave={(emp) => {
-          onSave(emp);
-          setTab('list');
-          setViewMode('employees');
-        }}
+        activePlans={plans}
+        onSave={emp => { onSave(emp); setTab('list'); }}
         refetch={refetch}
-      />
-
-      <IndividualMemberFormModal
-        showForm={showIndividualForm}
-        setShowForm={setShowIndividualForm}
-        individualPlans={plans.filter(p => p.planCategory === 'individual' && p.isActive)}
-        onSave={() => { refetch(); }}
       />
 
       <ChangePlanModal
         changePlanEmp={changePlanEmp}
         setChangePlanEmp={setChangePlanEmp}
-        activePlans={activePlans}
+        activePlans={plans}
         refetch={refetch}
       />
 
-      {addDependentEmp && showForm === false && (
+      {addDependentEmp && !showForm && (
         <EmployeeDependentFormModal
           showForm={!!addDependentEmp}
-          setShowForm={(val) => { if (!val) setAddDependentEmp(null); }}
+          setShowForm={val => { if (!val) setAddDependentEmp(null); }}
           employee={addDependentEmp}
           onSave={() => { setAddDependentEmp(null); refetch(); }}
         />
       )}
 
-      {/* Delete confirm */}
       {deleteEmp && (
         <ConfirmModal
-          title="Remove Employee"
-          message={`Remove ${deleteEmp.name} from the corporate employee list? Their patient record will remain but plan association will be cleared.`}
+          title="Remove Member"
+          message={`Remove ${deleteEmp.name} from the membership list? Their patient record will remain but the plan association will be cleared.`}
           confirmLabel="Remove"
           variant="danger"
           isLoading={deleteEmployeeMutation.isPending}
-          onConfirm={handleDeleteEmployee}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteEmp(null)}
         />
       )}

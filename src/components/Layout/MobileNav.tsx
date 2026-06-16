@@ -100,10 +100,10 @@ const PERMISSION_MAP: Record<string, string[]> = {
   consent: ["CONSENT_FORMS"],
   billing: ["BILLING"],
   inventory: ["INVENTORY"],
-  reports: ["ANALYTICS"],
-  staff: ["STAFF"],
+  reports: ["ANALYTICS", "REPORTS"],
+  staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS"],
+  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 export function MobileNav() {
@@ -146,22 +146,24 @@ export function MobileNav() {
           onClick={() => setMenuOpen(false)}
         >
           <div
-            className="absolute bottom-16 left-0 right-0 bg-card border-t border-border rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[70vh] overflow-y-auto"
+            className="absolute bottom-16 left-0 right-0 bg-white border-t border-border rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[70vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Drag handle */}
+            <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5" />
             <div className="flex items-center justify-between mb-5 border-b border-border/50 pb-3">
-              <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">All Modules</h4>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">All Modules</h4>
               <Button
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => setMenuOpen(false)}
-                className="rounded-full text-muted-foreground hover:text-foreground"
+                className="rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
               >
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {visibleMenu.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -169,14 +171,28 @@ export function MobileNav() {
                     key={item.id}
                     to={`/${item.id}`}
                     onClick={() => setMenuOpen(false)}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border hover:border-primary/20 hover:bg-primary/5 transition-all text-center min-w-0"
+                    className={({ isActive }) =>
+                      `flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center min-w-0 ${
+                        isActive
+                          ? "border-blue-200 bg-blue-50"
+                          : "border-border bg-slate-50 hover:border-blue-200 hover:bg-blue-50"
+                      }`
+                    }
                   >
-                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-2">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-bold text-foreground truncate w-full">
-                      {item.label}
-                    </span>
+                    {({ isActive }) => (
+                      <>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 ${
+                          isActive
+                            ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-400/30"
+                            : "bg-slate-200"
+                        }`}>
+                          <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-500"}`} />
+                        </div>
+                        <span className={`text-[10px] font-bold truncate w-full text-center ${isActive ? "text-blue-600" : "text-slate-600"}`}>
+                          {item.label}
+                        </span>
+                      </>
+                    )}
                   </NavLink>
                 );
               })}
@@ -186,7 +202,7 @@ export function MobileNav() {
       )}
 
       {/* Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border px-2 py-2 z-40">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border px-2 py-2 z-40 shadow-[0_-4px_16px_rgba(15,23,42,0.08)]">
         <div className="flex justify-around items-center">
           {visiblePrimary.map((item) => {
             const Icon = item.icon;
@@ -195,16 +211,26 @@ export function MobileNav() {
                 key={item.id}
                 to={`/${item.id}`}
                 className={({ isActive }) =>
-                  `flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-colors ${isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground"
+                  `flex flex-col items-center px-3 py-1.5 rounded-xl min-w-0 transition-all ${isActive
+                    ? "text-blue-600"
+                    : "text-slate-500 hover:text-slate-700"
                   }`
                 }
               >
-                <Icon className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-medium truncate">
-                  {item.label}
-                </span>
+                {({ isActive }) => (
+                  <>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-0.5 transition-all ${
+                      isActive
+                        ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm shadow-blue-400/30"
+                        : "bg-transparent"
+                    }`}>
+                      <Icon className={`w-4 h-4 ${isActive ? "text-white" : ""}`} />
+                    </div>
+                    <span className="text-[10px] font-bold truncate">
+                      {item.label}
+                    </span>
+                  </>
+                )}
               </NavLink>
             );
           })}
@@ -212,14 +238,18 @@ export function MobileNav() {
           <Button
             variant="ghost"
             onClick={() => setMenuOpen(!menuOpen)}
-            className={`flex flex-col h-auto items-center px-3 py-1.5 rounded-xl min-w-0 gap-0 ${
-              menuOpen
-                ? "text-primary bg-primary/10 hover:bg-primary/10 hover:text-primary"
-                : "text-muted-foreground hover:text-foreground"
+            className={`flex flex-col h-auto items-center px-3 py-1.5 rounded-xl min-w-0 gap-0 hover:bg-transparent ${
+              menuOpen ? "text-blue-600" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Menu className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-medium truncate">Menu</span>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-0.5 transition-all ${
+              menuOpen
+                ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm shadow-blue-400/30"
+                : "bg-transparent"
+            }`}>
+              <Menu className={`w-4 h-4 ${menuOpen ? "text-white" : ""}`} />
+            </div>
+            <span className="text-[10px] font-bold">Menu</span>
           </Button>
         </div>
       </div>

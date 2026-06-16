@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui";
 import { Mail, ArrowRight } from "lucide-react";
+import logoImg from "../../../logo.png";
 
 interface ForgotViewProps {
   setView: (view: 'login' | 'forgot' | 'forgot-sent') => void;
@@ -12,12 +13,16 @@ interface ForgotViewProps {
 export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewProps) {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+      {/* Header with Logo */}
+      <div className="flex flex-col items-center text-center mb-8">
+        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 shadow-xl shadow-slate-100/50 mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3 overflow-hidden">
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Forgot Password
         </h1>
-        <p className="text-gray-500 text-[14px] mt-2 leading-relaxed">
-          Enter your email address and we'll send you a link to reset your password.
+        <p className="text-slate-500 text-sm mt-1.5 leading-relaxed max-w-[280px]">
+          Enter your email address to receive a password reset link.
         </p>
       </div>
 
@@ -29,37 +34,38 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
         className="space-y-4"
       >
         <div>
-          <Label className="text-[13px] font-semibold text-gray-600 block mb-1.5">
+          <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">
             Email address
           </Label>
           <div className="relative group">
-            <Mail className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
+            <Mail className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
             <Input
               type="email"
               required
               value={resetEmail}
               onChange={(e) => setResetEmail(e.target.value)}
               placeholder="you@clinic.com"
-              className="w-full pl-10 pr-4 h-11 border border-gray-200 rounded-xl text-[14px] bg-gray-50 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all duration-150"
+              className="pl-10"
             />
           </div>
         </div>
 
         <Button
           type="submit"
-          className="w-full h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-150 shadow-sm shadow-blue-200 mt-2"
+          size="lg"
+          className="w-full mt-2"
         >
           <span>Send Reset Link</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
       </form>
 
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-center border-t border-slate-100 pt-5">
         <Button
           variant="ghost"
           type="button"
           onClick={() => setView('login')}
-          className="text-[13px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-medium transition-colors p-0 h-auto"
+          className="text-[13px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-bold transition-colors p-0 h-auto"
         >
           Back to Login
         </Button>

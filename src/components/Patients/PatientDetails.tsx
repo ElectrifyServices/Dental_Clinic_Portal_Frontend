@@ -29,6 +29,7 @@ import {
 } from "./PatientDetails/PrintTemplates";
 import { usePatientAppointmentHistoryQuery } from "../../hooks/patients/usePatientAppointmentHistoryQuery";
 import { usePatientFamilyTreeQuery } from "../../hooks/patients/usePatientFamilyTreeQuery";
+import { usePatientPrescriptionsQuery } from "../../hooks/patients/usePatientPrescriptionsQuery";
 import { toTitleCase } from "@/utils/stringUtils";
 
 interface PatientDetailsProps {
@@ -73,6 +74,15 @@ export function PatientDetails({
 
   const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
   const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
+  const { data: prescriptionsData, isLoading: isPrescriptionsLoading } = usePatientPrescriptionsQuery(patient?.id || "");
+
+  const rawPrescriptions =
+    prescriptionsData?.responseObject?.data?.prescriptions ||
+    prescriptionsData?.data?.prescriptions ||
+    (Array.isArray(prescriptionsData?.responseObject?.data) ? prescriptionsData.responseObject.data : null) ||
+    (Array.isArray(prescriptionsData?.data) ? prescriptionsData.data : null) ||
+    prescriptionsData?.prescriptions ||
+    (Array.isArray(prescriptionsData) ? prescriptionsData : []);
 
   // Extract family members from API response
   const apiData = familyTreeData?.responseObject?.data || familyTreeData?.data;
@@ -228,17 +238,17 @@ export function PatientDetails({
     }
   };
 
-  const handleOpenPrintModal = () => {
-    const latest = patient.prescriptionHistory?.[0];
+  const handleOpenPrintModal = (record?: any) => {
+    const latest = record || rawPrescriptions?.[0];
     if (latest) {
       setPreviewData({
         ...previewData,
         bp: latest.vitals?.bp || "",
         height: latest.vitals?.height || "",
         weight: latest.vitals?.weight || "",
-        complaints: latest.observations || latest.treatment || "",
+        complaints: latest.observations || latest.treatment || latest.procedure || "",
         diagnosis: latest.diagnosis || "General Consultation",
-        advice: latest.consultationNotes || "",
+        advice: latest.consultationNotes || latest.instructions || "",
       });
     }
     setShowPrintPreview(true);
@@ -371,10 +381,16 @@ export function PatientDetails({
               />
             </TabsContent>
             <TabsContent value="prescriptions" className="m-0 focus-visible:outline-none">
-              <PrescriptionsTab
-                patient={patient}
-                handlePrintDocument={handleOpenPrintModal}
-              />
+              {isPrescriptionsLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
+                  <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
+                  <p className="text-sm text-muted-foreground font-semibold">Loading prescriptions...</p>
+                </div>
+              ) : (
+                <PrescriptionsTab
+                  patient={{ ...patient, prescriptionHistory: rawPrescriptions }}
+                />
+              )}
             </TabsContent>
             <TabsContent value="documents" className="m-0 focus-visible:outline-none">
               <DocumentsTab patient={patient} loading={loading} />

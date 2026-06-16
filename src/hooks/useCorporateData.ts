@@ -126,8 +126,11 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
       plansArray = apiPlansData.data.plans;
     }
 
-    return plansArray ? plansArray.map(mapBackendPlanToFrontend) : [];
-  }, [apiPlansData]);
+    if (plansArray) return plansArray.map(mapBackendPlanToFrontend);
+    // When backend is unreachable, fall back to demo/local data
+    const isDemoMode = sessionStorage.getItem('demo_mode') === 'true';
+    return isDemoMode ? (localPlans as CorporatePlan[]) : [];
+  }, [apiPlansData, localPlans]);
 
   const handleSaveCorporatePlan = (plan: any) => {
     setLocalPlans(prev => {

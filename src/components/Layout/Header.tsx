@@ -5,7 +5,6 @@ import {
   LogOut,
   Calendar,
   ChevronDown,
-  Stethoscope,
   Package,
   UserCheck,
   Coins,
@@ -18,6 +17,7 @@ import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
+import { GlobalSearch } from "./GlobalSearch";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -60,9 +60,9 @@ export function Header() {
   };
 
   return (
-    <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center justify-between sticky top-0 z-40 flex-shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
+    <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center gap-4 sticky top-0 z-40 flex-shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
       {/* ── Left ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-shrink-0">
         {/* Mobile logo */}
         <div className="flex md:hidden items-center gap-2.5 group/logo cursor-pointer">
           <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
@@ -85,8 +85,12 @@ export function Header() {
         </div>
       </div>
 
+      {/* ── Center: Global Search ────────────────────────────────── */}
+      <div className="flex-1 flex justify-center">
+        <GlobalSearch />
+      </div>
       {/* ── Right ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
 
         {/* Notifications */}
         <Popover>

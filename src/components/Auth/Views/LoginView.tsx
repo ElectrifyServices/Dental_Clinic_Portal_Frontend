@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -14,6 +14,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/Form";
+import logoImg from "../../../logo.png";
 
 interface LoginViewProps {
   setView: (view: 'login' | 'forgot' | 'forgot-sent') => void;
@@ -21,7 +22,6 @@ interface LoginViewProps {
 
 export function LoginView({ setView }: LoginViewProps) {
   const [showPw, setShowPw] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null);
   const { state, login } = useAuth();
 
   const form = useForm<LoginFormData>({
@@ -35,13 +35,16 @@ export function LoginView({ setView }: LoginViewProps) {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-      {/* Heading */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+      {/* Header with Logo */}
+      <div className="flex flex-col items-center text-center mb-8">
+        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 shadow-xl shadow-slate-100/50 mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3 overflow-hidden">
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Welcome back
         </h1>
-        <p className="text-gray-500 text-[14px] mt-1">
-          Sign in to your portal account
+        <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
+          Sign in to access your Back-Office Portal
         </p>
       </div>
 
@@ -57,18 +60,18 @@ export function LoginView({ setView }: LoginViewProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[13px] font-semibold text-gray-600 block mb-1.5">
+                <FormLabel className="text-[13px] font-bold text-slate-700 block mb-1.5">
                   Email address
                 </FormLabel>
                 <FormControl>
                   <div className="relative group">
-                    <Mail className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
+                    <Mail className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
                     <Input
                       {...field}
                       type="email"
                       placeholder="you@clinic.com"
                       autoComplete="email"
-                      className="w-full pl-10 pr-4 h-11 border border-gray-200 rounded-xl text-[14px] bg-gray-50 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all duration-150"
+                      className="pl-10"
                     />
                   </div>
                 </FormControl>
@@ -83,33 +86,33 @@ export function LoginView({ setView }: LoginViewProps) {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between mb-1.5">
-                  <FormLabel className="text-[13px] font-semibold text-gray-600">
+                  <FormLabel className="text-[13px] font-bold text-slate-700">
                     Password
                   </FormLabel>
                   <Button
                     variant="ghost"
                     type="button"
                     onClick={() => setView('forgot')}
-                    className="text-[12px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-medium transition-colors p-0 h-auto"
+                    className="text-[12px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-bold transition-colors p-0 h-auto"
                   >
                     Forgot password?
                   </Button>
                 </div>
                 <FormControl>
                   <div className="relative group">
-                    <Lock className="w-[15px] h-[15px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-500" />
+                    <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
                     <Input
                       {...field}
                       type={showPw ? "text" : "password"}
                       placeholder="Enter your password"
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-11 h-11 border border-gray-200 rounded-xl text-[14px] bg-gray-50 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all duration-150"
+                      className="pl-10 pr-11"
                     />
                     <Button
                       variant="ghost"
                       type="button"
                       onClick={() => setShowPw(!showPw)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hover:bg-transparent transition-colors p-0.5 h-auto"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hover:bg-transparent transition-colors p-0.5 h-auto"
                       aria-label={showPw ? "Hide password" : "Show password"}
                     >
                       {showPw ? (
@@ -127,7 +130,7 @@ export function LoginView({ setView }: LoginViewProps) {
 
           {/* Error */}
           {state.error && (
-            <div className="flex items-start gap-2.5 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-[13px] leading-snug">
+            <div className="flex items-start gap-2.5 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-[13px] leading-snug animate-in fade-in zoom-in-95">
               <span className="mt-0.5 text-red-400 flex-shrink-0">⚠</span>
               <span>{state.error}</span>
             </div>
@@ -137,7 +140,8 @@ export function LoginView({ setView }: LoginViewProps) {
           <Button
             type="submit"
             disabled={state.isLoading || form.formState.isSubmitting}
-            className="w-full h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-150 shadow-sm shadow-blue-200 mt-2"
+            size="lg"
+            className="w-full mt-4"
           >
             {state.isLoading || form.formState.isSubmitting ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -151,6 +155,26 @@ export function LoginView({ setView }: LoginViewProps) {
         </form>
       </Form>
 
+      {/* Demo Mode */}
+      <div className="mt-6 pt-5 border-t border-slate-100">
+        <p className="text-center text-[10px] text-slate-400 mb-3 uppercase tracking-widest font-bold">No backend? Try demo</p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            form.setValue('email', 'demo@clinic.com');
+            form.setValue('password', 'demo');
+            form.handleSubmit(onSubmit)();
+          }}
+          className="w-full border-dashed border-amber-300 bg-amber-50/30 text-amber-700 hover:bg-amber-50"
+        >
+          <Zap className="w-4 h-4" />
+          Enter Demo Mode
+        </Button>
+        <p className="text-center text-[10px] text-slate-400 mt-2">
+          Uses local demo data · No internet required
+        </p>
+      </div>
     </div>
   );
 }

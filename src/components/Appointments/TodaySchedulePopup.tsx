@@ -1,8 +1,15 @@
-import { Label } from "@/components/ui/Label";
-import { Layout } from "lucide-react";
-import { Modal } from "@/components/ui";
+import React, { useEffect } from "react";
+import { Layout, Calendar, CheckCircle, Clock, Hourglass } from "lucide-react";
+import { Modal, MetricCard } from "@/components/ui";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
 import { AppointmentTimeline } from "./TodaySchedule/AppointmentTimeline";
+import {
+  useScheduleBookedQuery,
+  useSchedulePendingQuery,
+  useScheduleCompletedQuery,
+  useScheduleTeamAvailabilityQuery,
+  useScheduleLiveTimelineQuery,
+} from "@/hooks/appointments/useScheduleQueries";
 
 interface TodaySchedulePopupProps {
   onClose: () => void;
@@ -20,6 +27,7 @@ const STATUS_VARIANTS: Record<string, any> = {
   scheduled: "gray",
   cancelled: "red",
   "no-show": "amber",
+  booked: "indigo",
 };
 
 export function TodaySchedulePopup({
@@ -27,21 +35,105 @@ export function TodaySchedulePopup({
   appointments = [],
   doctors = [],
   doctorAvailability = {},
-  onToggleDoctorAvailability = () => {},
+  onToggleDoctorAvailability = () => { },
 }: TodaySchedulePopupProps) {
   const todayStr = new Date().toISOString().split("T")[0];
   const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
-  const completedCount = todayAppointments.filter(
-    (a) => a.status === "completed",
-  ).length;
-  const pendingCount = todayAppointments.filter(
-    (a) => !["completed", "cancelled", "no-show"].includes(a.status),
-  ).length;
+  const { data: bookedData, refetch: refetchBooked } = useScheduleBookedQuery();
+  const { data: pendingData, refetch: refetchPending } = useSchedulePendingQuery();
+  const { data: completedData, refetch: refetchCompleted } = useScheduleCompletedQuery();
+  const { data: teamAvailData, refetch: refetchTeam } = useScheduleTeamAvailabilityQuery();
+  const { data: timelineData, refetch: refetchTimeline } = useScheduleLiveTimelineQuery();
+
+  useEffect(() => {
+    // Refetch all APIs when this modal opens
+    refetchBooked();
+    refetchPending();
+    refetchCompleted();
+    refetchTeam();
+    refetchTimeline();
+  }, [refetchBooked, refetchPending, refetchCompleted, refetchTeam, refetchTimeline]);
+
+
+  const extractCount = (data: any, fallback: number): number => {
+    if (data === null || data === undefined) return fallback;
+    if (typeof data === "number") return data;
+    if (typeof data === "string") {
+      const parsed = parseInt(data, 10);
+      return isNaN(parsed) ? fallback : parsed;
+    }
+    
+    if (typeof data === "object") {
+      // 1. Try direct keys
+      const keys = ["count", "total", "booked", "pending", "completed", "value"];
+      for (const key of keys) {
+        if (typeof data[key] === "number") return data[key];
+        if (typeof data[key] === "string") {
+          const parsed = parseInt(data[key], 10);
+          if (!isNaN(parsed)) return parsed;
+        }
+      }
+      
+      // 2. Try nested data key
+      if (data.data !== undefined && data.data !== null) {
+        if (typeof data.data === "number") return data.data;
+        if (typeof data.data === "string") {
+          const parsed = parseInt(data.data, 10);
+          if (!isNaN(parsed)) return parsed;
+        }
+        if (typeof data.data === "object") {
+          const nested = extractCount(data.data, -999999);
+          if (nested !== -999999) return nested;
+        }
+      }
+
+      // 3. Fallback to first numeric property
+      for (const k of Object.keys(data)) {
+        if (typeof data[k] === "number") return data[k];
+        if (typeof data[k] === "string") {
+          const parsed = parseInt(data[k], 10);
+          if (!isNaN(parsed)) return parsed;
+        }
+      }
+    }
+    return fallback;
+  };
+
+  const resolvedAppointments = Array.isArray(timelineData?.data?.appointments)
+    ? timelineData.data.appointments
+    : Array.isArray(timelineData?.data?.data)
+    ? timelineData.data.data
+    : Array.isArray(timelineData?.appointments)
+    ? timelineData.appointments
+    : Array.isArray(timelineData?.data)
+    ? timelineData.data
+    : Array.isArray(timelineData)
+    ? timelineData
+    : todayAppointments;
+
+  const bookedCount = extractCount(bookedData, resolvedAppointments.length);
+  const completedCount = extractCount(completedData, resolvedAppointments.filter((a: any) => (a.status || "").toLowerCase() === "completed").length);
+  const pendingCount = extractCount(pendingData, resolvedAppointments.filter((a: any) => !["completed", "cancelled", "no-show"].includes((a.status || "").toLowerCase())).length);
+
+  const resolvedDoctors = Array.isArray(teamAvailData?.data)
+    ? teamAvailData.data
+    : Array.isArray(teamAvailData)
+    ? teamAvailData
+    : doctors;
+
+  const mergedDoctorAvailability = { ...doctorAvailability };
+  if (Array.isArray(resolvedDoctors)) {
+    resolvedDoctors.forEach((doc: any) => {
+      if (mergedDoctorAvailability[doc.id] === undefined) {
+        mergedDoctorAvailability[doc.id] = doc.status === "ACTIVE" || doc.isActive === true;
+      }
+    });
+  }
 
   return (
     <Modal
-      title="Today's Clinic Schedule"
+      title="Today's Appointments Schedule"
       subtitle={new Date().toLocaleDateString("en-IN", {
         weekday: "long",
         year: "numeric",
@@ -55,61 +147,41 @@ export function TodaySchedulePopup({
       <div className="space-y-8 py-2">
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            {
-              label: "Total Booked",
-              val: todayAppointments.length,
-              bg: "bg-primary/5",
-              border: "border-primary/10",
-              text: "text-primary",
-            },
-            {
-              label: "Completed",
-              val: completedCount,
-              bg: "bg-emerald-50",
-              border: "border-emerald-100",
-              text: "text-emerald-700",
-            },
-            {
-              label: "Pending Slots",
-              val: pendingCount,
-              bg: "bg-primary/10",
-              border: "border-primary/20",
-              text: "text-primary",
-            },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className={`${s.bg} p-5 rounded-2xl border ${s.border} shadow-sm transition-all hover:shadow-md`}
-            >
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">
-                {s.label}
-              </p>
-              <p className={`text-2xl font-black ${s.text}`}>{s.val}</p>
-            </div>
-          ))}
+          <MetricCard
+            label="Total Booked"
+            value={bookedCount}
+            icon={<Calendar className="w-5 h-5" />}
+            variant="primary"
+          />
+          <MetricCard
+            label="Completed"
+            value={completedCount}
+            icon={<CheckCircle className="w-5 h-5" />}
+            variant="emerald"
+          />
+          <MetricCard
+            label="Pending Slots"
+            value={pendingCount}
+            icon={<Hourglass className="w-5 h-5" />}
+            variant="amber"
+          />
         </div>
 
         <div className="h-px bg-border/50" />
 
         <DoctorAvailability
-          doctors={doctors}
-          doctorAvailability={doctorAvailability}
+          doctors={resolvedDoctors}
+          doctorAvailability={mergedDoctorAvailability}
           onToggle={onToggleDoctorAvailability}
         />
 
         <div className="h-px bg-border/50" />
 
-        <div className="space-y-4">
-          <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-            Live Appointment Timeline
-          </Label>
-          <AppointmentTimeline
-            appointments={todayAppointments}
-            doctors={doctors}
-            statusVariants={STATUS_VARIANTS}
-          />
-        </div>
+        <AppointmentTimeline
+          appointments={resolvedAppointments}
+          doctors={resolvedDoctors}
+          statusVariants={STATUS_VARIANTS}
+        />
       </div>
     </Modal>
   );

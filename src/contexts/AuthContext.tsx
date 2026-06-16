@@ -79,8 +79,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
 
+  const DEMO_EMAIL = 'demo@clinic.com';
+  const DEMO_PASSWORD = 'demo';
+
   const login = async (email: string, password?: string) => {
     dispatch({ type: "LOGIN_START" });
+
+    // ── Demo mode: bypass API entirely ───────────────────────────────────────
+    if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      const demoUser = {
+        id: 'DEMO-001',
+        name: 'Demo Admin',
+        email: DEMO_EMAIL,
+        role: 'admin' as const,
+        permissions: ['all'],
+        isActive: true,
+        avatar: undefined,
+      };
+      const fakeTokens = { accessToken: 'demo-token', refreshToken: 'demo-refresh', session_id: 'demo-session' };
+      AuthStorage.save({ user_info: demoUser, tokens: fakeTokens }, false);
+      sessionStorage.setItem('demo_mode', 'true');
+      dispatch({ type: "LOGIN_SUCCESS", payload: demoUser });
+      toast.success("Welcome! Running in Demo Mode — no backend required.");
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     try {
       // useApiMutation returns parsed.data directly (i.e. LoginResponseData)
       const response = await loginMutation.mutateAsync({ email, password });
@@ -141,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
     } finally {
       AuthStorage.clear();
+      sessionStorage.removeItem('demo_mode');
       dispatch({ type: "LOGOUT" });
       toast.success("Logged out successfully.");
     }

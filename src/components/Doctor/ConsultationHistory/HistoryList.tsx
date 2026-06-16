@@ -310,14 +310,14 @@ export function HistoryList({
                           }}
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
                         >
-                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary                       
                         </Button>
                       </div>
                     )}
-
-                    <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
+{/* This button can be enabled in the future, so for now it's just been commented out. */}
+                    {/* <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </CardFooter>
               </Card>

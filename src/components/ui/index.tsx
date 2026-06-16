@@ -320,8 +320,9 @@ interface DataTableProps<T> {
   renderExpandedRow?: (row: T) => React.ReactNode;
   expandedRowIds?: Set<string>;
   onRowClick?: (row: T) => void;
+  rowClassName?: (row: T, idx: number) => string;
 }
-export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName }: DataTableProps<T>) {
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
@@ -358,7 +359,10 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
                     <motion.tr
                       key={key}
                       onClick={() => onRowClick?.(row)}
-                      className={onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : ""}
+                      className={cn(
+                        onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
+                        rowClassName?.(row, idx)
+                      )}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
@@ -450,13 +454,13 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
 }
 
 // ─── SearchInput ──────────────────────────────────────────────────────────────
-interface SearchInputProps {
+interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
 }
-export function SearchInput({ value, onChange, placeholder = "Search…", className = "" }: SearchInputProps) {
+export function SearchInput({ value, onChange, placeholder = "Search…", className = "", ...props }: SearchInputProps) {
   return (
     <div className={cn("relative", className)}>
       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -469,6 +473,7 @@ export function SearchInput({ value, onChange, placeholder = "Search…", classN
         placeholder={placeholder}
         className="search-input"
         spellCheck="false"
+        {...props}
       />
     </div>
   );
