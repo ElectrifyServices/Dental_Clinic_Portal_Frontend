@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { Layout, Calendar, CheckCircle, Clock } from "lucide-react";
-import { Modal, MetricCard } from "@/components/ui";
+import { Layout, Calendar, CheckCircle, Clock, Hourglass } from "lucide-react";
+import { Modal } from "@/components/ui";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
 import { AppointmentTimeline } from "./TodaySchedule/AppointmentTimeline";
 import {
@@ -55,7 +55,6 @@ export function TodaySchedulePopup({
     refetchTimeline();
   }, [refetchBooked, refetchPending, refetchCompleted, refetchTeam, refetchTimeline]);
 
-  console.log("Dashboard Schedule API Responses:", { bookedData, pendingData, completedData, teamAvailData, timelineData });
 
   const extractCount = (data: any, fallback: number): number => {
     if (data === null || data === undefined) return fallback;
@@ -103,6 +102,8 @@ export function TodaySchedulePopup({
 
   const resolvedAppointments = Array.isArray(timelineData?.data?.appointments)
     ? timelineData.data.appointments
+    : Array.isArray(timelineData?.data?.data)
+    ? timelineData.data.data
     : Array.isArray(timelineData?.appointments)
     ? timelineData.appointments
     : Array.isArray(timelineData?.data)
@@ -146,24 +147,83 @@ export function TodaySchedulePopup({
       <div className="space-y-8 py-2">
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <MetricCard
-            label="Total Booked"
-            value={bookedCount}
-            icon={<Calendar className="w-5 h-5 text-primary" />}
-            variant="primary"
-          />
-          <MetricCard
-            label="Completed"
-            value={completedCount}
-            icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
-            variant="emerald"
-          />
-          <MetricCard
-            label="Pending Slots"
-            value={pendingCount}
-            icon={<Clock className="w-5 h-5 text-indigo-600" />}
-            variant="indigo"
-          />
+          {/* Total Booked Card */}
+          <div className="flex items-center justify-between p-5 bg-blue-50/20 border border-blue-100/60 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-200/60 transition-all duration-300">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50/80 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                  Total Booked
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 mt-2 leading-none">
+                  {bookedCount}
+                </p>
+                <p className="text-[10px] font-semibold text-muted-foreground/80 mt-1.5 leading-none">
+                  Appointments
+                </p>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <svg className="w-24 h-10 text-blue-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5,32 C20,12 35,28 50,15 C65,2 80,22 95,8" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="95" cy="8" r="3" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Completed Card */}
+          <div className="flex items-center justify-between p-5 bg-emerald-50/20 border border-emerald-100/60 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-200/60 transition-all duration-300">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50/80 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                  Completed
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 mt-2 leading-none">
+                  {completedCount}
+                </p>
+                <p className="text-[10px] font-semibold text-muted-foreground/80 mt-1.5 leading-none">
+                  Appointments
+                </p>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <svg className="w-24 h-10 text-emerald-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5,35 C20,25 35,30 50,18 C65,6 80,20 95,12" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="95" cy="12" r="3" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Pending Slots Card */}
+          <div className="flex items-center justify-between p-5 bg-purple-50/20 border border-purple-100/60 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-200/60 transition-all duration-300">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-50/80 text-purple-600 flex items-center justify-center flex-shrink-0">
+                <Hourglass className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                  Pending Slots
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 mt-2 leading-none">
+                  {pendingCount}
+                </p>
+                <p className="text-[10px] font-semibold text-muted-foreground/80 mt-1.5 leading-none">
+                  Available Slots
+                </p>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <svg className="w-24 h-10 text-purple-500" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5,30 C20,15 35,22 50,12 C65,2 80,18 95,10" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="95" cy="10" r="3" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <div className="h-px bg-border/50" />

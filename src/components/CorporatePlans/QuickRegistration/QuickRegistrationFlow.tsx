@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { CorporatePlan } from '../../../types';
 import { COLOR_MAP } from '../../../utils/corporatePlan';
-import { Button, Input, LabeledField } from '../../ui';
+import { Button, Input, LabeledField, Card, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
 import { useModal } from '../../../contexts/ModalContext';
@@ -178,7 +178,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
     <div className="space-y-5">
 
       {/* ── Header + progress ──────────────────────────────────────────── */}
-      <div className="bg-white border border-border/60 rounded-2xl p-5 shadow-sm space-y-4">
+      <Card className="p-5 border-border/60 shadow-sm space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm flex-shrink-0">
             <Zap className="w-5 h-5 text-white" />
@@ -223,10 +223,10 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
             })}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* ── Step card ──────────────────────────────────────────────────── */}
-      <div className="bg-white border border-border/60 rounded-2xl overflow-hidden shadow-sm">
+      <Card className="overflow-hidden border-border/60 shadow-sm">
 
         {/* Step 1: Choose Plan */}
         {step === 1 && (
@@ -236,10 +236,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
               <p className="text-xs text-muted-foreground mt-0.5">Choose the plan this member will be enrolled in</p>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={planSearch} onChange={e => setPlanSearch(e.target.value)} placeholder="Search by name or code…" className="pl-10 rounded-xl" />
-            </div>
+            <SearchInput value={planSearch} onChange={setPlanSearch} placeholder="Search by name or code…" className="w-full" />
 
             {errors.plan && (
               <p className="text-destructive text-xs font-bold flex items-center gap-1.5">
@@ -467,13 +464,17 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                         </LabeledField>
                       </div>
                       <LabeledField label="Relationship">
-                        <select
+                        <Select
                           value={fm.relationship}
-                          onChange={e => setFamilyMembers(p => p.map((m, i) => i === idx ? { ...m, relationship: e.target.value } : m))}
-                          className="w-full px-3 py-2.5 border border-border rounded-xl text-sm bg-background outline-none focus:ring-2 focus:ring-primary/20"
+                          onValueChange={val => setFamilyMembers(p => p.map((m, i) => i === idx ? { ...m, relationship: val } : m))}
                         >
-                          {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                          <SelectTrigger className="w-full rounded-xl text-sm h-10">
+                            <SelectValue placeholder="Select relationship" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </LabeledField>
                       <LabeledField label="Phone">
                         <Input value={fm.phone} onChange={e => setFamilyMembers(p => p.map((m, i) => i === idx ? { ...m, phone: e.target.value } : m))} placeholder="Optional" className="rounded-xl" />
@@ -552,31 +553,31 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
             )}
           </div>
         )}
-      </div>
 
-      {/* ── Navigation ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-4 border-t border-border/50 bg-muted/20">
-        <Button variant="outline" onClick={back} disabled={step === 1} className="gap-2 rounded-xl">
-          <ChevronLeft className="w-4 h-4" /> Back
-        </Button>
+        {/* ── Navigation ─────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border/50 bg-muted/20">
+          <Button variant="outline" onClick={back} disabled={step === 1} className="gap-2 rounded-xl">
+            <ChevronLeft className="w-4 h-4" /> Back
+          </Button>
 
-        {step < 5 ? (
-          <Button onClick={next} className="gap-2 rounded-xl px-6">
-            Continue <ChevronRight className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="gap-2 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 shadow-sm shadow-emerald-200"
-          >
-            {saving
-              ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><CheckCircle className="w-4 h-4" /> Register Member</>
-            }
-          </Button>
-        )}
-      </div>
+          {step < 5 ? (
+            <Button onClick={next} className="gap-2 rounded-xl px-6">
+              Continue <ChevronRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="gap-2 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 shadow-sm shadow-emerald-200"
+            >
+              {saving
+                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><CheckCircle className="w-4 h-4" /> Register Member</>
+              }
+            </Button>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

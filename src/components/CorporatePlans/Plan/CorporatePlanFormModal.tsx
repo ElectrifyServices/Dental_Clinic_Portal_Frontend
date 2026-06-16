@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User, Settings2 } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading } from '../../ui';
+import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -458,12 +458,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
           {/* Description */}
           <LabeledField label="Description">
-            <textarea
+            <Textarea
               value={form.description}
               onChange={e => handleFormChange('description', e.target.value)}
               placeholder="What does this membership plan include?"
               rows={2}
-              className="w-full px-4 py-3 border border-border rounded-xl text-sm bg-background outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+              className="w-full rounded-xl resize-none"
             />
           </LabeledField>
 

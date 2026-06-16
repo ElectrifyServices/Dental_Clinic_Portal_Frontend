@@ -10,7 +10,6 @@ import {
   CheckCircle,
   Download,
   FileText,
-  Search,
   X,
   CreditCard,
   Gift,
@@ -24,6 +23,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  DataTable,
+  SearchInput,
 } from "@/components/ui";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import * as XLSX from "xlsx";
@@ -350,6 +354,309 @@ export function CorporateManagement({
     document.body.removeChild(link);
   };
 
+  const bulkColumns = [
+    {
+      key: "name",
+      header: "Full Name",
+      render: (p: BulkPatient, idx: number) => {
+        const isDup = checkDuplicate(p);
+        return (
+          <div className="relative">
+            <Input
+              value={p.name}
+              onChange={(e) => handleBulkChange(idx, "name", e.target.value)}
+              placeholder="Name"
+              className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
+            />
+            {isDup && (
+              <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce z-[60]">
+                Already Registered!
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      render: (p: BulkPatient, idx: number) => {
+        const isDup = checkDuplicate(p);
+        return (
+          <Input
+            value={p.phone}
+            onChange={(e) => handleBulkChange(idx, "phone", e.target.value)}
+            placeholder="Phone"
+            className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
+          />
+        );
+      },
+    },
+    {
+      key: "email",
+      header: "Email",
+      render: (p: BulkPatient, idx: number) => {
+        const isDup = checkDuplicate(p);
+        return (
+          <Input
+            value={p.email}
+            onChange={(e) => handleBulkChange(idx, "email", e.target.value)}
+            placeholder="Email"
+            className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
+          />
+        );
+      },
+    },
+    {
+      key: "gender",
+      header: "Gender",
+      render: (p: BulkPatient, idx: number) => (
+        <Select
+          value={p.gender}
+          onValueChange={(val) => handleBulkChange(idx, "gender", val)}
+        >
+          <SelectTrigger className="h-8 text-sm font-bold border-none bg-transparent shadow-none px-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="male">Male</SelectItem>
+            <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      ),
+    },
+    {
+      key: "emp_id",
+      header: "Employee ID",
+      render: (p: BulkPatient, idx: number) => (
+        <Input
+          value={p.emp_id || ""}
+          onChange={(e) => handleBulkChange(idx, "emp_id", e.target.value)}
+          placeholder="Employee ID"
+          className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+        />
+      ),
+    },
+    {
+      key: "designation",
+      header: "Designation",
+      render: (p: BulkPatient, idx: number) => (
+        <Input
+          value={p.designation || ""}
+          onChange={(e) => handleBulkChange(idx, "designation", e.target.value)}
+          placeholder="Designation"
+          className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+        />
+      ),
+    },
+    {
+      key: "department",
+      header: "Department",
+      render: (p: BulkPatient, idx: number) => (
+        <Input
+          value={p.department || ""}
+          onChange={(e) => handleBulkChange(idx, "department", e.target.value)}
+          placeholder="Department"
+          className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+        />
+      ),
+    },
+    {
+      key: "action",
+      header: "Action",
+      render: (p: BulkPatient, idx: number) => (
+        <Button
+          onClick={() => handleRemoveBulkRow(idx)}
+          className="p-2 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all h-auto w-auto"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      ),
+    },
+  ];
+
+  const filteredEmployees = corporateEmployees
+    .filter((e) => e.companyId === viewingEmployeesPlanId)
+    .filter(
+      (e) =>
+        fuzzySearch(e.name, employeeSearchQuery) ||
+        fuzzySearch(e.email || "", employeeSearchQuery) ||
+        fuzzySearch(e.phone, employeeSearchQuery),
+    );
+
+  const employeeColumns = [
+    {
+      key: "name",
+      header: "Name",
+      render: (emp: any, idx: number) => {
+        const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-sm font-black shadow-sm ring-4 ring-primary/5 group-hover:scale-110 transition-transform">
+              {emp.name[0].toUpperCase()}
+            </div>
+            {isEditing ? (
+              <Input
+                value={tempEmpData.name}
+                onChange={(e) =>
+                  setTempEmpData({
+                    ...tempEmpData,
+                    name: e.target.value,
+                  })
+                }
+                className="px-3 py-1 border border-primary/20 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            ) : (
+              <div>
+                <div className="font-bold text-foreground text-sm">
+                  {emp.name}
+                </div>
+                <div className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
+                  ID: CORP-{idx + 100}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      render: (emp: any) => {
+        const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
+        return isEditing ? (
+          <Input
+            value={tempEmpData.phone}
+            onChange={(e) =>
+              setTempEmpData({
+                ...tempEmpData,
+                phone: e.target.value,
+              })
+            }
+            className="w-full px-3 py-1 border border-primary/20 rounded-lg text-xs font-bold outline-none"
+            placeholder="Phone"
+          />
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
+            {emp.phone}
+          </div>
+        );
+      },
+    },
+    {
+      key: "email",
+      header: "Email Address",
+      render: (emp: any) => {
+        const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
+        return isEditing ? (
+          <Input
+            value={tempEmpData.email}
+            onChange={(e) =>
+              setTempEmpData({
+                ...tempEmpData,
+                email: e.target.value,
+              })
+            }
+            className="w-full px-3 py-1 border border-primary/20 rounded-lg text-xs font-bold outline-none"
+            placeholder="Email"
+          />
+        ) : (
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/5 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest w-fit border border-primary/10">
+            <FileText className="w-3.5 h-3.5" />
+            {emp.email}
+          </div>
+        );
+      },
+    },
+    {
+      key: "gender",
+      header: "Gender",
+      render: (emp: any) => {
+        const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
+        return isEditing ? (
+          <Select
+            value={tempEmpData.gender}
+            onValueChange={(val) => setTempEmpData({ ...tempEmpData, gender: val })}
+          >
+            <SelectTrigger className="h-7 text-xs font-bold rounded-lg border-primary/20 px-3 py-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="px-3 py-1 bg-muted text-muted-foreground text-[10px] font-black rounded-lg uppercase tracking-widest border border-border">
+            {emp.gender}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: "Action",
+      align: "right" as const,
+      render: (emp: any) => {
+        const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
+        return (
+          <div className="flex justify-end gap-1">
+            {isEditing ? (
+              <>
+                <Button
+                  onClick={() => {
+                    onUpdateEmployee(
+                      editingEmployee!.name,
+                      editingEmployee!.email,
+                      tempEmpData,
+                    );
+                    setEditingEmployee(null);
+                  }}
+                  className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-lg shadow-emerald-100 h-auto w-auto"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => setEditingEmployee(null)}
+                  className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted h-auto w-auto"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => {
+                    setEditingEmployee({
+                      name: emp.name,
+                      email: emp.email,
+                    });
+                    setTempEmpData({ ...emp });
+                  }}
+                  className="p-2 text-primary hover:bg-primary hover:text-white rounded-lg transition-all bg-primary/5 border border-primary/10 h-auto w-auto"
+                  title="Edit Employee"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => onDeleteEmployee(emp.name, emp.email)}
+                  className="p-2 text-destructive hover:bg-destructive hover:text-white rounded-lg transition-all bg-destructive/5 border border-destructive/10 h-auto w-auto"
+                  title="Delete Employee"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <Modal
       title="Corporate Management"
@@ -367,28 +674,12 @@ export function CorporateManagement({
     >
       <div className="space-y-6">
         {/* Tabs */}
-        <div className="flex border-b border-border">
-          <Button
-            onClick={() => setActiveTab("plans")}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 relative ${
-              activeTab === "plans"
-                ? "text-primary border-primary"
-                : "text-muted-foreground/60 border-transparent hover:text-muted-foreground"
-            }`}
-          >
-            Corporate Plans
-          </Button>
-          <Button
-            onClick={() => setActiveTab("bulk")}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 relative ${
-              activeTab === "bulk"
-                ? "text-primary border-primary"
-                : "text-muted-foreground/60 border-transparent hover:text-muted-foreground"
-            }`}
-          >
-            Bulk Employee Registration
-          </Button>
-        </div>
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)}>
+          <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+            <TabsTrigger value="plans">Corporate Plans</TabsTrigger>
+            <TabsTrigger value="bulk">Bulk Employee Registration</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="min-h-[500px]">
           {activeTab === "plans" ? (
@@ -659,128 +950,12 @@ export function CorporateManagement({
                   </Select>
                 </div>
 
-                <div className="border border-border rounded-2xl overflow-x-auto">
-                  <table className="w-full text-left min-w-[900px]">
-                    <thead className="bg-muted text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-border">
-                      <tr>
-                        <th className="px-6 py-4">Full Name</th>
-                        <th className="px-6 py-4">Phone</th>
-                        <th className="px-6 py-4">Email</th>
-                        <th className="px-6 py-4">Gender</th>
-                        <th className="px-6 py-4">Employee ID</th>
-                        <th className="px-6 py-4">Designation</th>
-                        <th className="px-6 py-4">Department</th>
-                        <th className="px-6 py-4">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                      {bulkPatients.map((p, idx) => {
-                        const isDup = checkDuplicate(p);
-                        return (
-                          <tr
-                            key={idx}
-                            className={`group transition-colors ${isDup ? "bg-destructive/5" : "hover:bg-muted/50"}`}
-                          >
-                            <td className="px-6 py-3">
-                              <div className="relative">
-                                <Input
-                                  value={p.name}
-                                  onChange={(e) =>
-                                    handleBulkChange(
-                                      idx,
-                                      "name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Name"
-                                  className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
-                                />
-                                {isDup && (
-                                  <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce">
-                                    Already Registered!
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-3 text-sm">
-                              <Input
-                                value={p.phone}
-                                onChange={(e) =>
-                                  handleBulkChange(idx, "phone", e.target.value)
-                                }
-                                placeholder="Phone"
-                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
-                              />
-                            </td>
-                            <td className="px-6 py-3">
-                              <Input
-                                value={p.email}
-                                onChange={(e) =>
-                                  handleBulkChange(idx, "email", e.target.value)
-                                }
-                                placeholder="Email"
-                                className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
-                              />
-                            </td>
-                            <td className="px-6 py-3">
-                              <Select
-                                value={p.gender}
-                                onValueChange={(val) => handleBulkChange(idx, "gender", val)}
-                              >
-                                <SelectTrigger className="h-8 text-sm font-bold border-none bg-transparent shadow-none px-0">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="male">Male</SelectItem>
-                                  <SelectItem value="female">Female</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </td>
-                            <td className="px-6 py-3">
-                              <Input
-                                value={p.emp_id || ""}
-                                onChange={(e) =>
-                                  handleBulkChange(idx, "emp_id", e.target.value)
-                                }
-                                placeholder="Employee ID"
-                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
-                              />
-                            </td>
-                            <td className="px-6 py-3">
-                              <Input
-                                value={p.designation || ""}
-                                onChange={(e) =>
-                                  handleBulkChange(idx, "designation", e.target.value)
-                                }
-                                placeholder="Designation"
-                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
-                              />
-                            </td>
-                            <td className="px-6 py-3">
-                              <Input
-                                value={p.department || ""}
-                                onChange={(e) =>
-                                  handleBulkChange(idx, "department", e.target.value)
-                                }
-                                placeholder="Department"
-                                className="w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
-                              />
-                            </td>
-                            <td className="px-6 py-3">
-                              <Button
-                                onClick={() => handleRemoveBulkRow(idx)}
-                                className="p-2 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={bulkColumns}
+                  data={bulkPatients}
+                  rowKey={(p) => p.email || p.name || `bulk-${bulkPatients.indexOf(p)}`}
+                  rowClassName={(p) => checkDuplicate(p) ? "bg-destructive/5" : ""}
+                />
 
                 <Button
                   onClick={handleBulkAddRow}
@@ -839,17 +1014,16 @@ export function CorporateManagement({
                 </div>
               </div>
               <div className="relative group" ref={searchRef}>
-                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
                 <form onSubmit={handleSearchSubmit}>
-                  <Input
+                  <SearchInput
                     placeholder="Search name, phone, or email..."
                     value={employeeSearchQuery}
-                    onChange={(e) => {
-                      setEmployeeSearchQuery(e.target.value);
+                    onChange={(v) => {
+                      setEmployeeSearchQuery(v);
                       setShowSearchSuggestions(true);
                     }}
                     onFocus={() => setShowSearchSuggestions(true)}
-                    className="pl-12 pr-6 py-3 bg-card border-2 border-border rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary min-w-[450px] shadow-sm transition-all"
+                    className="min-w-[450px]"
                   />
                 </form>
 
@@ -902,193 +1076,14 @@ export function CorporateManagement({
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-border">
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Phone</th>
-                    <th className="px-6 py-4">Email Address</th>
-                    <th className="px-6 py-4">Gender</th>
-                    <th className="px-6 py-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {corporateEmployees
-                    .filter((e) => e.companyId === viewingEmployeesPlanId)
-                    .filter(
-                      (e) =>
-                        fuzzySearch(e.name, employeeSearchQuery) ||
-                        fuzzySearch(e.email || "", employeeSearchQuery) ||
-                        fuzzySearch(e.phone, employeeSearchQuery),
-                    )
-                    .map((emp, i) => {
-                      const isEditing =
-                        editingEmployee?.name === emp.name &&
-                        editingEmployee?.email === emp.email;
-
-                      return (
-                        <tr
-                          key={i}
-                          className={`hover:bg-muted/50 transition-colors group ${isEditing ? "bg-primary/5" : ""}`}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-sm font-black shadow-sm ring-4 ring-primary/5 group-hover:scale-110 transition-transform">
-                                {emp.name[0].toUpperCase()}
-                              </div>
-                              {isEditing ? (
-                                <Input
-                                  value={tempEmpData.name}
-                                  onChange={(e) =>
-                                    setTempEmpData({
-                                      ...tempEmpData,
-                                      name: e.target.value,
-                                    })
-                                  }
-                                  className="px-3 py-1 border border-primary/20 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                              ) : (
-                                <div>
-                                  <div className="font-bold text-foreground text-sm">
-                                    {emp.name}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
-                                    ID: CORP-{i + 100}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-bold text-foreground">
-                            {isEditing ? (
-                              <Input
-                                value={tempEmpData.phone}
-                                onChange={(e) =>
-                                  setTempEmpData({
-                                    ...tempEmpData,
-                                    phone: e.target.value,
-                                  })
-                                }
-                                className="w-full px-3 py-1 border border-primary/20 rounded-lg text-xs font-bold outline-none"
-                                placeholder="Phone"
-                              />
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
-                                {emp.phone}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {isEditing ? (
-                              <Input
-                                value={tempEmpData.email}
-                                onChange={(e) =>
-                                  setTempEmpData({
-                                    ...tempEmpData,
-                                    email: e.target.value,
-                                  })
-                                }
-                                className="w-full px-3 py-1 border border-primary/20 rounded-lg text-xs font-bold outline-none"
-                                placeholder="Email"
-                              />
-                            ) : (
-                              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/5 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest w-fit border border-primary/10">
-                                <FileText className="w-3.5 h-3.5" />
-                                {emp.email}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {isEditing ? (
-                              <Select
-                                value={tempEmpData.gender}
-                                onValueChange={(val) => setTempEmpData({ ...tempEmpData, gender: val })}
-                              >
-                                <SelectTrigger className="h-7 text-xs font-bold rounded-lg border-primary/20 px-3 py-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="male">Male</SelectItem>
-                                  <SelectItem value="female">Female</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <span className="px-3 py-1 bg-muted text-muted-foreground text-[10px] font-black rounded-lg uppercase tracking-widest border border-border">
-                                {emp.gender}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-1">
-                              {isEditing ? (
-                                <>
-                                  <Button
-                                    onClick={() => {
-                                      onUpdateEmployee(
-                                        editingEmployee!.name,
-                                        editingEmployee!.email,
-                                        tempEmpData,
-                                      );
-                                      setEditingEmployee(null);
-                                    }}
-                                    className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-lg shadow-emerald-100"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    onClick={() => setEditingEmployee(null)}
-                                    className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    onClick={() => {
-                                      setEditingEmployee({
-                                        name: emp.name,
-                                        email: emp.email,
-                                      });
-                                      setTempEmpData({ ...emp });
-                                    }}
-                                    className="p-2 text-primary hover:bg-primary hover:text-white rounded-lg transition-all bg-primary/5 border border-primary/10"
-                                    title="Edit Employee"
-                                  >
-                                    <Plus className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    onClick={() =>
-                                      onDeleteEmployee(emp.name, emp.email)
-                                    }
-                                    className="p-2 text-destructive hover:bg-destructive hover:text-white rounded-lg transition-all bg-destructive/5 border border-destructive/10"
-                                    title="Delete Employee"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  {corporateEmployees.filter(
-                    (e) => e.companyId === viewingEmployeesPlanId,
-                  ).length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-20 text-center">
-                        <Users className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                        <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                          No employees registered yet.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <DataTable
+                columns={employeeColumns}
+                data={filteredEmployees}
+                rowKey={(emp) => emp.email || emp.name}
+                rowClassName={(emp) => editingEmployee?.name === emp.name && editingEmployee?.email === emp.email ? "bg-primary/5" : ""}
+                emptyIcon={<Users className="w-12 h-12 text-muted-foreground/20" />}
+                emptyTitle="No employees registered yet."
+              />
             </div>
           </div>
         )}

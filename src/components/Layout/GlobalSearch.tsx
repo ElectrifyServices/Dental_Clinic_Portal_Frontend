@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, Users, Calendar, FileText, BarChart3, Package, CreditCard, UserCheck, Activity, Building2, DollarSign, Home } from "lucide-react";
+import { Input, Card } from "../ui";
 
 interface SearchResult {
   id: string;
@@ -131,20 +132,9 @@ export function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative flex-1 max-w-md">
       {/* Search trigger / input */}
-      <div
-        className={[
-          "flex items-center gap-2.5 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-text",
-          open
-            ? "bg-card border-primary/40 shadow-[0_0_0_3px_rgba(var(--primary)/0.08)] ring-1 ring-primary/20"
-            : "bg-muted/60 border-border/60 hover:border-border hover:bg-muted",
-        ].join(" ")}
-        onClick={() => {
-          setOpen(true);
-          setTimeout(() => inputRef.current?.focus(), 10);
-        }}
-      >
-        <Search className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
-        <input
+      <div className="relative">
+        <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none z-10" />
+        <Input
           ref={inputRef}
           type="text"
           value={query}
@@ -152,25 +142,30 @@ export function GlobalSearch() {
           onKeyDown={handleKeyDown}
           onFocus={() => setOpen(true)}
           placeholder="Search pages, patients, records…"
-          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
+          className={[
+            "pl-10 pr-12 h-9 text-sm rounded-xl border transition-all duration-200 bg-muted/60 border-border/60 hover:border-border hover:bg-muted focus-visible:bg-card focus-visible:border-primary/40 focus-visible:ring-primary/20",
+            open && "bg-card border-primary/40 shadow-[0_0_0_3px_rgba(var(--primary)/0.08)] ring-1 ring-primary/20"
+          ].join(" ")}
         />
-        {query ? (
-          <button
-            onClick={(e) => { e.stopPropagation(); setQuery(""); inputRef.current?.focus(); }}
-            className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        ) : (
-          <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 select-none flex-shrink-0">
-            <span className="text-[9px]">⌘</span>K
-          </kbd>
-        )}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center z-10">
+          {query ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); setQuery(""); inputRef.current?.focus(); }}
+              className="text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground/50 bg-muted border border-border/50 rounded px-1.5 py-0.5 select-none flex-shrink-0">
+              <span className="text-[9px]">⌘</span>K
+            </kbd>
+          )}
+        </div>
       </div>
 
       {/* Dropdown */}
       {open && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-[0_8px_32px_rgba(15,23,42,0.12)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+        <Card className="absolute top-full left-0 right-0 mt-1.5 border border-border rounded-xl shadow-[0_8px_32px_rgba(15,23,42,0.12)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
           {!query.trim() && (
             <div className="px-3 pt-2.5 pb-1">
               <span className="text-[10px] font-bold uppercase tracking-[1.5px] text-muted-foreground/60">Quick Navigation</span>
@@ -230,7 +225,7 @@ export function GlobalSearch() {
               <kbd className="bg-muted border border-border/50 rounded px-1 text-[9px]">Esc</kbd> close
             </span>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

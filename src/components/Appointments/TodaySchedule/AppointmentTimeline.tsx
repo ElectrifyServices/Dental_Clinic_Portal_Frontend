@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, Calendar, Stethoscope } from "lucide-react";
-import { DataTable, StatusBadge } from "@/components/ui";
+import { DataTable, Badge } from "@/components/ui";
 
 interface AppointmentTimelineProps {
   appointments: any[];
@@ -21,7 +21,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
   const getStatusVariant = (status: string): "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo" => {
     const lower = (status || "").toLowerCase();
     if (lower === "completed" || lower === "checked-in") return "green";
-    if (lower === "booked" || lower === "confirmed") return "indigo";
+    if (lower === "booked" || lower === "confirmed" || lower === "scheduled") return "indigo";
     if (lower === "in-progress") return "blue";
     if (lower === "cancelled") return "red";
     if (lower === "no-show") return "amber";
@@ -86,9 +86,9 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
       key: "status",
       header: "Status",
       render: (apt: any) => (
-        <StatusBadge variant={getStatusVariant(apt.status)}>
+        <Badge variant={getStatusVariant(apt.status)}>
           {apt.status}
-        </StatusBadge>
+        </Badge>
       ),
     },
   ];

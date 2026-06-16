@@ -9,7 +9,7 @@ import { CorporatePlan } from '../../../types';
 import { getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';
 import { BENEFIT_ICONS } from './constants';
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, Card,
 } from '../../ui';
 
 interface CorporatePlanCardProps {
@@ -91,7 +91,7 @@ export function CorporatePlanCard({
   const isExpiringSoon = daysLeft > 0 && daysLeft < 30;
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 bg-card border border-border/50 flex flex-col">
+    <Card className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 bg-card border border-border/50 flex flex-col">
 
       {/* ── Gradient header ──────────────────────────────────────────────── */}
       <div className={`relative bg-gradient-to-br ${gradient} px-5 pt-5 pb-7`}>
@@ -110,15 +110,16 @@ export function CorporatePlanCard({
 
           <div className="flex items-center gap-1.5">
             {/* Status pill */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => { if (status !== 'expired') onToggle(plan.id); }}
               disabled={status === 'expired' || isUpdatingStatus}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm transition-all h-auto active:scale-100 ${
                 status === 'expired'
                   ? 'bg-white/10 border-white/20 text-white/60 cursor-not-allowed'
                   : plan.isActive
-                    ? 'bg-white/20 border-white/30 text-white hover:bg-white/30'
-                    : 'bg-black/20 border-white/10 text-white/50 hover:bg-black/30'
+                    ? 'bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white'
+                    : 'bg-black/20 border-white/10 text-white/50 hover:bg-black/30 hover:text-white/50'
               }`}
             >
               {status === 'expired'
@@ -128,7 +129,7 @@ export function CorporatePlanCard({
                   : <ToggleLeft className="w-3.5 h-3.5" />
               }
               {status === 'expired' ? 'Expired' : plan.isActive ? 'Active' : 'Inactive'}
-            </button>
+            </Button>
 
             {/* Dropdown */}
             <DropdownMenu>
@@ -242,17 +243,18 @@ export function CorporatePlanCard({
       </div>
 
       {/* ── Expand toggle ─────────────────────────────────────────────────── */}
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all border-t border-border/40 ${
+        className={`w-full flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all border-t border-border/40 rounded-none h-auto active:scale-100 ${
           expanded
-            ? 'text-primary bg-primary/5'
+            ? 'text-primary bg-primary/5 hover:bg-primary/10 hover:text-primary'
             : 'text-muted-foreground/50 hover:text-primary hover:bg-muted/40'
         } ${tint}`}
       >
         {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         {expanded ? 'Show Less' : 'View All Benefits'}
-      </button>
+      </Button>
 
       {/* ── Expanded benefit detail ──────────────────────────────────────── */}
       {expanded && (
@@ -284,6 +286,6 @@ export function CorporatePlanCard({
           ))}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

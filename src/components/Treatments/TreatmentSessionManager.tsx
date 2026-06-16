@@ -5,7 +5,7 @@ import {
   TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
   Stethoscope, BadgeCheck, Sparkle, Sparkles, Pill,
 } from "lucide-react";
-import { Modal, Button, Badge, Label, Input, Textarea } from "@/components/ui";
+import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 
@@ -371,7 +371,7 @@ export function TreatmentSessionManager({
 
     return (
       <div className="relative" key={session.id}>
-        <div className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${
+        <Card className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${
           normalizedStatus === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
         }`}>
           {/* ── Card Header ── */}
@@ -584,7 +584,7 @@ export function TreatmentSessionManager({
               )}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* ── Complete Session Modal ── */}
         {isCompleting && (
@@ -658,38 +658,32 @@ export function TreatmentSessionManager({
       <div className="space-y-8">
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/10">
-            <div className="flex items-center justify-between mb-2">
-              <Calendar className="w-5 h-5 text-primary/60" />
-              <span className="text-2xl font-black text-primary">{totalSessions}</span>
-            </div>
-            <p className="text-[10px] font-black text-primary/60 uppercase tracking-wider">Total Sessions</p>
-          </div>
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 rounded-2xl p-4 border border-emerald-200">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span className="text-2xl font-black text-emerald-600">{completedCount}</span>
-            </div>
-            <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-wider">Completed</p>
-            <div className="mt-2 h-1.5 bg-emerald-200 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${sessionProgress}%` }} />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/30 rounded-2xl p-4 border border-indigo-200">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-5 h-5 text-indigo-600" />
-              <span className="text-2xl font-black text-indigo-600">₹{Number(projectedRevenue).toLocaleString()}</span>
-            </div>
-            <p className="text-[10px] font-black text-indigo-600/60 uppercase tracking-wider">Projected Revenue</p>
-          </div>
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100/30 rounded-2xl p-4 border border-blue-200">
-            <div className="flex items-center justify-between mb-2">
-              <Activity className="w-5 h-5 text-blue-600" />
-              <span className="text-2xl font-black text-blue-600">{groupedSessions.inProgress.length}</span>
-            </div>
-            <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-wider">In Progress</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            label="Total Sessions"
+            value={totalSessions}
+            icon={<Calendar className="w-5 h-5 text-primary" />}
+            variant="primary"
+          />
+          <MetricCard
+            label="Completed"
+            value={completedCount}
+            icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
+            variant="emerald"
+            trend={totalSessions > 0 ? `${Math.round(sessionProgress)}%` : undefined}
+          />
+          <MetricCard
+            label="Projected Revenue"
+            value={`₹${Number(projectedRevenue).toLocaleString()}`}
+            icon={<TrendingUp className="w-5 h-5 text-indigo-600" />}
+            variant="indigo"
+          />
+          <MetricCard
+            label="In Progress"
+            value={groupedSessions.inProgress.length}
+            icon={<Activity className="w-5 h-5 text-rose-600" />}
+            variant="rose"
+          />
         </div>
 
         {/* Active session banner */}
@@ -783,73 +777,65 @@ export function TreatmentSessionManager({
 
         {/* Add session modal */}
         {showNewSession && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowNewSession(false)}>
-            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-                    <Plus className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-xl">Schedule New Session</h3>
-                    <p className="text-sm text-muted-foreground">Add details for the upcoming appointment</p>
-                  </div>
-                </div>
-                <Button variant="ghost" onClick={() => setShowNewSession(false)} className="p-2 hover:bg-muted rounded-full h-auto">
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
-                  <Input type="date" value={newSession.date}
-                    onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
-                    min={new Date().toISOString().split("T")[0]}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-                <div>
-                  <Label className="text-sm font-semibold block mb-2">Start Time</Label>
-                  <Select value={newSession.time} onValueChange={(val) => setNewSession({ ...newSession, time: val })}>
-                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
-                  <Select value={newSession.duration.toString()} onValueChange={(val) => setNewSession({ ...newSession, duration: parseInt(val) })}>
-                    <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {[15,30,45,60,90,120].map(d => <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-semibold block mb-2">Session Fee (₹) <span className="text-red-500">*</span></Label>
-                  <Input type="number" value={newSession.cost || ""} min="0" step="500" placeholder="Enter amount"
-                    onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-              </div>
-              <div className="mb-6">
-                <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
-                <Textarea value={newSession.clinical_objectives} rows={3}
-                  onChange={(e) => setNewSession({ ...newSession, clinical_objectives: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none resize-none"
-                  placeholder="Describe the goals for this session..." />
-              </div>
-              <div className="flex gap-3">
+          <Modal
+            title="Schedule New Session"
+            subtitle="Add details for the upcoming appointment"
+            onClose={() => setShowNewSession(false)}
+            size="2xl"
+            icon={<Plus className="w-5 h-5" />}
+            footer={
+              <div className="flex gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
                 <Button onClick={handleAddSession} disabled={!newSession.date || !newSession.cost || addSession.isPending} className="flex-1 gap-2">
                   {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Schedule Session
                 </Button>
               </div>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
+                <Input type="date" value={newSession.date}
+                  onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Start Time</Label>
+                <Select value={newSession.time} onValueChange={(val) => setNewSession({ ...newSession, time: val })}>
+                  <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
+                <Select value={newSession.duration.toString()} onValueChange={(val) => setNewSession({ ...newSession, duration: parseInt(val) })}>
+                  <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[15,30,45,60,90,120].map(d => <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Session Fee (₹) <span className="text-red-500">*</span></Label>
+                <Input type="number" value={newSession.cost || ""} min="0" step="500" placeholder="Enter amount"
+                  onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
+              </div>
             </div>
-          </div>
+            <div className="mb-6">
+              <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
+              <Textarea value={newSession.clinical_objectives} rows={3}
+                onChange={(e) => setNewSession({ ...newSession, clinical_objectives: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                placeholder="Describe the goals for this session..." />
+            </div>
+          </Modal>
         )}
 
       </div>

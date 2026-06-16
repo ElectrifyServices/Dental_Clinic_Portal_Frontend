@@ -262,6 +262,7 @@
   .badge-red    { @apply bg-red-50    text-red-700    border-red-200;    }
   .badge-gray   { @apply bg-muted text-muted-foreground border-border;   }
   .badge-violet { @apply bg-violet-50 text-violet-700 border-violet-200; }
+  .badge-indigo { @apply bg-indigo-50 text-indigo-700 border-indigo-200; }
 
   /* ─────────────────────────────────────────────────────────────────
      MODALS

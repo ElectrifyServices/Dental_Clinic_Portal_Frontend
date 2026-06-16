@@ -1,8 +1,7 @@
-import { Input } from "@/components/ui/Input";
 import React, { useState } from 'react';
-import { Plus, Search, Zap, SlidersHorizontal, CreditCard } from 'lucide-react';
+import { Plus, Zap, CreditCard } from 'lucide-react';
 import { CorporatePlan, PlanCategory } from '../../types';
-import { Button, Loading } from '../ui';
+import { Button, Loading, SearchInput, FilterTabs } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
@@ -106,49 +105,26 @@ export function CorporatePlanManagement({
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
-        <div className="relative flex-1 min-w-56 max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search plans or company…"
-            className="pl-10 h-10 rounded-xl border-border/60 bg-card shadow-xs"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search plans or company…"
+          className="flex-1 min-w-56 max-w-sm"
+        />
 
         {/* Category segmented */}
-        <div className="flex bg-muted/70 rounded-xl p-1 border border-border/60 gap-0.5">
-          {CATEGORY_TABS.map(t => (
-            <button
-              key={t.value}
-              onClick={() => setCategoryFilter(t.value)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
-                categoryFilter === t.value
-                  ? 'bg-card text-foreground shadow-sm border border-border/80'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <FilterTabs
+          tabs={CATEGORY_TABS}
+          active={categoryFilter}
+          onChange={(val) => setCategoryFilter(val as any)}
+        />
 
         {/* Status segmented */}
-        <div className="flex bg-muted/70 rounded-xl p-1 border border-border/60 gap-0.5">
-          {STATUS_TABS.map(t => (
-            <button
-              key={t.value}
-              onClick={() => setFilter(t.value)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                filter === t.value
-                  ? 'bg-card text-foreground shadow-sm border border-border/80'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <FilterTabs
+          tabs={STATUS_TABS}
+          active={filter}
+          onChange={(val) => setFilter(val as any)}
+        />
 
         {/* Spacer + actions */}
         <div className="flex items-center gap-2 ml-auto">
