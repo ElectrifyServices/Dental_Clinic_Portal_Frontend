@@ -19,7 +19,7 @@ import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
-import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
+import { getDependentsByMember, removeDependent, notifyDependentChange } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 
@@ -57,6 +57,8 @@ export function EmployeeManagement({
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
+  const [editDep, setEditDep] = useState<any | null>(null);
+  const [deleteDep, setDeleteDep] = useState<any | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -192,6 +194,19 @@ export function EmployeeManagement({
     }
   };
 
+  const handleDeleteDependent = () => {
+    if (!deleteDep) return;
+    try {
+      removeDependent(deleteDep.id);
+      notifyDependentChange();
+      showToast("Family member removed successfully", "success");
+      refetch();
+      setDeleteDep(null);
+    } catch (err) {
+      showToast("Failed to remove family member", "error");
+    }
+  };
+
   const handleRowClick = (emp: CorporateEmployee) => {
     setExpandedRowIds(prev => {
       const next = new Set(prev);
@@ -238,6 +253,38 @@ export function EmployeeManagement({
           <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${dep.isActive !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-muted text-muted-foreground'}`}>
             {dep.isActive !== false ? 'Active' : 'Inactive'}
           </span>
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'ACTION',
+        align: 'right' as const,
+        render: (dep: any) => (
+          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:text-primary hover:border-primary/30"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setEditDep(dep);
+                setAddDependentEmp(emp);
+              }}
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/5 hover:border-destructive/30"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setDeleteDep(dep);
+              }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         ),
       },
     ];
@@ -365,7 +412,7 @@ export function EmployeeManagement({
       },
     },
     {
-      key: 'actions', header: '', align: 'right' as const,
+      key: 'actions', header: 'ACTION', align: 'right' as const,
       render: (e: CorporateEmployee) => (
         <div className="flex items-center justify-end">
           <DropdownMenu>
@@ -528,9 +575,10 @@ export function EmployeeManagement({
       {addDependentEmp && !showForm && (
         <EmployeeDependentFormModal
           showForm={!!addDependentEmp}
-          setShowForm={val => { if (!val) setAddDependentEmp(null); }}
+          setShowForm={val => { if (!val) { setAddDependentEmp(null); setEditDep(null); } }}
           employee={addDependentEmp}
-          onSave={() => { setAddDependentEmp(null); refetch(); }}
+          editDep={editDep}
+          onSave={() => { setAddDependentEmp(null); setEditDep(null); refetch(); }}
         />
       )}
 
@@ -543,6 +591,17 @@ export function EmployeeManagement({
           isLoading={deleteEmployeeMutation.isPending}
           onConfirm={handleDelete}
           onCancel={() => setDeleteEmp(null)}
+        />
+      )}
+
+      {deleteDep && (
+        <ConfirmModal
+          title="Remove Family Member"
+          message={`Remove ${deleteDep.name} from the family list?`}
+          confirmLabel="Remove"
+          variant="danger"
+          onConfirm={handleDeleteDependent}
+          onCancel={() => setDeleteDep(null)}
         />
       )}
     </div>

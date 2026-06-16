@@ -11,6 +11,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Card,
+  ContentCard,
 } from '../../ui';
 import { CorporateEmployee, CorporatePlan, PlanDependent, CoverageType } from '../../../types';
 import { useFormConfig } from '../../../hooks/useFormConfig';
@@ -374,40 +376,63 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
             <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading employee details from API...</p>
           </div>
         )}
+        {/* Personal Details Card */}
         {personalSection && (
-          <SectionRenderer
-            section={personalSection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            cols={2}
-          />
+          <ContentCard 
+            title={personalSection.title}
+            className="bg-card/50"
+          >
+            <SectionRenderer
+              section={personalSection}
+              values={form}
+              onChange={handleFormChange}
+              errors={formErrors}
+              cols={2}
+            />
+          </ContentCard>
         )}
-        {employmentSection && (
-          <SectionRenderer
-            section={employmentSection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            dynamicOptions={{ corporatePlanId: planOptions }}
-            cols={2}
-          />
-        )}
-        {eligibilitySection && (
-          <SectionRenderer
-            section={eligibilitySection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            cols={2}
-          />
-        )}
+
+        {/* Membership & Coverage Details Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {employmentSection && (
+            <ContentCard 
+              title={employmentSection.title}
+              className="bg-card/50 flex flex-col"
+              bodyClassName="flex-1 flex flex-col justify-center"
+            >
+              <SectionRenderer
+                section={employmentSection}
+                values={form}
+                onChange={handleFormChange}
+                errors={formErrors}
+                dynamicOptions={{ corporatePlanId: planOptions }}
+                cols={1}
+              />
+            </ContentCard>
+          )}
+
+          {eligibilitySection && (
+            <ContentCard 
+              title={eligibilitySection.title}
+              className="bg-card/50 flex flex-col"
+              bodyClassName="flex-1 flex flex-col justify-center"
+            >
+              <SectionRenderer
+                section={eligibilitySection}
+                values={form}
+                onChange={handleFormChange}
+                errors={formErrors}
+                cols={1}
+              />
+            </ContentCard>
+          )}
+        </div>
 
         {/* Coverage Type + Dependents — only shown when plan allows dependents */}
         {maxDependents > 0 && (
-          <div className="border border-border rounded-2xl overflow-hidden">
+          <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
             {/* Coverage toggle */}
-            <div className="p-4 bg-muted/20">
+            <div className="p-5 bg-muted/20 border-b border-border/40">
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Coverage Type</Label>
               <div className="flex gap-3">
                 {(['self', 'family'] as CoverageType[]).map(ct => (
@@ -431,13 +456,13 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
             {/* Dependents list */}
             {form.coverageType === 'family' && (
-              <div className="p-4 space-y-3 border-t border-border">
+              <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       Family Members
                     </Label>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-semibold">
                       {totalDependents} / {maxDependents} added
                     </p>
                   </div>
@@ -446,7 +471,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                       variant="outline"
                       size="sm"
                       onClick={() => { setShowAddDepForm(true); setAddDepForm(EMPTY_PENDING()); }}
-                      className="gap-1.5 text-xs"
+                      className="gap-1.5 text-xs font-bold"
                     >
                       <UserPlus className="w-3.5 h-3.5" /> Add Member
                     </Button>
@@ -464,7 +489,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{dep.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-medium">
+                            <p className="text-[10px] text-muted-foreground font-semibold">
                               {dep.relationship}{dep.dateOfBirth ? ` • ${dep.dateOfBirth}` : ''}
                             </p>
                           </div>
@@ -487,14 +512,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                 {pendingDependents.length > 0 && (
                   <div className="space-y-2">
                     {pendingDependents.map(dep => (
-                      <div key={dep.tempId} className="flex items-center justify-between bg-amber-50 rounded-xl px-4 py-3 border border-amber-200">
+                      <div key={dep.tempId} className="flex items-center justify-between bg-amber-50/50 rounded-xl px-4 py-3 border border-amber-200">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-amber-600" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{dep.name}</p>
-                            <p className="text-[10px] text-amber-600 font-medium">{dep.relationship} • Pending save</p>
+                            <p className="text-[10px] text-amber-600 font-semibold">{dep.relationship} • Pending save</p>
                           </div>
                         </div>
                         <Button
@@ -512,7 +537,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
                 {/* Add dependent inline form */}
                 {showAddDepForm && (
-                  <div className="border border-primary/30 bg-primary/5 rounded-2xl p-4 space-y-3">
+                  <div className="border border-primary/20 bg-primary/5 rounded-2xl p-4 space-y-3">
                     <Label className="text-[10px] font-black text-primary uppercase tracking-widest">Add Family Member</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -587,7 +612,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           </div>
         )}
 
-        <div className="p-4 bg-muted/30 rounded-2xl border border-border flex flex-col gap-2">
+        <div className="p-5 bg-card/40 rounded-2xl border border-border/60 shadow-sm flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
@@ -601,7 +626,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
             </Label>
           </div>
           {isDateInPast && (
-            <p className="text-[10px] text-rose-500 font-semibold">
+            <p className="text-[10px] text-rose-500 font-semibold font-mono">
               * Cannot change status when eligibility date is in the past.
             </p>
           )}

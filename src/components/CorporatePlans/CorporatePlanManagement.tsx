@@ -42,6 +42,8 @@ export function CorporatePlanManagement({
   const [localFilter, setLocalFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'all' | PlanCategory>('all');
 
+  const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+
   const search    = propSearch     !== undefined ? propSearch     : localSearch;
   const setSearch = propOnSearchChange            || setLocalSearch;
   const filter    = propFilter     !== undefined ? propFilter     : localFilter;
@@ -167,7 +169,7 @@ export function CorporatePlanManagement({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
           {filtered.map((plan, index) => (
             <CorporatePlanCard
               key={`${plan.id}-${index}`}
@@ -177,6 +179,8 @@ export function CorporatePlanManagement({
               onEdit={openEdit}
               onDelete={handleDelete}
               onToggle={() => handleToggle(plan)}
+              expanded={expandedPlanId === plan.id}
+              onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
             />
           ))}
         </div>

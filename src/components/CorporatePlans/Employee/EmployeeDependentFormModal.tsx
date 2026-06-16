@@ -11,22 +11,31 @@ import {
   SelectValue,
 } from '../../ui';
 import { CorporateEmployee, PlanDependent } from '../../../types';
-import { addDependent, notifyDependentChange } from '../../../hooks/corporate/dependentStorage';
+import { addDependent, updateDependent, notifyDependentChange } from '../../../hooks/corporate/dependentStorage';
 import { useModal } from '../../../contexts/ModalContext';
 
 interface Props {
   showForm: boolean;
   setShowForm: (val: boolean) => void;
   employee: CorporateEmployee | null;
+  editDep?: PlanDependent | null;
   onSave: () => void;
 }
 
-export function EmployeeDependentFormModal({ showForm, setShowForm, employee, onSave }: Props) {
+export function EmployeeDependentFormModal({ showForm, setShowForm, employee, editDep, onSave }: Props) {
   const { showToast } = useModal();
   const [formData, setFormData] = useState<Partial<PlanDependent>>({
     gender: 'male',
     isActive: true,
   });
+
+  React.useEffect(() => {
+    if (editDep) {
+      setFormData({ ...editDep });
+    } else {
+      setFormData({ gender: 'male', isActive: true });
+    }
+  }, [editDep, showForm]);
 
   if (!employee) return null;
 
@@ -38,20 +47,34 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, on
     }
 
     try {
-      addDependent({
-        memberId: employee.id,
-        name: formData.name,
-        relationship: formData.relationship,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender as 'male'|'female'|'other',
-        phone: formData.phone,
-        email: formData.email,
-        isActive: formData.isActive,
-        corporatePlanId: employee.corporatePlanId,
-        primaryMemberName: employee.name,
-      });
-      notifyDependentChange();
-      showToast("Family member added successfully", "success");
+      if (editDep) {
+        updateDependent(editDep.id, {
+          name: formData.name,
+          relationship: formData.relationship,
+          dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender as 'male' | 'female' | 'other',
+          phone: formData.phone,
+          email: formData.email,
+          isActive: formData.isActive,
+        });
+        notifyDependentChange();
+        showToast("Family member updated successfully", "success");
+      } else {
+        addDependent({
+          memberId: employee.id,
+          name: formData.name,
+          relationship: formData.relationship,
+          dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender as 'male'|'female'|'other',
+          phone: formData.phone,
+          email: formData.email,
+          isActive: formData.isActive,
+          corporatePlanId: employee.corporatePlanId,
+          primaryMemberName: employee.name,
+        });
+        notifyDependentChange();
+        showToast("Family member added successfully", "success");
+      }
       onSave();
       setShowForm(false);
       setFormData({ gender: 'male', isActive: true });
@@ -62,7 +85,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, on
 
   return (
     <Modal
-      title={`Add Family Member for ${employee.name}`}
+      title={editDep ? `Edit Family Member for ${employee.name}` : `Add Family Member for ${employee.name}`}
       subtitle="Add a family member to this membership"
       onClose={() => setShowForm(false)}
       size="md"

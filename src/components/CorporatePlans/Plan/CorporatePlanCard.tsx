@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Users, Calendar, ChevronDown, ChevronUp,
   ToggleLeft, ToggleRight, Edit2, Trash2,
@@ -11,6 +11,7 @@ import { getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';
 import { BENEFIT_ICONS } from './constants';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button,
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from '../../ui';
 
 interface CorporatePlanCardProps {
@@ -20,6 +21,8 @@ interface CorporatePlanCardProps {
   onEdit: (plan: CorporatePlan) => void;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
+  expanded: boolean;
+  onToggleExpand: () => void;
 }
 
 // ── Color Theme Map ─────────────────────────────────────────────────────────
@@ -46,8 +49,8 @@ const TIER_CONFIG: Record<string, { label: string; Icon: React.ComponentType<{ c
 
 export function CorporatePlanCard({
   plan, BENEFIT_LABELS, isUpdatingStatus, onEdit, onDelete, onToggle,
+  expanded, onToggleExpand,
 }: CorporatePlanCardProps) {
-  const [expanded, setExpanded] = useState(false);
 
   const theme = COLOR_MAP[plan.color] ?? COLOR_MAP.blue;
   const status = getPlanStatus(plan);
@@ -67,13 +70,16 @@ export function CorporatePlanCard({
   const isExpiringSoon = daysLeft > 0 && daysLeft < 30;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -5, boxShadow: "0 12px 20px -8px rgba(15,23,42,0.08), 0 4px 6px -2px rgba(15,23,42,0.03)" }}
-      className={`group relative rounded-3xl overflow-hidden bg-white border border-slate-100 flex flex-col h-full transition-all duration-300 border-t-4 ${theme.border}`}
-    >
+    <TooltipProvider>
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -5, boxShadow: "0 12px 20px -8px rgba(15,23,42,0.08), 0 4px 6px -2px rgba(15,23,42,0.03)" }}
+        className={`group relative border border-slate-200 flex flex-col h-fit transition-all duration-300 border-t-4 ${theme.border} ${
+          expanded ? 'z-20 shadow-lg rounded-t-3xl rounded-b-none' : 'z-10 rounded-3xl'
+        }`}
+      >
       <div className="p-5 flex-1 flex flex-col">
         {/* Top row: type icon + status + menu */}
         <div className="flex items-center justify-between mb-4">
@@ -117,7 +123,7 @@ export function CorporatePlanCard({
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 rounded-2xl border border-slate-100 shadow-xl">
+              <DropdownMenuContent align="end" className="w-40 rounded-2xl border border-slate-200 shadow-xl">
                 <DropdownMenuItem onClick={() => onEdit(plan)} className="cursor-pointer font-bold text-xs p-2.5 rounded-xl">
                   <Edit2 className="w-3.5 h-3.5 mr-2 text-primary" /> Edit Plan
                 </DropdownMenuItem>
@@ -133,12 +139,28 @@ export function CorporatePlanCard({
         </div>
 
         {/* Plan name & company */}
-        <div>
-          <h3 className="text-slate-800 font-extrabold text-[15px] leading-snug tracking-tight">{plan.name}</h3>
-          <p className="text-slate-400 text-[11px] mt-0.5 font-bold flex items-center gap-1">
-            {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60" />}
-            {isIndividual ? 'Personal Membership' : plan.companyName}
-          </p>
+        <div className="min-w-0 flex-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h3 className="text-slate-800 font-extrabold text-[15px] leading-snug tracking-tight truncate cursor-help">
+                {plan.name}
+              </h3>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs py-1 px-2 font-semibold">
+              {plan.name}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-slate-400 text-[11px] mt-0.5 font-bold flex items-center gap-1 truncate cursor-help">
+                {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />}
+                <span className="truncate">{isIndividual ? 'Personal Membership' : plan.companyName}</span>
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs py-1 px-2 font-semibold">
+              {isIndividual ? 'Personal Membership' : plan.companyName}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Badges row */}
@@ -162,13 +184,19 @@ export function CorporatePlanCard({
         {/* Benefits Preview */}
         <div className="py-3 flex flex-wrap gap-1 mt-1">
           {plan.benefits.slice(0, 2).map(b => (
-            <span
-              key={b.id}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-extrabold border ${theme.bg} border-current/10`}
-            >
-              <span className="opacity-80">{BENEFIT_ICONS[b.type]}</span>
-              <span className="max-w-[120px] truncate">{b.description}</span>
-            </span>
+            <Tooltip key={b.id}>
+              <TooltipTrigger asChild>
+                <span
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-extrabold border ${theme.bg} border-current/10 cursor-help`}
+                >
+                  <span className="opacity-80">{BENEFIT_ICONS[b.type]}</span>
+                  <span className="max-w-[120px] truncate">{b.description}</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs py-1 px-2 font-semibold max-w-xs">
+                {b.description}
+              </TooltipContent>
+            </Tooltip>
           ))}
           {plan.benefits.length > 2 && (
             <span className="flex items-center px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-50 border border-slate-200 text-slate-500 opacity-80">
@@ -178,7 +206,7 @@ export function CorporatePlanCard({
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-3 py-3 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-100/60 text-center">
+        <div className="grid grid-cols-3 py-3 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
           <div>
             <span className="block text-xs font-black text-slate-700 leading-none">
               {plan.currentMembers}{plan.maxMembers ? `/${plan.maxMembers}` : ''}
@@ -186,8 +214,17 @@ export function CorporatePlanCard({
             <span className="text-[8px] text-slate-400 uppercase tracking-wider font-bold mt-1 block">Members</span>
           </div>
 
-          <div className="border-x border-slate-200/60">
-            <span className="block text-xs font-black text-slate-700 leading-none truncate px-0.5">{familyLabel}</span>
+          <div className="border-x border-slate-200/60 min-w-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block text-xs font-black text-slate-700 leading-none truncate px-0.5 cursor-help">
+                  {familyLabel}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs py-1 px-2 font-semibold">
+                {familyLabel}
+              </TooltipContent>
+            </Tooltip>
             <span className="text-[8px] text-slate-400 uppercase tracking-wider font-bold mt-1 block">Coverage</span>
           </div>
 
@@ -203,18 +240,18 @@ export function CorporatePlanCard({
       {/* ── Expand toggle ─────────────────────────────────────────────────── */}
       <Button
         variant="ghost"
-        onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-center gap-1 py-2.5 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-100 rounded-none h-auto transition-colors active:scale-100 ${
+        onClick={onToggleExpand}
+        className={`w-full flex items-center justify-center gap-1 py-2.5 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-200 h-auto transition-colors active:scale-100 ${
           expanded
-            ? 'text-primary bg-primary/5 hover:bg-primary/10'
-            : 'text-slate-400 hover:text-primary hover:bg-slate-50/80'
+            ? 'text-primary bg-primary/5 hover:bg-primary/10 rounded-none'
+            : 'text-slate-400 hover:text-primary hover:bg-slate-50/80 rounded-b-[22px]'
         }`}
       >
         {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         {expanded ? 'Show Less' : 'View Benefits'}
       </Button>
 
-      {/* ── Expanded benefit detail ──────────────────────────────────────── */}
+      {/* ── Expanded benefit detail (Absolute position to overlap content below) ── */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -223,12 +260,12 @@ export function CorporatePlanCard({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="overflow-hidden px-4 pb-4 pt-2 border-t border-slate-100 bg-slate-50/20 space-y-2"
+            className="absolute top-[100%] left-[-1px] right-[-1px] z-30 overflow-hidden px-4 pb-4 pt-2 border-x border-b border-slate-200 bg-white rounded-b-3xl shadow-xl space-y-2"
           >
             {plan.benefits.map(b => (
               <div
                 key={b.id}
-                className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-100 shadow-xs hover:border-slate-200 transition-colors"
+                className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-200 shadow-xs hover:border-slate-200 transition-colors"
               >
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${theme.bg} border border-current/10 text-xs`}>
                   {BENEFIT_ICONS[b.type]}
@@ -241,7 +278,7 @@ export function CorporatePlanCard({
                   {b.treatmentTypes?.length ? (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {b.treatmentTypes.map(t => (
-                        <span key={t} className="text-[7.5px] font-extrabold bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-md text-slate-400 uppercase tracking-wide">
+                        <span key={t} className="text-[7.5px] font-extrabold bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-md text-slate-400 uppercase tracking-wide">
                           {TREATMENT_LABELS[t] || t}
                         </span>
                       ))}
@@ -253,6 +290,7 @@ export function CorporatePlanCard({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </TooltipProvider>
   );
 }
