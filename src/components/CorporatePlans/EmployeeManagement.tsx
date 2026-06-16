@@ -9,6 +9,7 @@ import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
   PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
@@ -46,7 +47,9 @@ export function EmployeeManagement({
   const [tab, setTab] = useState<'list' | 'import'>('list');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [planFilter, setPlanFilter] = useState('all');
+  const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
+  const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
+  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
 
   const [showForm, setShowForm] = useState(false);
@@ -61,13 +64,33 @@ export function EmployeeManagement({
     return () => clearTimeout(handler);
   }, [search]);
 
+  const queryFilters = useMemo(() => {
+    const filters: any = {};
+
+    if (planTypeFilter === 'corporate') {
+      const corpPlanIds = plans.filter(p => p.planCategory !== 'individual').map(p => p.id);
+      filters.corporate_plan_id = corpPlanIds.length > 0 ? corpPlanIds : ['none'];
+    } else if (planTypeFilter === 'individual') {
+      const indPlanIds = plans.filter(p => p.planCategory === 'individual').map(p => p.id);
+      filters.corporate_plan_id = indPlanIds.length > 0 ? indPlanIds : ['none'];
+    }
+
+    if (selectedPlanFilter !== 'all') {
+      filters.corporate_plan_id = [selectedPlanFilter];
+    }
+
+    if (selectedCompanyFilter !== 'all') {
+      filters.company_name = [selectedCompanyFilter];
+    }
+
+    return filters;
+  }, [planTypeFilter, selectedPlanFilter, selectedCompanyFilter, plans]);
+
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
     page,
     limit: PER_PAGE,
-    filters: {
-      corporate_plan_id: planFilter === 'all' ? undefined : [planFilter],
-    },
+    filters: queryFilters,
   });
 
   useEffect(() => {
@@ -87,7 +110,7 @@ export function EmployeeManagement({
     else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
     else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    let mapped = arr.map((e: any) => ({
+    return arr.map((e: any) => ({
       id: e.id,
       employeeId: e.emp_id || '',
       name: e.name,
@@ -108,31 +131,49 @@ export function EmployeeManagement({
       coverageType: (e.coverage_type?.toLowerCase() || 'self') as CoverageType,
       dependents: getDependentsByMember(e.id),
     }));
-
-    if (planFilter !== 'all') mapped = mapped.filter(e => e.corporatePlanId === planFilter);
-    return mapped;
-  }, [employeesData, plans, planFilter]);
+  }, [employeesData, plans]);
 
   const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: PER_PAGE, total: 0, totalPages: 1 };
-  const totalPages = planFilter !== 'all' ? Math.ceil(apiMembers.length / PER_PAGE) || 1 : pagination.totalPages || 1;
-  const totalItems = planFilter !== 'all' ? apiMembers.length : pagination.total || 0;
+  const totalPages = pagination.totalPages || 1;
+  const totalItems = pagination.total || 0;
 
-  const { data: companiesData } = useCompaniesQuery();
-  const companiesList = useMemo(() => {
-    let arr: any[] = [];
-    if (Array.isArray(companiesData)) arr = companiesData;
-    else if (Array.isArray(companiesData?.data)) arr = companiesData.data;
-    else if (Array.isArray(companiesData?.data?.data)) arr = companiesData.data.data;
-    return arr.map((c: any) => ({
-      name: c.company_name || c.name || 'Unknown',
-      count: Number(c.employee_count || c.count || c.total || 0),
-    })).sort((a, b) => b.count - a.count);
-  }, [companiesData]);
-
-  const planFilterTabs = [
-    { key: 'all', label: 'All Plans' },
-    ...plans.filter(p => p.isActive).map(p => ({ key: p.id, label: p.code })),
+  const planTypeTabs = [
+    { key: 'all', label: 'All Members' },
+    { key: 'corporate', label: 'Corporate Plans' },
+    { key: 'individual', label: 'Individual Plans' },
   ];
+
+  const handlePlanTypeChange = (val: string) => {
+    setPlanTypeFilter(val as any);
+    setSelectedPlanFilter('all');
+    setSelectedCompanyFilter('all');
+    setPage(1);
+  };
+
+  const availablePlanOptions = useMemo(() => {
+    let filteredPlans = plans.filter(p => p.isActive);
+    if (planTypeFilter === 'corporate') {
+      filteredPlans = filteredPlans.filter(p => p.planCategory !== 'individual');
+    } else if (planTypeFilter === 'individual') {
+      filteredPlans = filteredPlans.filter(p => p.planCategory === 'individual');
+    }
+    return [
+      { value: 'all', label: 'All Plans' },
+      ...filteredPlans.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }))
+    ];
+  }, [plans, planTypeFilter]);
+
+  const availableCompanyOptions = useMemo(() => {
+    const companies = Array.from(new Set(
+      plans
+        .filter(p => p.isActive && p.planCategory !== 'individual' && p.companyName && p.companyName !== 'Individual')
+        .map(p => p.companyName!)
+    ));
+    return [
+      { value: 'all', label: 'All Companies' },
+      ...companies.map(c => ({ value: c, label: c }))
+    ];
+  }, [plans]);
 
   const handleDelete = async () => {
     if (!deleteEmp) return;
@@ -361,11 +402,11 @@ export function EmployeeManagement({
         subtitle={`${totalItems} member${totalItems !== 1 ? 's' : ''} across ${plans.filter(p => p.isActive).length} active plan${plans.filter(p => p.isActive).length !== 1 ? 's' : ''}`}
         action={
           <div className="flex items-center gap-2">
-            {onGoToRegister && (
+            {/* {onGoToRegister && (
               <Button onClick={onGoToRegister} variant="outline" className="gap-2">
                 <Zap className="w-4 h-4" /> Quick Register
               </Button>
-            )}
+            )} */}
             <Button onClick={() => setTab('import')} variant="outline" className="gap-2">
               <Upload className="w-4 h-4" /> Import
             </Button>
@@ -379,19 +420,63 @@ export function EmployeeManagement({
       {tab === 'list' ? (
         <>
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <SearchInput
-              value={search}
-              onChange={val => { setSearch(val); setPage(1); }}
-              placeholder="Search by name, phone…"
-              className="flex-1 min-w-56"
-            />
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
+            <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full">
+              <SearchInput
+                value={search}
+                onChange={val => { setSearch(val); setPage(1); }}
+                placeholder="Search by name, phone…"
+                className="w-full sm:max-w-xs"
+              />
 
-            <FilterTabs
-              tabs={planFilterTabs}
-              active={planFilter}
-              onChange={val => { setPlanFilter(val); setPage(1); }}
-            />
+              <FilterTabs
+                tabs={planTypeTabs}
+                active={planTypeFilter}
+                onChange={handlePlanTypeChange}
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
+              {/* Plan Select */}
+              <div className="w-full sm:w-48">
+                <Select
+                  value={selectedPlanFilter}
+                  onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
+                >
+                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                    <SelectValue placeholder="Filter by Plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePlanOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Company Select - only for corporate or all */}
+              {planTypeFilter !== 'individual' && (
+                <div className="w-full sm:w-48">
+                  <Select
+                    value={selectedCompanyFilter}
+                    onValueChange={val => { setSelectedCompanyFilter(val); setPage(1); }}
+                  >
+                    <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                      <SelectValue placeholder="Filter by Company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCompanyOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           </div>
 
           <DataTable
@@ -400,7 +485,7 @@ export function EmployeeManagement({
             rowKey={e => e.id}
             emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
             emptyTitle="No members found"
-            emptySubtitle="Use Quick Register to add your first member"
+            emptySubtitle="Use Add Member to add your first member"
             onRowClick={handleRowClick}
             expandedRowIds={expandedRowIds}
             renderExpandedRow={renderExpandedRow}

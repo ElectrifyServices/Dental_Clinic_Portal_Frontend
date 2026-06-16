@@ -29,9 +29,8 @@
     },
     {
       "id": "employment",
-      "title": "Plan & Company",
+      "title": "Membership Plan",
       "fields": [
-        { "name": "companyName",     "label": "Company Name",    "type": "text",              "required": true, "placeholder": "Organization name" },
         { "name": "corporatePlanId", "label": "Membership Plan", "type": "searchable_select", "required": true }
       ]
     },

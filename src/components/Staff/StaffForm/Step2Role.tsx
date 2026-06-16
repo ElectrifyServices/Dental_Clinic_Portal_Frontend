@@ -120,10 +120,22 @@ const PERMISSIONS = [
     icon: BarChart3,
   },
   {
-    id: "staff_management",
+    id: "staff",
     label: "Staff Management",
     description: "Manage clinic staff",
     icon: Users,
+  },
+  {
+    id: "profit_sharing",
+    label: "Profit Sharing",
+    description: "Access profit sharing data",
+    icon: DollarSign,
+  },
+  {
+    id: "membership",
+    label: "Memberships",
+    description: "Manage corporate plans & memberships",
+    icon: Shield,
   },
 ];
 

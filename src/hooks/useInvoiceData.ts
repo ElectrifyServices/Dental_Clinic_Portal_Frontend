@@ -1,25 +1,53 @@
-import { useEffect } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useInvoicesQuery } from './billing/useInvoicesQuery';
+import { normalizeInvoice } from './billing/useInvoiceQuery';
+import { useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useInvoiceData() {
-  const [invoices, setInvoices] = useLocalStorage<any[]>('invoices', []);
+  const queryClient = useQueryClient();
 
-  // Auto-mark overdue invoices
-  useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let changed = false;
-    const updated = invoices.map(inv => {
-      const due = new Date(inv.dueDate);
-      due.setHours(0, 0, 0, 0);
-      if (inv.status !== 'paid' && due < today && inv.status !== 'overdue') {
-        changed = true;
-        return { ...inv, status: 'overdue' };
-      }
-      return inv;
-    });
-    if (changed) setInvoices(updated);
-  }, [invoices]); // eslint-disable-line react-hooks/exhaustive-deps
+  const isEnabled = useMemo(() => {
+    const path = window.location.pathname;
+    const isExcluded = path.includes('/inventory') || path.includes('/corporate-plans') || path.includes('/staff');
+    return !isExcluded;
+  }, []);
 
-  return { invoices, setInvoices };
+  const { data: apiInvoices, isLoading: isInvoicesLoading } = useInvoicesQuery(
+    { page: 1, limit: 1000 },
+    { enabled: isEnabled }
+  );
+
+  const refetchInvoices = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  }, [queryClient]);
+
+  const invoices = useMemo(() => {
+    let rawList: any[] = [];
+    if (Array.isArray(apiInvoices)) {
+      rawList = apiInvoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).invoices)) {
+      rawList = (apiInvoices as any).invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.invoices)) {
+      rawList = (apiInvoices as any).data.invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.data)) {
+      rawList = (apiInvoices as any).data.data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
+      rawList = (apiInvoices as any).data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data)) {
+      rawList = (apiInvoices as any).responseObject.data;
+    }
+
+    return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
+  }, [apiInvoices]);
+
+  // Keep setInvoices as no-op stub for backward compatibility
+  const setInvoices = (_updater: any) => {};
+
+  return {
+    invoices,
+    setInvoices,
+    isInvoicesLoading,
+    refetchInvoices,
+  };
 }
+

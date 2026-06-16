@@ -100,10 +100,10 @@ const PERMISSION_MAP: Record<string, string[]> = {
   consent: ["CONSENT_FORMS"],
   billing: ["BILLING"],
   inventory: ["INVENTORY"],
-  reports: ["ANALYTICS"],
-  staff: ["STAFF"],
+  reports: ["ANALYTICS", "REPORTS"],
+  staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS"],
+  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 export function MobileNav() {

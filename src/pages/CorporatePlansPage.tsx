@@ -13,20 +13,20 @@ const TABS: {
   sub: string;
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { key: 'plans',    label: 'Membership Plans',   sub: 'Create & manage plans',  icon: CreditCard },
-  { key: 'register', label: 'Quick Registration', sub: 'Enrol a member fast',    icon: Zap },
-  { key: 'members',  label: 'Members',            sub: 'View enrolled members',  icon: Users },
-];
+    { key: 'plans', label: 'Membership Plans', sub: 'Create & manage plans', icon: CreditCard },
+    // { key: 'register', label: 'Quick Registration', sub: 'Enrol a member fast', icon: Zap },
+    { key: 'members', label: 'Members', sub: 'View enrolled members', icon: Users },
+  ];
 
 const TAB_ACCENT: Record<MembershipTab, string> = {
-  plans:    'border-blue-500 text-blue-600',
+  plans: 'border-blue-500 text-blue-600',
   register: 'border-amber-500 text-amber-600',
-  members:  'border-violet-500 text-violet-600',
+  members: 'border-violet-500 text-violet-600',
 };
 const TAB_ICON_ACTIVE: Record<MembershipTab, string> = {
-  plans:    'bg-blue-50 text-blue-600 border-blue-100',
+  plans: 'bg-blue-50 text-blue-600 border-blue-100',
   register: 'bg-amber-50 text-amber-600 border-amber-100',
-  members:  'bg-violet-50 text-violet-600 border-violet-100',
+  members: 'bg-violet-50 text-violet-600 border-violet-100',
 };
 const STAT_COLORS = [
   'bg-blue-50   text-blue-700   border-blue-100',
@@ -59,9 +59,9 @@ export const CorporatePlansPage: React.FC = () => {
   useEffect(() => { if (refetchCorporate) refetchCorporate(); }, [refetchCorporate]);
 
   const stats = [
-    { label: 'Active Plans',   value: corporatePlans.filter(p => p.isActive).length },
-    { label: 'Total Members',  value: corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
-    { label: 'Company Plans',  value: corporatePlans.filter(p => p.planCategory !== 'individual').length },
+    { label: 'Active Plans', value: corporatePlans.filter(p => p.isActive).length },
+    { label: 'Total Members', value: corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
+    { label: 'Company Plans', value: corporatePlans.filter(p => p.planCategory !== 'individual').length },
     { label: 'Personal Plans', value: corporatePlans.filter(p => p.planCategory === 'individual').length },
   ];
 
@@ -75,13 +75,13 @@ export const CorporatePlansPage: React.FC = () => {
         <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center gap-4">
           {/* Icon + title */}
           <div className="flex items-center gap-3.5 flex-1">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
+              <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-lg font-black text-foreground tracking-tight">Dental Memberships</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Manage plans, enrol members and track family coverage
+              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">Opal Smiles Memberships</h1>
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                Configure membership plans, manage team onboarding, and track family coverage benefits.
               </p>
             </div>
           </div>
@@ -111,11 +111,10 @@ export const CorporatePlansPage: React.FC = () => {
                 className={`flex-1 flex items-center justify-center gap-3 px-4 py-3.5 border-b-2 transition-all group
                   ${active ? TAB_ACCENT[key] : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'}`}
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all ${
-                  active
-                    ? TAB_ICON_ACTIVE[key]
-                    : 'bg-muted/50 border-border/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground'
-                }`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all ${active
+                  ? TAB_ICON_ACTIVE[key]
+                  : 'bg-muted/50 border-border/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground'
+                  }`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="text-left hidden sm:block">
@@ -144,12 +143,12 @@ export const CorporatePlansPage: React.FC = () => {
         />
       )}
 
-      {activeTab === 'register' && (
+      {/* {activeTab === 'register' && (
         <QuickRegistrationFlow
           plans={corporatePlans}
           onRegistered={() => setActiveTab('members')}
         />
-      )}
+      )} */}
 
       {activeTab === 'members' && (
         <EmployeeManagement

@@ -1,6 +1,7 @@
 import { usePatientData } from "./usePatientData";
 import { useAppointmentData } from "./useAppointmentData";
 import { useInvoiceData } from "./useInvoiceData";
+import { useDeleteInvoiceMutation } from "./billing/useDeleteInvoiceMutation";
 import { useTreatmentData } from "./useTreatmentData";
 import { useStaffData } from "./useStaffData";
 import { useInventoryData } from "./useInventoryData";
@@ -22,6 +23,8 @@ export const useAppData = (params?: {
     search: params?.corporateSearch,
     status: params?.corporateStatus,
   });
+
+  const { mutateAsync: deleteInvoice } = useDeleteInvoiceMutation();
 
   const { setPatients } = patientData;
   const { setInvoices } = invoiceData;
@@ -81,27 +84,12 @@ export const useAppData = (params?: {
     });
   };
 
-  const handleDeleteInvoice = (id: string) => {
-    setInvoices((prev) => {
-      const inv = prev.find((i) => i.id === id);
-      if (inv && inv.status !== "paid") {
-        setPatients((pp) =>
-          pp.map((p) => {
-            if (p.id === inv.patientId || p.name === inv.patientName) {
-              return {
-                ...p,
-                outstandingBalance: Math.max(
-                  0,
-                  (p.outstandingBalance || 0) - (inv.total || inv.amount || 0),
-                ),
-              };
-            }
-            return p;
-          }),
-        );
-      }
-      return prev.filter((i) => i.id !== id);
-    });
+  const handleDeleteInvoice = async (id: string) => {
+    try {
+      await deleteInvoice({ id });
+    } catch (err) {
+      // Error handled by mutation options / Toast if any, or silently ignored here
+    }
   };
 
   const handleUpdateInvoiceStatus = (id: string, status: string) => {

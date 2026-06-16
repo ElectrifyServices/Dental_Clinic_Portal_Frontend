@@ -103,38 +103,33 @@ export function CorporatePlanManagement({
     <div className="space-y-5">
 
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search plans or company…"
-          className="flex-1 min-w-56 max-w-sm"
-        />
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
+        <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full">
+          {/* Search */}
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search plans or company…"
+            className="w-full sm:max-w-xs"
+          />
 
-        {/* Category segmented */}
-        <FilterTabs
-          tabs={CATEGORY_TABS}
-          active={categoryFilter}
-          onChange={(val) => setCategoryFilter(val as any)}
-        />
+          {/* Category segmented */}
+          <FilterTabs
+            tabs={CATEGORY_TABS}
+            active={categoryFilter}
+            onChange={(val) => setCategoryFilter(val as any)}
+          />
+        </div>
 
-        {/* Status segmented */}
-        <FilterTabs
-          tabs={STATUS_TABS}
-          active={filter}
-          onChange={(val) => setFilter(val as any)}
-        />
+        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
+          {/* Status segmented */}
+          <FilterTabs
+            tabs={STATUS_TABS}
+            active={filter}
+            onChange={(val) => setFilter(val as any)}
+          />
 
-        {/* Spacer + actions */}
-        <div className="flex items-center gap-2 ml-auto">
-          {onGoToRegister && (
-            <Button variant="outline" onClick={onGoToRegister} className="gap-2 h-10 rounded-xl shadow-xs">
-              <Zap className="w-4 h-4 text-amber-500" />
-              Quick Register
-            </Button>
-          )}
-          <Button onClick={openNew} className="gap-2 h-10 rounded-xl shadow-sm shadow-primary/20">
+          <Button onClick={openNew} className="gap-2 h-10 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 transition-all">
             <Plus className="w-4 h-4" />
             New Plan
           </Button>
@@ -173,9 +168,9 @@ export function CorporatePlanManagement({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map(plan => (
+          {filtered.map((plan, index) => (
             <CorporatePlanCard
-              key={plan.id}
+              key={`${plan.id}-${index}`}
               plan={plan}
               BENEFIT_LABELS={BENEFIT_LABELS}
               isUpdatingStatus={updateStatusMutation.isPending}

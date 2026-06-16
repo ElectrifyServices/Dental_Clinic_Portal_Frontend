@@ -1,4 +1,4 @@
-﻿import {
+import {
   Download,
   Printer,
   Send,
@@ -12,6 +12,7 @@
 import { Modal, Button, Badge, Card, CardContent } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { useAppData } from "../../hooks/useAppData";
+import { useInvoiceQuery } from "../../hooks/billing/useInvoiceQuery";
 
 interface InvoiceViewerProps {
   invoiceId: string;
@@ -24,10 +25,38 @@ export function InvoiceViewer({
   onClose,
   onUpdateStatus,
 }: InvoiceViewerProps) {
-  const { invoices, patients, corporatePlans } = useAppData();
-  const invoice = invoices.find((inv) => inv.id === invoiceId);
+  const { patients, corporatePlans } = useAppData();
+  const { data: invoice, isLoading, error } = useInvoiceQuery(invoiceId);
 
-  if (!invoice) return null;
+  if (isLoading) {
+    return (
+      <Modal
+        title={`Invoice ${invoiceId}`}
+        onClose={onClose}
+        size="2xl"
+        icon={<FileText className="w-4 h-4" />}
+      >
+        <div className="flex items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (error || !invoice) {
+    return (
+      <Modal
+        title={`Invoice ${invoiceId}`}
+        onClose={onClose}
+        size="2xl"
+        icon={<FileText className="w-4 h-4" />}
+      >
+        <div className="p-6 text-center text-destructive">
+          Failed to load invoice details. Please try again.
+        </div>
+      </Modal>
+    );
+  }
 
   const patient = patients.find(
     (p) => p.id === invoice.patientId || p.name === invoice.patientName,

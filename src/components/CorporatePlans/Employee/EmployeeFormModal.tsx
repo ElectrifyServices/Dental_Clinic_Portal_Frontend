@@ -162,7 +162,6 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
     const errs: Record<string, string> = {};
     if (!form.name?.trim()) errs.name = 'Required';
     if (!form.phone?.trim()) errs.phone = 'Required';
-    if (!form.companyName?.trim()) errs.companyName = 'Required';
     if (!form.corporatePlanId) errs.corporatePlanId = 'Assign a corporate plan';
     setFormErrors(errs);
     return !Object.keys(errs).length;
@@ -204,6 +203,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   const handleSave = async () => {
     if (!validateForm()) return;
     const plan = activePlans.find(p => p.id === form.corporatePlanId);
+    const companyNameVal = plan?.companyName || 'Individual';
     const coverageTypeVal = form.coverageType === 'family' ? 'FAMILY' : 'SELF';
 
     if (!editEmp) {
@@ -215,7 +215,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: form.companyName!,
+          company_name: companyNameVal,
           designation: form.designation || "Employee",
           department: form.department || "General",
           corporate_plan_id: form.corporatePlanId!,
@@ -251,7 +251,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           dateOfBirth: form.dateOfBirth || '',
           designation: form.designation || '',
           department: form.department || '',
-          companyName: form.companyName!,
+          companyName: companyNameVal,
           corporatePlanId: form.corporatePlanId!,
           corporatePlanName: plan?.name || '',
           enrolledAt: new Date().toISOString(),
@@ -286,7 +286,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: form.companyName!,
+          company_name: companyNameVal,
           designation: form.designation || "Employee",
           department: form.department || "General",
           corporate_plan_id: form.corporatePlanId!,
@@ -307,7 +307,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           dateOfBirth: form.dateOfBirth || '',
           designation: form.designation || '',
           department: form.department || '',
-          companyName: form.companyName!,
+          companyName: companyNameVal,
           corporatePlanId: form.corporatePlanId!,
           corporatePlanName: plan?.name || '',
           enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),

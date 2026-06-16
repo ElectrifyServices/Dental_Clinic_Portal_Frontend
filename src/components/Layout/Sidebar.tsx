@@ -50,10 +50,10 @@ const PERMISSION_MAP: Record<string, string[]> = {
   consent: ["CONSENT_FORMS"],
   billing: ["BILLING"],
   inventory: ["INVENTORY"],
-  reports: ["ANALYTICS"],
-  staff: ["STAFF"],
+  reports: ["ANALYTICS", "REPORTS"],
+  staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS"],
+  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 export function Sidebar() {
@@ -178,57 +178,49 @@ export function Sidebar() {
                         asChild
                         variant="ghost"
                         className={[
-                          "w-full justify-start rounded-xl text-[13px] font-medium transition-all duration-200 outline-none select-none relative overflow-hidden group/btn",
+                          "w-full justify-start rounded-xl text-[13px] font-medium outline-none select-none relative overflow-hidden group/btn border",
                           collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : "h-10 px-3 gap-3",
                           isActive
-                            ? "text-white font-semibold hover:text-white hover:bg-transparent"
-                            : "text-slate-600 hover:text-primary hover:bg-primary/5",
+                            ? "text-primary font-bold bg-primary/[0.03] border-primary/40"
+                            : "text-slate-600 hover:text-primary hover:bg-slate-50 border-slate-200/50",
+                          // Vertical border mask
+                          "before:content-[''] before:absolute before:top-[5px] before:left-[-1px] before:w-[calc(100%+2px)] before:h-[calc(100%-10px)] before:bg-white before:transition-all before:duration-300 before:ease-in-out before:z-[1]",
+                          isActive ? "before:scale-y-0" : "before:scale-y-100 group-hover/btn:before:scale-y-0",
+                          // Horizontal border mask
+                          "after:content-[''] after:absolute after:left-[5px] after:top-[-1px] after:h-[calc(100%+2px)] after:w-[calc(100%-10px)] after:bg-white after:transition-all after:duration-300 after:ease-in-out after:z-[1]",
+                          isActive ? "after:scale-x-0" : "after:scale-x-100 group-hover/btn:after:scale-x-0",
                         ].join(" ")}
                       >
                         <NavLink
                           to={`/${item.id}`}
                           title={collapsed ? item.label : undefined}
                         >
-                          {/* Active pill background with framer-motion */}
-                          {isActive && (
-                            <motion.div
-                              layoutId="sidebar-active-pill"
-                              className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-sm shadow-primary/15"
-                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                            />
-                          )}
-
                           {/* Icon wrapper */}
                           <div className={[
-                            "flex-shrink-0 flex items-center justify-center transition-all duration-200 z-10",
+                            "flex-shrink-0 flex items-center justify-center transition-all duration-150 z-10",
                             !collapsed ? "w-7 h-7 rounded-lg" : "",
                             isActive && !collapsed
-                              ? "bg-white/15"
+                              ? "bg-primary/15"
                               : !isActive && !collapsed
                                 ? "bg-slate-100 group-hover/btn:bg-primary/10"
                                 : "",
                           ].join(" ")}>
                             <Icon className={[
-                              "transition-transform duration-200 group-hover/btn:scale-110 z-10",
+                              "transition-transform duration-150 group-hover/btn:scale-105 z-10",
                               collapsed ? "w-5 h-5" : "w-3.5 h-3.5",
-                              isActive ? "text-white" : "text-slate-500 group-hover/btn:text-primary",
+                              isActive ? "text-primary" : "text-slate-500 group-hover/btn:text-primary",
                             ].join(" ")} />
                           </div>
 
                           {!collapsed && (
-                            <span className="truncate transition-transform duration-200 group-hover/btn:translate-x-0.5 z-10">
+                            <span className="truncate z-10">
                               {item.label}
                             </span>
                           )}
 
-                          {/* Active dot in collapsed mode */}
+                          {/* Active bar in collapsed mode */}
                           {isActive && collapsed && (
-                            <motion.div
-                              layoutId="sidebar-active-dot"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full z-10"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                            />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full z-10" />
                           )}
                         </NavLink>
                       </Button>

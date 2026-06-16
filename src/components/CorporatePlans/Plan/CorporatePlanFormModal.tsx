@@ -411,7 +411,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
           {/* Company Name (corporate only) */}
           {form.planCategory === 'corporate' && (
-            <LabeledField label="Company Name *" error={errors.companyName}>
+            <LabeledField label="Company Name" error={errors.companyName}>
               <Input
                 value={form.companyName}
                 onChange={e => handleFormChange('companyName', e.target.value)}
