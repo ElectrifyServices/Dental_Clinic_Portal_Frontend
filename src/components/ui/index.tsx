@@ -480,7 +480,7 @@ export function SearchInput({ value, onChange, placeholder = "Search…", classN
 }
 
 // ─── FilterTabs ───────────────────────────────────────────────────────────────
-interface FilterTab { key: string; label: string; }
+interface FilterTab { key?: string; value?: string; label: string; }
 interface FilterTabsProps {
   tabs: FilterTab[];
   active: string;
@@ -489,12 +489,15 @@ interface FilterTabsProps {
 export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
   return (
     <div className="filter-tabs">
-      {tabs.map((t) => (
-        <button key={t.key} onClick={() => onChange(t.key)}
-          className={active === t.key ? "filter-tab-active" : "filter-tab"}>
-          {t.label}
-        </button>
-      ))}
+      {tabs.map((t, idx) => {
+        const k = t.key ?? t.value ?? String(idx);
+        return (
+          <button key={k} onClick={() => onChange(k)}
+            className={active === k ? "filter-tab-active" : "filter-tab"}>
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
-import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
+import { getDependentsByMember, removeDependent, notifyDependentChange } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 
@@ -57,6 +57,8 @@ export function EmployeeManagement({
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
+  const [editDep, setEditDep] = useState<any | null>(null);
+  const [deleteDep, setDeleteDep] = useState<any | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -68,15 +70,13 @@ export function EmployeeManagement({
     const filters: any = {};
 
     if (planTypeFilter === 'corporate') {
-      const corpPlanIds = plans.filter(p => p.planCategory !== 'individual').map(p => p.id);
-      filters.corporate_plan_id = corpPlanIds.length > 0 ? corpPlanIds : ['none'];
+      filters.plan_type = ['COMPANY'];
     } else if (planTypeFilter === 'individual') {
-      const indPlanIds = plans.filter(p => p.planCategory === 'individual').map(p => p.id);
-      filters.corporate_plan_id = indPlanIds.length > 0 ? indPlanIds : ['none'];
+      filters.plan_type = ['INDIVIDUAL'];
     }
 
     if (selectedPlanFilter !== 'all') {
-      filters.corporate_plan_id = [selectedPlanFilter];
+      filters.plan_id = [selectedPlanFilter];
     }
 
     if (selectedCompanyFilter !== 'all') {
@@ -110,27 +110,34 @@ export function EmployeeManagement({
     else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
     else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    return arr.map((e: any) => ({
-      id: e.id,
-      employeeId: e.emp_id || '',
-      name: e.name,
-      phone: e.phone,
-      email: e.email,
-      gender: e.gender?.toLowerCase() || 'male',
-      dateOfBirth: e.date_of_birth,
-      designation: e.designation,
-      department: e.department,
-      companyName: e.company_name || '',
-      corporatePlanId: e.corporate_plan?.id || e.corporate_plan_id || '',
-      corporatePlanName: e.corporate_plan?.plan_name || plans.find(p => p.id === (e.corporate_plan?.id || e.corporate_plan_id))?.name || '',
-      enrolledAt: e.created_at || new Date().toISOString(),
-      eligible_date: e.eligible_date,
-      isActive: e.status === 'ACTIVE',
-      status: e.status,
-      patientId: e.patient_id || undefined,
-      coverageType: (e.coverage_type?.toLowerCase() || 'self') as CoverageType,
-      dependents: getDependentsByMember(e.id),
-    }));
+    return arr.map((e: any) => {
+      const activeEnrollment = e.enrollments?.find((en: any) => en.status === 'ACTIVE') || e.enrollments?.[0];
+      const planInfo = activeEnrollment?.plan || {};
+      const planId = activeEnrollment?.plan_id || '';
+      
+      return {
+        id: e.id,
+        employeeId: e.id || '', // No emp_id provided in new json
+        name: e.name,
+        phone: e.phone,
+        email: e.email,
+        gender: e.gender?.toLowerCase() || 'male',
+        dateOfBirth: e.date_of_birth,
+        designation: '',
+        department: '',
+        companyName: planInfo.company_name || '',
+        corporatePlanId: planId,
+        corporatePlanName: planInfo.plan_name || plans.find(p => p.id === planId)?.name || '',
+        enrolledAt: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
+        eligible_date: activeEnrollment?.enrollment_date || e.created_at || new Date().toISOString(),
+        isActive: e.status === 'ACTIVE',
+        status: e.status,
+        patientId: e.patient_id || undefined,
+        coverageType: (e.family_members?.length > 0 ? 'family' : 'self') as CoverageType,
+        dependents: e.family_members || getDependentsByMember(e.id),
+        familyCoverageLimit: planInfo.family_coverage_limit || 0,
+      };
+    });
   }, [employeesData, plans]);
 
   const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: PER_PAGE, total: 0, totalPages: 1 };
@@ -192,6 +199,21 @@ export function EmployeeManagement({
     }
   };
 
+  const handleDeleteDependent = async () => {
+    if (!deleteDep) return;
+    try {
+      await deleteEmployeeMutation.mutateAsync({ id: deleteDep.id });
+      queryClient.invalidateQueries({ queryKey: ['corporatePlans'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      showToast("Family member removed successfully", "success");
+      refetch();
+      setDeleteDep(null);
+    } catch (err: any) {
+      showToast(err?.message || "Failed to remove family member", "error");
+    }
+  };
+
   const handleRowClick = (emp: CorporateEmployee) => {
     setExpandedRowIds(prev => {
       const next = new Set(prev);
@@ -218,7 +240,7 @@ export function EmployeeManagement({
       {
         key: 'relationship',
         header: 'Relation',
-        render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship}</span>,
+        render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
       },
       {
         key: 'contact',
@@ -234,10 +256,66 @@ export function EmployeeManagement({
       {
         key: 'status',
         header: 'Status',
+        render: (dep: any) => {
+          const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
+          const isDepExpired = dep.status === 'EXPIRED';
+          return (
+            <Button
+              onClick={async (ev) => {
+                ev.stopPropagation();
+                if (isDepExpired) return;
+                try {
+                  await updateStatusMutation.mutateAsync({ id: dep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
+                  refetch();
+                } catch {}
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
+                isDepExpired
+                  ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                  : isDepActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+              }`}
+              disabled={isDepExpired || (updateStatusMutation as any).isPending}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+              }`} />
+              {isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}
+            </Button>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: 'ACTION',
+        align: 'right' as const,
         render: (dep: any) => (
-          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${dep.isActive !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-muted text-muted-foreground'}`}>
-            {dep.isActive !== false ? 'Active' : 'Inactive'}
-          </span>
+          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:text-primary hover:border-primary/30"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setEditDep(dep);
+                setAddDependentEmp(emp);
+              }}
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/5 hover:border-destructive/30"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setDeleteDep(dep);
+              }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         ),
       },
     ];
@@ -290,9 +368,9 @@ export function EmployeeManagement({
       key: 'plan', header: 'Plan',
       render: (e: CorporateEmployee) => {
         const plan = plans.find(p => p.id === e.corporatePlanId);
-        return plan
-          ? <PlanBadge name={plan.name} code={plan.code} color={plan.color} />
-          : <span className="text-xs text-muted-foreground/60 italic">No plan</span>;
+        if (plan) return <PlanBadge name={plan.name} code={plan.code} color={plan.color} />;
+        if (e.corporatePlanName) return <span className="text-sm font-semibold">{e.corporatePlanName}</span>;
+        return <span className="text-xs text-muted-foreground/60 italic">No plan</span>;
       },
     },
     {
@@ -307,26 +385,19 @@ export function EmployeeManagement({
               : 'bg-blue-50 text-blue-700 border-blue-200'
           }`}>
             {isInd ? <User className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
-            {isInd ? 'Personal' : 'Company'}
+            {isInd ? 'INDIVIDUAL' : 'COMPANY'}
           </span>
         );
       },
     },
     {
-      key: 'company', header: 'Company',
-      render: (e: CorporateEmployee) => (
-        <span className="text-xs text-muted-foreground">
-          {e.companyName === 'Individual' ? <span className="italic opacity-40">—</span> : e.companyName}
-        </span>
-      ),
-    },
-    {
       key: 'family', header: 'Family',
-      render: (e: CorporateEmployee) => {
+      render: (e: any) => {
         const count = e.dependents?.length ?? 0;
-        return count > 0 ? (
+        const limit = e.familyCoverageLimit ?? 0;
+        return count > 0 || limit > 0 ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-full">
-            <Users className="w-3 h-3" /> +{count}
+            <Users className="w-3 h-3" /> {count}/{limit}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground/50 italic">Self</span>
@@ -365,7 +436,7 @@ export function EmployeeManagement({
       },
     },
     {
-      key: 'actions', header: '', align: 'right' as const,
+      key: 'actions', header: 'ACTION', align: 'right' as const,
       render: (e: CorporateEmployee) => (
         <div className="flex items-center justify-end">
           <DropdownMenu>
@@ -402,11 +473,6 @@ export function EmployeeManagement({
         subtitle={`${totalItems} member${totalItems !== 1 ? 's' : ''} across ${plans.filter(p => p.isActive).length} active plan${plans.filter(p => p.isActive).length !== 1 ? 's' : ''}`}
         action={
           <div className="flex items-center gap-2">
-            {/* {onGoToRegister && (
-              <Button onClick={onGoToRegister} variant="outline" className="gap-2">
-                <Zap className="w-4 h-4" /> Quick Register
-              </Button>
-            )} */}
             <Button onClick={() => setTab('import')} variant="outline" className="gap-2">
               <Upload className="w-4 h-4" /> Import
             </Button>
@@ -420,23 +486,25 @@ export function EmployeeManagement({
       {tab === 'list' ? (
         <>
           {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
-            <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full">
+          <div className="flex flex-col xl:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
+            {/* Search Input grows dynamically */}
+            <div className="flex-1 w-full min-w-0">
               <SearchInput
                 value={search}
                 onChange={val => { setSearch(val); setPage(1); }}
                 placeholder="Search by name, phone…"
-                className="w-full sm:max-w-xs"
+                className="w-full"
               />
+            </div>
 
+            {/* Filters clustered together */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto shrink-0">
               <FilterTabs
                 tabs={planTypeTabs}
                 active={planTypeFilter}
                 onChange={handlePlanTypeChange}
               />
-            </div>
 
-            <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
               {/* Plan Select */}
               <div className="w-full sm:w-48">
                 <Select
@@ -528,9 +596,10 @@ export function EmployeeManagement({
       {addDependentEmp && !showForm && (
         <EmployeeDependentFormModal
           showForm={!!addDependentEmp}
-          setShowForm={val => { if (!val) setAddDependentEmp(null); }}
+          setShowForm={val => { if (!val) { setAddDependentEmp(null); setEditDep(null); } }}
           employee={addDependentEmp}
-          onSave={() => { setAddDependentEmp(null); refetch(); }}
+          editDep={editDep}
+          onSave={() => { setAddDependentEmp(null); setEditDep(null); refetch(); }}
         />
       )}
 
@@ -543,6 +612,17 @@ export function EmployeeManagement({
           isLoading={deleteEmployeeMutation.isPending}
           onConfirm={handleDelete}
           onCancel={() => setDeleteEmp(null)}
+        />
+      )}
+
+      {deleteDep && (
+        <ConfirmModal
+          title="Remove Family Member"
+          message={`Remove ${deleteDep.name} from the family list?`}
+          confirmLabel="Remove"
+          variant="danger"
+          onConfirm={handleDeleteDependent}
+          onCancel={() => setDeleteDep(null)}
         />
       )}
     </div>

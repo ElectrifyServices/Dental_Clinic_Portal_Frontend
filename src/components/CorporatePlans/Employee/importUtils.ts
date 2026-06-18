@@ -45,9 +45,7 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           } else if (!plan && !isUuid) { 
             errors.push(`Row ${row}: Plan "${planCode}" not found`); 
           }
-
-          const eligibleDate = String(r['EligibleDate'] || r['eligible_date'] || r['Eligible Date'] || '').trim();
-
+          const eligibleDate = String(r['expiry_date'] || r['ExpiryDate'] || r['EligibleDate'] || r['eligible_date'] || '').trim();
           rows.push({
             id: `EMP-${Date.now()}-${i}`,
             employeeId: String(r['EmployeeId'] || r['EmpID'] || r['employee_id'] || r['emp_id'] || '').trim(),
@@ -78,10 +76,10 @@ export function downloadTemplate(plans?: CorporatePlan[]) {
   const activeCompanyName = plans && plans.length > 0 ? (plans[0].companyName || 'electrify') : 'Tata Consultancy Services';
 
   const ws = XLSX.utils.aoa_to_sheet([
-    ['name', 'emp_id', 'phone', 'email', 'gender', 'company_name', 'designation', 'department', 'plan_code', 'date_of_birth', 'eligible_date'],
-    ['Bulk User 1', 'BULK001', '9999911111', 'bulk1@example.com', 'MALE', activeCompanyName, 'Developer', 'IT', activePlanCode, '1995-01-01', '2026-06-01'],
-    ['Bulk User 2', 'BULK002', '9999922222', 'bulk2@example.com', 'FEMALE', activeCompanyName, 'Tester', 'QA', activePlanCode, '1996-02-02', '2026-06-01'],
-    ['Bulk User 3', 'BULK003', '9999933333', 'bulk3@example.com', 'MALE', activeCompanyName, 'Manager', 'Management', activePlanCode, '1994-03-03', '2026-06-01'],
+    ['name', 'phone', 'email', 'gender', 'plan_code', 'date_of_birth', 'expiry_date'],
+    ['Bulk User 1', '9999911111', 'bulk1@example.com', 'MALE', 'ISP-2026-001', '1995-01-01', '2028-06-01'],
+    ['Bulk User 2', '9999922222', 'bulk2@example.com', 'FEMALE', 'ISP-2026-001', '1996-02-02', '2028-06-01'],
+    ['Bulk User 3', '9999933333', 'bulk3@example.com', 'MALE', 'ISP-2026-001', '1994-03-03', '2028-06-01'],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Employees');

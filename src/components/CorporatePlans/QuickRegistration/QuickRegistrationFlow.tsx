@@ -25,11 +25,11 @@ interface FamilyMember {
 }
 
 const STEPS = [
-  { num: 1, label: 'Choose Plan',   icon: Sparkles },
-  { num: 2, label: 'Member Info',   icon: User },
-  { num: 3, label: 'Discount',      icon: Tag },
-  { num: 4, label: 'Family',        icon: Users },
-  { num: 5, label: 'Confirm',       icon: CheckCircle },
+  { num: 1, label: 'Choose Plan', icon: Sparkles },
+  { num: 2, label: 'Member Info', icon: User },
+  { num: 3, label: 'Discount', icon: Tag },
+  { num: 4, label: 'Family', icon: Users },
+  { num: 5, label: 'Confirm', icon: CheckCircle },
 ];
 
 const RELATIONSHIPS = ['Spouse', 'Child', 'Parent', 'Sibling', 'Other'];
@@ -39,14 +39,14 @@ const blankMember = (): FamilyMember => ({
 });
 
 const GRADIENT_MAP: Record<string, string> = {
-  blue:    'from-blue-500 to-blue-700',
-  violet:  'from-violet-500 to-purple-700',
+  blue: 'from-blue-500 to-blue-700',
+  violet: 'from-violet-500 to-purple-700',
   emerald: 'from-emerald-500 to-teal-700',
-  rose:    'from-rose-500 to-pink-700',
-  amber:   'from-amber-400 to-orange-600',
-  cyan:    'from-cyan-500 to-blue-600',
-  indigo:  'from-indigo-500 to-violet-700',
-  teal:    'from-teal-500 to-emerald-600',
+  rose: 'from-rose-500 to-pink-700',
+  amber: 'from-amber-400 to-orange-600',
+  cyan: 'from-cyan-500 to-blue-600',
+  indigo: 'from-indigo-500 to-violet-700',
+  teal: 'from-teal-500 to-emerald-600',
 };
 
 const TIER_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -57,19 +57,19 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
   const [step, setStep] = useState(1);
   const [planSearch, setPlanSearch] = useState('');
 
-  const [selectedPlan, setSelectedPlan]   = useState<CorporatePlan | null>(null);
-  const [memberName, setMemberName]       = useState('');
-  const [memberPhone, setMemberPhone]     = useState('');
-  const [memberEmail, setMemberEmail]     = useState('');
-  const [memberDob, setMemberDob]         = useState('');
-  const [memberGender, setMemberGender]   = useState<'male' | 'female' | 'other'>('male');
-  const [companyName, setCompanyName]     = useState('');
-  const [discountType, setDiscountType]   = useState<'none' | 'percent' | 'fixed'>('none');
+  const [selectedPlan, setSelectedPlan] = useState<CorporatePlan | null>(null);
+  const [memberName, setMemberName] = useState('');
+  const [memberPhone, setMemberPhone] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberDob, setMemberDob] = useState('');
+  const [memberGender, setMemberGender] = useState<'male' | 'female' | 'other'>('male');
+  const [companyName, setCompanyName] = useState('');
+  const [discountType, setDiscountType] = useState<'none' | 'percent' | 'fixed'>('none');
   const [discountValue, setDiscountValue] = useState('');
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [errors, setErrors]               = useState<Record<string, string>>({});
-  const [saving, setSaving]               = useState(false);
-  const [saved, setSaved]                 = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const createMember = useCreateEmployeeMutation();
   const addDependent = useAddDependentMutation();
@@ -82,7 +82,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
     p.code.toLowerCase().includes(planSearch.toLowerCase())
   );
 
-  const isIndividual  = selectedPlan?.planCategory === 'individual';
+  const isIndividual = selectedPlan?.planCategory === 'individual';
   const maxDependents = selectedPlan?.maxDependents ?? 0;
 
   const validateStep = (s: number) => {
@@ -204,20 +204,18 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
           <div className="flex justify-between">
             {STEPS.map(s => {
               const Icon = s.icon;
-              const done   = step > s.num;
+              const done = step > s.num;
               const active = step === s.num;
               return (
                 <div key={s.num} className="flex flex-col items-center gap-1">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                    done   ? 'bg-emerald-500 text-white' :
-                    active ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm' :
-                             'bg-muted text-muted-foreground/40'
-                  }`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${done ? 'bg-emerald-500 text-white' :
+                      active ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm' :
+                        'bg-muted text-muted-foreground/40'
+                    }`}>
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
                   </div>
-                  <span className={`text-[9px] font-bold uppercase tracking-wide hidden sm:block ${
-                    active ? 'text-foreground' : done ? 'text-emerald-600' : 'text-muted-foreground/40'
-                  }`}>{s.label}</span>
+                  <span className={`text-[9px] font-bold uppercase tracking-wide hidden sm:block ${active ? 'text-foreground' : done ? 'text-emerald-600' : 'text-muted-foreground/40'
+                    }`}>{s.label}</span>
                 </div>
               );
             })}
@@ -257,11 +255,10 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                     key={plan.id}
                     type="button"
                     onClick={() => { setSelectedPlan(plan); setErrors({}); }}
-                    className={`w-full text-left flex items-center gap-4 p-4 rounded-xl border-2 transition-all group ${
-                      selected
+                    className={`w-full text-left flex items-center gap-4 p-4 rounded-xl border-2 transition-all group ${selected
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/40 hover:bg-muted/30'
-                    }`}
+                      }`}
                   >
                     {/* Color swatch */}
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center flex-shrink-0`}>
@@ -352,11 +349,10 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                     <button
                       key={g} type="button"
                       onClick={() => setMemberGender(g)}
-                      className={`flex-1 py-2.5 rounded-xl border-2 text-xs font-bold capitalize transition-all ${
-                        memberGender === g
+                      className={`flex-1 py-2.5 rounded-xl border-2 text-xs font-bold capitalize transition-all ${memberGender === g
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-border text-muted-foreground hover:border-primary/40'
-                      }`}
+                        }`}
                     >
                       {g}
                     </button>
@@ -388,9 +384,9 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
 
             <div className="grid grid-cols-3 gap-3">
               {([
-                { key: 'none',    label: 'No Discount',  sub: 'Standard plan benefits',   icon: Shield },
-                { key: 'percent', label: '% Discount',   sub: 'Additional % off',          icon: Tag },
-                { key: 'fixed',   label: '₹ Fixed Off',  sub: 'Fixed ₹ reduction',         icon: Tag },
+                { key: 'none', label: 'No Discount', sub: 'Standard plan benefits', icon: Shield },
+                { key: 'percent', label: '% Discount', sub: 'Additional % off', icon: Tag },
+                { key: 'fixed', label: '₹ Fixed Off', sub: 'Fixed ₹ reduction', icon: Tag },
               ] as { key: 'none' | 'percent' | 'fixed'; label: string; sub: string; icon: React.ComponentType<{ className?: string }> }[]).map(opt => {
                 const Icon = opt.icon;
                 const sel = discountType === opt.key;
@@ -398,9 +394,8 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                   <button
                     key={opt.key} type="button"
                     onClick={() => setDiscountType(opt.key)}
-                    className={`flex flex-col items-start gap-2 p-4 rounded-2xl border-2 text-left transition-all ${
-                      sel ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'
-                    }`}
+                    className={`flex flex-col items-start gap-2 p-4 rounded-2xl border-2 text-left transition-all ${sel ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'
+                      }`}
                   >
                     <Icon className={`w-4 h-4 ${sel ? 'text-primary' : 'text-muted-foreground'}`} />
                     <span className={`text-sm font-bold ${sel ? 'text-primary' : 'text-foreground'}`}>{opt.label}</span>

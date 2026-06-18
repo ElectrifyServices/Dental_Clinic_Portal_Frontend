@@ -232,9 +232,9 @@ export function Sidebar() {
           })}
         </div>
       </nav>
-
+      {/* This code will be useful in the future, so for now it's been commented out. */}
       {/* ── Bottom user chip ────────────────────────────────────── */}
-      {!collapsed ? (
+      {/* {!collapsed ? (
         <div className="px-3 py-3 border-t border-border/60 flex-shrink-0">
           <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-primary/5 border border-primary/10">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-sm shadow-primary/20">
@@ -256,7 +256,7 @@ export function Sidebar() {
             {state.user?.name?.[0] ?? "U"}
           </div>
         </div>
-      )}
+      )} */}
     </aside>
   );
 }

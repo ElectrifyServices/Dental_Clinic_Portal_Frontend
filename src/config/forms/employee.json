@@ -14,31 +14,77 @@
       "id": "personal",
       "title": "Personal Details",
       "fields": [
-        { "name": "name",        "label": "Full Name",     "type": "text",   "required": true,  "placeholder": "Member's full name" },
-        { "name": "phone",       "label": "Phone Number",  "type": "phone",  "required": true,  "placeholder": "10-digit mobile number" },
-        { "name": "email",       "label": "Email Address", "type": "email",  "required": false, "placeholder": "email@example.com" },
-        { "name": "gender",      "label": "Gender",        "type": "select", "required": false,
+        {
+          "name": "name",
+          "label": "Full Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "Member's full name"
+        },
+        {
+          "name": "phone",
+          "label": "Phone Number",
+          "type": "phone",
+          "required": true,
+          "placeholder": "10-digit mobile number"
+        },
+        {
+          "name": "email",
+          "label": "Email Address",
+          "type": "email",
+          "required": false,
+          "placeholder": "email@example.com"
+        },
+        {
+          "name": "gender",
+          "label": "Gender",
+          "type": "select",
+          "required": false,
           "options": [
-            { "value": "male",   "label": "Male" },
-            { "value": "female", "label": "Female" },
-            { "value": "other",  "label": "Other" }
+            {
+              "value": "male",
+              "label": "Male"
+            },
+            {
+              "value": "female",
+              "label": "Female"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
           ]
         },
-        { "name": "dateOfBirth", "label": "Date of Birth", "type": "date",   "required": false }
+        {
+          "name": "dateOfBirth",
+          "label": "Date of Birth",
+          "type": "date",
+          "required": false
+        }
       ]
     },
     {
       "id": "employment",
       "title": "Membership Plan",
       "fields": [
-        { "name": "corporatePlanId", "label": "Membership Plan", "type": "searchable_select", "required": true }
+        {
+          "name": "corporatePlanId",
+          "label": "Membership Plan",
+          "type": "searchable_select",
+          "required": true
+        }
       ]
     },
     {
       "id": "eligibility",
-      "title": "Coverage Details",
+      "title": "Eligibility Details",
       "fields": [
-        { "name": "eligible_date", "label": "Membership Start Date", "type": "date", "required": true }
+        {
+          "name": "eligible_date",
+          "label": "Eligibility Date",
+          "type": "date",
+          "required": true
+        }
       ]
     }
   ]

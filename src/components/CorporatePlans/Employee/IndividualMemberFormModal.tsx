@@ -95,18 +95,13 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
       const empId = `IND-${Date.now()}`;
       const apiResponse = await createEmployeeMutation.mutateAsync({
         name: form.name,
-        emp_id: empId,
         phone: form.phone,
         email: form.email || 'noemail@example.com',
         gender: form.gender.toUpperCase(),
         date_of_birth: form.dateOfBirth || '1990-01-01',
-        company_name: 'Individual',
-        designation: 'Individual Member',
-        department: 'Individual',
-        corporate_plan_id: form.planId,
-        eligible_date: new Date(form.enrollmentDate).toISOString(),
+        plan_id: form.planId,
+        expiry_date: new Date(form.enrollmentDate).toISOString().split('T')[0],
         status: 'ACTIVE',
-        coverage_type: form.coverageType === 'family' ? 'FAMILY' : 'SELF',
       });
 
       const newMemberId = apiResponse?.id || empId;

@@ -11,6 +11,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Card,
+  ContentCard,
 } from '../../ui';
 import { CorporateEmployee, CorporatePlan, PlanDependent, CoverageType } from '../../../types';
 import { useFormConfig } from '../../../hooks/useFormConfig';
@@ -104,25 +106,29 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
       if (editEmp) {
         if (employeeDetails) {
           const empData = employeeDetails.data || employeeDetails;
-          const plan = activePlans.find(p => p.id === (empData.corporate_plan?.id || empData.corporate_plan_id));
+          const activeEnrollment = empData.enrollments?.find((en: any) => en.status === 'ACTIVE') || empData.enrollments?.[0];
+          const planId = activeEnrollment?.plan_id || '';
+          const plan = activePlans.find(p => p.id === planId);
+          const expiryDate = activeEnrollment?.expiry_date || '';
+
           setForm({
             id: empData.id,
-            employeeId: empData.emp_id || '',
+            employeeId: empData.id || '',
             name: empData.name || '',
             phone: empData.phone || '',
             email: empData.email || '',
             gender: empData.gender?.toLowerCase() || 'male',
             dateOfBirth: empData.date_of_birth ? empData.date_of_birth.split('T')[0] : '',
-            designation: empData.designation || '',
-            department: empData.department || '',
-            companyName: empData.company_name || '',
-            corporatePlanId: empData.corporate_plan?.id || empData.corporate_plan_id || '',
-            corporatePlanName: empData.corporate_plan?.plan_name || plan?.name || '',
-            enrolledAt: empData.created_at || editEmp.enrolledAt || '',
-            eligible_date: empData.eligible_date ? empData.eligible_date.split('T')[0] : '',
+            designation: '',
+            department: '',
+            companyName: activeEnrollment?.plan?.company_name || '',
+            corporatePlanId: planId,
+            corporatePlanName: activeEnrollment?.plan?.plan_name || plan?.name || '',
+            enrolledAt: activeEnrollment?.enrollment_date || empData.created_at || editEmp.enrolledAt || '',
+            eligible_date: expiryDate ? expiryDate.split('T')[0] : '',
             isActive: empData.status === 'ACTIVE',
             patientId: empData.patient_id || editEmp.patientId,
-            coverageType: (empData.coverage_type?.toLowerCase() || editEmp.coverageType || 'self') as CoverageType,
+            coverageType: (empData.family_members?.length > 0 ? 'family' : 'self') as CoverageType,
           });
         } else {
           setForm({ ...editEmp });
@@ -209,19 +215,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
     if (!editEmp) {
       try {
         const transformedBody = {
+          plan_id: form.corporatePlanId!,
           name: form.name!,
-          emp_id: form.employeeId || `EMP${Date.now().toString().slice(-5)}`,
           phone: form.phone!,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: companyNameVal,
-          designation: form.designation || "Employee",
-          department: form.department || "General",
-          corporate_plan_id: form.corporatePlanId!,
-          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
-          coverage_type: coverageTypeVal as 'SELF' | 'FAMILY',
         };
 
         const apiResponse = await createEmployeeMutation.mutateAsync(transformedBody);
@@ -280,19 +281,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
       try {
         const transformedBody = {
           id: editEmp.id,
+          plan_id: form.corporatePlanId!,
           name: form.name!,
-          emp_id: form.employeeId || '',
           phone: form.phone!,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: companyNameVal,
-          designation: form.designation || "Employee",
-          department: form.department || "General",
-          corporate_plan_id: form.corporatePlanId!,
-          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
-          coverage_type: coverageTypeVal as 'SELF' | 'FAMILY',
         };
 
         await updateEmployeeMutation.mutateAsync(transformedBody);
@@ -374,40 +370,63 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
             <p className="text-xs font-bold text-primary tracking-wide animate-pulse">Loading employee details from API...</p>
           </div>
         )}
+        {/* Personal Details Card */}
         {personalSection && (
-          <SectionRenderer
-            section={personalSection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            cols={2}
-          />
-        )}
-        {employmentSection && (
-          <SectionRenderer
-            section={employmentSection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            dynamicOptions={{ corporatePlanId: planOptions }}
-            cols={2}
-          />
-        )}
-        {eligibilitySection && (
-          <SectionRenderer
-            section={eligibilitySection}
-            values={form}
-            onChange={handleFormChange}
-            errors={formErrors}
-            cols={2}
-          />
+          <ContentCard 
+            title={personalSection.title}
+            className="bg-card/50"
+          >
+            <SectionRenderer
+              section={personalSection}
+              values={form}
+              onChange={handleFormChange}
+              errors={formErrors}
+              cols={2}
+            />
+          </ContentCard>
         )}
 
+        {/* Membership & Coverage Details Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {employmentSection && (
+            <ContentCard 
+              title={employmentSection.title}
+              className="bg-card/50 flex flex-col"
+              bodyClassName="flex-1 flex flex-col justify-center"
+            >
+              <SectionRenderer
+                section={employmentSection}
+                values={form}
+                onChange={handleFormChange}
+                errors={formErrors}
+                dynamicOptions={{ corporatePlanId: planOptions }}
+                cols={1}
+              />
+            </ContentCard>
+          )}
+
+          {eligibilitySection && (
+            <ContentCard 
+              title={eligibilitySection.title}
+              className="bg-card/50 flex flex-col"
+              bodyClassName="flex-1 flex flex-col justify-center"
+            >
+              <SectionRenderer
+                section={eligibilitySection}
+                values={form}
+                onChange={handleFormChange}
+                errors={formErrors}
+                cols={1}
+              />
+            </ContentCard>
+          )}
+        </div>
+
         {/* Coverage Type + Dependents — only shown when plan allows dependents */}
-        {maxDependents > 0 && (
-          <div className="border border-border rounded-2xl overflow-hidden">
+        {false /* maxDependents > 0 */ && (
+          <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
             {/* Coverage toggle */}
-            <div className="p-4 bg-muted/20">
+            <div className="p-5 bg-muted/20 border-b border-border/40">
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Coverage Type</Label>
               <div className="flex gap-3">
                 {(['self', 'family'] as CoverageType[]).map(ct => (
@@ -431,13 +450,13 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
             {/* Dependents list */}
             {form.coverageType === 'family' && (
-              <div className="p-4 space-y-3 border-t border-border">
+              <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       Family Members
                     </Label>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-semibold">
                       {totalDependents} / {maxDependents} added
                     </p>
                   </div>
@@ -446,7 +465,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                       variant="outline"
                       size="sm"
                       onClick={() => { setShowAddDepForm(true); setAddDepForm(EMPTY_PENDING()); }}
-                      className="gap-1.5 text-xs"
+                      className="gap-1.5 text-xs font-bold"
                     >
                       <UserPlus className="w-3.5 h-3.5" /> Add Member
                     </Button>
@@ -464,7 +483,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{dep.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-medium">
+                            <p className="text-[10px] text-muted-foreground font-semibold">
                               {dep.relationship}{dep.dateOfBirth ? ` • ${dep.dateOfBirth}` : ''}
                             </p>
                           </div>
@@ -487,14 +506,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                 {pendingDependents.length > 0 && (
                   <div className="space-y-2">
                     {pendingDependents.map(dep => (
-                      <div key={dep.tempId} className="flex items-center justify-between bg-amber-50 rounded-xl px-4 py-3 border border-amber-200">
+                      <div key={dep.tempId} className="flex items-center justify-between bg-amber-50/50 rounded-xl px-4 py-3 border border-amber-200">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-amber-600" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{dep.name}</p>
-                            <p className="text-[10px] text-amber-600 font-medium">{dep.relationship} • Pending save</p>
+                            <p className="text-[10px] text-amber-600 font-semibold">{dep.relationship} • Pending save</p>
                           </div>
                         </div>
                         <Button
@@ -512,7 +531,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
                 {/* Add dependent inline form */}
                 {showAddDepForm && (
-                  <div className="border border-primary/30 bg-primary/5 rounded-2xl p-4 space-y-3">
+                  <div className="border border-primary/20 bg-primary/5 rounded-2xl p-4 space-y-3">
                     <Label className="text-[10px] font-black text-primary uppercase tracking-widest">Add Family Member</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -587,7 +606,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           </div>
         )}
 
-        <div className="p-4 bg-muted/30 rounded-2xl border border-border flex flex-col gap-2">
+        <div className="p-5 bg-card/40 rounded-2xl border border-border/60 shadow-sm flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
@@ -601,7 +620,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
             </Label>
           </div>
           {isDateInPast && (
-            <p className="text-[10px] text-rose-500 font-semibold">
+            <p className="text-[10px] text-rose-500 font-semibold font-mono">
               * Cannot change status when eligibility date is in the past.
             </p>
           )}

@@ -9,12 +9,12 @@ export interface UpdateEmployeeStatusVariables {
 export function useUpdateEmployeeStatusMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, UpdateEmployeeStatusVariables>({
-    getEndpoint: (variables) => `/employee/status/${variables.id}`,
+    getEndpoint: (variables) => `/member/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({ status: variables.status }),
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        queryClient.invalidateQueries({ queryKey: ["members"] });
       },
     },
   });

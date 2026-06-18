@@ -9,12 +9,13 @@ export interface UpdateCorporatePlanStatusVariables {
 export function useUpdateCorporatePlanStatusMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, UpdateCorporatePlanStatusVariables>({
-    getEndpoint: (variables) => `/corporatePlan/status/${variables.id}`,
+    getEndpoint: (variables) => `/membershipPlan/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({ status: variables.status }),
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
       },
     },
   });

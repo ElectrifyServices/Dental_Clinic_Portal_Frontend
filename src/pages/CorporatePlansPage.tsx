@@ -5,7 +5,7 @@ import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagem
 import { QuickRegistrationFlow } from '../components/CorporatePlans/QuickRegistration/QuickRegistrationFlow';
 import { useAppData } from '../hooks/useAppData';
 
-export type MembershipTab = 'plans' | 'register' | 'members';
+export type MembershipTab = 'plans' | 'members';
 
 const TABS: {
   key: MembershipTab;
@@ -14,18 +14,15 @@ const TABS: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
     { key: 'plans', label: 'Membership Plans', sub: 'Create & manage plans', icon: CreditCard },
-    // { key: 'register', label: 'Quick Registration', sub: 'Enrol a member fast', icon: Zap },
     { key: 'members', label: 'Members', sub: 'View enrolled members', icon: Users },
   ];
 
 const TAB_ACCENT: Record<MembershipTab, string> = {
   plans: 'border-blue-500 text-blue-600',
-  register: 'border-amber-500 text-amber-600',
   members: 'border-violet-500 text-violet-600',
 };
 const TAB_ICON_ACTIVE: Record<MembershipTab, string> = {
   plans: 'bg-blue-50 text-blue-600 border-blue-100',
-  register: 'bg-amber-50 text-amber-600 border-amber-100',
   members: 'bg-violet-50 text-violet-600 border-violet-100',
 };
 const STAT_COLORS = [
@@ -35,11 +32,14 @@ const STAT_COLORS = [
   'bg-amber-50  text-amber-700  border-amber-100',
 ];
 
+import { useMembershipStatsQuery } from '../hooks/corporate/useMembershipStatsQuery';
+
 export const CorporatePlansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<MembershipTab>('plans');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [category, setCategory] = useState<'all' | string>('all');
 
   useEffect(() => {
     const h = setTimeout(() => setDebouncedSearch(search), 500);
@@ -54,15 +54,18 @@ export const CorporatePlansPage: React.FC = () => {
   } = useAppData({
     corporateSearch: debouncedSearch,
     corporateStatus: filter === 'all' ? undefined : filter.toUpperCase(),
+    corporatePlanType: category === 'all' ? undefined : category === 'corporate' ? 'COMPANY' : 'INDIVIDUAL',
   });
+
+  const { data: statsData } = useMembershipStatsQuery();
 
   useEffect(() => { if (refetchCorporate) refetchCorporate(); }, [refetchCorporate]);
 
   const stats = [
-    { label: 'Active Plans', value: corporatePlans.filter(p => p.isActive).length },
-    { label: 'Total Members', value: corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
-    { label: 'Company Plans', value: corporatePlans.filter(p => p.planCategory !== 'individual').length },
-    { label: 'Personal Plans', value: corporatePlans.filter(p => p.planCategory === 'individual').length },
+    { label: 'Total Plans', value: statsData?.totalPlans ?? corporatePlans.filter(p => p.isActive).length },
+    { label: 'Total Members', value: statsData?.totalMembers ?? corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
+    { label: 'Company Plans', value: statsData?.companyPlans ?? corporatePlans.filter(p => p.planCategory !== 'individual').length },
+    { label: 'Individual Plans', value: statsData?.individualPlans ?? corporatePlans.filter(p => p.planCategory === 'individual').length },
   ];
 
   return (
@@ -87,11 +90,11 @@ export const CorporatePlansPage: React.FC = () => {
           </div>
 
           {/* Stat chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 xl:flex xl:flex-wrap gap-2 w-full xl:w-auto mt-2 sm:mt-0">
             {stats.map((s, i) => (
-              <div key={s.label} className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-sm ${STAT_COLORS[i]}`}>
-                <span className="text-base font-black leading-none">{s.value}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wide opacity-70 whitespace-nowrap">{s.label}</span>
+              <div key={s.label} className={`flex flex-col sm:flex-row items-center sm:justify-start justify-center gap-1 sm:gap-2.5 px-2 sm:px-3.5 py-2 rounded-xl border text-sm text-center sm:text-left ${STAT_COLORS[i]}`}>
+                <span className="text-lg sm:text-base font-black leading-none">{s.value}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide opacity-70 whitespace-nowrap">{s.label}</span>
               </div>
             ))}
           </div>
@@ -138,17 +141,11 @@ export const CorporatePlansPage: React.FC = () => {
           onSearchChange={setSearch}
           filter={filter}
           onFilterChange={setFilter}
+          category={category}
+          onCategoryChange={setCategory}
           isLoading={isPlansLoading}
-          onGoToRegister={() => setActiveTab('register')}
         />
       )}
-
-      {/* {activeTab === 'register' && (
-        <QuickRegistrationFlow
-          plans={corporatePlans}
-          onRegistered={() => setActiveTab('members')}
-        />
-      )} */}
 
       {activeTab === 'members' && (
         <EmployeeManagement
@@ -158,7 +155,6 @@ export const CorporatePlansPage: React.FC = () => {
           onDelete={handleDeleteEmployee}
           onBulkSave={handleBulkSaveEmployees}
           onChangePlan={handleChangeEmployeePlan}
-          onGoToRegister={() => setActiveTab('register')}
         />
       )}
     </div>

@@ -18,6 +18,8 @@ interface Props {
   onSearchChange?: (val: string) => void;
   filter?: 'all' | 'active' | 'inactive';
   onFilterChange?: (val: 'all' | 'active' | 'inactive') => void;
+  category?: 'all' | string;
+  onCategoryChange?: (val: 'all' | string) => void;
   isLoading?: boolean;
   onGoToRegister?: () => void;
 }
@@ -26,6 +28,7 @@ export function CorporatePlanManagement({
   plans, onSave, onDelete, onToggle,
   search: propSearch, onSearchChange: propOnSearchChange,
   filter: propFilter, onFilterChange: propOnFilterChange,
+  category: propCategory, onCategoryChange: propOnCategoryChange,
   isLoading, onGoToRegister,
 }: Props) {
   const { showToast, confirmDelete } = useModal();
@@ -40,21 +43,25 @@ export function CorporatePlanManagement({
   const [editing, setEditing] = useState<CorporatePlan | null>(null);
   const [localSearch, setLocalSearch] = useState('');
   const [localFilter, setLocalFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<'all' | PlanCategory>('all');
+  const [localCategoryFilter, setLocalCategoryFilter] = useState<'all' | PlanCategory>('all');
 
-  const search    = propSearch     !== undefined ? propSearch     : localSearch;
-  const setSearch = propOnSearchChange            || setLocalSearch;
-  const filter    = propFilter     !== undefined ? propFilter     : localFilter;
-  const setFilter = propOnFilterChange            || setLocalFilter;
+  const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+
+  const search = propSearch !== undefined ? propSearch : localSearch;
+  const setSearch = propOnSearchChange || setLocalSearch;
+  const filter = propFilter !== undefined ? propFilter : localFilter;
+  const setFilter = propOnFilterChange || setLocalFilter;
+  const categoryFilter = propCategory !== undefined ? (propCategory as 'all' | PlanCategory) : localCategoryFilter;
+  const setCategoryFilter = propOnCategoryChange || setLocalCategoryFilter;
 
   const filtered = plans.filter(p => {
     const matchCat =
       categoryFilter === 'all' ? true :
-      categoryFilter === 'corporate' ? (!p.planCategory || p.planCategory === 'corporate') :
-      p.planCategory === 'individual';
+        categoryFilter === 'corporate' ? (!p.planCategory || p.planCategory === 'corporate') :
+          p.planCategory === 'individual';
     const matchStatus =
       filter === 'all' ? true :
-      filter === 'active' ? p.isActive : !p.isActive;
+        filter === 'active' ? p.isActive : !p.isActive;
     const matchSearch = !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.companyName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,18 +91,18 @@ export function CorporatePlanManagement({
     }
   };
 
-  const openNew  = () => { setEditing(null); setShowForm(true); };
+  const openNew = () => { setEditing(null); setShowForm(true); };
   const openEdit = (p: CorporatePlan) => { setEditing(p); setShowForm(true); };
 
   const CATEGORY_TABS = [
-    { value: 'all',        label: 'All Plans' },
-    { value: 'corporate',  label: 'Company' },
-    { value: 'individual', label: 'Personal' },
+    { value: 'all', label: 'All Plans' },
+    { value: 'corporate', label: 'COMPANY' },
+    { value: 'individual', label: 'INDIVIDUAL' },
   ] as { value: 'all' | PlanCategory; label: string }[];
 
   const STATUS_TABS = [
-    { value: 'all',      label: 'All' },
-    { value: 'active',   label: 'Active' },
+    { value: 'all', label: 'All' },
+    { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
   ] as { value: 'all' | 'active' | 'inactive'; label: string }[];
 
@@ -103,33 +110,34 @@ export function CorporatePlanManagement({
     <div className="space-y-5">
 
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
-        <div className="flex flex-1 flex-col sm:flex-row gap-3 items-center w-full">
-          {/* Search */}
+      <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center bg-slate-50/50 p-3 rounded-2xl border border-border/50">
+        {/* Search */}
+        <div className="w-full lg:flex-1">
           <SearchInput
             value={search}
             onChange={setSearch}
             placeholder="Search plans or company…"
-            className="w-full sm:max-w-xs"
-          />
-
-          {/* Category segmented */}
-          <FilterTabs
-            tabs={CATEGORY_TABS}
-            active={categoryFilter}
-            onChange={(val) => setCategoryFilter(val as any)}
+            className="w-full"
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
-          {/* Status segmented */}
-          <FilterTabs
-            tabs={STATUS_TABS}
-            active={filter}
-            onChange={(val) => setFilter(val as any)}
-          />
+        {/* Filters and Actions */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center">
+          {/* Filters grouped together */}
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto">
+            <FilterTabs
+              tabs={CATEGORY_TABS}
+              active={categoryFilter}
+              onChange={(val) => setCategoryFilter(val as any)}
+            />
+            <FilterTabs
+              tabs={STATUS_TABS}
+              active={filter}
+              onChange={(val) => setFilter(val as any)}
+            />
+          </div>
 
-          <Button onClick={openNew} className="gap-2 h-10 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 transition-all">
+          <Button onClick={openNew} className="gap-2 h-10 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 transition-all flex-shrink-0">
             <Plus className="w-4 h-4" />
             New Plan
           </Button>
@@ -167,7 +175,7 @@ export function CorporatePlanManagement({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
           {filtered.map((plan, index) => (
             <CorporatePlanCard
               key={`${plan.id}-${index}`}
@@ -177,6 +185,8 @@ export function CorporatePlanManagement({
               onEdit={openEdit}
               onDelete={handleDelete}
               onToggle={() => handleToggle(plan)}
+              expanded={expandedPlanId === plan.id}
+              onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
             />
           ))}
         </div>

@@ -47,8 +47,8 @@ export function LoginForm() {
             <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">Clinic</span> Operations
           </h2>
           <p className="text-slate-400 text-[15px] leading-relaxed max-w-xs mb-8">
-            Complete dental clinic operations — appointments, patient records,
-            billing, and corporate plans — unified in one portal.
+            Complete Opal Smiles Dental Studio operations — appointments, patient records,
+            billing, and Membership plans — unified in one portal.
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export function LoginForm() {
           {[
             {
               icon: <Building2 className="w-4 h-4" />,
-              label: "Corporate Plan Management",
+              label: "Membership Plan Management",
               sub: "Multi-clinic support",
             },
             {

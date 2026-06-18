@@ -515,7 +515,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             formData={formData}
             onChange={(role) => {
               form.setValue("role", role as any, { shouldValidate: true });
-              if (role === "super_admin" || role === "staff") {
+              if (role === "super_admin") {
                 form.setValue(
                   "permissions",
                   [
@@ -529,7 +529,27 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     "billing",
                     "inventory",
                     "reports",
-                    "staff_management",
+                    "staff",
+                    "profit_sharing",
+                    "membership",
+                  ],
+                  { shouldValidate: true }
+                );
+              } else if (role === "staff") {
+                form.setValue(
+                  "permissions",
+                  [
+                    "dashboard",
+                    "appointments",
+                    "patients",
+                    "consultation",
+                    "treatments",
+                    "medical_records",
+                    "consent_forms",
+                    "billing",
+                    "inventory",
+                    "reports",
+                    "staff",
                   ],
                   { shouldValidate: true }
                 );

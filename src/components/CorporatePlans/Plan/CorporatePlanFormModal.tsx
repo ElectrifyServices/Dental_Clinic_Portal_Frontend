@@ -15,22 +15,22 @@ import { mapProcedureLabelToKey } from '@/constants/consent.constants';
 // ── Tier config ───────────────────────────────────────────────────────────────
 const CORPORATE_TIERS: { value: CorporatePlanTier; label: string; activeClass: string }[] = [
   { value: 'platinum', label: 'Platinum', activeClass: 'border-violet-500 bg-violet-50 text-violet-700 hover:bg-violet-50 hover:text-violet-700' },
-  { value: 'gold',     label: 'Gold',     activeClass: 'border-amber-500 bg-amber-50 text-amber-700 hover:bg-amber-50 hover:text-amber-700' },
-  { value: 'silver',   label: 'Silver',   activeClass: 'border-slate-400 bg-slate-50 text-slate-600 hover:bg-slate-50 hover:text-slate-600' },
+  { value: 'gold', label: 'Gold', activeClass: 'border-amber-500 bg-amber-50 text-amber-700 hover:bg-amber-50 hover:text-amber-700' },
+  { value: 'silver', label: 'Silver', activeClass: 'border-slate-400 bg-slate-50 text-slate-600 hover:bg-slate-50 hover:text-slate-600' },
 ];
 const INDIVIDUAL_TIERS: { value: CorporatePlanTier; label: string; pax: number; activeClass: string }[] = [
-  { value: 'premium',  label: 'Premium',  pax: 5, activeClass: 'border-indigo-500 bg-indigo-50 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-700' },
+  { value: 'premium', label: 'Premium', pax: 5, activeClass: 'border-indigo-500 bg-indigo-50 text-indigo-700 hover:bg-indigo-50 hover:text-indigo-700' },
   { value: 'standard', label: 'Standard', pax: 2, activeClass: 'border-sky-500 bg-sky-50 text-sky-700 hover:bg-sky-50 hover:text-sky-700' },
-  { value: 'basic',    label: 'Basic',    pax: 0, activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700' },
+  { value: 'basic', label: 'Basic', pax: 0, activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700' },
 ];
 
 // ── Family coverage presets ───────────────────────────────────────────────────
 type CoveragePreset = 'self' | '2' | '5' | 'custom';
 const COVERAGE_PRESETS: { key: CoveragePreset; label: string; sub: string; pax: number | null }[] = [
-  { key: 'self',   label: 'Self Only',              sub: 'Single person',       pax: 0    },
-  { key: '2',      label: 'Up to 2 Family Members', sub: 'Member + 2',          pax: 2    },
-  { key: '5',      label: 'Up to 5 Family Members', sub: 'Member + 5',          pax: 5    },
-  { key: 'custom', label: 'Custom',                 sub: 'Set your own number', pax: null },
+  { key: 'self', label: 'Self Only', sub: 'Single person', pax: 0 },
+  { key: '2', label: 'Up to 2 Family Members', sub: 'Member + 2', pax: 2 },
+  { key: '5', label: 'Up to 5 Family Members', sub: 'Member + 5', pax: 5 },
+  { key: 'custom', label: 'Custom', sub: 'Set your own number', pax: null },
 ];
 
 function getCoveragePreset(maxDependents: number): CoveragePreset {
@@ -117,8 +117,8 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           description: b.description || "",
         }));
 
-        const resolvedCategory = (planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any;
-        const resolvedMaxDep = planData.max_dependents ?? editing.maxDependents ?? 0;
+        const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any;
+        const resolvedMaxDep = planData.family_coverage_limit ?? planData.max_dependents ?? editing.maxDependents ?? 0;
         setCoveragePreset(getCoveragePreset(resolvedMaxDep));
 
         setForm({
@@ -129,7 +129,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           benefits: benefits.length > 0 ? benefits : editing.benefits,
           validFrom: planData.valid_from ? planData.valid_from.split('T')[0] : editing.validFrom,
           validTo: planData.valid_till ? planData.valid_till.split('T')[0] : editing.validTo,
-          maxMembers: planData.max_member || editing.maxMembers,
+          maxMembers: planData.max_member || planData.enrollment_cap || editing.maxMembers,
           isActive: planData.status === "ACTIVE",
           color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color,
           planCategory: resolvedCategory,
@@ -240,13 +240,13 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       plan_code: form.code,
       description: form.description || "",
       valid_till: new Date(form.validTo).toISOString(),
-      enrollment_cap: form.maxMembers || 0,
+      max_member: form.maxMembers || 0,
       theme_color: mapColorToHex(form.color),
       benefits: buildBenefitsPayload(form.benefits),
-      plan_category: (form.planCategory?.toUpperCase() || 'CORPORATE') as 'CORPORATE' | 'INDIVIDUAL',
+      plan_type: (form.planCategory?.toUpperCase() === 'INDIVIDUAL' ? 'INDIVIDUAL' : 'COMPANY') as 'COMPANY' | 'INDIVIDUAL',
       plan_tier: form.planTier?.toUpperCase() || undefined,
-      annual_fee: form.planCategory === 'individual' ? (form.annualFee || 1000) : undefined,
-      max_dependents: form.maxDependents || 0,
+      annual_fee: form.annualFee || 0,
+      family_coverage_limit: form.maxDependents || 0,
     };
 
     if (!editing) {
@@ -364,13 +364,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     companyName: cat === 'individual' ? 'Individual' : (prev.companyName === 'Individual' ? '' : prev.companyName),
                     maxDependents: cat === 'individual' ? 0 : prev.maxDependents,
                   }))}
-                  className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${
-                    form.planCategory === cat
+                  className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${form.planCategory === cat
                       ? cat === 'corporate'
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-teal-500 bg-teal-50 text-teal-700'
                       : 'border-border text-muted-foreground hover:border-primary/40'
-                  }`}
+                    }`}
                 >
                   {cat === 'corporate' ? <Building2 className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   {cat === 'corporate' ? 'Company Membership' : 'Personal Membership'}
@@ -394,9 +393,8 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     }
                     setForm(prev => ({ ...prev, ...updates }));
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
-                    form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
+                    }`}
                 >
                   {tier.label}
                   {form.planCategory === 'individual' && (
@@ -429,7 +427,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             <LabeledField label="End Date *" error={errors.validTo}>
               <Input type="date" value={form.validTo} onChange={e => handleFormChange('validTo', e.target.value)} className="rounded-xl" />
             </LabeledField>
-            <LabeledField label="Max Members (optional)">
+            <LabeledField label="Max Members">
               <Input
                 type="number" min="0"
                 value={form.maxMembers ?? ''}
@@ -440,21 +438,19 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             </LabeledField>
           </div>
 
-          {/* Annual Fee (individual only) */}
-          {form.planCategory === 'individual' && (
-            <LabeledField label="Annual Fee (₹)">
-              <div className="relative">
-                <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="number" min="0"
-                  value={form.annualFee ?? ''}
-                  onChange={e => setForm(prev => ({ ...prev, annualFee: parseFloat(e.target.value) || 0 }))}
-                  placeholder="e.g. 2000"
-                  className="pl-10 rounded-xl"
-                />
-              </div>
-            </LabeledField>
-          )}
+          {/* Annual Fee */}
+          <LabeledField label="Annual Fee (₹)">
+            <div className="relative">
+              <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="number" min="0"
+                value={form.annualFee ?? ''}
+                onChange={e => setForm(prev => ({ ...prev, annualFee: parseFloat(e.target.value) || 0 }))}
+                placeholder="e.g. 2000"
+                className="pl-10 rounded-xl"
+              />
+            </div>
+          </LabeledField>
 
           {/* Description */}
           <LabeledField label="Description">
@@ -475,9 +471,8 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                   key={c}
                   type="button"
                   onClick={() => setForm({ ...form, color: c as any })}
-                  className={`w-8 h-8 rounded-xl transition-all shadow-sm ${planColorDots[c] ?? 'bg-gray-400'} ${
-                    form.color === c ? 'ring-2 ring-offset-3 ring-primary scale-110' : 'opacity-40 hover:opacity-80'
-                  }`}
+                  className={`w-8 h-8 rounded-xl transition-all shadow-sm ${planColorDots[c] ?? 'bg-gray-400'} ${form.color === c ? 'ring-2 ring-offset-3 ring-primary scale-110' : 'opacity-40 hover:opacity-80'
+                    }`}
                 />
               ))}
             </div>
@@ -499,11 +494,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 key={preset.key}
                 type="button"
                 onClick={() => setCoverage(preset.key)}
-                className={`flex flex-col items-start gap-1 p-4 rounded-2xl border-2 text-left transition-all ${
-                  coveragePreset === preset.key
+                className={`flex flex-col items-start gap-1 p-4 rounded-2xl border-2 text-left transition-all ${coveragePreset === preset.key
                     ? 'border-primary bg-primary/5 text-primary'
                     : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                }`}
+                  }`}
               >
                 <Users className={`w-4 h-4 ${coveragePreset === preset.key ? 'text-primary' : 'text-muted-foreground'}`} />
                 <span className="text-xs font-bold">{preset.label}</span>
@@ -635,11 +629,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                         {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
                           <label
                             key={key}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${
-                              b.treatmentTypes?.includes(key)
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${b.treatmentTypes?.includes(key)
                                 ? 'bg-primary/10 border-primary text-primary'
                                 : 'bg-background border-border text-muted-foreground hover:border-primary/40'
-                            }`}
+                              }`}
                           >
                             <input
                               type="checkbox"
