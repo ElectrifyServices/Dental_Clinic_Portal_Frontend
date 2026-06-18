@@ -3,7 +3,10 @@ import { useApiQuery } from "../useApiQuery";
 export interface EmployeeListFilters {
   status?: string[];
   company_name?: string[];
-  corporate_plan_id?: string[];
+  plan_id?: string[];
+  plan_type?: string[];
+  relationship_type?: string[];
+  parent_member_id?: string[];
 }
 
 export interface EmployeeListVariables {
@@ -25,10 +28,10 @@ export interface EmployeeListResponse {
 
 export function useEmployeesQuery(variables: EmployeeListVariables, options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
-  
+
   return useApiQuery<EmployeeListResponse>({
-    queryKey: ["employees", variables],
-    endpoint: "/employee/list",
+    queryKey: ["member", variables],
+    endpoint: "/member/list",
     method: "post",
     data: {
       search: variables.search || "",

@@ -130,9 +130,9 @@ export function GlobalSearch() {
   }, {});
 
   return (
-    <div ref={containerRef} className="relative flex-1 max-w-md">
+    <div ref={containerRef} className="relative flex-1 w-full max-w-md">
       {/* Search trigger / input */}
-      <div className="relative">
+      <div className="relative w-full">
         <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none z-10" />
         <Input
           ref={inputRef}
@@ -143,7 +143,7 @@ export function GlobalSearch() {
           onFocus={() => setOpen(true)}
           placeholder="Search pages, patients, records…"
           className={[
-            "pl-10 pr-12 h-9 text-sm rounded-xl border transition-all duration-200 bg-muted/60 border-border/60 hover:border-border hover:bg-muted focus-visible:bg-card focus-visible:border-primary/40 focus-visible:ring-primary/20",
+            "w-full pl-10 pr-12 h-9 text-sm rounded-xl border transition-all duration-200 bg-muted/60 border-border/60 hover:border-border hover:bg-muted focus-visible:bg-card focus-visible:border-primary/40 focus-visible:ring-primary/20 text-ellipsis",
             open && "bg-card border-primary/40 shadow-[0_0_0_3px_rgba(var(--primary)/0.08)] ring-1 ring-primary/20"
           ].join(" ")}
         />

@@ -21,25 +21,56 @@ interface Props {
   editDep?: PlanDependent | null;
   onSave: () => void;
 }
+import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
+import { useUpdateEmployeeMutation } from '../../../hooks/corporate/useUpdateEmployeeMutation';
+import { useEmployeeQuery } from '../../../hooks/corporate/useEmployeeQuery';
 
 export function EmployeeDependentFormModal({ showForm, setShowForm, employee, editDep, onSave }: Props) {
   const { showToast } = useModal();
+  const createMemberMutation = useCreateEmployeeMutation();
+  const updateMemberMutation = useUpdateEmployeeMutation();
+  
+  const { data: dependentDetails } = useEmployeeQuery(editDep?.id, {
+    enabled: showForm && !!editDep?.id,
+  });
+
   const [formData, setFormData] = useState<Partial<PlanDependent>>({
     gender: 'male',
     isActive: true,
   });
 
+  const toTitleCase = (str?: string) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   React.useEffect(() => {
-    if (editDep) {
-      setFormData({ ...editDep });
+    if (dependentDetails) {
+      setFormData({
+        ...editDep,
+        ...dependentDetails,
+        name: dependentDetails.name || editDep?.name,
+        phone: dependentDetails.phone || editDep?.phone,
+        email: dependentDetails.email || editDep?.email,
+        gender: dependentDetails.gender?.toLowerCase() || editDep?.gender || 'male',
+        dateOfBirth: dependentDetails.date_of_birth ? dependentDetails.date_of_birth.split('T')[0] : (editDep?.date_of_birth || editDep?.dateOfBirth),
+        relationship: toTitleCase(dependentDetails.relationship_type || dependentDetails.relationship || editDep?.relationship_type || editDep?.relationship),
+        isActive: dependentDetails.status === 'ACTIVE'
+      });
+    } else if (editDep) {
+      setFormData({ 
+        ...editDep, 
+        relationship: toTitleCase(editDep.relationship_type || editDep.relationship),
+        dateOfBirth: editDep.date_of_birth || editDep.dateOfBirth
+      });
     } else {
       setFormData({ gender: 'male', isActive: true });
     }
-  }, [editDep, showForm]);
+  }, [editDep, dependentDetails, showForm]);
 
   if (!employee) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.relationship) {
       showToast("Please fill in required fields", "error");
@@ -47,39 +78,35 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
     }
 
     try {
+      const payload = {
+        plan_id: employee.corporatePlanId,
+        name: formData.name,
+        phone: formData.phone || '',
+        email: formData.email || '',
+        gender: formData.gender?.toUpperCase() || 'MALE',
+        date_of_birth: formData.dateOfBirth || '2000-01-01',
+        relationship_type: formData.relationship.toUpperCase(),
+        parent_member_id: employee.id,
+        expiry_date: employee.eligible_date || '2025-12-31',
+        status: formData.isActive ? 'ACTIVE' : 'INACTIVE',
+      };
+
       if (editDep) {
-        updateDependent(editDep.id, {
-          name: formData.name,
-          relationship: formData.relationship,
-          dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as 'male' | 'female' | 'other',
-          phone: formData.phone,
-          email: formData.email,
-          isActive: formData.isActive,
+        await updateMemberMutation.mutateAsync({
+          id: editDep.id,
+          ...payload
         });
-        notifyDependentChange();
         showToast("Family member updated successfully", "success");
       } else {
-        addDependent({
-          memberId: employee.id,
-          name: formData.name,
-          relationship: formData.relationship,
-          dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as 'male'|'female'|'other',
-          phone: formData.phone,
-          email: formData.email,
-          isActive: formData.isActive,
-          corporatePlanId: employee.corporatePlanId,
-          primaryMemberName: employee.name,
-        });
-        notifyDependentChange();
+        await createMemberMutation.mutateAsync(payload);
         showToast("Family member added successfully", "success");
       }
       onSave();
       setShowForm(false);
       setFormData({ gender: 'male', isActive: true });
-    } catch (err) {
-      showToast("Failed to save dependent", "error");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.response?.data?.statusDesc || "Failed to save family member";
+      showToast(msg, "error");
     }
   };
 
@@ -192,8 +219,8 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
           <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
             Cancel
           </Button>
-          <Button type="submit" variant="default">
-            Save Member
+          <Button type="submit" variant="default" disabled={createMemberMutation.isPending || updateMemberMutation.isPending}>
+            {createMemberMutation.isPending || updateMemberMutation.isPending ? "Saving..." : "Save Member"}
           </Button>
         </div>
       </form>

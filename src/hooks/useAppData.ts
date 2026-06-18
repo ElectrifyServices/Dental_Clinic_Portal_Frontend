@@ -12,6 +12,7 @@ export const useAppData = (params?: {
   role?: string;
   corporateSearch?: string;
   corporateStatus?: string;
+  corporatePlanType?: string;
 }) => {
   const patientData = usePatientData();
   const apptData = useAppointmentData();
@@ -22,6 +23,7 @@ export const useAppData = (params?: {
   const corpData = useCorporateData({
     search: params?.corporateSearch,
     status: params?.corporateStatus,
+    planType: params?.corporatePlanType,
   });
 
   const { mutateAsync: deleteInvoice } = useDeleteInvoiceMutation();

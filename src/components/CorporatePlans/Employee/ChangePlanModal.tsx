@@ -32,16 +32,12 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
       const transformedBody = {
         id: changePlanEmp.id,
         name: changePlanEmp.name,
-        emp_id: changePlanEmp.employeeId || '',
         phone: changePlanEmp.phone,
         email: changePlanEmp.email || "noemail@example.com",
         gender: (changePlanEmp.gender || "male").toUpperCase(),
         date_of_birth: changePlanEmp.dateOfBirth || "1990-01-01",
-        company_name: changePlanEmp.companyName,
-        designation: changePlanEmp.designation || "Employee",
-        department: changePlanEmp.department || "General",
-        corporate_plan_id: newPlanId,
-        eligible_date: changePlanEmp.eligible_date || new Date().toISOString(),
+        plan_id: newPlanId,
+        expiry_date: changePlanEmp.eligible_date || new Date().toISOString().split('T')[0],
         status: changePlanEmp.isActive ? "ACTIVE" : "INACTIVE",
       };
 

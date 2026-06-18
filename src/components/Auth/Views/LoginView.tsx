@@ -44,7 +44,7 @@ export function LoginView({ setView }: LoginViewProps) {
           Welcome back
         </h1>
         <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
-          Sign in to access your Back-Office Portal
+          Sign in to access your Opal Smile Dental Clinic Portal
         </p>
       </div>
 

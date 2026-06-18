@@ -14,6 +14,7 @@ export interface CorporatePlansParams {
   enabled?: boolean;
   search?: string;
   status?: string;
+  planType?: string;
 }
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
@@ -27,15 +28,19 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     body.search = params.search;
   }
 
-  if (params.status && params.status !== "ALL") {
-    body.filters = {
-      status: [params.status]
-    };
+  if (params.status && params.status !== "ALL" || params.planType && params.planType !== "ALL") {
+    body.filters = {};
+    if (params.status && params.status !== "ALL") {
+      body.filters.status = [params.status];
+    }
+    if (params.planType && params.planType !== "ALL") {
+      body.filters.plan_type = [params.planType];
+    }
   }
 
   return useApiQuery<CorporatePlansResponse>({
-    queryKey: ["corporatePlans", body],
-    endpoint: "/corporatePlan/list",
+    queryKey: ["membershipPlans", body],
+    endpoint: "/membershipPlan/list",
     method: "post",
     data: body,
     options: {

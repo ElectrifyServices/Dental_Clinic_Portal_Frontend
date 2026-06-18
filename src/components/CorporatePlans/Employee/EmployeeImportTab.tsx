@@ -32,27 +32,28 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
   const handleImportConfirm = async () => {
     const valid = importRows.filter(r => r.name && r.phone && r.corporatePlanId);
     if (!valid.length) return;
-    
+
     setImporting(true);
     try {
       const payload = {
-        employees: valid.map((r, i) => ({
-          name: r.name!,
-          emp_id: r.employeeId || `EMP${Date.now().toString().slice(-4)}${i}`,
-          phone: r.phone!,
-          email: r.email || "noemail@example.com",
-          gender: (r.gender || "male").toUpperCase(),
-          company_name: r.companyName || "Unknown Company",
-          designation: r.designation || "Employee",
-          department: r.department || "General",
-          corporate_plan_id: r.corporatePlanId || "",
-          date_of_birth: r.dateOfBirth || "1990-01-01",
-          eligible_date: r.eligible_date || new Date().toISOString().split('T')[0]
-        }))
+        members: valid.map((r, i) => {
+          const matchedPlan = activePlans.find(p => p.id === r.corporatePlanId);
+          const planCodeToUse = matchedPlan ? matchedPlan.code : r.corporatePlanId;
+          
+          return {
+            name: r.name!,
+            phone: r.phone!,
+            email: r.email || "",
+            gender: (r.gender || "male").toUpperCase(),
+            date_of_birth: r.dateOfBirth || "",
+            plan_code: planCodeToUse || "",
+            expiry_date: r.eligible_date || ""
+          };
+        })
       };
 
       const res: any = await bulkImportMutation.mutateAsync(payload);
-      
+
       const responseData = res?.responseObject?.data || res?.data;
       const failed = responseData?.failed || [];
 
@@ -62,11 +63,11 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         setImporting(false);
         return; // Do not redirect to list
       }
-      
+
       queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       queryClient.invalidateQueries({ queryKey: ["companies"] });
-      
+
       onBulkSave(valid as CorporateEmployee[]);
       setImportRows([]);
       setImportErrors([]);
@@ -93,7 +94,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           <div>
             <p className="text-sm font-semibold text-foreground mb-1">Upload Excel / CSV file</p>
             <p className="text-xs text-muted-foreground">
-              Columns: Name, Phone, Email, Gender, EmployeeId, Designation, Department, Company, PlanCode, DOB, EligibleDate
+              Columns: name, phone, email, gender, plan_code, date_of_birth, expiry_date
             </p>
           </div>
           <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="flex-shrink-0 gap-2">
@@ -133,14 +134,17 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               { key: 'name', header: 'Name', render: r => <span className="font-medium text-sm">{r.name}</span> },
               { key: 'phone', header: 'Phone', render: r => <span className="text-sm text-muted-foreground">{r.phone}</span> },
               { key: 'email', header: 'Email', render: r => <span className="text-xs text-muted-foreground">{r.email}</span> },
-              { key: 'company', header: 'Company', render: r => <span className="text-sm">{r.companyName}</span> },
-              { key: 'plan', header: 'Plan', render: r => {
-                const p = plans.find(pl => pl.id === r.corporatePlanId);
-                return p ? <PlanBadge name={p.name} code={p.code} color={p.color} /> : <Badge variant="amber">No plan</Badge>;
-              }},
-              { key: 'ok', header: 'Status', render: r => r.name && r.phone && r.corporatePlanId
-                ? <CheckCircle className="w-4 h-4 text-emerald-500" />
-                : <AlertTriangle className="w-4 h-4 text-red-500" /> },
+              {
+                key: 'plan', header: 'Plan', render: r => {
+                  const p = plans.find(pl => pl.id === r.corporatePlanId);
+                  return p ? <PlanBadge name={p.name} code={p.code} color={p.color} /> : <Badge variant="amber">No plan</Badge>;
+                }
+              },
+              {
+                key: 'ok', header: 'Status', render: r => r.name && r.phone && r.corporatePlanId
+                  ? <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  : <AlertTriangle className="w-4 h-4 text-red-500" />
+              },
             ]}
             data={importRows as CorporateEmployee[]}
             rowKey={(_, i) => String(i)}

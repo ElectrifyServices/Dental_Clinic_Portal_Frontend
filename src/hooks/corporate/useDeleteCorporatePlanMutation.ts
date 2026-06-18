@@ -8,12 +8,13 @@ export interface DeleteCorporatePlanVariables {
 export function useDeleteCorporatePlanMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, DeleteCorporatePlanVariables>({
-    getEndpoint: (variables) => `/corporatePlan/${variables.id}`,
+    getEndpoint: (variables) => `/membershipPlan/${variables.id}`,
     method: "delete",
     transformRequest: () => undefined,
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
       },
     },
   });

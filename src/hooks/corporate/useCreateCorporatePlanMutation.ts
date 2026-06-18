@@ -2,7 +2,7 @@ import { useApiMutation } from "../useApiMutation";
 
 export interface CreatePlanBenefitVariables {
   type: string;
-  count?: number;
+  allocationCount?: number;
   clinical_procedures?: string[];
   description: string;
   benifit_label: string;
@@ -17,12 +17,13 @@ export interface CreateCorporatePlanVariables {
   description?: string;
   valid_from: string;
   valid_till: string;
-  enrollment_cap?: number;
+  max_member?: number;
   theme_color?: string;
   benefits: CreatePlanBenefitVariables[];
-  plan_category?: 'CORPORATE' | 'INDIVIDUAL';
+  plan_type?: 'COMPANY' | 'INDIVIDUAL';
+  plan_tier?: string;
   annual_fee?: number;
-  max_dependents?: number;
+  family_coverage_limit?: number;
 }
 
 export interface CreateCorporatePlanResponse {
@@ -33,15 +34,24 @@ export interface CreateCorporatePlanResponse {
   description: string;
   valid_from: string;
   valid_till: string;
-  enrollment_cap: number;
+  max_member: number;
   theme_color: string;
   benefits: any[];
   [key: string]: any;
 }
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export function useCreateCorporatePlanMutation() {
+  const queryClient = useQueryClient();
   return useApiMutation<CreateCorporatePlanResponse, CreateCorporatePlanVariables>({
-    endpoint: "/corporatePlan",
+    endpoint: "/membershipPlan",
     method: "post",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["membershipPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
+      },
+    },
   });
 }

@@ -12,6 +12,7 @@ import {
   CheckCheck,
   Trash2,
   Zap,
+  MoreVertical,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -63,16 +64,16 @@ export function Header() {
   return (
     <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center gap-4 sticky top-0 z-40 flex-shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
       {/* ── Left ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         {/* Mobile logo */}
-        <div className="flex md:hidden items-center gap-2.5 group/logo cursor-pointer">
-          <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+        <div className="flex md:hidden items-center gap-2 group/logo cursor-pointer">
+          <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5 flex-shrink-0">
             <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors">{tenant.branding.clinicName}</span>
+          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block">{tenant.branding.clinicName}</span>
         </div>
 
-        {/* Today's Schedule shortcut */}
+        {/* Today's Schedule shortcut (Desktop) */}
         <div className="hidden sm:flex items-center gap-2">
           <Button
             variant="outline"
@@ -93,10 +94,43 @@ export function Header() {
             Register Member
           </Button>
         </div>
+
+        {/* Mobile Actions Menu */}
+        <div className="sm:hidden flex items-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="px-1">
+                <MoreVertical className="w-5 h-5 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-48 p-1.5 flex flex-col gap-1 rounded-xl shadow-modal">
+              <Button
+                variant="ghost"
+                onClick={() => setActiveModal("todaySchedule")}
+                className="w-full justify-start gap-2.5 text-sm h-auto py-2.5 rounded-lg"
+              >
+                <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-primary" />
+                </div>
+                Today's Schedule
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setActiveModal("quickRegister")}
+                className="w-full justify-start gap-2.5 text-sm h-auto py-2.5 rounded-lg"
+              >
+                <div className="w-7 h-7 rounded-md bg-amber-50 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                </div>
+                Register Member
+              </Button>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* ── Center: Global Search ────────────────────────────────── */}
-      <div className="flex-1 flex justify-center">
+      <div className="flex-1 flex justify-center min-w-0 mx-2 sm:mx-0">
         <GlobalSearch />
       </div>
       {/* ── Right ───────────────────────────────────────────────── */}

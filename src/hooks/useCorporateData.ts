@@ -4,7 +4,7 @@ import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
 import { CorporatePlan, PlanBenefitType } from '../types';
 import { useMemo } from 'react';
 
-export function useCorporateData(params?: { search?: string; status?: string }) {
+export function useCorporateData(params?: { search?: string; status?: string; planType?: string; }) {
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<any[]>('corporateEmployees', []);
 
@@ -16,7 +16,9 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
 
   const { data: apiPlansData, refetch: refetchPlans, isLoading: isPlansLoading } = useCorporatePlansQuery({
     enabled: isEnabled,
-    ...params
+    search: params?.search,
+    status: params?.status,
+    planType: params?.planType,
   });
 
   const mapBackendPlanToFrontend = (plan: any): CorporatePlan => {
@@ -91,19 +93,23 @@ export function useCorporateData(params?: { search?: string; status?: string }) 
       description: plan.description || "",
       validFrom: plan.valid_from ? plan.valid_from.split('T')[0] : "",
       validTo: plan.valid_till ? plan.valid_till.split('T')[0] : "",
-      maxMembers: plan.max_member || undefined,
-      currentMembers: plan._count?.employees || 0,
+      maxMembers: plan.max_member || plan.enrollment_cap || undefined,
+      currentMembers: plan._count?.enrollments ?? plan._count?.employees ?? 0,
       isActive: plan.status === "ACTIVE",
       status: plan.status,
       createdAt: plan.created_at || new Date().toISOString(),
       createdBy: plan.created_by || "Super Admin",
       color: mapHexToColor(plan.theme_color),
+      planCategory: (plan.plan_type?.toLowerCase() === 'company' ? 'corporate' : plan.plan_type?.toLowerCase() === 'individual' ? 'individual' : plan.plan_category?.toLowerCase() || 'corporate') as any,
+      planTier: plan.plan_tier?.toLowerCase() as any,
+      annualFee: plan.annual_fee ? Number(plan.annual_fee) : undefined,
+      maxDependents: plan.family_coverage_limit ?? plan.max_dependents ?? 0,
       benefits: (plan.benefits || []).map((b: any) => ({
         id: b.id,
         type: mapBackendBenefitType(b.type),
         value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
-          ? (b.count || 0)
-          : (b.discount_percentage || 0),
+          ? (b.allocationCount ?? b.count ?? 0)
+          : (b.discount_percentage ?? 0),
         cap: b.max_amount || undefined,
         customName: b.benifit_label || undefined,
         treatmentTypes: (b.clinical_procedures || []).map(mapProcedureLabelToKey),

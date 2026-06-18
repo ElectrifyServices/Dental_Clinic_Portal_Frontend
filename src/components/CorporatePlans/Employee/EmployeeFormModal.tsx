@@ -106,25 +106,29 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
       if (editEmp) {
         if (employeeDetails) {
           const empData = employeeDetails.data || employeeDetails;
-          const plan = activePlans.find(p => p.id === (empData.corporate_plan?.id || empData.corporate_plan_id));
+          const activeEnrollment = empData.enrollments?.find((en: any) => en.status === 'ACTIVE') || empData.enrollments?.[0];
+          const planId = activeEnrollment?.plan_id || '';
+          const plan = activePlans.find(p => p.id === planId);
+          const expiryDate = activeEnrollment?.expiry_date || '';
+
           setForm({
             id: empData.id,
-            employeeId: empData.emp_id || '',
+            employeeId: empData.id || '',
             name: empData.name || '',
             phone: empData.phone || '',
             email: empData.email || '',
             gender: empData.gender?.toLowerCase() || 'male',
             dateOfBirth: empData.date_of_birth ? empData.date_of_birth.split('T')[0] : '',
-            designation: empData.designation || '',
-            department: empData.department || '',
-            companyName: empData.company_name || '',
-            corporatePlanId: empData.corporate_plan?.id || empData.corporate_plan_id || '',
-            corporatePlanName: empData.corporate_plan?.plan_name || plan?.name || '',
-            enrolledAt: empData.created_at || editEmp.enrolledAt || '',
-            eligible_date: empData.eligible_date ? empData.eligible_date.split('T')[0] : '',
+            designation: '',
+            department: '',
+            companyName: activeEnrollment?.plan?.company_name || '',
+            corporatePlanId: planId,
+            corporatePlanName: activeEnrollment?.plan?.plan_name || plan?.name || '',
+            enrolledAt: activeEnrollment?.enrollment_date || empData.created_at || editEmp.enrolledAt || '',
+            eligible_date: expiryDate ? expiryDate.split('T')[0] : '',
             isActive: empData.status === 'ACTIVE',
             patientId: empData.patient_id || editEmp.patientId,
-            coverageType: (empData.coverage_type?.toLowerCase() || editEmp.coverageType || 'self') as CoverageType,
+            coverageType: (empData.family_members?.length > 0 ? 'family' : 'self') as CoverageType,
           });
         } else {
           setForm({ ...editEmp });
@@ -211,19 +215,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
     if (!editEmp) {
       try {
         const transformedBody = {
+          plan_id: form.corporatePlanId!,
           name: form.name!,
-          emp_id: form.employeeId || `EMP${Date.now().toString().slice(-5)}`,
           phone: form.phone!,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: companyNameVal,
-          designation: form.designation || "Employee",
-          department: form.department || "General",
-          corporate_plan_id: form.corporatePlanId!,
-          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
-          coverage_type: coverageTypeVal as 'SELF' | 'FAMILY',
         };
 
         const apiResponse = await createEmployeeMutation.mutateAsync(transformedBody);
@@ -282,19 +281,14 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
       try {
         const transformedBody = {
           id: editEmp.id,
+          plan_id: form.corporatePlanId!,
           name: form.name!,
-          emp_id: form.employeeId || '',
           phone: form.phone!,
           email: form.email || "noemail@example.com",
           gender: (form.gender || "male").toUpperCase(),
           date_of_birth: form.dateOfBirth || "1990-01-01",
-          company_name: companyNameVal,
-          designation: form.designation || "Employee",
-          department: form.department || "General",
-          corporate_plan_id: form.corporatePlanId!,
-          eligible_date: form.eligible_date ? new Date(form.eligible_date).toISOString() : new Date().toISOString(),
+          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
-          coverage_type: coverageTypeVal as 'SELF' | 'FAMILY',
         };
 
         await updateEmployeeMutation.mutateAsync(transformedBody);
@@ -429,7 +423,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         </div>
 
         {/* Coverage Type + Dependents — only shown when plan allows dependents */}
-        {maxDependents > 0 && (
+        {false /* maxDependents > 0 */ && (
           <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
             {/* Coverage toggle */}
             <div className="p-5 bg-muted/20 border-b border-border/40">

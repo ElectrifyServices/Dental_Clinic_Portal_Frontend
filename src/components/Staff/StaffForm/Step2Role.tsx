@@ -160,11 +160,11 @@ export function Step2Role({
 
   const rolesList = rawRoles
     ? rawRoles.map((r: any) => {
-        const val = r.name.toLowerCase();
-        const existing = ROLES.find((x) => x.value === val);
+        const val = r.name.toLowerCase().trim();
+        const existing = ROLES.find((x) => x.value === val || x.value.replace(/_/g, ' ') === val.replace(/_/g, ' '));
         return (
           existing || {
-            value: val,
+            value: val.replace(/\s+/g, '_'),
             label: r.name,
             description: "Custom role access",
             icon: Users,
@@ -240,43 +240,45 @@ export function Step2Role({
 
       {/* PERMISSIONS */}
 
-      {formData.role !== "super_admin" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black text-foreground uppercase tracking-widest">
-              Module Permissions
-            </h4>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-black text-foreground uppercase tracking-widest">
+            Module Permissions
+          </h4>
 
-            <Badge variant="gray" className="text-[9px]">
-              {formData.permissions.length} Enabled
-            </Badge>
-          </div>
-          {errors?.permissions && (
-            <p className="text-destructive text-xs mt-1 font-bold">{errors.permissions.message}</p>
-          )}
+          <Badge variant="gray" className="text-[9px]">
+            {formData.role === "super_admin" ? PERMISSIONS.length : formData.permissions.length} Enabled
+          </Badge>
+        </div>
+        {errors?.permissions && (
+          <p className="text-destructive text-xs mt-1 font-bold">{errors.permissions.message}</p>
+        )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {PERMISSIONS.map((permission) => (
-              <Label
-                key={permission.id}
-                className={`flex items-start gap-3 p-3 border rounded-2xl cursor-pointer transition-colors ${formData.permissions.includes(permission.id)
-                  ? "border-primary/30 bg-primary/5"
-                  : "border-border bg-muted/30 hover:bg-muted/50"
-                  }`}
-              >
-                <Input
-                  type="checkbox"
-                  checked={formData.permissions.includes(permission.id)}
-                  onChange={(e) =>
-                    onPermissionChange(
-                      permission.id,
-                      e.target.checked
-                    )
-                  }
-                  className="w-4 h-4 mt-0.5 rounded border-border text-primary focus:ring-primary/20"
-                />
+            {PERMISSIONS.map((permission) => {
+              const isChecked = formData.role === "super_admin" || formData.permissions.includes(permission.id);
+              return (
+                <Label
+                  key={permission.id}
+                  className={`flex items-start gap-3 p-3 border rounded-2xl cursor-pointer transition-colors ${isChecked
+                    ? "border-primary/30 bg-primary/5"
+                    : "border-border bg-muted/30 hover:bg-muted/50"
+                    } ${formData.role === "super_admin" ? "opacity-75 cursor-not-allowed" : ""}`}
+                >
+                  <Input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled={formData.role === "super_admin"}
+                    onChange={(e) =>
+                      onPermissionChange(
+                        permission.id,
+                        e.target.checked
+                      )
+                    }
+                    className="w-4 h-4 mt-0.5 rounded border-border text-primary focus:ring-primary/20"
+                  />
 
-                <div>
+                  <div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-bold text-foreground">
                       {permission.label}
@@ -288,10 +290,10 @@ export function Step2Role({
                   </p>
                 </div>
               </Label>
-            ))}
+            );
+          })}
           </div>
         </div>
-      )}
     </div>
   );
 }

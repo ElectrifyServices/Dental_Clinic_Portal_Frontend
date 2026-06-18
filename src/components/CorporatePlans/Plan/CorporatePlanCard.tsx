@@ -163,20 +163,23 @@ export function CorporatePlanCard({
 
           {/* Badges row */}
           <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-            <span className="text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500 uppercase tracking-wider">
-              {plan.code}
+            <span className="text-[9px] font-black px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-lg text-primary uppercase tracking-wider" title="Plan Type">
+              {isIndividual ? 'INDIVIDUAL' : 'COMPANY'}
             </span>
-            {tier && (
-              <span className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500 uppercase tracking-wider">
-                <tier.Icon className="w-2.5 h-2.5 text-amber-500" />
-                {tier.label}
-              </span>
-            )}
-            {plan.annualFee != null && isIndividual && (
-              <span className="text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500">
-                ₹{plan.annualFee.toLocaleString()}/yr
-              </span>
-            )}
+            <span className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500 uppercase tracking-wider" title="Plan Tier">
+              {tier ? <tier.Icon className="w-2.5 h-2.5 text-amber-500" /> : <Award className="w-2.5 h-2.5 text-slate-400" />}
+              {tier ? tier.label : 'NO TIER'}
+            </span>
+            <span className="text-[9px] font-black px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 uppercase tracking-wider" title="Annual Fee">
+              ₹{(plan.annualFee || 0).toLocaleString()}/yr
+            </span>
+            <span className="text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500 uppercase tracking-wider flex items-center gap-1" title="Validity">
+              <Calendar className="w-2.5 h-2.5" />
+              {plan.validFrom ? new Date(plan.validFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit'}) : 'N/A'} - {plan.validTo ? new Date(plan.validTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit'}) : 'N/A'}
+            </span>
+            <span className="text-[9px] font-black px-2 py-0.5 bg-slate-50 border border-slate-200/80 rounded-lg text-slate-500 uppercase tracking-wider" title="Max Members">
+              MAX: {plan.maxMembers || '∞'}
+            </span>
           </div>
 
           {/* Benefits Preview */}
@@ -197,9 +200,13 @@ export function CorporatePlanCard({
               </Tooltip>
             ))}
             {plan.benefits.length > 2 && (
-              <span className="flex items-center px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-50 border border-slate-200 text-slate-500 opacity-80">
+              <div 
+                role="button"
+                onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+                className="flex items-center px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:text-slate-700 text-slate-500 transition-colors cursor-pointer"
+              >
                 +{plan.benefits.length - 2} more
-              </span>
+              </div>
             )}
           </div>
 

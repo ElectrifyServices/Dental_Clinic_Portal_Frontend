@@ -28,11 +28,11 @@ export interface BulkImportEmployeeResponse {
 export function useBulkImportEmployeeMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<BulkImportEmployeeResponse, BulkImportEmployeeVariables>({
-    endpoint: "/employee/bulk-import",
+    endpoint: "/member/bulk-import",
     method: "post",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        queryClient.invalidateQueries({ queryKey: ["members"] });
       },
     },
   });

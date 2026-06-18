@@ -8,12 +8,13 @@ export interface DeleteEmployeeVariables {
 export function useDeleteEmployeeMutation() {
   const queryClient = useQueryClient();
   return useApiMutation<any, DeleteEmployeeVariables>({
-    getEndpoint: (variables) => `/employee/${variables.id}`,
+    getEndpoint: (variables) => `/member/${variables.id}`,
     method: "delete",
     transformRequest: () => undefined,
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
       },
     },
   });

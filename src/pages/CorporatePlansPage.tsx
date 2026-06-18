@@ -32,11 +32,14 @@ const STAT_COLORS = [
   'bg-amber-50  text-amber-700  border-amber-100',
 ];
 
+import { useMembershipStatsQuery } from '../hooks/corporate/useMembershipStatsQuery';
+
 export const CorporatePlansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<MembershipTab>('plans');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [category, setCategory] = useState<'all' | string>('all');
 
   useEffect(() => {
     const h = setTimeout(() => setDebouncedSearch(search), 500);
@@ -51,15 +54,18 @@ export const CorporatePlansPage: React.FC = () => {
   } = useAppData({
     corporateSearch: debouncedSearch,
     corporateStatus: filter === 'all' ? undefined : filter.toUpperCase(),
+    corporatePlanType: category === 'all' ? undefined : category === 'corporate' ? 'COMPANY' : 'INDIVIDUAL',
   });
+
+  const { data: statsData } = useMembershipStatsQuery();
 
   useEffect(() => { if (refetchCorporate) refetchCorporate(); }, [refetchCorporate]);
 
   const stats = [
-    { label: 'Active Plans', value: corporatePlans.filter(p => p.isActive).length },
-    { label: 'Total Members', value: corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
-    { label: 'Company Plans', value: corporatePlans.filter(p => p.planCategory !== 'individual').length },
-    { label: 'Personal Plans', value: corporatePlans.filter(p => p.planCategory === 'individual').length },
+    { label: 'Total Plans', value: statsData?.totalPlans ?? corporatePlans.filter(p => p.isActive).length },
+    { label: 'Total Members', value: statsData?.totalMembers ?? corporatePlans.reduce((s, p) => s + p.currentMembers, 0) },
+    { label: 'Company Plans', value: statsData?.companyPlans ?? corporatePlans.filter(p => p.planCategory !== 'individual').length },
+    { label: 'Individual Plans', value: statsData?.individualPlans ?? corporatePlans.filter(p => p.planCategory === 'individual').length },
   ];
 
   return (
@@ -84,11 +90,11 @@ export const CorporatePlansPage: React.FC = () => {
           </div>
 
           {/* Stat chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 xl:flex xl:flex-wrap gap-2 w-full xl:w-auto mt-2 sm:mt-0">
             {stats.map((s, i) => (
-              <div key={s.label} className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-sm ${STAT_COLORS[i]}`}>
-                <span className="text-base font-black leading-none">{s.value}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wide opacity-70 whitespace-nowrap">{s.label}</span>
+              <div key={s.label} className={`flex flex-col sm:flex-row items-center sm:justify-start justify-center gap-1 sm:gap-2.5 px-2 sm:px-3.5 py-2 rounded-xl border text-sm text-center sm:text-left ${STAT_COLORS[i]}`}>
+                <span className="text-lg sm:text-base font-black leading-none">{s.value}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide opacity-70 whitespace-nowrap">{s.label}</span>
               </div>
             ))}
           </div>
@@ -135,6 +141,8 @@ export const CorporatePlansPage: React.FC = () => {
           onSearchChange={setSearch}
           filter={filter}
           onFilterChange={setFilter}
+          category={category}
+          onCategoryChange={setCategory}
           isLoading={isPlansLoading}
         />
       )}

@@ -9,18 +9,28 @@ export interface UpdateCorporatePlanVariables {
   description?: string;
   valid_from: string;
   valid_till: string;
-  enrollment_cap?: number;
+  max_member?: number;
   theme_color?: string;
   benefits: CreatePlanBenefitVariables[];
-  plan_category?: 'CORPORATE' | 'INDIVIDUAL';
+  plan_type?: 'COMPANY' | 'INDIVIDUAL';
+  plan_tier?: string;
   annual_fee?: number;
-  max_dependents?: number;
+  family_coverage_limit?: number;
 }
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export function useUpdateCorporatePlanMutation() {
+  const queryClient = useQueryClient();
   return useApiMutation<CreateCorporatePlanResponse, UpdateCorporatePlanVariables>({
-    getEndpoint: (variables) => `/corporatePlan/${variables.id}`,
+    getEndpoint: (variables) => `/membershipPlan/${variables.id}`,
     method: "put",
     transformRequest: ({ id: _id, ...rest }) => rest,
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["membershipPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
+      },
+    },
   });
 }
