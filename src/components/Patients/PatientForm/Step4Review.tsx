@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Phone, Heart, ClipboardCheck, CheckCircle } from "lucide-react";
+import { User, Phone, Heart, ClipboardCheck, CheckCircle, ShieldCheck } from "lucide-react";
 import { calculateAge } from "./utils";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -9,6 +9,7 @@ import { useAllergiesQuery } from "../../../hooks/patients/useAllergiesQuery";
 interface Step4Props {
   formData: any;
   isCheckIn?: boolean;
+  corporatePlans?: any[];
 }
 
 const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, index }) => {
@@ -42,7 +43,7 @@ const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, ind
   );
 };
 
-export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
+export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corporatePlans = [] }) => {
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
   const { data: rawAllergies } = useAllergiesQuery();
 
@@ -196,6 +197,18 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn }) => {
                   {formData.emergencyContact || "Not provided"}
                 </p>
               </div>
+
+              {formData.selectedMembershipPlanId && (
+                <div className="col-span-2 p-3 bg-primary/10 border border-primary/20 rounded-xl">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" />
+                    Enrolling in Membership Plan
+                  </span>
+                  <p className="font-bold text-foreground text-sm">
+                    {corporatePlans.find(p => p.id === formData.selectedMembershipPlanId)?.name || "Selected Plan"}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

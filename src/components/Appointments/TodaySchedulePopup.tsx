@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Layout, Calendar, CheckCircle, Clock, Hourglass } from "lucide-react";
 import { Modal, MetricCard } from "@/components/ui";
+import { Loading } from "@/components/ui/Loading";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
 import { AppointmentTimeline } from "./TodaySchedule/AppointmentTimeline";
 import {
@@ -40,11 +41,13 @@ export function TodaySchedulePopup({
   const todayStr = new Date().toISOString().split("T")[0];
   const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
-  const { data: bookedData, refetch: refetchBooked } = useScheduleBookedQuery();
-  const { data: pendingData, refetch: refetchPending } = useSchedulePendingQuery();
-  const { data: completedData, refetch: refetchCompleted } = useScheduleCompletedQuery();
-  const { data: teamAvailData, refetch: refetchTeam } = useScheduleTeamAvailabilityQuery();
-  const { data: timelineData, refetch: refetchTimeline } = useScheduleLiveTimelineQuery();
+  const { data: bookedData, refetch: refetchBooked, isFetching: isBookedFetching } = useScheduleBookedQuery();
+  const { data: pendingData, refetch: refetchPending, isFetching: isPendingFetching } = useSchedulePendingQuery();
+  const { data: completedData, refetch: refetchCompleted, isFetching: isCompletedFetching } = useScheduleCompletedQuery();
+  const { data: teamAvailData, refetch: refetchTeam, isFetching: isTeamFetching } = useScheduleTeamAvailabilityQuery();
+  const { data: timelineData, refetch: refetchTimeline, isFetching: isTimelineFetching } = useScheduleLiveTimelineQuery();
+
+  const isFetching = isBookedFetching || isPendingFetching || isCompletedFetching || isTeamFetching || isTimelineFetching;
 
   useEffect(() => {
     // Refetch all APIs when this modal opens
@@ -110,7 +113,7 @@ export function TodaySchedulePopup({
     ? timelineData.data
     : Array.isArray(timelineData)
     ? timelineData
-    : todayAppointments;
+    : [];
 
   const bookedCount = extractCount(bookedData, resolvedAppointments.length);
   const completedCount = extractCount(completedData, resolvedAppointments.filter((a: any) => (a.status || "").toLowerCase() === "completed").length);
@@ -120,7 +123,7 @@ export function TodaySchedulePopup({
     ? teamAvailData.data
     : Array.isArray(teamAvailData)
     ? teamAvailData
-    : doctors;
+    : [];
 
   const mergedDoctorAvailability = { ...doctorAvailability };
   if (Array.isArray(resolvedDoctors)) {
@@ -144,7 +147,14 @@ export function TodaySchedulePopup({
       size="5xl"
       icon={<Layout className="w-4 h-4" />}
     >
-      <div className="space-y-8 py-2">
+      <div className="space-y-8 py-2 relative min-h-[300px]">
+        {/* Loading Overlay */}
+        {isFetching && (
+          <div className="absolute inset-0 z-50 rounded-2xl overflow-hidden backdrop-blur-[2px]">
+            <Loading type="spinner" text="Loading live schedule..." className="h-full bg-background/80" />
+          </div>
+        )}
+
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <MetricCard

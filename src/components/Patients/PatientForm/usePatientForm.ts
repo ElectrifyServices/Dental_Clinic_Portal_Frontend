@@ -219,10 +219,10 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
   useEffect(() => {
     // We get response wrapped in responseObject.data
     const data = checkEmployeeResponse?.responseObject?.data || checkEmployeeResponse?.data || checkEmployeeResponse;
-    const emp = data?.employee || data;
-    const isEmployee = data?.is_employee ?? !!emp;
+    const emp = data?.employee || data?.member || (data?.is_member === undefined && data?.is_employee === undefined && Object.keys(data || {}).length > 0 ? data : null);
+    const isEmployee = data?.is_employee ?? data?.is_member ?? !!emp;
     
-    if (phoneToSearch && emp && isEmployee && !emp.error) {
+    if (phoneToSearch && emp && isEmployee && !emp.error && Object.keys(emp).length > 0) {
       setMatchedCorporateEmp(emp);
     } else {
       setMatchedCorporateEmp(null);
@@ -240,14 +240,14 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     if (emp.designation) form.setValue("occupation", emp.designation);
     if (emp.email) form.setValue("email", emp.email);
     
-    const plan = emp.corporate_plan || {};
+    const plan = emp.corporate_plan || emp.membership || {};
     
     setExtraData((prev) => ({
       ...prev,
       category: "corporate",
-      corporatePlanId: plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id,
+      corporatePlanId: plan.plan_id || plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id,
       corporatePlanName: plan.plan_name || emp.company_name || emp.companyName || "Corporate Plan",
-      corporateMemberId: emp.emp_id || emp.employee_id || emp.employeeId || emp.id,
+      corporateMemberId: emp.id || emp.emp_id || emp.employee_id || emp.employeeId,
     }));
   };
 

@@ -30,6 +30,7 @@ import { ConsumeForm } from "../Inventory/ConsumeForm";
 import { AdjustForm } from "../Inventory/AdjustForm";
 import { InventoryHistoryViewer } from "../Inventory/InventoryHistoryViewer";
 import { QuickRegistrationModal } from "../CorporatePlans/QuickRegistration/QuickRegistrationModal";
+import { EmployeeFormModal } from "../CorporatePlans/Employee/EmployeeFormModal";
 import { ConfirmModal, Modal, Button, toast } from "../ui";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
@@ -49,6 +50,7 @@ import { useCreateConsultationMutation } from "../../hooks/consultation/useCreat
 import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdateConsultationMutation";
 import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/consultationUtils";
 import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
+import { useCreateInvoiceMutation, CreateInvoiceVariables } from "../../hooks/billing/useCreateInvoiceMutation";
 
 export function ModalRegistry() {
   const {
@@ -235,7 +237,10 @@ export function ModalRegistry() {
   const { mutateAsync: createAppointmentMutation } = useCreateAppointmentMutation();
   const { mutateAsync: updateAppointmentMutation } = useUpdateAppointmentMutation();
   const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
-  const { mutateAsync: createEMR } = useCreateEMRMutation();
+  const { mutateAsync: createEMRMutation } = useCreateEMRMutation();
+  const { mutateAsync: createInvoiceMutation } = useCreateInvoiceMutation();
+
+  // Queries for detail views
   const createConsentMutation = useCreateConsentFormMutation();
   const { mutateAsync: createInventoryMutation } = useCreateInventoryItemMutation();
   const { mutateAsync: updateInventoryMutation } = useUpdateInventoryItemMutation();
@@ -632,10 +637,43 @@ export function ModalRegistry() {
       {activeModal === "invoiceForm" && (
         <InvoiceForm
           onClose={() => setActiveModal(null)}
-          onSave={(inv: any) => {
-            handleSaveInvoice(inv);
-            setActiveModal(null);
-            showToast("Invoice created!");
+          onSave={async (inv: any) => {
+            try {
+              const payload: CreateInvoiceVariables = {
+                patient_id: inv.patientId,
+                due_date: inv.dueDate,
+                payment_method: "CASH",
+                complimentary_reason: inv.complimentaryNote || undefined,
+                discount: inv.discount || 0,
+                tax_percentage: inv.tax || 0,
+                items: inv.items.map((item: any) => {
+                  let type: "CONSULTATION" | "TREATMENT_SESSION" | "CUSTOM" = "CUSTOM";
+                  if (item.linkedType) {
+                    if (item.linkedType.toLowerCase().includes("consultation")) type = "CONSULTATION";
+                    else if (item.linkedType.toLowerCase().includes("treatment")) type = "TREATMENT_SESSION";
+                  }
+                  
+                  return {
+                    item_type: type,
+                    consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
+                    treatment_session_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
+                    description: item.description,
+                    total_amount: item.amount,
+                    billed_amount: item.amount,
+                  };
+                }),
+              };
+
+              const response = await createInvoiceMutation(payload);
+              const invoiceId = response?.data?.id || inv.id;
+              
+              handleSaveInvoice({ ...inv, id: invoiceId });
+              setActiveModal(null);
+              showToast("Invoice created successfully!", "success");
+            } catch (err: any) {
+              const message = err?.response?.data?.message || err?.message || "Failed to create invoice";
+              showToast(message, "error");
+            }
           }}
           patients={patients}
           treatments={treatments}
@@ -1182,6 +1220,20 @@ export function ModalRegistry() {
 
       {activeModal === "quickRegister" && (
         <QuickRegistrationModal />
+      )}
+
+      {activeModal === "addCorporateMember" && (
+        <EmployeeFormModal
+          showForm={true}
+          setShowForm={(val) => { if (!val) setActiveModal(null); }}
+          editEmp={null}
+          activePlans={corporatePlans}
+          onSave={() => { 
+             toast.success("Member added successfully!");
+             setActiveModal(null);
+          }}
+          refetch={() => {}}
+        />
       )}
 
       {confirmConfig.show && (

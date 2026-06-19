@@ -152,8 +152,10 @@ export function mapFormDataToCreatePayload(
     formData.previousTreatments.forEach((pt: string) => payload.append('previous_treatments', pt));
   }
 
-  // Step tracking
-  payload.append('current_step', '4');
+  // Membership Plan
+  if (formData.selectedMembershipPlanId) {
+    payload.append('plan_id', formData.selectedMembershipPlanId);
+  }
 
   // Family link
   if (options?.primaryPatientId) {

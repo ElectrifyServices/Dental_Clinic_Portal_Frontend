@@ -3,17 +3,26 @@ import { normalizeInvoice } from './billing/useInvoiceQuery';
 import { useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useInvoiceData() {
+export function useInvoiceData(params?: { search?: string; status?: string }) {
   const queryClient = useQueryClient();
 
-  const isEnabled = useMemo(() => {
-    const path = window.location.pathname;
-    const isExcluded = path.includes('/inventory') || path.includes('/corporate-plans') || path.includes('/staff');
-    return !isExcluded;
-  }, []);
+  const isEnabled = true;
+
+  const queryParams = useMemo(() => {
+    const filters: any = {};
+    if (params?.status && params.status !== "all") {
+      filters.status = [params.status.toUpperCase()];
+    }
+    return {
+      page: 1,
+      limit: 1000,
+      search: params?.search || undefined,
+      filters: Object.keys(filters).length > 0 ? filters : undefined,
+    };
+  }, [params?.search, params?.status]);
 
   const { data: apiInvoices, isLoading: isInvoicesLoading } = useInvoicesQuery(
-    { page: 1, limit: 1000 },
+    queryParams,
     { enabled: isEnabled }
   );
 

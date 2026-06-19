@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/Input";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { getDependentByPatientId } from "../../hooks/corporate/dependentStorage";
 import {
   Save,
@@ -8,6 +8,7 @@ import {
   DollarSign,
   Stethoscope,
   ClipboardList,
+  Eye,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +26,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { PendingItems } from "./InvoiceForm/PendingItems";
 import { InvoiceItemRow } from "./InvoiceForm/InvoiceItemRow";
 import { PlanBanner } from "./InvoiceForm/PlanBanner";
@@ -32,6 +34,8 @@ import { useFormConfig } from "../../hooks/useFormConfig";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
 import { useUnbilledItemsQuery } from "../../hooks/billing/useUnbilledItemsQuery";
+import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
+import { InvoiceViewer } from "./InvoiceViewer";
 import {
   invoiceSchema,
   type InvoiceFormData,
@@ -60,6 +64,7 @@ export function InvoiceForm({
     resolver: zodResolver(invoiceSchema) as any,
     defaultValues: {
       patientName: invoice?.patientName ?? "",
+      patientPhone: (invoice as any)?.patientPhone ?? "",
       patientId: (invoice as any)?.patientId ?? "",
       doctor: (invoice as any)?.doctor ?? "",
       date: invoice?.date ?? new Date().toISOString().split("T")[0],
@@ -84,28 +89,75 @@ export function InvoiceForm({
 
   const formData = form.watch();
 
-  const { data: rawPatientsData } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  const [selectedPrevInvoiceId, setSelectedPrevInvoiceId] = useState<string>("");
+  const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
+  const [showAllInvoicesModal, setShowAllInvoicesModal] = useState<boolean>(false);
+
+  const { data: patientInvoicesData } = useInvoicesQuery(
+    { filters: { patient_id: formData.patientId ? [formData.patientId] : [] }, limit: 100 },
+    { enabled: !!formData.patientId }
+  );
+
+  const patientInvoices = useMemo(() => {
+    if (!patientInvoicesData) return [];
+    let rawList: any[] = [];
+    const apiInvoices = patientInvoicesData;
+    if (Array.isArray(apiInvoices)) {
+      rawList = apiInvoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).invoices)) {
+      rawList = (apiInvoices as any).invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.invoices)) {
+      rawList = (apiInvoices as any).data.invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.data)) {
+      rawList = (apiInvoices as any).data.data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
+      rawList = (apiInvoices as any).data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data)) {
+      rawList = (apiInvoices as any).responseObject.data;
+    }
+    return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
+  }, [patientInvoicesData]);
+
+  const [patientSearchInput, setPatientSearchInput] = useState("");
+  const [patientSearchQuery, setPatientSearchQuery] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setPatientSearchQuery(patientSearchInput);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [patientSearchInput]);
+
+  const { data: rawPatientsData } = usePatientQuery({
+    search: patientSearchQuery || undefined,
+    filters: { isDropdown: [true] as any }
+  });
   const apiPatients = useMemo(() => {
-    return Array.isArray(rawPatientsData) 
-      ? rawPatientsData 
+    return Array.isArray(rawPatientsData)
+      ? rawPatientsData
       : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
   }, [rawPatientsData]);
 
-  // const { data: rawInvoicesData } = useInvoicesQuery(
-  //   {
-  //     page: 1,
-  //     limit: 100,
-  //     filters: {
-  //       patient_id: formData.patientId ? [formData.patientId] : undefined,
-  //     },
-  //   },
-  //   {
-  //     enabled: !!formData.patientId,
-  //   }
-  // );
+  const selectedPatient = useMemo(() => {
+    return apiPatients.find((p: any) => p.id === formData.patientId || p.name === formData.patientName);
+  }, [apiPatients, formData.patientId, formData.patientName]);
+
+  const cat = (selectedPatient?.category || selectedPatient?.patient_category || "").toLowerCase();
+  const isCorporate = cat === "corporate" || cat === "employee" || cat === "member" || 
+                      selectedPatient?.corporatePlanId || selectedPatient?.companyId || selectedPatient?.company_id ||
+                      selectedPatient?.is_member || selectedPatient?.is_employee || selectedPatient?.isMember || selectedPatient?.isEmployee ||
+                      selectedPatient?.employeeId || selectedPatient?.employee_id || selectedPatient?.membership_id || selectedPatient?.membershipId;
+
+  const memberId = selectedPatient?.corporateMemberId || 
+                   selectedPatient?.member_id || 
+                   selectedPatient?.memberId || 
+                   selectedPatient?.primaryMemberId ||
+                   (isCorporate ? selectedPatient.id : "");
+
 
   const { data: rawUnbilledData } = useUnbilledItemsQuery(
     formData.patientId,
+    memberId,
     {
       enabled: !!formData.patientId,
     }
@@ -113,12 +165,12 @@ export function InvoiceForm({
 
   const outstandingBalance = useMemo(() => {
     if (!rawUnbilledData) return 0;
-    const itemsList = Array.isArray(rawUnbilledData) 
-      ? rawUnbilledData 
+    const itemsList = Array.isArray(rawUnbilledData)
+      ? rawUnbilledData
       : (rawUnbilledData as any)?.data?.items || (rawUnbilledData as any)?.items || (rawUnbilledData as any)?.data || [];
-    
+
     if (!Array.isArray(itemsList)) return 0;
-    
+
     return itemsList
       .reduce((sum: number, item: any) => sum + (Number(item.total || item.amount || item.cost || item.rate || 0)), 0);
   }, [rawUnbilledData]);
@@ -165,13 +217,13 @@ export function InvoiceForm({
   const pendingItems = useMemo(() => {
     if (!formData.patientId) return [];
     const list: any[] = [];
-    
+
     const unbilledObj = rawUnbilledData?.data?.unbilled_items || rawUnbilledData?.unbilled_items;
-    
+
     if (unbilledObj) {
       const apiConsultations = unbilledObj.consultations || [];
       const apiTreatments = unbilledObj.treatments || [];
-      
+
       apiConsultations.forEach((c: any) => {
         const isFree = c.is_free || c.isFree || activeCorporatePlan?.freeConsultation || false;
         list.push({
@@ -184,7 +236,7 @@ export function InvoiceForm({
           status: c.status,
         });
       });
-      
+
       apiTreatments.forEach((t: any) => {
         const isFree = t.is_free || t.isFree || false;
         list.push({
@@ -198,7 +250,7 @@ export function InvoiceForm({
         });
       });
     }
-    
+
     return list;
   }, [formData.patientId, rawUnbilledData, activeCorporatePlan]);
 
@@ -227,6 +279,7 @@ export function InvoiceForm({
       rate: pItem.rate,
       amount: pItem.rate,
       linkedId: pItem.id,
+      linkedType: pItem.type,
     } as any;
     setItems(
       items.length === 1 && !items[0].description && items[0].rate === 0
@@ -317,11 +370,127 @@ export function InvoiceForm({
       }
     >
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <LabeledField label="Patient Name" required>
-            <Select
-              value={formData.patientName}
-              onValueChange={(val) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <LabeledField label="Phone" required>
+            <SearchableSelect
+              value={formData.patientPhone || "none"}
+              onChange={(val) => {
+                if (val === "none") return;
+                const p = apiPatients.find((p: any) => p.phone === val);
+                const cp =
+                  p?.corporatePlanId || p?.companyId
+                    ? corporatePlans.find(
+                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                    )
+                    : null;
+                setSelectedPrevInvoiceId("");
+                setFormData({
+                  ...formData,
+                  patientPhone: val,
+                  patientName: p?.name || "",
+                  patientId: p?.id || "",
+                  linkedItemIds: [],
+                  discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
+                });
+              }}
+              onSearchChange={setPatientSearchInput}
+              options={[
+                { label: "Select Phone", value: "none" },
+                ...apiPatients.filter((p: any) => p.phone).map((p: any) => ({
+                  label: `${p.phone} (${p.name})`,
+                  value: p.phone,
+                  patient: p,
+                }))
+              ]}
+              renderOption={(option: any) => {
+                if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
+                const p = option.patient;
+                if (!p) return <span className="truncate pr-2">{option.label}</span>;
+
+                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                return (
+                  <div className="flex items-center gap-3 py-1">
+                    {profilePic ? (
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.avatar-fallback');
+                              if (fallback) fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-foreground text-xs leading-tight">{p.phone}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">{p.name}</span>
+                    </div>
+                  </div>
+                );
+              }}
+              renderValue={(option: any) => {
+                if (option.value === "none") return option.label;
+                const p = option.patient;
+                if (!p) return option.label;
+
+                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                return (
+                  <div className="flex items-center gap-2">
+                    {profilePic ? (
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.avatar-fallback-val');
+                              if (fallback) fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback-val hidden w-full h-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <span className="font-bold text-foreground text-sm truncate">{p.phone}</span>
+                  </div>
+                );
+              }}
+              placeholder="Select Phone"
+              searchPlaceholder="Search Phone..."
+              className="w-full bg-white"
+            />
+          </LabeledField>
+          <LabeledField label="Name" required>
+            <SearchableSelect
+              value={formData.patientName || "none"}
+              onChange={(val) => {
+                if (val === "none") return;
                 const p = apiPatients.find((p: any) => p.name === val);
                 const cp =
                   p?.corporatePlanId || p?.companyId
@@ -329,27 +498,111 @@ export function InvoiceForm({
                       (cp) => cp.id === (p.corporatePlanId || p.companyId),
                     )
                     : null;
+                setSelectedPrevInvoiceId("");
                 setFormData({
                   ...formData,
                   patientName: val,
+                  patientPhone: p?.phone || "",
                   patientId: p?.id || "",
                   linkedItemIds: [],
                   discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
                 });
               }}
-            >
-              <SelectTrigger className="w-full px-4 py-2 border rounded-xl text-sm font-medium text-left">
-                <SelectValue placeholder="Select Patient" />
-              </SelectTrigger>
-              <SelectContent>
-                {apiPatients.map((p: any) => (
-                  <SelectItem key={p.id} value={p.name}>
-                    {p.name} {p.category === "family" ? "⭐" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onSearchChange={setPatientSearchInput}
+              options={[
+                { label: "Select Patient", value: "none" },
+                ...apiPatients.map((p: any) => ({
+                  label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
+                  value: p.name,
+                  patient: p,
+                }))
+              ]}
+              renderOption={(option: any) => {
+                if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
+                const p = option.patient;
+                if (!p) return <span className="truncate pr-2">{option.label}</span>;
+
+                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                return (
+                  <div className="flex items-center gap-3 py-1">
+                    {profilePic ? (
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.avatar-fallback');
+                              if (fallback) fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-foreground text-xs leading-tight">{p.name}</span>
+                      {p.phone && <span className="text-[10px] text-muted-foreground mt-0.5">{p.phone}</span>}
+                    </div>
+                  </div>
+                );
+              }}
+              renderValue={(option: any) => {
+                if (option.value === "none") return option.label;
+                const p = option.patient;
+                if (!p) return option.label;
+
+                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                return (
+                  <div className="flex items-center gap-2">
+                    {profilePic ? (
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.avatar-fallback-val');
+                              if (fallback) fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback-val hidden w-full h-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <span className="font-bold text-foreground text-sm truncate">{p.name}</span>
+                  </div>
+                );
+              }}
+              placeholder="Select Patient"
+              searchPlaceholder="Search Patient..."
+              className="w-full bg-white"
+            />
           </LabeledField>
+
+
           <LabeledField label="Invoice Date" required>
             <Input
               type="date"
@@ -373,6 +626,33 @@ export function InvoiceForm({
             />
           </LabeledField>
         </div>
+
+        {formData.patientId && patientInvoices.length > 0 && (
+          <div className="bg-muted/40 border border-border/50 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20 shadow-sm">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Patient Invoices Detected
+                </p>
+                <p className="text-xs font-bold text-slate-800 mt-0.5">
+                  This patient has {patientInvoices.length} previous bills recorded.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAllInvoicesModal(true)}
+              className="bg-white hover:bg-slate-50 border-border text-foreground hover:text-primary font-bold px-4 rounded-xl flex items-center gap-1.5"
+            >
+              <Eye className="w-4 h-4 text-primary" /> View All Bills
+            </Button>
+          </div>
+        )}
 
         {activeCorporatePlan && (
           <PlanBanner
@@ -623,6 +903,87 @@ export function InvoiceForm({
           </Card>
         </div>
       </form>
+      {showAllInvoicesModal && (
+        <Modal
+          title={`All Invoices for ${formData.patientName}`}
+          onClose={() => setShowAllInvoicesModal(false)}
+          size="lg"
+          icon={<ClipboardList className="w-4 h-4" />}
+        >
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
+                      Invoice
+                    </th>
+                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-right">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {patientInvoices.map((inv, idx) => (
+                    <tr key={idx} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs font-bold text-foreground">
+                        {inv.invoice_number || inv.id}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {inv.date
+                          ? new Date(inv.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-foreground">
+                        ₹{inv.total.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${inv.status === "paid"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                          : "bg-amber-50 text-amber-700 border border-amber-100"
+                          }`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => setViewingInvoiceId(inv.id)}
+                          className="text-primary hover:underline font-bold"
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {viewingInvoiceId && (
+        <InvoiceViewer
+          invoiceId={viewingInvoiceId}
+          onClose={() => setViewingInvoiceId(null)}
+        />
+      )}
     </Modal>
   );
 }

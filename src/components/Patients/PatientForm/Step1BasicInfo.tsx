@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import {
   AlertTriangle,
   Calendar,
@@ -221,17 +222,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         (() => {
           let plan = null;
 
-          if (matchedCorporateEmp.corporate_plan) {
-            const cp = matchedCorporateEmp.corporate_plan;
+          if (matchedCorporateEmp.corporate_plan || matchedCorporateEmp.membership) {
+            const cp = matchedCorporateEmp.corporate_plan || matchedCorporateEmp.membership;
             plan = {
               name: cp.plan_name,
-              code: cp.plan_code || "CORP",
-              validTo: cp.valid_till ? new Date(cp.valid_till).toLocaleDateString() : "Lifetime",
+              code: cp.plan_code || "MEMBERSHIP",
+              validTo: cp.valid_till || cp.expiry_date ? new Date(cp.valid_till || cp.expiry_date).toLocaleDateString() : "Lifetime",
               benefits: cp.benefits?.map((b: any) => ({
                 id: b.id || Math.random().toString(),
                 description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
               })) || [],
-              companyName: matchedCorporateEmp.company_name
+              companyName: matchedCorporateEmp.company_name || cp.company_name || "Membership Plan"
             };
           } else {
             const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
@@ -247,14 +248,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white flex items-center gap-2">
-                    Corporate Employee Identified
+                    Membership/Corporate Found
                     <span className="text-[10px] bg-white text-primary px-2 py-0.5 rounded-full font-bold animate-pulse">
                       Click to Auto-Fill
                     </span>
                   </p>
                   <p className="text-xs text-primary-foreground/80">
                     {matchedCorporateEmp.company_name || plan?.companyName} ·
-                    EMP:{" "}
+                    ID:{" "}
                     {matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
                   </p>
                 </div>
@@ -505,6 +506,91 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         )}
       </div>
 
+      {/* Membership Plan Selection */}
+      {!matchedCorporateEmp && (
+        <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+          <Label className="block text-sm font-bold text-primary flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            Enroll in a Membership Plan (Optional)
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Select a membership plan to automatically enroll the patient and apply exclusive benefits.
+          </p>
+          <SearchableSelect
+            value={formData.selectedMembershipPlanId || "none"}
+            onChange={(val) => {
+              setFormData((prev: any) => ({
+                ...prev,
+                selectedMembershipPlanId: val === "none" ? undefined : val,
+                category: val !== "none" ? "corporate" : (prev.category === "corporate" ? "regular" : prev.category),
+                defaultDiscount: val !== "none" ? 0 : prev.defaultDiscount,
+              }));
+            }}
+            options={[
+              { label: "No Membership Plan", value: "none" },
+              ...corporatePlans.filter((p: any) => p.isActive !== false).map((plan: any) => {
+                const fee = plan.annual_fee || plan.annualFee || plan.fee || "0";
+                const limit = plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
+                const benefitsSummary = plan.benefits?.map((b: any) => b.description || b.benifit_label).join(", ") || "No specific benefits listed";
+                return {
+                  label: `${plan.name}`, // Fallback string for internal search
+                  value: plan.id,
+                  planData: plan,
+                  fee,
+                  limit,
+                  benefitsSummary
+                };
+              })
+            ]}
+            renderValue={(opt: any) => {
+              if (opt.value === "none") return <span className="font-semibold text-muted-foreground">{opt.label}</span>;
+              const { planData, fee, limit } = opt;
+              return (
+                <div className="flex items-center gap-2 truncate pr-2">
+                  <span className="font-bold text-sm truncate">{planData.name}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-green-100/50 text-green-700 whitespace-nowrap border border-green-200">
+                    Fee: ₹{fee}/yr
+                  </span>
+                  {limit && limit > 1 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100/50 text-blue-700 whitespace-nowrap border border-blue-200">
+                      Up to {limit} Members
+                    </span>
+                  )}
+                </div>
+              );
+            }}
+            renderOption={(opt: any) => {
+              if (opt.value === "none") return <span className="font-semibold text-muted-foreground py-1">{opt.label}</span>;
+              const { planData, fee, limit, benefitsSummary } = opt;
+              return (
+                <div className="flex flex-col gap-1.5 pr-2 w-full min-w-0 py-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-bold text-foreground text-sm">{planData.name}</span>
+                    <div className="flex gap-2 shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100/80 text-green-800 whitespace-nowrap border border-green-200">
+                        Fee: ₹{fee}/yr
+                      </span>
+                      {limit && limit > 1 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 whitespace-nowrap border border-blue-200">
+                          Limit: {limit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-normal leading-snug">
+                    {benefitsSummary}
+                  </span>
+                </div>
+              );
+            }}
+            placeholder="Select a plan..."
+            searchPlaceholder="Search plans..."
+            className="w-full bg-white"
+          />
+        </div>
+      )}
+
+      {/* Address */}
       <div>
         <Label className="block text-sm font-semibold text-muted-foreground mb-1">
           <MapPin className="w-4 h-4 inline mr-2" />
@@ -580,7 +666,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="regular">Regular</SelectItem>
-                    {isCorporate && <SelectItem value="corporate">Corporate</SelectItem>}
+                    {isCorporate && <SelectItem value="corporate">Membership</SelectItem>}
                     <SelectItem value="family">Family (Doctor's House)</SelectItem>
                     <SelectItem value="staff">Clinic Staff</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>
@@ -613,6 +699,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
       </div>
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

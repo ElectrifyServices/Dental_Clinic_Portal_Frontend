@@ -40,6 +40,7 @@ export function normalizeInvoice(payload: any) {
     discountAmount,
     taxAmount,
     total,
+    invoice_number: inv.invoice_number || inv.invoiceNumber || inv.id,
     isComplimentary: inv.is_complimentary || inv.isComplimentary || false,
     complimentaryNote: inv.complimentary_reason || inv.complimentaryNote || '',
     linkedItemIds: inv.linked_item_ids || inv.linkedItemIds || [],
