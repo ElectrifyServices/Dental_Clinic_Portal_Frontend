@@ -31,50 +31,37 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
     <div className={`grid grid-cols-12 gap-3 items-end p-3 rounded-xl border transition-all ${
       isLinked ? 'bg-indigo-50 border-indigo-100' : 'bg-muted/30 border-border/50 hover:border-border'
     }`}>
-      <div className="col-span-12 md:col-span-5">
+      <div className="col-span-12 md:col-span-6">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Service Description</Label>
         {isLinked ? (
-          <div className="w-full px-3 py-2 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-sm flex items-center border border-indigo-200">
-            <Check className="w-4 h-4 mr-2" />
-            {item.description}
+          <div className="w-full px-3 h-10 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-sm flex items-center border border-indigo-200">
+            <Check className="w-4 h-4 mr-2 shrink-0" />
+            <span className="truncate">{item.description}</span>
           </div>
         ) : (
           <div className="space-y-2">
             <Select
-              value={commonServices.some(s => s.name === item.description) ? item.description : (item.description ? 'custom' : '')}
+              value={item.description || ''}
               onValueChange={(value) => {
-                if (value === 'custom') {
-                  onUpdate(item.id, 'description', '');
-                } else {
-                  const s = commonServices.find(s => s.name === value);
-                  onUpdate(item.id, 'description', value);
-                  if (s) onUpdate(item.id, 'rate', s.rate);
-                }
+                const s = commonServices.find(s => s.label === value);
+                onUpdate(item.id, 'description', value);
+                if (s) onUpdate(item.id, 'rate', s.rate);
               }}
             >
-              <SelectTrigger className="w-full rounded-lg text-sm">
+              <SelectTrigger className="w-full h-10 rounded-lg text-sm bg-card">
                 <SelectValue placeholder="Select Service" />
               </SelectTrigger>
               <SelectContent>
                 {commonServices.map(s => (
-                  <SelectItem key={s.id || s.name} value={s.name}>{s.name}</SelectItem>
+                  <SelectItem key={s.label} value={s.label}>{s.label}</SelectItem>
                 ))}
-                <SelectItem value="custom">Custom Service...</SelectItem>
               </SelectContent>
             </Select>
-            {(!commonServices.some(s => s.name === item.description) && !isLinked) && (
-              <Input
-                type="text"
-                placeholder="Enter custom service description"
-                value={item.description}
-                onChange={e => onUpdate(item.id, 'description', e.target.value)}
-                className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-              />
-            )}
           </div>
         )}
       </div>
 
+      {/* Qty field hidden as per request
       <div className="col-span-3 md:col-span-2">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Qty</Label>
         <Input
@@ -82,18 +69,19 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
           min="1"
           value={item.quantity}
           onChange={e => onUpdate(item.id, 'quantity', parseInt(e.target.value) || 1)}
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-center font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+          className="w-full px-3 h-10 bg-card border border-border rounded-lg text-sm text-center font-bold focus:ring-2 focus:ring-primary/20 outline-none"
         />
       </div>
+      */}
 
-      <div className="col-span-4 md:col-span-2">
+      <div className="col-span-4 md:col-span-3">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Rate (₹)</Label>
         <Input
           type="number"
           value={item.rate}
           readOnly={isLinked}
           onChange={e => onUpdate(item.id, 'rate', parseFloat(e.target.value) || 0)}
-          className={`w-full px-3 py-2 border rounded-lg text-sm font-bold text-right outline-none ${
+          className={`w-full px-3 h-10 border rounded-lg text-sm font-bold text-right outline-none ${
             isLinked ? 'bg-indigo-100 border-indigo-200 text-indigo-900 cursor-not-allowed' : 'bg-card border-border focus:ring-2 focus:ring-primary/20'
           }`}
         />
@@ -101,16 +89,17 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
 
       <div className="col-span-4 md:col-span-2">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Total (₹)</Label>
-        <div className="w-full px-3 py-2 bg-muted/50 border border-border/50 rounded-lg text-sm font-black text-right text-foreground">
+        <div className="w-full px-3 h-10 flex items-center justify-end bg-muted/50 border border-border/50 rounded-lg text-sm font-black text-foreground">
           {(item.amount || 0).toLocaleString()}
         </div>
       </div>
 
-      <div className="col-span-1 text-center pb-1">
+      <div className="col-span-1 flex items-center justify-center">
         <Button
           type="button"
+          variant="ghost"
           onClick={() => onRemove(item.id)}
-          className="p-2 text-red-500 hover:bg-destructive/10 rounded-lg transition-all"
+          className="h-10 w-10 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-all"
           title="Remove Item"
         >
           <Trash2 className="w-4 h-4" />

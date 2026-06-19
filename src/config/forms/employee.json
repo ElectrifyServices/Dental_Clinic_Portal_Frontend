@@ -74,18 +74,6 @@
           "required": true
         }
       ]
-    },
-    {
-      "id": "eligibility",
-      "title": "Eligibility Details",
-      "fields": [
-        {
-          "name": "eligible_date",
-          "label": "Eligibility Date",
-          "type": "date",
-          "required": true
-        }
-      ]
     }
   ]
 }

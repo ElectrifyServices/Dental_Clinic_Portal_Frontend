@@ -22,7 +22,9 @@ interface SearchableSelectProps {
   isMulti?: boolean;
   className?: string;
   onSearchChange?: (query: string) => void;
-  displayValue?: string;
+  displayValue?: React.ReactNode | string;
+  renderOption?: (option: any) => React.ReactNode;
+  renderValue?: (option: any) => React.ReactNode;
 }
 
 export function SearchableSelect({
@@ -42,6 +44,8 @@ export function SearchableSelect({
   className,
   onSearchChange,
   displayValue,
+  renderOption,
+  renderValue,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -104,13 +108,17 @@ export function SearchableSelect({
             className
           )}
         >
-          <span className="truncate">
+          <div className="flex-1 truncate pr-2 text-left">
             {isLoading
               ? "Loading..."
               : isMulti
                 ? (Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder)
-                : (options.find(opt => getOptionValue(opt) === value) ? getOptionLabel(options.find(opt => getOptionValue(opt) === value)!) : displayValue || value) || placeholder}
-          </span>
+                : (
+                    options.find(opt => getOptionValue(opt) === value) 
+                      ? (renderValue ? renderValue(options.find(opt => getOptionValue(opt) === value)) : getOptionLabel(options.find(opt => getOptionValue(opt) === value)!))
+                      : displayValue || value
+                  ) || placeholder}
+          </div>
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </Button>
       </PopoverTrigger>
@@ -144,7 +152,7 @@ export function SearchableSelect({
         </div>
 
         <div 
-          className="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar"
+          className="max-h-[420px] overflow-y-auto space-y-0.5 custom-scrollbar"
           onWheelCapture={(e) => e.stopPropagation()}
           onTouchMoveCapture={(e) => e.stopPropagation()}
         >
@@ -168,8 +176,12 @@ export function SearchableSelect({
                     onClick={() => handleSelect(optValue)}
                     className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none transition-colors duration-150"
                   >
-                    <span className="truncate pr-2">{optLabel}</span>
-                    {isSelected && <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
+                    {renderOption ? (
+                      renderOption(opt)
+                    ) : (
+                      <span className="truncate pr-2">{optLabel}</span>
+                    )}
+                    {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
                   </button>
                   {onDeleteOption && (
                     <button

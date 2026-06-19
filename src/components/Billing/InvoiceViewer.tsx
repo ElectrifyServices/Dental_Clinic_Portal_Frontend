@@ -87,7 +87,7 @@ export function InvoiceViewer({
 
   return (
     <Modal
-      title={`Invoice ${invoice.id}`}
+      title={`Invoice ${invoice.invoice_number || invoice.id}`}
       onClose={onClose}
       size="2xl"
       icon={<FileText className="w-4 h-4" />}

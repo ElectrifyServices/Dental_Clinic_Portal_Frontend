@@ -146,9 +146,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                     </h3>
                   </SimpleTooltip>
                   {patient.category && (
-                    <SimpleTooltip content={`Category: ${patient.category.toUpperCase()}`}>
+                    <SimpleTooltip content={`Category: ${patient.category.toLowerCase() === 'corporate' ? 'MEMBERSHIP' : patient.category.toUpperCase()}`}>
                       <Badge className={`border-none text-[9px] font-black px-1.5 py-0 whitespace-nowrap cursor-help ${getCategoryStyles(patient.category)}`}>
-                        {patient.category.toUpperCase()}
+                        {patient.category.toLowerCase() === 'corporate' ? 'MEMBERSHIP' : patient.category.toUpperCase()}
                       </Badge>
                     </SimpleTooltip>
                   )}

@@ -263,7 +263,7 @@ export function PatientForm({
             />
           )}
           {step === 4 && (
-            <Step4Review formData={formData} isCheckIn={isCheckIn} />
+            <Step4Review formData={formData} isCheckIn={isCheckIn} corporatePlans={corporatePlans} />
           )}
         </form>
 

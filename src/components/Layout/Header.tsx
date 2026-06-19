@@ -87,7 +87,7 @@ export function Header() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setActiveModal("quickRegister")}
+            onClick={() => setActiveModal("addCorporateMember")}
             className="gap-2 text-foreground"
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -116,7 +116,7 @@ export function Header() {
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => setActiveModal("quickRegister")}
+                onClick={() => setActiveModal("addCorporateMember")}
                 className="w-full justify-start gap-2.5 text-sm h-auto py-2.5 rounded-lg"
               >
                 <div className="w-7 h-7 rounded-md bg-amber-50 flex items-center justify-center">

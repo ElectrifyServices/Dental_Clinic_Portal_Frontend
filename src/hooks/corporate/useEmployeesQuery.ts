@@ -41,7 +41,8 @@ export function useEmployeesQuery(variables: EmployeeListVariables, options?: { 
     },
     options: {
       enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
+      refetchOnMount: "always",
       keepPreviousData: true,
     },
   });

@@ -10,6 +10,7 @@ const invoiceItemSchema = z.object({
 
 export const invoiceSchema = z.object({
   patientName: z.string().min(1, 'Patient name is required'),
+  patientPhone: z.string().optional(),
   patientId: z.string().optional(),
   doctor: z.string().optional(),
   date: z.string().min(1, 'Date is required'),

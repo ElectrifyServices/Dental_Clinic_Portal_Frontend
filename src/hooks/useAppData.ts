@@ -13,10 +13,15 @@ export const useAppData = (params?: {
   corporateSearch?: string;
   corporateStatus?: string;
   corporatePlanType?: string;
+  invoiceSearch?: string;
+  invoiceStatus?: string;
 }) => {
   const patientData = usePatientData();
   const apptData = useAppointmentData();
-  const invoiceData = useInvoiceData();
+  const invoiceData = useInvoiceData({
+    search: params?.invoiceSearch,
+    status: params?.invoiceStatus,
+  });
   const treatmentData = useTreatmentData();
   const staffData = useStaffData(params);
   const inventoryData = useInventoryData();
