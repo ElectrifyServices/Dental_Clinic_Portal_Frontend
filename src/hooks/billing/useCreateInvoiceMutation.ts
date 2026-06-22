@@ -10,7 +10,8 @@ export interface CreateInvoiceItemVariables {
 }
 
 export interface CreateInvoiceVariables {
-  patient_id: string;
+  patient_id?: string;
+  member_id?: string;
   due_date: string;
   payment_method: string;
   complimentary_reason?: string;

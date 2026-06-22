@@ -37,24 +37,38 @@ export function useApiMutation<TData, TVariables = any>({
         ? headers(variables)
         : headers;
 
-      const res = await apiClient.request<ApiResponse<TData>>({
-        url: resolvedEndpoint,
-        method,
-        data: requestData,
-        headers: resolvedHeaders,
-      });
+      try {
+        const res = await apiClient.request<ApiResponse<TData>>({
+          url: resolvedEndpoint,
+          method,
+          data: requestData,
+          headers: resolvedHeaders,
+        });
 
-      const parsed = parseApiResponse(res.data);
-      
-      // If the API structure uses status codes within the response body
-      if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
-        const err: any = new Error(parsed.status.statusDesc || "API Error");
-        err.data = parsed.data;
-        err.status = parsed.status;
-        throw err;
+        const parsed = parseApiResponse(res.data);
+        
+        // If the API structure uses status codes within the response body
+        if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
+          const err: any = new Error(parsed.status.statusDesc || "API Error");
+          err.data = parsed.data;
+          err.status = parsed.status;
+          throw err;
+        }
+
+        return parsed.data as TData;
+      } catch (error: any) {
+        const serverResponse = error.response?.data;
+        if (serverResponse) {
+          const parsed = parseApiResponse(serverResponse);
+          if (parsed.status && parsed.status.statusDesc) {
+            const err: any = new Error(parsed.status.statusDesc);
+            err.data = parsed.data;
+            err.status = parsed.status;
+            throw err;
+          }
+        }
+        throw error;
       }
-
-      return parsed.data as TData;
     },
     ...options,
   });

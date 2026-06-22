@@ -62,10 +62,14 @@ export function SearchableSelect({
   const getOptionValue = (opt: OptionType) => typeof opt === 'string' ? opt : (opt.value || "");
 
   const filteredOptions = React.useMemo(() => {
-    return options.filter((option) =>
-      getOptionLabel(option).toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [options, searchQuery]);
+    if (onSearchChange) return options;
+    return options.filter((option) => {
+      const searchStr = typeof option === 'string' 
+        ? option 
+        : (option.searchLabel || option.label || "");
+      return searchStr.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [options, searchQuery, onSearchChange]);
 
   const exactMatchExists = React.useMemo(() => {
     return options.some(

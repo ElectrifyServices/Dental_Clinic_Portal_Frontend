@@ -42,6 +42,8 @@ export function useInvoiceData(params?: { search?: string; status?: string }) {
       rawList = (apiInvoices as any).data.data;
     } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
       rawList = (apiInvoices as any).data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data?.invoices)) {
+      rawList = (apiInvoices as any).responseObject.data.invoices;
     } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data)) {
       rawList = (apiInvoices as any).responseObject.data;
     }
