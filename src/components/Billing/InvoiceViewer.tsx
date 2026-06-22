@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Download,
   Printer,
@@ -9,24 +10,32 @@ import {
   CreditCard,
   Stethoscope,
 } from "lucide-react";
-import { Modal, Button, Badge, Card, CardContent } from "@/components/ui";
+import { Modal, Button, Badge, Card, CardContent, DataTable } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { useAppData } from "../../hooks/useAppData";
 import { useInvoiceQuery } from "../../hooks/billing/useInvoiceQuery";
 
 interface InvoiceViewerProps {
   invoiceId: string;
+  patientId?: string;
   onClose: () => void;
   onUpdateStatus?: (id: string, status: string) => void;
 }
 
 export function InvoiceViewer({
   invoiceId,
+  patientId,
   onClose,
   onUpdateStatus,
 }: InvoiceViewerProps) {
   const { patients, corporatePlans } = useAppData();
-  const { data: invoice, isLoading, error } = useInvoiceQuery(invoiceId);
+  const [activeId, setActiveId] = useState(invoiceId);
+
+  useEffect(() => {
+    setActiveId(invoiceId);
+  }, [invoiceId]);
+
+  const { data: invoice, allInvoices, isLoading, error } = useInvoiceQuery(activeId, patientId);
 
   if (isLoading) {
     return (
@@ -75,12 +84,13 @@ export function InvoiceViewer({
 
   const statusColors: Record<
     string,
-    "green" | "blue" | "red" | "gray" | "violet"
+    string
   > = {
     paid: "green",
     sent: "blue",
     overdue: "red",
     draft: "gray",
+    generated: "indigo",
     complimentary: "violet",
     cancelled: "gray",
   };
@@ -118,35 +128,32 @@ export function InvoiceViewer({
       <div className="space-y-6">
         {/* Status Banner */}
         <div
-          className={`p-4 rounded-2xl flex items-center justify-between border ${
-            invoice.status === "paid"
+          className={`p-4 rounded-2xl flex items-center justify-between border ${invoice.status === "paid"
               ? "bg-emerald-50 border-emerald-100"
               : invoice.status === "overdue"
                 ? "bg-destructive/10 border-destructive/20"
                 : "bg-primary/10 border-primary/20"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-xl ${
-                invoice.status === "paid"
+              className={`p-2 rounded-xl ${invoice.status === "paid"
                   ? "bg-emerald-500 text-white"
                   : invoice.status === "overdue"
                     ? "bg-destructive/100 text-white"
                     : "bg-primary/100 text-white"
-              }`}
+                }`}
             >
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
               <p
-                className={`text-xs font-bold uppercase tracking-wider ${
-                  invoice.status === "paid"
+                className={`text-xs font-bold uppercase tracking-wider ${invoice.status === "paid"
                     ? "text-emerald-700"
                     : invoice.status === "overdue"
                       ? "text-destructive"
                       : "text-primary"
-                }`}
+                  }`}
               >
                 Invoice Status
               </p>
@@ -251,94 +258,67 @@ export function InvoiceViewer({
         </div>
 
         {/* Items Table */}
-        <div className="rounded-2xl border border-border overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 border-b border-border">
-              <tr>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
-                  Description
-                </th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
-                  Qty
-                </th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-right">
-                  Rate
-                </th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-right">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {invoice.items.map((item: any, idx: number) => (
-                <tr key={idx} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">
-                    {item.description}
-                  </td>
-                  <td className="px-4 py-3 text-center text-muted-foreground">
-                    {item.quantity}
-                  </td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">
-                    ₹{item.rate.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right font-bold text-foreground">
-                    ₹{item.amount.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-muted/30 font-medium">
-              <tr>
-                <td
-                  colSpan={3}
-                  className="px-4 py-2 text-right text-muted-foreground"
-                >
-                  Subtotal
-                </td>
-                <td className="px-4 py-2 text-right text-foreground">
-                  ₹{invoice.subtotal.toLocaleString()}
-                </td>
-              </tr>
+        <DataTable
+          columns={[
+            {
+              key: "description",
+              header: "Description",
+              render: (item: any) => <span className="font-medium text-foreground">{item.description}</span>,
+            },
+            {
+              key: "quantity",
+              header: "Qty",
+              align: "center",
+              render: (item: any) => <span className="text-muted-foreground">{item.quantity}</span>,
+            },
+            {
+              key: "rate",
+              header: "Rate",
+              align: "right",
+              render: (item: any) => <span className="text-muted-foreground">₹{(item.rate ?? 0).toLocaleString()}</span>,
+            },
+            {
+              key: "amount",
+              header: "Amount",
+              align: "right",
+              render: (item: any) => <span className="font-bold text-foreground">₹{(item.amount ?? 0).toLocaleString()}</span>,
+            },
+          ]}
+          data={invoice.items || []}
+          rowKey={(item: any, idx: number) => item.id || `item-${idx}`}
+          footer={
+            <div className="bg-muted/30 font-medium text-sm divide-y divide-border/60">
+              <div className="flex justify-between px-6 py-2">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">₹{invoice.subtotal.toLocaleString()}</span>
+              </div>
               {invoice.discount > 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-4 py-2 text-right text-destructive"
-                  >
-                    Total Discount
-                  </td>
-                  <td className="px-4 py-2 text-right text-destructive">
-                    -₹{invoice.discount.toLocaleString()}
-                  </td>
-                </tr>
+                <div className="flex justify-between px-6 py-2">
+                  <span className="text-destructive">Total Discount</span>
+                  <span className="text-destructive">-₹{invoice.discount.toLocaleString()}</span>
+                </div>
               )}
               {invoice.tax > 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-4 py-2 text-right text-muted-foreground"
-                  >
-                    GST (18%)
-                  </td>
-                  <td className="px-4 py-2 text-right text-foreground">
-                    ₹{invoice.tax.toLocaleString()}
-                  </td>
-                </tr>
+                <div className="flex justify-between px-6 py-2">
+                  <span className="text-muted-foreground">GST (18%)</span>
+                  <span className="text-foreground">₹{invoice.tax.toLocaleString()}</span>
+                </div>
               )}
-              <tr className="bg-primary/5 text-lg font-black">
-                <td
-                  colSpan={3}
-                  className="px-4 py-4 text-right text-primary uppercase tracking-wider"
-                >
-                  Grand Total
-                </td>
-                <td className="px-4 py-4 text-right text-primary">
-                  ₹{invoice.total.toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              <div className="flex justify-between px-6 py-3.5 bg-primary/5 text-base font-black text-primary uppercase tracking-wider">
+                <span>Grand Total</span>
+                <span>₹{invoice.total.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between px-6 py-2.5 bg-emerald-50/40 text-emerald-700 font-bold uppercase tracking-wider">
+                <span>Paid Amount</span>
+                <span>₹{invoice.paidAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between px-6 py-2.5 bg-amber-50/40 text-amber-700 font-bold uppercase tracking-wider">
+                <span>Pending Amount</span>
+                <span>₹{invoice.pendingAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          }
+        />
 
         {invoice.isComplimentary && invoice.complimentaryNote && (
           <div className="p-4 bg-violet-50 border border-violet-100 rounded-2xl flex items-start gap-3">
@@ -351,6 +331,79 @@ export function InvoiceViewer({
                 "{invoice.complimentaryNote}"
               </p>
             </div>
+          </div>
+        )}
+
+        {allInvoices && allInvoices.length > 1 && (
+          <div className="space-y-3 pt-4 border-t border-border/80">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" /> All Bills for this Patient ({allInvoices.length})
+            </h3>
+            <DataTable
+              columns={[
+                {
+                  key: "invoice_number",
+                  header: "Invoice No",
+                  render: (inv: any) => (
+                    <span className="font-mono text-primary font-bold">
+                      {inv.invoice_number}
+                      {inv.id === invoice.id && (
+                        <span className="ml-1.5 text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
+                          Current
+                        </span>
+                      )}
+                    </span>
+                  ),
+                },
+                {
+                  key: "date",
+                  header: "Date",
+                  render: (inv: any) => (
+                    <span className="text-muted-foreground">
+                      {new Date(inv.date).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  ),
+                },
+                {
+                  key: "total",
+                  header: "Total",
+                  align: "right",
+                  render: (inv: any) => <span>₹{(inv.total || 0).toLocaleString()}</span>,
+                },
+                {
+                  key: "paidAmount",
+                  header: "Paid",
+                  align: "right",
+                  render: (inv: any) => <span className="text-emerald-700">₹{(inv.paidAmount || 0).toLocaleString()}</span>,
+                },
+                {
+                  key: "pendingAmount",
+                  header: "Pending",
+                  align: "right",
+                  render: (inv: any) => <span className="text-amber-700">₹{(inv.pendingAmount || 0).toLocaleString()}</span>,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  align: "center",
+                  render: (inv: any) => (
+                    <Badge
+                      variant={statusColors[inv.status] || "gray"}
+                      className="text-[8px] uppercase px-2 py-0.5 font-bold"
+                    >
+                      {inv.status}
+                    </Badge>
+                  ),
+                },
+              ]}
+              data={allInvoices}
+              rowKey={(inv: any) => inv.id}
+              onRowClick={(inv: any) => setActiveId(inv.id)}
+            />
           </div>
         )}
       </div>

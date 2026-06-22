@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface InvoicePaymentModalProps {
   invoice: any;
   onClose: () => void;
-  onConfirmPayment: (invoiceId: string, method: string) => void;
+  onConfirmPayment: (invoiceId: string, method: string, amount: number) => void;
 }
 
 const PAYMENT_METHODS = [
@@ -51,6 +51,8 @@ export function InvoicePaymentModal({
   const [method, setMethod] = useState("cash");
 
   const totalAmount = invoice.total ?? invoice.amount ?? 0;
+  const pendingAmount = invoice.pendingAmount ?? totalAmount;
+  const [payAmount, setPayAmount] = useState(pendingAmount.toString());
 
   return (
     <Modal
@@ -64,7 +66,7 @@ export function InvoicePaymentModal({
             Cancel
           </Button>
           <Button
-            onClick={() => onConfirmPayment(invoice.id, method)}
+            onClick={() => onConfirmPayment(invoice.id, method.toUpperCase(), Number(payAmount || 0))}
             className="gap-2 rounded-xl shadow-lg shadow-primary/20"
           >
             <CheckCircle2 className="w-4 h-4" /> Confirm Payment
@@ -73,20 +75,33 @@ export function InvoicePaymentModal({
       }
     >
       <div className="space-y-6 py-2">
-        {/* Total Amount Card */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-transparent p-5 rounded-2xl border border-primary/10 text-center">
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute -left-6 -top-6 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
-          
-          <p className="text-[10px] text-muted-foreground font-extrabold uppercase tracking-widest mb-1.5">
-            Total Amount Due
-          </p>
-          <p className="text-4xl font-black text-foreground tracking-tight">
-            ₹{Number(totalAmount).toLocaleString("en-IN")}
-          </p>
-          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-background border border-border text-xs font-bold text-slate-700 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Invoice: <span className="font-mono text-primary font-bold">{invoice.invoice_number || invoice.id}</span>
+        {/* Manual Amount Input */}
+        <div className="space-y-2">
+          <Label className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">
+            Payment Amount (₹)
+          </Label>
+          <div className="relative rounded-2xl shadow-sm">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-base">
+              ₹
+            </span>
+            <input
+              type="number"
+              value={payAmount}
+              onFocus={() => {
+                if (payAmount === "0") {
+                  setPayAmount("");
+                }
+              }}
+              onChange={(e) => {
+                let val = e.target.value;
+                if (val.startsWith("0") && val.length > 1 && val[1] !== ".") {
+                  val = val.substring(1);
+                }
+                setPayAmount(val);
+              }}
+              className="w-full pl-9 pr-4 py-3 rounded-2xl border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-bold text-foreground text-base transition-all duration-200"
+              placeholder="Enter payment amount"
+            />
           </div>
         </div>
 

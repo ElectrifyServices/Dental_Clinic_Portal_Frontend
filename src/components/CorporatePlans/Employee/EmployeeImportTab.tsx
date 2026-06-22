@@ -65,7 +65,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       }
 
       queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["member"] });
       queryClient.invalidateQueries({ queryKey: ["companies"] });
 
       onBulkSave(valid as CorporateEmployee[]);
@@ -94,7 +94,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           <div>
             <p className="text-sm font-semibold text-foreground mb-1">Upload Excel / CSV file</p>
             <p className="text-xs text-muted-foreground">
-              Columns: name, phone, email, gender, plan_code, date_of_birth, expiry_date
+              Columns: name, phone, email, gender, plan_code, date_of_birth
             </p>
           </div>
           <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="flex-shrink-0 gap-2">

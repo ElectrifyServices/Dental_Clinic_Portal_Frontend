@@ -49,7 +49,6 @@ export function EmployeeManagement({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
-  const [selectedCompanyFilter, setSelectedCompanyFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
 
   const [showForm, setShowForm] = useState(false);
@@ -79,12 +78,8 @@ export function EmployeeManagement({
       filters.plan_id = [selectedPlanFilter];
     }
 
-    if (selectedCompanyFilter !== 'all') {
-      filters.company_name = [selectedCompanyFilter];
-    }
-
     return filters;
-  }, [planTypeFilter, selectedPlanFilter, selectedCompanyFilter, plans]);
+  }, [planTypeFilter, selectedPlanFilter, plans]);
 
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
@@ -153,7 +148,6 @@ export function EmployeeManagement({
   const handlePlanTypeChange = (val: string) => {
     setPlanTypeFilter(val as any);
     setSelectedPlanFilter('all');
-    setSelectedCompanyFilter('all');
     setPage(1);
   };
 
@@ -169,18 +163,6 @@ export function EmployeeManagement({
       ...filteredPlans.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }))
     ];
   }, [plans, planTypeFilter]);
-
-  const availableCompanyOptions = useMemo(() => {
-    const companies = Array.from(new Set(
-      plans
-        .filter(p => p.isActive && p.planCategory !== 'individual' && p.companyName && p.companyName !== 'Individual')
-        .map(p => p.companyName!)
-    ));
-    return [
-      { value: 'all', label: 'All Companies' },
-      ...companies.map(c => ({ value: c, label: c }))
-    ];
-  }, [plans]);
 
   const handleDelete = async () => {
     if (!deleteEmp) return;
@@ -524,26 +506,7 @@ export function EmployeeManagement({
                 </Select>
               </div>
 
-              {/* Company Select - only for corporate or all */}
-              {planTypeFilter !== 'individual' && (
-                <div className="w-full sm:w-48">
-                  <Select
-                    value={selectedCompanyFilter}
-                    onValueChange={val => { setSelectedCompanyFilter(val); setPage(1); }}
-                  >
-                    <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
-                      <SelectValue placeholder="Filter by Company" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCompanyOptions.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              {/* Company filter has been removed */}
             </div>
           </div>
 

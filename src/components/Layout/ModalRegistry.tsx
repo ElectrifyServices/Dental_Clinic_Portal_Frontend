@@ -51,8 +51,10 @@ import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdat
 import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/consultationUtils";
 import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
 import { useCreateInvoiceMutation, CreateInvoiceVariables } from "../../hooks/billing/useCreateInvoiceMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function ModalRegistry() {
+  const queryClient = useQueryClient();
   const {
     activeModal,
     setActiveModal,
@@ -640,7 +642,6 @@ export function ModalRegistry() {
           onSave={async (inv: any) => {
             try {
               const payload: CreateInvoiceVariables = {
-                patient_id: inv.patientId,
                 due_date: inv.dueDate,
                 payment_method: "CASH",
                 complimentary_reason: inv.complimentaryNote || undefined,
@@ -664,10 +665,17 @@ export function ModalRegistry() {
                 }),
               };
 
+              if (inv.memberId) {
+                payload.member_id = inv.memberId;
+              } else {
+                payload.patient_id = inv.patientId;
+              }
+
               const response = await createInvoiceMutation(payload);
               const invoiceId = response?.data?.id || inv.id;
               
               handleSaveInvoice({ ...inv, id: invoiceId });
+              queryClient.invalidateQueries({ queryKey: ["invoices"] });
               setActiveModal(null);
               showToast("Invoice created successfully!", "success");
             } catch (err: any) {
@@ -708,6 +716,7 @@ export function ModalRegistry() {
       {selectedItemId && invoices.find((i: any) => i.id === selectedItemId) && (
         <InvoiceViewer
           invoiceId={selectedItemId}
+          patientId={invoices.find((i: any) => i.id === selectedItemId)?.patientId || invoices.find((i: any) => i.id === selectedItemId)?.patient_id}
           onClose={() => setSelectedItemId("")}
           onUpdateStatus={handleUpdateInvoiceStatus}
         />

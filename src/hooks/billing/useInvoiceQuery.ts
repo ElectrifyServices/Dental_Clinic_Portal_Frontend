@@ -1,8 +1,22 @@
 import { useApiQuery } from "../useApiQuery";
 
-export function normalizeInvoice(payload: any) {
+export function normalizeInvoice(payload: any, expectedId?: string) {
   if (!payload) return null;
-  const inv = payload?.responseObject?.data || payload?.data || payload?.invoice || payload;
+  let inv = payload?.responseObject?.data || payload?.data || payload?.invoice || payload;
+
+  if (inv && inv.invoices && Array.isArray(inv.invoices)) {
+    inv = inv.invoices;
+  }
+
+  if (Array.isArray(inv)) {
+    if (expectedId) {
+      inv = inv.find((i: any) => i.id === expectedId || i.invoice_number === expectedId) || inv[0];
+    } else {
+      inv = inv[0];
+    }
+  }
+
+  if (!inv) return null;
 
   // Normalize items array
   const rawItems = inv.invoice_items || inv.invoiceItems || inv.items || [];
@@ -25,12 +39,15 @@ export function normalizeInvoice(payload: any) {
   const taxAmount = Number(inv.tax_amount ?? (inv.is_complimentary ? 0 : ((subtotal - discountAmount) * taxVal) / 100));
   const total = Number(inv.total_amount ?? inv.total ?? (inv.is_complimentary ? 0 : (subtotal - discountAmount + taxAmount)));
 
+  const paidAmount = Number(inv.paid_amount ?? inv.paidAmount ?? 0);
+  const pendingAmount = Number(inv.pending_amount ?? inv.pendingAmount ?? 0);
+
   return {
     ...inv,
     id: inv.id,
-    patientName: inv.patient_name || inv.patientName || (inv.patient?.name) || '',
-    patientId: inv.patient_id || inv.patientId || (inv.patient?.id) || '',
-    phone: inv.phone || inv.patient_phone || (inv.patient?.phone) || '',
+    patientName: inv.patient_name || inv.patientName || (inv.patient?.name) || (inv.member?.name) || inv.member_name || inv.memberName || '',
+    patientId: inv.patient_id || inv.patientId || (inv.patient?.id) || (inv.member?.id) || inv.member_id || inv.memberId || '',
+    phone: inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '',
     doctor: inv.doctor_name || inv.doctor || (inv.doctor?.name) || '',
     date: inv.invoice_date ? inv.invoice_date.split('T')[0] : (inv.date ? inv.date.split('T')[0] : (inv.created_at ? inv.created_at.split('T')[0] : '')),
     dueDate: inv.due_date ? inv.due_date.split('T')[0] : (inv.dueDate ? inv.dueDate.split('T')[0] : ''),
@@ -40,6 +57,8 @@ export function normalizeInvoice(payload: any) {
     discountAmount,
     taxAmount,
     total,
+    paidAmount,
+    pendingAmount,
     invoice_number: inv.invoice_number || inv.invoiceNumber || inv.id,
     isComplimentary: inv.is_complimentary || inv.isComplimentary || false,
     complimentaryNote: inv.complimentary_reason || inv.complimentaryNote || '',
@@ -49,19 +68,31 @@ export function normalizeInvoice(payload: any) {
   };
 }
 
-export function useInvoiceQuery(id: string, options?: any) {
+export function useInvoiceQuery(id: string, patientId?: string, options?: any) {
   const query = useApiQuery<any>({
-    queryKey: ["invoice", id],
-    endpoint: `/invoice/${id}`,
+    queryKey: ["invoice", id, patientId],
+    endpoint: `/invoice/history`,
     method: "get",
+    params: {
+      ...(patientId ? { patient_id: patientId } : {})
+    },
     options: {
       enabled: !!id,
       ...options,
     },
   });
 
+  let rawData = query.data?.responseObject?.data || query.data?.data || query.data?.invoice || query.data;
+  if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
+    rawData = rawData.invoices;
+  }
+  const allInvoices = Array.isArray(rawData)
+    ? rawData.map((inv: any) => normalizeInvoice(inv))
+    : rawData ? [normalizeInvoice(rawData)] : [];
+
   return {
     ...query,
-    data: query.data ? normalizeInvoice(query.data) : null,
+    data: query.data ? normalizeInvoice(query.data, id) : null,
+    allInvoices,
   };
 }

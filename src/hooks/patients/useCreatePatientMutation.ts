@@ -127,15 +127,17 @@ export function mapFormDataToCreatePayload(
   payload.append('patient_category', CATEGORY_MAP[category] ?? category.toUpperCase());
 
   // Arrays (Medical History & Allergies)
+  const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
   const medicalHistories = formData.medicalHistory
     ? formData.medicalHistory.split("\n").map((s: string) => s.trim()).filter(Boolean)
     : [];
-  medicalHistories.forEach((id: string) => payload.append('medical_history_ids', id));
+  medicalHistories.filter(isUUID).forEach((id: string) => payload.append('medical_history_ids', id));
 
   const allergies = formData.allergies
     ? formData.allergies.split("\n").map((s: string) => s.trim()).filter(Boolean)
     : [];
-  allergies.forEach((id: string) => payload.append('allergy_ids', id));
+  allergies.filter(isUUID).forEach((id: string) => payload.append('allergy_ids', id));
 
   // Past Dental History
   if (formData.pastDentalHistory) payload.append('past_dental_history', formData.pastDentalHistory);
@@ -152,9 +154,15 @@ export function mapFormDataToCreatePayload(
     formData.previousTreatments.forEach((pt: string) => payload.append('previous_treatments', pt));
   }
 
-  // Membership Plan
+  // Membership / Corporate Plan
   if (formData.selectedMembershipPlanId) {
     payload.append('plan_id', formData.selectedMembershipPlanId);
+  } else if (formData.category === "corporate" && formData.corporatePlanId) {
+    payload.append('plan_id', formData.corporatePlanId);
+  }
+
+  if (formData.corporateMemberId) {
+    payload.append('member_id', formData.corporateMemberId);
   }
 
   // Family link

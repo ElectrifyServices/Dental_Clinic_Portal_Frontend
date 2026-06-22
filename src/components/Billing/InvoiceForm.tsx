@@ -148,7 +148,8 @@ export function InvoiceForm({
                       selectedPatient?.is_member || selectedPatient?.is_employee || selectedPatient?.isMember || selectedPatient?.isEmployee ||
                       selectedPatient?.employeeId || selectedPatient?.employee_id || selectedPatient?.membership_id || selectedPatient?.membershipId;
 
-  const memberId = selectedPatient?.corporateMemberId || 
+  const memberId = selectedPatient?.source === "member" ? selectedPatient.id :
+                   selectedPatient?.corporateMemberId || 
                    selectedPatient?.member_id || 
                    selectedPatient?.memberId || 
                    selectedPatient?.primaryMemberId ||
@@ -249,6 +250,18 @@ export function InvoiceForm({
           status: t.status,
         });
       });
+
+      const apiMemberships = unbilledObj.membership || [];
+      apiMemberships.forEach((m: any) => {
+        list.push({
+          id: m.id,
+          type: m.type || "membership",
+          description: m.description || m.plan_name || m.planName || "Membership Fee",
+          rate: m.amount ?? m.cost ?? 0,
+          date: m.date,
+          status: m.status,
+        });
+      });
     }
 
     return list;
@@ -339,8 +352,10 @@ export function InvoiceForm({
       id: invoice?.id || `INV-${Date.now()}`,
       items,
       subtotal,
-      discount: discountAmount,
-      tax: taxAmount,
+      discount: data.discount,
+      tax: data.tax,
+      discountAmount: discountAmount,
+      taxAmount: taxAmount,
       total: data.isComplimentary ? 0 : total,
       status: data.isComplimentary
         ? "complimentary"
@@ -349,6 +364,7 @@ export function InvoiceForm({
       corporatePlanName: activeCorporatePlan?.name,
       planDiscountApplied: planDiscountResult.totalDiscount,
       planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
+      memberId: memberId,
     } as any);
   };
 
@@ -398,6 +414,7 @@ export function InvoiceForm({
                 { label: "Select Phone", value: "none" },
                 ...apiPatients.filter((p: any) => p.phone).map((p: any) => ({
                   label: `${p.phone} (${p.name})`,
+                  searchLabel: `${p.phone} ${p.name}`,
                   value: p.phone,
                   patient: p,
                 }))
@@ -513,6 +530,7 @@ export function InvoiceForm({
                 { label: "Select Patient", value: "none" },
                 ...apiPatients.map((p: any) => ({
                   label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
+                  searchLabel: `${p.name} ${p.phone || ""}`,
                   value: p.name,
                   patient: p,
                 }))
@@ -666,14 +684,14 @@ export function InvoiceForm({
           <Card className="border-rose-100 bg-rose-50/50 shadow-none rounded-2xl overflow-hidden">
             <CardContent className="p-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm">
+                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm flex-shrink-0">
                   <DollarSign className="w-5 h-5" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest truncate">
                     Outstanding Payment Detected
                   </p>
-                  <p className="text-xs font-bold text-rose-900 mt-0.5">
+                  <p className="text-xs font-bold text-rose-900 mt-0.5 break-words">
                     This patient has a pending balance of ₹{outstandingBalance.toLocaleString()} from previous invoices.
                   </p>
                 </div>
@@ -981,6 +999,7 @@ export function InvoiceForm({
       {viewingInvoiceId && (
         <InvoiceViewer
           invoiceId={viewingInvoiceId}
+          patientId={formData.patientId}
           onClose={() => setViewingInvoiceId(null)}
         />
       )}
