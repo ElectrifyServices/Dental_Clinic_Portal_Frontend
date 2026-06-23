@@ -36,7 +36,7 @@ export function useAppointmentData() {
 
   const isEnabled = useMemo(() => {
     const path = window.location.pathname;
-    const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/corporate-plans') || path.includes('/consent') || path.includes('/treatments');
+    const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/membership') || path.includes('/consent') || path.includes('/treatments');
     return !isExcluded;
   }, []);
 

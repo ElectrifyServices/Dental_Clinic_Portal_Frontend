@@ -155,13 +155,15 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         const fee = plan.annual_fee || plan.annualFee || plan.fee || "0";
         const limit = plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
         const benefitsSummary = plan.benefits?.map((b: any) => b.description || b.benifit_label).join(", ") || "No specific benefits listed";
+        const planType = (plan as any).plan_type || plan.planCategory || "Unknown";
         return {
           label: plan.name,
           value: plan.id,
           planData: plan,
           fee,
           limit,
-          benefitsSummary
+          benefitsSummary,
+          planType
         };
       });
   }, [activePlans]);
@@ -431,10 +433,13 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                 searchPlaceholder="Search plans..."
                 className="w-full bg-white"
                 renderValue={(opt: any) => {
-                  const { planData, fee, limit } = opt;
+                  const { planData, fee, limit, planType } = opt;
                   return (
                     <div className="flex items-center gap-2 truncate pr-2">
                       <span className="font-bold text-sm truncate">{planData.name}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100/50 text-purple-700 whitespace-nowrap border border-purple-200 uppercase">
+                        {planType}
+                      </span>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-green-100/50 text-green-700 whitespace-nowrap border border-green-200">
                         Fee: ₹{fee}/yr
                       </span>
@@ -447,12 +452,15 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                   );
                 }}
                 renderOption={(opt: any) => {
-                  const { planData, fee, limit, benefitsSummary } = opt;
+                  const { planData, fee, limit, benefitsSummary, planType } = opt;
                   return (
                     <div className="flex flex-col gap-1.5 pr-2 w-full min-w-0 py-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-bold text-foreground text-sm">{planData.name}</span>
                         <div className="flex gap-2 shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100/80 text-purple-800 whitespace-nowrap border border-purple-200 uppercase">
+                            {planType}
+                          </span>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100/80 text-green-800 whitespace-nowrap border border-green-200">
                             Fee: ₹{fee}/yr
                           </span>

@@ -83,8 +83,8 @@ const MENU_ITEMS = [
     roles: ["admin", "superadmin"],
   },
   {
-    id: "corporate-plans",
-    label: "Corporate",
+    id: "membership",
+    label: "Membership",
     icon: Building2,
     roles: ["admin", "superadmin"],
   },
@@ -103,7 +103,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   reports: ["ANALYTICS", "REPORTS"],
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
+  membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 export function MobileNav() {

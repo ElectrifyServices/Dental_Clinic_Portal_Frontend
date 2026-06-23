@@ -37,7 +37,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   reports: BarChart3,
   staff: UserCheck,
   "profit-sharing": DollarSign,
-  "corporate-plans": Building2,
+  membership: Building2,
 };
 
 const PERMISSION_MAP: Record<string, string[]> = {
@@ -53,7 +53,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   reports: ["ANALYTICS", "REPORTS"],
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
+  membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 export function Sidebar() {

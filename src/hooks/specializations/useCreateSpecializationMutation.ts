@@ -14,7 +14,8 @@ export interface Specialization {
 
 export function useCreateSpecializationMutation() {
   return useApiMutation<Specialization, CreateSpecializationVariables>({
-    endpoint: "/specialization",
+    endpoint: "/specialization/create",
+
     method: "post",
   });
 }

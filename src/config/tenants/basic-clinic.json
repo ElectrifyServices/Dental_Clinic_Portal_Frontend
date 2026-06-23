@@ -115,9 +115,9 @@
         "defaultSharePercent": 0
       }
     },
-    "corporate-plans": {
+    "membership": {
       "enabled": false,
-      "label": "Corporate Plans",
+      "label": "Memberships",
       "features": {}
     }
   },

@@ -758,7 +758,7 @@ export function ModalRegistry() {
 
       {activeModal === "treatmentViewer" && (
         <TreatmentViewer
-          treatment={treatments.find((t: any) => t.id === selectedItemId)}
+          treatmentId={selectedItemId}
           onClose={() => setActiveModal(null)}
           onEditTreatment={(id: string) => {
             setActiveModal("treatmentForm");
@@ -839,7 +839,7 @@ export function ModalRegistry() {
                 });
               }
 
-              await createEMR(formData);
+              await createEMRMutation(formData);
               setActiveModal(null);
               showToast("EMR saved!");
             } catch (err: any) {

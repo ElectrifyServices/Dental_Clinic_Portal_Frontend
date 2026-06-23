@@ -157,6 +157,7 @@ export function AppointmentCalendar({
       const appointmentCount = slot.appointment_count || 0;
       
       const now = new Date();
+      now.setHours(0, 0, 0, 0);
       const slotTime = new Date(selectedDateObj);
       const [sh, sm] = time24.split(":");
       slotTime.setHours(parseInt(sh, 10), parseInt(sm, 10), 0, 0);

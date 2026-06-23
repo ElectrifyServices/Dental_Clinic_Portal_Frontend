@@ -115,7 +115,7 @@
         "defaultSharePercent": 35
       }
     },
-    "corporate-plans": {
+    "membership": {
       "enabled": true,
       "label": "Memberships",
       "features": {}
@@ -141,7 +141,7 @@
       {
         "id": "superadmin",
         "label": "Super Admin",
-        "items": ["corporate-plans"]
+        "items": ["membership"]
       }
     ]
   },

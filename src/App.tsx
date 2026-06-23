@@ -35,7 +35,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   reports: ["ANALYTICS", "REPORTS"],
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
-  "corporate-plans": ["CORPORATE_PLANS", "MEMBERSHIP"],
+  membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
 };
 
 function getDefaultRedirect(userPermissions: string[]): string {
@@ -105,7 +105,7 @@ function ProtectedRoutes() {
         <Route path="/consent" element={<GuardedRoute path="/consent" element={<ConsentPage />} />} />
         <Route path="/reports" element={<GuardedRoute path="/reports" element={<ReportsPage />} />} />
         <Route path="/inventory" element={<GuardedRoute path="/inventory" element={<InventoryPage />} />} />
-        <Route path="/corporate-plans" element={<GuardedRoute path="/corporate-plans" element={<CorporatePlansPage />} />} />
+        <Route path="/membership" element={<GuardedRoute path="/membership" element={<CorporatePlansPage />} />} />
         <Route path="*" element={<Navigate to={defaultPath} replace />} />
       </Route>
     </Routes>

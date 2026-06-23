@@ -35,7 +35,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             <Button 
               variant="ghost"
               onClick={() => { onCheckIn?.(appointment); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-600 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
             >
               <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
                 <UserCheck className="w-4 h-4 text-emerald-600" /> 
@@ -59,10 +59,10 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             <Button 
               variant="ghost"
               onClick={() => { onUpdateStatus?.(appointment.id, 'no-show'); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-amber-50 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium h-auto"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-amber-500/10 hover:text-amber-600 flex items-center gap-3 text-amber-700 rounded-xl transition-colors font-medium h-auto"
             >
               <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                <UserX className="w-4 h-4 text-amber-400" /> 
+                <UserX className="w-4 h-4 text-amber-500" /> 
               </div>
               Mark No-Show
             </Button>

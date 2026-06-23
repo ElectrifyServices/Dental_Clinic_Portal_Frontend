@@ -158,10 +158,7 @@ export function EmployeeManagement({
     } else if (planTypeFilter === 'individual') {
       filteredPlans = filteredPlans.filter(p => p.planCategory === 'individual');
     }
-    return [
-      { value: 'all', label: 'All Plans' },
-      ...filteredPlans.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }))
-    ];
+    return filteredPlans.map(p => ({ value: p.id, label: `${p.name} (${p.code})` }));
   }, [plans, planTypeFilter]);
 
   const handleDelete = async () => {
@@ -497,6 +494,7 @@ export function EmployeeManagement({
                     <SelectValue placeholder="Filter by Plan" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
                     {availablePlanOptions.map(opt => (
                       <SelectItem key={opt.value} value={opt.value} className="text-xs">
                         {opt.label}

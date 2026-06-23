@@ -57,7 +57,7 @@ export function TreatmentPlanning({
   onFollowUpRequiredChange,
   errors = {},
 }: TreatmentPlanningProps) {
-  const totalPlannedCost = treatmentPlans.reduce((sum, p) => sum + (p.cost || 0), 0);
+  const totalPlannedCost = treatmentPlans.reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
 
   const columns = [
     {

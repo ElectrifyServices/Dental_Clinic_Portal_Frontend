@@ -46,22 +46,25 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
 
   React.useEffect(() => {
     if (dependentDetails) {
+      const depData = dependentDetails.data || dependentDetails;
+      const rawDob = depData.date_of_birth || depData.dateOfBirth || editDep?.date_of_birth || editDep?.dateOfBirth || '';
       setFormData({
         ...editDep,
-        ...dependentDetails,
-        name: dependentDetails.name || editDep?.name,
-        phone: dependentDetails.phone || editDep?.phone,
-        email: dependentDetails.email || editDep?.email,
-        gender: dependentDetails.gender?.toLowerCase() || editDep?.gender || 'male',
-        dateOfBirth: dependentDetails.date_of_birth ? dependentDetails.date_of_birth.split('T')[0] : (editDep?.date_of_birth || editDep?.dateOfBirth),
-        relationship: toTitleCase(dependentDetails.relationship_type || dependentDetails.relationship || editDep?.relationship_type || editDep?.relationship),
-        isActive: dependentDetails.status === 'ACTIVE'
+        ...depData,
+        name: depData.name || editDep?.name,
+        phone: depData.phone || editDep?.phone,
+        email: depData.email || editDep?.email,
+        gender: depData.gender?.toLowerCase() || editDep?.gender || 'male',
+        dateOfBirth: rawDob ? rawDob.split('T')[0] : '',
+        relationship: toTitleCase(depData.relationship_type || depData.relationship || editDep?.relationship_type || editDep?.relationship),
+        isActive: depData.status === 'ACTIVE' || (depData.status === undefined && editDep?.isActive !== false)
       });
     } else if (editDep) {
+      const rawDob = editDep.date_of_birth || editDep.dateOfBirth || '';
       setFormData({ 
         ...editDep, 
         relationship: toTitleCase(editDep.relationship_type || editDep.relationship),
-        dateOfBirth: editDep.date_of_birth || editDep.dateOfBirth
+        dateOfBirth: rawDob ? rawDob.split('T')[0] : ''
       });
     } else {
       setFormData({ gender: 'male', isActive: true });
@@ -105,7 +108,9 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
       setShowForm(false);
       setFormData({ gender: 'male', isActive: true });
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.response?.data?.statusDesc || "Failed to save family member";
+      console.error("API Error:", err?.response?.data || err);
+      const data = err?.response?.data;
+      const msg = data?.message || data?.error || data?.statusDesc || (typeof data === 'string' ? data : err.message) || "Failed to save family member";
       showToast(msg, "error");
     }
   };
@@ -154,9 +159,15 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Phone Number</Label>
             <Input
               value={formData.phone || ''}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length <= 10) {
+                  setFormData({ ...formData, phone: val });
+                }
+              }}
               placeholder="10-digit number"
               className="rounded-xl text-sm"
+              maxLength={10}
             />
           </div>
 
