@@ -124,8 +124,23 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
   const minStock = form.watch("minStock");
 
   const onSubmit = (data: InventoryFormData) => {
+    // Attempt to resolve category name or legacy ID to the correct category UUID
+    let categoryId = data.category;
+    if (categoryId) {
+      const matchedOpt = categoryOptions.find(
+        (opt: any) =>
+          opt.value === categoryId ||
+          opt.label.toLowerCase() === categoryId.toLowerCase() ||
+          opt.value.toLowerCase() === categoryId.toLowerCase()
+      );
+      if (matchedOpt) {
+        categoryId = matchedOpt.value;
+      }
+    }
+
     onSave({
       ...data,
+      category: categoryId,
       id: item?.id || Date.now().toString(),
       lastRestocked:
         item?.lastRestocked || new Date().toISOString().split("T")[0],
@@ -196,7 +211,21 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           onCreateOption={async (val) => {
                             try {
                               const res = await createCategoryMutation.mutateAsync({ name: val });
-                              const newId = res?.id || res?.data?.id || res?.responseObject?.id || res?.categoryId;
+                              const newId = typeof res === 'string' ? res : (
+                                res?.id ||
+                                res?.category_id ||
+                                res?.categoryId ||
+                                res?.category?.id ||
+                                res?.category?.category_id ||
+                                res?.data?.id ||
+                                res?.data?.category_id ||
+                                res?.data?.categoryId ||
+                                res?.data?.category?.id ||
+                                res?.responseObject?.id ||
+                                res?.responseObject?.category_id ||
+                                res?.responseObject?.categoryId ||
+                                res?.responseObject?.category?.id
+                              );
                               if (newId) {
                                 field.onChange(newId);
                               } else {

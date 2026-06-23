@@ -93,14 +93,6 @@ export function DirectConsultationPopup({
       const time12 = `${hour12}:${m} ${ampm}`;
 
       let isPast = false;
-      if (selectedDate === todayStr) {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const slotHour = parseInt(h);
-        const slotMinute = parseInt(m);
-        isPast = slotHour < currentHour || (slotHour === currentHour && slotMinute < currentMinute);
-      }
 
       return {
         time24,

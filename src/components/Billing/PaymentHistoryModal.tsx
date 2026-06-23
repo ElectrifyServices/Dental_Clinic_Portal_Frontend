@@ -1,19 +1,17 @@
-import { Modal, Button, Badge, Card, CardContent } from "@/components/ui";
+import { Modal, Button, Card, CardContent, DataTable, StatusBadge } from "@/components/ui";
 import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknote } from "lucide-react";
 import { useAppData } from "../../hooks/useAppData";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
-import { useInvoiceQuery } from "../../hooks/billing/useInvoiceQuery";
+import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
 
 interface PaymentHistoryModalProps {
   invoice: any;
   onClose: () => void;
 }
 
-export function PaymentHistoryModal({ invoice: initialInvoice, onClose }: PaymentHistoryModalProps) {
+export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalProps) {
   const { patients } = useAppData();
-  const { data: fetchedInvoice, isLoading } = useInvoiceQuery(initialInvoice.id, initialInvoice.patientId || initialInvoice.patient_id);
-
-  const invoice = fetchedInvoice || initialInvoice;
+  const { data: fetchedPayments, isLoading } = usePaymentHistoryQuery(invoice.id);
 
   if (isLoading) {
     return (
@@ -39,23 +37,34 @@ export function PaymentHistoryModal({ invoice: initialInvoice, onClose }: Paymen
     }
   };
 
-  const totalAmount = invoice.total ?? invoice.amount ?? 0;
-  const isPaid = invoice.status === "paid";
-  const paidAmount = invoice.paidAmount ?? (isPaid ? totalAmount : 0);
-  const dueAmount = invoice.pendingAmount ?? Math.max(0, totalAmount - paidAmount);
+  const apiInvoice = fetchedPayments?.data?.invoice || fetchedPayments?.invoice;
+  const apiSummary = fetchedPayments?.data?.summary || fetchedPayments?.summary;
+  const rawPayments = fetchedPayments?.data?.payments || fetchedPayments?.payments || [];
 
-  // Mock payment history based on status, since we don't have a dedicated payments array yet
-  const payments = isPaid
-    ? [
-        {
-          id: `PAY-${invoice.id}-1`,
-          date: invoice.date,
-          amount: totalAmount,
-          method: "Cash",
-          status: "Success",
-        },
-      ]
-    : [];
+  const totalAmount = apiInvoice?.grand_total ?? invoice.total ?? invoice.amount ?? 0;
+  const isPaid = (apiInvoice?.status || invoice.status)?.toLowerCase() === "paid";
+  const paidAmount = apiSummary?.paid_amount ?? invoice.paidAmount ?? (isPaid ? totalAmount : 0);
+  const dueAmount = apiSummary?.pending_amount ?? invoice.pendingAmount ?? Math.max(0, totalAmount - paidAmount);
+
+  const payments = Array.isArray(rawPayments)
+    ? rawPayments.map((p: any) => ({
+        id: p.id || p.payment_id || p.transaction_id || `PAY-${p.invoice_id || invoice.id}-${Date.now()}`,
+        date: p.payment_date || p.date || p.created_at || invoice.date,
+        amount: Number(p.amount ?? p.amount_paid ?? 0),
+        method: p.payment_method || p.method || "Cash",
+        status: p.status || p.payment_status || "Success",
+      }))
+    : (isPaid
+        ? [
+            {
+              id: `PAY-${invoice.id}-1`,
+              date: invoice.date,
+              amount: totalAmount,
+              method: "Cash",
+              status: "Success",
+            },
+          ]
+        : []);
 
   return (
     <Modal
@@ -119,56 +128,63 @@ export function PaymentHistoryModal({ invoice: initialInvoice, onClose }: Paymen
           </h3>
           
           {payments.length > 0 ? (
-            <div className="border border-border rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 border-b border-border">
-                  <tr>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
-                      Transaction ID
-                    </th>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider">
-                      Method
-                    </th>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-right">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {payments.map((pay, idx) => (
-                    <tr key={idx} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs font-bold text-foreground">
-                        {pay.id}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {new Date(pay.date).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground font-medium">
-                        {pay.method}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-foreground">
-                        ₹{pay.amount.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <Badge variant="green" className="text-[9px] uppercase">
-                          {pay.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={[
+                {
+                  key: "id",
+                  header: "Transaction ID",
+                  render: (pay: any) => (
+                    <span className="font-mono text-xs font-bold text-foreground">
+                      {pay.id}
+                    </span>
+                  ),
+                },
+                {
+                  key: "date",
+                  header: "Date",
+                  render: (pay: any) => (
+                    <span className="text-muted-foreground">
+                      {new Date(pay.date).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  ),
+                },
+                {
+                  key: "method",
+                  header: "Method",
+                  render: (pay: any) => (
+                    <span className="text-muted-foreground font-medium">
+                      {pay.method}
+                    </span>
+                  ),
+                },
+                {
+                  key: "amount",
+                  header: "Amount",
+                  align: "right" as const,
+                  render: (pay: any) => (
+                    <span className="font-bold text-foreground">
+                      ₹{pay.amount.toLocaleString()}
+                    </span>
+                  ),
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  align: "center" as const,
+                  render: (pay: any) => (
+                    <StatusBadge variant="green" className="text-[9px] uppercase font-bold">
+                      {pay.status}
+                    </StatusBadge>
+                  ),
+                },
+              ]}
+              data={payments}
+              rowKey={(pay) => pay.id}
+            />
           ) : (
             <div className="text-center p-8 border border-dashed border-border rounded-xl bg-muted/10">
               <History className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />

@@ -52,12 +52,14 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         <Button
-          variant={selectedDoctorId === null ? "default" : "ghost"}
+          variant="ghost"
           onClick={() => setSelectedDoctorId(null)}
-          className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto
-            ${selectedDoctorId === null ? "bg-secondary border-primary shadow-sm text-foreground hover:bg-secondary/90" : "bg-card border-transparent hover:border-border text-foreground hover:bg-muted"}`}
+          className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto active:scale-[0.98]
+            ${selectedDoctorId === null 
+              ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
+              : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
         >
-          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground/60">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground/60 flex-shrink-0">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
@@ -68,11 +70,13 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 
         {filteredDoctors.map((doctor) => (
           <Button
-            variant={selectedDoctorId === doctor.id ? "default" : "ghost"}
+            variant="ghost"
             key={doctor.id}
             onClick={() => setSelectedDoctorId(doctor.id)}
-            className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto
-              ${selectedDoctorId === doctor.id ? "bg-secondary border-primary shadow-sm text-foreground hover:bg-secondary/90" : "bg-card border-transparent hover:bg-muted text-foreground"}`}
+            className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto active:scale-[0.98]
+              ${selectedDoctorId === doctor.id 
+                ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
+                : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 flex-shrink-0">
               <img

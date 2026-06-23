@@ -305,9 +305,9 @@ export function AppointmentList({
   return (
     <div className="space-y-6">
       {/* Filters row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-1 items-center gap-4 max-w-2xl">
-          <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card/30 p-3 rounded-2xl border border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search patient, treatment or doctor..."
@@ -319,7 +319,7 @@ export function AppointmentList({
               className="pl-10 h-10 rounded-2xl bg-card border-border"
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Input
               type="date"
               value={selectedDate}
@@ -332,16 +332,16 @@ export function AppointmentList({
             />
           </div>
         </div>
-        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start">
+        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start lg:self-auto flex-shrink-0">
           {TYPE_FILTERS.map((f) => (
             <Button
-              variant={filter === f.id ? "default" : "ghost"}
+              variant="ghost"
               key={f.id}
               onClick={() => {
                 setFilter(f.id);
                 setPage(1);
               }}
-              className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${
+              className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all h-9 ${
                 filter === f.id
                   ? "bg-card text-primary shadow-sm ring-1 ring-black/5 hover:bg-card"
                   : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"

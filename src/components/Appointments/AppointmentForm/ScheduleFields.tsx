@@ -46,6 +46,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
   const slots = useMemo(() => {
     if (!slotsResponse?.data?.slots) return [];
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     return slotsResponse.data.slots.map((slot) => {
       const time24 = convert12to24(slot.time);
       const [h, m] = time24.split(":");

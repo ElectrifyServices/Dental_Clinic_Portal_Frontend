@@ -94,7 +94,7 @@ export function InventoryList({
   }, { refetchOnMount: "always" });
 
   const { data: categoriesData } = useInventoryCategoriesQuery();
-  
+
   let dynamicCategories: any[] = [];
   if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
   else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
@@ -102,7 +102,7 @@ export function InventoryList({
   else if (Array.isArray(categoriesData?.responseObject)) dynamicCategories = categoriesData.responseObject;
   else if (Array.isArray(categoriesData?.responseObject?.data)) dynamicCategories = categoriesData.responseObject.data;
   else if (categoriesData?.responseObject && Array.isArray(categoriesData?.responseObject?.categories)) dynamicCategories = categoriesData.responseObject.categories;
-  
+
   const filterTabs = [
     { key: "all", label: "All Items" },
     ...dynamicCategories.map((c: any) => ({ key: c.name, label: c.name }))
@@ -114,11 +114,11 @@ export function InventoryList({
   else if (Array.isArray(listData?.data)) rawList = listData.data;
   else if (Array.isArray(listData?.data?.items)) rawList = listData.data.items;
   else if (Array.isArray(listData?.responseObject)) rawList = listData.responseObject;
-  
+
   const filtered = rawList.map((item: any) => ({
     id: item.id,
     name: item.name,
-    category: item.category?.id || item.category_id || item.category,
+    category: item.category?.name || item.category_name || item.category,
     currentStock: item.current_stock ?? item.currentStock ?? 0,
     minStock: item.min_stock ?? item.minStock ?? 0,
     maxStock: item.max_stock ?? item.maxStock ?? 100,

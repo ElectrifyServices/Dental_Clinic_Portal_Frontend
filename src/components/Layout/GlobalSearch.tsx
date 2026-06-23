@@ -24,7 +24,7 @@ const PAGES: Array<{ id: string; label: string; icon: React.ComponentType<{ clas
   { id: "inventory",       label: "Inventory",          icon: Package,    color: "text-orange-500" },
   { id: "reports",         label: "Analytics",          icon: BarChart3,  color: "text-purple-500" },
   { id: "staff",           label: "Staff",              icon: UserCheck,  color: "text-indigo-500" },
-  { id: "corporate-plans", label: "Corporate Plans",    icon: Building2,  color: "text-teal-500" },
+  { id: "membership",      label: "Memberships",        icon: Building2,  color: "text-teal-500" },
   { id: "profit-sharing",  label: "Profit Sharing",     icon: DollarSign, color: "text-yellow-500" },
 ];
 

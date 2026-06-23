@@ -10,7 +10,7 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
 
   const isEnabled = useMemo(() => {
     const path = window.location.pathname;
-    const allowed = path.includes('/corporate-plans') || path.includes('/patients') || path.includes('/billing') || path.includes('/patient-queue') || path.includes('/appointments') || path.includes('/dashboard');
+    const allowed = path.includes('/membership') || path.includes('/patients') || path.includes('/billing') || path.includes('/patient-queue') || path.includes('/appointments') || path.includes('/dashboard');
     return allowed;
   }, []);
 

@@ -10,7 +10,7 @@ export function useStaffData(params?: { search?: string; role?: string }) {
   const queryClient = useQueryClient();
   const isEnabled = useMemo(() => {
     const path = window.location.pathname;
-    const isExcluded = path.includes('/inventory') || path.includes('/corporate-plans');
+    const isExcluded = path.includes('/inventory') || path.includes('/membership');
     return !isExcluded;
   }, []);
 
