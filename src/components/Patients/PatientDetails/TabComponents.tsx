@@ -42,27 +42,61 @@ const EmptyState = ({
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: any }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <Card className="lg:col-span-2 bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
+    {/* Medical History */}
+    <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
+      <h3 className="text-lg font-bold text-primary mb-4 flex items-center">
+        <Heart className="w-5 h-5 mr-2 text-red-500" /> Medical History
+      </h3>
+      <div className="space-y-3">
+        {(patient?.medicalHistoryNames || patient?.medicalHistory || patient?.medicalHistories || []).length > 0 ? (
+          (patient.medicalHistoryNames || patient.medicalHistory || patient.medicalHistories).map((item: any, index: number) => {
+            const name = typeof item === "object" ? (item.name || item.history?.name || item.condition || item.history_name) : item;
+            return (
+              <div
+                key={index}
+                className="bg-card rounded-xl p-4 border border-primary/10 shadow-sm animate-in fade-in duration-200"
+              >
+                <div className="flex items-center">
+                  <Heart className="w-4 h-4 text-red-500 mr-2" />
+                  <p className="text-foreground font-semibold">{name}</p>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-8">
+            <Heart className="w-12 h-12 text-red-200 mx-auto mb-3" />
+            <p className="text-muted-foreground font-semibold">No medical history recorded</p>
+          </div>
+        )}
+      </div>
+    </Card>
+
+    {/* Allergies */}
+    <Card className="lg:col-span-1 bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
       <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
       <div className="space-y-3">
         {(patient?.allergyNames || patient?.allergies || []).length > 0 ? (
-          (patient.allergyNames || patient.allergies).map((allergy: string, index: number) => (
-            <div
-              key={index}
-              className="bg-card rounded-xl p-4 border border-destructive/20 shadow-sm"
-            >
-              <div className="flex items-center">
-                <AlertTriangle className="w-4 h-4 text-destructive mr-2" />
-                <p className="text-destructive font-medium">{allergy}</p>
+          (patient.allergyNames || patient.allergies).map((allergy: any, index: number) => {
+            const name = typeof allergy === "object" ? (allergy.allergy_name || allergy.name) : allergy;
+            return (
+              <div
+                key={index}
+                className="bg-card rounded-xl p-4 border border-destructive/20 shadow-sm animate-in fade-in duration-200"
+              >
+                <div className="flex items-center">
+                  <AlertTriangle className="w-4 h-4 text-destructive mr-2" />
+                  <p className="text-destructive font-semibold">{name}</p>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="text-center py-8">
             <AlertTriangle className="w-12 h-12 text-red-300 mx-auto mb-3" />
-            <p className="text-destructive">No allergies recorded</p>
+            <p className="text-destructive font-semibold">No allergies recorded</p>
           </div>
         )}
       </div>

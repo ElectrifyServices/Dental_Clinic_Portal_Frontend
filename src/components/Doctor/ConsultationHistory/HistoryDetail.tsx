@@ -25,6 +25,22 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
   const [appointment, setAppointment] = useState<any>(null);
   const [isLoadingAppt, setIsLoadingAppt] = useState(false);
 
+  const getMedicalHistoryText = () => {
+    if (fullRecord.conditions) return fullRecord.conditions;
+    const p = fullRecord.patient;
+    if (!p) return "";
+    const list = p.medicalHistoryNames || p.medicalHistory || p.medical_histories || p.medicalHistories || [];
+    return list.map((item: any) => typeof item === 'object' ? (item.name || item.history?.name || item.condition || item.history_name) : item).filter(Boolean).join(", ");
+  };
+
+  const getAllergiesText = () => {
+    if (fullRecord.allergies) return fullRecord.allergies;
+    const p = fullRecord.patient;
+    if (!p) return "";
+    const list = p.allergyNames || p.allergies || [];
+    return list.map((item: any) => typeof item === 'object' ? (item.allergy_name || item.name) : item).filter(Boolean).join(", ");
+  };
+
   // Edit Appointment States
   const [editMode, setEditMode] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -361,36 +377,42 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
       {/* Grid containing Vitals, Medical History & General findings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Medical History Card */}
-        {(fullRecord.allergies || fullRecord.conditions || fullRecord.visits || fullRecord.lastVisit) && (
-          <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2 border-b border-border/40 pb-2">
-              <Stethoscope className="w-4.5 h-4.5 text-primary" />
-              <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
-            </div>
-            <div className="space-y-3 text-sm font-semibold">
-              {fullRecord.allergies && (
-                <div>
-                  <span className="text-[10px] font-bold text-red-500 block mb-0.5 uppercase tracking-wider">Allergies</span>
-                  <span className="text-foreground bg-red-50/40 px-3 py-1 rounded-lg border border-red-100 block">{fullRecord.allergies}</span>
+        {(() => {
+          const conditionsText = getMedicalHistoryText();
+          const allergiesText = getAllergiesText();
+          const hasHistory = allergiesText || conditionsText || fullRecord.visits || fullRecord.lastVisit;
+          if (!hasHistory) return null;
+          return (
+            <Card className="border-border/70 rounded-xl shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 border-b border-border/40 pb-2">
+                  <Stethoscope className="w-4.5 h-4.5 text-primary" />
+                  <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
                 </div>
-              )}
-              {fullRecord.conditions && (
-                <div>
-                  <span className="text-[10px] font-bold text-blue-500 block mb-0.5 uppercase tracking-wider">Medical Conditions</span>
-                  <span className="text-foreground bg-blue-50/30 px-3 py-1 rounded-lg border border-blue-100 block">{fullRecord.conditions}</span>
+                <div className="space-y-3 text-sm font-semibold">
+                  {allergiesText && (
+                    <div>
+                      <span className="text-[10px] font-bold text-red-500 block mb-0.5 uppercase tracking-wider">Allergies</span>
+                      <span className="text-foreground bg-red-50/40 px-3 py-1 rounded-lg border border-red-100 block">{allergiesText}</span>
+                    </div>
+                  )}
+                  {conditionsText && (
+                    <div>
+                      <span className="text-[10px] font-bold text-blue-500 block mb-0.5 uppercase tracking-wider">Medical Conditions</span>
+                      <span className="text-foreground bg-blue-50/30 px-3 py-1 rounded-lg border border-blue-100 block">{conditionsText}</span>
+                    </div>
+                  )}
+                  {(fullRecord.visits || fullRecord.lastVisit) && (
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1.5 pt-2 border-t border-border/40 font-bold">
+                      {fullRecord.visits && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">🩺 Total Visits: {fullRecord.visits}</span>}
+                      {fullRecord.lastVisit && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">📅 Last Visit: {fullRecord.lastVisit}</span>}
+                    </div>
+                  )}
                 </div>
-              )}
-              {(fullRecord.visits || fullRecord.lastVisit) && (
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1.5 pt-2 border-t border-border/40 font-bold">
-                  {fullRecord.visits && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">🩺 Total Visits: {fullRecord.visits}</span>}
-                  {fullRecord.lastVisit && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">📅 Last Visit: {fullRecord.lastVisit}</span>}
-                </div>
-              )}
-            </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Vitals Card */}
         {(fullRecord.bp || fullRecord.height || fullRecord.weight || fullRecord.bmi) && (

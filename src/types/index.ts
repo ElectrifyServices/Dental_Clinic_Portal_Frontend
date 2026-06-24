@@ -54,6 +54,7 @@ export interface CorporatePlan {
   color: string;
   status?: string;
   planCategory?: PlanCategory;  // 'corporate' (default) | 'individual'
+  planType?: string;
   annualFee?: number;            // for individual plans (e.g. 1000)
   maxDependents?: number;        // 0 = self only; admin configures per plan
   planTier?: CorporatePlanTier;

@@ -18,12 +18,12 @@ export function useStep2MedicalHistory({
   setSelectedAllergies,
   setFormData,
 }: UseStep2MedicalHistoryProps) {
-  const { data: apiMedicalHistories } = useMedicalHistoriesQuery();
+  const { data: apiMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
   const createMedicalHistory = useCreateMedicalHistoryMutation();
   const deleteMedicalHistory = useDeleteMedicalHistoryMutation();
   const { confirmDelete } = useModal();
 
-  const { data: apiAllergies } = useAllergiesQuery();
+  const { data: apiAllergies } = useAllergiesQuery({ staleTime: 0 });
   const createAllergy = useCreateAllergyMutation();
   const deleteAllergy = useDeleteAllergyMutation();
 
@@ -65,6 +65,7 @@ export function useStep2MedicalHistory({
           setSelectedMedicalHistory(updated);
           setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
         }
+        return newId;
       }
     } catch (error) {
     }
@@ -102,6 +103,7 @@ export function useStep2MedicalHistory({
           setSelectedAllergies(updated);
           setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
         }
+        return newId;
       }
     } catch (error) {
     }

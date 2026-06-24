@@ -7,6 +7,8 @@ import { Step3Consent } from "./PatientForm/Step3Consent";
 import { Step4Review } from "./PatientForm/Step4Review";
 import { PatientData } from "@/types";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
+import { useMedicalHistoriesQuery } from "@/hooks/patients/useMedicalHistoriesQuery";
+import { useAllergiesQuery } from "@/hooks/patients/useAllergiesQuery";
 import { Button, Modal } from "@/components/ui";
 
 interface PatientFormProps {
@@ -50,8 +52,16 @@ export function PatientForm({
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
-  // Fetch corporate plans when adding/editing patient
-  useCorporatePlansQuery({ enabled: true });
+  // Fetch and refetch corporate plans, medical history, and allergies on mount
+  const { refetch: refetchCorporatePlans } = useCorporatePlansQuery({ enabled: true, staleTime: 0 });
+  const { refetch: refetchMedicalHistories } = useMedicalHistoriesQuery({ enabled: true, staleTime: 0 });
+  const { refetch: refetchAllergies } = useAllergiesQuery({ enabled: true, staleTime: 0 });
+
+  React.useEffect(() => {
+    refetchCorporatePlans();
+    refetchMedicalHistories();
+    refetchAllergies();
+  }, [refetchCorporatePlans, refetchMedicalHistories, refetchAllergies]);
 
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
@@ -201,7 +211,10 @@ export function PatientForm({
             const isDone = step > s.num;
             return (
               <React.Fragment key={s.num}>
-                <div className="flex items-center gap-2 shrink-0">
+                <div 
+                  className="flex items-center gap-2 shrink-0 cursor-pointer hover:opacity-85 transition-opacity duration-200"
+                  onClick={() => setStep(s.num)}
+                >
                   {getStepIndicator(s.num)}
                   <span
                     className={`text-[10px] font-black uppercase tracking-widest hidden sm:inline-block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground/60"}`}

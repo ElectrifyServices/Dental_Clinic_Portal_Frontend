@@ -6,6 +6,8 @@ import {
   MapPin,
   Phone,
   Globe,
+  Upload,
+  BookOpen,
 } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 
@@ -234,6 +236,41 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
               </div>
             </div>
           </div>
+
+          {/* Uploaded Offline Consent Form (If exists) */}
+          {form.consentFormUrl && form.consentFormUrl !== "null" && form.consentFormUrl !== "" && (
+            <div className="bg-muted p-6 rounded-2xl mb-10 border border-border flex flex-col items-start gap-3 print:hidden">
+              <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" />
+                Uploaded Offline Consent Document
+              </h3>
+              <div className="w-full max-w-xl border border-border rounded-xl p-2 bg-card shadow-sm overflow-hidden flex justify-center items-center">
+                {form.consentFormUrl.toLowerCase().includes(".pdf") || form.consentFormUrl.startsWith("data:application/pdf") ? (
+                  <div className="h-32 w-full flex flex-col items-center justify-center p-4 text-center">
+                    <BookOpen className="w-10 h-10 text-primary mb-1" />
+                    <span className="text-xs font-bold text-foreground truncate w-full">Consent Document (PDF)</span>
+                    <a
+                      href={form.consentFormUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 text-xs text-primary font-bold underline"
+                    >
+                      Open PDF in New Tab
+                    </a>
+                  </div>
+                ) : (
+                  <img
+                    src={form.consentFormUrl}
+                    alt="Uploaded Consent Form"
+                    className="max-h-[250px] object-contain rounded-lg"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Legal Content Sections */}
           <div className="space-y-10 mb-12">

@@ -44,8 +44,8 @@ const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, ind
 };
 
 export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corporatePlans = [] }) => {
-  const { data: rawMedicalHistories } = useMedicalHistoriesQuery();
-  const { data: rawAllergies } = useAllergiesQuery();
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
+  const { data: rawAllergies } = useAllergiesQuery({ staleTime: 0 });
 
   const extractList = (data: any) => {
     if (!data) return [];
@@ -221,12 +221,42 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 Medical Status
               </h4>
               <div className="space-y-4">
+                <div className="p-3 bg-primary/5 border border-primary/10 rounded-xl">
+                  <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-1">
+                    Medical Conditions
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.medicalHistory &&
+                    formData.medicalHistory
+                      .split("\n")
+                      .filter((m: string) => m.trim()).length > 0 ? (
+                      formData.medicalHistory
+                        .split("\n")
+                        .filter((m: string) => m.trim())
+                        .map((m: string) => (
+                          <Badge
+                            key={m}
+                            variant="default"
+                            className="text-[10px] px-2 py-0 bg-primary/20 text-primary hover:bg-primary/30"
+                          >
+                            {getMedicalHistoryName(m)}
+                          </Badge>
+                        ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground/60">
+                        None reported
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="p-3 bg-destructive/5 border border-destructive/10 rounded-xl">
                   <span className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest block mb-1">
                     Allergies
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {formData.allergies
+                    {formData.allergies &&
+                    formData.allergies
                       .split("\n")
                       .filter((a: string) => a.trim()).length > 0 ? (
                       formData.allergies

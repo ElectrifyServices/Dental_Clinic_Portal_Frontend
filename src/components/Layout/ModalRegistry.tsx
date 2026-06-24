@@ -328,6 +328,7 @@ export function ModalRegistry() {
       witnessSignature: form.witness_signature || "",
       doctorName: doctorObj?.name || form.doctor_name || "",
       doctorId: form.doctor_id || "",
+      consentFormUrl: form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
     };
   }, [apiConsentDetail, selectedConsentForm, staffMembers]);
 
@@ -354,6 +355,7 @@ export function ModalRegistry() {
       signedDate: form.signed_on || null,
       status: !form.signed_on ? "PENDING" : (form.status || "PENDING"),
       signature: form.patient_signature || "",
+      consentFormUrl: form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
     };
   }, [apiConsentDetail, selectedConsentForm, staffMembers]);
 
@@ -530,6 +532,30 @@ export function ModalRegistry() {
           }}
           onCompleteConsultation={async (d: any) => {
             try {
+              let resolvedPatientId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
+
+              if (d.isDirect) {
+                const normalizedDirectPhone = d.directPatientPhone.replace(/\D/g, "");
+                const ex = patients.find(
+                  (p: any) =>
+                    p.phone && p.phone.replace(/\D/g, "") === normalizedDirectPhone
+                );
+
+                if (ex) {
+                  resolvedPatientId = ex.id;
+                } else {
+                  const savedPatientResponse = await handleSavePatient({
+                    name: d.directPatientName,
+                    phone: d.directPatientPhone,
+                  });
+                  const newId = savedPatientResponse?.data?.id || savedPatientResponse?.id;
+                  if (!newId) {
+                    throw new Error("Failed to register new patient during direct consultation.");
+                  }
+                  resolvedPatientId = newId;
+                }
+              }
+
               // Map tooth chart state to tooth_findings array
               const tooth_findings = Object.entries(d.toothChartState || {}).flatMap(([toothNum, conditions]) => {
                 if (!Array.isArray(conditions)) return [];
@@ -576,7 +602,7 @@ export function ModalRegistry() {
 
               const apiPayload: any = {
                 id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
-                patientId: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id,
+                patientId: resolvedPatientId,
                 appointmentId: selectedPatientForDiagnose.appointmentId,
                 doctorId: validDoctorId,
                 observations: d.observations,
@@ -593,7 +619,7 @@ export function ModalRegistry() {
 
               if (d.followUpRequired) {
                 apiPayload.appointment_info = {
-                  patient_id: selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id,
+                  patient_id: resolvedPatientId,
                   doctor_id: d.followUpDoctorId,
                   date: d.followUpDate,
                   start_time: d.followUpTime,
@@ -1001,8 +1027,27 @@ export function ModalRegistry() {
               payload.append("procedure_declaration", f.procedure_declaration || f.content || "I understand the procedure");
               payload.append("clinical_risks", f.riskDisclosure || "Infection");
               payload.append("alternative_risks", f.alternativeTreatments || "Tooth extraction");
+              
+              // New field: post_treatment_care
+              if (f.postTreatmentCare) {
+                payload.append("post_treatment_care", f.postTreatmentCare);
+              }
+
               if (f.witnessName) {
                 payload.append("witness_name", f.witnessName);
+              }
+
+              // Status and Signed Date
+              const isSigned = !!f.patientSignature;
+              payload.append("status", isSigned ? "COMPLETED" : "PENDING");
+              if (isSigned) {
+                payload.append("signed_on", new Date().toISOString());
+              }
+
+              // Consent form file upload
+              if (f.rawConsentFormFile) {
+                payload.append("consent_form_image", f.rawConsentFormFile);
+                payload.append("consent_form", f.rawConsentFormFile);
               }
 
               if (f.patientSignature && f.patientSignature.startsWith("data:")) {

@@ -47,8 +47,8 @@ export function usePatientData() {
     filters: apiFilters,
   }, { enabled: isEnabled });
 
-  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ enabled: isEnabled });
-  const { data: rawAllergies } = useAllergiesQuery({ enabled: isEnabled });
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ enabled: false });
+  const { data: rawAllergies } = useAllergiesQuery({ enabled: false });
 
   const { mutateAsync: deletePatientMutation } = useDeletePatientMutation();
   const { mutateAsync: updateStatusMutation } = useUpdatePatientStatusMutation();

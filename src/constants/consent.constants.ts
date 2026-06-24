@@ -6,6 +6,31 @@ export interface ConsentTemplate {
   responsibilities: string[];
 }
 
+// The 3 primary treatment consent types for checkbox selection
+export const CONSENT_CHECKBOX_TREATMENTS = [
+  {
+    key: "Root Canal Treatment (Endodontics)",
+    label: "Root Canal Treatment",
+    subtitle: "Endodontics",
+    description: "Removal of infected pulp tissue, root canal disinfection and sealing to preserve tooth function.",
+    icon: "tooth-rct",
+  },
+  {
+    key: "Tooth Extraction (Oral Surgery)",
+    label: "Tooth Extraction",
+    subtitle: "Oral Surgery",
+    description: "Surgical removal of damaged, infected, impacted or non-restorable teeth under local/general anesthesia.",
+    icon: "tooth-extract",
+  },
+  {
+    key: "Implant Surgery",
+    label: "Implant Surgery",
+    subtitle: "Dental Implants",
+    description: "Titanium implant placement into the jawbone to replace missing teeth — a multi-stage surgical procedure.",
+    icon: "implant",
+  },
+] as const;
+
 export const CONSENT_TEMPLATES: Record<string, ConsentTemplate> = {
   "Root Canal Treatment (Endodontics)": {
     description:
@@ -32,7 +57,7 @@ export const CONSENT_TEMPLATES: Record<string, ConsentTemplate> = {
       "Complete crown restoration if advised",
     ],
   },
-  "Tooth Extraction": {
+  "Tooth Extraction (Oral Surgery)": {
     description:
       "Tooth extraction involves removal of a damaged, infected, impacted, or non-restorable tooth.",
     consentDeclaration:
@@ -58,7 +83,7 @@ export const CONSENT_TEMPLATES: Record<string, ConsentTemplate> = {
       "Attend review visits",
     ],
   },
-  "Dental Implant": {
+  "Implant Surgery": {
     description:
       "Dental implant placement involves inserting a titanium implant into the jawbone to replace missing teeth.",
     consentDeclaration:

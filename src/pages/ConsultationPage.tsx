@@ -134,11 +134,15 @@ export const ConsultationPage: React.FC = () => {
     dName?: string,
     time?: string
   ) => {
-    const ex = patients.find(
+    const trimmedName = (name || "").trim();
+    const cleanPhone = (phone || "").replace(/\D/g, "");
+
+    const ex = (trimmedName && cleanPhone) ? patients.find(
       (p: any) =>
-        p.name.toLowerCase() === name.toLowerCase().trim() &&
-        p.phone.replace(/\D/g, "") === phone.replace(/\D/g, "")
-    );
+        p.name.toLowerCase() === trimmedName.toLowerCase() &&
+        p.phone.replace(/\D/g, "") === cleanPhone
+    ) : null;
+
     if (ex) {
       setSelectedPatientForDiagnose({
         id: `WALK-${Date.now()}`,
@@ -149,15 +153,35 @@ export const ConsultationPage: React.FC = () => {
         treatmentType: ex.treatmentType || "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || "1",
-        doctorName: dName || "Dr. Rajesh Sharma",
-        appointmentTime: time || new Date().toLocaleTimeString(),
+        doctorId: dId || state.user?.id || "1",
+        doctorName: dName || state.user?.name || "Doctor",
+        appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         patientHistory: {
           medicalHistory: ex.medicalHistory || [],
           allergies: ex.allergies || [],
           gender: ex.gender || "",
           dateOfBirth: ex.dateOfBirth || "",
           bloodGroup: ex.bloodGroup || "",
+        },
+      });
+      setActiveModal("diagnoseForm");
+    } else {
+      setSelectedPatientForDiagnose({
+        id: `WALK-${Date.now()}`,
+        patientId: "",
+        patientName: trimmedName,
+        patientPhone: phone || "",
+        phone: phone || "",
+        treatmentType: "General Consultation",
+        patientConcern: "",
+        status: "in-consultation",
+        doctorId: dId || state.user?.id || "1",
+        doctorName: dName || state.user?.name || "Doctor",
+        appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isDirect: true,
+        patientHistory: {
+          medicalHistory: [],
+          allergies: [],
         },
       });
       setActiveModal("diagnoseForm");

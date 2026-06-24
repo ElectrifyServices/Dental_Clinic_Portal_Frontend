@@ -101,6 +101,7 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
       createdBy: plan.created_by || "Super Admin",
       color: mapHexToColor(plan.theme_color),
       planCategory: (plan.plan_type?.toLowerCase() === 'company' ? 'corporate' : plan.plan_type?.toLowerCase() === 'individual' ? 'individual' : plan.plan_category?.toLowerCase() || 'corporate') as any,
+      planType: plan.plan_type || (plan.plan_type?.toLowerCase() === 'company' ? 'COMPANY' : plan.plan_type?.toLowerCase() === 'individual' ? 'INDIVIDUAL' : 'COMPANY'),
       planTier: plan.plan_tier?.toLowerCase() as any,
       annualFee: plan.annual_fee ? Number(plan.annual_fee) : undefined,
       maxDependents: plan.family_coverage_limit ?? plan.max_dependents ?? 0,

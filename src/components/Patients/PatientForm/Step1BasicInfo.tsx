@@ -542,12 +542,22 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 };
               })
             ]}
+
             renderValue={(opt: any) => {
               if (opt.value === "none") return <span className="font-semibold text-muted-foreground">{opt.label}</span>;
               const { planData, fee, limit } = opt;
               return (
                 <div className="flex items-center gap-2 truncate pr-2">
                   <span className="font-bold text-sm truncate">{planData.name}</span>
+                  {planData.planType && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
+                      planData.planType.toUpperCase() === 'INDIVIDUAL' 
+                        ? 'bg-purple-100 text-purple-700 border-purple-200' 
+                        : 'bg-amber-100 text-amber-700 border-amber-200'
+                    } whitespace-nowrap`}>
+                      {planData.planType}
+                    </span>
+                  )}
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-green-100/50 text-green-700 whitespace-nowrap border border-green-200">
                     Fee: ₹{fee}/yr
                   </span>
@@ -565,7 +575,18 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               return (
                 <div className="flex flex-col gap-1.5 pr-2 w-full min-w-0 py-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-foreground text-sm">{planData.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground text-sm">{planData.name}</span>
+                      {planData.planType && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
+                          planData.planType.toUpperCase() === 'INDIVIDUAL' 
+                            ? 'bg-purple-100 text-purple-700 border-purple-200' 
+                            : 'bg-amber-100 text-amber-700 border-amber-200'
+                        } whitespace-nowrap`}>
+                          {planData.planType}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2 shrink-0">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100/80 text-green-800 whitespace-nowrap border border-green-200">
                         Fee: ₹{fee}/yr
