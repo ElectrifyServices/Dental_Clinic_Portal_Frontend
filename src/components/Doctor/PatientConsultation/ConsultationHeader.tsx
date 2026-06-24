@@ -145,18 +145,29 @@ export function ConsultationHeader({
                 Medical Alerts & History
               </p>
               {patient.patientHistory &&
-              patient.patientHistory.allergies.length > 0 ? (
-                <div className="bg-destructive/10 p-3 rounded-xl border border-destructive/20 space-y-1">
-                  <div className="text-[11px] text-destructive">
-                    <strong className="uppercase text-[9px] mr-1">
-                      Allergies:
-                    </strong>{" "}
-                    {patient.patientHistory.allergies.join(", ")}
-                  </div>
+              ((patient.patientHistory.allergies && patient.patientHistory.allergies.length > 0) ||
+               (patient.patientHistory.medicalHistory && patient.patientHistory.medicalHistory.length > 0)) ? (
+                <div className="bg-destructive/10 p-3 rounded-xl border border-destructive/20 space-y-2">
+                  {patient.patientHistory.allergies && patient.patientHistory.allergies.length > 0 && (
+                    <div className="text-[11px] text-destructive">
+                      <strong className="uppercase text-[9px] mr-1">
+                        Allergies:
+                      </strong>{" "}
+                      {patient.patientHistory.allergies.join(", ")}
+                    </div>
+                  )}
+                  {patient.patientHistory.medicalHistory && patient.patientHistory.medicalHistory.length > 0 && (
+                    <div className="text-[11px] text-destructive">
+                      <strong className="uppercase text-[9px] mr-1">
+                        Conditions:
+                      </strong>{" "}
+                      {patient.patientHistory.medicalHistory.join(", ")}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm font-medium text-blue-400 italic">
-                  No medical history recorded
+                  No medical history or allergies recorded
                 </p>
               )}
             </div>

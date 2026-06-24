@@ -15,6 +15,7 @@ export interface CorporatePlansParams {
   search?: string;
   status?: string;
   planType?: string;
+  staleTime?: number;
 }
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
@@ -45,7 +46,7 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     data: body,
     options: {
       enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: params.staleTime !== undefined ? params.staleTime : 5 * 60 * 1000,
       refetchOnWindowFocus: false,
     },
   });

@@ -4,7 +4,7 @@ import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, Input, Label } from "@/components/ui";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
@@ -105,6 +105,8 @@ export function PatientConsultation({
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [directPatientName, setDirectPatientName] = useState((patient as any).isDirect ? (patient.patientName || "") : "");
+  const [directPatientPhone, setDirectPatientPhone] = useState((patient as any).isDirect ? (patient.phone || "") : "");
   const [historySearch, setHistorySearch] = useState("");
   const [historyDateFrom, setHistoryDateFrom] = useState("");
   const [historyDateTo, setHistoryDateTo] = useState("");
@@ -166,6 +168,25 @@ export function PatientConsultation({
   const [selectedSlot, setSelectedSlot] = useState<string | null>(
     initialData?.selectedSlot || null
   );
+
+  const patientDOB = patient.patientHistory?.dateOfBirth || (patient as any).dateOfBirth || "";
+  const calculatedAge = React.useMemo(() => {
+    if (!patientDOB) return null;
+    try {
+      const birthDate = new Date(patientDOB);
+      if (isNaN(birthDate.getTime())) return null;
+      let age = new Date().getFullYear() - birthDate.getFullYear();
+      const m = new Date().getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && new Date().getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    } catch (e) {
+      return null;
+    }
+  }, [patientDOB]);
+
+  const defaultChartType = calculatedAge !== null && calculatedAge <= 12 ? "pediatric" : "adult";
 
   useEffect(() => {
     onDraftUpdate?.({
@@ -466,6 +487,16 @@ export function PatientConsultation({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if ((patient as any).isDirect) {
+      if (!directPatientName.trim()) {
+        alert("Patient name is required for direct consultation.");
+        return;
+      }
+      if (!directPatientPhone.trim()) {
+        alert("Patient phone number is required for direct consultation.");
+        return;
+      }
+    }
     if (!validateForm()) return;
     setLoading(true);
     try {
@@ -482,6 +513,9 @@ export function PatientConsultation({
         followUpDoctorId,
         followUpDate,
         followUpTime: selectedSlot,
+        directPatientName,
+        directPatientPhone,
+        isDirect: (patient as any).isDirect,
       });
       setIsCompleted(true);
       refetchConsultations();
@@ -495,8 +529,8 @@ export function PatientConsultation({
     <Modal
       title={
         viewMode === "history"
-          ? `Previous Consultations: ${patient.patientName}`
-          : `Consultation: ${patient.patientName}`
+          ? `Previous Consultations: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+          : `Consultation: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
       }
       subtitle={
         viewMode === "history"
@@ -578,21 +612,46 @@ export function PatientConsultation({
           />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
-              <div>
-                <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
-                <div className="text-sm font-black text-foreground">Phone: {patient.phone || "—"}</div>
+            {(patient as any).isDirect ? (
+              <div className="mx-6 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                <div className="space-y-1 text-left">
+                  <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter Patient Name"
+                    value={directPatientName}
+                    onChange={(e) => setDirectPatientName(e.target.value)}
+                    className="bg-background text-sm font-bold border-border/80"
+                  />
+                </div>
+                <div className="space-y-1 text-left">
+                  <Label className="text-xs font-bold text-primary">Phone Number <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter Phone Number"
+                    value={directPatientPhone}
+                    onChange={(e) => setDirectPatientPhone(e.target.value)}
+                    className="bg-background text-sm font-bold border-border/80"
+                  />
+                </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setViewMode("history")}
-                className="gap-2 font-bold hover:bg-primary hover:text-white transition-all shadow-sm border-primary/30 text-primary w-full sm:w-auto justify-center"
-              >
-                <History className="w-4 h-4" />
-                Previous Consultations
-              </Button>
-            </div>
+            ) : (
+              <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
+                <div>
+                  <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
+                  <div className="text-sm font-black text-foreground">Phone: {patient.phone || "—"}</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setViewMode("history")}
+                  className="gap-2 font-bold hover:bg-primary hover:text-white transition-all shadow-sm border-primary/30 text-primary w-full sm:w-auto justify-center"
+                >
+                  <History className="w-4 h-4" />
+                  Previous Consultations
+                </Button>
+              </div>
+            )}
 
             <ClinicalImages
               images={consultationData.images}
@@ -610,6 +669,7 @@ export function PatientConsultation({
               diagnosis={consultationData.diagnosis}
               onChange={handleChange}
               errors={errors}
+              defaultChartType={defaultChartType}
             />
 
             <TreatmentPlanning

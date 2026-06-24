@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Save,
   User,
@@ -11,14 +11,17 @@ import {
   XCircle,
   HeartPulse,
   ClipboardList,
+  Upload,
 } from "lucide-react";
 import { Patient } from "../../types";
 import { SignaturePad } from "./SignaturePad";
 import { Modal, Button, Badge, Label, Textarea, Input, Loading } from "@/components/ui";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
-import { CONSENT_TEMPLATES } from "../../constants/consent.constants";
+import { CONSENT_TEMPLATES, CONSENT_CHECKBOX_TREATMENTS } from "../../constants/consent.constants";
+import { cn } from "@/lib/utils";
 
 interface ConsentFormProps {
   onClose: () => void;
@@ -66,8 +69,22 @@ export function ConsentForm({
     ? rawPatientsData 
     : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
 
+  const [selectedTreatments, setSelectedTreatments] = useState<string[]>(() => {
+    if (form?.treatmentType) {
+      return form.treatmentType.split(", ").filter(Boolean);
+    }
+    return [];
+  });
+
+  const [isOfflineUploadOnly, setIsOfflineUploadOnly] = useState<boolean>(() => {
+    if (form) {
+      return !!form.consentFormUrl && !form.patientSignature;
+    }
+    return false;
+  });
+
   const isPatientInfoValid = () => {
-    return !!(formData.patientId && formData.doctorName && formData.treatmentType);
+    return !!(formData.patientId && formData.doctorName && selectedTreatments.length > 0);
   };
 
   const [activeTab, setActiveTab] = useState<"patient" | "terms" | "sign">(
@@ -87,6 +104,8 @@ export function ConsentForm({
     witnessSignature: form?.witnessSignature || "",
     doctorName: form?.doctorName || "",
     doctorId: form?.doctorId || "",
+    consentFormUrl: form?.consentFormUrl || "",
+    rawConsentFormFile: null as File | null,
     date: form?.date
       ? form.date.includes("T")
         ? form.date.split("T")[0]
@@ -109,44 +128,96 @@ export function ConsentForm({
         witnessSignature: form.witnessSignature || "",
         doctorName: form.doctorName || "",
         doctorId: form.doctorId || "",
+        consentFormUrl: form.consentFormUrl || "",
+        rawConsentFormFile: null,
         date: form.date
           ? form.date.includes("T")
             ? form.date.split("T")[0]
             : form.date
           : new Date().toISOString().split("T")[0],
       });
+      if (form.treatmentType) {
+        setSelectedTreatments(form.treatmentType.split(", ").filter(Boolean));
+      } else {
+        setSelectedTreatments([]);
+      }
     }
   }, [form]);
 
-  // Auto-fill template when procedure changes (new form only)
+  // Auto-fill template when selectedTreatments changes (new form only)
   useEffect(() => {
-    if (!form && formData.treatmentType && CONSENT_TEMPLATES[formData.treatmentType]) {
-      const key = formData.treatmentType;
-      setFormData((prev) => ({
-        ...prev,
-        content: buildContentText(key),
-        riskDisclosure: buildRisksText(key),
-        alternativeTreatments: buildAlternativesText(key),
-        postTreatmentCare: buildResponsibilitiesText(key),
-      }));
+    if (!form) {
+      if (selectedTreatments.length > 0) {
+        const combinedContent = selectedTreatments
+          .map((key) => {
+            const t = CONSENT_TEMPLATES[key];
+            return t ? `--- ${key} ---\n${buildContentText(key)}` : "";
+          })
+          .join("\n\n");
+
+        const combinedRisks = selectedTreatments
+          .map((key) => {
+            const t = CONSENT_TEMPLATES[key];
+            return t ? `• ${key}:\n${buildRisksText(key)}` : "";
+          })
+          .join("\n\n");
+
+        const combinedAlts = selectedTreatments
+          .map((key) => {
+            const t = CONSENT_TEMPLATES[key];
+            return t ? `• ${key}:\n${buildAlternativesText(key)}` : "";
+          })
+          .join("\n\n");
+
+        const combinedCare = selectedTreatments
+          .map((key) => {
+            const t = CONSENT_TEMPLATES[key];
+            return t ? `• ${key}:\n${buildResponsibilitiesText(key)}` : "";
+          })
+          .join("\n\n");
+
+        setFormData((prev) => ({
+          ...prev,
+          treatmentType: selectedTreatments.join(", "),
+          content: combinedContent,
+          riskDisclosure: combinedRisks,
+          alternativeTreatments: combinedAlts,
+          postTreatmentCare: combinedCare,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          treatmentType: "",
+          content: "",
+          riskDisclosure: "",
+          alternativeTreatments: "",
+          postTreatmentCare: "",
+        }));
+      }
     }
-  }, [formData.treatmentType, form]);
+  }, [selectedTreatments, form]);
 
   const handleSubmit = () => {
     if (
       !formData.patientId ||
-      !formData.treatmentType ||
+      selectedTreatments.length === 0 ||
       !formData.doctorName
     ) {
-      alert("Required fields: Patient, Doctor, and Procedure.");
+      alert("Required fields: Patient, Doctor, and at least one Procedure.");
+      return;
+    }
+
+    if (isOfflineUploadOnly && !formData.consentFormUrl) {
+      alert("Please upload the signed offline consent form.");
       return;
     }
 
     onSave({
       ...formData,
+      treatmentType: selectedTreatments.join(", "),
       procedure_declaration: formData.content,
       id: form?.id || `CONSENT-${Date.now()}`,
-      status: formData.patientSignature ? "COMPLETED" : "PENDING",
+      status: (formData.patientSignature || isOfflineUploadOnly) ? "COMPLETED" : "PENDING",
       signature: formData.patientSignature,
     });
   };
@@ -162,14 +233,51 @@ export function ConsentForm({
     }
   };
 
-  // Handle procedure selection
-  const handleProcedureChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, treatmentType: value }));
+  const handleTreatmentToggle = (key: string) => {
+    setSelectedTreatments((prev) => {
+      if (prev.includes(key)) {
+        return prev.filter((item) => item !== key);
+      } else {
+        if (prev.length >= 2) {
+          alert("Maximum 2 consents can be selected at a time");
+          return prev;
+        }
+        return [...prev, key];
+      }
+    });
   };
 
-  const selectedTemplate = formData.treatmentType
-    ? CONSENT_TEMPLATES[formData.treatmentType]
-    : null;
+  const selectedTemplate = useMemo(() => {
+    if (selectedTreatments.length === 0) return null;
+    if (selectedTreatments.length === 1) {
+      return CONSENT_TEMPLATES[selectedTreatments[0]] || null;
+    }
+
+    const descriptions: string[] = [];
+    const declarations: string[] = [];
+    const risks: string[] = [];
+    const alternatives: string[] = [];
+    const responsibilities: string[] = [];
+
+    selectedTreatments.forEach((key) => {
+      const template = CONSENT_TEMPLATES[key];
+      if (template) {
+        descriptions.push(`${key}: ${template.description}`);
+        declarations.push(`${key}: ${template.consentDeclaration}`);
+        risks.push(...template.risks);
+        alternatives.push(...template.alternatives);
+        responsibilities.push(...template.responsibilities);
+      }
+    });
+
+    return {
+      description: descriptions.join("\n\n"),
+      consentDeclaration: declarations.join("\n\n"),
+      risks: [risks.join("\n")],
+      alternatives: [alternatives.join("\n")],
+      responsibilities: [responsibilities.join("\n")],
+    };
+  }, [selectedTreatments]);
 
   const footer = (
     <div className="flex items-center justify-between w-full">
@@ -198,7 +306,7 @@ export function ConsentForm({
       </div>
 
       <div className="flex gap-3">
-        {activeTab !== "patient" && !isLoading && (
+        {activeTab !== "patient" && !isOfflineUploadOnly && !isLoading && (
           <Button
             variant="outline"
             onClick={() =>
@@ -210,7 +318,14 @@ export function ConsentForm({
         )}
 
         {!isLoading &&
-          (activeTab !== "sign" ? (
+          (isOfflineUploadOnly ? (
+            <Button
+              onClick={handleSubmit}
+              className="gap-2 shadow-lg shadow-primary/20"
+            >
+              <Save className="w-4 h-4" /> Finish & Generate Form
+            </Button>
+          ) : activeTab !== "sign" ? (
             <Button
               onClick={() => {
                 if (activeTab === "patient" && !isPatientInfoValid()) {
@@ -260,32 +375,34 @@ export function ConsentForm({
         ) : (
           <>
             {/* Tab Header */}
-            <div className="flex gap-2 p-1 bg-muted rounded-xl">
-              {[
-                { id: "patient", label: "Identity", icon: User },
-                { id: "terms", label: "Legal Terms", icon: BookOpen },
-                { id: "sign", label: "Auth", icon: PenTool },
-              ].map((tab) => (
-                <Button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id !== "patient" && !isPatientInfoValid()) {
-                      setShowErrors(true);
-                      return;
-                    }
-                    setActiveTab(tab.id as any);
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${
-                    activeTab === tab.id
-                      ? "bg-background text-primary shadow-sm hover:bg-background hover:text-primary"
-                      : ""
-                  }`}
-                >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
+            {!isOfflineUploadOnly && (
+              <div className="flex gap-2 p-1 bg-muted rounded-xl">
+                {[
+                  { id: "patient", label: "Identity", icon: User },
+                  { id: "terms", label: "Legal Terms", icon: BookOpen },
+                  { id: "sign", label: "Auth", icon: PenTool },
+                ].map((tab) => (
+                  <Button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.id !== "patient" && !isPatientInfoValid()) {
+                        setShowErrors(true);
+                        return;
+                      }
+                      setActiveTab(tab.id as any);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${
+                      activeTab === tab.id
+                        ? "bg-background text-primary shadow-sm hover:bg-background hover:text-primary"
+                        : ""
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            )}
 
             <div>
               {/* ── Step 1: Identity ── */}
@@ -343,27 +460,159 @@ export function ConsentForm({
                       )}
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">
-                        Clinical Procedure Type <span className="text-red-500">*</span>
-                      </Label>
-                      <SearchableSelect
-                        value={formData.treatmentType}
-                        onChange={handleProcedureChange}
-                        options={Object.keys(CONSENT_TEMPLATES).map((type) => ({ label: type, value: type }))}
-                        placeholder="Select Procedure Template..."
-                        className={showErrors && !formData.treatmentType ? "border-red-400 bg-red-50/15 focus:border-red-400 focus:ring-red-100" : ""}
+                    <div className="md:col-span-2 p-4 bg-muted/40 rounded-2xl flex items-center justify-between border border-border/80">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-bold text-foreground">Offline Signed Form Upload Only</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">Skip digital signature and legal term editing by uploading a signed paper form</span>
+                      </div>
+                      <Checkbox
+                        checked={isOfflineUploadOnly}
+                        onCheckedChange={(checked) => {
+                          setIsOfflineUploadOnly(!!checked);
+                          if (checked) {
+                            setActiveTab("patient"); // lock tab to patient
+                          }
+                        }}
                       />
-                      {showErrors && !formData.treatmentType && (
-                        <span className="text-[10px] text-red-500 font-bold ml-1 block">Clinical Procedure Type is required</span>
+                    </div>
+
+                    <div className="space-y-3 md:col-span-2">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 block">
+                        Select Treatment Consent(s) <span className="text-red-500">*</span> (Select up to 2)
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {CONSENT_CHECKBOX_TREATMENTS.map((item) => {
+                          const isChecked = selectedTreatments.includes(item.key);
+                          const isMaxReached = selectedTreatments.length >= 2 && !isChecked;
+                          return (
+                            <div
+                              key={item.key}
+                              onClick={() => !isMaxReached && handleTreatmentToggle(item.key)}
+                              className={cn(
+                                "border rounded-2xl p-4 flex flex-col justify-between gap-3 cursor-pointer transition-all duration-200 bg-background hover:border-primary/50",
+                                isChecked
+                                  ? "border-primary bg-primary/[0.02] shadow-sm ring-1 ring-primary/20"
+                                  : "border-border",
+                                isMaxReached ? "opacity-60 cursor-not-allowed hover:border-border" : ""
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <span className="text-xs font-bold text-foreground block">
+                                    {item.label}
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mt-0.5 font-mono">
+                                    {item.subtitle}
+                                  </span>
+                                </div>
+                                <Checkbox
+                                  checked={isChecked}
+                                  disabled={isMaxReached}
+                                  onCheckedChange={() => handleTreatmentToggle(item.key)}
+                                />
+                              </div>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                                {item.description}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {showErrors && selectedTreatments.length === 0 && (
+                        <span className="text-[10px] text-red-500 font-bold ml-1 block">At least one treatment must be selected</span>
                       )}
                     </div>
                   </div>
 
+                  {isOfflineUploadOnly && (
+                    <div className="border border-border rounded-2xl p-4 bg-muted/10 shadow-sm space-y-3 animate-in fade-in duration-300">
+                      <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        Upload Signed Offline Document <span className="text-red-500">*</span>
+                      </h4>
+                      {formData.consentFormUrl ? (
+                        <div className="flex flex-col items-center justify-center gap-3 bg-card p-4 border border-dashed border-border rounded-xl">
+                          <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                            {formData.consentFormUrl.toLowerCase().includes(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
+                              <div className="h-24 w-36 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-3">
+                                <BookOpen className="w-6 h-6 text-primary mb-1" />
+                                <span className="text-[10px] font-bold text-foreground text-center truncate w-full">Consent PDF</span>
+                              </div>
+                            ) : (
+                              <img
+                                src={formData.consentFormUrl}
+                                alt="Uploaded Consent Form"
+                                className="h-24 object-contain mx-auto rounded-lg"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  consentFormUrl: "",
+                                  rawConsentFormFile: null
+                                }));
+                              }}
+                              className="h-7 text-[10px] px-3 font-bold"
+                            >
+                              Remove Form
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => {
+                            const fileInput = document.getElementById("offline-consent-file-upload-step1");
+                            fileInput?.click();
+                          }}
+                          className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
+                        >
+                          <input
+                            id="offline-consent-file-upload-step1"
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setFormData((prev: any) => ({
+                                    ...prev,
+                                    consentFormUrl: event.target?.result as string,
+                                    rawConsentFormFile: file,
+                                  }));
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+                          <p className="text-xs font-bold text-foreground">Click to upload signed document</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
+                        </div>
+                      )}
+                      {showErrors && !formData.consentFormUrl && (
+                        <span className="text-[10px] text-red-500 font-bold ml-1 block">Signed document is required in offline upload mode</span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex gap-3">
                     <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <p className="text-[11px] text-primary/80 font-bold leading-relaxed uppercase tracking-tight">
-                      Select a procedure to auto-load legal terms, risks, and consent content. You can review and edit them in the next step.
+                      {isOfflineUploadOnly 
+                        ? "Offline upload mode active. Fill patient, doctor, procedure info, upload signed document, and submit directly."
+                        : "Select treatment consents to auto-load legal terms, risks, and post-care content. You can review and edit them in the next step."
+                      }
                     </p>
                   </div>
                 </div>
@@ -528,7 +777,86 @@ export function ConsentForm({
 
               {/* ── Step 3: Signature ── */}
               {activeTab === "sign" && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                  
+                  {/* Offline Consent Form Upload Section */}
+                  <div className="border border-border rounded-2xl p-4 bg-muted/10 shadow-sm space-y-3">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      Offline Consent Form Upload (Optional)
+                    </h4>
+                    {formData.consentFormUrl ? (
+                      <div className="flex flex-col items-center justify-center gap-3 bg-card p-4 border border-dashed border-border rounded-xl">
+                        <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                          {formData.consentFormUrl.toLowerCase().includes(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
+                            <div className="h-24 w-36 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-3">
+                              <BookOpen className="w-6 h-6 text-primary mb-1" />
+                              <span className="text-[10px] font-bold text-foreground text-center truncate w-full">Consent PDF</span>
+                            </div>
+                          ) : (
+                            <img
+                              src={formData.consentFormUrl}
+                              alt="Uploaded Consent Form"
+                              className="h-24 object-contain mx-auto rounded-lg"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                consentFormUrl: "",
+                                rawConsentFormFile: null
+                              }));
+                            }}
+                            className="h-7 text-[10px] px-3 font-bold"
+                          >
+                            Remove Form
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          const fileInput = document.getElementById("consent-file-upload");
+                          fileInput?.click();
+                        }}
+                        className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
+                      >
+                        <input
+                          id="consent-file-upload"
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  consentFormUrl: event.target?.result as string,
+                                  rawConsentFormFile: file,
+                                }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-foreground">Click to upload offline consent document</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between px-1">

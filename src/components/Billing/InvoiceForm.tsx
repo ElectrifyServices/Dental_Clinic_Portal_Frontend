@@ -224,14 +224,14 @@ export function InvoiceForm({
     if (unbilledObj) {
       const apiConsultations = unbilledObj.consultations || [];
       const apiTreatments = unbilledObj.treatments || [];
+      const apiMemberships = unbilledObj.membership || [];
 
       apiConsultations.forEach((c: any) => {
-        const isFree = c.is_free || c.isFree || activeCorporatePlan?.freeConsultation || false;
         list.push({
           id: c.id,
           type: c.type || "consultation",
-          description: c.description || `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})${isFree ? " [FREE]" : ""}`,
-          rate: isFree ? 0 : (c.amount ?? 500),
+          description: c.description || `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})`,
+          rate: c.final_amount ?? c.amount ?? c.original_amount ?? 0,
           date: c.date,
           doctor_name: c.doctor_name || c.doctorName,
           status: c.status,
@@ -239,25 +239,23 @@ export function InvoiceForm({
       });
 
       apiTreatments.forEach((t: any) => {
-        const isFree = t.is_free || t.isFree || false;
         list.push({
           id: t.id,
           type: t.type || "treatment",
           description: t.description || t.procedure || "Treatment Item",
-          rate: isFree ? 0 : (t.amount ?? t.cost ?? 0),
+          rate: t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0,
           date: t.date,
           doctor_name: t.doctor_name || t.doctorName,
           status: t.status,
         });
       });
 
-      const apiMemberships = unbilledObj.membership || [];
       apiMemberships.forEach((m: any) => {
         list.push({
           id: m.id,
           type: m.type || "membership",
           description: m.description || m.plan_name || m.planName || "Membership Fee",
-          rate: m.amount ?? m.cost ?? 0,
+          rate: m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0,
           date: m.date,
           status: m.status,
         });
@@ -265,7 +263,7 @@ export function InvoiceForm({
     }
 
     return list;
-  }, [formData.patientId, rawUnbilledData, activeCorporatePlan]);
+  }, [formData.patientId, rawUnbilledData]);
 
   const invoiceCfg = useFormConfig("invoice");
   const commonServices: Array<{ name: string; rate: number }> =

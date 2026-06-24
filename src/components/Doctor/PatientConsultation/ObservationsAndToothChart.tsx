@@ -11,6 +11,7 @@ interface ObservationsAndToothChartProps {
   diagnosis: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   errors?: Record<string, string>;
+  defaultChartType?: "adult" | "pediatric";
 }
 
 export function ObservationsAndToothChart({
@@ -20,6 +21,7 @@ export function ObservationsAndToothChart({
   diagnosis,
   onChange,
   errors = {},
+  defaultChartType,
 }: ObservationsAndToothChartProps) {
   return (
     <div className="px-6">
@@ -36,6 +38,7 @@ export function ObservationsAndToothChart({
           <ToothChart
             initialState={toothChartState as any}
             onChartChange={onChartChange}
+            defaultChartType={defaultChartType}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

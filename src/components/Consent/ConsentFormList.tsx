@@ -66,11 +66,21 @@ export function ConsentFormList({
     {
       key: "consentType",
       header: "Consent Type",
-      render: (form: any) => (
-        <div className="font-bold text-foreground text-sm uppercase tracking-tight">
-          {form.treatmentType}
-        </div>
-      ),
+      render: (form: any) => {
+        const treatments = form.treatmentType?.split(", ").filter(Boolean) || [];
+        return (
+          <div className="flex flex-wrap gap-1.5 max-w-[280px]">
+            {treatments.map((t: string) => {
+              const cleanName = t.replace(/\s*\(.*\)\s*/g, '');
+              return (
+                <Badge key={t} className="uppercase font-bold text-[9px] px-2 h-5 tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+                  {cleanName}
+                </Badge>
+              );
+            })}
+          </div>
+        );
+      },
       className: "px-6 py-4",
     },
     {
@@ -107,12 +117,14 @@ export function ConsentFormList({
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         return (
           <div className={`text-sm font-medium ${isSigned ? 'text-muted-foreground' : 'text-amber-600 font-semibold'}`}>
-            {isSigned && form.signedDate
-              ? new Date(form.signedDate).toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
+            {isSigned
+              ? form.signedDate
+                ? new Date(form.signedDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+                : "Signed"
               : "Pending"}
           </div>
         );

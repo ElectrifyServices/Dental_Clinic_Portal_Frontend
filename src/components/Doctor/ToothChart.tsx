@@ -91,10 +91,27 @@ const LOWER_TEETH: number[] = [
   48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38,
 ];
 
+const UPPER_PRIMARY: number[] = [
+  55, 54, 53, 52, 51, 61, 62, 63, 64, 65,
+];
+const LOWER_PRIMARY: number[] = [
+  85, 84, 83, 82, 81, 71, 72, 73, 74, 75,
+];
+
 function getToothType(
   num: number,
 ): "molar" | "premolar" | "canine" | "incisor" {
+  const q = Math.floor(num / 10);
   const d = num % 10;
+  
+  // Deciduous quadrants (5, 6, 7, 8) have no premolars
+  const isPrimary = q >= 5 && q <= 8;
+  if (isPrimary) {
+    if (d >= 4) return "molar";
+    if (d === 3) return "canine";
+    return "incisor";
+  }
+
   if (d >= 6) return "molar";
   if (d >= 4) return "premolar";
   if (d === 3) return "canine";
@@ -222,16 +239,25 @@ function ToothCell({ num, conditionIds, isLower, onClick }: ToothCellProps) {
 export function ToothChart({
   onChartChange,
   initialState,
+  defaultChartType = "adult",
 }: {
   onChartChange?: (state: ToothState) => void;
   initialState?: ToothState;
+  defaultChartType?: "adult" | "pediatric";
 } = {}) {
   const [toothState, setToothState] = useState<ToothState>(initialState || {});
   const [activeMode, setActiveMode] = useState<ConditionId>("caries");
+  const [chartType, setChartType] = useState<"adult" | "pediatric">(defaultChartType);
 
   useEffect(() => {
     onChartChange?.(toothState);
   }, [toothState, onChartChange]);
+
+  useEffect(() => {
+    if (defaultChartType) {
+      setChartType(defaultChartType);
+    }
+  }, [defaultChartType]);
 
   const clickTooth = (num: number): void => {
     setToothState((prev) => {
@@ -266,6 +292,9 @@ export function ToothChart({
     });
   };
 
+  const upperTeeth = chartType === "adult" ? UPPER_TEETH : UPPER_PRIMARY;
+  const lowerTeeth = chartType === "adult" ? LOWER_TEETH : LOWER_PRIMARY;
+
   const findings: [string, ConditionId[]][] = (
     Object.entries(toothState) as [string, ConditionId[]][]
   )
@@ -293,6 +322,57 @@ export function ToothChart({
         }}
       >
         Dental Chart — FDI / ISO Two-Digit System
+      </div>
+
+      {/* Chart Type Selector */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          justifyContent: "center",
+          marginBottom: "1rem",
+          alignItems: "center",
+        }}
+      >
+        <span style={{ fontSize: 11, fontWeight: "bold", color: "#888780", textTransform: "uppercase", letterSpacing: "0.05em" }}>Chart Type:</span>
+        <div style={{ display: "inline-flex", background: "#f1efef", padding: 3, borderRadius: 8 }}>
+          <button
+            type="button"
+            onClick={() => setChartType("adult")}
+            style={{
+              padding: "4px 12px",
+              fontSize: 11,
+              fontWeight: chartType === "adult" ? "bold" : "500",
+              borderRadius: 6,
+              border: "none",
+              background: chartType === "adult" ? "#fff" : "transparent",
+              color: chartType === "adult" ? "#2563eb" : "#666",
+              boxShadow: chartType === "adult" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            Adult (Permanent)
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartType("pediatric")}
+            style={{
+              padding: "4px 12px",
+              fontSize: 11,
+              fontWeight: chartType === "pediatric" ? "bold" : "500",
+              borderRadius: 6,
+              border: "none",
+              background: chartType === "pediatric" ? "#fff" : "transparent",
+              color: chartType === "pediatric" ? "#2563eb" : "#666",
+              boxShadow: chartType === "pediatric" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            Pediatric (Primary)
+          </button>
+        </div>
       </div>
 
       {/* Mode selector */}
@@ -352,8 +432,8 @@ export function ToothChart({
             marginBottom: 2,
           }}
         >
-          <span>Q1 — upper right</span>
-          <span>Q2 — upper left</span>
+          <span>{chartType === "adult" ? "Q1 — upper right" : "Q5 — upper right"}</span>
+          <span>{chartType === "adult" ? "Q2 — upper left" : "Q6 — upper left"}</span>
         </div>
         <div
           style={{
@@ -366,8 +446,8 @@ export function ToothChart({
         >
           Maxilla (upper)
         </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: 540 }}>
-          {UPPER_TEETH.map((num) => (
+        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
+          {upperTeeth.map((num) => (
             <ToothCell
               key={num}
               num={num}
@@ -387,7 +467,7 @@ export function ToothChart({
             opacity: 0.2,
           }}
         >
-          <div style={{ flex: 1, minWidth: 200, height: 0.5, background: "#444" }} />
+          <div style={{ flex: 1, minWidth: chartType === "adult" ? 200 : 120, height: 0.5, background: "#444" }} />
           <div
             style={{
               width: 4,
@@ -396,11 +476,11 @@ export function ToothChart({
               background: "#444",
             }}
           />
-          <div style={{ flex: 1, minWidth: 200, height: 0.5, background: "#444" }} />
+          <div style={{ flex: 1, minWidth: chartType === "adult" ? 200 : 120, height: 0.5, background: "#444" }} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: 540 }}>
-          {LOWER_TEETH.map((num) => (
+        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
+          {lowerTeeth.map((num) => (
             <ToothCell
               key={num}
               num={num}
@@ -432,8 +512,8 @@ export function ToothChart({
             marginTop: 2,
           }}
         >
-          <span>Q4 — lower right</span>
-          <span>Q3 — lower left</span>
+          <span>{chartType === "adult" ? "Q4 — lower right" : "Q8 — lower right"}</span>
+          <span>{chartType === "adult" ? "Q3 — lower left" : "Q7 — lower left"}</span>
         </div>
       </div>
 

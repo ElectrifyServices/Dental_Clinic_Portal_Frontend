@@ -302,16 +302,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       }
     }
     if (stepNumber === 3) {
-      const age = calculateAge(form.getValues("dateOfBirth") ?? "");
-      if (age > 0 && age < 18) {
-        if (!extraData.guardianName?.trim())
-          errors.guardianName = "Guardian name is required";
-        if (!extraData.guardianSignature)
-          errors.guardianSignature = "Guardian signature is required";
-      } else {
-        if (!extraData.patientSignature)
-          errors.patientSignature = "Patient signature is required";
-      }
+      // Signature is optional as per request
     }
     return errors;
   };

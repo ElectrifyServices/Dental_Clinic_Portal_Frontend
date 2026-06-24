@@ -240,13 +240,13 @@ export function PatientQueue({
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* <Button
-              onClick={() => setShowDirectPopup(true)}
+            <Button
+              onClick={() => onDirectConsultation("", "")}
               className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary active:scale-95 transition-all shadow-md shadow-blue-200 font-bold text-sm flex-1 sm:flex-initial"
             >
               <UserPlus className="w-4 h-4" />
               <span>Direct</span>
-            </Button> */}
+            </Button>
 
             <Button
               variant="outline"

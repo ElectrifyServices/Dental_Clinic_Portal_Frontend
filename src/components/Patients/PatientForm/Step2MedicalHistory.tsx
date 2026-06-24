@@ -65,18 +65,69 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">Allergies</p>
       </div>
 
+      <div>
+        <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+          Referred By
+        </Label>
+        <Input
+          type="text"
+          name="referredBy"
+          value={formData.referredBy}
+          onChange={handleChange}
+          placeholder="Doctor name or referral source"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         <div>
-          <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-            Referred By
+          <Label className="block text-sm font-semibold text-muted-foreground mb-1">
+            <Heart className="w-4 h-4 inline mr-2 text-red-500" />
+            Medical History
           </Label>
-          <Input
-            type="text"
-            name="referredBy"
-            value={formData.referredBy}
-            onChange={handleChange}
-            placeholder="Doctor name or referral source"
-          />
+          <div className="space-y-2">
+            <SearchableSelect
+              isMulti
+              value={selectedMedicalHistory}
+              onChange={(values: string[]) => {
+                setSelectedMedicalHistory(values);
+                setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
+              }}
+              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => {
+                return { label: h.name, value: h.id || h.name };
+              })}
+              placeholder="Select medical conditions..."
+              searchPlaceholder="Search conditions..."
+              onCreateOption={handleCreateMedicalHistory}
+              createLabel="Create condition"
+              onDeleteOption={handleDeleteMedicalHistory}
+            />
+            {selectedMedicalHistory.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedMedicalHistory.map((item) => {
+                  const history = medicalHistories.find((h: any) => (h.id || h.name) === item);
+                  const displayName = history ? history.name : item;
+                  return (
+                    <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
+                      <span className="truncate max-w-[200px]">{displayName}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => {
+                          const updated = selectedMedicalHistory.filter((i) => i !== item);
+                          setSelectedMedicalHistory(updated);
+                          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
+                        }}
+                        className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>

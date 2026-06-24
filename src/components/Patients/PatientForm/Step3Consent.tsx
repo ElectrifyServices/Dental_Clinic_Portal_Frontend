@@ -50,7 +50,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
           <div className="border border-border rounded-xl p-3.5 bg-card shadow-sm">
             <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
               <Camera className="w-4 h-4 text-primary" />
-              Patient Consent Form
+              Offline Patient Registration Form
             </h4>
             {formData.consentFormUrl && formData.consentFormUrl !== "null" && formData.consentFormUrl !== "undefined" && formData.consentFormUrl !== "" ? (
               <div className="flex flex-col items-center justify-center gap-3 bg-muted/20 p-4 border border-dashed border-border rounded-xl">
@@ -133,7 +133,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
               <div>
                 <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
                   <PenTool className="w-4 h-4 text-primary" />
-                  Patient Signature Section <span className="text-destructive">*</span>
+                  Patient Signature Section
                 </h4>
                 <div className="p-0">
                   <SignaturePad
@@ -153,18 +153,18 @@ export const Step3Consent: React.FC<Step3Props> = ({
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-amber-900">
-                      Guardian Authorization Required
+                      Guardian Authorization
                     </p>
                     <p className="text-xs text-amber-700">
-                      Patient is under 18 years old ({age} years). Guardian
-                      details and signature are mandatory.
+                      Patient is under 18 years old ({age} years). Please provide guardian
+                      details and signature.
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <Label className="block text-sm font-semibold text-muted-foreground mb-1">
-                    Guardian Full Name <span className="text-destructive">*</span>
+                    Guardian Full Name
                   </Label>
                   <Input
                     type="text"
@@ -178,7 +178,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                 <div>
                   <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
                     <PenTool className="w-4 h-4 text-primary" />
-                    Guardian Signature <span className="text-destructive">*</span>
+                    Guardian Signature
                   </h4>
                   <div className="p-0">
                     <SignaturePad
