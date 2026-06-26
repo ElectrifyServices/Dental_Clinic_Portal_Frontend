@@ -1,7 +1,7 @@
 import React from 'react';
 import { Building2, Users, Shield, Calendar, User } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { useActivePlansQuery } from '../../../hooks/corporate/useActivePlansQuery';
+import { useCorporatePlansQuery } from '../../../hooks/corporate/useCorporatePlansQuery';
 import { getDependentsByMember } from '../../../hooks/corporate/dependentStorage';
 import { CorporatePlan, PlanDependent } from '../../../types';
 
@@ -10,15 +10,21 @@ interface PlanCoverageCardProps {
 }
 
 export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) => {
-  const { data: plansData } = useActivePlansQuery();
-  const allPlans: CorporatePlan[] = React.useMemo(() => {
-    if (Array.isArray(plansData)) return plansData;
-    if (plansData && Array.isArray(plansData.data)) return plansData.data;
-    return [];
-  }, [plansData]);
-
   const planId = patient?.corporatePlanId || patient?.companyId;
   const primaryMemberId = patient?.primaryMemberId || patient?.corporateMemberId;
+
+  const hasPlan = !!(planId || primaryMemberId);
+
+  const { data: plansResponse } = useCorporatePlansQuery({ 
+    enabled: hasPlan, 
+    status: "ACTIVE" 
+  });
+
+  const allPlans: CorporatePlan[] = React.useMemo(() => {
+    if (plansResponse && Array.isArray(plansResponse.data)) return plansResponse.data;
+    if (Array.isArray(plansResponse)) return plansResponse;
+    return [];
+  }, [plansResponse]);
 
   const plan = React.useMemo(
     () => allPlans.find(p => p.id === planId),

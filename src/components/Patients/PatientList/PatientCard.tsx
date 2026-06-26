@@ -112,10 +112,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   };
 
   const age = calculateAge(patient.dateOfBirth);
+  const isIncompletePatient = !patient.gender || !patient.dateOfBirth;
 
   return (
     <TooltipProvider>
-      <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit">
+      <Card className={`bg-card shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit ${isIncompletePatient ? "border-2 border-orange-500/60 shadow-orange-500/10" : "border-border"}`}>
         <CardContent className="p-4 sm:p-5">
           {/* Header Section - More compact */}
           <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
@@ -173,28 +174,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                 </div>
               </div>
             </div>
-            <div className="flex sm:flex-col gap-1.5 shrink-0">
-              <SimpleTooltip content="Export Patient Data">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                  onClick={() => onExport(patient.id)}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </Button>
-              </SimpleTooltip>
-              <SimpleTooltip content="Print Patient Barcode">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/10"
-                  onClick={() => onPrintBarcode(patient)}
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                </Button>
-              </SimpleTooltip>
-            </div>
+
           </div>
 
           {/* Contact Info - Compact Grid */}
@@ -230,6 +210,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             </span>
           </div>
           <div className="space-y-1">
+            <p className="text-[10px] font-medium text-orange-800 leading-tight">
+              <span className="font-black">MEDICAL HISTORY:</span>{" "}
+              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || (patient as any).medical_history?.join(", ") || "None"}
+            </p>
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">ALLERGIES:</span>{" "}
               {patient.allergyNames?.join(", ") || patient.allergies?.join(", ") || "None"}
@@ -332,6 +316,13 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               }
             >
               <UserPlus className="w-3.5 h-3.5" /> PERSON
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-8 px-2.5 bg-sky-50 text-sky-600 hover:bg-sky-100 font-black text-[10px] gap-1.5"
+              onClick={() => onExport(patient.id)}
+            >
+              <Download className="w-3.5 h-3.5" /> EXPORT
             </Button>
           </div>
           <div className="flex gap-1.5">

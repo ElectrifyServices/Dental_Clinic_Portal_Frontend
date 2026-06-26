@@ -1,11 +1,13 @@
 import React from "react";
-import { Calendar as CalendarIcon, Clock, Stethoscope } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Stethoscope, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 interface DayAgendaProps {
   selectedDate: Date;
   appointments: any[];
   onEditAppointment?: (appointment: any) => void;
+  onDirectCheckIn?: (appointment: any) => void;
   formatTime: (time: string) => string;
 }
 
@@ -13,6 +15,7 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
   selectedDate,
   appointments,
   onEditAppointment,
+  onDirectCheckIn,
   formatTime,
 }) => {
   return (
@@ -67,6 +70,22 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                   </p>
                 </div>
               </div>
+
+              {onDirectCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(apt.status) && (
+                <div className="mt-3 pt-3 border-t border-border/50 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDirectCheckIn(apt);
+                    }}
+                    className="h-7 px-3 text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg gap-1.5"
+                  >
+                    <UserCheck className="w-3 h-3" />
+                    Direct check-in
+                  </Button>
+                </div>
+              )}
             </div>
           ))
         ) : (

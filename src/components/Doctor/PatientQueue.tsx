@@ -14,6 +14,7 @@ import {
 import ConsultationHistoryModal from "./ConsultationHistoryModal";
 import { DirectConsultationPopup } from "./DirectConsultationPopup";
 import { QueueCard } from "./PatientQueue/QueueCard";
+import { Pagination } from "@/components/ui";
 
 interface QueuedPatient {
   id: string;
@@ -48,15 +49,19 @@ interface PatientQueueProps {
     time?: string,
   ) => void;
   onRegisterNew: (name: string, phone: string) => void;
-  onUpdateConsultation: (id: string, updates: any) => void;
   patients: any[];
   doctors: any[];
   appointments: any[];
-  doctorAvailability: { [key: string]: boolean };
-  searchTerm?: string;
-  onSearchChange?: (value: string) => void;
-  filterStatus?: string;
-  onFilterStatusChange?: (value: string) => void;
+  doctorAvailability: any[];
+  onUpdateConsultation?: (consultation: any) => Promise<void>;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  filterStatus: string;
+  onFilterStatusChange: (value: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function PatientQueue({
@@ -75,6 +80,10 @@ export function PatientQueue({
   onSearchChange,
   filterStatus: propFilterStatus,
   onFilterStatusChange,
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  onPageChange,
 }: PatientQueueProps) {
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localFilterStatus, setLocalFilterStatus] = useState("ALL");
@@ -282,6 +291,18 @@ export function PatientQueue({
           );
         })}
       </div>
+
+      {totalPages > 1 && onPageChange && (
+        <div className="mt-6 flex justify-end">
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            perPage={10}
+            onPageChange={onPageChange}
+          />
+        </div>
+      )}
 
       {showDirectPopup && (
         <DirectConsultationPopup

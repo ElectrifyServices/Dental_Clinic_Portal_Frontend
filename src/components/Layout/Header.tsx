@@ -23,30 +23,30 @@ import { GlobalSearch } from "./GlobalSearch";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
-    case "inventory":   return Package;
-    case "queue":       return UserCheck;
-    case "billing":     return Coins;
+    case "inventory": return Package;
+    case "queue": return UserCheck;
+    case "billing": return Coins;
     case "appointment":
-    case "followup":    return CalendarDays;
-    default:            return Bell;
+    case "followup": return CalendarDays;
+    default: return Bell;
   }
 };
 
 const getNotificationColorCls = (type: string) => {
   switch (type) {
-    case "inventory":  return "bg-red-50 text-red-600";
-    case "queue":      return "bg-emerald-50 text-emerald-600";
-    case "billing":    return "bg-amber-50 text-amber-600";
-    case "appointment":return "bg-blue-50 text-blue-600";
-    case "followup":   return "bg-indigo-50 text-indigo-600";
-    default:           return "bg-primary/10 text-primary";
+    case "inventory": return "bg-red-50 text-red-600";
+    case "queue": return "bg-emerald-50 text-emerald-600";
+    case "billing": return "bg-amber-50 text-amber-600";
+    case "appointment": return "bg-blue-50 text-blue-600";
+    case "followup": return "bg-indigo-50 text-indigo-600";
+    default: return "bg-primary/10 text-primary";
   }
 };
 
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  superadmin:   { label: "Super Admin",  cls: "bg-violet-50 text-violet-700 border-violet-200" },
-  admin:        { label: "Admin",        cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  doctor:       { label: "Doctor",       cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  superadmin: { label: "Super Admin", cls: "bg-violet-50 text-violet-700 border-violet-200" },
+  admin: { label: "Admin", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  doctor: { label: "Doctor", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   receptionist: { label: "Receptionist", cls: "bg-amber-50 text-amber-700 border-amber-200" },
 };
 

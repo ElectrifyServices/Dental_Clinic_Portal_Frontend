@@ -12,6 +12,8 @@ export const PatientsPage: React.FC = () => {
     patientSearch, setPatientSearch,
     patientStatus, setPatientStatus,
     patientCategory, setPatientCategory,
+    patientPage, setPatientPage,
+    totalItems, totalPages,
     refetchPatients,
   } = useAppData();
 
@@ -87,6 +89,10 @@ export const PatientsPage: React.FC = () => {
         onFilterStatusChange={setPatientStatus}
         filterCategory={patientCategory}
         onFilterCategoryChange={setPatientCategory}
+        currentPage={patientPage}
+        onPageChange={setPatientPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
       />
     </div>
   );

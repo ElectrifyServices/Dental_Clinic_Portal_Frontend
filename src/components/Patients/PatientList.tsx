@@ -5,6 +5,7 @@ import { PatientStats } from "./PatientList/PatientStats";
 import { PatientFilters } from "./PatientList/PatientFilters";
 import { PatientCard } from "./PatientList/PatientCard";
 import { PatientTable } from "./PatientList/PatientTable";
+import { Pagination } from "@/components/ui";
 import { Patient } from "@/types";
 
 interface PatientListProps {
@@ -23,6 +24,10 @@ interface PatientListProps {
   onFilterStatusChange?: (val: string) => void;
   filterCategory?: string;
   onFilterCategoryChange?: (val: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function PatientList({
@@ -40,6 +45,10 @@ export function PatientList({
   onFilterStatusChange,
   filterCategory,
   onFilterCategoryChange,
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  onPageChange,
 }: PatientListProps) {
   const [localSearch, setLocalSearch] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : localSearch;
@@ -186,6 +195,18 @@ export function PatientList({
           onExport={(id) => onExportPatient?.(id)}
           onPrintBarcode={printBarcode}
         />
+      )}
+
+      {totalPages > 1 && onPageChange && (
+        <div className="mt-6 flex justify-end">
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            perPage={10}
+            onPageChange={onPageChange}
+          />
+        </div>
       )}
 
     </div>

@@ -76,17 +76,6 @@ export function ConsentForm({
     return [];
   });
 
-  const [isOfflineUploadOnly, setIsOfflineUploadOnly] = useState<boolean>(() => {
-    if (form) {
-      return !!form.consentFormUrl && !form.patientSignature;
-    }
-    return false;
-  });
-
-  const isPatientInfoValid = () => {
-    return !!(formData.patientId && formData.doctorName && selectedTreatments.length > 0);
-  };
-
   const [activeTab, setActiveTab] = useState<"patient" | "terms" | "sign">(
     "patient",
   );
@@ -112,6 +101,12 @@ export function ConsentForm({
         : form.date
       : new Date().toISOString().split("T")[0],
   });
+
+  const isOfflineUploadOnly = !!formData.consentFormUrl;
+
+  const isPatientInfoValid = () => {
+    return !!(formData.patientId && formData.doctorName && selectedTreatments.length > 0);
+  };
 
   useEffect(() => {
     if (form) {
@@ -198,19 +193,6 @@ export function ConsentForm({
   }, [selectedTreatments, form]);
 
   const handleSubmit = () => {
-    if (
-      !formData.patientId ||
-      selectedTreatments.length === 0 ||
-      !formData.doctorName
-    ) {
-      alert("Required fields: Patient, Doctor, and at least one Procedure.");
-      return;
-    }
-
-    if (isOfflineUploadOnly && !formData.consentFormUrl) {
-      alert("Please upload the signed offline consent form.");
-      return;
-    }
 
     onSave({
       ...formData,
@@ -238,10 +220,6 @@ export function ConsentForm({
       if (prev.includes(key)) {
         return prev.filter((item) => item !== key);
       } else {
-        if (prev.length >= 2) {
-          alert("Maximum 2 consents can be selected at a time");
-          return prev;
-        }
         return [...prev, key];
       }
     });
@@ -321,9 +299,9 @@ export function ConsentForm({
           (isOfflineUploadOnly ? (
             <Button
               onClick={handleSubmit}
-              className="gap-2 shadow-lg shadow-primary/20"
+              className="gap-2 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              <Save className="w-4 h-4" /> Finish & Generate Form
+              <Save className="w-4 h-4" /> Finalize Consent (Upload)
             </Button>
           ) : activeTab !== "sign" ? (
             <Button
@@ -426,7 +404,68 @@ export function ConsentForm({
                             });
                           }
                         }}
-                        options={(apiPatients.length > 0 ? apiPatients : patients).map((p: any) => ({ label: p.name, value: p.id }))}
+                        options={(apiPatients.length > 0 ? apiPatients : patients).map((p: any) => ({ 
+                          label: p.name, 
+                          value: p.id,
+                          searchLabel: `${p.name} ${p.phone || ''}`,
+                          patient: p
+                        }))}
+                        renderOption={(option: any) => {
+                          const p = option.patient;
+                          if (!p) return <span>{option.label}</span>;
+                          const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                          const initial = p.name ? p.name.charAt(0).toUpperCase() : "?";
+                          return (
+                            <div className="flex items-center gap-3 py-1">
+                              {profilePic ? (
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                  <img
+                                    src={profilePic}
+                                    alt={p.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as any).style.display = 'none';
+                                      const parent = (e.target as any).parentElement;
+                                      if (parent) {
+                                        const fallback = parent.querySelector('.avatar-fallback');
+                                        if (fallback) fallback.classList.remove('hidden');
+                                      }
+                                    }}
+                                  />
+                                  <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                                    {initial}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                  {initial}
+                                </div>
+                              )}
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-foreground text-xs leading-tight">{p.name}</span>
+                                {p.phone && <span className="text-[10px] text-muted-foreground mt-0.5">{p.phone}</span>}
+                              </div>
+                            </div>
+                          );
+                        }}
+                        renderValue={(option: any) => {
+                          const p = option.patient;
+                          if (!p) return option.label;
+                          const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                          const initial = p.name ? p.name.charAt(0).toUpperCase() : "?";
+                          return (
+                            <div className="flex items-center gap-2">
+                              {profilePic ? (
+                                <img src={profilePic} alt={p.name} className="w-5 h-5 rounded-full object-cover border border-border flex-shrink-0" />
+                              ) : (
+                                <div className="w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                  {initial}
+                                </div>
+                              )}
+                              <span className="font-medium truncate">{p.name}</span>
+                            </div>
+                          );
+                        }}
                         placeholder="Select Patient..."
                         isLoading={isPatientsLoading}
                         className={showErrors && !formData.patientId ? "border-red-400 bg-red-50/15 focus:border-red-400 focus:ring-red-100" : ""}
@@ -450,7 +489,70 @@ export function ConsentForm({
                             doctorId: matched ? matched.id : "",
                           });
                         }}
-                        options={(apiDoctors?.length ? apiDoctors : doctors).map((d: any) => ({ label: d.name, value: d.name }))}
+                        options={(apiDoctors?.length ? apiDoctors : doctors).map((d: any) => ({ 
+                          label: d.name, 
+                          value: d.name,
+                          searchLabel: `${d.name} ${d.specialization || d.role || ''}`,
+                          doctor: d
+                        }))}
+                        renderOption={(option: any) => {
+                          const d = option.doctor;
+                          if (!d) return <span>{option.label}</span>;
+                          const profilePic = d.avatar || d.profile_picture || d.image;
+                          const initial = d.name ? d.name.charAt(0).toUpperCase() : "?";
+                          return (
+                            <div className="flex items-center gap-3 py-1">
+                              {profilePic ? (
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                  <img
+                                    src={profilePic}
+                                    alt={d.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as any).style.display = 'none';
+                                      const parent = (e.target as any).parentElement;
+                                      if (parent) {
+                                        const fallback = parent.querySelector('.avatar-fallback');
+                                        if (fallback) fallback.classList.remove('hidden');
+                                      }
+                                    }}
+                                  />
+                                  <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                                    {initial}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 font-black text-xs flex items-center justify-center border border-blue-500/20 flex-shrink-0">
+                                  {initial}
+                                </div>
+                              )}
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-foreground text-xs leading-tight">{d.name}</span>
+                                {(d.specialization || d.role) && (
+                                  <span className="text-[10px] text-muted-foreground mt-0.5 capitalize">{d.specialization || d.role.replace(/_/g, ' ')}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }}
+                        renderValue={(option: any) => {
+                          const d = option.doctor;
+                          if (!d) return option.label;
+                          const profilePic = d.avatar || d.profile_picture || d.image;
+                          const initial = d.name ? d.name.charAt(0).toUpperCase() : "?";
+                          return (
+                            <div className="flex items-center gap-2">
+                              {profilePic ? (
+                                <img src={profilePic} alt={d.name} className="w-5 h-5 rounded-full object-cover border border-border flex-shrink-0" />
+                              ) : (
+                                <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-500 font-bold text-[10px] flex items-center justify-center border border-blue-500/20 flex-shrink-0">
+                                  {initial}
+                                </div>
+                              )}
+                              <span className="font-medium truncate">{d.name}</span>
+                            </div>
+                          );
+                        }}
                         placeholder="Select Doctor..."
                         isLoading={isDoctorsLoading}
                         className={showErrors && !formData.doctorName ? "border-red-400 bg-red-50/15 focus:border-red-400 focus:ring-red-100" : ""}
@@ -460,40 +562,27 @@ export function ConsentForm({
                       )}
                     </div>
 
-                    <div className="md:col-span-2 p-4 bg-muted/40 rounded-2xl flex items-center justify-between border border-border/80">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-bold text-foreground">Offline Signed Form Upload Only</span>
-                        <span className="text-[10px] text-muted-foreground font-medium">Skip digital signature and legal term editing by uploading a signed paper form</span>
-                      </div>
-                      <Checkbox
-                        checked={isOfflineUploadOnly}
-                        onCheckedChange={(checked) => {
-                          setIsOfflineUploadOnly(!!checked);
-                          if (checked) {
-                            setActiveTab("patient"); // lock tab to patient
-                          }
-                        }}
-                      />
-                    </div>
-
                     <div className="space-y-3 md:col-span-2">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 block">
-                        Select Treatment Consent(s) <span className="text-red-500">*</span> (Select up to 2)
-                      </Label>
+                      <div className="mb-2">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 block">
+                          Select Treatment Consent(s) <span className="text-red-500">*</span> (Select up to 2)
+                        </Label>
+                        <span className="text-[10px] text-muted-foreground font-medium ml-1 block mt-1">
+                          Select treatment consents to auto-load legal terms, risks, and post-care content. You can review and edit them in the next step. <b>OR</b> bypass this by uploading a signed document below.
+                        </span>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {CONSENT_CHECKBOX_TREATMENTS.map((item) => {
                           const isChecked = selectedTreatments.includes(item.key);
-                          const isMaxReached = selectedTreatments.length >= 2 && !isChecked;
                           return (
                             <div
                               key={item.key}
-                              onClick={() => !isMaxReached && handleTreatmentToggle(item.key)}
+                              onClick={() => handleTreatmentToggle(item.key)}
                               className={cn(
-                                "border rounded-2xl p-4 flex flex-col justify-between gap-3 cursor-pointer transition-all duration-200 bg-background hover:border-primary/50",
+                                "border rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all duration-200 bg-background cursor-pointer hover:border-primary/50",
                                 isChecked
                                   ? "border-primary bg-primary/[0.02] shadow-sm ring-1 ring-primary/20"
-                                  : "border-border",
-                                isMaxReached ? "opacity-60 cursor-not-allowed hover:border-border" : ""
+                                  : "border-border"
                               )}
                             >
                               <div className="flex items-start justify-between gap-2">
@@ -507,7 +596,6 @@ export function ConsentForm({
                                 </div>
                                 <Checkbox
                                   checked={isChecked}
-                                  disabled={isMaxReached}
                                   onCheckedChange={() => handleTreatmentToggle(item.key)}
                                 />
                               </div>
@@ -524,96 +612,93 @@ export function ConsentForm({
                     </div>
                   </div>
 
-                  {isOfflineUploadOnly && (
-                    <div className="border border-border rounded-2xl p-4 bg-muted/10 shadow-sm space-y-3 animate-in fade-in duration-300">
-                      <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2">
-                        <Upload className="w-4 h-4" />
-                        Upload Signed Offline Document <span className="text-red-500">*</span>
-                      </h4>
-                      {formData.consentFormUrl ? (
-                        <div className="flex flex-col items-center justify-center gap-3 bg-card p-4 border border-dashed border-border rounded-xl">
-                          <div className="relative group rounded-lg overflow-hidden shadow-sm">
-                            {formData.consentFormUrl.toLowerCase().includes(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
-                              <div className="h-24 w-36 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-3">
-                                <BookOpen className="w-6 h-6 text-primary mb-1" />
-                                <span className="text-[10px] font-bold text-foreground text-center truncate w-full">Consent PDF</span>
-                              </div>
-                            ) : (
-                              <img
-                                src={formData.consentFormUrl}
-                                alt="Uploaded Consent Form"
-                                className="h-24 object-contain mx-auto rounded-lg"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
-                                }}
-                              />
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => {
+                  <div className="border border-border rounded-2xl p-4 bg-muted/10 shadow-sm space-y-3 animate-in fade-in duration-300 md:col-span-2 mt-6">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      Offline Consent Form Upload
+                    </h4>
+                    {formData.consentFormUrl ? (
+                      <div className="flex flex-col items-center justify-center gap-3 bg-card p-4 border border-dashed border-border rounded-xl">
+                        <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                          {formData.consentFormUrl.toLowerCase().includes(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
+                            <div className="h-24 w-36 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-3">
+                              <BookOpen className="w-6 h-6 text-primary mb-1" />
+                              <span className="text-[10px] font-bold text-foreground text-center truncate w-full">Consent PDF</span>
+                            </div>
+                          ) : (
+                            <img
+                              src={formData.consentFormUrl}
+                              alt="Uploaded Consent Form"
+                              className="h-24 object-contain mx-auto rounded-lg"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                consentFormUrl: "",
+                                rawConsentFormFile: null
+                              }));
+                            }}
+                            className="h-7 text-[10px] px-3 font-bold"
+                          >
+                            Remove Form
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          const fileInput = document.getElementById("offline-consent-file-upload-step1");
+                          fileInput?.click();
+                        }}
+                        className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
+                      >
+                        <input
+                          id="offline-consent-file-upload-step1"
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
                                 setFormData((prev: any) => ({
                                   ...prev,
-                                  consentFormUrl: "",
-                                  rawConsentFormFile: null
+                                  consentFormUrl: event.target?.result as string,
+                                  rawConsentFormFile: file,
                                 }));
-                              }}
-                              className="h-7 text-[10px] px-3 font-bold"
-                            >
-                              Remove Form
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => {
-                            const fileInput = document.getElementById("offline-consent-file-upload-step1");
-                            fileInput?.click();
+                              };
+                              reader.readAsDataURL(file);
+                            }
                           }}
-                          className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
-                        >
-                          <input
-                            id="offline-consent-file-upload-step1"
-                            type="file"
-                            accept="image/*,.pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  setFormData((prev: any) => ({
-                                    ...prev,
-                                    consentFormUrl: event.target?.result as string,
-                                    rawConsentFormFile: file,
-                                  }));
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
-                          <p className="text-xs font-bold text-foreground">Click to upload signed document</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
-                        </div>
-                      )}
-                      {showErrors && !formData.consentFormUrl && (
-                        <span className="text-[10px] text-red-500 font-bold ml-1 block">Signed document is required in offline upload mode</span>
-                      )}
-                    </div>
-                  )}
+                        />
+                        <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-foreground">Click to upload signed document</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG, PDF supported. Max size: 5MB</p>
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex gap-3">
+                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex gap-3 mt-6">
                     <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-primary/80 font-bold leading-relaxed uppercase tracking-tight">
-                      {isOfflineUploadOnly 
-                        ? "Offline upload mode active. Fill patient, doctor, procedure info, upload signed document, and submit directly."
-                        : "Select treatment consents to auto-load legal terms, risks, and post-care content. You can review and edit them in the next step."
-                      }
-                    </p>
+                    <div className="text-[11px] text-primary/90 font-medium leading-relaxed tracking-tight">
+                      <strong className="block mb-1 text-xs uppercase tracking-wider">Flow Information:</strong>
+                      Select your Patient, Doctor, and Treatment(s). Then:
+                      <ul className="mt-1 space-y-1 ml-1">
+                        <li>• <b>Upload Consent:</b> If you upload a signed document below, you can finalize directly via the "Finalize Consent (Upload)" button.</li>
+                        <li>• <b>Manual Consent:</b> If you do not upload a document, click "Next Step" to proceed to digital terms and signatures.</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               )}
@@ -779,84 +864,6 @@ export function ConsentForm({
               {activeTab === "sign" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   
-                  {/* Offline Consent Form Upload Section */}
-                  <div className="border border-border rounded-2xl p-4 bg-muted/10 shadow-sm space-y-3">
-                    <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      Offline Consent Form Upload (Optional)
-                    </h4>
-                    {formData.consentFormUrl ? (
-                      <div className="flex flex-col items-center justify-center gap-3 bg-card p-4 border border-dashed border-border rounded-xl">
-                        <div className="relative group rounded-lg overflow-hidden shadow-sm">
-                          {formData.consentFormUrl.toLowerCase().includes(".pdf") || formData.consentFormUrl.startsWith("data:application/pdf") ? (
-                            <div className="h-24 w-36 bg-muted rounded-lg border border-border flex flex-col items-center justify-center p-3">
-                              <BookOpen className="w-6 h-6 text-primary mb-1" />
-                              <span className="text-[10px] font-bold text-foreground text-center truncate w-full">Consent PDF</span>
-                            </div>
-                          ) : (
-                            <img
-                              src={formData.consentFormUrl}
-                              alt="Uploaded Consent Form"
-                              className="h-24 object-contain mx-auto rounded-lg"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://placehold.co/150x100?text=Consent+Form";
-                              }}
-                            />
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              setFormData((prev: any) => ({
-                                ...prev,
-                                consentFormUrl: "",
-                                rawConsentFormFile: null
-                              }));
-                            }}
-                            className="h-7 text-[10px] px-3 font-bold"
-                          >
-                            Remove Form
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => {
-                          const fileInput = document.getElementById("consent-file-upload");
-                          fileInput?.click();
-                        }}
-                        className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
-                      >
-                        <input
-                          id="consent-file-upload"
-                          type="file"
-                          accept="image/*,.pdf"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => {
-                                setFormData((prev: any) => ({
-                                  ...prev,
-                                  consentFormUrl: event.target?.result as string,
-                                  rawConsentFormFile: file,
-                                }));
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                        <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
-                        <p className="text-xs font-bold text-foreground">Click to upload offline consent document</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between px-1">

@@ -3,13 +3,14 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
-import { SearchableSelect, DataTable } from "@/components/ui";
+import { SearchableSelect, DataTable, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
 
 interface TreatmentPlan {
   id: string;
   tooth: string;
   procedure: string;
   sessions: number;
+  duration?: string;
   cost: number;
   isActive?: boolean;
   status: string;
@@ -105,6 +106,30 @@ export function TreatmentPlanning({
           onChange={(e) => onUpdatePlan(index, "sessions", parseInt(e.target.value) || 1)}
           className="w-16 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
         />
+      ),
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <Select
+          value={plan.duration || "15 mins"}
+          onValueChange={(val) => onUpdatePlan(index, "duration", val)}
+        >
+          <SelectTrigger className="w-24 h-11 px-3 text-sm border border-purple-200 rounded-xl focus:ring-purple-500 focus:outline-none">
+            <SelectValue placeholder="Select duration" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="10 mins">10 mins</SelectItem>
+            <SelectItem value="15 mins">15 mins</SelectItem>
+            <SelectItem value="20 mins">20 mins</SelectItem>
+            <SelectItem value="30 mins">30 mins</SelectItem>
+            <SelectItem value="45 mins">45 mins</SelectItem>
+            <SelectItem value="60 mins">60 mins</SelectItem>
+          </SelectContent>
+        </Select>
       ),
     },
     {

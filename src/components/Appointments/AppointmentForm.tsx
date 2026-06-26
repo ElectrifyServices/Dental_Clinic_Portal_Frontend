@@ -60,14 +60,19 @@ export function AppointmentForm({
     phone: string;
   } | null>(null);
 
+  const initialDoctorId = appointment?.doctorId ?? appointment?.doctor_id ?? (doctors && doctors.length > 0 ? doctors[0].id : "1");
+  const initialDoctor = doctors?.find((d: any) => String(d.id) === String(initialDoctorId));
+  const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? (initialDoctor?.consultationFee ? Number(initialDoctor.consultationFee) : 500);
+  const defaultDoctorName = appointment?.doctorName ?? appointment?.doctor_name ?? (initialDoctor?.name || "Dr. Sharma");
+
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema) as any,
     defaultValues: {
       patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
       patientPhone: appointment?.patientPhone ?? appointment?.patient_phone ?? "",
       treatment: appointment?.treatment ?? appointment?.specific_treatment ?? "",
-      doctorId: appointment?.doctorId ?? appointment?.doctor_id ?? "1",
-      doctorName: appointment?.doctorName ?? appointment?.doctor_name ?? "Dr. Sharma",
+      doctorId: initialDoctorId,
+      doctorName: defaultDoctorName,
       date: appointment?.date
         ? formatDateLocal(new Date(appointment.date))
         : formatDateLocal(safeDate),
@@ -98,7 +103,7 @@ export function AppointmentForm({
       duration: appointment?.duration?.toString() ?? appointment?.slot_duration_mins?.toString() ?? "15",
       type: appointment?.type ?? "consultation",
       notes: appointment?.notes ?? "",
-      fee: appointment?.fee ?? appointment?.treatment_cost ?? 500,
+      fee: defaultFee,
       patientConcern: appointment?.patientConcern ?? appointment?.concern ?? "",
       treatmentType: appointment?.treatmentType ?? appointment?.treatment_type ?? "",
     },
@@ -240,8 +245,8 @@ export function AppointmentForm({
         </div>
       }
     >
-      <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-5 border-none p-0 m-0">
+      <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
+        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-3 border-none p-0 m-0">
           <PatientInfoFields
             patientName={formData.patientName}
             patientPhone={formData.patientPhone ?? ""}
@@ -289,9 +294,10 @@ export function AppointmentForm({
               const selectedOption = appointmentTypes.find(
                 (opt) => opt.label === val || opt.value === val
               );
-              if (selectedOption && selectedOption.fee !== undefined) {
-                form.setValue("fee", selectedOption.fee, { shouldValidate: true });
-              }
+              // Commented out to ensure the Assigned Specialist's consultation fee is not overridden
+              // if (selectedOption && selectedOption.fee !== undefined) {
+              //   form.setValue("fee", selectedOption.fee, { shouldValidate: true });
+              // }
             }}
           />
         </fieldset>

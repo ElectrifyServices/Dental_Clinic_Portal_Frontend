@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText } from 'lucide-react';
-import { PageHeader, SearchInput, FilterTabs, DataTable, StatusBadge, Button } from '@/components/ui';
+import { PageHeader, SearchInput, FilterTabs, DataTable, StatusBadge, Button, Pagination } from '@/components/ui';
 
 interface EMRRecord {
   id: string;
@@ -98,13 +98,13 @@ export function EMRList({
         <span className="text-muted-foreground font-medium">{r.totalRecords ?? '-'}</span>
       )
     },
-    {
-      key: 'lastDoctor',
-      header: 'Last Doctor',
-      render: (r: EMRRecord) => (
-        <span className="text-muted-foreground font-medium">{r.lastDoctorName || '-'}</span>
-      )
-    },
+    // {
+    //   key: 'lastDoctor',
+    //   header: 'Last Doctor',
+    //   render: (r: EMRRecord) => (
+    //     <span className="text-muted-foreground font-medium">{r.lastDoctorName || '-'}</span>
+    //   )
+    // },
     {
       key: 'lastVisit',
       header: 'Last Visit',
@@ -132,6 +132,11 @@ export function EMRList({
   ];
 
   const totalRecordsCount = records.reduce((sum, r) => sum + (r.totalRecords || 1), 0);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(records.length / itemsPerPage);
+  const paginatedRecords = records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-3">
@@ -161,11 +166,24 @@ export function EMRList({
 
       <DataTable
         columns={columns}
-        data={records}
+        data={paginatedRecords}
         rowKey={(r) => r.id}
         emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
         emptyTitle="No records found"
         emptySubtitle="Add a new EMR record to get started."
+        footer={
+          totalPages > 1 ? (
+            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={records.length}
+                perPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          ) : undefined
+        }
       />
     </div>
   );

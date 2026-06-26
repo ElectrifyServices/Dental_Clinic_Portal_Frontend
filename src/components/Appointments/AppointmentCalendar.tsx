@@ -5,6 +5,7 @@ import { DayAgenda } from "./AppointmentCalendar/DayAgenda";
 import { BookingSlots } from "./AppointmentCalendar/BookingSlots";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { useAppointmentCalendarQuery } from "../../hooks/appointments/useAppointmentCalendarQuery";
+import { useDoctorScheduleQuery, mapApiResponseToScheduleState } from "../../hooks/staff/useDoctorScheduleQuery";
 
 interface Doctor {
   id: string;
@@ -28,6 +29,7 @@ interface CalendarProps {
   setSelectedDoctorId?: (id: string | null) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
+  onDirectCheckIn?: (appointment: any) => void;
 }
 
 export function AppointmentCalendar({
@@ -41,6 +43,7 @@ export function AppointmentCalendar({
   setSelectedDoctorId,
   selectedDate: propSelectedDate,
   setSelectedDate: propSetSelectedDate,
+  onDirectCheckIn,
 }: CalendarProps) {
   const [localSearch, setLocalSearch] = useState("");
   const currentSearch = searchTerm !== undefined ? searchTerm : localSearch;
@@ -90,6 +93,9 @@ export function AppointmentCalendar({
     currentDoctorId,
     formattedDate
   );
+
+  const { data: scheduleData } = useDoctorScheduleQuery(currentDoctorId);
+  const scheduleState = useMemo(() => mapApiResponseToScheduleState(scheduleData), [scheduleData]);
 
   const monthNames = [
     "January",
@@ -197,6 +203,7 @@ export function AppointmentCalendar({
         }
         monthNames={monthNames}
         currentDoctorId={currentDoctorId}
+        scheduleState={scheduleState}
         onRefetchSlots={() => refetchAvailableSlots()}
       />
 
@@ -209,6 +216,7 @@ export function AppointmentCalendar({
               (!currentDoctorId || String(a.doctorId) === String(currentDoctorId)),
           )}
           onEditAppointment={onEditAppointment}
+          onDirectCheckIn={onDirectCheckIn}
           formatTime={formatTime}
         />
         <BookingSlots

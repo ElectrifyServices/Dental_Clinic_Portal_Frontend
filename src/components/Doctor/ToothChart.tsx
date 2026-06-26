@@ -21,12 +21,14 @@ interface Condition {
 interface ToothSVGProps {
   num: number;
   conditionIds: ConditionId[] | undefined;
+  activeMode: ConditionId;
 }
 
 interface ToothCellProps {
   num: number;
   conditionIds: ConditionId[] | undefined;
   isLower: boolean;
+  activeMode: ConditionId;
   onClick: () => void;
 }
 
@@ -122,9 +124,9 @@ function getCondition(id: ConditionId | undefined): Condition {
   return CONDITIONS.find((c) => c.id === id) ?? CONDITIONS[0];
 }
 
-function ToothSVG({ num, conditionIds }: ToothSVGProps) {
+function ToothSVG({ num, conditionIds, activeMode }: ToothSVGProps) {
   const type = getToothType(num);
-  const activeConditionId = conditionIds && conditionIds.length > 0 ? conditionIds[conditionIds.length - 1] : "normal";
+  const activeConditionId = conditionIds?.includes(activeMode) ? activeMode : (conditionIds && conditionIds.length > 0 ? conditionIds[conditionIds.length - 1] : "normal");
   const cond = getCondition(activeConditionId);
   const missing = conditionIds?.includes("missing");
   const { fill, stroke } = cond;
@@ -195,9 +197,10 @@ function ToothSVG({ num, conditionIds }: ToothSVGProps) {
   );
 }
 
-function ToothCell({ num, conditionIds, isLower, onClick }: ToothCellProps) {
+function ToothCell({ num, conditionIds, isLower, activeMode, onClick }: ToothCellProps) {
   const isMarked = conditionIds !== undefined && conditionIds.length > 0 && !conditionIds.includes("normal");
-  const lastCond = conditionIds && conditionIds.length > 0 ? getCondition(conditionIds[conditionIds.length - 1]) : getCondition("normal");
+  const activeConditionId = conditionIds?.includes(activeMode) ? activeMode : (conditionIds && conditionIds.length > 0 ? conditionIds[conditionIds.length - 1] : "normal");
+  const lastCond = getCondition(activeConditionId);
 
   return (
     <div
@@ -218,7 +221,7 @@ function ToothCell({ num, conditionIds, isLower, onClick }: ToothCellProps) {
       }
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
-      <ToothSVG num={num} conditionIds={conditionIds} />
+      <ToothSVG num={num} conditionIds={conditionIds} activeMode={activeMode} />
       <span
         style={{
           fontSize: 9,
@@ -301,6 +304,16 @@ export function ToothChart({
     .filter(([, v]) => v && v.length > 0 && !v.includes("normal"))
     .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
+  const hasAdultFindings = findings.some(([num]) => {
+    const n = parseInt(num);
+    return UPPER_TEETH.includes(n) || LOWER_TEETH.includes(n);
+  });
+
+  const hasPediatricFindings = findings.some(([num]) => {
+    const n = parseInt(num);
+    return UPPER_PRIMARY.includes(n) || LOWER_PRIMARY.includes(n);
+  });
+
   return (
     <div
       style={{
@@ -338,7 +351,8 @@ export function ToothChart({
         <div style={{ display: "inline-flex", background: "#f1efef", padding: 3, borderRadius: 8 }}>
           <button
             type="button"
-            onClick={() => setChartType("adult")}
+            onClick={() => !hasPediatricFindings && setChartType("adult")}
+            disabled={hasPediatricFindings}
             style={{
               padding: "4px 12px",
               fontSize: 11,
@@ -346,17 +360,19 @@ export function ToothChart({
               borderRadius: 6,
               border: "none",
               background: chartType === "adult" ? "#fff" : "transparent",
-              color: chartType === "adult" ? "#2563eb" : "#666",
+              color: hasPediatricFindings ? "#aaa" : chartType === "adult" ? "#2563eb" : "#666",
               boxShadow: chartType === "adult" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-              cursor: "pointer",
+              cursor: hasPediatricFindings ? "not-allowed" : "pointer",
               transition: "all 0.15s",
+              opacity: hasPediatricFindings ? 0.6 : 1,
             }}
           >
             Adult (Permanent)
           </button>
           <button
             type="button"
-            onClick={() => setChartType("pediatric")}
+            onClick={() => !hasAdultFindings && setChartType("pediatric")}
+            disabled={hasAdultFindings}
             style={{
               padding: "4px 12px",
               fontSize: 11,
@@ -364,10 +380,11 @@ export function ToothChart({
               borderRadius: 6,
               border: "none",
               background: chartType === "pediatric" ? "#fff" : "transparent",
-              color: chartType === "pediatric" ? "#2563eb" : "#666",
+              color: hasAdultFindings ? "#aaa" : chartType === "pediatric" ? "#2563eb" : "#666",
               boxShadow: chartType === "pediatric" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-              cursor: "pointer",
+              cursor: hasAdultFindings ? "not-allowed" : "pointer",
               transition: "all 0.15s",
+              opacity: hasAdultFindings ? 0.6 : 1,
             }}
           >
             Pediatric (Primary)
@@ -453,6 +470,7 @@ export function ToothChart({
               num={num}
               conditionIds={toothState[num]}
               isLower={false}
+              activeMode={activeMode}
               onClick={() => clickTooth(num)}
             />
           ))}
@@ -486,6 +504,7 @@ export function ToothChart({
               num={num}
               conditionIds={toothState[num]}
               isLower={true}
+              activeMode={activeMode}
               onClick={() => clickTooth(num)}
             />
           ))}

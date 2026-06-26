@@ -103,7 +103,7 @@ export function ModalRegistry() {
   const editConsultationData = useMemo(() => {
     if (!editConsultationRaw) return null;
     const data = editConsultationRaw.data || editConsultationRaw;
-    
+
     // Map to toothChartState format
     const toothChartState: any = {};
     const toothFindingsRaw = data.tooth_findings || data.toothFindings || [];
@@ -118,7 +118,7 @@ export function ModalRegistry() {
       if (mappedCond === 'endo_rct') mappedCond = 'endo';
       else if (mappedCond === 'for_extraction') mappedCond = 'extract';
       else if (mappedCond === 'healthy') mappedCond = 'normal';
-      
+
       toothChartState[tf.tooth_number].push(mappedCond);
       availableConditionsByTooth[tf.tooth_number].push(mappedCond);
     });
@@ -134,6 +134,7 @@ export function ModalRegistry() {
         condition: condition,
         procedure: t.procedure || "",
         sessions: t.sessions?.length || t.total_sessions || 1,
+        duration: t.duration ? `${t.duration} mins` : "15 mins",
         cost: t.est_cost || 0,
         isActive: t.is_active ?? true,
         planDate: t.treatment_date ? t.treatment_date.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -143,7 +144,7 @@ export function ModalRegistry() {
     const prescriptions = (data.prescriptions || []).map((p: any) => {
       let dUnit = "Days";
       if (p.duration_type) {
-         dUnit = p.duration_type.charAt(0).toUpperCase() + p.duration_type.slice(1).toLowerCase();
+        dUnit = p.duration_type.charAt(0).toUpperCase() + p.duration_type.slice(1).toLowerCase();
       }
       return {
         id: p.id || Math.random().toString(),
@@ -318,7 +319,7 @@ export function ModalRegistry() {
     return {
       id: form.id,
       patientId: form.patient_id || "",
-      patientName: form.patient_name || "",
+      // patientName: form.patient_name || "",
       treatmentType: form.procedure_type || "",
       content: form.consent_declaration || "",
       riskDisclosure: form.clinical_risks || "",
@@ -508,11 +509,11 @@ export function ModalRegistry() {
           appointments={appointments}
           bookedFollowUp={bookedFollowUp}
           initialData={
-            selectedPatientForDiagnose.isEditMode 
-              ? editConsultationData 
+            selectedPatientForDiagnose.isEditMode
+              ? editConsultationData
               : draftConsultations[
-                  selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id
-                ]
+              selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id
+              ]
           }
           onDraftUpdate={(d: any) =>
             handleDraftUpdate(
@@ -544,15 +545,7 @@ export function ModalRegistry() {
                 if (ex) {
                   resolvedPatientId = ex.id;
                 } else {
-                  const savedPatientResponse = await handleSavePatient({
-                    name: d.directPatientName,
-                    phone: d.directPatientPhone,
-                  });
-                  const newId = savedPatientResponse?.data?.id || savedPatientResponse?.id;
-                  if (!newId) {
-                    throw new Error("Failed to register new patient during direct consultation.");
-                  }
-                  resolvedPatientId = newId;
+                  resolvedPatientId = undefined; // Will be handled by the backend
                 }
               }
 
@@ -565,9 +558,17 @@ export function ModalRegistry() {
                   if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
                   else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
                   else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+
+                  const n = parseInt(toothNum);
+                  let cType = "ADULT";
+                  if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
+                    cType = "PEDIATRIC";
+                  }
+
                   return {
                     tooth_number: parseInt(toothNum),
-                    condition: mappedCondition
+                    condition: mappedCondition,
+                    chart_type: cType
                   };
                 });
               });
@@ -577,6 +578,7 @@ export function ModalRegistry() {
                 tooth_number: parseInt(tp.tooth),
                 procedure: tp.procedure,
                 total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
+                duration_min: parseInt((tp.duration || "15").replace(/\D/g, "")) || 15,
                 est_cost: parseFloat(tp.cost) || 0,
                 treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0]
               }));
@@ -603,6 +605,8 @@ export function ModalRegistry() {
               const apiPayload: any = {
                 id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
                 patientId: resolvedPatientId,
+                patient_name: d.isDirect && !resolvedPatientId ? d.directPatientName : undefined,
+                patient_phone: d.isDirect && !resolvedPatientId ? d.directPatientPhone : undefined,
                 appointmentId: selectedPatientForDiagnose.appointmentId,
                 doctorId: validDoctorId,
                 observations: d.observations,
@@ -614,7 +618,8 @@ export function ModalRegistry() {
                 status: "COMPLETED",
                 toothFindings: tooth_findings,
                 treatments: treatments,
-                prescriptions: prescriptions
+                prescriptions: prescriptions,
+                attachments: d.attachments || []
               };
 
               if (d.followUpRequired) {
@@ -679,7 +684,7 @@ export function ModalRegistry() {
                     if (item.linkedType.toLowerCase().includes("consultation")) type = "CONSULTATION";
                     else if (item.linkedType.toLowerCase().includes("treatment")) type = "TREATMENT_SESSION";
                   }
-                  
+
                   return {
                     item_type: type,
                     consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
@@ -699,7 +704,7 @@ export function ModalRegistry() {
 
               const response = await createInvoiceMutation(payload);
               const invoiceId = response?.data?.id || inv.id;
-              
+
               handleSaveInvoice({ ...inv, id: invoiceId });
               queryClient.invalidateQueries({ queryKey: ["invoices"] });
               setActiveModal(null);
@@ -1019,48 +1024,53 @@ export function ModalRegistry() {
           onSave={async (f: any) => {
             try {
               const payload = new FormData();
-              payload.append("patient_name", f.patientName || "Ram");
               payload.append("doctor_id", f.doctorId || "d11a6adb-2420-4ca6-8b10-a798edbbfce9");
-              payload.append("procedure_type", f.treatmentType || "Root Canal Treatment");
               payload.append("patient_id", f.patientId || "96609aed-e06b-42ac-ac8a-8ea978315ce2");
-              payload.append("consent_declaration", f.content || "I understand the procedure");
-              payload.append("procedure_declaration", f.procedure_declaration || f.content || "I understand the procedure");
-              payload.append("clinical_risks", f.riskDisclosure || "Infection");
-              payload.append("alternative_risks", f.alternativeTreatments || "Tooth extraction");
-              
-              // New field: post_treatment_care
-              if (f.postTreatmentCare) {
-                payload.append("post_treatment_care", f.postTreatmentCare);
-              }
 
-              if (f.witnessName) {
-                payload.append("witness_name", f.witnessName);
-              }
+              const isOffline = !!f.rawConsentFormFile;
 
-              // Status and Signed Date
-              const isSigned = !!f.patientSignature;
-              payload.append("status", isSigned ? "COMPLETED" : "PENDING");
-              if (isSigned) {
-                payload.append("signed_on", new Date().toISOString());
-              }
-
-              // Consent form file upload
-              if (f.rawConsentFormFile) {
-                payload.append("consent_form_image", f.rawConsentFormFile);
-                payload.append("consent_form", f.rawConsentFormFile);
-              }
-
-              if (f.patientSignature && f.patientSignature.startsWith("data:")) {
-                const patientFile = dataURLtoFile(f.patientSignature, "patient_signature.png");
-                if (patientFile) {
-                  payload.append("patient_signature", patientFile);
+              if (isOffline) {
+                // Only send minimal fields for offline consent upload
+                if (f.treatmentType) {
+                  payload.append("procedure_type", f.treatmentType);
                 }
-              }
+                payload.append("offline_consent_image", f.rawConsentFormFile);
+                payload.append("status", "COMPLETED");
+              } else {
+                payload.append("patient_name", f.patientName || "Ram");
+                // Standard manual consent fields
+                payload.append("procedure_type", f.treatmentType || "Root Canal Treatment");
+                payload.append("consent_declaration", f.content || "I understand the procedure");
+                payload.append("procedure_declaration", f.procedure_declaration || f.content || "I understand the procedure");
+                payload.append("clinical_risks", f.riskDisclosure || "Infection");
+                payload.append("alternative_risks", f.alternativeTreatments || "Tooth extraction");
 
-              if (f.witnessSignature && f.witnessSignature.startsWith("data:")) {
-                const witnessFile = dataURLtoFile(f.witnessSignature, "witness_signature.png");
-                if (witnessFile) {
-                  payload.append("witness_signature", witnessFile);
+                if (f.postTreatmentCare) {
+                  payload.append("post_treatment_care", f.postTreatmentCare);
+                }
+
+                if (f.witnessName) {
+                  payload.append("witness_name", f.witnessName);
+                }
+
+                const isSigned = !!f.patientSignature;
+                payload.append("status", isSigned ? "COMPLETED" : "PENDING");
+                if (isSigned) {
+                  payload.append("signed_on", new Date().toISOString());
+                }
+
+                if (f.patientSignature && f.patientSignature.startsWith("data:")) {
+                  const patientFile = dataURLtoFile(f.patientSignature, "patient_signature.png");
+                  if (patientFile) {
+                    payload.append("patient_signature", patientFile);
+                  }
+                }
+
+                if (f.witnessSignature && f.witnessSignature.startsWith("data:")) {
+                  const witnessFile = dataURLtoFile(f.witnessSignature, "witness_signature.png");
+                  if (witnessFile) {
+                    payload.append("witness_signature", witnessFile);
+                  }
                 }
               }
 
@@ -1282,11 +1292,11 @@ export function ModalRegistry() {
           setShowForm={(val) => { if (!val) setActiveModal(null); }}
           editEmp={null}
           activePlans={corporatePlans}
-          onSave={() => { 
-             toast.success("Member added successfully!");
-             setActiveModal(null);
+          onSave={() => {
+            toast.success("Member added successfully!");
+            setActiveModal(null);
           }}
-          refetch={() => {}}
+          refetch={() => { }}
         />
       )}
 

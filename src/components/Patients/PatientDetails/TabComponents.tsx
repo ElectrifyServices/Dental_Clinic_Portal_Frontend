@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { Card, Button } from "@/components/ui";
+import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
 
 // --- Reusable Empty State Component ---
 const EmptyState = ({
@@ -729,38 +730,68 @@ export const DocumentsTab = ({
 }: {
   patient: any;
   loading: boolean;
-}) => (
-  <div>
-    <h3 className="text-lg font-bold text-foreground mb-6">
-      Patient Documents & Images
-    </h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {patient.documents?.map((doc: any) => (
-        <Card
-          key={doc.id}
-          className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm"
-        >
-          <img
-            src={doc.url}
-            alt={doc.name}
-            className="w-full h-40 object-cover rounded-lg mb-3"
-          />
-          <h4 className="font-semibold text-foreground mb-1">{doc.name}</h4>
-          <p className="text-sm text-muted-foreground">
-            {new Date(doc.date).toLocaleDateString()}
-          </p>
-        </Card>
-      ))}
+}) => {
+  const { data: documentsResponse, isLoading } = usePatientDocumentsQuery(patient?.id);
+  
+  // Navigate through potential API response envelopes
+  const rawDocuments = 
+    documentsResponse?.responseObject?.data?.data || 
+    documentsResponse?.responseObject?.data?.documents || 
+    documentsResponse?.data?.data ||
+    documentsResponse?.data?.documents || 
+    (Array.isArray(documentsResponse?.responseObject?.data) ? documentsResponse.responseObject.data : null) ||
+    (Array.isArray(documentsResponse?.data) ? documentsResponse.data : null) ||
+    documentsResponse?.documents || 
+    (Array.isArray(documentsResponse) ? documentsResponse : []);
+
+  // Use API documents if available, otherwise fallback to patient.documents (local/mock)
+  const documents = rawDocuments.length > 0 ? rawDocuments : (patient?.documents || []);
+
+  return (
+    <div>
+      <h3 className="text-lg font-bold text-foreground mb-6">
+        Patient Documents & Images
+      </h3>
+      
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {documents.map((doc: any, index: number) => (
+              <Card
+                key={doc.id || index}
+                className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm"
+              >
+                <img
+                  src={doc.url || doc.document_url || doc.file_url || "https://placehold.co/400x300?text=Document"}
+                  alt={doc.name || doc.document_name || "Document"}
+                  className="w-full h-40 object-cover rounded-lg mb-3"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://placehold.co/400x300?text=Document";
+                  }}
+                />
+                <h4 className="font-semibold text-foreground mb-1 truncate">{doc.name || doc.document_name || "Document"}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {doc.date || doc.created_at ? new Date(doc.date || doc.created_at).toLocaleDateString() : "Unknown date"}
+                </p>
+              </Card>
+            ))}
+          </div>
+          {documents.length === 0 && (
+            <EmptyState
+              icon={ImageIcon}
+              title="No documents uploaded"
+              description="X-rays, dental scans, and other medical documents will be visible here once uploaded."
+            />
+          )}
+        </>
+      )}
     </div>
-    {(!patient.documents || patient.documents.length === 0) && (
-      <EmptyState
-        icon={ImageIcon}
-        title="No documents uploaded"
-        description="X-rays, dental scans, and other medical documents will be visible here once uploaded."
-      />
-    )}
-  </div>
-);
+  );
+};
 
 // --- Family Tab ---
 export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {

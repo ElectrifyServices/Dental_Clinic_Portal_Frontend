@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui";
+import { InternalScheduleState } from "../../hooks/staff/useDoctorScheduleQuery";
 
 interface CalendarGridProps {
   monthOffset: number;
@@ -13,6 +14,7 @@ interface CalendarGridProps {
   getDayAppointmentsForDate: (date: Date) => any[];
   monthNames: string[];
   currentDoctorId?: string | null;
+  scheduleState?: InternalScheduleState | null;
   onRefetchSlots?: () => void;
 }
 
@@ -26,6 +28,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   getDayAppointmentsForDate,
   monthNames,
   currentDoctorId,
+  scheduleState,
   onRefetchSlots,
 }) => {
   const isPastActualDate = (date: Date) => {
@@ -55,6 +58,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     }
     return `${monthNames[first.getMonth()]} - ${monthNames[last.getMonth()]} ${last.getFullYear()}`;
   };
+
+  const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
   return (
     <Card className="xl:col-span-6 flex flex-col overflow-hidden h-[500px] xl:h-full shadow-sm">
@@ -104,16 +109,37 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             const isSelected = selectedDate.toDateString() === date.toDateString();
             const isToday = isTodayDate(date);
             const isPast = isPastActualDate(date);
+            
+            const dayName = DAY_NAMES[date.getDay()];
+            const isWorkingDay = scheduleState?.workingHours?.[dayName]?.isWorking;
+
+            let bgClass = "bg-card hover:bg-muted/50 cursor-pointer";
+            if (isToday) {
+              bgClass = "bg-primary text-white shadow-lg";
+            } else if (isPast) {
+              bgClass = "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-40";
+            } else if (isSelected) {
+              bgClass = "bg-secondary text-primary shadow-sm";
+            }
+
+            let borderClass = "border-transparent hover:border-border";
+            if (isToday) {
+              borderClass = "border-primary shadow-md shadow-primary/30";
+            } else if (isPast) {
+              borderClass = "border-transparent";
+            } else if (currentDoctorId && scheduleState) {
+              borderClass = isWorkingDay 
+                ? "border-emerald-400/50 shadow-[0_4px_12px_-2px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_16px_-2px_rgba(16,185,129,0.4)] hover:border-emerald-500" 
+                : "border-red-300/50 shadow-[0_4px_12px_-2px_rgba(239,68,68,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(239,68,68,0.25)] hover:border-red-400/80";
+            } else if (isSelected) {
+              borderClass = "border-primary/30 shadow-sm hover:border-primary/50";
+            }
 
             return (
               <div
                 key={index}
                 onClick={() => handleDateClick(date, isPast, isSelected)}
-                className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group
-                  ${isToday ? "bg-primary text-white shadow-lg border-primary" : 
-                    isSelected ? "bg-secondary text-primary border-primary/20 shadow-sm" : 
-                    isPast ? "bg-muted text-muted-foreground/40 border-transparent opacity-40 cursor-not-allowed" : 
-                    "bg-card border-transparent hover:border-border cursor-pointer"}`}
+                className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group ${bgClass} ${borderClass}`}
               >
                 <span className={`text-sm md:text-base font-bold ${isToday ? "text-white" : isPast ? "text-muted-foreground/60" : "text-foreground"}`}>
                   {date.getDate()}

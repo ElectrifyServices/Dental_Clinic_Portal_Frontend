@@ -22,6 +22,7 @@ interface AppointmentListProps {
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string) => void;
   onCheckInPatient?: (appointment: any) => void;
+  onDirectCheckIn?: (appointment: any) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
   searchValue?: string;
@@ -65,6 +66,7 @@ export function AppointmentList({
   onDeleteAppointment,
   onUpdateStatus,
   onCheckInPatient,
+  onDirectCheckIn,
   selectedDate,
   setSelectedDate,
   searchValue,
@@ -372,6 +374,7 @@ export function AppointmentList({
             onUpdateStatus={onUpdateStatus}
             onDelete={onDeleteAppointment}
             onCheckIn={onCheckInPatient}
+            onDirectCheckIn={onDirectCheckIn}
             onClose={() => setOpenMenuId(null)}
             pos={menuPos}
           />,
