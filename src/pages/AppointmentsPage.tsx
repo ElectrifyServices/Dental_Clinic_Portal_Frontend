@@ -8,6 +8,7 @@ import { AppointmentList } from "../components/Appointments/AppointmentList";
 import { AppointmentStats } from "../components/Appointments/AppointmentList/AppointmentStats";
 import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 import { useCheckInAppointmentMutation } from "../hooks/appointments/useCheckInAppointmentMutation";
+import { useCheckInAfterRegistrationMutation } from "../hooks/appointments/useCheckInAfterRegistrationMutation";
 import { useDebounce } from "../hooks/useDebounce";
 import { toast } from "../components/ui";
 
@@ -28,6 +29,8 @@ export const AppointmentsPage: React.FC = () => {
     selectedDoctorId,
     setSelectedDoctorId,
     refetchAppointments,
+    refetchStaff,
+    setQueuedPatients,
   } = useAppData();
   const {
     setActiveModal,
@@ -37,17 +40,25 @@ export const AppointmentsPage: React.FC = () => {
     setSelectedPatientId,
   } = useModal();
 
-  useEffect(() => {
-    if (refetchAppointments) {
-      refetchAppointments();
-    }
-  }, [refetchAppointments]);
-
   const [viewMode, setViewMode] = useState("calendar");
   const [specialistSearch, setSpecialistSearch] = useState("");
   const debouncedSpecialistSearch = useDebounce(specialistSearch, 500);
 
-  const { doctors: activeDoctors } = useDoctorsListQuery(debouncedSpecialistSearch);
+  const { doctors: activeDoctors, refetch: refetchDoctors } = useDoctorsListQuery(debouncedSpecialistSearch);
+
+  useEffect(() => {
+    if (refetchAppointments) {
+      refetchAppointments();
+    }
+    if (refetchStaff) {
+      refetchStaff();
+    }
+    if (refetchDoctors) {
+      refetchDoctors();
+    }
+  }, [refetchAppointments, refetchStaff, refetchDoctors]);
+
+
 
   const isMatchingDate = (dateStr: string) => {
     if (!selectedDate) return true;
@@ -101,6 +112,66 @@ export const AppointmentsPage: React.FC = () => {
       toast.success("Please verify patient details before check-in");
     } else {
       setActiveModal("patientNotFound");
+    }
+  };
+
+  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
+
+  const handleDirectCheckInPatient = async (appt: any) => {
+    try {
+      // First update the appointment status
+      await checkInAppointment({ id: appt.id });
+      
+      const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
+      const sName = String(rawName).toLowerCase().trim();
+      const sPhone = (appt.patientPhone || appt.phone || "").trim();
+      
+      let patientId = appt.patientId || appt.patient_id;
+      
+      // If no explicit patientId, try to find the patient
+      if (!patientId) {
+        const existing = patients.find(
+          (p: any) =>
+            (p.phone || "").trim() === sPhone &&
+            (p.name || "").toLowerCase().trim() === sName,
+        );
+        if (existing) {
+          patientId = existing.id;
+        }
+      }
+
+      if (patientId) {
+        // Add to local queue
+        setQueuedPatients((prev: any[]) => [
+          ...prev,
+          {
+            id: appt.id,
+            patientId: patientId,
+            patientName: rawName,
+            patientPhone: sPhone,
+            appointmentTime: appt.time,
+            status: "waiting",
+            treatmentType: appt.treatment || appt.type,
+            patientConcern: appt.patientConcern || "",
+          },
+        ]);
+        
+        // Notify backend of the checkin to create consultation
+        try {
+          await checkInAfterRegistration({
+            id: appt.id,
+            patient_id: patientId
+          });
+        } catch (err) {
+          console.error("Backend consultation queue error:", err);
+        }
+      } else {
+        toast.warning("Patient checked in, but could not be added to consultation queue because patient ID is missing. Please verify the patient profile.");
+      }
+
+      toast.success("Patient checked in directly");
+    } catch (err) {
+      toast.error("Failed to check in patient directly");
     }
   };
 
@@ -175,6 +246,7 @@ export const AppointmentsPage: React.FC = () => {
               setSelectedAppointment(apt);
               setActiveModal("appointmentForm");
             }}
+            onDirectCheckIn={handleDirectCheckInPatient}
           />
         )}
         {(viewMode === "list" || viewMode === "no-show") && (
@@ -188,6 +260,7 @@ export const AppointmentsPage: React.FC = () => {
             onDeleteAppointment={handleDeleteAppt}
             onUpdateStatus={handleUpdateAppointmentStatus}
             onCheckInPatient={handleCheckInPatient}
+            onDirectCheckIn={handleDirectCheckInPatient}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             searchValue={apptSearch}

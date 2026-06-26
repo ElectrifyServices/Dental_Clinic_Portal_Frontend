@@ -122,43 +122,47 @@ export default function ConsultationHistoryModal({
     record: any,
     type: PDFReportType = "FULL",
   ) => {
-    let consultationData = { ...record };
-    let endpoint = "";
-
+    const toastId = toast.loading("Generating PDF report...");
     try {
+      let consultationData = { ...record };
+      
       const detailData = await fetchConsultationDetail(record.id, type);
       if (detailData) {
         consultationData = { ...consultationData, ...detailData };
       }
+
+      const matchedPatient = (patients || []).find(
+        (p) =>
+          p.id === record.patient_id ||
+          p.id === record.patientId ||
+          p.id === record.patient?.id ||
+          p.patientId === record.patientId
+      );
+
+      await downloadConsultationPDF({
+        type,
+        patient: {
+          id: record.patientId || record.patient_id || record.patient?.id || "—",
+          patientName: record.patientName || record.patient?.name || "—",
+          phone: record.patientContact || record.patient_phone || record.patient?.phone || "—",
+          doctorName: (record as any).doctorName || record.doctor?.name,
+          treatmentType: record.treatmentType,
+          gender: matchedPatient?.gender || record.patient?.gender || "—",
+          bloodGroup: matchedPatient?.blood_group || matchedPatient?.bloodGroup || record.patient?.blood_group || record.patient?.bloodGroup || "—",
+        },
+        consultationData,
+        toothChartState: consultationData.toothChartState || {},
+      });
+      toast.success("PDF Downloaded successfully!", { id: toastId });
     } catch (error) {
+      toast.error("Failed to generate PDF", { id: toastId });
     }
-
-    const matchedPatient = (patients || []).find(
-      (p) =>
-        p.id === record.patient_id ||
-        p.id === record.patientId ||
-        p.id === record.patient?.id ||
-        p.patientId === record.patientId
-    );
-
-    await downloadConsultationPDF({
-      type,
-      patient: {
-        id: record.patientId || record.patient_id || record.patient?.id || "—",
-        patientName: record.patientName || record.patient?.name || "—",
-        phone: record.patientContact || record.patient_phone || record.patient?.phone || "—",
-        doctorName: (record as any).doctorName || record.doctor?.name,
-        treatmentType: record.treatmentType,
-        gender: matchedPatient?.gender || record.patient?.gender || "—",
-        bloodGroup: matchedPatient?.blood_group || matchedPatient?.bloodGroup || record.patient?.blood_group || record.patient?.bloodGroup || "—",
-      },
-      consultationData,
-      toothChartState: consultationData.toothChartState || {},
-    });
   };
 
   const totalRecords = useMemo(() => {
     if (!apiData) return 0;
+    if (apiData.data?.pagination?.total_items !== undefined) return apiData.data.pagination.total_items;
+    if (apiData.pagination?.total_items !== undefined) return apiData.pagination.total_items;
     if (typeof apiData.total === 'number') return apiData.total;
     if (apiData.data && typeof apiData.data.total === 'number') return apiData.data.total;
     if (apiData.data?.pagination && typeof apiData.data.pagination.total === 'number') return apiData.data.pagination.total;
@@ -168,6 +172,8 @@ export default function ConsultationHistoryModal({
 
   const totalPages = useMemo(() => {
     if (!apiData) return 1;
+    if (apiData.data?.pagination?.total_pages !== undefined) return apiData.data.pagination.total_pages;
+    if (apiData.pagination?.total_pages !== undefined) return apiData.pagination.total_pages;
     if (typeof apiData.totalPages === 'number') return apiData.totalPages;
     if (apiData.data && typeof apiData.data.totalPages === 'number') return apiData.data.totalPages;
     if (apiData.data?.pagination && typeof apiData.data.pagination.totalPages === 'number') return apiData.data.pagination.totalPages;

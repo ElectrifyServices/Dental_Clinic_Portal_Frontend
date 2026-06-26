@@ -47,7 +47,7 @@ export function usePatientConsultationsQuery(
         endpoint,
         method: "get",
         options: {
-            enabled: !!patientId && (options?.enabled ?? true),
+            enabled: !!patientId && !patientId.startsWith("WALK-") && (options?.enabled ?? true),
             staleTime: 30 * 1000,
         },
     });

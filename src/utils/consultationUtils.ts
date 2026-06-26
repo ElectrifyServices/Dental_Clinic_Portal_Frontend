@@ -38,7 +38,7 @@ export interface ApiConsultation {
   status: string;
   observations_desc?: string;
   diagnosis_desc?: string;
-  treatment_plan_description?: string;
+  treatment_plan_desc?: string;
   total_estimated_cost?: number;
   is_follow_up?: boolean;
   additional_notes?: string;
@@ -85,7 +85,7 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
     status: apiConsultation.status as UiConsultation['status'],
     observations: apiConsultation.observations_desc,
     diagnosis: apiConsultation.diagnosis_desc,
-    treatmentPlan: apiConsultation.treatment_plan_description,
+    treatmentPlan: apiConsultation.treatment_plan_desc,
     treatmentCost: apiConsultation.total_estimated_cost,
     followUpRequired: apiConsultation.is_follow_up,
     consultationNotes: apiConsultation.additional_notes,
@@ -104,14 +104,16 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
   };
 }
 
-export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any }): any {
+export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, patient_name?: string, patient_phone?: string, attachments?: File[] }): any {
   return {
-    patient_id: uiConsultation.patientId,
+    patient_id: uiConsultation.patientId || undefined,
+    patient_name: uiConsultation.patient_name,
+    patient_phone: uiConsultation.patient_phone,
     doctor_id: uiConsultation.doctorId || undefined,
     appointment_id: uiConsultation.appointmentId || undefined,
     observations_desc: uiConsultation.observations,
     diagnosis_desc: uiConsultation.diagnosis,
-    treatment_plan_description: uiConsultation.treatmentPlan,
+    treatment_plan_desc: uiConsultation.treatmentPlan,
     total_estimated_cost: uiConsultation.treatmentCost,
     is_follow_up: uiConsultation.followUpRequired,
     additional_notes: uiConsultation.consultationNotes,
@@ -120,10 +122,11 @@ export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> 
     treatment_plans: uiConsultation.treatments || [],
     prescriptions: uiConsultation.prescriptions || [],
     appointment_info: uiConsultation.appointment_info || undefined,
+    attachments: uiConsultation.attachments || [],
   };
 }
 
-export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any }): any {
+export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, attachments?: File[] }): any {
   return {
     id: uiConsultation.id,
     patient_id: uiConsultation.patientId,
@@ -131,7 +134,7 @@ export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> 
     appointment_id: uiConsultation.appointmentId || undefined,
     observations_desc: uiConsultation.observations,
     diagnosis_desc: uiConsultation.diagnosis,
-    treatment_plan_description: uiConsultation.treatmentPlan,
+    treatment_plan_desc: uiConsultation.treatmentPlan,
     total_estimated_cost: uiConsultation.treatmentCost,
     is_follow_up: uiConsultation.followUpRequired,
     additional_notes: uiConsultation.consultationNotes,
@@ -140,5 +143,6 @@ export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> 
     treatment_plans: uiConsultation.treatments,
     prescriptions: uiConsultation.prescriptions,
     appointment_info: uiConsultation.appointment_info || undefined,
+    attachments: uiConsultation.attachments || [],
   };
 }

@@ -29,6 +29,7 @@ import {
   Card,
   CardContent,
   Loading,
+  Pagination,
 } from "@/components/ui";
 
 interface DoctorManagementProps {
@@ -113,13 +114,13 @@ export function DoctorManagement({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
-  const filtered = staffMembers.filter((s) => {
+  const filtered = (staffMembers || []).filter((s) => {
     const q = search.toLowerCase();
     const matchSearch =
-      s.name.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q) ||
+      s.name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
       (s.specialization || "").toLowerCase().includes(q);
-    const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase().includes("doctor");
+    const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase()?.includes("doctor");
     const matchRole = roleFilter === "all" || 
                       (roleFilter === "doctor" && isDoctor) ||
                       (roleFilter !== "doctor" && s.role === roleFilter);
@@ -267,7 +268,7 @@ export function DoctorManagement({
       key: "role",
       header: "Role",
       render: (staff: UserType) => {
-        const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+        const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase()?.includes("doctor");
         const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
         const rawLabel = (staff as any).originalRoleName || rm.label;
         const displayLabel = rawLabel.replace(/_/g, ' ');
@@ -363,19 +364,36 @@ export function DoctorManagement({
     },
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const paginationUI = totalPages > 1 ? (
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        perPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  ) : null;
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <PageHeader
         title="Staff Directory"
-        subtitle={`${staffMembers.length} team members recorded`}
+        subtitle={`Manage ${filtered.length} team members`}
         action={
           <Button onClick={onAddDoctor} className="gap-2">
-            <Plus className="w-4 h-4" /> Add New Staff
+            <Plus className="w-4 h-4" /> Add Staff Member
           </Button>
         }
       />
 
-      <div className="flex flex-col lg:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -416,13 +434,15 @@ export function DoctorManagement({
       ) : viewMode === "list" ? (
         <DataTable
           columns={columns}
-          data={filtered}
+          data={paginatedData}
           rowKey={(s) => s.id}
           emptyTitle="No staff members found"
           emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
+          footer={paginationUI || undefined}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {filtered.length === 0 ? (
             <div className="col-span-full py-20 bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
               <Users className="w-12 h-12 text-muted-foreground/30 mb-4" />
@@ -434,8 +454,8 @@ export function DoctorManagement({
               </p>
             </div>
           ) : (
-            filtered.map((staff) => {
-              const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+            paginatedData.map((staff) => {
+              const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase()?.includes("doctor");
               const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
               return (
                 <Card
@@ -573,6 +593,8 @@ export function DoctorManagement({
             })
           )}
         </div>
+        {paginationUI}
+        </>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { demoCorporatePlans } from '../data/demoData';
 import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
 import { CorporatePlan, PlanBenefitType } from '../types';
 import { useMemo } from 'react';
+import { mapProcedureLabelToKey } from '../constants/consent.constants';
 
 export function useCorporateData(params?: { search?: string; status?: string; planType?: string; }) {
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
@@ -48,42 +49,7 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
       return typeMap[backendType] || "custom";
     };
 
-    const mapProcedureLabelToKey = (label: string): string => {
-      const labelMap: Record<string, string> = {
-        "Consultation / Check-up": "consultation",
-        "Consultation": "consultation",
-        "follow up visit": "follow-up",
-        "X-ray review": "xray-review",
-        "Teeth Cleaning": "cleaning",
-        "Tooth Pain / Emergency": "emergency",
-        "Filling": "filling",
-        "Root Canal Treatment": "root-canal",
-        "Extraction / Wisdom Tooth": "extraction",
-        "Braces / Aligners": "orthodontics",
-        "Implants": "implants",
-        "full mouth rehabilitation": "full-mouth-rehab",
-        "Veneers/Cosmetic Dentistry": "veneers-cosmetic",
-        "Child Dentistry": "child-dentistry",
-        "Crown": "crown",
-        "Denture": "denture",
-        "Toothache": "toothache",
-        "Swelling / Infection": "swelling-infection",
-        "Broken Tooth": "broken-tooth",
-        "Trauma / Injury": "trauma-injury",
-        "other/ not sure": "other",
-        
-        // Legacy mapping fallbacks
-        "Teeth Cleaning & Scaling": "cleaning",
-        "Dental Filling": "filling",
-        "Tooth Extraction": "extraction",
-        "Root Canal": "root-canal",
-        "Crown Fitting": "crown",
-        "Orthodontics": "orthodontics",
-        "Oral Surgery": "surgery",
-        "Other": "other",
-      };
-      return labelMap[label] || label.toLowerCase();
-    };
+
 
     return {
       id: plan.id,
@@ -123,14 +89,14 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
     let plansArray = null;
     if (Array.isArray(apiPlansData)) {
       plansArray = apiPlansData;
-    } else if (apiPlansData && Array.isArray(apiPlansData.data)) {
-      plansArray = apiPlansData.data;
-    } else if (apiPlansData?.data && Array.isArray(apiPlansData.data.data)) {
-      plansArray = apiPlansData.data.data;
-    } else if (apiPlansData && Array.isArray(apiPlansData.plans)) {
-      plansArray = apiPlansData.plans;
-    } else if (apiPlansData?.data && Array.isArray(apiPlansData.data.plans)) {
-      plansArray = apiPlansData.data.plans;
+    } else if (apiPlansData && Array.isArray((apiPlansData as any).data)) {
+      plansArray = (apiPlansData as any).data;
+    } else if ((apiPlansData as any)?.data && Array.isArray((apiPlansData as any).data.data)) {
+      plansArray = (apiPlansData as any).data.data;
+    } else if (apiPlansData && Array.isArray((apiPlansData as any).plans)) {
+      plansArray = (apiPlansData as any).plans;
+    } else if ((apiPlansData as any)?.data && Array.isArray((apiPlansData as any).data.plans)) {
+      plansArray = (apiPlansData as any).data.plans;
     }
 
     if (plansArray) return plansArray.map(mapBackendPlanToFrontend);

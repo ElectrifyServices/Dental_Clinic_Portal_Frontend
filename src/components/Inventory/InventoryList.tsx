@@ -20,6 +20,7 @@ import {
   FilterTabs,
   StatusBadge,
   MetricCard,
+  Pagination,
 } from "@/components/ui";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
 import { useInventorySummaryQuery } from "../../hooks/inventory/useInventorySummaryQuery";
@@ -335,15 +336,19 @@ export function InventoryList({
       ),
     },
   ];
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-3">
       <PageHeader
         title="Inventory Management"
-        subtitle={`${summaryData?.total_items || 0} total stock items recorded`}
+        subtitle={`${filtered.length} total items in stock`}
         action={
           <Button onClick={onAddItem} className="gap-2">
-            <Plus className="w-4 h-4" /> Add New Item
+            <Plus className="w-4 h-4" /> Add Item
           </Button>
         }
       />
@@ -393,11 +398,24 @@ export function InventoryList({
 
       <DataTable
         columns={columns}
-        data={filtered}
+        data={paginatedData}
         rowKey={(item) => item.id}
         emptyIcon={<Package className="w-12 h-12 text-muted-foreground/40" />}
         emptyTitle="No inventory items found"
         emptySubtitle="Add your first medical supply to track stock levels."
+        footer={
+          totalPages > 1 ? (
+            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                perPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          ) : undefined
+        }
       />
     </div>
   );

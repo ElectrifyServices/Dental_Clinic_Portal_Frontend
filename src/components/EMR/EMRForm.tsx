@@ -123,8 +123,81 @@ export function EMRForm({
                   <FormControl>
                     <SearchableSelect
                       value={field.value}
-                      onChange={field.onChange}
-                      options={apiPatients.map((p: any) => ({ label: p.name, value: p.name }))}
+                      onChange={(val) => {
+                        field.onChange(val);
+                        // Optional: if patientId needs to be set, we can look it up, 
+                        // but it seems EMRForm relies on patientName and looks up ID on submit.
+                      }}
+                      options={[
+                        { label: "Select Patient", value: "none" },
+                        ...apiPatients.map((p: any) => ({
+                          label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
+                          searchLabel: `${p.name} ${p.phone || ""}`,
+                          value: p.name,
+                          patient: p,
+                        }))
+                      ]}
+                      renderOption={(option: any) => {
+                        if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
+                        const p = option.patient;
+                        if (!p) return <span className="truncate pr-2">{option.label}</span>;
+
+                        const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                        const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                        return (
+                          <div className="flex items-center gap-3 py-1">
+                            {profilePic ? (
+                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                <img
+                                  src={profilePic}
+                                  alt={p.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                {initial}
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-foreground text-sm truncate">{p.name}</span>
+                              {p.phone && (
+                                <span className="text-[10px] font-semibold text-muted-foreground truncate tracking-wide">
+                                  {p.phone}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }}
+                      renderValue={(option: any) => {
+                        if (option.value === "none") return option.label;
+                        const p = option.patient;
+                        if (!p) return option.label;
+
+                        const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
+                        const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+
+                        return (
+                          <div className="flex items-center gap-2">
+                            {profilePic ? (
+                              <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                <img
+                                  src={profilePic}
+                                  alt={p.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                {initial}
+                              </div>
+                            )}
+                            <span className="font-bold text-foreground text-sm truncate">{p.name}</span>
+                          </div>
+                        );
+                      }}
                       placeholder="Select patient..."
                     />
                   </FormControl>
@@ -236,14 +309,33 @@ export function EMRForm({
             </div>
             {attachments.length > 0 && (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2 mt-3">
-                {attachments.map((_url: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="relative aspect-square bg-muted rounded-xl overflow-hidden border border-border flex items-center justify-center"
-                  >
-                    <Camera className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                ))}
+                {attachments.map((url: string, idx: number) => {
+                  const initialAttachmentCount = record?.attachments?.length || 0;
+                  const isNewFile = idx >= initialAttachmentCount;
+                  const fileObj = isNewFile ? selectedFiles[idx - initialAttachmentCount] : null;
+                  
+                  const isImage = fileObj 
+                    ? fileObj.type.startsWith("image/") 
+                    : url.match(/\\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.startsWith("blob:") || url.startsWith("data:image");
+
+                  const fileName = fileObj ? fileObj.name : url.split('/').pop() || `File ${idx + 1}`;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="relative aspect-square bg-muted rounded-xl overflow-hidden border border-border flex flex-col items-center justify-center group"
+                    >
+                      {isImage ? (
+                        <img src={url} alt="attachment" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-2 text-center w-full h-full bg-primary/5">
+                           <FileText className="w-6 h-6 text-primary mb-1" />
+                           <span className="text-[9px] font-medium text-foreground line-clamp-2 break-all">{fileName}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

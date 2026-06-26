@@ -28,6 +28,7 @@ import {
   StatusBadge,
   MetricCard,
   toast,
+  Pagination,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
 
@@ -575,6 +576,11 @@ export function InvoiceList({
     },
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
+  const paginatedData = groupedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="space-y-3">
       <PageHeader
@@ -621,11 +627,24 @@ export function InvoiceList({
 
       <DataTable
         columns={columns}
-        data={groupedData as any[]}
+        data={paginatedData as any[]}
         rowKey={(inv) => inv.id}
         emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
         emptyTitle="No invoices found"
         emptySubtitle="Create your first invoice to get started."
+        footer={
+          totalPages > 1 ? (
+            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={groupedData.length}
+                perPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          ) : undefined
+        }
         onRowClick={(row: any) => toggleRowExpanded(row.id)}
         expandedRowIds={expandedRowIds}
         rowClassName={(row: any) => {

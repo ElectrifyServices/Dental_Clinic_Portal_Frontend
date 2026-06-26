@@ -9,6 +9,7 @@ import {
   Stethoscope,
   ClipboardList,
   Eye,
+  IndianRupee,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -143,17 +144,17 @@ export function InvoiceForm({
   }, [apiPatients, formData.patientId, formData.patientName]);
 
   const cat = (selectedPatient?.category || selectedPatient?.patient_category || "").toLowerCase();
-  const isCorporate = cat === "corporate" || cat === "employee" || cat === "member" || 
-                      selectedPatient?.corporatePlanId || selectedPatient?.companyId || selectedPatient?.company_id ||
-                      selectedPatient?.is_member || selectedPatient?.is_employee || selectedPatient?.isMember || selectedPatient?.isEmployee ||
-                      selectedPatient?.employeeId || selectedPatient?.employee_id || selectedPatient?.membership_id || selectedPatient?.membershipId;
+  const isCorporate = cat === "corporate" || cat === "employee" || cat === "member" ||
+    selectedPatient?.corporatePlanId || selectedPatient?.companyId || selectedPatient?.company_id ||
+    selectedPatient?.is_member || selectedPatient?.is_employee || selectedPatient?.isMember || selectedPatient?.isEmployee ||
+    selectedPatient?.employeeId || selectedPatient?.employee_id || selectedPatient?.membership_id || selectedPatient?.membershipId;
 
   const memberId = selectedPatient?.source === "member" ? selectedPatient.id :
-                   selectedPatient?.corporateMemberId || 
-                   selectedPatient?.member_id || 
-                   selectedPatient?.memberId || 
-                   selectedPatient?.primaryMemberId ||
-                   (isCorporate ? selectedPatient.id : "");
+    selectedPatient?.corporateMemberId ||
+    selectedPatient?.member_id ||
+    selectedPatient?.memberId ||
+    selectedPatient?.primaryMemberId ||
+    (isCorporate ? selectedPatient.id : "");
 
 
   const { data: rawUnbilledData } = useUnbilledItemsQuery(
@@ -802,7 +803,7 @@ export function InvoiceForm({
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <DollarSign
+                  <IndianRupee
                     className={`w-4 h-4 ${formData.isComplimentary ? "text-primary" : "text-muted-foreground"}`}
                   />
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

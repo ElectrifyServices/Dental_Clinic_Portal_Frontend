@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Calendar,
@@ -9,6 +9,7 @@ import {
   FileText,
   Heart,
   CreditCard,
+  AlertCircle,
 } from "lucide-react";
 import { Modal, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
@@ -30,7 +31,10 @@ import {
 import { usePatientAppointmentHistoryQuery } from "../../hooks/patients/usePatientAppointmentHistoryQuery";
 import { usePatientFamilyTreeQuery } from "../../hooks/patients/usePatientFamilyTreeQuery";
 import { usePatientPrescriptionsQuery } from "../../hooks/patients/usePatientPrescriptionsQuery";
+import { useTreatmentPlansQuery } from "../../hooks/treatment/useTreatmentPlansQuery";
 import { toTitleCase } from "@/utils/stringUtils";
+import { toUiTreatment } from "../../utils/treatmentPlanUtils";
+import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
 
 interface PatientDetailsProps {
   patient: any;
@@ -50,8 +54,8 @@ export function PatientDetails({
   appointments = [],
   treatments = [],
   invoices = [],
-  onSendReminder = () => {},
-  onExport = () => {},
+  onSendReminder = () => { },
+  onExport = () => { },
 }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
@@ -72,9 +76,28 @@ export function PatientDetails({
 
   if (!patient) return null;
 
-  const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
-  const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
-  const { data: prescriptionsData, isLoading: isPrescriptionsLoading } = usePatientPrescriptionsQuery(patient?.id || "");
+  const { data: historyData, refetch: refetchHistory } = usePatientAppointmentHistoryQuery(patient?.id || "");
+  const { data: familyTreeData, refetch: refetchFamily } = usePatientFamilyTreeQuery(patient?.id || "");
+  const { data: prescriptionsData, isLoading: isPrescriptionsLoading, refetch: refetchPrescriptions } = usePatientPrescriptionsQuery(patient?.id || "");
+  const { data: treatmentsData, refetch: refetchTreatments } = useTreatmentPlansQuery(
+    { all: true, filters: { patientId: [patient?.id || ""] } },
+    { enabled: !!patient?.id }
+  );
+
+  const { data: invoicesData, isLoading: isInvoicesLoading, refetch: refetchInvoices } = useInvoicesQuery(
+    { filters: { patient_id: [patient?.id || ""] } },
+    { enabled: !!patient?.id }
+  );
+
+  useEffect(() => {
+    if (patient?.id) {
+      refetchHistory();
+      refetchFamily();
+      refetchPrescriptions();
+      refetchTreatments();
+      refetchInvoices();
+    }
+  }, [patient?.id, refetchHistory, refetchFamily, refetchPrescriptions, refetchTreatments, refetchInvoices]);
 
   const rawPrescriptions =
     prescriptionsData?.responseObject?.data?.prescriptions ||
@@ -86,7 +109,7 @@ export function PatientDetails({
 
   // Extract family members from API response
   const apiData = familyTreeData?.responseObject?.data || familyTreeData?.data;
-  
+
   let allFamilyMembers: any[] = [];
   if (apiData) {
     if (apiData.primary) {
@@ -102,24 +125,24 @@ export function PatientDetails({
 
   const resolvedFamilyMembers = (otherFamilyMembers.length > 0 || apiData)
     ? otherFamilyMembers.map((m: any) => ({
-        id: m.id,
-        patientCode: m.patient_code || m.patientCode || m.id,
-        name: m.name,
-        // If it's the primary patient, we label them as PRIMARY, otherwise use their relation
-        relation: m.id === apiData?.primary?.id 
-          ? "PRIMARY" 
-          : (m.relation_type || m.relation || m.relationship || "Family"),
-        phone: m.phone,
-        email: m.email,
-        dateOfBirth: m.date_of_birth || m.dateOfBirth || m.dob,
-        gender: m.gender,
-        bloodGroup: m.blood_group || m.bloodGroup,
-        status: m.is_active ? "active" : "inactive",
-        lastVisit: m.last_visit_date || m.lastVisit || null,
-        outstandingBalance: m.outstanding_balance || m.outstandingBalance || 0,
-        totalVisits: m.total_visits || 0,
-        profilePicture: m.profile_picture_url || null,
-      }))
+      id: m.id,
+      patientCode: m.patient_code || m.patientCode || m.id,
+      name: m.name,
+      // If it's the primary patient, we label them as PRIMARY, otherwise use their relation
+      relation: m.id === apiData?.primary?.id
+        ? "PRIMARY"
+        : (m.relation_type || m.relation || m.relationship || "Family"),
+      phone: m.phone,
+      email: m.email,
+      dateOfBirth: m.date_of_birth || m.dateOfBirth || m.dob,
+      gender: m.gender,
+      bloodGroup: m.blood_group || m.bloodGroup,
+      status: m.is_active ? "active" : "inactive",
+      lastVisit: m.last_visit_date || m.lastVisit || null,
+      outstandingBalance: m.outstanding_balance || m.outstandingBalance || 0,
+      totalVisits: m.total_visits || 0,
+      profilePicture: m.profile_picture_url || null,
+    }))
     : familyMembers;
 
   const formatAppointmentDate = (dateVal?: string | number | Date) => {
@@ -128,10 +151,10 @@ export function PatientDetails({
       const d = new Date(dateVal);
       return !isNaN(d.getTime())
         ? d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
         : String(dateVal);
     } catch (e) {
       return String(dateVal);
@@ -161,7 +184,7 @@ export function PatientDetails({
           if (timeStr.includes("T")) {
             try {
               timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch(e) {}
+            } catch (e) { }
           } else if (timeStr.match(/^\d{2}:\d{2}$/) || timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
             try {
               const [h, m] = timeStr.split(":");
@@ -169,7 +192,7 @@ export function PatientDetails({
               const ampm = hr >= 12 ? "PM" : "AM";
               hr = hr % 12 || 12;
               timeStr = `${String(hr).padStart(2, '0')}:${m} ${ampm}`;
-            } catch(e) {}
+            } catch (e) { }
           }
         }
 
@@ -200,12 +223,24 @@ export function PatientDetails({
       patientAppointments = [];
     }
   }
-  const patientTreatments = treatments.filter(
+
+  let patientTreatments = treatments.filter(
     (t) => t.patientId === patient.id,
   );
-  const patientInvoices = invoices.filter(
-    (inv) => inv.patientId === patient.id,
-  );
+
+  if (treatmentsData?.data) {
+    const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as any).data || [];
+    if (Array.isArray(rawData) && rawData.length > 0) {
+      patientTreatments = rawData.map(toUiTreatment);
+    }
+  }
+
+  const fetchedInvoices = invoicesData?.data?.invoices || invoicesData?.invoices || invoicesData?.data?.data || [];
+  const patientInvoices = fetchedInvoices.length > 0
+    ? fetchedInvoices
+    : invoices.filter((inv) => inv.patientId === patient.id);
+
+  const isIncompletePatient = (!patient.gender && !patient.dateOfBirth) || patient.is_direct || patient.status === "incomplete";
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -316,14 +351,14 @@ export function PatientDetails({
               onClick={() => onExport?.(patient.id)}
               className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/10"
             >
-              <Download className="w-4 h-4 mr-2" /> Export Dossier
+              <Download className="w-4 h-4 mr-2" /> Export All Data
             </Button>
-            <Button
+            {/* <Button
               onClick={handlePrintBarcode}
               className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/10"
             >
               <QrCode className="w-4 h-4 mr-2" /> Generate Barcode
-            </Button>
+            </Button> */}
           </div>
           <Button
             variant="outline"
@@ -335,6 +370,15 @@ export function PatientDetails({
         </div>
       }
     >
+      {isIncompletePatient && (
+        <div className="bg-orange-500/10 border-2 border-orange-500/20 text-orange-600 rounded-xl p-3 mb-6 flex items-start gap-3 animate-pulse">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wide">Incomplete Patient Profile</p>
+            <p className="text-xs font-medium mt-1">This patient was created quickly during consultation. Please complete their registration form to unlock all features.</p>
+          </div>
+        </div>
+      )}
       <div className="space-y-8">
         <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">

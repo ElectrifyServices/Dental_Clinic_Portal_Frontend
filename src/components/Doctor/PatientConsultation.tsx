@@ -20,6 +20,7 @@ import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { usePatientConsultationsQuery } from "../../hooks/consultation/usePatientConsultationsQuery";
 import { useDebounce } from "../../hooks/useDebounce";
+import toast from "react-hot-toast";
 
 interface PatientConsultationProps {
   patient: {
@@ -83,7 +84,9 @@ interface ConsultationData {
   nextVisit: string;
   prescriptions: any[];
   images: string[];
+  rawImages: File[];
   xrayFiles: string[];
+  rawXrays: File[];
   labFiles: { name: string; url: string; type: string }[];
   selectedTeeth: string[];
   treatmentPlans: any[];
@@ -152,7 +155,9 @@ export function PatientConsultation({
         },
       ],
       images: [] as string[],
+      rawImages: [] as File[],
       xrayFiles: [] as string[],
+      rawXrays: [] as File[],
       labFiles: [] as { name: string; url: string; type: string }[],
       selectedTeeth: [] as string[],
       treatmentPlans: [] as any[],
@@ -226,6 +231,7 @@ export function PatientConsultation({
         condition: pair.condition,
         procedure: "",
         sessions: 1,
+        duration: "15 mins",
         cost: 0,
         isActive: true,
         planDate: new Date().toISOString().split("T")[0],
@@ -314,25 +320,28 @@ export function PatientConsultation({
   };
 
   const handleDownloadPDF = async (type: PDFReportType = "FULL") => {
-    let finalConsultationData = { ...consultationData };
+    const toastId = toast.loading("Generating PDF report...");
     try {
+      let finalConsultationData = { ...consultationData };
       const detailData = await fetchConsultationDetail(patient.id, type);
       if (detailData) {
         finalConsultationData = { ...finalConsultationData, ...detailData };
       }
-    } catch (error) {
-    }
 
-    await downloadConsultationPDF({
-      type,
-      patient: {
-        ...patient,
-        gender: patient.patientHistory?.gender || (patient as any).gender || "—",
-        bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "—",
-      },
-      consultationData: finalConsultationData,
-      toothChartState,
-    });
+      await downloadConsultationPDF({
+        type,
+        patient: {
+          ...patient,
+          gender: patient.patientHistory?.gender || (patient as any).gender || "—",
+          bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "—",
+        },
+        consultationData: finalConsultationData,
+        toothChartState,
+      });
+      toast.success("PDF Downloaded successfully!", { id: toastId });
+    } catch (error) {
+      toast.error("Failed to generate PDF", { id: toastId });
+    }
   };
 
   const addPrescription = () => {
@@ -416,6 +425,7 @@ export function PatientConsultation({
     setConsultationData((prev) => ({
       ...prev,
       images: [...prev.images, ...imageUrls],
+      rawImages: [...(prev.rawImages || []), ...files],
     }));
   };
 
@@ -425,6 +435,7 @@ export function PatientConsultation({
     setConsultationData((prev) => ({
       ...prev,
       xrayFiles: [...prev.xrayFiles, ...imageUrls],
+      rawXrays: [...(prev.rawXrays || []), ...files],
     }));
   };
 
@@ -432,6 +443,7 @@ export function PatientConsultation({
     setConsultationData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
+      rawImages: prev.rawImages ? prev.rawImages.filter((_, i) => i !== index) : [],
     }));
   };
 
@@ -439,6 +451,7 @@ export function PatientConsultation({
     setConsultationData((prev) => ({
       ...prev,
       xrayFiles: prev.xrayFiles.filter((_, i) => i !== index),
+      rawXrays: prev.rawXrays ? prev.rawXrays.filter((_, i) => i !== index) : [],
     }));
   };
 
@@ -505,6 +518,7 @@ export function PatientConsultation({
         patientId: patient.patientId || patient.id,
         appointmentId: patient.appointmentId,
         ...consultationData,
+        attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
         consultationDate: new Date().toISOString(),
         doctorId: patient.doctorId || "1",
@@ -630,7 +644,12 @@ export function PatientConsultation({
                     type="text"
                     placeholder="Enter Phone Number"
                     value={directPatientPhone}
-                    onChange={(e) => setDirectPatientPhone(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) {
+                        setDirectPatientPhone(val);
+                      }
+                    }}
                     className="bg-background text-sm font-bold border-border/80"
                   />
                 </div>

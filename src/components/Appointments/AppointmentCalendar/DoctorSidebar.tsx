@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Search, Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui";
@@ -31,6 +31,13 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
       d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.specialization.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    // Auto-select if there is only one doctor in the entire list and no doctor is currently selected
+    if (doctors.length === 1 && selectedDoctorId === null) {
+      setSelectedDoctorId(doctors[0].id);
+    }
+  }, [doctors, selectedDoctorId, setSelectedDoctorId]);
 
   return (
     <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden h-[400px] xl:h-full">

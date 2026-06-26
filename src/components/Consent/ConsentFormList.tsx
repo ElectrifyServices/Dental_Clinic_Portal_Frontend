@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical } from "lucide-react";
 
 interface ConsentFormListProps {
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
   DataTable,
+  Pagination,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -45,6 +47,11 @@ export function ConsentFormList({
   onFilterChange,
   doctorsList,
 }: ConsentFormListProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(forms.length / itemsPerPage);
+  const paginatedForms = forms.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const columns = [
     {
       key: "patient",
@@ -73,7 +80,7 @@ export function ConsentFormList({
             {treatments.map((t: string) => {
               const cleanName = t.replace(/\s*\(.*\)\s*/g, '');
               return (
-                <Badge key={t} className="uppercase font-bold text-[9px] px-2 h-5 tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+                <Badge key={t} className="whitespace-nowrap uppercase font-bold text-[9px] px-2 h-5 tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
                   {cleanName}
                 </Badge>
               );
@@ -292,8 +299,21 @@ export function ConsentFormList({
         >
           <DataTable
             columns={columns}
-            data={forms}
+            data={paginatedForms}
             rowKey={(row) => row.id}
+            footer={
+              totalPages > 1 ? (
+                <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                  <Pagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    totalItems={forms.length}
+                    perPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              ) : undefined
+            }
           />
         </ContentCard>
       )}

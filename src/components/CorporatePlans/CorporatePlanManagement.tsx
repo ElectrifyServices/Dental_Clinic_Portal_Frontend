@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Zap, CreditCard } from 'lucide-react';
 import { CorporatePlan, PlanCategory } from '../../types';
-import { Button, Loading, SearchInput, FilterTabs } from '../ui';
+import { Button, Loading, SearchInput, FilterTabs, Pagination } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
@@ -68,6 +68,11 @@ export function CorporatePlanManagement({
       p.code?.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchStatus && matchSearch;
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleDelete = (id: string) => {
     confirmDelete('Delete Plan', 'This plan will be permanently removed. Members on this plan will be affected.', async () => {
@@ -176,7 +181,7 @@ export function CorporatePlanManagement({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
-          {filtered.map((plan, index) => (
+          {paginatedData.map((plan, index) => (
             <CorporatePlanCard
               key={`${plan.id}-${index}`}
               plan={plan}
@@ -189,6 +194,18 @@ export function CorporatePlanManagement({
               onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
             />
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && !isLoading && filtered.length > 0 && (
+        <div className="py-4 px-6 border border-border/50 bg-card rounded-2xl shadow-sm mt-6">
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            perPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 

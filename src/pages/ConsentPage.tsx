@@ -9,7 +9,7 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 
 export function ConsentPage() {
-  const { staffMembers } = useAppData();
+  const { staffMembers, patients } = useAppData();
   const { setActiveModal, setSelectedConsentForm, confirmDelete, showToast } = useModal();
   const { doctors: apiDoctors } = useDoctorsListQuery();
 
@@ -59,10 +59,12 @@ export function ConsentPage() {
   const mappedForms = consentFormsList.map((form: any) => {
     // Attempt to map doctor name
     const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
+    const patientIdStr = form.patient?.id || form.patient_id;
+    const patientObj = patients.find((p: any) => p.id === patientIdStr);
     return {
       id: form.id,
-      patientName: form.patient_name || "Unknown",
-      patientId: form.patient_id || "",
+      patientName: form.patient?.name || form.patient_name || patientObj?.name || "Unknown",
+      patientId: patientIdStr || "",
       treatmentType: form.procedure_type || "",
       createdDate: form.created_at || new Date().toISOString(),
       signedDate: form.signed_on || null,

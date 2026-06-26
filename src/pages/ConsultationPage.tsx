@@ -27,6 +27,10 @@ export const ConsultationPage: React.FC = () => {
     isLoading,
     refetch,
     updateFilters,
+    totalItems,
+    totalPages,
+    currentPage,
+    handlePageChange
   } = useConsultationData();
 
   const queuedPatients = useMemo(() => {
@@ -304,6 +308,10 @@ export const ConsultationPage: React.FC = () => {
         onSearchChange={setSearchTerm}
         filterStatus={filterStatus}
         onFilterStatusChange={setFilterStatus}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
       />
     </div>
   );

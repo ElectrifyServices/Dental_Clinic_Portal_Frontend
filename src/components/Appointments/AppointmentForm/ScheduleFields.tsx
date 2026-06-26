@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { Button } from "@/components/ui";
-import { Calendar, Clock, Loader2, CheckCircle } from "lucide-react";
+import { Calendar, Clock, Loader2, CheckCircle, Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 
@@ -64,6 +64,12 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
 
   const hasSlots = slots.length > 0;
 
+  useEffect(() => {
+    if (doctors?.length === 1 && doctorId !== doctors[0].id) {
+      onDoctorChange(doctors[0].id);
+    }
+  }, [doctors, doctorId, onDoctorChange]);
+
   const handleSlotClick = (time24: string) => {
     const syntheticEvent = {
       target: { name: "time", value: time24 },
@@ -71,12 +77,37 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
     onTimeChange(syntheticEvent);
   };
 
-  const handleDoctorSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onDoctorChange(e.target.value);
-  };
-
   return (
     <section className="space-y-3">
+      {/* Assigned Doctor — editable */}
+      <div className="space-y-3 p-4 rounded-2xl bg-blue-50/60 border border-blue-100 mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+            <Stethoscope className="w-4 h-4 text-blue-600" />
+          </div>
+          <h4 className="text-[10px] font-bold text-blue-800 uppercase tracking-widest">
+            Assigned Specialist
+          </h4>
+        </div>
+        <div className="space-y-1.5">
+          <Select
+            value={doctorId}
+            onValueChange={onDoctorChange}
+          >
+            <SelectTrigger className="w-full h-11 px-3 text-sm border border-blue-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500/20 outline-none font-bold shadow-sm transition-all hover:border-blue-300 text-blue-900">
+              <SelectValue placeholder="-- Select Specialist --" />
+            </SelectTrigger>
+            <SelectContent>
+              {doctors.map((d) => (
+                <SelectItem key={d.id} value={d.id} className="font-medium">
+                  {d.name} {d.specialization ? <span className="text-muted-foreground text-xs ml-1">({d.specialization})</span> : null}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 mb-2">
         <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
           <Calendar className="w-4 h-4 text-primary" />
@@ -97,6 +128,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
             type="date"
             name="date"
             value={date}
+            min={new Date().toISOString().split('T')[0]}
             onChange={onDateChange}
             required
             className="h-11 rounded-xl border-border"
@@ -210,27 +242,6 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
         </div>
       )}
 
-      {/* Assigned Doctor — editable */}
-      <div className="space-y-1.5">
-        <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
-          Assigned Doctor
-        </label>
-        <Select
-          value={doctorId}
-          onValueChange={onDoctorChange}
-        >
-          <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-bold">
-            <SelectValue placeholder="-- Select Doctor --" />
-          </SelectTrigger>
-          <SelectContent>
-            {doctors.map((d) => (
-              <SelectItem key={d.id} value={d.id}>
-                {d.name} ({d.specialization})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
     </section>
   );
 };

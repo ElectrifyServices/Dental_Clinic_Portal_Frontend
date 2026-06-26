@@ -8,6 +8,7 @@ interface AppointmentActionMenuProps {
   onUpdateStatus?: (id: string, status: string) => void;
   onDelete?: (id: string) => void;
   onCheckIn?: (appointment: any) => void;
+  onDirectCheckIn?: (appointment: any) => void;
   onClose: () => void;
   pos: { top: number; left: number };
 }
@@ -18,6 +19,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   onUpdateStatus,
   onDelete,
   onCheckIn,
+  onDirectCheckIn,
   onClose,
   pos
 }) => {
@@ -43,6 +45,19 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
               Check-in Patient
             </Button>
           )}
+
+          {/* {canCheckIn && onDirectCheckIn && (
+            <Button 
+              variant="ghost"
+              onClick={() => { onDirectCheckIn?.(appointment); onClose(); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-600 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
+            >
+              <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
+                <UserCheck className="w-4 h-4 text-emerald-600" /> 
+              </div>
+              Direct check-in
+            </Button>
+          )} */}
 
           <Button 
             variant="ghost"

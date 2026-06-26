@@ -335,8 +335,8 @@ export function useConsultationData() {
     setConsultations: setLocalConsultations,
     isLoading: isLoading || isFetching,
     totals,
-    totalItems: consultationsRaw?.total || 0,
-    totalPages: consultationsRaw?.totalPages || 1,
+    totalItems: consultationsRaw?.pagination?.total_items || consultationsRaw?.data?.pagination?.total_items || consultationsRaw?.total || 0,
+    totalPages: consultationsRaw?.pagination?.total_pages || consultationsRaw?.data?.pagination?.total_pages || consultationsRaw?.totalPages || 1,
     currentPage: filters.page || 1,
 
     // Queue management

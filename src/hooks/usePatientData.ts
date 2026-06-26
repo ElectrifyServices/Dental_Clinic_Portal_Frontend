@@ -22,6 +22,8 @@ export function usePatientData() {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientStatus, setPatientStatus] = useState('all');
   const [patientCategory, setPatientCategory] = useState('all');
+  const [patientPage, setPatientPage] = useState(1);
+  const patientLimit = 10;
 
   const apiFilters = useMemo(() => {
     const filters: Record<string, string[]> = {};
@@ -36,6 +38,11 @@ export function usePatientData() {
 
   const debouncedSearch = useDebounce(patientSearch, 500);
 
+  // Reset page to 1 when filters change
+  useMemo(() => {
+    setPatientPage(1);
+  }, [debouncedSearch, patientStatus, patientCategory]);
+
   const isEnabled = useMemo(() => {
     const path = window.location.pathname;
     const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/membership');
@@ -43,6 +50,8 @@ export function usePatientData() {
   }, []);
 
   const { data: apiPatients, isLoading: isPatientsLoading } = usePatientQuery({
+    page: patientPage,
+    limit: patientLimit,
     search: debouncedSearch || undefined,
     filters: apiFilters,
   }, { enabled: isEnabled });
@@ -246,5 +255,9 @@ export function usePatientData() {
     handleUpdatePatientStatus,
     handleBulkSavePatients,
     refetchPatients,
+    patientPage,
+    setPatientPage,
+    totalItems: (apiPatients as any)?.pagination?.total_items || (apiPatients as any)?.data?.pagination?.total_items || (apiPatients as any)?.total || 0,
+    totalPages: (apiPatients as any)?.pagination?.total_pages || (apiPatients as any)?.data?.pagination?.total_pages || (apiPatients as any)?.totalPages || 1,
   };
 }
