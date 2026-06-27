@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { getFileUrl } from "../../../services/apiClient";
 import { Button } from "@/components/ui/Button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui";
 import { Patient } from "@/types";
@@ -124,9 +125,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               <SimpleTooltip content="Patient Avatar">
                 <div className="relative shrink-0 cursor-help">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
-                    {patient.avatar ? (
+                    {patient.profile_picture_url || patient.avatar ? (
                       <img
-                         src={patient.avatar}
+                         src={patient.profile_picture_url ? getFileUrl(patient.profile_picture_url) : patient.avatar}
                         alt={toTitleCase(patient.name)}
                         className="w-full h-full object-cover"
                       />
@@ -134,9 +135,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                       <User className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500" />
                     )}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                    <User className="w-2.5 h-2.5 text-white" />
-                  </div>
+                  {/* <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+          
+                  </div> */}
                 </div>
               </SimpleTooltip>
               <div className="min-w-0">

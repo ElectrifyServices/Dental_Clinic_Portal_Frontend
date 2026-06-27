@@ -25,10 +25,13 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
     const quantity = Number(item.quantity ?? 1);
     return {
       id: item.id,
+      item_type: item.item_type || "Service",
       description: item.description || '',
       quantity,
       rate,
       amount: Number(item.amount ?? (quantity * rate) ?? 0),
+      total_amount: Number(item.total_amount ?? item.amount ?? (quantity * rate) ?? 0),
+      billed_amount: Number(item.billed_amount ?? item.amount ?? (quantity * rate) ?? 0),
     };
   });
 

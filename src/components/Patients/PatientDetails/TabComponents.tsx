@@ -13,6 +13,7 @@ import {
   Send,
   Stethoscope,
   User,
+  X,
 } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
@@ -732,6 +733,7 @@ export const DocumentsTab = ({
   loading: boolean;
 }) => {
   const { data: documentsResponse, isLoading } = usePatientDocumentsQuery(patient?.id);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   // Navigate through potential API response envelopes
   const rawDocuments = 
@@ -760,25 +762,33 @@ export const DocumentsTab = ({
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc: any, index: number) => (
-              <Card
-                key={doc.id || index}
-                className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm"
-              >
-                <img
-                  src={doc.url || doc.document_url || doc.file_url || "https://placehold.co/400x300?text=Document"}
-                  alt={doc.name || doc.document_name || "Document"}
-                  className="w-full h-40 object-cover rounded-lg mb-3"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://placehold.co/400x300?text=Document";
+            {documents.map((doc: any, index: number) => {
+              const docUrl = doc.url || doc.document_url || doc.file_url;
+              const docName = doc.file_name || doc.name || doc.document_name || "Document";
+              
+              return (
+                <Card
+                  key={doc.id || index}
+                  className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm cursor-pointer"
+                  onClick={() => {
+                    if (docUrl) setSelectedImage(docUrl);
                   }}
-                />
-                <h4 className="font-semibold text-foreground mb-1 truncate">{doc.name || doc.document_name || "Document"}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {doc.date || doc.created_at ? new Date(doc.date || doc.created_at).toLocaleDateString() : "Unknown date"}
-                </p>
-              </Card>
-            ))}
+                >
+                  <img
+                    src={docUrl || "https://placehold.co/400x300?text=Document"}
+                    alt={docName}
+                    className="w-full h-40 object-cover rounded-lg mb-3 hover:opacity-90 transition-opacity"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://placehold.co/400x300?text=Document";
+                    }}
+                  />
+                  <h4 className="font-semibold text-foreground mb-1 truncate">{docName}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {doc.date || doc.created_at ? new Date(doc.date || doc.created_at).toLocaleDateString() : "Unknown date"}
+                  </p>
+                </Card>
+              );
+            })}
           </div>
           {documents.length === 0 && (
             <EmptyState
@@ -786,6 +796,32 @@ export const DocumentsTab = ({
               title="No documents uploaded"
               description="X-rays, dental scans, and other medical documents will be visible here once uploaded."
             />
+          )}
+
+          {/* Full Screen Image Viewer Modal */}
+          {selectedImage && (
+            <div 
+              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
+              onClick={() => setSelectedImage(null)}
+            >
+              <Button 
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 text-white hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-colors border-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImage(null);
+                }}
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              <img 
+                src={selectedImage} 
+                alt="Full View" 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border border-white/10"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+              />
+            </div>
           )}
         </>
       )}

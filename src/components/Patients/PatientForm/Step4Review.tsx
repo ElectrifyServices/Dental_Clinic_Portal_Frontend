@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useMedicalHistoriesQuery } from "../../../hooks/patients/useMedicalHistoriesQuery";
 import { useAllergiesQuery } from "../../../hooks/patients/useAllergiesQuery";
+import { getFileUrl } from "../../../services/apiClient";
 
 interface Step4Props {
   formData: any;
@@ -384,6 +385,66 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 <ClipboardCheck className="w-5 h-5 text-primary" />
                 Declarations & Consents
               </h4>
+              <div className="p-3 bg-secondary/20 border border-secondary rounded-xl mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">
+                    Offline Patient Registration Form
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] font-bold border-primary/20 ${formData.consentFormUrl ? "text-primary" : "text-destructive border-destructive"}`}
+                  >
+                    {formData.consentFormUrl ? "ATTACHED" : "PENDING"}
+                  </Badge>
+                </div>
+                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-[4.5rem] flex items-center justify-center">
+                  {(() => {
+                    const consentFormUrl = formData.consentFormUrl;
+                    const isValidForm = consentFormUrl && consentFormUrl !== "null" && consentFormUrl !== "undefined" && consentFormUrl !== "";
+                    
+                    if (isValidForm) {
+                      const finalUrl = consentFormUrl.startsWith("data:") ? consentFormUrl : getFileUrl(consentFormUrl);
+                      const isPdf = typeof finalUrl === "string" && (finalUrl.toLowerCase().includes(".pdf") || finalUrl.startsWith("data:application/pdf"));
+                      
+                      if (isPdf) {
+                         return (
+                           <div className="relative w-full flex items-center justify-center py-2">
+                             <div className="h-16 px-4 bg-muted/50 rounded-lg border border-border flex items-center justify-center gap-3">
+                               <ClipboardCheck className="w-5 h-5 text-primary" />
+                               <span className="text-sm font-semibold text-foreground">Consent Form (PDF)</span>
+                             </div>
+                           </div>
+                         );
+                      }
+                      return (
+                        <div className="relative w-full flex items-center justify-center">
+                          <img
+                            src={finalUrl}
+                            alt="Consent Form"
+                            className="h-16 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                const fallback = document.createElement('p');
+                                fallback.className = "text-xs text-destructive text-center py-4 font-semibold animate-in fade-in duration-200";
+                                fallback.innerText = "Form image failed to load / Invalid format";
+                                parent.appendChild(fallback);
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <p className="text-xs text-destructive text-center py-4">
+                        Form not attached
+                      </p>
+                    );
+                  })()}
+                </div>
+              </div>
+
               <div className="p-3 bg-secondary/20 border border-secondary rounded-xl mt-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">

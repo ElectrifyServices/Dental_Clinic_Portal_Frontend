@@ -115,7 +115,13 @@ export function FollowUpScheduler({
                 value={followUpDate}
                 onChange={(e) => onDateChange(e.target.value)}
                 disabled={!!bookedFollowUp}
-                min={new Date().toISOString().split("T")[0]}
+                min={(() => {
+                  const today = new Date();
+                  const year = today.getFullYear();
+                  const month = String(today.getMonth() + 1).padStart(2, "0");
+                  const day = String(today.getDate()).padStart(2, "0");
+                  return `${year}-${month}-${day}`;
+                })()}
                 className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
               />
             </div>

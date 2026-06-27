@@ -323,9 +323,17 @@ export function PatientConsultation({
     const toastId = toast.loading("Generating PDF report...");
     try {
       let finalConsultationData = { ...consultationData };
-      const detailData = await fetchConsultationDetail(patient.id, type);
-      if (detailData) {
-        finalConsultationData = { ...finalConsultationData, ...detailData };
+      try {
+        const consultationId = initialData?.id || (patient as any).consultationId || patient.id;
+        // Only fetch if it looks like a valid UUID (36 chars)
+        if (consultationId && consultationId.length === 36) {
+          const detailData = await fetchConsultationDetail(consultationId, type);
+          if (detailData) {
+            finalConsultationData = { ...finalConsultationData, ...detailData };
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("Could not fetch extra details, using local state:", fetchErr);
       }
 
       await downloadConsultationPDF({
@@ -463,9 +471,7 @@ export function PatientConsultation({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (consultationData.requiresTreatment && !consultationData.treatmentPlan.trim()) {
-      newErrors.treatmentPlan = "Treatment Plan Description is required when treatment is needed.";
-    }
+
     if (consultationData.followUpRequired && !selectedSlot) {
       newErrors.followUpSlot = "Please select a follow-up time slot.";
     }

@@ -1,8 +1,11 @@
-import { Modal, Button, Card, CardContent, DataTable, StatusBadge } from "@/components/ui";
+import { Modal, Button, Card, CardContent, DataTable, StatusBadge, Loading } from "@/components/ui";
 import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknote } from "lucide-react";
 import { useAppData } from "../../hooks/useAppData";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
+import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
+import apiClient from "../../services/apiClient";
+import { useState } from "react";
 
 interface PaymentHistoryModalProps {
   invoice: any;
@@ -12,6 +15,7 @@ interface PaymentHistoryModalProps {
 export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalProps) {
   const { patients } = useAppData();
   const { data: fetchedPayments, isLoading } = usePaymentHistoryQuery(invoice.id);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   if (isLoading) {
     return (
@@ -31,9 +35,66 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
     window.print();
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (invoice) {
-      generateInvoicePDF(invoice, patient);
+      try {
+        setIsDownloading(true);
+        // Yield to the event loop so the loading spinner appears before heavy processing
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const res = await apiClient.get('/invoice/history', { 
+          params: { patient_id: invoice.patientId || patient?.id } 
+        });
+        
+        let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
+        if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
+          rawData = rawData.invoices;
+        }
+        const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: any) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
+
+        if (fetchedInvoices.length > 0) {
+          let consolidatedItems: any[] = [];
+          let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
+          
+          fetchedInvoices.forEach((inv: any) => {
+             if (inv && inv.items) {
+             const itemsWithContext = inv.items.map((item: any) => ({
+                ...item,
+                invoice_number: inv.invoice_number || inv.id,
+                description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
+             }));
+             consolidatedItems = [...consolidatedItems, ...itemsWithContext];
+               totalSub += inv.subtotal || 0;
+               totalTax += inv.taxAmount || 0;
+               totalDiscount += inv.discountAmount || 0;
+               grandTotal += inv.total || 0;
+               totalPaid += inv.paidAmount || 0;
+               totalPending += inv.pendingAmount || 0;
+             }
+          });
+          
+          const freshData = {
+             ...fetchedInvoices[0],
+             items: consolidatedItems,
+             subtotal: totalSub,
+             taxAmount: totalTax,
+             discountAmount: totalDiscount,
+             total: grandTotal,
+             paidAmount: totalPaid,
+             pendingAmount: totalPending,
+             invoice_number: "STATEMENT",
+             date: new Date().toISOString(),
+          };
+          await generateInvoicePDF(freshData, patient);
+        } else {
+          await generateInvoicePDF(invoice, patient);
+        }
+      } catch (err) {
+        console.error("Failed to fetch fresh invoice, generating from cache", err);
+        await generateInvoicePDF(invoice, patient);
+      } finally {
+        setIsDownloading(false);
+      }
     }
   };
 
@@ -81,14 +142,19 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
             <Button variant="outline" onClick={handlePrint} className="gap-2">
               <Printer className="w-4 h-4" /> Print Invoice
             </Button>
-            <Button onClick={handleDownload} className="gap-2">
-              <Download className="w-4 h-4" /> Download PDF
+            <Button variant="outline" onClick={handleDownload} className="gap-2" disabled={isDownloading}>
+              <Download className="w-4 h-4" /> {isDownloading ? "Preparing..." : "Download PDF"}
             </Button>
           </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
+        {isDownloading && (
+          <div className="absolute inset-0 z-50 bg-background/60 backdrop-blur-[1px] flex items-center justify-center rounded-2xl">
+            <Loading type="spinner" text="Generating PDF..." />
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-4">
           <Card className="border-border/50 shadow-sm bg-muted/10">
             <CardContent className="p-4 flex flex-col items-center justify-center text-center">
