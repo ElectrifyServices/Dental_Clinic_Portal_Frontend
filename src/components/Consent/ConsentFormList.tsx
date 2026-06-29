@@ -146,7 +146,7 @@ export function ConsentFormList({
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         const isDraft = statusUpper === "DRAFT";
         return isSigned ? (
-          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10">
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-emerald-500/10 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20">
             <CheckCircle className="w-3 h-3" /> Signed
           </Badge>
         ) : isDraft ? (
@@ -154,7 +154,7 @@ export function ConsentFormList({
             <Clock className="w-3 h-3" /> Draft
           </Badge>
         ) : (
-          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10">
+          <Badge className="gap-1.5 uppercase font-black text-[9px] px-2.5 h-5 shadow-sm shadow-amber-500/10 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20">
             <Clock className="w-3 h-3" /> Pending
           </Badge>
         );

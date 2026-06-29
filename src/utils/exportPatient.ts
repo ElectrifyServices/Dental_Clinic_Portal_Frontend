@@ -1,6 +1,7 @@
 import apiClient from "../services/apiClient";
 import { parseApiResponse } from "../services/parseApiResponse";
 import { normalizePatient } from "../hooks/patients/usePatientDetailQuery";
+import logoImg from '../logo.png';
 
 export const exportPatientReport = async (
   patientId: string,
@@ -38,321 +39,401 @@ export const exportPatientReport = async (
   const allergiesList = patient.allergyNames?.length ? patient.allergyNames : patient.allergies;
   const medicalHistoryList = patient.medicalHistoryNames?.length ? patient.medicalHistoryNames : patient.medicalHistory;
 
+  const rawDoctor = patient.doctor_name || patient.doctorName || patientAppointments[0]?.doctorName || patientAppointments[0]?.doctor_name || "Consulting Doctor";
+  const displayDoctorName = rawDoctor.toLowerCase().startsWith("dr") ? rawDoctor : `Dr. ${rawDoctor}`;
+
+  const displayPatientId = patient.patient_code || patient.patientCode || patient.id.split('-')[0];
+  const patientGender = patient.gender || "N/A";
+  const patientBlood = patient.bloodGroup || patient.blood_group ? (patient.bloodGroup || patient.blood_group).replace('_', ' ') : "N/A";
+
   const printContent = `
     <html>
       <head>
-        <title>Patient Full Report - ${patient.name}</title>
+        <title>Patient Report - ${patient.name}</title>
         <style>
-          @page { size: A4; margin: 20mm; }
-          body { 
+          @page { size: A4; margin: 15mm 20mm 28mm 20mm; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
+            color: #1e293b;
+            font-size: 11px;
             line-height: 1.4;
-            margin: 0;
-            padding: 0;
+            background: #fff;
           }
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-          }
-          .header h1 { color: #1e40af; margin: 0; font-size: 28px; }
-          .header p { margin: 5px 0; color: #666; font-size: 14px; }
-          
-          .section { margin-bottom: 25px; }
-          .section-title {
-            font-size: 16px;
-            font-bold: bold;
-            color: #1e40af;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-          
-          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-          .info-item { margin-bottom: 10px; }
-          .info-label { font-size: 12px; color: #666; font-weight: 600; }
-          .info-value { font-size: 14px; color: #111; font-weight: 500; }
-          
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th { text-align: left; background: #f8fafc; padding: 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #e2e8f0; color: #475569; }
-          td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-          
-          .alert-box {
-            background: #fff7ed;
-            border: 1px solid #ffedd5;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-          }
-          .alert-title { color: #9a3412; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-          .alert-text { color: #c2410c; font-size: 13px; }
 
-          .footer-sig {
-            margin-top: 60px;
+          /* ===== TABLE-BASED PRINT LAYOUT ===== */
+          .print-layout { width: 100%; border-collapse: collapse; }
+          .print-layout > thead td { vertical-align: bottom; padding: 0 5px; }
+          .print-layout > tbody td { vertical-align: top; padding: 0 5px; }
+          .print-layout > tfoot { display: none; } /* hide tfoot, we use fixed footer */
+
+          /* Header area */
+          .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 12px 0;
+            border-bottom: 2px solid #1e40af;
+          }
+          .report-header .logo img { height: 70px; width: auto; }
+          .report-header .patient-info { text-align: right; }
+          .report-header .patient-name { font-size: 17px; font-weight: 800; color: #1e40af; text-transform: uppercase; }
+          .report-header .patient-detail { font-size: 11px; color: #475569; margin-top: 2px; }
+
+          /* Fixed footer - always at page bottom */
+          .fixed-footer {
+            display: none;
+          }
+          @media print {
+            .fixed-footer {
+              display: block;
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              padding: 6px 20mm;
+              border-top: 1px solid #cbd5e1;
+              background: #fff;
+            }
+            .fixed-footer .footer-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+          }
+          .footer-clinic { font-size: 9px; color: #475569; line-height: 1.5; }
+          .footer-clinic strong { color: #1e293b; }
+          .footer-note { font-size: 8px; color: #94a3b8; text-align: right; }
+
+          /* Screen footer (visible in browser) */
+          .screen-footer {
+            border-top: 1px solid #cbd5e1;
+            padding: 8px 0 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 20px;
+          }
+          @media print { .screen-footer { display: none; } }
+
+          /* Content sections */
+          .section { margin-bottom: 14px; }
+          .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #1e40af;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+          }
+
+          /* Info grid */
+          .info-grid { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+          .info-grid .item { min-width: 45%; }
+          .info-grid .item-full { width: 100%; }
+          .info-grid .label { font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+          .info-grid .value { font-size: 12px; color: #0f172a; font-weight: 500; }
+
+          /* Data tables */
+          .data-table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 4px; }
+          .data-table th {
+            text-align: left; background: #f1f5f9; padding: 5px 8px;
+            font-size: 10px; font-weight: 700; color: #475569;
+            border-bottom: 1px solid #cbd5e1; text-transform: uppercase;
+          }
+          .data-table td {
+            padding: 4px 8px; border-bottom: 1px solid #e2e8f0;
+            font-size: 11px; color: #334155;
+          }
+          .data-table tr:nth-child(even) { background: #f8fafc; }
+
+          /* Alert box */
+          .alert-box {
+            background: #fef3c7; border: 1px solid #fbbf24;
+            padding: 8px 10px; border-radius: 4px; margin-top: 4px;
+          }
+          .alert-box .alert-label { font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase; }
+          .alert-box .alert-text { font-size: 11px; color: #78350f; margin-top: 2px; }
+
+          /* Signature block */
+          .signature-block {
+            margin-top: 30px;
             display: flex;
             justify-content: flex-end;
-            padding-right: 50px;
+            padding-right: 20px;
           }
-          .sig-container { text-align: center; }
-          .sig-line { border-top: 1px solid #333; width: 200px; margin-bottom: 8px; }
-          .sig-name { font-weight: bold; font-size: 15px; color: #111; }
-          .sig-title { font-size: 12px; color: #666; }
+          .signature-block .sig { text-align: center; }
+          .signature-block .sig-line { border-top: 1px solid #334155; width: 180px; margin-bottom: 5px; }
+          .signature-block .sig-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+          .signature-block .sig-role { font-size: 10px; color: #64748b; }
 
-          .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 100px;
-            color: rgba(226, 232, 240, 0.4);
-            z-index: -1;
-            pointer-events: none;
-            white-space: nowrap;
+          /* Page border (print only) */
+          @media print {
+            .page-border {
+              position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+              border: 1px solid #cbd5e1;
+              pointer-events: none; z-index: 9999;
+            }
+          }
+          @media screen {
+            body { background: #e2e8f0; padding: 20px; }
+            .page-border { display: none; }
+            .fixed-footer { display: none; }
+            .print-layout { max-width: 210mm; margin: 0 auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 20px; }
           }
         </style>
       </head>
       <body>
-        <div class="watermark">OPAL SMILES</div>
-        
-        <div class="header">
-          <h1>🦷 Opal Smiles Dental Studio</h1>
-          <p>Advanced Multispeciality Dental Clinic & Implant Centre</p>
-          <p>#102, C Block, South Extension, New Delhi | Ph: 9204972991</p>
-        </div>
+        <div class="page-border"></div>
 
-        <div class="section">
-          <div class="section-title">Personal Information</div>
-          <div class="grid">
-            <div class="info-item">
-              <div class="info-label">Patient Name</div>
-              <div class="info-value">${patient.name}</div>
+        <!-- Fixed footer: always at page bottom in print -->
+        <div class="fixed-footer">
+          <div class="footer-row">
+            <div class="footer-clinic">
+              <strong>Opal Smiles Dental Studio</strong><br/>
+              104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015<br/>
+              Phone: +91 99981 93256 | Email: hello@opalsmiles.in<br/>
+              Mon–Sat: 10:00 AM – 8:00 PM | Emergency: 24/7
             </div>
-            <div class="info-item">
-              <div class="info-label">Patient ID</div>
-              <div class="info-value">${patient.id}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Phone Number</div>
-              <div class="info-value">${patient.phone}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Email Address</div>
-              <div class="info-value">${patient.email || "N/A"}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Date of Birth</div>
-              <div class="info-value">${patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : "N/A"}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Gender</div>
-              <div class="info-value">${patient.gender || "N/A"}</div>
-            </div>
-            <div class="info-item" style="grid-column: span 2;">
-              <div class="info-label">Residential Address</div>
-              <div class="info-value">${patient.address || "N/A"}</div>
+            <div class="footer-note">
+              Computer-generated report<br/>
+              ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
             </div>
           </div>
         </div>
 
-        ${
-          medicalHistoryList?.length > 0 || allergiesList?.length > 0
-            ? `
-          <div class="section">
-            <div class="section-title">Medical Alerts</div>
-            <div class="alert-box">
-              ${
-                allergiesList?.length > 0
-                  ? `
-                <div class="alert-title">ALLERGIES</div>
-                <div class="alert-text">${allergiesList.join(", ")}</div>
-                <div style="margin-bottom: 10px;"></div>
-              `
-                  : ""
-              }
-              ${
-                medicalHistoryList?.length > 0
-                  ? `
-                <div class="alert-title">MEDICAL CONDITIONS</div>
-                <div class="alert-text">${medicalHistoryList.join(", ")}</div>
-              `
-                  : ""
-              }
-            </div>
-          </div>
-        `
-            : ""
-        }
-
-        ${
-          patientAppointments.length > 0
-            ? `
-          <div class="section">
-            <div class="section-title">Appointment History</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Treatment / Purpose</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${patientAppointments
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime(),
-                  )
-                  .map(
-                    (a) => `
-                  <tr>
-                    <td>${new Date(a.date).toLocaleDateString()}</td>
-                    <td>${a.time}</td>
-                    <td>${a.treatment || a.type || "General Consultation"}</td>
-                    <td>${a.status.toUpperCase()}</td>
-                  </tr>
-                `,
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
-        `
-            : ""
-        }
-
-        ${
-          patientTreatments.length > 0
-            ? `
-          <div class="section">
-            <div class="section-title">Treatment History</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Treatment Name</th>
-                  <th>Notes</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${patientTreatments
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime(),
-                  )
-                  .map(
-                    (t) => `
-                  <tr>
-                    <td>${new Date(t.date).toLocaleDateString()}</td>
-                    <td>${t.name || t.treatmentName || "N/A"}</td>
-                    <td>${t.notes || "—"}</td>
-                    <td>${(t.status || "completed").toUpperCase()}</td>
-                  </tr>
-                `,
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
-        `
-            : ""
-        }
-
-        ${
-          prescriptions.length > 0
-            ? `
-          <div class="section">
-            <div class="section-title">Prescription History</div>
-            ${prescriptions
-              .map(
-                (p: any) => `
-              <div style="margin-bottom: 15px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                  <span style="font-weight: bold; font-size: 13px;">${p.treatment}</span>
-                  <span style="color: #666; font-size: 12px;">${new Date(p.date).toLocaleDateString()}</span>
+        <table class="print-layout">
+          <!-- ====== REPEATING HEADER (every page) ====== -->
+          <thead>
+            <tr><td>
+              <div class="report-header">
+                <div class="logo">
+                  <img src="${logoImg}" crossorigin="anonymous" />
                 </div>
-                <table style="margin-top: 0;">
+                <div class="patient-info">
+                  <div class="patient-name">${patient.name}</div>
+                  <div class="patient-detail"><strong>Patient ID:</strong> ${displayPatientId}</div>
+                  <div class="patient-detail"><strong>Phone:</strong> ${patient.phone || 'N/A'}</div>
+                  <div class="patient-detail">${patientGender} | ${patientBlood}</div>
+                </div>
+              </div>
+              <div style="height: 10px;"></div>
+            </td></tr>
+          </thead>
+
+          <tfoot><tr><td><div style="height:1px;"></div></td></tr></tfoot>
+
+          <!-- ====== MAIN CONTENT ====== -->
+          <tbody>
+            <tr><td>
+
+              <!-- Personal Information -->
+              <div class="section">
+                <div class="section-title">Personal Information</div>
+                <div class="info-grid">
+                  <div class="item">
+                    <div class="label">Email</div>
+                    <div class="value">${patient.email || 'N/A'}</div>
+                  </div>
+                  <div class="item">
+                    <div class="label">Date of Birth</div>
+                    <div class="value">${patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                  </div>
+                  <div class="item">
+                    <div class="label">Gender</div>
+                    <div class="value">${patientGender}</div>
+                  </div>
+                  <div class="item">
+                    <div class="label">Blood Group</div>
+                    <div class="value">${patientBlood}</div>
+                  </div>
+                  <div class="item-full">
+                    <div class="label">Address</div>
+                    <div class="value">${patient.address || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Medical Alerts -->
+              ${
+                (medicalHistoryList?.length > 0 || allergiesList?.length > 0)
+                  ? `
+              <div class="section">
+                <div class="section-title">Medical Alerts</div>
+                <div class="alert-box">
+                  ${allergiesList?.length > 0 ? `
+                    <div class="alert-label">⚠ Allergies</div>
+                    <div class="alert-text">${allergiesList.join(', ')}</div>
+                  ` : ''}
+                  ${medicalHistoryList?.length > 0 ? `
+                    <div class="alert-label" style="margin-top: ${allergiesList?.length > 0 ? '6px' : '0'};">Medical Conditions</div>
+                    <div class="alert-text">${medicalHistoryList.join(', ')}</div>
+                  ` : ''}
+                </div>
+              </div>
+              ` : ''
+              }
+
+              <!-- Appointment History -->
+              ${
+                patientAppointments.length > 0
+                  ? `
+              <div class="section">
+                <div class="section-title">Appointment History</div>
+                <table class="data-table">
                   <thead>
                     <tr>
-                      <th style="padding: 5px 10px;">Medicine</th>
-                      <th style="padding: 5px 10px;">Dosage</th>
-                      <th style="padding: 5px 10px;">Frequency</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Treatment / Purpose</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${p.prescriptions
-                      .map(
-                        (m: any) => `
-                      <tr>
-                        <td style="padding: 5px 10px;">${m.medicine}</td>
-                        <td style="padding: 5px 10px;">${m.dosage}</td>
-                        <td style="padding: 5px 10px;">${m.frequency}</td>
-                      </tr>
-                    `,
-                      )
-                      .join("")}
+                    ${patientAppointments
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .map((a) => `
+                    <tr>
+                      <td>${new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                      <td>${a.time}</td>
+                      <td>${a.treatment || a.type || 'General Consultation'}</td>
+                      <td style="font-weight:600; color: ${a.status === 'COMPLETED' ? '#16a34a' : '#2563eb'}">${a.status.toUpperCase()}</td>
+                    </tr>
+                    `).join('')}
                   </tbody>
                 </table>
               </div>
-            `,
-              )
-              .join("")}
-          </div>
-        `
-            : ""
-        }
+              ` : ''
+              }
 
-        ${
-          patientInvoices.length > 0
-            ? `
-          <div class="section">
-            <div class="section-title">Billing Summary</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Invoice #</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${patientInvoices
-                  .map(
-                    (inv) => `
-                  <tr>
-                    <td>${inv.id}</td>
-                    <td>${new Date(inv.date).toLocaleDateString()}</td>
-                    <td>₹${(inv.total || inv.amount || 0).toLocaleString()}</td>
-                    <td style="color: ${inv.status === "paid" ? "#16a34a" : "#dc2626"}">${(inv.status || "").toUpperCase()}</td>
-                  </tr>
-                `,
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
-        `
-            : ""
-        }
+              <!-- Treatment History -->
+              ${
+                patientTreatments.length > 0
+                  ? `
+              <div class="section">
+                <div class="section-title">Treatment History</div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Treatment Name</th>
+                      <th>Notes</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${patientTreatments
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .map((t) => `
+                    <tr>
+                      <td>${new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                      <td>${t.name || t.treatmentName || 'N/A'}</td>
+                      <td>${t.notes || '—'}</td>
+                      <td style="font-weight:600;">${(t.status || 'completed').toUpperCase()}</td>
+                    </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              ` : ''
+              }
 
-        <div class="footer-sig">
-          <div class="sig-container">
-            <div class="sig-line"></div>
-            <div class="sig-name">Dr. Rajesh Sharma</div>
-            <div class="sig-title">BDS, MDS (Oral Surgery)</div>
-            <div class="sig-title">Reg No: 12345/A</div>
+              <!-- Prescription History -->
+              ${
+                prescriptions.length > 0
+                  ? `
+              <div class="section">
+                <div class="section-title">Prescription History</div>
+                ${prescriptions.map((p: any) => `
+                  <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                      <span style="font-weight: 700; font-size: 11px;">${p.treatment}</span>
+                      <span style="color: #64748b; font-size: 10px;">${new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    </div>
+                    <table class="data-table" style="margin: 0;">
+                      <thead>
+                        <tr>
+                          <th>Medicine</th>
+                          <th>Dosage</th>
+                          <th>Frequency</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${p.prescriptions.map((m: any) => `
+                        <tr>
+                          <td>${m.medicine}</td>
+                          <td>${m.dosage}</td>
+                          <td>${m.frequency}</td>
+                        </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                `).join('')}
+              </div>
+              ` : ''
+              }
+
+              <!-- Billing Summary -->
+              ${
+                patientInvoices.length > 0
+                  ? `
+              <div class="section">
+                <div class="section-title">Billing Summary</div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${patientInvoices.map((inv) => `
+                    <tr>
+                      <td style="font-weight:600;">${inv.invoice_number || inv.id}</td>
+                      <td>${new Date(inv.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                      <td>₹${(inv.total || inv.amount || 0).toLocaleString('en-IN')}</td>
+                      <td style="font-weight:600; color: ${inv.status === 'paid' ? '#16a34a' : '#dc2626'}">${(inv.status || '').toUpperCase()}</td>
+                    </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              ` : ''
+              }
+
+              <!-- Authorized Signature -->
+              <div class="signature-block">
+                <div class="sig">
+                  <div class="sig-line"></div>
+                  <div class="sig-name">${displayDoctorName}</div>
+                  <div class="sig-role">Authorized Signatory</div>
+                  <div class="sig-role">Opal Smiles Dental Studio</div>
+                </div>
+              </div>
+
+            </td></tr>
+          </tbody>
+        </table>
+
+        <!-- Screen-only footer (browser preview) -->
+        <div class="screen-footer" style="padding: 8px 20px;">
+          <div class="footer-clinic">
+            <strong>Opal Smiles Dental Studio</strong><br/>
+            104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015<br/>
+            Phone: +91 99981 93256 | Email: hello@opalsmiles.in<br/>
+            Mon–Sat: 10:00 AM – 8:00 PM | Emergency: 24/7
+          </div>
+          <div class="footer-note">
+            Computer-generated report<br/>
+            ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
           </div>
         </div>
 
-        <div style="position: fixed; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 10px; color: #999;">
-          This is a computer-generated medical report. Generated on ${new Date().toLocaleString()}
-        </div>
       </body>
     </html>
   `;

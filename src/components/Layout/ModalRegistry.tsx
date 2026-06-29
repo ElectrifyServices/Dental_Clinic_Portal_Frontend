@@ -329,7 +329,7 @@ export function ModalRegistry() {
       witnessSignature: form.witness_signature || "",
       doctorName: doctorObj?.name || form.doctor_name || "",
       doctorId: form.doctor_id || "",
-      consentFormUrl: form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
+      consentFormUrl: form.offline_consent_image_url || form.offlineConsentImageUrl || form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
     };
   }, [apiConsentDetail, selectedConsentForm, staffMembers]);
 
@@ -337,28 +337,29 @@ export function ModalRegistry() {
     if (!apiConsentDetail) return selectedConsentForm;
     const form = apiConsentDetail?.data || apiConsentDetail;
     const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
+    const patientObj = patients.find((p: any) => p.id === (form.patient?.id || form.patient_id));
     return {
       id: form.id,
       patientId: form.patient_id || "",
-      patientName: form.patient_name || "",
+      patientName: form.patient?.name || form.patient_name || patientObj?.name || "Unknown",
       treatmentType: form.procedure_type || "",
       content: form.consent_declaration || "",
       riskDisclosure: form.clinical_risks || "",
       alternativeTreatments: form.alternative_risks || "",
       postTreatmentCare: form.post_treatment_care || "Follow doctor's post-treatment guidelines carefully.",
       witnessName: form.witness_name || "",
-      patientSignature: form.patient_signature || "",
-      witnessSignature: form.witness_signature || "",
+      patientSignature: form.patient_signature_url || form.patient_signature || "",
+      witnessSignature: form.witness_signature_url || form.witness_signature || "",
       doctorName: doctorObj?.name || form.doctor_name || "Attending Dentist",
       doctorId: form.doctor_id || "",
       date: form.created_at || new Date().toISOString(),
       createdDate: form.created_at || form.createdAt || null,
       signedDate: form.signed_on || null,
       status: !form.signed_on ? "PENDING" : (form.status || "PENDING"),
-      signature: form.patient_signature || "",
-      consentFormUrl: form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
+      signature: form.patient_signature_url || form.patient_signature || "",
+      consentFormUrl: form.offline_consent_image_url || form.offlineConsentImageUrl || form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
     };
-  }, [apiConsentDetail, selectedConsentForm, staffMembers]);
+  }, [apiConsentDetail, selectedConsentForm, staffMembers, patients]);
 
   return (
     <>

@@ -10,10 +10,11 @@ import {
   CreditCard,
   Stethoscope,
 } from "lucide-react";
-import { Modal, Button, Badge, Card, CardContent, DataTable } from "@/components/ui";
+import { Modal, Button, Badge, Card, CardContent, DataTable, Loading } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { useAppData } from "../../hooks/useAppData";
-import { useInvoiceQuery } from "../../hooks/billing/useInvoiceQuery";
+import { useInvoiceQuery, normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
+import apiClient from "../../services/apiClient";
 
 interface InvoiceViewerProps {
   invoiceId: string;
@@ -30,6 +31,7 @@ export function InvoiceViewer({
 }: InvoiceViewerProps) {
   const { patients, corporatePlans } = useAppData();
   const [activeId, setActiveId] = useState(invoiceId);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     setActiveId(invoiceId);
@@ -74,12 +76,66 @@ export function InvoiceViewer({
     ? corporatePlans.find((cp) => cp.id === invoice.corporatePlanId)
     : null;
 
-  const handleDownload = () => {
-    generateInvoicePDF(invoice, patient);
-  };
 
-  const handlePrint = () => {
-    window.print();
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true);
+      // Yield to the event loop so the loading spinner appears before heavy processing
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const res = await apiClient.get('/invoice/history', { 
+        params: { patient_id: patientId || invoice.patientId || patient?.id } 
+      });
+      let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
+      if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
+        rawData = rawData.invoices;
+      }
+      const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: any) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
+
+      if (fetchedInvoices.length > 0) {
+        let consolidatedItems: any[] = [];
+        let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
+        
+        fetchedInvoices.forEach((inv: any) => {
+           if (inv && inv.items) {
+             const itemsWithContext = inv.items.map((item: any) => ({
+                ...item,
+                invoice_number: inv.invoice_number || inv.id,
+                description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
+             }));
+             consolidatedItems = [...consolidatedItems, ...itemsWithContext];
+             totalSub += inv.subtotal || 0;
+             totalTax += inv.taxAmount || 0;
+             totalDiscount += inv.discountAmount || 0;
+             grandTotal += inv.total || 0;
+             totalPaid += inv.paidAmount || 0;
+             totalPending += inv.pendingAmount || 0;
+           }
+        });
+        
+        const freshData = {
+           ...fetchedInvoices[0],
+           items: consolidatedItems,
+           subtotal: totalSub,
+           taxAmount: totalTax,
+           discountAmount: totalDiscount,
+           total: grandTotal,
+           paidAmount: totalPaid,
+           pendingAmount: totalPending,
+           invoice_number: "STATEMENT",
+           date: new Date().toISOString(),
+        };
+        await generateInvoicePDF(freshData, patient);
+      } else {
+        await generateInvoicePDF(invoice, patient);
+      }
+    } catch (err) {
+      console.error("Failed to fetch fresh invoice, generating from cache", err);
+      await generateInvoicePDF(invoice, patient);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const statusColors: Record<
@@ -115,17 +171,19 @@ export function InvoiceViewer({
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handlePrint} className="gap-2">
-              <Printer className="w-4 h-4" /> Print
-            </Button>
-            <Button onClick={handleDownload} className="gap-2">
-              <Download className="w-4 h-4" /> Download PDF
+            <Button onClick={handleDownload} className="gap-2" disabled={isDownloading}>
+              <Download className="w-4 h-4" /> {isDownloading ? "Preparing..." : "Download PDF"}
             </Button>
           </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
+        {isDownloading && (
+          <div className="absolute inset-0 z-50 bg-background/60 backdrop-blur-[1px] flex items-center justify-center rounded-2xl">
+            <Loading type="spinner" text="Generating PDF..." />
+          </div>
+        )}
         {/* Status Banner */}
         <div
           className={`p-4 rounded-2xl flex items-center justify-between border ${invoice.status === "paid"
