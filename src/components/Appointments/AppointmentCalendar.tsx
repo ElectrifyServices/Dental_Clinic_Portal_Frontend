@@ -173,6 +173,7 @@ export function AppointmentCalendar({
         time12: slot.time,
         appointmentCount,
         isPast: slotTime < now,
+        disabled: slot.disabled === true,
       };
     });
   }, [availableSlotsResponse, selectedDateObj]);

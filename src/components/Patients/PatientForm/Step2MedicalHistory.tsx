@@ -382,7 +382,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         <Label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
           <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2 group-hover:text-primary transition-colors" />
           <p className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Upload Clinical Images / X-rays</p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM)</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM) - Max 5MB per file</p>
           <Input
             type="file"
             multiple

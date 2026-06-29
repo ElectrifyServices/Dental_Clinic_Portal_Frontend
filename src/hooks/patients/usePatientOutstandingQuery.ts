@@ -8,7 +8,7 @@ export interface PatientOutstandingResponse {
 export function usePatientOutstandingQuery() {
   return useApiQuery<PatientOutstandingResponse>({
     queryKey: ["patients", "outstanding"],
-    endpoint: "/patient/stats/outstanding",
+    endpoint: "/patient/stats/pending-billing",
     method: "get",
   });
 }

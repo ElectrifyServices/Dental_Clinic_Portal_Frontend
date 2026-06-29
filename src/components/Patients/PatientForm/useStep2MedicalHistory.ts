@@ -18,12 +18,12 @@ export function useStep2MedicalHistory({
   setSelectedAllergies,
   setFormData,
 }: UseStep2MedicalHistoryProps) {
-  const { data: apiMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
+  const { data: apiMedicalHistories } = useMedicalHistoriesQuery({ enabled: true, staleTime: 0 });
   const createMedicalHistory = useCreateMedicalHistoryMutation();
   const deleteMedicalHistory = useDeleteMedicalHistoryMutation();
   const { confirmDelete } = useModal();
 
-  const { data: apiAllergies } = useAllergiesQuery({ staleTime: 0 });
+  const { data: apiAllergies } = useAllergiesQuery({ enabled: true, staleTime: 0 });
   const createAllergy = useCreateAllergyMutation();
   const deleteAllergy = useDeleteAllergyMutation();
 

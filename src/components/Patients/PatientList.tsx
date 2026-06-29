@@ -194,6 +194,8 @@ export function PatientList({
           onDelete={onDeletePatient}
           onExport={(id) => onExportPatient?.(id)}
           onPrintBarcode={printBarcode}
+          onToggleStatus={handleToggleStatus}
+          onToggleCategory={handleToggleCategory}
         />
       )}
 

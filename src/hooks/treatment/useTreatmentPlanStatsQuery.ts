@@ -109,7 +109,7 @@ export function useTreatmentPlanStatsQuery(
     method: "get",
     options: {
       enabled: options?.enabled ?? true,
-      staleTime: 30 * 1000,
+      staleTime: 0,
     },
   });
 }

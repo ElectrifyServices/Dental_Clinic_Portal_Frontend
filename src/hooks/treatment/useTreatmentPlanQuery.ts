@@ -11,7 +11,7 @@ export function useTreatmentPlanQuery(id?: string, options?: { enabled?: boolean
     method: "get",
     options: {
       enabled,
-      staleTime: 30 * 1000,
+      staleTime: 0,
     },
   });
 }

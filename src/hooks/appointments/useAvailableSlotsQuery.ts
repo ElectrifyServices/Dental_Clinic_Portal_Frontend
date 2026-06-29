@@ -3,6 +3,7 @@ import { useApiQuery } from "../useApiQuery";
 export interface AvailableSlot {
   time: string;
   appointment_count: number;
+  disabled?: boolean;
 }
 
 export interface AvailableSlotsData {

@@ -17,7 +17,7 @@ interface FollowUpSchedulerProps {
   followUpDoctorId: string;
   followUpDate: string;
   selectedSlot: string | null;
-  availableSlots: { time24: string; time12: string; appointmentCount: number }[];
+  availableSlots: { time24: string; time12: string; appointmentCount: number; disabled?: boolean }[];
   doctors: any[];
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDoctorChange: (id: string) => void;
@@ -136,23 +136,27 @@ export function FollowUpScheduler({
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-primary/20 rounded-xl bg-card/50 custom-scrollbar">
                     {availableSlots.map((slot) => {
+                      const isApiDisabled = slot.disabled === true;
                       const isSelected = selectedSlot === slot.time24;
                       return (
                         <Button
                           key={slot.time24}
                           type="button"
-                          onClick={() => onSlotSelect(slot.time24)}
+                          disabled={isApiDisabled}
+                          onClick={() => !isApiDisabled && onSlotSelect(slot.time24)}
                           className={`
                             relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5
-                            ${isSelected
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
-                              : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
+                            ${isApiDisabled
+                              ? "bg-red-50 text-red-400 border-red-200 cursor-not-allowed line-through opacity-70"
+                              : isSelected
+                                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
+                                : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
                             }
                           `}
-                          title={`Select ${slot.time12}`}
+                          title={isApiDisabled ? "This slot is blocked" : `Select ${slot.time12}`}
                         >
-                          {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />}
-                          {slot.time12} ({slot.appointmentCount})
+                          {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />)}
+                          {isApiDisabled ? slot.time12 : `${slot.time12} (${slot.appointmentCount})`}
                         </Button>
                       );
                     })}

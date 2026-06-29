@@ -7,6 +7,7 @@ import {
 } from "@/lib/schemas/patient.schema";
 import { generatePatientId, generateBarcode, calculateAge } from "./utils";
 import { useCheckEmployeeQuery } from "@/hooks/patients/useCheckEmployeeQuery";
+import { toast } from "@/components/ui";
 
 const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "A_POSITIVE": "A+",
@@ -344,6 +345,11 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Profile picture size cannot exceed 2MB.");
+        e.target.value = "";
+        return;
+      }
       setExtraData((prev) => ({ ...prev, rawAvatarFile: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -356,6 +362,11 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
   const handleConsentFormUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Consent form size cannot exceed 5MB.");
+        e.target.value = "";
+        return;
+      }
       setExtraData((prev) => ({ ...prev, rawConsentFormFile: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -367,11 +378,27 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
 
   const handleDentalFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`File "${file.name}" exceeds the 5MB limit and was not uploaded.`);
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length === 0) {
+      e.target.value = "";
+      return;
+    }
+
     setExtraData((prev) => ({
       ...prev,
-      rawDentalFiles: [...(prev.rawDentalFiles || []), ...files],
+      rawDentalFiles: [...(prev.rawDentalFiles || []), ...validFiles],
     }));
-    files.forEach((file) => {
+
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const current = form.getValues("dentalFiles") ?? [];
@@ -382,6 +409,8 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       };
       reader.readAsDataURL(file);
     });
+
+    e.target.value = ""; // Clear input
   };
 
   return {

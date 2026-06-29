@@ -147,7 +147,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Click to update photo
+          Click to update photo (Max 2MB)
         </p>
       </div>
 

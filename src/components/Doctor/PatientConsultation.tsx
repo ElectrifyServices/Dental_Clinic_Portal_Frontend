@@ -279,8 +279,11 @@ export function PatientConsultation({
   );
 
   useEffect(() => {
-    refetchConsultations();
-  }, [patient.id, refetchConsultations]);
+    const idToUse = patient.patientId || patient.id;
+    if (idToUse && !idToUse.startsWith("WALK-")) {
+      refetchConsultations();
+    }
+  }, [patient.id, patient.patientId, refetchConsultations]);
 
   const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
     consultationData.followUpRequired ? followUpDoctorId : null,
@@ -299,7 +302,7 @@ export function PatientConsultation({
         const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
         time12 = `${hour12}:${m} ${ampm}`;
       }
-      return { time24, time12, appointmentCount: s.appointment_count || 0 };
+      return { time24, time12, appointmentCount: s.appointment_count || 0, disabled: s.disabled === true };
     });
   }, [slotsData]);
 

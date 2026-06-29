@@ -6,6 +6,7 @@ interface Slot {
   time12: string;
   appointmentCount: number;
   isPast: boolean;
+  disabled?: boolean;
 }
 
 interface TimeSlotGridProps {
@@ -23,22 +24,29 @@ export function TimeSlotGrid({
     <div className="bg-muted/50 p-4 rounded-2xl border border-border">
       {slots.length > 0 ? (
         <div className="grid grid-cols-3 gap-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-          {slots.map((slot) => (
-            <Button
-              key={slot.time24}
-              disabled={slot.isPast}
-              onClick={() => onSelectTime(slot.time12)}
-              className={`py-2.5 px-2 text-xs font-bold rounded-full border transition-all flex items-center justify-center ${
-                slot.isPast
-                  ? "bg-muted text-muted-foreground/60 border-border cursor-not-allowed opacity-60"
-                  : selectedTime === slot.time12
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-primary shadow-md transform scale-105"
-                    : "bg-green-50/50 text-green-700 border-green-200 hover:border-green-400 hover:bg-green-50"
-              }`}
-            >
-              {slot.time12} ({slot.appointmentCount})
-            </Button>
-          ))}
+          {slots.map((slot) => {
+            const isApiDisabled = slot.disabled === true;
+            const isDisabled = slot.isPast || isApiDisabled;
+            return (
+              <Button
+                key={slot.time24}
+                disabled={isDisabled}
+                onClick={() => !isDisabled && onSelectTime(slot.time12)}
+                title={isApiDisabled ? "This slot is blocked" : undefined}
+                className={`py-2.5 px-2 text-xs font-bold rounded-full border transition-all flex items-center justify-center ${
+                  isApiDisabled
+                    ? "bg-red-50 text-red-400 border-red-200 cursor-not-allowed line-through opacity-75"
+                    : slot.isPast
+                      ? "bg-muted text-muted-foreground/60 border-border cursor-not-allowed opacity-60"
+                      : selectedTime === slot.time12
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-primary shadow-md transform scale-105"
+                        : "bg-green-50/50 text-green-700 border-green-200 hover:border-green-400 hover:bg-green-50"
+                }`}
+              >
+                {isApiDisabled ? "🔒 " : ""}{slot.time12} {!isApiDisabled && `(${slot.appointmentCount})`}
+              </Button>
+            );
+          })}
         </div>
       ) : (
         <div className="p-8 text-center bg-card rounded-xl border border-dashed border-border">

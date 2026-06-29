@@ -13,7 +13,6 @@ import { useMedicalHistoriesQuery } from './patients/useMedicalHistoriesQuery';
 import { useAllergiesQuery } from './patients/useAllergiesQuery';
 import { useBulkImportEmployeeMutation } from './corporate/useBulkImportEmployeeMutation';
 import { useDebounce } from './useDebounce';
-import { toast } from '../components/ui';
 
 export function usePatientData() {
   const queryClient = useQueryClient();
@@ -56,8 +55,8 @@ export function usePatientData() {
     filters: apiFilters,
   }, { enabled: isEnabled });
 
-  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ enabled: false });
-  const { data: rawAllergies } = useAllergiesQuery({ enabled: false });
+  const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 300000 });
+  const { data: rawAllergies } = useAllergiesQuery({ staleTime: 300000 });
 
   const { mutateAsync: deletePatientMutation } = useDeletePatientMutation();
   const { mutateAsync: updateStatusMutation } = useUpdatePatientStatusMutation();
@@ -193,7 +192,7 @@ export function usePatientData() {
       const isNew = !patient?.id;
 
       const payload = mapFormDataToCreatePayload(patient, {
-        primaryPatientId: parentPatientId || undefined,
+        primaryPatientId: parentPatientId || patient.parentId || patient.primaryPatientId || patient.primary_patient_id || undefined,
       });
 
       if (isNew) {

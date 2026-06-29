@@ -34,19 +34,21 @@ export function useDoctorsListQuery(search?: string) {
       rawList = (apiData as any).staffs;
     }
 
-    return rawList.map(s => {
-      return {
-        id: s.id,
-        name: s.name || "",
-        email: s.email || "",
-        phone: s.phone || "",
-        specialization: s.personal_profile?.specialization?.name || s.specialization || "General Dentist",
-        experience: s.personal_profile?.experience_years ? `${s.personal_profile.experience_years} Years` : s.experience || "",
-        qualification: s.personal_profile?.qualification || s.qualification || "",
-        location: s.personal_profile?.department || s.department || "Main Clinic",
-        image: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || "",
-      };
-    });
+    return rawList
+      .filter((s) => s && typeof s === "object")
+      .map((s) => {
+        return {
+          id: s.id,
+          name: s.name || "",
+          email: s.email || "",
+          phone: s.phone || "",
+          specialization: s.personal_profile?.specialization?.name || s.specialization || "General Dentist",
+          experience: s.personal_profile?.experience_years ? `${s.personal_profile.experience_years} Years` : s.experience || "",
+          qualification: s.personal_profile?.qualification || s.qualification || "",
+          location: s.personal_profile?.department || s.department || "Main Clinic",
+          image: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || "",
+        };
+      });
   }, [query.data]);
 
   return {

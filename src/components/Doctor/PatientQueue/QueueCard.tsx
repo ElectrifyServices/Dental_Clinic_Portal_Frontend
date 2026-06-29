@@ -80,15 +80,31 @@ export function QueueCard({
   
   const [showAllAllergies, setShowAllAllergies] = useState(false);
   
-  const allergies: string[] = fullPatient?.allergyNames?.length
-    ? Array.isArray(fullPatient.allergyNames)
-      ? fullPatient.allergyNames
-      : fullPatient.allergyNames.split("\n").filter(Boolean)
-    : fullPatient?.allergies
-    ? Array.isArray(fullPatient.allergies)
-      ? fullPatient.allergies
-      : fullPatient.allergies.split("\n").filter(Boolean)
-    : [];
+  const extractNames = (list: any, keyName: string) => {
+    if (!list) return [];
+    if (typeof list === 'string') return list.split('\n').filter(Boolean);
+    if (Array.isArray(list)) {
+      return list.map(item => {
+        if (typeof item === 'string') {
+          // Ignore if it's a UUID
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item)) return null;
+          return item;
+        }
+        return item[keyName]?.name || item.name || item.condition || item[`${keyName}_name`];
+      }).filter(Boolean);
+    }
+    return [];
+  };
+
+  const allergies: string[] = extractNames(
+    fullPatient?.allergyNames || fullPatient?.allergyList || fullPatient?.patient_allergies || fullPatient?.allergies,
+    'allergy'
+  );
+
+  const medicalHistories: string[] = extractNames(
+    fullPatient?.medicalHistoryNames || fullPatient?.historyList || fullPatient?.patient_histories || fullPatient?.medicalHistories || fullPatient?.medicalHistory,
+    'history'
+  );
 
   return (
     <Card className="hover:shadow-md hover:border-gray-200 transition-all duration-300 rounded-2xl border border-gray-100 bg-white overflow-hidden">
@@ -136,7 +152,7 @@ export function QueueCard({
               <Clock className="w-3.5 h-3.5 mr-2 text-gray-400" /> Slot Duration
             </span>
             <span className="font-bold text-gray-900 text-right leading-tight">
-              {patient.slotDurationMins ? `${patient.slotDurationMins} mins` : "—"}
+              {patient.slotDurationMins ? `${patient.slotDurationMins} mins` : "N/A"}
             </span>
           </div>
 
@@ -145,7 +161,7 @@ export function QueueCard({
               <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
             </span>
             <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
-              {patient.treatmentType || "—"}
+              {patient.treatmentType || "N/A"}
             </span>
           </div>
 
@@ -154,7 +170,7 @@ export function QueueCard({
               <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
             </span>
             <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
-              {patient.specificTreatment || "—"}
+              {patient.specificTreatment || "N/A"}
             </span>
           </div>
 
@@ -163,7 +179,7 @@ export function QueueCard({
               <IndianRupee className="w-3.5 h-3.5 mr-2 text-gray-400" /> Cost
             </span>
             <span className="font-bold text-gray-900 text-right leading-tight">
-              {patient.appointmentCost ? `₹${patient.appointmentCost}` : "—"}
+              {patient.appointmentCost ? `₹${patient.appointmentCost}` : "N/A"}
             </span>
           </div>
 
@@ -191,7 +207,7 @@ export function QueueCard({
         </div>
 
         {/* Medical Alerts */}
-        {allergies.length > 0 && (
+        {(allergies.length > 0 || medicalHistories.length > 0) && (
           <div className="p-3 bg-red-50/40 rounded-xl border border-red-100/60">
             <div className="flex items-center mb-2">
               <AlertTriangle className="w-3.5 h-3.5 text-red-500 mr-1.5" />
@@ -200,22 +216,34 @@ export function QueueCard({
               </span>
             </div>
             <div className="space-y-1">
-              <div className="text-[11px] text-red-600 font-bold leading-tight">
-                <strong>Allergies:</strong>{" "}
-                {showAllAllergies
-                  ? allergies.join(", ")
-                  : allergies.slice(0, 3).join(", ")}
-                {allergies.length > 3 && (
+              {medicalHistories.length > 0 && (
+                <div className="text-[11px] text-red-600 font-bold leading-tight">
+                  <strong>History:</strong>{" "}
+                  {showAllAllergies
+                    ? medicalHistories.join(", ")
+                    : medicalHistories.slice(0, 3).join(", ")}
+                </div>
+              )}
+              {allergies.length > 0 && (
+                <div className="text-[11px] text-red-600 font-bold leading-tight">
+                  <strong>Allergies:</strong>{" "}
+                  {showAllAllergies
+                    ? allergies.join(", ")
+                    : allergies.slice(0, 3).join(", ")}
+                </div>
+              )}
+              {(allergies.length > 3 || medicalHistories.length > 3) && (
+                <div className="pt-1">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => setShowAllAllergies(!showAllAllergies)}
-                    className="cursor-pointer hover:underline text-red-800 ml-1 h-auto p-0 text-[11px] font-bold"
+                    className="cursor-pointer hover:underline text-red-800 h-auto p-0 text-[11px] font-bold"
                   >
-                    {showAllAllergies ? "(less)" : `+${allergies.length - 3} more`}
+                    {showAllAllergies ? "(show less)" : "(show more)"}
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
