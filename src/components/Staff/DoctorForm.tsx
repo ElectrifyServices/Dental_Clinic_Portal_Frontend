@@ -247,6 +247,50 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
 
     setCurrentStep((s) => s + 1);
   };
+
+  const handleStepClick = async (targetStep: number) => {
+    if (targetStep === currentStep) return;
+
+    if (targetStep < currentStep) {
+      setCurrentStep(targetStep);
+      return;
+    }
+
+    // Going forward: validate intermediate steps sequentially
+    for (let step = currentStep; step < targetStep; step++) {
+      const stepFields: Record<number, (keyof StaffFormData)[]> = {
+        1: [...staffStep1Fields] as (keyof StaffFormData)[],
+        2: [...staffStep2Fields] as (keyof StaffFormData)[],
+        3: [...staffStep3Fields] as (keyof StaffFormData)[],
+      };
+      const fields = stepFields[step];
+      if (fields) {
+        const valid = await form.trigger(fields);
+        if (!valid) {
+          setCurrentStep(step);
+          return;
+        }
+      }
+
+      if (step === 3) {
+        const docs = form.getValues("documents") || [];
+        const role = form.getValues("role") || "doctor";
+        const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
+
+        const missingDocs = requiredList.filter(
+          (reqDoc) => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
+        );
+
+        if (missingDocs.length > 0) {
+          showToast(`Please upload the following mandatory documents:\n• ${missingDocs.join("\n• ")}`, "error");
+          setCurrentStep(3);
+          return;
+        }
+      }
+    }
+
+    setCurrentStep(targetStep);
+  };
   const { data: apiRoles } = useRolesQuery();
   const { data: apiSpecs } = useSpecializationsQuery();
   const { mutateAsync: createStaff, isPending: isCreating } = useCreateStaffMutation();
@@ -673,14 +717,37 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             const isDone = currentStep > s.number;
             return (
               <React.Fragment key={s.number}>
-                <div className="flex flex-col items-center gap-1.5 relative group">
+                <div
+                  onClick={() => handleStepClick(s.number)}
+                  className="flex flex-col items-center gap-1.5 relative group cursor-pointer focus:outline-none"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleStepClick(s.number);
+                    }
+                  }}
+                >
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isDone ? "bg-emerald-500 text-white" : isActive ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" : "bg-muted text-muted-foreground"}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      isDone
+                        ? "bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105"
+                        : isActive
+                        ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:scale-105"
+                    }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
                   <span
-                    className={`text-[9px] font-black uppercase tracking-widest hidden sm:block ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}
+                    className={`text-[9px] font-black uppercase tracking-widest hidden sm:block transition-colors duration-300 ${
+                      isActive
+                        ? "text-primary"
+                        : isDone
+                        ? "text-emerald-600 group-hover:text-emerald-700"
+                        : "text-muted-foreground group-hover:text-foreground"
+                    }`}
                   >
                     {s.title}
                   </span>

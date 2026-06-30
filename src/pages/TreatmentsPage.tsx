@@ -37,6 +37,10 @@ export const TreatmentsPage: React.FC = () => {
     }
   }, [selectedItemId, fetchSingleTreatment, clearSelectedTreatment]);
 
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const wrappedHandleSaveTreatment = async (formData: any, sessions: any[]) => {
     try {
       await handleSaveTreatment({ ...formData, sessions });

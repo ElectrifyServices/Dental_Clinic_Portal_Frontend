@@ -183,10 +183,19 @@ export function ModalRegistry() {
             qty: "",
           }
         ],
-        images: [],
-        xrayFiles: [],
-        labFiles: [],
-        selectedTeeth: []
+        images: (data.attachments || data.images || data.clinical_images || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
+        xrayFiles: (data.xrayFiles || data.xray_files || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
+        labFiles: data.labFiles || data.lab_files || [],
+        selectedTeeth: data.selectedTeeth || data.selected_teeth || [],
+        bp: data.bp || "",
+        height: data.height || "",
+        weight: data.weight || "",
+        bmi: data.bmi || "",
+        tests: data.tests || "",
+        nextVisit: data.nextVisit || data.next_visit || "",
+        consultationDate: data.consultationDate || data.consultation_date || new Date().toISOString().split("T")[0],
+        followUpDate: data.followUpDate || data.follow_up_date || "",
+        startTreatmentToday: data.startTreatmentToday || data.start_treatment_today || false,
       }
     };
   }, [editConsultationRaw]);
@@ -504,6 +513,7 @@ export function ModalRegistry() {
 
       {activeModal === "diagnoseForm" && selectedPatientForDiagnose && (!selectedPatientForDiagnose.isEditMode || editConsultationData) && (
         <PatientConsultation
+          key={selectedPatientForDiagnose.appointmentId || selectedPatientForDiagnose.id}
           patient={selectedPatientForDiagnose}
           doctors={activeDoctors}
           doctorAvailability={doctorAvailability}
@@ -531,6 +541,7 @@ export function ModalRegistry() {
           onClose={() => {
             setActiveModal(null);
             setBookedFollowUp(null);
+            setSelectedPatientForDiagnose(null);
           }}
           onCompleteConsultation={async (d: any) => {
             try {
@@ -809,6 +820,10 @@ export function ModalRegistry() {
               handleSaveTreatment({ ...t, status: "in-progress" });
               showToast("Treatment started!");
             }
+          }}
+          onManageSessions={(id: string) => {
+            setActiveModal("sessionManager");
+            setSelectedItemId(id);
           }}
         />
       )}

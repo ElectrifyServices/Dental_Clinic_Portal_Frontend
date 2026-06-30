@@ -25,7 +25,14 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
 
   const parseData = (d: any) => {
     if (!d) return undefined;
-    return d.count ?? d.total ?? d.amount ?? d.data?.count ?? d.data?.total ?? d.data?.amount;
+    return d.total_pending ?? d.count ?? d.total ?? d.amount ?? d.data?.total_pending ?? d.data?.count ?? d.data?.total ?? d.data?.amount;
+  };
+
+  const formatCompact = (val: number) => {
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(1).replace(/\.0$/, '')}Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1).replace(/\.0$/, '')}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+    return `₹${val.toLocaleString()}`;
   };
 
   const totalPatients = parseData(totalData) ?? patients.length;
@@ -55,7 +62,7 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
       />
       <MetricCard 
         label="Outstanding"
-        value={`₹${totalOutstanding.toLocaleString()}`}
+        value={formatCompact(totalOutstanding)}
         icon={<CreditCard className="w-4.5 h-4.5 md:w-6 md:h-6" />}
         variant="amber"
       />

@@ -121,7 +121,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                     <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <p className="text-sm font-bold text-foreground">Click to upload consent form</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">JPEG, PNG, PDF supported</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">JPEG, PNG, PDF supported (Max 5MB)</p>
                 </div>
               </Label>
             )}

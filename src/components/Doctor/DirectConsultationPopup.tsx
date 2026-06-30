@@ -99,6 +99,7 @@ export function DirectConsultationPopup({
         time12,
         appointmentCount: slot.appointment_count || 0,
         isPast,
+        disabled: slot.disabled === true,
       };
     });
   }, [slotsData, selectedDate, todayStr]);

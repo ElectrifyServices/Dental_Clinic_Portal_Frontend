@@ -1,6 +1,7 @@
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { EMRList } from "../components/EMR/EMRList";
+import { generateEMRPDF } from "../components/EMR/EMRViewer";
 import { useEMRListQuery } from "../hooks/emr/useEMRListQuery";
 import { useMemo, useState } from "react";
 import { useDebounce } from "../hooks/useDebounce";
@@ -141,8 +142,10 @@ export function MedicalRecordsPage() {
     setSelectedEMRRecord(r);
     setActiveModal("emrViewer");
   };
-  const onExportRecord = (_r: any) =>
-    showToast("Record exported successfully!");
+  const onExportRecord = async (r: any) => {
+    const timeline = r.timeline || [];
+    await generateEMRPDF(r.patientName || "Patient", timeline, r.type);
+  };
 
   return (
     <div className="animate-in fade-in duration-500">

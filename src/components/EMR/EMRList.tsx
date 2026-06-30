@@ -120,12 +120,12 @@ export function EMRList({
       align: 'center' as const,
       render: (r: EMRRecord) => (
         <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="icon-sm" onClick={() => onViewRecord(r)} title="View">
+          <Button variant="outline" size="icon-sm" onClick={() => onViewRecord(r)} title="View Record">
             <Eye className="w-4 h-4 text-primary" />
           </Button>
-          {/* <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Export">
-            <Download className="w-4 h-4 text-muted-foreground" />
-          </Button> */}
+          <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Download Medical History PDF">
+            <Download className="w-4 h-4 text-muted-foreground hover:text-primary" />
+          </Button>
         </div>
       )
     }

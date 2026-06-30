@@ -1,7 +1,28 @@
-import { Eye, Edit, Trash2, Users } from "lucide-react";
-import { Badge, Button, DataTable } from "@/components/ui";
+import React from "react";
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  MoreVertical,
+  UserPlus,
+  Download,
+  QrCode,
+  UserCheck,
+  PowerOff
+} from "lucide-react";
+import {
+  Badge,
+  Button,
+  DataTable,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from "@/components/ui";
 import { Patient } from "@/types";
 import { toTitleCase } from "@/utils/stringUtils";
+import { getFileUrl } from "../../../services/apiClient";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -10,6 +31,8 @@ interface PatientTableProps {
   onDelete: (id: string) => void;
   onExport: (id: string) => void;
   onPrintBarcode: (patient: Patient) => void;
+  onToggleStatus: (id: string, currentStatus: string) => void;
+  onToggleCategory: (id: string, currentCategory: string) => void;
 }
 
 export const PatientTable: React.FC<PatientTableProps> = ({
@@ -17,13 +40,17 @@ export const PatientTable: React.FC<PatientTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  onExport,
+  onPrintBarcode,
+  onToggleStatus,
+  onToggleCategory,
 }) => {
   const getStatusVariant = (status: string): any => {
     switch (status) {
-      case "active":   return "green";
+      case "active": return "green";
       case "inactive": return "gray";
-      case "new":      return "blue";
-      default:         return "gray";
+      case "new": return "blue";
+      default: return "gray";
     }
   };
 
@@ -33,8 +60,16 @@ export const PatientTable: React.FC<PatientTableProps> = ({
       header: "Patient",
       render: (patient: Patient) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shadow-sm ring-4 ring-primary/5 group-hover:scale-110 transition-transform">
-            {patient.name.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shadow-sm ring-4 ring-primary/5 group-hover:scale-110 transition-transform overflow-hidden">
+            {patient.profile_picture_url || patient.avatar ? (
+              <img
+                src={patient.profile_picture_url ? getFileUrl(patient.profile_picture_url) : patient.avatar}
+                alt={toTitleCase(patient.name)}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              patient.name ? patient.name.charAt(0).toUpperCase() : "?"
+            )}
           </div>
           <div>
             <div className="font-bold text-foreground text-sm">{toTitleCase(patient.name)}</div>
@@ -86,9 +121,8 @@ export const PatientTable: React.FC<PatientTableProps> = ({
       header: "Balance",
       render: (patient: Patient) => (
         <div
-          className={`text-sm font-black ${
-            patient.outstandingBalance ? "text-amber-600" : "text-emerald-600"
-          }`}
+          className={`text-sm font-black ${patient.outstandingBalance ? "text-amber-600" : "text-emerald-600"
+            }`}
         >
           ₹{(patient.outstandingBalance || 0).toLocaleString()}
         </div>
@@ -99,31 +133,79 @@ export const PatientTable: React.FC<PatientTableProps> = ({
       header: "Actions",
       align: "right" as const,
       render: (patient: Patient) => (
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-primary hover:bg-primary/10"
-            onClick={() => onView(patient.id)}
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-amber-600 hover:bg-amber-50"
-            onClick={() => onEdit(patient.id)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(patient.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-muted text-muted-foreground">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl bg-card border border-border shadow-lg">
+              <DropdownMenuItem
+                onClick={() => onView(patient.id)}
+                className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+              >
+                <Eye className="w-4 h-4" /> View Details
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => onEdit(patient.id)}
+                className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+              >
+                <Edit className="w-4 h-4" /> Edit Info
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => onToggleCategory(patient.id, patient.category || "regular")}
+                className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" /> Person
+              </DropdownMenuItem>
+
+              {onExport && (
+                <DropdownMenuItem
+                  onClick={() => onExport(patient.id)}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+                >
+                  <Download className="w-4 h-4" /> Export Report
+                </DropdownMenuItem>
+              )}
+
+              {/* {onPrintBarcode && (
+                <DropdownMenuItem
+                  onClick={() => onPrintBarcode(patient)}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+                >
+                  <QrCode className="w-4 h-4" /> Print Barcode
+                </DropdownMenuItem>
+              )} */}
+
+              <DropdownMenuItem
+                onClick={() => onToggleStatus(patient.id, patient.status || "active")}
+                className={`px-3.5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-3 cursor-pointer ${patient.status === "inactive"
+                    ? "text-emerald-600 hover:bg-emerald-50/50"
+                    : "text-orange-600 hover:bg-orange-50/50"
+                  }`}
+              >
+                {patient.status === "inactive" ? (
+                  <>
+                    <UserCheck className="w-4 h-4" /> Activate
+                  </>
+                ) : (
+                  <>
+                    <PowerOff className="w-4 h-4" /> Deactivate
+                  </>
+                )}
+              </DropdownMenuItem>
+
+              {/* <DropdownMenuItem
+                onClick={() => onDelete(patient.id)}
+                className="px-3.5 py-2.5 text-xs font-bold hover:bg-destructive/10 rounded-xl flex items-center gap-3 text-destructive cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Delete Patient
+              </DropdownMenuItem> */}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },

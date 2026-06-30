@@ -15,7 +15,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Badge } from "@/components/ui";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
 
 // --- Reusable Empty State Component ---
@@ -783,6 +783,11 @@ export const DocumentsTab = ({
                     }}
                   />
                   <h4 className="font-semibold text-foreground mb-1 truncate">{docName}</h4>
+                  {(doc.doc_type || doc.type || doc.document_type) && (
+                    <Badge variant="outline" className="mb-2 text-[10px] font-black uppercase text-primary border-primary/20 bg-primary/5 px-2 py-0.5 inline-flex w-fit">
+                      {String(doc.doc_type || doc.type || doc.document_type).replace(/_/g, " ")}
+                    </Badge>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     {doc.date || doc.created_at ? new Date(doc.date || doc.created_at).toLocaleDateString() : "Unknown date"}
                   </p>

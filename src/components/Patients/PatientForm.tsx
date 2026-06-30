@@ -116,7 +116,7 @@ export function PatientForm({
         ...formData,
         // Keep id from existing patient for edit mode; undefined for new patients
         id: patient?.id ?? undefined,
-        parentId: type === "person" ? parentId : undefined,
+        parentId: type === "person" ? parentId : (patient?.primary_patient_id || patient?.primaryPatientId || patient?.parentId || undefined),
       });
     } catch (err) {
       setFormErrors({ submit: "Failed to save patient. Please try again." });

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Clock as ClockIcon,
   CalendarDays,
+  Edit2,
 } from "lucide-react";
 import { Modal, Button, ContentCard, Badge } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
@@ -22,6 +23,7 @@ interface TreatmentViewerProps {
   onEditTreatment: (id: string) => void;
   onMarkCompleted: (id: string) => void;
   onStartTreatment: (id: string) => void;
+  onManageSessions?: (id: string) => void;
 }
 
 export function TreatmentViewer({
@@ -30,8 +32,9 @@ export function TreatmentViewer({
   onEditTreatment,
   onMarkCompleted,
   onStartTreatment,
+  onManageSessions,
 }: TreatmentViewerProps) {
-  
+
   // Fetch treatment data using the ID
   const { data: treatmentData, isLoading, error } = useTreatmentPlanQuery(treatmentId, {
     enabled: !!treatmentId
@@ -121,14 +124,13 @@ export function TreatmentViewer({
             <p style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">${treatment.clinical_notes || "No notes available."}</p>
           </div>
 
-          ${
-            treatment.sessions?.length > 0
-              ? `
+          ${treatment.sessions?.length > 0
+        ? `
           <div class="section">
             <h3>Treatment Sessions</h3>
             ${treatment.sessions
-              .map(
-                (session: any) => `
+          .map(
+            (session: any) => `
               <div class="session-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                   <h4 style="margin: 0;">Session ${session.visit_number}</h4>
@@ -137,36 +139,33 @@ export function TreatmentViewer({
                 <p><strong>Date:</strong> ${new Date(session.visit_date).toLocaleDateString()}</p>
                 <p><strong>Time:</strong> ${session.start_time} (${session.duration_min} mins)</p>
                 <p><strong>Fee:</strong> ₹${parseInt(session.session_fee).toLocaleString()}</p>
-                ${
-                  session.work_done
-                    ? `<p><strong>Work Done:</strong> ${session.work_done}</p>`
-                    : ""
-                }
-                ${
-                  session.session_findings
-                    ? `<p><strong>Findings:</strong> ${session.session_findings}</p>`
-                    : ""
-                }
-                ${
-                  session.next_session_plan
-                    ? `<p><strong>Next Session Plan:</strong> ${session.next_session_plan}</p>`
-                    : ""
-                }
+                ${session.work_done
+                ? `<p><strong>Work Done:</strong> ${session.work_done}</p>`
+                : ""
+              }
+                ${session.session_findings
+                ? `<p><strong>Findings:</strong> ${session.session_findings}</p>`
+                : ""
+              }
+                ${session.next_session_plan
+                ? `<p><strong>Next Session Plan:</strong> ${session.next_session_plan}</p>`
+                : ""
+              }
               </div>
             `,
-              )
-              .join("")}
+          )
+          .join("")}
           </div>
           `
-              : ""
-          }
+        : ""
+      }
 
           <div class="section">
             <h3>Prescribed Medications</h3>
             <div class="prescription-grid">
               ${(treatment.prescriptions || [])
-                .map(
-                  (p: any) => `
+        .map(
+          (p: any) => `
                 <div class="med-card">
                   <p><strong>${p.medicine_name}</strong></p>
                   <p style="font-size: 13px; margin: 5px 0;">Dosage: ${p.dosage} | Timing: ${p.timing}</p>
@@ -175,8 +174,8 @@ export function TreatmentViewer({
                   ${p.instructions ? `<p style="font-size: 13px; margin: 5px 0;"><strong>Instructions:</strong> ${p.instructions}</p>` : ""}
                 </div>
               `,
-                )
-                .join("")}
+        )
+        .join("")}
             </div>
           </div>
 
@@ -222,8 +221,8 @@ export function TreatmentViewer({
     treatment.status === "COMPLETED"
       ? "green"
       : treatment.status === "IN_PROGRESS"
-      ? "blue"
-      : "amber"
+        ? "blue"
+        : "amber"
   ) as any;
 
   // Calculate session progress
@@ -274,13 +273,13 @@ export function TreatmentViewer({
               Edit Plan
             </Button>
           </div>
-          <Button
+          {/* <Button
             variant="ghost"
             onClick={handleDownload}
             className="gap-2 text-muted-foreground hover:text-foreground"
           >
             <Download className="w-4 h-4" /> Download Report
-          </Button>
+          </Button> */}
         </div>
       }
     >
@@ -352,10 +351,10 @@ export function TreatmentViewer({
                 <span className="text-sm font-black text-foreground">
                   {treatment.next_appointment
                     ? new Date(treatment.next_appointment).toLocaleDateString(
-                        "en-IN",
-                        { day: "2-digit", month: "short", year: "numeric" }
-                      )
-                    : "—"}
+                      "en-IN",
+                      { day: "2-digit", month: "short", year: "numeric" }
+                    )
+                    : "N/A"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -418,13 +417,12 @@ export function TreatmentViewer({
                 .map((session: any) => (
                   <ContentCard
                     key={session.id}
-                    className={`border-l-4 hover:shadow-md transition-all ${
-                      session.status === "COMPLETED"
+                    className={`border-l-4 hover:shadow-md transition-all ${session.status === "COMPLETED"
                         ? "border-l-emerald-500"
                         : session.status === "IN_PROGRESS"
-                        ? "border-l-blue-500"
-                        : "border-l-amber-500"
-                    }`}
+                          ? "border-l-blue-500"
+                          : "border-l-amber-500"
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -432,7 +430,7 @@ export function TreatmentViewer({
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
                             {session.visit_number}
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="font-bold text-foreground">
                               Session {session.visit_number}
                             </p>
@@ -440,6 +438,16 @@ export function TreatmentViewer({
                               {session.clinical_objectives || "No objectives set"}
                             </p>
                           </div>
+                          {onManageSessions && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onManageSessions(treatmentId)}
+                              className="h-8 w-8 p-0 ml-auto flex-shrink-0"
+                            >
+                              <Edit2 className="w-4 h-4 text-primary" />
+                            </Button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ml-11">
