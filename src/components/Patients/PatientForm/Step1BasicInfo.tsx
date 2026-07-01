@@ -24,6 +24,7 @@ import {
   User,
   Camera,
   X,
+  CheckCircle,
 } from "lucide-react";
 
 interface Step1Props {
@@ -314,7 +315,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             type="text"
             name="name"
             value={formData.name || ""}
-            onChange={handleChange}
+            onChange={(e) => {
+              e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+              handleChange(e);
+            }}
             className={
               validationErrors.name ? "border-destructive bg-destructive/5" : ""
             }
@@ -388,14 +392,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
           </Label>
-          <Input
-            type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth || ""}
-            onChange={handleChange}
-            max={new Date().toISOString().split("T")[0]}
-            className="focus:ring-primary"
-          />
+          <div className="relative">
+            <Input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth || ""}
+              onChange={handleChange}
+              max={new Date().toISOString().split("T")[0]}
+              className="focus:ring-primary w-full pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+            />
+            <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+          </div>
         </div>
 
         <div>
@@ -527,34 +534,32 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               }));
             }}
             options={[
-              { label: "No Membership Plan", value: "none" },
+              { label: "No Membership Plan", value: "none", description: "Proceed without enrolling in any membership plan." },
               ...corporatePlans.filter((p: any) => p.isActive !== false).map((plan: any) => {
                 const fee = plan.annual_fee || plan.annualFee || plan.fee || "0";
                 const limit = plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
-                const benefitsSummary = plan.benefits?.map((b: any) => b.description || b.benifit_label).join(", ") || "No specific benefits listed";
+                const benefits = plan.benefits || [];
                 return {
-                  label: `${plan.name}`, // Fallback string for internal search
+                  label: `${plan.name}`,
                   value: plan.id,
                   planData: plan,
                   fee,
                   limit,
-                  benefitsSummary
+                  benefits
                 };
               })
             ]}
-
             renderValue={(opt: any) => {
               if (opt.value === "none") return <span className="font-semibold text-muted-foreground">{opt.label}</span>;
               const { planData, fee, limit } = opt;
               return (
-                <div className="flex items-center gap-2 truncate pr-2">
+                <div className="flex items-center gap-2 truncate pr-2 w-full">
                   <span className="font-bold text-sm truncate">{planData.name}</span>
                   {planData.planType && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
-                      planData.planType.toUpperCase() === 'INDIVIDUAL' 
-                        ? 'bg-purple-100 text-purple-700 border-purple-200' 
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${planData.planType.toUpperCase() === 'INDIVIDUAL'
+                        ? 'bg-purple-100 text-purple-700 border-purple-200'
                         : 'bg-amber-100 text-amber-700 border-amber-200'
-                    } whitespace-nowrap`}>
+                      } whitespace-nowrap`}>
                       {planData.planType}
                     </span>
                   )}
@@ -570,37 +575,55 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               );
             }}
             renderOption={(opt: any) => {
-              if (opt.value === "none") return <span className="font-semibold text-muted-foreground py-1">{opt.label}</span>;
-              const { planData, fee, limit, benefitsSummary } = opt;
+              if (opt.value === "none") {
+                return (
+                  <div className="flex flex-col gap-1 w-full min-w-0 p-2 border border-transparent rounded-lg hover:bg-muted/50">
+                    <span className="font-bold text-foreground text-sm">{opt.label}</span>
+                    <span className="text-xs text-muted-foreground">{opt.description}</span>
+                  </div>
+                );
+              }
+
+              const { planData, fee, limit, benefits } = opt;
               return (
-                <div className="flex flex-col gap-1.5 pr-2 w-full min-w-0 py-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-foreground text-sm">{planData.name}</span>
+                <div className="flex flex-col w-full min-w-0 p-3 border border-border rounded-lg bg-card shadow-sm hover:border-primary/50 hover:bg-primary/5 transition-all">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                    <span className="font-bold text-foreground text-base leading-tight">{planData.name}</span>
+                    <div className="flex gap-2 flex-wrap justify-end">
                       {planData.planType && (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
-                          planData.planType.toUpperCase() === 'INDIVIDUAL' 
-                            ? 'bg-purple-100 text-purple-700 border-purple-200' 
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${planData.planType.toUpperCase() === 'INDIVIDUAL'
+                            ? 'bg-purple-100 text-purple-700 border-purple-200'
                             : 'bg-amber-100 text-amber-700 border-amber-200'
-                        } whitespace-nowrap`}>
+                          } whitespace-nowrap`}>
                           {planData.planType}
                         </span>
                       )}
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100/80 text-green-800 whitespace-nowrap border border-green-200">
-                        Fee: ₹{fee}/yr
-                      </span>
+                      {fee !== undefined && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100/80 text-green-800 border border-green-200 whitespace-nowrap">
+                          Fee: ₹{fee}/yr
+                        </span>
+                      )}
                       {limit && limit > 1 && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 whitespace-nowrap border border-blue-200">
-                          Limit: {limit}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 border border-blue-200 whitespace-nowrap">
+                          Up to {limit} Members
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground whitespace-normal leading-snug">
-                    {benefitsSummary}
-                  </span>
+
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <p className="font-semibold mb-1 text-foreground/80">Benefits included:</p>
+                    <ul className="space-y-1">
+                      {benefits.length > 0 ? benefits.map((b: any, idx: number) => (
+                        <li key={idx} className="flex items-start gap-1.5">
+                          <span className="text-primary mt-0.5">•</span>
+                          <span className="leading-snug">{b.description || b.benifit_label}</span>
+                        </li>
+                      )) : (
+                        <li className="italic">No specific benefits listed</li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               );
             }}

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect, Button } from '@/components/ui';
-import { AlertTriangle, Heart, History, ShieldCheck, Upload, User, X, Trash2, Plus } from 'lucide-react';
+import { X, AlertTriangle, FileText, Pill, Stethoscope, Scissors, Syringe, Zap, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 interface Step2Props {
@@ -245,8 +245,11 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               type="text"
               name="previousDoctorName"
               value={formData.previousDoctorName}
-              onChange={handleChange}
-              className={validationErrors.previousDoctorName ? "border-destructive bg-destructive/5" : ""}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                handleChange(e);
+              }}
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
               placeholder="Doctor or Clinic name"
             />
             {validationErrors.previousDoctorName && (
@@ -262,8 +265,11 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               type="text"
               name="previousClinicName"
               value={formData.previousClinicName}
-              onChange={handleChange}
-              className={validationErrors.previousClinicName ? "border-destructive bg-destructive/5" : ""}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                handleChange(e);
+              }}
+              className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
               placeholder="Clinic Name"
             />
             {validationErrors.previousClinicName && (
@@ -289,14 +295,17 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           </div>
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</Label>
-            <Input
-              type="date"
-              name="previousLastVisitDate"
-              value={formData.previousLastVisitDate}
-              onChange={handleChange}
-              className={validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : ""}
-              max={new Date().toISOString().split("T")[0]}
-            />
+            <div className="relative">
+              <Input
+                type="date"
+                name="previousLastVisitDate"
+                value={formData.previousLastVisitDate}
+                onChange={handleChange}
+                className={`w-full h-10 px-4 border rounded-md focus:ring-2 focus:ring-primary bg-card text-sm pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10 ${validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : "border-input"}`}
+                max={new Date().toISOString().split("T")[0]}
+              />
+              <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+            </div>
             {validationErrors.previousLastVisitDate && (
               <p className="text-destructive text-[10px] mt-1 flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />
@@ -392,27 +401,43 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           />
         </Label>
         {formData.dentalFiles?.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {formData.dentalFiles.map((file: any, index: number) => (
-              <Badge key={index} variant="secondary" className="pr-1 pl-2 py-1 gap-1 border-primary/10">
-                <span className="truncate max-w-[150px]">{file.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => {
-                    setFormData((prev: any) => ({
-                      ...prev,
-                      dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
-                      rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
-                    }));
-                  }}
-                  className="p-0.5 hover:bg-primary/10 rounded-full text-primary"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </Badge>
-            ))}
+          <div className="flex flex-wrap gap-4 mt-2">
+            {formData.dentalFiles.map((file: any, index: number) => {
+              const fileUrl = file.url || (file.file ? URL.createObjectURL(file.file) : null);
+              const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpeg|jpg|png|gif|webp)$/i);
+              
+              return (
+                <div key={index} className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 flex-shrink-0 flex items-center justify-center">
+                  {isImage && fileUrl ? (
+                    <img src={fileUrl} alt={file.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                  )}
+                  
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                    <span className="text-[9px] text-white text-center truncate w-full mb-1" title={file.name}>
+                      {file.name}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon-xs"
+                      onClick={() => {
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
+                          rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
+                        }));
+                      }}
+                      className="h-6 w-6 rounded-full"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

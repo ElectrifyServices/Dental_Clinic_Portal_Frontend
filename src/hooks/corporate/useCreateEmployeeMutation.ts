@@ -5,13 +5,12 @@ export interface CreateEmployeeVariables {
   plan_id: string;
   name: string;
   phone?: string;
-  email?: string;
-  gender?: string;
-  date_of_birth?: string;
-  relationship_type?: string;
-  parent_member_id?: string;
-  expiry_date?: string;
   status?: string;
+  family_members?: Array<{
+    name: string;
+    relationship_type: string;
+    phone?: string;
+  }>;
 }
 
 export interface CreateEmployeeResponse {

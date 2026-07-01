@@ -388,10 +388,10 @@ export function InvoiceForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <LabeledField label="Phone" required>
             <SearchableSelect
-              value={formData.patientPhone || "none"}
+              value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                const p = apiPatients.find((p: any) => p.phone === val);
+                const p = apiPatients.find((p: any) => p.id === val);
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
@@ -401,9 +401,9 @@ export function InvoiceForm({
                 setSelectedPrevInvoiceId("");
                 setFormData({
                   ...formData,
-                  patientPhone: val,
+                  patientPhone: p?.phone || "",
                   patientName: p?.name || "",
-                  patientId: p?.id || "",
+                  patientId: val,
                   linkedItemIds: [],
                   discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
                 });
@@ -414,7 +414,7 @@ export function InvoiceForm({
                 ...apiPatients.filter((p: any) => p.phone).map((p: any) => ({
                   label: `${p.phone} (${p.name})`,
                   searchLabel: `${p.phone} ${p.name}`,
-                  value: p.phone,
+                  value: p.id,
                   patient: p,
                 }))
               ]}
@@ -504,10 +504,10 @@ export function InvoiceForm({
           </LabeledField>
           <LabeledField label="Name" required>
             <SearchableSelect
-              value={formData.patientName || "none"}
+              value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                const p = apiPatients.find((p: any) => p.name === val);
+                const p = apiPatients.find((p: any) => p.id === val);
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
@@ -517,9 +517,9 @@ export function InvoiceForm({
                 setSelectedPrevInvoiceId("");
                 setFormData({
                   ...formData,
-                  patientName: val,
+                  patientName: p?.name || "",
                   patientPhone: p?.phone || "",
-                  patientId: p?.id || "",
+                  patientId: val,
                   linkedItemIds: [],
                   discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
                 });
@@ -530,7 +530,7 @@ export function InvoiceForm({
                 ...apiPatients.map((p: any) => ({
                   label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
                   searchLabel: `${p.name} ${p.phone || ""}`,
-                  value: p.name,
+                  value: p.id,
                   patient: p,
                 }))
               ]}

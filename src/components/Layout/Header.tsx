@@ -66,15 +66,15 @@ export function Header() {
       {/* ── Left ────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         {/* Mobile logo */}
-        <div className="flex md:hidden items-center gap-2 group/logo cursor-pointer">
+        <div className="flex lg:hidden items-center gap-2 group/logo cursor-pointer">
           <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5 flex-shrink-0">
             <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block">{tenant.branding.clinicName}</span>
+          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block truncate max-w-[140px] sm:max-w-[200px]">{tenant.branding.clinicName}</span>
         </div>
 
         {/* Today's Schedule shortcut (Desktop) */}
-        <div className="hidden sm:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -96,7 +96,7 @@ export function Header() {
         </div>
 
         {/* Mobile Actions Menu */}
-        <div className="sm:hidden flex items-center">
+        <div className="lg:hidden flex items-center">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-sm" className="px-1">
@@ -131,13 +131,14 @@ export function Header() {
 
       {/* ── Center: Global Search ────────────────────────────────── */}
       <div className="flex-1 flex justify-center min-w-0 mx-2 sm:mx-0">
-        <GlobalSearch />
+        {/* <GlobalSearch /> */}
       </div>
       {/* ── Right ───────────────────────────────────────────────── */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
 
         {/* Notifications */}
-        <Popover>
+        {/* Notifications */}
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
@@ -154,7 +155,6 @@ export function Header() {
           </PopoverTrigger>
 
           <PopoverContent align="end" className="w-96 p-0 bg-card rounded-lg border border-border shadow-modal flex flex-col max-h-[480px]">
-            {/* Notification header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div>
                 <h4 className="text-sm font-semibold text-foreground">Notifications</h4>
@@ -176,7 +176,6 @@ export function Header() {
               )}
             </div>
 
-            {/* Notification list */}
             <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-border/60 max-h-[380px]">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -217,7 +216,7 @@ export function Header() {
               )}
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover> */}
 
         {/* User menu */}
         <Popover>
@@ -230,7 +229,7 @@ export function Header() {
                 {state.user?.name?.[0] ?? "U"}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-semibold text-foreground leading-tight">
+                <p className="text-sm font-semibold text-foreground leading-tight truncate max-w-[120px]">
                   {state.user?.name}
                 </p>
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${rm.cls}`}>

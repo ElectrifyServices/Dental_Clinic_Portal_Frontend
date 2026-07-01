@@ -214,7 +214,8 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
 
   const searchPhone = form.watch("phone")?.trim();
   const phoneToSearch = searchPhone && searchPhone.length >= 10 ? searchPhone : "";
-  const { data: checkEmployeeResponse } = useCheckEmployeeQuery(phoneToSearch);
+  const searchName = form.watch("name")?.trim() || "";
+  const { data: checkEmployeeResponse } = useCheckEmployeeQuery(phoneToSearch, searchName);
 
   // Corporate Lookup logic using API
   useEffect(() => {

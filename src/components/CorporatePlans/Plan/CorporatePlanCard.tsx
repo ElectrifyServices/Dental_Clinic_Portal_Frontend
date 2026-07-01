@@ -182,33 +182,7 @@ export function CorporatePlanCard({
             </span>
           </div>
 
-          {/* Benefits Preview */}
-          <div className="py-3 flex flex-wrap gap-1 mt-1">
-            {plan.benefits.slice(0, 2).map(b => (
-              <Tooltip key={b.id}>
-                <TooltipTrigger asChild>
-                  <span
-                    className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-extrabold border ${theme.bg} border-current/10 cursor-help`}
-                  >
-                    <span className="opacity-80">{BENEFIT_ICONS[b.type]}</span>
-                    <span className="max-w-[120px] truncate">{b.description}</span>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="text-xs py-1 px-2 font-semibold max-w-xs">
-                  {b.description}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-            {plan.benefits.length > 2 && (
-              <div 
-                role="button"
-                onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
-                className="flex items-center px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:text-slate-700 text-slate-500 transition-colors cursor-pointer"
-              >
-                +{plan.benefits.length - 2} more
-              </div>
-            )}
-          </div>
+
 
           {/* Stats Section */}
           <div className="grid grid-cols-3 py-3 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
@@ -255,7 +229,7 @@ export function CorporatePlanCard({
           {expanded ? 'Show Less' : 'View Benefits'}
         </Button>
 
-        {/* ── Expanded benefit detail (Absolute position to overlap content below) ── */}
+        {/* ── Expanded benefit detail (Absolute position to overlay below card) ── */}
         <AnimatePresence>
           {expanded && (
             <motion.div
@@ -264,7 +238,7 @@ export function CorporatePlanCard({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="absolute top-[100%] left-[-1px] right-[-1px] z-30 overflow-hidden px-4 pb-4 pt-2 border-x border-b border-slate-200 bg-white rounded-b-3xl shadow-xl space-y-2"
+              className="absolute left-[-1px] right-[-1px] top-[calc(100%-1px)] z-50 overflow-hidden px-4 pb-4 pt-2 bg-white border-x border-b border-slate-200 shadow-xl rounded-b-[22px] space-y-2"
             >
               {plan.benefits.map(b => (
                 <div

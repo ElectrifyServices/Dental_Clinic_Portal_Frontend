@@ -32,6 +32,7 @@ export interface PlanBenefit {
   cap?: number;
   customName?: string;
   treatmentTypes?: string[];
+  customTreatmentText?: string;
   description: string;
 }
 

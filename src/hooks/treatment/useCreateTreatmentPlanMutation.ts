@@ -32,6 +32,9 @@ export interface CreateTreatmentPlanVariables {
   clinical_notes?: string;
   prescriptions?: CreateTreatmentPrescriptionVariables[];
   sessions?: CreateTreatmentSessionVariables[];  // Added sessions
+  rawFiles?: File[];
+  existingImages?: string[];
+  attachments?: string[];
 }
 
 export interface TreatmentPlanResponse {
@@ -57,9 +60,56 @@ export interface TreatmentPlanResponse {
 export function useCreateTreatmentPlanMutation() {
   const queryClient = useQueryClient();
 
+  const buildFormData = (formData: FormData, data: any, parentKey?: string) => {
+    if (data === null || data === undefined) return;
+
+    if (data instanceof File) {
+      formData.append(parentKey || "", data);
+    } else if (Array.isArray(data)) {
+      data.forEach((val, i) => {
+        buildFormData(formData, val, `${parentKey}[${i}]`);
+      });
+    } else if (typeof data === "object" && !(data instanceof Date)) {
+      Object.keys(data).forEach((key) => {
+        buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+      });
+    } else {
+      formData.append(parentKey || "", String(data));
+    }
+  };
+
   return useApiMutation<TreatmentPlanResponse, CreateTreatmentPlanVariables>({
     getEndpoint: () => "/treatment",
     method: "post",
+    transformRequest: (variables) => {
+      const formData = new FormData();
+      
+      // Append files as "attachments"
+      if (variables.rawFiles && variables.rawFiles.length > 0) {
+        variables.rawFiles.forEach((file) => {
+          formData.append("attachments", file);
+        });
+      }
+
+      // Append existing images as a stringified list if applicable
+      if (variables.existingImages && variables.existingImages.length > 0) {
+        variables.existingImages.forEach((url, i) => {
+          formData.append(`existing_images[${i}]`, url);
+        });
+      }
+
+      // Append all other fields
+      Object.keys(variables).forEach((key) => {
+        if (key !== "rawFiles" && key !== "existingImages") {
+          const val = (variables as any)[key];
+          if (val !== undefined && val !== null) {
+            buildFormData(formData, val, key);
+          }
+        }
+      });
+
+      return formData;
+    },
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });

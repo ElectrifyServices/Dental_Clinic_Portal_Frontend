@@ -1,9 +1,10 @@
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Stethoscope, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { Button } from "@/components/ui/Button";
 
 const TREATMENT_OPTIONS = [
   "Consultation / Check-up",
@@ -52,6 +53,18 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
   onChange,
   onTreatmentTypeChange,
 }) => {
+  const [customOptions, setCustomOptions] = useState<string[]>([]);
+  const [customInput, setCustomInput] = useState("");
+
+  useEffect(() => {
+    if (treatmentType && !TREATMENT_OPTIONS.includes(treatmentType) && !customOptions.includes(treatmentType) && treatmentType !== "other/ not sure") {
+      setCustomOptions(prev => [...prev, treatmentType]);
+    }
+  }, [treatmentType, customOptions]);
+
+  const allOptions = [...TREATMENT_OPTIONS, ...customOptions];
+  const isOtherSelected = treatmentType === "other/ not sure";
+
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2 mb-2">
@@ -69,20 +82,65 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
           <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Appointment Type
           </Label>
-          <SearchableSelect
-            value={treatmentType}
-            onChange={(val: string) => {
-              if (onTreatmentTypeChange) {
-                onTreatmentTypeChange(val);
-              } else {
-                onChange({
-                  target: { name: "treatmentType", value: val }
-                } as any);
-              }
-            }}
-            options={TREATMENT_OPTIONS.map(opt => ({ label: opt, value: opt }))}
-            placeholder="Select Appointment Type..."
-          />
+          {isOtherSelected ? (
+            <div className="flex gap-2">
+              <Input
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder="Enter custom type..."
+                className="h-11 flex-1 rounded-xl bg-muted/50 border-border focus:bg-card font-medium"
+                autoFocus
+              />
+              <Button 
+                type="button"
+                onClick={() => {
+                  const val = customInput.trim();
+                  if (val) {
+                    setCustomOptions(prev => [...prev, val]);
+                    if (onTreatmentTypeChange) {
+                      onTreatmentTypeChange(val);
+                    } else {
+                      onChange({ target: { name: "treatmentType", value: val } } as any);
+                    }
+                  }
+                }}
+                className="h-11 px-4 bg-primary text-primary-foreground"
+              >
+                Add
+              </Button>
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={() => {
+                  setCustomInput("");
+                  if (onTreatmentTypeChange) {
+                    onTreatmentTypeChange("");
+                  } else {
+                    onChange({ target: { name: "treatmentType", value: "" } } as any);
+                  }
+                }}
+                className="h-11 px-3"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <SearchableSelect
+              value={treatmentType}
+              onChange={(val: string) => {
+                if (val === "other/ not sure") setCustomInput("");
+                if (onTreatmentTypeChange) {
+                  onTreatmentTypeChange(val);
+                } else {
+                  onChange({
+                    target: { name: "treatmentType", value: val }
+                  } as any);
+                }
+              }}
+              options={allOptions.map(opt => ({ label: opt, value: opt }))}
+              placeholder="Select Appointment Type..."
+            />
+          )}
         </div>
         <div className="md:col-span-2 space-y-1.5">
           <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">

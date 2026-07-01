@@ -15,6 +15,8 @@ interface BasicInfoSectionProps {
   pendingPlans: any[];
   onLoadPlan: (plan: any) => void;
   isEdit: boolean;
+  onPatientSearch?: (query: string) => void;
+  onDoctorSearch?: (query: string) => void;
 }
 
 export function BasicInfoSection({
@@ -27,6 +29,8 @@ export function BasicInfoSection({
   pendingPlans,
   onLoadPlan,
   isEdit,
+  onPatientSearch,
+  onDoctorSearch,
 }: BasicInfoSectionProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -37,11 +41,63 @@ export function BasicInfoSection({
         </Label>
         <SearchableSelect
           value={formData.patientName}
-          onChange={(val) => handleChange({ target: { name: "patientName", value: val } } as any)}
+          onChange={(val) => {
+            const selectedPat = allPatients.find(
+              (p) => (typeof p === "string" ? p : p.name) === val
+            );
+            handleChange({ target: { name: "patientName", value: val } } as any);
+            if (selectedPat) {
+              handleChange({ target: { name: "patientId", value: selectedPat.id } } as any);
+            }
+          }}
           options={allPatients.map((p) => {
             const name = typeof p === "string" ? p : p.name;
-            return { label: name, value: name };
+            return {
+              label: name,
+              value: name,
+              phone: typeof p === "object" ? p.phone : "",
+              avatar: typeof p === "object" ? p.avatar : "",
+              searchLabel: `${name} ${typeof p === "object" ? p.phone || "" : ""}`
+            };
           })}
+          onSearchChange={onPatientSearch}
+          renderOption={(pat: any) => (
+            <div className="flex items-center gap-3 py-1">
+              {pat.avatar ? (
+                <img
+                  src={pat.avatar}
+                  alt={pat.label}
+                  className="w-8 h-8 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                  {pat.label.charAt(0)}
+                </div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-foreground text-xs">{pat.label}</span>
+                {pat.phone && (
+                  <span className="text-[10px] text-muted-foreground">{pat.phone}</span>
+                )}
+              </div>
+            </div>
+          )}
+          renderValue={(option: any) => (
+            <div className="flex items-center gap-2">
+              {option.avatar ? (
+                <img
+                  src={option.avatar}
+                  alt={option.label}
+                  className="w-5 h-5 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                  {option.label.charAt(0)}
+                </div>
+              )}
+              <span className="font-bold text-foreground">{option.label}</span>
+            </div>
+          )}
           placeholder="Select Patient"
           disabled={isEdit}
         />
@@ -144,8 +200,57 @@ export function BasicInfoSection({
         </Label>
         <SearchableSelect
           value={formData.doctorId}
-          onChange={(val) => handleChange({ target: { name: "doctorId", value: val } } as any)}
-          options={doctors.map((doc) => ({ label: doc.name, value: doc.id }))}
+          onChange={(val) => {
+            const selectedDoc = doctors.find((d) => d.id === val);
+            handleChange({ target: { name: "doctorId", value: val } } as any);
+            handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as any);
+          }}
+          options={doctors.map((doc) => ({
+            label: doc.name,
+            value: doc.id,
+            phone: doc.phone,
+            avatar: doc.avatar,
+            specialization: doc.specialization,
+            searchLabel: `${doc.name} ${doc.phone || ""}`
+          }))}
+          onSearchChange={onDoctorSearch}
+          renderOption={(doc: any) => (
+            <div className="flex items-center gap-3 py-1">
+              {doc.avatar ? (
+                <img
+                  src={doc.avatar}
+                  alt={doc.label}
+                  className="w-8 h-8 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                  {doc.label.charAt(0)}
+                </div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-foreground text-xs">{doc.label}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone || "No phone"}
+                </span>
+              </div>
+            </div>
+          )}
+          renderValue={(option: any) => (
+            <div className="flex items-center gap-2">
+              {option.avatar ? (
+                <img
+                  src={option.avatar}
+                  alt={option.label}
+                  className="w-5 h-5 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                  {option.label.charAt(0)}
+                </div>
+              )}
+              <span className="font-bold text-foreground">{option.label}</span>
+            </div>
+          )}
           placeholder="Select Doctor"
         />
       </div>

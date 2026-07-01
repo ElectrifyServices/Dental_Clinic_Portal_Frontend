@@ -6,6 +6,9 @@ import { Modal, Button } from "@/components/ui";
 import { procedures, teeth } from "@/constants/treatment.constants";
 import type { TreatmentFormProps } from "@/types/treatment.types";
 import { useTreatmentForm } from "@/hooks/treatment/useTreatmentForm";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebounce } from "@/hooks/useDebounce";
+import { getFileUrl } from "@/services/apiClient";
 import { BasicInfoSection } from "./TreatmentForm/BasicInfoSection";
 import { SessionPlannerSection } from "./TreatmentForm/SessionPlannerSection";
 import { PrescriptionSection } from "./TreatmentForm/PrescriptionSection";
@@ -19,6 +22,116 @@ export function TreatmentForm({
   doctors,
   treatments: allTreatments,
 }: TreatmentFormProps) {
+  const [patientSearch, setPatientSearch] = React.useState("");
+  const debouncedPatientSearch = useDebounce(patientSearch, 300);
+
+  const { data: apiPatientsData } = useApiQuery<any[]>({
+    queryKey: ["treatment-form-patients", debouncedPatientSearch],
+    endpoint: "/patient/list",
+    method: "post",
+    data: {
+      page: 1,
+      limit: 50,
+      search: debouncedPatientSearch || undefined,
+    }
+  });
+
+  const apiPatients = React.useMemo(() => {
+    let rawList: any[] = [];
+    const dataObj: any = apiPatientsData;
+    if (Array.isArray(dataObj)) {
+      rawList = dataObj;
+    } else if (dataObj && Array.isArray(dataObj.patients)) {
+      rawList = dataObj.patients;
+    } else if (dataObj && Array.isArray(dataObj.data?.patients)) {
+      rawList = dataObj.data.patients;
+    } else if (dataObj && Array.isArray(dataObj.data?.data)) {
+      rawList = dataObj.data.data;
+    } else if (dataObj && Array.isArray(dataObj.data)) {
+      rawList = dataObj.data;
+    }
+    
+    const mapped = rawList.map((p: any) => ({
+      ...p,
+      id: p.id,
+      name: p.name || p.full_name || '',
+      phone: p.phone || p.mobile || '',
+      avatar: getFileUrl(p.profile_picture_url) || getFileUrl(p.profile_picture) || getFileUrl(p.avatar) || '',
+    }));
+
+    if (mapped.length === 0 && !debouncedPatientSearch) {
+      return (allPatients || []).map((p) => {
+        const name = typeof p === "string" ? p : p.name;
+        return typeof p === "object" ? p : { id: name, name, phone: "", avatar: "" };
+      });
+    }
+    return mapped;
+  }, [apiPatientsData, allPatients, debouncedPatientSearch]);
+
+  const [doctorSearch, setDoctorSearch] = React.useState("");
+  const debouncedDoctorSearch = useDebounce(doctorSearch, 300);
+
+  const { data: apiStaffData } = useApiQuery<any[]>({
+    queryKey: ["treatment-form-doctors", debouncedDoctorSearch],
+    endpoint: "/staff/list",
+    method: "post",
+    data: {
+      all: true,
+      search: debouncedDoctorSearch || undefined,
+    }
+  });
+
+  const apiDoctors = React.useMemo(() => {
+    let rawList: any[] = [];
+    const dataObj: any = apiStaffData;
+    if (Array.isArray(dataObj)) {
+      rawList = dataObj;
+    } else if (dataObj && Array.isArray(dataObj.staffs)) {
+      rawList = dataObj.staffs;
+    } else if (dataObj && Array.isArray(dataObj.data?.staffs)) {
+      rawList = dataObj.data.staffs;
+    } else if (dataObj && Array.isArray(dataObj.data?.staff)) {
+      rawList = dataObj.data.staff;
+    } else if (dataObj && Array.isArray(dataObj.data?.data)) {
+      rawList = dataObj.data.data;
+    } else if (dataObj && Array.isArray(dataObj.data)) {
+      rawList = dataObj.data;
+    }
+
+    const mapped = rawList.map((s: any) => {
+      let normalizedRole = 'staff';
+      let rawRole = s.role?.name || s.role_id || s.role || 'staff';
+      if (typeof rawRole !== 'string') rawRole = String(rawRole);
+      const lowerRole = rawRole.toLowerCase();
+
+      if (lowerRole.includes('super')) normalizedRole = 'super_admin';
+      else if (lowerRole.includes('admin')) normalizedRole = 'admin';
+      else if (lowerRole.includes('doctor')) normalizedRole = 'doctor';
+      else if (lowerRole.includes('reception')) normalizedRole = 'receptionist';
+      else if (lowerRole.includes('nurse')) normalizedRole = 'nurse';
+      else if (lowerRole.includes('assist')) normalizedRole = 'assistant';
+      else normalizedRole = 'staff';
+
+      return {
+        ...s,
+        id: s.id,
+        name: s.name,
+        phone: s.phone,
+        role: normalizedRole,
+        specialization: s.personal_profile?.specialization?.name || s.specialization || '',
+        avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || getFileUrl(s.personal_profile?.profile_picture_url) || getFileUrl(s.personal_profile?.profile_picture) || '',
+      };
+    });
+
+    const filtered = mapped.filter(
+      (s: any) => s.role === "doctor" || s.role === "admin"
+    );
+
+    if (filtered.length === 0 && !debouncedDoctorSearch) {
+      return (doctors || []);
+    }
+    return filtered;
+  }, [apiStaffData, doctors, debouncedDoctorSearch]);
   const {
     form,
     formData,
@@ -86,13 +199,15 @@ export function TreatmentForm({
           <BasicInfoSection
             formData={formData}
             handleChange={handleChange}
-            allPatients={allPatients}
-            doctors={doctors}
+            allPatients={apiPatients}
+            doctors={apiDoctors}
             procedures={procedures}
             teeth={teeth}
             pendingPlans={pendingPlans}
             onLoadPlan={handleLoadPlan}
             isEdit={!!treatment}
+            onPatientSearch={setPatientSearch}
+            onDoctorSearch={setDoctorSearch}
           />
         </div>
 
@@ -137,14 +252,30 @@ export function TreatmentForm({
           onUpload={(e) => {
             const files = Array.from(e.target.files || []);
             const urls = files.map((f) => URL.createObjectURL(f));
-            form.setValue("images", [...formData.images, ...urls]);
+            form.setValue("images", [...(formData.images || []), ...urls]);
+            
+            const currentFiles = form.getValues("rawFiles") || [];
+            form.setValue("rawFiles", [...currentFiles, ...files]);
           }}
-          onRemove={(index) =>
-            form.setValue(
-              "images",
-              formData.images.filter((_, i) => i !== index)
-            )
-          }
+          onRemove={(index) => {
+            const urlToRemove = formData.images[index];
+            const updatedPreviews = formData.images.filter((_, i) => i !== index);
+            form.setValue("images", updatedPreviews);
+
+            if (urlToRemove && urlToRemove.startsWith("blob:")) {
+              let blobIndex = 0;
+              for (let i = 0; i < index; i++) {
+                if (formData.images[i] && formData.images[i].startsWith("blob:")) {
+                  blobIndex++;
+                }
+              }
+              const currentFiles = form.getValues("rawFiles") || [];
+              form.setValue("rawFiles", currentFiles.filter((_, i) => i !== blobIndex));
+            } else if (urlToRemove) {
+              const currentExisting = form.getValues("existingImages") || [];
+              form.setValue("existingImages", currentExisting.filter((url) => url !== urlToRemove));
+            }
+          }}
         />
       </form>
     </Modal>

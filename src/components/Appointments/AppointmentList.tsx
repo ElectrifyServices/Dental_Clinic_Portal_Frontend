@@ -84,6 +84,14 @@ export function AppointmentList({
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  
+  const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const nextWeekStr = `${nextWeek.getFullYear()}-${String(nextWeek.getMonth() + 1).padStart(2, "0")}-${String(nextWeek.getDate()).padStart(2, "0")}`;
+
+  const [startDate, setStartDate] = useState<string>(selectedDate || todayStr);
+  const [endDate, setEndDate] = useState<string>(nextWeekStr);
 
   const { doctors } = useDoctorsListQuery();
 
@@ -100,10 +108,14 @@ export function AppointmentList({
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
     let dateMatch = true;
-    if (selectedDate) {
+    if (startDate) {
       const aDate = new Date(a.date);
       const aDateString = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, "0")}-${String(aDate.getDate()).padStart(2, "0")}`;
-      dateMatch = aDateString === selectedDate;
+      if (endDate) {
+        dateMatch = aDateString >= startDate && aDateString <= endDate;
+      } else {
+        dateMatch = aDateString === startDate;
+      }
     }
     if (filter === "today")
       return searchMatch && new Date(a.date).toDateString() === today.toDateString();
@@ -135,7 +147,10 @@ export function AppointmentList({
               {patientName.charAt(0)}
             </div>
             <div>
-              <div className="font-semibold text-foreground leading-tight mb-0.5 capitalize">
+              <div 
+                className="font-semibold text-foreground leading-tight mb-0.5 capitalize truncate max-w-[150px]" 
+                title={patientName}
+              >
                 {patientName}
               </div>
               <div className="text-[10px] text-muted-foreground font-medium">
@@ -321,16 +336,29 @@ export function AppointmentList({
               className="pl-10 h-10 rounded-2xl bg-card border-border"
             />
           </div>
-          <div className="w-full sm:w-48">
+          <div className="flex w-full sm:w-auto items-center gap-2">
             <Input
               type="date"
-              value={selectedDate}
+              value={startDate || ""}
               onChange={(e) => {
+                setStartDate(e.target.value);
                 setSelectedDate?.(e.target.value);
                 setFilter("all");
                 setPage(1);
               }}
-              className="h-10 rounded-2xl bg-card border-border"
+              className="h-10 rounded-2xl bg-card border-border w-36"
+            />
+            <span className="text-muted-foreground text-sm font-medium">to</span>
+            <Input
+              type="date"
+              value={endDate}
+              min={startDate || ""}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setFilter("all");
+                setPage(1);
+              }}
+              className="h-10 rounded-2xl bg-card border-border w-36"
             />
           </div>
         </div>

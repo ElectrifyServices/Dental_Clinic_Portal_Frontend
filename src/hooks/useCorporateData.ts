@@ -71,17 +71,36 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
       planTier: plan.plan_tier?.toLowerCase() as any,
       annualFee: plan.annual_fee ? Number(plan.annual_fee) : undefined,
       maxDependents: plan.family_coverage_limit ?? plan.max_dependents ?? 0,
-      benefits: (plan.benefits || []).map((b: any) => ({
-        id: b.id,
-        type: mapBackendBenefitType(b.type),
-        value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
-          ? (b.allocationCount ?? b.count ?? 0)
-          : (b.discount_percentage ?? 0),
-        cap: b.max_amount || undefined,
-        customName: b.benifit_label || undefined,
-        treatmentTypes: (b.clinical_procedures || []).map(mapProcedureLabelToKey),
-        description: b.description || "",
-      })),
+      benefits: (plan.benefits || []).map((b: any) => {
+        let customTreatmentText = "";
+        const standardKeys = [
+          'consultation', 'follow-up', 'xray-review', 'cleaning', 'emergency',
+          'filling', 'root-canal', 'extraction', 'orthodontics', 'implants',
+          'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
+          'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
+        ];
+        const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
+          const key = mapProcedureLabelToKey(proc);
+          if (!standardKeys.includes(key)) {
+            customTreatmentText = proc;
+            return 'other';
+          }
+          return key;
+        });
+
+        return {
+          id: b.id,
+          type: mapBackendBenefitType(b.type),
+          value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
+            ? (b.allocationCount ?? b.count ?? 0)
+            : (b.discount_percentage ?? 0),
+          cap: b.max_amount || undefined,
+          customName: b.benifit_label || undefined,
+          treatmentTypes,
+          customTreatmentText,
+          description: b.description || "",
+        };
+      }),
     };
   };
 

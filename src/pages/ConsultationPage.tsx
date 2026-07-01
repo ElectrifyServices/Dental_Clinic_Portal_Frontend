@@ -231,8 +231,16 @@ export const ConsultationPage: React.FC = () => {
           instructions: p.instructions || ''
         }));
 
+      const resolvedPatientId = consultationData.patientId;
+      const isWalkIn = resolvedPatientId && String(resolvedPatientId).startsWith("WALK-");
       const apiPayload: any = {
-        patientId: consultationData.patientId,
+        patientId: isWalkIn ? undefined : resolvedPatientId,
+        patient_name: isWalkIn
+          ? (consultationData.patientName || consultationData.name || consultationData.directPatientName)
+          : (consultationData.isDirect && !resolvedPatientId ? consultationData.directPatientName : undefined),
+        patient_phone: isWalkIn
+          ? (consultationData.patientPhone || consultationData.phone || consultationData.directPatientPhone)
+          : (consultationData.isDirect && !resolvedPatientId ? consultationData.directPatientPhone : undefined),
         appointmentId: consultationData.appointmentId,
         observations: consultationData.observations,
         diagnosis: consultationData.diagnosis,
@@ -248,7 +256,7 @@ export const ConsultationPage: React.FC = () => {
 
       if (consultationData.followUpRequired) {
         apiPayload.appointment_info = {
-          patient_id: consultationData.patientId,
+          patient_id: isWalkIn ? undefined : resolvedPatientId,
           doctor_id: consultationData.followUpDoctorId,
           date: consultationData.followUpDate,
           start_time: consultationData.followUpTime,

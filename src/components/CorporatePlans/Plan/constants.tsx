@@ -44,10 +44,22 @@ export const mkForm = () => ({
 export function autoDesc(b: PlanBenefit): string {
   switch (b.type) {
     case 'flat_discount': return `${b.value}% discount on all treatments`;
-    case 'treatment_discount': return `${b.value}% discount on ${(b.treatmentTypes || []).map(t => TREATMENT_LABELS[t] || t).join(', ') || 'selected treatments'}`;
+    case 'treatment_discount': {
+      const list = (b.treatmentTypes || []).map(t => {
+        if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+        return TREATMENT_LABELS[t] || t;
+      });
+      return `${b.value}% discount on ${list.join(', ') || 'selected treatments'}`;
+    }
     case 'free_consultations': return `${b.value} free consultation${b.value > 1 ? 's' : ''} per year`;
-    case 'free_treatments': return `${b.value} free ${(b.treatmentTypes || []).map(t => TREATMENT_LABELS[t] || t).join(', ') || 'treatment'}`;
-    case 'capped_discount': return `${b.value}% discount (max ?${b.cap?.toLocaleString() || '...'} per visit)`;
+    case 'free_treatments': {
+      const list = (b.treatmentTypes || []).map(t => {
+        if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+        return TREATMENT_LABELS[t] || t;
+      });
+      return `${b.value} free ${list.join(', ') || 'treatment'}`;
+    }
+    case 'capped_discount': return `${b.value}% discount (max ₹${b.cap?.toLocaleString() || '...'} per visit)`;
     case 'custom': return `${b.value}% off on ${b.customName || 'Custom Benefit'}`;
     default: return '';
   }

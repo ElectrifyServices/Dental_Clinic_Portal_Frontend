@@ -126,7 +126,12 @@
       {
         "id": "main",
         "label": "Overview",
-        "items": ["dashboard", "appointments", "patients"]
+        "items": ["patients", "appointments", "dashboard"]
+      },
+      {
+        "id": "superadmin",
+        "label": "Super Admin",
+        "items": ["membership"]
       },
       {
         "id": "clinical",
@@ -136,12 +141,7 @@
       {
         "id": "admin",
         "label": "Administration",
-        "items": ["billing", "inventory", "reports", "staff", "profit-sharing"]
-      },
-      {
-        "id": "superadmin",
-        "label": "Super Admin",
-        "items": ["membership"]
+        "items": ["billing", "staff", "inventory", "reports", "profit-sharing"]
       }
     ]
   },

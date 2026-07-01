@@ -119,20 +119,23 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Date — editable */}
+        {/* Date — editable (Moved to Right) */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Date
           </label>
-          <Input
-            type="date"
-            name="date"
-            value={date}
-            min={new Date().toISOString().split('T')[0]}
-            onChange={onDateChange}
-            required
-            className="h-11 rounded-xl border-border"
-          />
+          <div className="relative">
+            <Input
+              type="date"
+              name="date"
+              value={date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={onDateChange}
+              required
+              className="h-11 w-full rounded-xl border-border pl-3 pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
+            />
+            <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+          </div>
         </div>
 
         {/* Time — editable */}
@@ -196,31 +199,31 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
             </div>
           ) : hasSlots ? (
             <div className="flex gap-2 flex-wrap max-h-40 overflow-y-auto p-1.5 custom-scrollbar">
-               {slots.map((slot) => {
-                 const isSelected = time === slot.time24;
-                 const isDisabled = slot.isPast;
-                 return (
-                   <Button
-                     key={slot.time24}
-                     type="button"
-                     disabled={isDisabled}
-                     onClick={() => !isDisabled && handleSlotClick(slot.time24)}
-                     className={`
+              {slots.map((slot) => {
+                const isSelected = time === slot.time24;
+                const isDisabled = slot.isPast;
+                return (
+                  <Button
+                    key={slot.time24}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && handleSlotClick(slot.time24)}
+                    className={`
                        relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5 h-auto
                        ${isSelected
-                         ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
-                         : isDisabled
-                         ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
-                         : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
-                       }
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105 hover:bg-emerald-600"
+                        : isDisabled
+                          ? "bg-red-50 text-red-300 border-red-100 cursor-not-allowed line-through opacity-50 hover:bg-red-50"
+                          : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
+                      }
                      `}
-                     title={slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
-                   >
-                     {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
-                     {slot.time12} ({slot.appointmentCount})
-                   </Button>
-                 );
-               })}
+                    title={slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
+                  >
+                    {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
+                    {slot.time12} ({slot.appointmentCount})
+                  </Button>
+                );
+              })}
             </div>
           ) : (
             <p className="text-[10px] text-emerald-600/60 font-medium italic py-1">

@@ -31,7 +31,7 @@ export function CorporatePlanManagement({
   category: propCategory, onCategoryChange: propOnCategoryChange,
   isLoading, onGoToRegister,
 }: Props) {
-  const { showToast, confirmDelete } = useModal();
+  const { showToast, confirmDelete, showConfirm } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
   const cfg = useFormConfig('corporate');
@@ -86,14 +86,20 @@ export function CorporatePlanManagement({
     });
   };
 
-  const handleToggle = async (plan: CorporatePlan) => {
-    try {
-      await updateStatusMutation.mutateAsync({ id: plan.id, status: plan.isActive ? 'INACTIVE' : 'ACTIVE' });
-      onToggle(plan.id);
-      showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'}`);
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || err?.message || 'Failed to update status', 'error');
-    }
+  const handleToggle = (plan: CorporatePlan) => {
+    showConfirm(
+      'Update Status',
+      `Are you sure you want to ${plan.isActive ? 'deactivate' : 'activate'} this plan?`,
+      async () => {
+        try {
+          await updateStatusMutation.mutateAsync({ id: plan.id, status: plan.isActive ? 'INACTIVE' : 'ACTIVE' });
+          onToggle(plan.id);
+          showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'}`);
+        } catch (err: any) {
+          throw err;
+        }
+      }
+    );
   };
 
   const openNew = () => { setEditing(null); setShowForm(true); };
