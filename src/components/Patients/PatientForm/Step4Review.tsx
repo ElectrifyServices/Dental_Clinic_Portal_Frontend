@@ -115,59 +115,58 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
             </div>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Full Name
                 </span>
-                <p className="font-semibold text-foreground">{formData.name}</p>
+                <p className="font-semibold text-foreground truncate block" title={formData.name}>{formData.name}</p>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Phone Number
                 </span>
-                <p className="font-semibold text-foreground flex items-center gap-2">
+                <p className="font-semibold text-foreground flex items-center gap-2 truncate block" title={formData.phone}>
                   {formData.phone}
-
                 </p>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Email Address
                 </span>
-                <p className="font-semibold text-foreground truncate">
+                <p className="font-semibold text-foreground truncate block" title={formData.email || "N/A"}>
                   {formData.email || "N/A"}
                 </p>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Gender / Age
                 </span>
-                <p className="font-semibold text-foreground capitalize">
+                <p className="font-semibold text-foreground capitalize truncate block" title={`${formData.gender || "N/A"} / ${calculateAge(formData.dateOfBirth)}Y`}>
                   {formData.gender || "N/A"} /{" "}
                   {calculateAge(formData.dateOfBirth)}Y
                 </p>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Blood Group
                 </span>
-                <p className="font-semibold text-foreground">
+                <p className="font-semibold text-foreground truncate block" title={formData.bloodGroup || "Not provided"}>
                   {formData.bloodGroup || "Not provided"}
                 </p>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Marital Status
                 </span>
-                <p className="font-semibold text-foreground capitalize">
+                <p className="font-semibold text-foreground capitalize truncate block" title={formData.maritalStatus || "N/A"}>
                   {formData.maritalStatus || "N/A"}
                 </p>
               </div>
-              <div className="col-span-2 space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              <div className="col-span-2 space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Occupation
                 </span>
-                <p className="font-semibold text-foreground">
+                <p className="font-semibold text-foreground truncate block" title={formData.occupation || "N/A"}>
                   {formData.occupation || "N/A"}
                 </p>
               </div>
@@ -175,7 +174,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                   Residential Address
                 </span>
-                <p className="font-semibold text-foreground text-sm">
+                <p className="font-semibold text-foreground text-sm line-clamp-2" title={formData.address}>
                   {formData.address || "N/A"}
                 </p>
               </div>
@@ -216,12 +215,12 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
 
         <div className="space-y-4">
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
-            <CardContent className="p-4">
-              <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-destructive" />
+            <CardContent className="p-3 md:p-4">
+              <h4 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                <Heart className="w-4 h-4 text-destructive" />
                 Medical Status
               </h4>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="p-3 bg-primary/5 border border-primary/10 rounded-xl">
                   <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-1">
                     Medical Conditions
@@ -283,7 +282,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                   <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1.5">
                     Past Dental History
                   </span>
-                  <p className="text-sm text-foreground font-semibold leading-relaxed">
+                  <p className="text-sm text-foreground font-semibold leading-relaxed line-clamp-3" title={formData.pastDentalHistory}>
                     {formData.pastDentalHistory ||
                       "No previous history provided"}
                   </p>
@@ -306,43 +305,43 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
           </Card>
 
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
-            <CardContent className="p-4">
-              <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
+            <CardContent className="p-3 md:p-4">
+              <h4 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
                 Previous Dentist / Doctor Details
               </h4>
               {formData.previousDoctorName || formData.previousClinicName || formData.previousClinicAddress ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                         Doctor Name
                       </span>
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorName ? `Dr. ${formData.previousDoctorName}` : "—"}>
                         Dr. {formData.previousDoctorName || "—"}
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                         Clinic Name
                       </span>
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousClinicName || "—"}>
                         {formData.previousClinicName || "—"}
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                         Doctor Phone
                       </span>
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorPhone || "—"}>
                         {formData.previousDoctorPhone || "—"}
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                         Last Visit Date
                       </span>
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousLastVisitDate || "—"}>
                         {formData.previousLastVisitDate || "—"}
                       </p>
                     </div>
@@ -350,7 +349,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                       <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                         Clinic Address
                       </span>
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-sm line-clamp-2" title={formData.previousClinicAddress}>
                         {formData.previousClinicAddress || "—"}
                       </p>
                     </div>
@@ -380,9 +379,9 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
           </Card>
 
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
-            <CardContent className="p-4">
-              <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-primary" />
+            <CardContent className="p-3 md:p-4">
+              <h4 className="text-base font-bold text-foreground mb-2 flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4 text-primary" />
                 Declarations & Consents
               </h4>
               <div className="p-3 bg-secondary/20 border border-secondary rounded-xl mt-4">

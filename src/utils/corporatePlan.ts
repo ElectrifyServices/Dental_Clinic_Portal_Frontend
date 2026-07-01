@@ -55,7 +55,14 @@ export function computePlanDiscount(
         if (matching.length) {
           const d = Math.round((subtotal * b.value) / 100);
           totalDiscount += d;
-          applied.push({ benefit: b, discountAmount: d, label: `${b.value}% on ${matching.map(t => TREATMENT_LABELS[t] || t).join(', ')}` });
+          applied.push({
+            benefit: b,
+            discountAmount: d,
+            label: `${b.value}% on ${matching.map(t => {
+              if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+              return TREATMENT_LABELS[t] || t;
+            }).join(', ')}`
+          });
         }
         break;
       }

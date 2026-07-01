@@ -42,8 +42,16 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         // Yield to the event loop so the loading spinner appears before heavy processing
         await new Promise(resolve => setTimeout(resolve, 50));
         
+        const idToUse = invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
+        const isMemberCheck = invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
+        const queryParams: any = {};
+        if (idToUse) {
+          if (isMemberCheck) queryParams.member_id = idToUse;
+          else queryParams.patient_id = idToUse;
+        }
+        
         const res = await apiClient.get('/invoice/history', { 
-          params: { patient_id: invoice.patientId || patient?.id } 
+          params: queryParams
         });
         
         let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
@@ -110,6 +118,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
   const payments = Array.isArray(rawPayments)
     ? rawPayments.map((p: any) => ({
         id: p.id || p.payment_id || p.transaction_id || `PAY-${p.invoice_id || invoice.id}-${Date.now()}`,
+        invoice_number: p.invoice_number || invoice.invoice_number || invoice.id,
         date: p.payment_date || p.date || p.created_at || invoice.date,
         amount: Number(p.amount ?? p.amount_paid ?? 0),
         method: p.payment_method || p.method || "Cash",
@@ -119,6 +128,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         ? [
             {
               id: `PAY-${invoice.id}-1`,
+              invoice_number: invoice.invoice_number || invoice.id,
               date: invoice.date,
               amount: totalAmount,
               method: "Cash",
@@ -197,11 +207,11 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
             <DataTable
               columns={[
                 {
-                  key: "id",
-                  header: "Transaction ID",
+                  key: "invoice_number",
+                  header: "Invoice No.",
                   render: (pay: any) => (
                     <span className="font-mono text-xs font-bold text-foreground">
-                      {pay.id}
+                      {pay.invoice_number}
                     </span>
                   ),
                 },

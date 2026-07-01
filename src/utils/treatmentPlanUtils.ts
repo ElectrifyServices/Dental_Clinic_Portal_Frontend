@@ -63,6 +63,7 @@ export function toUiTreatment(plan: TreatmentPlanResponse) {
     notes: plan.clinical_notes ?? "",
     prescriptions: (plan.prescriptions ?? []).map(apiPrescToUi),
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
+    images: (plan as any).images ?? [],
   };
 }
 
@@ -102,6 +103,8 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     clinical_notes: formData.notes ?? "",
     prescriptions,
     sessions: sessions.length > 0 ? sessions : undefined,
+    rawFiles: formData.rawFiles ?? [],
+    existingImages: formData.existingImages ?? [],
   };
   return data;
 }
@@ -131,5 +134,7 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     clinical_notes: formData.notes ?? "",
     doctor_id: formData.doctorId,
     prescriptions,
+    rawFiles: formData.rawFiles ?? [],
+    existingImages: formData.existingImages ?? [],
   };
 }

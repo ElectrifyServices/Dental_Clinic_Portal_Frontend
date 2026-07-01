@@ -9,7 +9,7 @@ import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
   PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading,
 } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
@@ -39,7 +39,7 @@ export function EmployeeManagement({
   employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
 }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
-  const { showToast } = useModal();
+  const { showToast, confirmDelete, showConfirm } = useModal();
 
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
@@ -431,9 +431,9 @@ export function EmployeeManagement({
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setChangePlanEmp(e); }}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
+              {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
                 <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setDeleteEmp(e); }} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>
@@ -447,21 +447,6 @@ export function EmployeeManagement({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Members"
-        subtitle={`${totalItems} member${totalItems !== 1 ? 's' : ''} across ${plans.filter(p => p.isActive).length} active plan${plans.filter(p => p.isActive).length !== 1 ? 's' : ''}`}
-        action={
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setTab('import')} variant="outline" className="gap-2">
-              <Upload className="w-4 h-4" /> Import
-            </Button>
-            <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2">
-              <Plus className="w-4 h-4" /> Add Member
-            </Button>
-          </div>
-        }
-      />
-
       {tab === 'list' ? (
         <>
           {/* Filters */}
@@ -505,10 +490,21 @@ export function EmployeeManagement({
               </div>
 
               {/* Company filter has been removed */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0 xl:border-l xl:pl-3 border-border/50">
+                <Button onClick={() => setTab('import')} variant="outline" className="gap-2 w-full sm:w-auto rounded-xl h-10 border-border/60 hover:bg-slate-50 flex-1 sm:flex-none">
+                  <Upload className="w-4 h-4" /> Import
+                </Button>
+                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 flex-1 sm:flex-none px-4">
+                  <Plus className="w-4 h-4" /> Add Member
+                </Button>
+              </div>
             </div>
           </div>
 
-          <DataTable
+          {employeesLoading ? (
+            <Loading type="spinner" text="Loading members…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
+          ) : (
+            <DataTable
             columns={columns}
             data={apiMembers}
             rowKey={e => e.id}
@@ -528,6 +524,7 @@ export function EmployeeManagement({
               />
             }
           />
+          )}
         </>
       ) : (
         <EmployeeImportTab

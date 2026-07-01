@@ -74,6 +74,16 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     enabled: showForm && !!editing?.id,
   });
 
+  const [expandedBenefits, setExpandedBenefits] = useState<Record<number, boolean>>({ 0: true });
+
+  const toggleBenefit = (idx: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setExpandedBenefits(prev => ({ ...prev, [idx]: prev[idx] === false ? true : false }));
+  };
+
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
     (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
   );
@@ -105,17 +115,34 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           CAPPED_DISCOUNT: "capped_discount", CUSTOM: "custom",
         }[t] || "custom");
 
-        const benefits = (planData.benefits || []).map((b: any) => ({
-          id: b.id || `b-${Date.now()}-${Math.random()}`,
-          type: mapBackendBenefitType(b.type),
-          value: ["FREE_CONSULTATION", "FREE_TREATMENT_SERVICE"].includes(b.type)
-            ? (b.allocationCount || b.count || 0) : (b.discount_percentage || 0),
-          allocationCount: b.allocationCount || b.count || 0,
-          cap: b.max_amount || undefined,
-          customName: b.benifit_label || undefined,
-          treatmentTypes: (b.clinical_procedures || []).map(mapProcedureLabelToKey),
-          description: b.description || "",
-        }));
+        const benefits = (planData.benefits || []).map((b: any) => {
+          let customTreatmentText = "";
+          const standardKeys = [
+            'consultation', 'follow-up', 'xray-review', 'cleaning', 'emergency',
+            'filling', 'root-canal', 'extraction', 'orthodontics', 'implants',
+            'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
+            'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
+          ];
+          const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
+            const key = mapProcedureLabelToKey(proc);
+            if (!standardKeys.includes(key)) {
+              customTreatmentText = proc;
+              return 'other';
+            }
+            return key;
+          });
+
+          return {
+            id: b.id || Date.now().toString() + Math.random().toString(),
+            type: mapBackendBenefitType(b.type),
+            value: b.discount_percentage || b.allocationCount || 0,
+            cap: b.max_amount || undefined,
+            customName: b.benifit_label || undefined,
+            treatmentTypes,
+            customTreatmentText,
+            description: b.description || "",
+          };
+        });
 
         const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any;
         const resolvedMaxDep = planData.family_coverage_limit ?? planData.max_dependents ?? editing.maxDependents ?? 0;
@@ -219,7 +246,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       const isFree = ["free_consultations", "free_treatments"].includes(b.type);
       let clinical_procedures: string[] = [];
       if (b.type === "free_consultations") clinical_procedures = ["Consultation"];
-      else if (Array.isArray(b.treatmentTypes)) clinical_procedures = b.treatmentTypes.map(t => TREATMENT_LABELS[t] || t);
+      else if (Array.isArray(b.treatmentTypes)) {
+        clinical_procedures = b.treatmentTypes.map(t => {
+          if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+          return TREATMENT_LABELS[t] || t;
+        });
+      }
       return {
         type: mapBenefitType(b.type),
         allocationCount: isFree ? b.value : 0,
@@ -533,7 +565,11 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             </div>
             <Button
               variant="outline" size="sm"
-              onClick={() => setForm({ ...form, benefits: [...form.benefits, mkBenefit()] })}
+              onClick={() => {
+                const newIdx = form.benefits.length;
+                setForm({ ...form, benefits: [...form.benefits, mkBenefit()] });
+                setExpandedBenefits(prev => ({ ...prev, [newIdx]: true }));
+              }}
               className="gap-1.5 h-8"
             >
               <Plus className="w-3.5 h-3.5" /> Add Benefit
@@ -547,123 +583,153 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           )}
 
           <div className="space-y-4">
-            {form.benefits.map((b, idx) => (
+            {form.benefits.map((b, idx) => {
+              const isExpanded = expandedBenefits[idx] !== false;
+              return (
               <div key={b.id} className="relative border border-border rounded-2xl p-6 bg-muted/10 hover:bg-muted/20 transition-all">
-                <div className="absolute -top-2.5 left-5 px-3 py-0.5 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest">
-                  Benefit {idx + 1}
+                <div 
+                  className="absolute -top-2.5 left-5 px-3 py-0.5 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest cursor-pointer select-none"
+                  onClick={(e) => toggleBenefit(idx, e)}
+                >
+                  Benefit {idx + 1} {isExpanded ? '▼' : '▶'}
                 </div>
 
                 {form.benefits.length > 1 && (
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) });
+                    }}
                     className="absolute top-3 right-3 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
+                )}
+                
+                {/* Accordion Toggle Header for the whole block when collapsed */}
+                {!isExpanded && (
+                  <div className="cursor-pointer select-none text-sm font-semibold text-muted-foreground pt-2" onClick={(e) => toggleBenefit(idx, e)}>
+                    {b.type === 'custom' ? b.customName || 'Custom Benefit' : BENEFIT_LABELS[b.type] || 'Benefit Details'}
+                    {b.value ? ` - ${b.value}` : ''}
+                  </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-                  {/* Benefit type */}
-                  <div className="md:col-span-2">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Benefit Type</Label>
-                    <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
-                      <SelectTrigger className="w-full rounded-xl text-sm">
-                        <SelectValue placeholder="Choose benefit type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(BENEFIT_LABELS).map(([v, l]) => (
-                          <SelectItem key={v} value={v}>{l}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Value / Count */}
-                  {b.type === 'custom' ? (
-                    <LabeledField label="Benefit Name">
-                      <Input
-                        value={b.customName || ''}
-                        onChange={e => updateBenefit(idx, 'customName', e.target.value)}
-                        placeholder="e.g. Lab Charges"
-                        className="rounded-xl"
-                      />
-                    </LabeledField>
-                  ) : (
-                    <LabeledField label={['free_consultations', 'free_treatments'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
-                      <Input
-                        type="number" min="0"
-                        max={b.type.includes('discount') ? 100 : 999}
-                        value={b.value}
-                        onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
-                        className="rounded-xl font-bold"
-                      />
-                    </LabeledField>
-                  )}
-
-                  {b.type === 'custom' && (
-                    <LabeledField label="Discount %">
-                      <Input
-                        type="number" min="0" max={100} value={b.value}
-                        onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
-                        className="rounded-xl font-bold"
-                      />
-                    </LabeledField>
-                  )}
-
-                  {b.type === 'capped_discount' && (
-                    <LabeledField label="Maximum Amount (₹)">
-                      <Input
-                        type="number" min="0" value={b.cap ?? ''}
-                        onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
-                        className="rounded-xl"
-                      />
-                    </LabeledField>
-                  )}
-
-                  {/* Applicable treatments */}
-                  {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
-                    <div className="md:col-span-3">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Applicable Treatments</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
-                          <label
-                            key={key}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${b.treatmentTypes?.includes(key)
-                                ? 'bg-primary/10 border-primary text-primary'
-                                : 'bg-background border-border text-muted-foreground hover:border-primary/40'
-                              }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={b.treatmentTypes?.includes(key) ?? false}
-                              className="sr-only"
-                              onChange={e => {
-                                const curr = b.treatmentTypes || [];
-                                updateBenefit(idx, 'treatmentTypes', e.target.checked ? [...curr, key] : curr.filter(t => t !== key));
-                              }}
-                            />
-                            {label}
-                          </label>
-                        ))}
-                      </div>
+                {isExpanded && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+                    {/* Benefit type */}
+                    <div className="md:col-span-2">
+                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Benefit Type</Label>
+                      <Select value={b.type} onValueChange={val => updateBenefit(idx, 'type', val)}>
+                        <SelectTrigger className="w-full rounded-xl text-sm">
+                          <SelectValue placeholder="Choose benefit type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(BENEFIT_LABELS).map(([v, l]) => (
+                            <SelectItem key={v} value={v}>{l}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
 
-                  {/* Description */}
-                  <div className="md:col-span-3">
-                    <LabeledField label="Benefit Description (shown to patients)" error={errors[`b_${idx}`]}>
-                      <Input
-                        value={b.description}
-                        onChange={e => updateBenefit(idx, 'description', e.target.value)}
-                        placeholder="e.g. 20% off on all treatments"
-                        className="rounded-xl bg-muted/30"
-                      />
-                    </LabeledField>
+                    {/* Value / Count */}
+                    {b.type === 'custom' ? (
+                      <LabeledField label="Benefit Name">
+                        <Input
+                          value={b.customName || ''}
+                          onChange={e => updateBenefit(idx, 'customName', e.target.value)}
+                          placeholder="e.g. Lab Charges"
+                          className="rounded-xl"
+                        />
+                      </LabeledField>
+                    ) : (
+                      <LabeledField label={['free_consultations', 'free_treatments'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
+                        <Input
+                          type="number" min="0"
+                          max={b.type.includes('discount') ? 100 : 999}
+                          value={b.value}
+                          onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
+                          className="rounded-xl font-bold"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {b.type === 'custom' && (
+                      <LabeledField label="Discount %">
+                        <Input
+                          type="number" min="0" max={100} value={b.value}
+                          onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
+                          className="rounded-xl font-bold"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {b.type === 'capped_discount' && (
+                      <LabeledField label="Maximum Amount (₹)">
+                        <Input
+                          type="number" min="0" value={b.cap ?? ''}
+                          onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
+                          className="rounded-xl"
+                        />
+                      </LabeledField>
+                    )}
+
+                    {/* Applicable treatments */}
+                    {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
+                      <div className="md:col-span-3">
+                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Applicable Treatments</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
+                            <label
+                              key={key}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${b.treatmentTypes?.includes(key)
+                                  ? 'bg-primary/10 border-primary text-primary'
+                                  : 'bg-background border-border text-muted-foreground hover:border-primary/40'
+                                }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={b.treatmentTypes?.includes(key) ?? false}
+                                className="sr-only"
+                                onChange={e => {
+                                  const curr = b.treatmentTypes || [];
+                                  updateBenefit(idx, 'treatmentTypes', e.target.checked ? [...curr, key] : curr.filter(t => t !== key));
+                                }}
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                        {b.treatmentTypes?.includes('other') && (
+                          <div className="mt-3 max-w-md">
+                            <LabeledField label="Specify Custom Treatment Name">
+                              <Input
+                                value={b.customTreatmentText || ''}
+                                onChange={e => updateBenefit(idx, 'customTreatmentText', e.target.value)}
+                                placeholder="e.g. Tooth Whitening"
+                                className="rounded-xl font-bold bg-white"
+                              />
+                            </LabeledField>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div className="md:col-span-3">
+                      <LabeledField label="Benefit Description (shown to patients)" error={errors[`b_${idx}`]}>
+                        <Textarea
+                          value={b.description}
+                          onChange={e => updateBenefit(idx, 'description', e.target.value)}
+                          placeholder="e.g. 20% off on all treatments"
+                          className="rounded-xl bg-muted/30 min-h-[80px]"
+                        />
+                      </LabeledField>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            ))}
+            )})}
           </div>
         </section>
       </div>

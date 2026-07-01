@@ -4,6 +4,7 @@ import { CorporatePlanManagement } from '../components/CorporatePlans/CorporateP
 import { EmployeeManagement } from '../components/CorporatePlans/EmployeeManagement';
 import { QuickRegistrationFlow } from '../components/CorporatePlans/QuickRegistration/QuickRegistrationFlow';
 import { useAppData } from '../hooks/useAppData';
+import { PageHeader } from '../components/ui';
 
 export type MembershipTab = 'plans' | 'members';
 
@@ -13,8 +14,8 @@ const TABS: {
   sub: string;
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
-    { key: 'plans', label: 'Membership Plans', sub: 'Create & manage plans', icon: CreditCard },
     { key: 'members', label: 'Members', sub: 'View enrolled members', icon: Users },
+    { key: 'plans', label: 'Membership Plans', sub: 'Create & manage plans', icon: CreditCard },
   ];
 
 const TAB_ACCENT: Record<MembershipTab, string> = {
@@ -35,7 +36,7 @@ const STAT_COLORS = [
 import { useMembershipStatsQuery } from '../hooks/corporate/useMembershipStatsQuery';
 
 export const CorporatePlansPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<MembershipTab>('plans');
+  const [activeTab, setActiveTab] = useState<MembershipTab>('members');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -69,42 +70,28 @@ export const CorporatePlansPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-0">
 
-      {/* ── Light module header ─────────────────────────────────────────── */}
-      <div className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden">
-
-        {/* Top section: title + stats */}
-        <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Icon + title */}
-          <div className="flex items-center gap-3.5 flex-1">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
-              <Shield className="w-5 h-5" />
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <PageHeader
+        title="Opal Smiles Memberships"
+        subtitle="Configure membership plans, manage team onboarding, and track family coverage benefits."
+      >
+        <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 md:mt-0 md:justify-end">
+          {stats.map((s, i) => (
+            <div key={s.label} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border text-sm ${STAT_COLORS[i]} flex-1 sm:flex-none min-w-[130px] justify-center sm:justify-start`}>
+              <span className="text-xl sm:text-2xl font-black leading-none">{s.value}</span>
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wide opacity-80 leading-tight text-left">
+                {s.label.split(' ').map((word, idx) => <React.Fragment key={idx}>{word}<br className="hidden xl:block" /></React.Fragment>)}
+              </span>
             </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">Opal Smiles Memberships</h1>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                Configure membership plans, manage team onboarding, and track family coverage benefits.
-              </p>
-            </div>
-          </div>
-
-          {/* Stat chips */}
-          <div className="grid grid-cols-2 xl:flex xl:flex-wrap gap-2 w-full xl:w-auto mt-2 sm:mt-0">
-            {stats.map((s, i) => (
-              <div key={s.label} className={`flex flex-col sm:flex-row items-center sm:justify-start justify-center gap-1 sm:gap-2.5 px-2 sm:px-3.5 py-2 rounded-xl border text-sm text-center sm:text-left ${STAT_COLORS[i]}`}>
-                <span className="text-lg sm:text-base font-black leading-none">{s.value}</span>
-                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide opacity-70 whitespace-nowrap">{s.label}</span>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
+      </PageHeader>
 
-        {/* Divider */}
-        <div className="h-px bg-border/50 mx-0" />
-
-        {/* Tab bar */}
-        <div className="flex">
+      <div className="space-y-5">
+        {/* ── Tab bar ────────────────────────────────────────────────── */}
+      <div className="bg-white border border-border/60 rounded-xl shadow-sm overflow-hidden flex flex-wrap sm:flex-nowrap">
           {TABS.map(({ key, label, sub, icon: Icon }) => {
             const active = activeTab === key;
             return (
@@ -128,9 +115,8 @@ export const CorporatePlansPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
 
-      {/* ── Tab content ────────────────────────────────────────────────── */}
+        {/* ── Tab content ────────────────────────────────────────────────── */}
       {activeTab === 'plans' && (
         <CorporatePlanManagement
           plans={corporatePlans}
@@ -157,6 +143,7 @@ export const CorporatePlansPage: React.FC = () => {
           onChangePlan={handleChangeEmployeePlan}
         />
       )}
+      </div>
     </div>
   );
 };

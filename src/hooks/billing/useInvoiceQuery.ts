@@ -45,11 +45,14 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
   const paidAmount = Number(inv.paid_amount ?? inv.paidAmount ?? 0);
   const pendingAmount = Number(inv.pending_amount ?? inv.pendingAmount ?? 0);
 
+  const isMemberInvoice = !!(inv.member_id || inv.memberId || (inv.member?.id) || inv.corporate_plan_id || inv.corporatePlanId);
+
   return {
     ...inv,
     id: inv.id,
     patientName: inv.patient_name || inv.patientName || (inv.patient?.name) || (inv.member?.name) || inv.member_name || inv.memberName || '',
     patientId: inv.patient_id || inv.patientId || (inv.patient?.id) || (inv.member?.id) || inv.member_id || inv.memberId || '',
+    isMemberInvoice,
     phone: inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '',
     doctor: inv.doctor_name || inv.doctor || (inv.doctor?.name) || '',
     date: inv.invoice_date ? inv.invoice_date.split('T')[0] : (inv.date ? inv.date.split('T')[0] : (inv.created_at ? inv.created_at.split('T')[0] : '')),
@@ -71,14 +74,19 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
   };
 }
 
-export function useInvoiceQuery(id: string, patientId?: string, options?: any) {
+export function useInvoiceQuery(id: string, patientId?: string, isMember?: boolean, options?: any) {
+  const isMemberCheck = isMember || (patientId && (patientId.startsWith('EMP-') || patientId.startsWith('IND-') || patientId.startsWith('MEM-')));
+  const queryParams: any = {};
+  if (patientId) {
+    if (isMemberCheck) queryParams.member_id = patientId;
+    else queryParams.patient_id = patientId;
+  }
+  
   const query = useApiQuery<any>({
     queryKey: ["invoice", id, patientId],
     endpoint: `/invoice/history`,
     method: "get",
-    params: {
-      ...(patientId ? { patient_id: patientId } : {})
-    },
+    params: queryParams,
     options: {
       enabled: !!id,
       ...options,

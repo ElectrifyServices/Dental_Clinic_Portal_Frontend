@@ -525,6 +525,8 @@ export function PatientConsultation({
       await onCompleteConsultation({
         id: patient.id,
         patientId: patient.patientId || patient.id,
+        patientName: patient.patientName || (patient as any).name || "",
+        patientPhone: patient.phone || (patient as any).patientPhone || "",
         appointmentId: patient.appointmentId,
         ...consultationData,
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
@@ -541,7 +543,10 @@ export function PatientConsultation({
         isDirect: (patient as any).isDirect,
       });
       setIsCompleted(true);
-      refetchConsultations();
+      const idToUse = patient.patientId || patient.id;
+      if (idToUse && !idToUse.startsWith("WALK-")) {
+        refetchConsultations();
+      }
     } catch (error) {
     } finally {
       setLoading(false);

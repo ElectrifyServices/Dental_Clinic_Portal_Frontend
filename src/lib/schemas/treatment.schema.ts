@@ -30,6 +30,8 @@ export const treatmentSchema = z.object({
   status: z.enum(['planned', 'in-progress', 'completed', 'cancelled']).default('planned'),
   nextAppointment: z.string().optional(),
   images: z.array(z.string()).default([]),
+  rawFiles: z.array(z.any()).optional().default([]),
+  existingImages: z.array(z.string()).optional().default([]),
   doctorId: z.string().default('1'),
   doctorName: z.string().optional(),
   prescriptions: z.array(prescriptionItemSchema).default([]),

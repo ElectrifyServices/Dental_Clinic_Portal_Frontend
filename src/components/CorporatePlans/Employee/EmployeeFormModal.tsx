@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, CheckCircle, Users, Plus, Trash2, UserPlus } from 'lucide-react';
+import { User, CheckCircle, Users, Plus, Trash2, UserPlus, Edit } from 'lucide-react';
 import {
   Modal,
   Button,
@@ -22,6 +22,7 @@ import { useEmployeeQuery } from '../../../hooks/corporate/useEmployeeQuery';
 import { useDependentsQuery } from '../../../hooks/corporate/useDependentsQuery';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
 import { useRemoveDependentMutation } from '../../../hooks/corporate/useRemoveDependentMutation';
+import { useUpdateDependentMutation } from '../../../hooks/corporate/useUpdateDependentMutation';
 import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 import { SearchableSelect } from '../../ui/SearchableSelect';
@@ -65,6 +66,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   const [pendingDependents, setPendingDependents] = useState<PendingDependent[]>([]);
   const [showAddDepForm, setShowAddDepForm] = useState(false);
   const [addDepForm, setAddDepForm] = useState<PendingDependent>(EMPTY_PENDING());
+  const [editingDepId, setEditingDepId] = useState<string | null>(null);
 
   const todayStr = React.useMemo(() => {
     const d = new Date();
@@ -81,6 +83,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
   const updateEmployeeMutation = useUpdateEmployeeMutation();
   const addDependentMutation = useAddDependentMutation();
   const removeDependentMutation = useRemoveDependentMutation();
+  const updateDependentMutation = useUpdateDependentMutation();
 
   const { data: employeeDetails, isLoading: isFetching } = useEmployeeQuery(editEmp?.id || undefined, {
     enabled: showForm && !!editEmp?.id,
@@ -95,11 +98,18 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
     [activePlans, form.corporatePlanId]
   );
 
-  const maxDependents = selectedPlan?.maxDependents ?? 0;
+  const maxDependents = selectedPlan ? (Number((selectedPlan as any).family_coverage_limit) || Number((selectedPlan as any).familyCoverageLimit) || Number(selectedPlan.limit) || Number(selectedPlan.maxDependents) || 0) : 0;
   const totalDependents = (existingDependents?.length ?? 0) + pendingDependents.length;
 
   const empCfgAny = empCfg as any;
-  const personalSection = empCfg.sections?.find(s => s.id === 'personal');
+  const personalSection = React.useMemo(() => {
+    const sec = empCfg.sections?.find(s => s.id === 'personal');
+    if (!sec) return undefined;
+    return {
+      ...sec,
+      fields: sec.fields.filter(f => f.name !== 'email' && f.name !== 'gender' && f.name !== 'dateOfBirth')
+    };
+  }, [empCfg]);
   const employmentSection = empCfg.sections?.find(s => s.id === 'employment');
   const eligibilitySection = empCfg.sections?.find(s => s.id === 'eligibility');
 
@@ -141,8 +151,39 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
       }
       setFormErrors({});
       setShowAddDepForm(false);
+      setEditingDepId(null);
     }
   }, [showForm, editEmp, employeeDetails, activePlans]);
+
+  React.useEffect(() => {
+    if (showForm && maxDependents > 0) {
+      const existingCount = existingDependents?.length || 0;
+      const targetPendingCount = Math.max(0, maxDependents - 1 - existingCount);
+      
+      setPendingDependents(prev => {
+        if (prev.length === targetPendingCount) return prev;
+        const newArr = [...prev];
+        if (newArr.length > targetPendingCount) {
+          return newArr.slice(0, targetPendingCount);
+        } else {
+          const needed = targetPendingCount - newArr.length;
+          for (let i = 0; i < needed; i++) {
+            newArr.push({
+              tempId: `tmp-${Date.now()}-${newArr.length + i}`,
+              name: '',
+              relationship: '',
+              dateOfBirth: '',
+              gender: 'male',
+              phone: ''
+            });
+          }
+          return newArr;
+        }
+      });
+    } else if (showForm && maxDependents === 0) {
+      setPendingDependents([]);
+    }
+  }, [maxDependents, showForm, existingDependents?.length]);
 
   const handleFormChange = (name: string, value: any) => {
     setForm(prev => ({ ...prev, [name]: value }));
@@ -177,31 +218,38 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
     return !Object.keys(errs).length;
   };
 
+  const handleEditDependent = (dep: any, isExisting: boolean) => {
+    setEditingDepId(isExisting ? dep.id : dep.tempId);
+    setAddDepForm({
+      tempId: isExisting ? dep.id : dep.tempId,
+      name: dep.name,
+      relationship: dep.relationship,
+      dateOfBirth: dep.dateOfBirth || '',
+      gender: dep.gender || 'male',
+      phone: dep.phone || ''
+    });
+    setShowAddDepForm(true);
+  };
+
   const handleAddDependent = () => {
     if (!addDepForm.name.trim() || !addDepForm.relationship.trim()) {
       return;
     }
-    if (editEmp?.id) {
-      // Live save for existing employees
-      addDependentMutation.mutateAsync({
-        memberId: editEmp.id,
+
+    if (editingDepId && !editingDepId.startsWith('tmp-')) {
+      updateDependentMutation.mutateAsync({
+        id: editingDepId,
         name: addDepForm.name,
         relationship: addDepForm.relationship,
         dateOfBirth: addDepForm.dateOfBirth || undefined,
         gender: addDepForm.gender,
         phone: addDepForm.phone || undefined,
-        corporatePlanId: form.corporatePlanId || undefined,
-        primaryMemberName: form.name || undefined,
       }).then(() => {
         refetchDependents();
+        setEditingDepId(null);
         setAddDepForm(EMPTY_PENDING());
         setShowAddDepForm(false);
       });
-    } else {
-      // Queue for after employee is created
-      setPendingDependents(prev => [...prev, { ...addDepForm, tempId: `tmp-${Date.now()}` }]);
-      setAddDepForm(EMPTY_PENDING());
-      setShowAddDepForm(false);
     }
   };
 
@@ -218,33 +266,24 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
     if (!editEmp) {
       try {
-        const transformedBody = {
+        const transformedBody: any = {
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
-          email: form.email || "noemail@example.com",
-          gender: (form.gender || "male").toUpperCase(),
-          date_of_birth: form.dateOfBirth || "1990-01-01",
-          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
 
+        const validDependents = pendingDependents.filter(dep => dep.name && dep.relationship);
+        if (validDependents.length > 0) {
+          transformedBody.family_members = validDependents.map(dep => ({
+            name: dep.name,
+            relationship_type: dep.relationship.toUpperCase(),
+            phone: dep.phone || undefined
+          }));
+        }
+
         const apiResponse = await createEmployeeMutation.mutateAsync(transformedBody);
         const newEmpId = apiResponse?.id || `EMP-${Date.now()}`;
-
-        // Save pending dependents
-        for (const dep of pendingDependents) {
-          await addDependentMutation.mutateAsync({
-            memberId: newEmpId,
-            name: dep.name,
-            relationship: dep.relationship,
-            dateOfBirth: dep.dateOfBirth || undefined,
-            gender: dep.gender,
-            phone: dep.phone || undefined,
-            corporatePlanId: form.corporatePlanId || undefined,
-            primaryMemberName: form.name || undefined,
-          });
-        }
 
         const emp: CorporateEmployee = {
           id: newEmpId,
@@ -285,27 +324,32 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         });
       } catch (err: any) {
         const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
-                         err?.response?.data?.statusDesc ||
-                         err?.response?.data?.message ||
-                         err?.status?.statusDesc ||
-                         err?.message ||
-                         "Failed to create employee on backend";
+          err?.response?.data?.statusDesc ||
+          err?.response?.data?.message ||
+          err?.status?.statusDesc ||
+          err?.message ||
+          "Failed to create employee on backend";
         const msg = Array.isArray(apiError) ? apiError.join(', ') : apiError;
         setFormErrors(prev => ({ ...prev, submit: msg }));
       }
     } else {
       try {
-        const transformedBody = {
+        const transformedBody: any = {
           id: editEmp.id,
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
-          email: form.email || "noemail@example.com",
-          gender: (form.gender || "male").toUpperCase(),
-          date_of_birth: form.dateOfBirth || "1990-01-01",
-          expiry_date: plan?.validTo ? new Date(plan.validTo).toISOString().split('T')[0] : "2025-12-31",
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
+
+        const validDependents = pendingDependents.filter(dep => dep.name && dep.relationship);
+        if (validDependents.length > 0) {
+          transformedBody.family_members = validDependents.map(dep => ({
+            name: dep.name,
+            relationship_type: dep.relationship.toUpperCase(),
+            phone: dep.phone || undefined
+          }));
+        }
 
         await updateEmployeeMutation.mutateAsync(transformedBody);
 
@@ -348,11 +392,11 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         });
       } catch (err: any) {
         const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
-                         err?.response?.data?.statusDesc ||
-                         err?.response?.data?.message ||
-                         err?.status?.statusDesc ||
-                         err?.message ||
-                         "Failed to update employee on backend";
+          err?.response?.data?.statusDesc ||
+          err?.response?.data?.message ||
+          err?.status?.statusDesc ||
+          err?.message ||
+          "Failed to update employee on backend";
         const msg = Array.isArray(apiError) ? apiError.join(', ') : apiError;
         setFormErrors(prev => ({ ...prev, submit: msg }));
       }
@@ -400,7 +444,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
         )}
         {/* Personal Details Card */}
         {personalSection && (
-          <ContentCard 
+          <ContentCard
             title={personalSection.title}
             className="bg-card/50"
           >
@@ -416,7 +460,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
         {/* Membership & Coverage Details Side-by-Side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ContentCard 
+          <ContentCard
             title="Membership Plan"
             className="bg-card/50 flex flex-col md:col-span-2"
             bodyClassName="flex-1 flex flex-col justify-center"
@@ -483,7 +527,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           </ContentCard>
 
           {eligibilitySection && (
-            <ContentCard 
+            <ContentCard
               title={eligibilitySection.title}
               className="bg-card/50 flex flex-col md:col-span-1"
               bodyClassName="flex-1 flex flex-col justify-center"
@@ -499,55 +543,20 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
           )}
         </div>
 
-        {/* Coverage Type + Dependents — only shown when plan allows dependents */}
-        {false /* maxDependents > 0 */ && (
+        {/* Dependents — only shown when plan allows dependents */}
+        {maxDependents > 0 && (
           <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
-            {/* Coverage toggle */}
-            <div className="p-5 bg-muted/20 border-b border-border/40">
-              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 block">Coverage Type</Label>
-              <div className="flex gap-3">
-                {(['self', 'family'] as CoverageType[]).map(ct => (
-                  <Button
-                    key={ct}
-                    type="button"
-                    variant="outline"
-                    onClick={() => setForm(prev => ({ ...prev, coverageType: ct }))}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
-                      form.coverageType === ct
-                        ? 'border-primary bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/40'
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    {ct === 'self' ? 'Self Only' : '+ Family Members'}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Dependents list */}
-            {form.coverageType === 'family' && (
-              <div className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                      Family Members
-                    </Label>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Family Members (Optional)
+                  </Label>
                     <p className="text-[11px] text-muted-foreground mt-0.5 font-semibold">
                       {totalDependents} / {maxDependents} added
                     </p>
                   </div>
-                  {!coverageLimitReached && !showAddDepForm && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => { setShowAddDepForm(true); setAddDepForm(EMPTY_PENDING()); }}
-                      className="gap-1.5 text-xs font-bold"
-                    >
-                      <UserPlus className="w-3.5 h-3.5" /> Add Member
-                    </Button>
-                  )}
-                </div>
+              </div>
 
                 {/* Existing (saved) dependents */}
                 {existingDependents && existingDependents.length > 0 && (
@@ -565,15 +574,25 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10 rounded-xl"
-                          onClick={() => handleRemoveExistingDependent(dep.id)}
-                          disabled={removeDependentMutation.isLoading}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:bg-primary/10 rounded-xl"
+                            onClick={() => handleEditDependent(dep, true)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/10 rounded-xl"
+                            onClick={() => handleRemoveExistingDependent(dep.id)}
+                            disabled={removeDependentMutation.isLoading}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -581,26 +600,45 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
 
                 {/* Pending (not yet saved) dependents */}
                 {pendingDependents.length > 0 && (
-                  <div className="space-y-2">
-                    {pendingDependents.map(dep => (
-                      <div key={dep.tempId} className="flex items-center justify-between bg-amber-50/50 rounded-xl px-4 py-3 border border-amber-200">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                            <User className="w-4 h-4 text-amber-600" />
+                  <div className="space-y-4">
+                    {pendingDependents.map((dep, index) => (
+                      <div key={dep.tempId} className="border border-primary/20 bg-white rounded-2xl p-4 shadow-sm space-y-3">
+                        <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
+                          Dependent {existingDependents ? existingDependents.length + index + 1 : index + 1}
+                        </Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Name</Label>
+                            <Input value={dep.name} onChange={e => {
+                              const val = e.target.value;
+                              setPendingDependents(prev => prev.map((d, i) => i === index ? { ...d, name: val } : d));
+                            }} placeholder="Full name" className="rounded-xl text-sm" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-foreground">{dep.name}</p>
-                            <p className="text-[10px] text-amber-600 font-semibold">{dep.relationship} • Pending save</p>
+                            <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Relationship</Label>
+                            <Select value={dep.relationship} onValueChange={val => {
+                              setPendingDependents(prev => prev.map((d, i) => i === index ? { ...d, relationship: val } : d));
+                            }}>
+                              <SelectTrigger className="rounded-xl text-sm h-10 bg-white">
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Spouse">Spouse</SelectItem>
+                                <SelectItem value="Child">Child</SelectItem>
+                                <SelectItem value="Parent">Parent</SelectItem>
+                                <SelectItem value="Sibling">Sibling</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Phone</Label>
+                            <Input value={dep.phone} onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setPendingDependents(prev => prev.map((d, i) => i === index ? { ...d, phone: val } : d));
+                            }} placeholder="Optional (10 digits)" className="rounded-xl text-sm" maxLength={10} />
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10 rounded-xl"
-                          onClick={() => setPendingDependents(prev => prev.filter(d => d.tempId !== dep.tempId))}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
@@ -609,7 +647,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                 {/* Add dependent inline form */}
                 {showAddDepForm && (
                   <div className="border border-primary/20 bg-primary/5 rounded-2xl p-4 space-y-3">
-                    <Label className="text-[10px] font-black text-primary uppercase tracking-widest">Add Family Member</Label>
+                    <Label className="text-[10px] font-black text-primary uppercase tracking-widest">{editingDepId ? 'Edit Family Member' : 'Add Family Member'}</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Name *</Label>
@@ -622,53 +660,38 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                       </div>
                       <div>
                         <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Relationship *</Label>
-                        <Input
-                          value={addDepForm.relationship}
-                          onChange={e => setAddDepForm(p => ({ ...p, relationship: e.target.value }))}
-                          placeholder="e.g. Spouse, Child, Parent"
-                          className="rounded-xl text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Date of Birth</Label>
-                        <Input
-                          type="date"
-                          value={addDepForm.dateOfBirth}
-                          onChange={e => setAddDepForm(p => ({ ...p, dateOfBirth: e.target.value }))}
-                          className="rounded-xl text-sm"
-                        />
+                        <Select value={addDepForm.relationship} onValueChange={(val) => setAddDepForm(p => ({ ...p, relationship: val }))}>
+                          <SelectTrigger className="rounded-xl text-sm h-10 bg-white">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Spouse">Spouse</SelectItem>
+                            <SelectItem value="Child">Child</SelectItem>
+                            <SelectItem value="Parent">Parent</SelectItem>
+                            <SelectItem value="Sibling">Sibling</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Phone</Label>
                         <Input
                           value={addDepForm.phone}
-                          onChange={e => setAddDepForm(p => ({ ...p, phone: e.target.value }))}
-                          placeholder="Optional"
+                          onChange={e => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setAddDepForm(p => ({ ...p, phone: val }));
+                          }}
+                          placeholder="Optional (10 digits)"
                           className="rounded-xl text-sm"
+                          maxLength={10}
                         />
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Gender</Label>
-                        <Select
-                          value={addDepForm.gender}
-                          onValueChange={value => setAddDepForm(p => ({ ...p, gender: value as any }))}
-                        >
-                          <SelectTrigger className="rounded-xl text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <Button size="sm" onClick={handleAddDependent} className="gap-1.5" disabled={addDependentMutation.isLoading}>
-                        <Plus className="w-3.5 h-3.5" /> Add
+                      <Button size="sm" onClick={handleAddDependent} className="gap-1.5" disabled={addDependentMutation.isLoading || updateDependentMutation.isLoading}>
+                        <CheckCircle className="w-3.5 h-3.5" /> {editingDepId ? 'Save' : 'Add'}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setShowAddDepForm(false)}>Cancel</Button>
+                      <Button size="sm" variant="outline" onClick={() => { setShowAddDepForm(false); setEditingDepId(null); }}>Cancel</Button>
                     </div>
                   </div>
                 )}
@@ -679,11 +702,10 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
                   </p>
                 )}
               </div>
-            )}
           </div>
         )}
 
-        <div className="p-5 bg-card/40 rounded-2xl border border-border/60 shadow-sm flex flex-col gap-2">
+        {/* <div className="p-5 bg-card/40 rounded-2xl border border-border/60 shadow-sm flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${form.isActive !== false ? 'bg-emerald-500' : 'bg-muted-foreground animate-pulse'}`} />
@@ -701,7 +723,7 @@ export function EmployeeFormModal({ showForm, setShowForm, editEmp, activePlans,
               * Cannot change status when eligibility date is in the past.
             </p>
           )}
-        </div>
+        </div> */}
       </div>
     </Modal>
   );

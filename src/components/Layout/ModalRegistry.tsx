@@ -548,17 +548,7 @@ export function ModalRegistry() {
               let resolvedPatientId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
 
               if (d.isDirect) {
-                const normalizedDirectPhone = d.directPatientPhone.replace(/\D/g, "");
-                const ex = patients.find(
-                  (p: any) =>
-                    p.phone && p.phone.replace(/\D/g, "") === normalizedDirectPhone
-                );
-
-                if (ex) {
-                  resolvedPatientId = ex.id;
-                } else {
-                  resolvedPatientId = undefined; // Will be handled by the backend
-                }
+                resolvedPatientId = undefined;
               }
 
               // Map tooth chart state to tooth_findings array
@@ -614,11 +604,16 @@ export function ModalRegistry() {
                 ? selectedPatientForDiagnose.doctorId
                 : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
 
+              const isWalkIn = resolvedPatientId && String(resolvedPatientId).startsWith("WALK-");
               const apiPayload: any = {
                 id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
-                patientId: resolvedPatientId,
-                patient_name: d.isDirect && !resolvedPatientId ? d.directPatientName : undefined,
-                patient_phone: d.isDirect && !resolvedPatientId ? d.directPatientPhone : undefined,
+                patientId: isWalkIn ? undefined : resolvedPatientId,
+                patient_name: isWalkIn
+                  ? (selectedPatientForDiagnose.patientName || selectedPatientForDiagnose.name || d.patientName || d.directPatientName)
+                  : (d.isDirect && !resolvedPatientId ? d.directPatientName : undefined),
+                patient_phone: isWalkIn
+                  ? (selectedPatientForDiagnose.phone || selectedPatientForDiagnose.patientPhone || d.patientPhone || d.directPatientPhone)
+                  : (d.isDirect && !resolvedPatientId ? d.directPatientPhone : undefined),
                 appointmentId: selectedPatientForDiagnose.appointmentId,
                 doctorId: validDoctorId,
                 observations: d.observations,
@@ -636,7 +631,7 @@ export function ModalRegistry() {
 
               if (d.followUpRequired) {
                 apiPayload.appointment_info = {
-                  patient_id: resolvedPatientId,
+                  patient_id: isWalkIn ? undefined : resolvedPatientId,
                   doctor_id: d.followUpDoctorId,
                   date: d.followUpDate,
                   start_time: d.followUpTime,
@@ -759,7 +754,13 @@ export function ModalRegistry() {
       {selectedItemId && invoices.find((i: any) => i.id === selectedItemId) && (
         <InvoiceViewer
           invoiceId={selectedItemId}
-          patientId={invoices.find((i: any) => i.id === selectedItemId)?.patientId || invoices.find((i: any) => i.id === selectedItemId)?.patient_id}
+          patientId={
+            invoices.find((i: any) => i.id === selectedItemId)?.patientId || 
+            invoices.find((i: any) => i.id === selectedItemId)?.patient_id ||
+            invoices.find((i: any) => i.id === selectedItemId)?.memberId ||
+            invoices.find((i: any) => i.id === selectedItemId)?.member_id
+          }
+          isMember={invoices.find((i: any) => i.id === selectedItemId)?.isMemberInvoice}
           onClose={() => setSelectedItemId("")}
           onUpdateStatus={handleUpdateInvoiceStatus}
         />

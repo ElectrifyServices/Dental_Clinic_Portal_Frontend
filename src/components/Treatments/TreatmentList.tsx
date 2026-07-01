@@ -232,6 +232,7 @@ export function TreatmentList({
         const sessions = treatment.sessions ?? [];
         const totalSessions = sessions.length;
         const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
+        const cancelledSessions = sessions.filter((s: any) => s.status === "cancelled").length;
 
         const nextApptRaw = treatment.nextAppointment ||
           sessions
@@ -261,6 +262,8 @@ export function TreatmentList({
                     className={`w-1.5 h-1.5 rounded-full ${
                       s.status === "completed"
                         ? "bg-emerald-500"
+                        : s.status === "cancelled"
+                        ? "bg-red-500"
                         : s.status === "in-progress" || s.status === "in_progress"
                         ? "bg-primary animate-pulse"
                         : "bg-border"
@@ -270,8 +273,8 @@ export function TreatmentList({
                 {totalSessions > 6 && (
                   <span className="text-[9px] text-muted-foreground/50">+{totalSessions - 6}</span>
                 )}
-                <span className="text-[9px] font-black text-muted-foreground/50 ml-1">
-                  {completedSessions}/{totalSessions}
+                <span className={`text-[9px] font-black ml-1 ${cancelledSessions > 0 ? "text-red-500" : "text-muted-foreground/50"}`}>
+                  {completedSessions + cancelledSessions}/{totalSessions}
                 </span>
               </div>
             )}
@@ -303,26 +306,30 @@ export function TreatmentList({
                 View Details
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => onEditTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
-                <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                  <Edit className="w-4 h-4" />
-                </div>
-                Edit Plan
-              </DropdownMenuItem>
+              {treatment.status !== "completed" && (
+                <DropdownMenuItem onClick={() => onEditTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
+                  <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                    <Edit className="w-4 h-4" />
+                  </div>
+                  Edit Plan
+                </DropdownMenuItem>
+              )}
 
-              <DropdownMenuItem onClick={() => onManageSessions(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
-                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  Sessions
-                  {totalSessions > 0 && (
-                    <span className="text-[9px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                      {completedSessions}/{totalSessions}
-                    </span>
-                  )}
-                </div>
-              </DropdownMenuItem>
+              {treatment.status !== "completed" && (
+                <DropdownMenuItem onClick={() => onManageSessions(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">
+                  <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 flex items-center justify-between">
+                    Sessions
+                    {totalSessions > 0 && (
+                      <span className="text-[9px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
+                        {completedSessions}/{totalSessions}
+                      </span>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              )}
 
               {treatment.status === "planned" && (
                 <DropdownMenuItem onClick={() => onStartTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-primary/10 rounded-xl flex items-center gap-3 text-primary cursor-pointer">

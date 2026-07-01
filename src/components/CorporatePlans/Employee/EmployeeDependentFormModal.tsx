@@ -29,7 +29,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
   const { showToast } = useModal();
   const createMemberMutation = useCreateEmployeeMutation();
   const updateMemberMutation = useUpdateEmployeeMutation();
-  
+
   const { data: dependentDetails } = useEmployeeQuery(editDep?.id, {
     enabled: showForm && !!editDep?.id,
   });
@@ -61,8 +61,8 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
       });
     } else if (editDep) {
       const rawDob = editDep.date_of_birth || editDep.dateOfBirth || '';
-      setFormData({ 
-        ...editDep, 
+      setFormData({
+        ...editDep,
         relationship: toTitleCase(editDep.relationship_type || editDep.relationship),
         dateOfBirth: rawDob ? rawDob.split('T')[0] : ''
       });
@@ -85,9 +85,9 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
         plan_id: employee.corporatePlanId,
         name: formData.name,
         phone: formData.phone || '',
-        email: formData.email || '',
-        gender: formData.gender?.toUpperCase() || 'MALE',
-        date_of_birth: formData.dateOfBirth || '2000-01-01',
+        // email: formData.email || '',
+        // gender: formData.gender?.toUpperCase() || 'MALE',
+        // date_of_birth: formData.dateOfBirth || '2000-01-01',
         relationship_type: formData.relationship.toUpperCase(),
         parent_member_id: employee.id,
         expiry_date: employee.eligible_date || '2025-12-31',
@@ -171,7 +171,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
             />
           </div>
 
-          <div>
+          {/* <div>
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Email Address</Label>
             <Input
               type="email"
@@ -207,7 +207,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div>
             <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Status</Label>
@@ -225,7 +225,7 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
             </Select>
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-border">
           <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
             Cancel

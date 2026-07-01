@@ -42,11 +42,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const isTodayDate = (date: Date) => new Date().toDateString() === date.toDateString();
 
   const handleDateClick = (date: Date, isPast: boolean, isSelected: boolean) => {
-    if (isPast) return;
     if (isSelected) {
       onRefetchSlots?.();
     } else {
       setSelectedDate(date);
+    }
+  };
+
+  const handleDatePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      const newDate = new Date(e.target.value);
+      setSelectedDate(newDate);
+      const today = new Date();
+      const monthDiff = (newDate.getFullYear() - today.getFullYear()) * 12 + (newDate.getMonth() - today.getMonth());
+      setMonthOffset(monthDiff);
     }
   };
 
@@ -61,11 +70,21 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
+  const formattedSelectedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+
   return (
     <Card className="xl:col-span-6 flex flex-col overflow-hidden h-[500px] xl:h-full shadow-sm">
       <CardContent className="p-6 flex flex-col h-full">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
+            <input 
+              type="date" 
+              value={formattedSelectedDate}
+              onChange={handleDatePickerChange}
+              className="h-8 px-2 text-xs rounded-lg border border-border bg-muted/50 focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -77,7 +96,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </Button>
           <Button
             variant={monthOffset === 0 ? "default" : "outline"}
-            onClick={() => setMonthOffset(0)}
+            onClick={() => {
+              setMonthOffset(0);
+              setSelectedDate(new Date());
+            }}
             className="h-9 px-4 rounded-xl text-[10px] font-bold uppercase tracking-wider"
           >
             Today
@@ -115,24 +137,25 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
             let bgClass = "bg-card hover:bg-muted/50 cursor-pointer";
             if (isToday) {
-              bgClass = "bg-primary text-white shadow-lg";
+              bgClass = "bg-primary text-white shadow-lg cursor-pointer";
             } else if (isPast) {
-              bgClass = "bg-muted text-muted-foreground/40 cursor-not-allowed opacity-40";
+              bgClass = "bg-muted text-muted-foreground/80 cursor-pointer opacity-60 hover:bg-muted/80";
             } else if (isSelected) {
-              bgClass = "bg-secondary text-primary shadow-sm";
+              bgClass = "bg-secondary text-primary shadow-sm cursor-pointer";
             }
 
             let borderClass = "border-transparent hover:border-border";
             if (isToday) {
               borderClass = "border-primary shadow-md shadow-primary/30";
-            } else if (isPast) {
-              borderClass = "border-transparent";
+            } else if (isPast && !isSelected) {
+              borderClass = "border-transparent hover:border-border/50";
             } else if (currentDoctorId && scheduleState) {
               borderClass = isWorkingDay 
                 ? "border-emerald-400/50 shadow-[0_4px_12px_-2px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_16px_-2px_rgba(16,185,129,0.4)] hover:border-emerald-500" 
                 : "border-red-300/50 shadow-[0_4px_12px_-2px_rgba(239,68,68,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(239,68,68,0.25)] hover:border-red-400/80";
-            } else if (isSelected) {
-              borderClass = "border-primary/30 shadow-sm hover:border-primary/50";
+            } 
+            if (isSelected && !isToday) {
+              borderClass = "border-primary/50 shadow-sm hover:border-primary/80";
             }
 
             return (
@@ -141,7 +164,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 onClick={() => handleDateClick(date, isPast, isSelected)}
                 className={`aspect-square p-2 rounded-2xl transition-all duration-200 border-2 flex flex-col items-center justify-center relative group ${bgClass} ${borderClass}`}
               >
-                <span className={`text-sm md:text-base font-bold ${isToday ? "text-white" : isPast ? "text-muted-foreground/60" : "text-foreground"}`}>
+                <span className={`text-sm md:text-base font-bold ${isToday ? "text-white" : isPast && !isSelected ? "text-muted-foreground/80" : "text-foreground"}`}>
                   {date.getDate()}
                 </span>
                 {countToDisplay > 0 && (

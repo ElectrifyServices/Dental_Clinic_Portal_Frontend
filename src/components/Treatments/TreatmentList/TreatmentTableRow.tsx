@@ -43,6 +43,7 @@ export function TreatmentTableRow({
   const sessions: any[] = treatment.sessions ?? [];
   const totalSessions = sessions.length;
   const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
+  const cancelledSessions = sessions.filter((s: any) => s.status === "cancelled").length;
 
   // FIX: next session date — use plan's nextAppointment (set by backend when session is scheduled)
   // Fall back to finding the earliest SCHEDULED session date
@@ -120,17 +121,19 @@ export function TreatmentTableRow({
                   key={i}
                   className={`w-1.5 h-1.5 rounded-full ${s.status === "completed"
                       ? "bg-emerald-500"
-                      : s.status === "in-progress" || s.status === "in_progress"
-                        ? "bg-primary animate-pulse"
-                        : "bg-border"
+                      : s.status === "cancelled"
+                        ? "bg-red-500"
+                        : s.status === "in-progress" || s.status === "in_progress"
+                          ? "bg-primary animate-pulse"
+                          : "bg-border"
                     }`}
                 />
               ))}
               {totalSessions > 6 && (
                 <span className="text-[9px] text-muted-foreground/50">+{totalSessions - 6}</span>
               )}
-              <span className="text-[9px] font-black text-muted-foreground/50 ml-1">
-                {completedSessions}/{totalSessions}
+              <span className={`text-[9px] font-black ml-1 ${cancelledSessions > 0 ? "text-red-500" : "text-muted-foreground/50"}`}>
+                {completedSessions + cancelledSessions}/{totalSessions}
               </span>
             </div>
           )}
@@ -166,28 +169,32 @@ export function TreatmentTableRow({
                   style={{ top: menuPos.top, left: menuPos.left }}
                 >
                   <div className="p-1.5">
-                    <Button variant="ghost" onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
-                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                        <Edit className="w-4 h-4" />
-                      </div>
-                      Edit Plan
-                    </Button>
+                    {treatment.status !== "completed" && (
+                      <Button variant="ghost" onClick={() => { onEdit(treatment.id); setShowMenu(false); }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
+                        <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                          <Edit className="w-4 h-4" />
+                        </div>
+                        Edit Plan
+                      </Button>
+                    )}
 
-                    <Button variant="ghost" onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
-                      className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
-                      <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 flex items-center justify-between">
-                        Sessions
-                        {totalSessions > 0 && (
-                          <span className="text-[9px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                            {completedSessions}/{totalSessions}
-                          </span>
-                        )}
-                      </div>
-                    </Button>
+                    {treatment.status !== "completed" && (
+                      <Button variant="ghost" onClick={() => { onManageSessions(treatment.id); setShowMenu(false); }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground transition-colors">
+                        <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 flex items-center justify-between">
+                          Sessions
+                          {totalSessions > 0 && (
+                            <span className="text-[9px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
+                              {completedSessions}/{totalSessions}
+                            </span>
+                          )}
+                        </div>
+                      </Button>
+                    )}
 
                     {treatment.status === "planned" && (
                       <Button variant="ghost" onClick={() => { onStart(treatment.id); setShowMenu(false); }}

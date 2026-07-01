@@ -33,11 +33,11 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
         id: changePlanEmp.id,
         name: changePlanEmp.name,
         phone: changePlanEmp.phone,
-        email: changePlanEmp.email || "noemail@example.com",
-        gender: (changePlanEmp.gender || "male").toUpperCase(),
-        date_of_birth: changePlanEmp.dateOfBirth || "1990-01-01",
+        // email: changePlanEmp.email || "",
+        // gender: (changePlanEmp.gender || "male").toUpperCase(),
+        // date_of_birth: changePlanEmp.dateOfBirth || "1990-01-01",
         plan_id: newPlanId,
-        expiry_date: changePlanEmp.eligible_date || new Date().toISOString().split('T')[0],
+        // expiry_date: changePlanEmp.eligible_date || new Date().toISOString().split('T')[0],
         status: changePlanEmp.isActive ? "ACTIVE" : "INACTIVE",
       };
 
@@ -54,16 +54,16 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
   if (!changePlanEmp) return null;
 
   return (
-    <Modal 
-      title="Update Corporate Health Plan" 
-      onClose={() => setChangePlanEmp(null)} 
+    <Modal
+      title="Update Corporate Health Plan"
+      onClose={() => setChangePlanEmp(null)}
       size="md"
       icon={<RefreshCw className="w-4 h-4" />}
       footer={
         <div className="flex justify-end gap-3 w-full">
           <Button variant="outline" onClick={() => setChangePlanEmp(null)}>Cancel</Button>
-          <Button 
-            onClick={handleChangePlan} 
+          <Button
+            onClick={handleChangePlan}
             disabled={!newPlanId || newPlanId === changePlanEmp.corporatePlanId || updateEmployeeMutation.isPending}
             className="gap-2 shadow-lg shadow-primary/10"
           >

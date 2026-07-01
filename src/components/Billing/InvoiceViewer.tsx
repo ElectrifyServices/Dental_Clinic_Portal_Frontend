@@ -19,6 +19,7 @@ import apiClient from "../../services/apiClient";
 interface InvoiceViewerProps {
   invoiceId: string;
   patientId?: string;
+  isMember?: boolean;
   onClose: () => void;
   onUpdateStatus?: (id: string, status: string) => void;
 }
@@ -26,6 +27,7 @@ interface InvoiceViewerProps {
 export function InvoiceViewer({
   invoiceId,
   patientId,
+  isMember,
   onClose,
   onUpdateStatus,
 }: InvoiceViewerProps) {
@@ -37,7 +39,7 @@ export function InvoiceViewer({
     setActiveId(invoiceId);
   }, [invoiceId]);
 
-  const { data: invoice, allInvoices, isLoading, error } = useInvoiceQuery(activeId, patientId);
+  const { data: invoice, allInvoices, isLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
 
   if (isLoading) {
     return (
@@ -84,8 +86,16 @@ export function InvoiceViewer({
       // Yield to the event loop so the loading spinner appears before heavy processing
       await new Promise(resolve => setTimeout(resolve, 50));
       
+      const idToUse = patientId || invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
+      const isMemberCheck = isMember || invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
+      const queryParams: any = {};
+      if (idToUse) {
+        if (isMemberCheck) queryParams.member_id = idToUse;
+        else queryParams.patient_id = idToUse;
+      }
+
       const res = await apiClient.get('/invoice/history', { 
-        params: { patient_id: patientId || invoice.patientId || patient?.id } 
+        params: queryParams
       });
       let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
       if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {

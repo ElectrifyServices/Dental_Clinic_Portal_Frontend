@@ -46,7 +46,10 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
           <Input
             name="patientName"
             value={patientName}
-            onChange={onChange}
+            onChange={(e) => {
+              e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+              onChange(e);
+            }}
             required
             disabled={isFollowUp || isConsulted}
             placeholder="Search or enter name"

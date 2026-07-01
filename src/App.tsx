@@ -39,11 +39,11 @@ const PERMISSION_MAP: Record<string, string[]> = {
 };
 
 function getDefaultRedirect(userPermissions: string[]): string {
-  if (!userPermissions || userPermissions.length === 0) return "/dashboard";
+  if (!userPermissions || userPermissions.length === 0) return "/patients";
 
   const hasAll = userPermissions.some((p) => p.toUpperCase() === "ALL");
-  if (hasAll || userPermissions.some((p) => p.toUpperCase() === "DASHBOARD")) {
-    return "/dashboard";
+  if (hasAll || userPermissions.some((p) => p.toUpperCase() === "PATIENTS")) {
+    return "/patients";
   }
 
   // Find the first route in PERMISSION_MAP that matches userPermissions

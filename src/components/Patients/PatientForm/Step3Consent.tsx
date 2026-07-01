@@ -1,12 +1,26 @@
 import { Label } from "@/components/ui/Label";
 import React from "react";
-import { ClipboardCheck, PenTool, AlertTriangle, Camera, Upload, X } from "lucide-react";
+import { ClipboardCheck, FileText, CheckCircle, ShieldCheck, PenTool, Image as ImageIcon, AlertTriangle, Camera, Upload, X } from "lucide-react";
 import { SignaturePad } from "../../Consent/SignaturePad";
 import { calculateAge } from "./utils";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getFileUrl } from "../../../services/apiClient";
+
+const getSignatureSize = (dataUrl: string) => {
+  if (!dataUrl) return null;
+  const base64Data = dataUrl.split(',')[1];
+  if (!base64Data) return null;
+  const padding = (dataUrl.match(/(=*)$/) || [])[1].length;
+  const bytes = Math.round((base64Data.length * 3) / 4) - padding;
+  
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 interface Step3Props {
   formData: any;
@@ -145,6 +159,12 @@ export const Step3Consent: React.FC<Step3Props> = ({
                     }
                     defaultValue={formData.patientSignature}
                   />
+                  {formData.patientSignature && (
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground bg-muted/50 w-max px-2 py-1 rounded-md border border-border">
+                      <ImageIcon className="w-3.5 h-3.5 text-primary/70" />
+                      Signature Size: <span className="font-semibold text-foreground">{getSignatureSize(formData.patientSignature)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -190,6 +210,12 @@ export const Step3Consent: React.FC<Step3Props> = ({
                       }
                       defaultValue={formData.guardianSignature}
                     />
+                    {formData.guardianSignature && (
+                      <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground bg-muted/50 w-max px-2 py-1 rounded-md border border-border">
+                        <ImageIcon className="w-3.5 h-3.5 text-primary/70" />
+                        Signature Size: <span className="font-semibold text-foreground">{getSignatureSize(formData.guardianSignature)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
