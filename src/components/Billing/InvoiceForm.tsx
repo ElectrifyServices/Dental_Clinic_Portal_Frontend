@@ -271,19 +271,20 @@ export function InvoiceForm({
     (invoiceCfg as any).commonServices ?? [];
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
-    setItems(
-      items.map((item) => {
-        if (item.id !== id) return item;
-        const updated = { ...item, [field]: value };
-        if (field === "quantity" || field === "rate")
-          updated.amount = (updated.quantity || 1) * (updated.rate || 0);
-        return updated;
-      }),
-    );
+    const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+    const updatedItems = currentItems.map((item) => {
+      if (item.id !== id) return item;
+      const updated = { ...item, [field]: value };
+      if (field === "quantity" || field === "rate")
+        updated.amount = (updated.quantity || 1) * (updated.rate || 0);
+      return updated;
+    });
+    setItems(updatedItems);
   };
 
   const addPendingItem = (pItem: any) => {
     if (formData.linkedItemIds.includes(pItem.id)) return;
+    const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     const newItem = {
       id: `linked-${Date.now()}-${pItem.id}`,
       description: pItem.description,
@@ -294,9 +295,9 @@ export function InvoiceForm({
       linkedType: pItem.type,
     } as any;
     setItems(
-      items.length === 1 && !items[0].description && items[0].rate === 0
+      currentItems.length === 1 && !currentItems[0].description && currentItems[0].rate === 0
         ? [newItem]
-        : [...items, newItem],
+        : [...currentItems, newItem],
     );
     setFormData((prev) => ({
       ...prev,
@@ -309,7 +310,8 @@ export function InvoiceForm({
       ...prev,
       linkedItemIds: prev.linkedItemIds.filter((id) => id !== linkedId),
     }));
-    setItems(items.filter((i) => (i as any).linkedId !== linkedId));
+    const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+    setItems(currentItems.filter((i) => (i as any).linkedId !== linkedId));
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
@@ -758,9 +760,10 @@ export function InvoiceForm({
             <Button
               size="sm"
               variant="outline"
-              onClick={() =>
+              onClick={() => {
+                const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
                 setItems([
-                  ...items,
+                  ...currentItems,
                   {
                     id: Date.now().toString(),
                     description: "",
@@ -768,8 +771,8 @@ export function InvoiceForm({
                     rate: 0,
                     amount: 0,
                   },
-                ])
-              }
+                ]);
+              }}
               className="h-8 text-xs gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" /> Add Item
@@ -783,7 +786,8 @@ export function InvoiceForm({
                 commonServices={commonServices}
                 onUpdate={updateItem}
                 onRemove={(id) => {
-                  const lid = (items.find((i) => i.id === id) as any)?.linkedId;
+                  const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+                  const lid = (currentItems.find((i) => i.id === id) as any)?.linkedId;
                   if (lid)
                     setFormData((prev) => ({
                       ...prev,
@@ -791,7 +795,7 @@ export function InvoiceForm({
                         (i) => i !== lid,
                       ),
                     }));
-                  setItems(items.filter((i) => i.id !== id));
+                  setItems(currentItems.filter((i) => i.id !== id));
                 }}
               />
             ))}

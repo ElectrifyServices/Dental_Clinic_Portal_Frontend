@@ -381,13 +381,18 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
                         </td>
                       ))}
                     </motion.tr>
-                    {renderExpandedRow && expandedRowIds?.has(key) && (
-                      <tr>
-                        <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">
-                          {renderExpandedRow(row)}
-                        </td>
-                      </tr>
-                    )}
+                    {(() => {
+                      if (!renderExpandedRow || !expandedRowIds?.has(key)) return null;
+                      const content = renderExpandedRow(row);
+                      if (!content) return null;
+                      return (
+                        <tr>
+                          <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">
+                            {content}
+                          </td>
+                        </tr>
+                      );
+                    })()}
                   </React.Fragment>
                 );
               })
