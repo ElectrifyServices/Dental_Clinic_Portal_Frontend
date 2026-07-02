@@ -11,6 +11,12 @@ export function useUnbilledItemsQuery(patientId: string, memberId?: string, opti
     queryKey: ["unbilledItems", patientId, memberId],
     endpoint,
     method: "get",
-    options,
+    options: {
+      staleTime: 0,
+      gcTime: 0,
+      cacheTime: 0,
+      refetchOnMount: "always",
+      ...options,
+    },
   });
 }

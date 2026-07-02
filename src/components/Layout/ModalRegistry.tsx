@@ -714,6 +714,7 @@ export function ModalRegistry() {
 
               handleSaveInvoice({ ...inv, id: invoiceId });
               queryClient.invalidateQueries({ queryKey: ["invoices"] });
+              queryClient.invalidateQueries({ queryKey: ["unbilledItems"] });
               setActiveModal(null);
               showToast("Invoice created successfully!", "success");
             } catch (err: any) {

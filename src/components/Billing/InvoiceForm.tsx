@@ -96,7 +96,13 @@ export function InvoiceForm({
 
   const { data: patientInvoicesData } = useInvoicesQuery(
     { filters: { patient_id: formData.patientId ? [formData.patientId] : [] }, limit: 100 },
-    { enabled: !!formData.patientId }
+    {
+      enabled: !!formData.patientId,
+      staleTime: 0,
+      gcTime: 0,
+      cacheTime: 0,
+      refetchOnMount: "always",
+    }
   );
 
   const patientInvoices = useMemo(() => {
@@ -162,6 +168,10 @@ export function InvoiceForm({
     memberId,
     {
       enabled: !!formData.patientId,
+      staleTime: 0,
+      gcTime: 0,
+      cacheTime: 0,
+      refetchOnMount: "always",
     }
   );
 
