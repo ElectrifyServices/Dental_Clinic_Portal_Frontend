@@ -1,4 +1,5 @@
 import { useApiMutation } from "../useApiMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface CreateInvoiceItemVariables {
   item_type: "CONSULTATION" | "TREATMENT_SESSION" | "CUSTOM";
@@ -21,8 +22,16 @@ export interface CreateInvoiceVariables {
 }
 
 export function useCreateInvoiceMutation() {
+  const queryClient = useQueryClient();
+
   return useApiMutation<any, CreateInvoiceVariables>({
     endpoint: "/invoice",
     method: "post",
+    options: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["unbilledItems"] });
+      },
+    },
   });
 }

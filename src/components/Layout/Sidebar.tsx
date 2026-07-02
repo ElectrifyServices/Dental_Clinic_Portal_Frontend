@@ -110,7 +110,7 @@ export function Sidebar() {
         "dashboard",
         "emr",
         "consent",
-        "inventory",
+
         "reports",
         "profit-sharing",
       ].includes(item.id),

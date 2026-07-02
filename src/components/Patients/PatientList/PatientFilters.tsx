@@ -1,6 +1,14 @@
 import React from "react";
 import { Plus, LayoutGrid, List } from "lucide-react";
-import { Button, SearchInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import {
+  Button,
+  SearchInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 
 interface PatientFiltersProps {
   searchTerm: string;
@@ -28,7 +36,7 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
   return (
     <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-6 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0">
       {/* Search Input takes remaining space */}
-      <div className="flex-grow min-w-[100px] max-w-md xl:max-w-xl min-w-0">
+      <div className="flex-grow min-w-[100px] max-w-md xl:max-w-full">
         <SearchInput
           placeholder="Search by name, ID, phone or email..."
           value={searchTerm}
@@ -61,8 +69,8 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
             <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="regular">Regular</SelectItem>
             <SelectItem value="family">Family</SelectItem>
-            <SelectItem value="staff">Staff</SelectItem>
-            <SelectItem value="corporate">Membership</SelectItem>
+            <SelectItem value="clinic_staff">Clinic Staff</SelectItem>
+            <SelectItem value="CORPORATE">Membership</SelectItem>
             <SelectItem value="vip">VIP</SelectItem>
             <SelectItem value="complimentary">Complimentary</SelectItem>
           </SelectContent>

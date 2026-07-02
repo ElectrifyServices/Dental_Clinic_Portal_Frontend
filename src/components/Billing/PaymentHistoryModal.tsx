@@ -183,16 +183,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/50 shadow-sm bg-amber-50/50">
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-              <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">
-                Balance Due
-              </p>
-              <p className="text-xl font-black text-amber-700">
-                ₹{dueAmount.toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
+
         </div>
 
         <div>

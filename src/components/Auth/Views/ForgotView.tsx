@@ -15,8 +15,8 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Header with Logo */}
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 shadow-xl shadow-slate-100/50 mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3 overflow-hidden">
-          <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+        <div className="w-28 h-28 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Forgot Password

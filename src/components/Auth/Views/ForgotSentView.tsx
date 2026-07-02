@@ -13,8 +13,8 @@ export function ForgotSentView({ setView, resetEmail, setResetEmail }: ForgotSen
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
       {/* Header with Logo */}
       <div className="flex flex-col items-center text-center mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 shadow-xl shadow-slate-100/50 mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3 overflow-hidden">
-          <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+        <div className="w-28 h-28 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-2">
           <MailCheck className="w-6 h-6 text-blue-500" />

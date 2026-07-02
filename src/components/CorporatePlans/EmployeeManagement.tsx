@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
-  PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal,
+  PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal, Modal,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading,
 } from '../ui';
@@ -22,6 +22,7 @@ import { ChangePlanModal } from './Employee/ChangePlanModal';
 import { getDependentsByMember, removeDependent, notifyDependentChange } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
+import { MemberCard } from './Employee/MemberCard';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -59,6 +60,7 @@ export function EmployeeManagement({
   const [editDep, setEditDep] = useState<any | null>(null);
   const [deleteDep, setDeleteDep] = useState<any | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+  const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -134,6 +136,8 @@ export function EmployeeManagement({
       };
     });
   }, [employeesData, plans]);
+
+  const selectedEmp = useMemo(() => apiMembers.find(e => e.id === viewDependentsEmpId), [apiMembers, viewDependentsEmpId]);
 
   const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: PER_PAGE, total: 0, totalPages: 1 };
   const totalPages = pagination.totalPages || 1;
@@ -450,27 +454,43 @@ export function EmployeeManagement({
       {tab === 'list' ? (
         <>
           {/* Filters */}
-          <div className="flex flex-col xl:flex-row gap-4 items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-border/50">
-            {/* Search Input grows dynamically */}
-            <div className="flex-1 w-full min-w-0">
-              <SearchInput
-                value={search}
-                onChange={val => { setSearch(val); setPage(1); }}
-                placeholder="Search by name, phone…"
-                className="w-full"
-              />
+          <div className="flex flex-col gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+            {/* Top row: Search & Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full items-stretch sm:items-center justify-between">
+              {/* Search Input grows dynamically */}
+              <div className="flex-1 min-w-0">
+                <SearchInput
+                  value={search}
+                  onChange={val => { setSearch(val); setPage(1); }}
+                  placeholder="Search by name, phone…"
+                  className="w-full"
+                />
+              </div>
+
+              {/* Action Buttons grouped side-by-side */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0 flex-shrink-0">
+                <Button onClick={() => setTab('import')} variant="outline" className="gap-2 w-full sm:w-auto rounded-xl h-10 border-border/60 hover:bg-slate-50 flex-1 sm:flex-none">
+                  <Upload className="w-4 h-4" /> Import
+                </Button>
+                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 flex-1 sm:flex-none px-4">
+                  <Plus className="w-4 h-4" /> Add Member
+                </Button>
+              </div>
             </div>
 
-            {/* Filters clustered together */}
-            <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto shrink-0">
-              <FilterTabs
-                tabs={planTypeTabs}
-                active={planTypeFilter}
-                onChange={handlePlanTypeChange}
-              />
+            {/* Bottom row: Filter Tabs & Plan Select */}
+            <div className="flex flex-col gap-3 w-full sm:flex-row sm:items-center sm:justify-start border-t pt-3 border-border/50">
+              {/* Filter Tabs wrapper with touch-friendly swipe layout */}
+              <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-shrink-0">
+                <FilterTabs
+                  tabs={planTypeTabs}
+                  active={planTypeFilter}
+                  onChange={handlePlanTypeChange}
+                />
+              </div>
 
               {/* Plan Select */}
-              <div className="w-full sm:w-48">
+              <div className="w-full sm:w-48 flex-shrink-0">
                 <Select
                   value={selectedPlanFilter}
                   onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
@@ -488,42 +508,93 @@ export function EmployeeManagement({
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Company filter has been removed */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0 xl:border-l xl:pl-3 border-border/50">
-                <Button onClick={() => setTab('import')} variant="outline" className="gap-2 w-full sm:w-auto rounded-xl h-10 border-border/60 hover:bg-slate-50 flex-1 sm:flex-none">
-                  <Upload className="w-4 h-4" /> Import
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 flex-1 sm:flex-none px-4">
-                  <Plus className="w-4 h-4" /> Add Member
-                </Button>
-              </div>
             </div>
           </div>
 
           {employeesLoading ? (
             <Loading type="spinner" text="Loading members…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
           ) : (
-            <DataTable
-            columns={columns}
-            data={apiMembers}
-            rowKey={e => e.id}
-            emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
-            emptyTitle="No members found"
-            emptySubtitle="Use Add Member to add your first member"
-            onRowClick={handleRowClick}
-            expandedRowIds={expandedRowIds}
-            renderExpandedRow={renderExpandedRow}
-            footer={
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                perPage={PER_PAGE}
-                onPageChange={setPage}
-              />
-            }
-          />
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block">
+                <DataTable
+                  columns={columns}
+                  data={apiMembers}
+                  rowKey={e => e.id}
+                  emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
+                  emptyTitle="No members found"
+                  emptySubtitle="Use Add Member to add your first member"
+                  onRowClick={handleRowClick}
+                  expandedRowIds={expandedRowIds}
+                  renderExpandedRow={renderExpandedRow}
+                  footer={
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      totalItems={totalItems}
+                      perPage={PER_PAGE}
+                      onPageChange={setPage}
+                    />
+                  }
+                />
+              </div>
+
+              {/* Mobile/Tablet Card View */}
+              <div className="block lg:hidden space-y-4">
+                {apiMembers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <Users className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                    <p className="font-bold text-foreground text-sm">No members found</p>
+                    <p className="text-muted-foreground text-xs mt-1">Use Add Member to add your first member</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {apiMembers.map((e) => (
+                        <MemberCard
+                          key={e.id}
+                          employee={e}
+                          plans={plans}
+                          isExpanded={viewDependentsEmpId === e.id}
+                          onToggleExpand={() => setViewDependentsEmpId(e.id)}
+                          onEdit={() => { setEditEmp(e); setShowForm(true); }}
+                          onChangePlan={() => setChangePlanEmp(e)}
+                          onDelete={() => setDeleteEmp(e)}
+                          onToggleStatus={async () => {
+                            if (e.status === 'EXPIRED') return;
+                            try {
+                              await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
+                              refetch();
+                            } catch {}
+                          }}
+                          isStatusPending={updateStatusMutation.isPending}
+                          onEditDependent={(dep) => {
+                            setEditDep(dep);
+                            setAddDependentEmp(e);
+                          }}
+                          onDeleteDependent={(dep) => {
+                            setDeleteDep(dep);
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Mobile/Tablet Pagination */}
+                    {totalPages > 1 && (
+                      <div className="py-4 px-4 border border-border/50 bg-card rounded-2xl shadow-sm mt-4">
+                        <Pagination
+                          page={page}
+                          totalPages={totalPages}
+                          totalItems={totalItems}
+                          perPage={PER_PAGE}
+                          onPageChange={setPage}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
           )}
         </>
       ) : (
@@ -582,6 +653,99 @@ export function EmployeeManagement({
           onConfirm={handleDeleteDependent}
           onCancel={() => setDeleteDep(null)}
         />
+      )}
+
+      {selectedEmp && (
+        <Modal
+          title={`Family Members - ${selectedEmp.name}`}
+          subtitle={`${selectedEmp.dependents?.length || 0} enrolled dependents`}
+          onClose={() => setViewDependentsEmpId(null)}
+          size="md"
+        >
+          <div className="space-y-3">
+            {(!selectedEmp.dependents || selectedEmp.dependents.length === 0) ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No family members enrolled.</p>
+            ) : (
+              selectedEmp.dependents.map((dep: any) => {
+                const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
+                const isDepExpired = dep.status === 'EXPIRED';
+
+                return (
+                  <div
+                    key={dep.id}
+                    className="p-3.5 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-border/60 space-y-2.5 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0">
+                        <span className="font-bold text-sm text-foreground truncate block">{dep.name}</span>
+                        <span className="inline-block text-[10px] font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded mt-1 uppercase tracking-wide">
+                          {dep.relationship_type || dep.relationship}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <Button
+                          onClick={async (ev) => {
+                            ev.stopPropagation();
+                            if (isDepExpired) return;
+                            try {
+                              await updateStatusMutation.mutateAsync({ id: dep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
+                              refetch();
+                            } catch {}
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold border h-auto uppercase tracking-wide transition-all ${
+                            isDepExpired
+                              ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                              : isDepActive
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                          }`}
+                          disabled={isDepExpired || updateStatusMutation.isPending}
+                        >
+                          <span className={`w-1 h-1 rounded-full ${
+                            isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                          }`} />
+                          <span>{isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2.5">
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 opacity-60" />
+                        <span>{dep.phone || '—'}</span>
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg hover:text-primary"
+                          onClick={() => {
+                            setEditDep(dep);
+                            setAddDependentEmp(selectedEmp);
+                          }}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/5 hover:border-destructive/30"
+                          onClick={() => {
+                            setDeleteDep(dep);
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -556,6 +556,27 @@ export const downloadConsultationPDF = async ({
 // Invoice / consolidated statement
 // ---------------------------------------------------------------------------
 
+const INK_BORDER = "#2d2d2d";
+const CELL_LINE = "#c8ccd0";
+const PANEL_BG = "#f2f2f2";
+
+function numberToWords(n: number): string {
+  const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  if (n === 0) return "Zero";
+  if (n < 20) return ONES[n];
+  if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
+  if (n < 1000) return ONES[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + numberToWords(n % 100) : "");
+  if (n < 100000) return numberToWords(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + numberToWords(n % 1000) : "");
+  if (n < 10000000) return numberToWords(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + numberToWords(n % 100000) : "");
+  return numberToWords(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + numberToWords(n % 10000000) : "");
+}
+
+function tdCell(align: string, last = false): string {
+  return `padding:8px 10px; font-size:11px; color:${INK}; text-align:${align}; border-right:${last ? "none" : `1px solid ${CELL_LINE}`}; border-bottom:1px solid ${CELL_LINE};`;
+}
+
 export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const pdfContainer = makeOffscreenContainer();
 
@@ -565,158 +586,168 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const patientId = invoice.patientId || patient?.id || "—";
   const patientCode = invoice.patient_code || invoice.patientCode || patient?.patient_code || patient?.patientCode;
   const displayPatientId = patientCode || (patientId === "—" ? "—" : patientId.split('-')[0]);
-  const patientPhone = invoice.phone || patient?.phone || "—";
-  const patientGender = invoice.gender || patient?.gender || "—";
-  const patientAge = invoice.age || patient?.age || ageFromDOB(invoice.dob || patient?.dob) || "—";
-
-  const doctorName = invoice.doctor || "General Dentist";
-  const displayDoctorName = doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`;
+  const memberId = invoice.memberId || invoice.member_id || patient?.memberId || patient?.member_id || "—";
 
   const invoiceNumber = invoice.invoice_number || invoice.id || "—";
   const invoiceDate = invoice.date
     ? new Date(invoice.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-  const dueDate = invoice.dueDate
-    ? new Date(invoice.dueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
-  const status = (invoice.status || "Generated").replace('_', ' ');
 
-  // Determine paid amount and balance due from API structure or normalized structure
   const rawPayments = invoice.invoice_payments || [];
   const calculatedPaidAmount = rawPayments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
   const paidAmount = invoice.paidAmount !== undefined ? Number(invoice.paidAmount) : calculatedPaidAmount;
-  const subtotal = Number(invoice.subtotal || 0);
-  const discountAmount = Number(invoice.discountAmount || invoice.discount || 0);
-  const taxAmount = Number(invoice.taxAmount || invoice.tax || 0);
+  const discountAmount = Number(invoice.discountAmount || 0);
+  const discountPct = Number(invoice.discount || 0);
+  const taxAmount = Number(invoice.taxAmount || 0);
+  const taxPct = Number(invoice.tax || 0);
   const grandTotal = Number(invoice.total || invoice.grand_total || 0);
   const pendingAmount = invoice.pendingAmount !== undefined ? Number(invoice.pendingAmount) : Math.max(0, grandTotal - paidAmount);
 
-  const getHeader = () => getLetterhead(`
-<div style="font-size: 13px; font-weight: 800; color: ${INK}; text-transform: uppercase; letter-spacing: 1px;">
-      ${isStatement ? "Consolidated Statement" : "Tax Invoice"}
-</div>
-<div style="font-size: 16px; font-weight: 800; color: ${INK}; margin-top: 6px;">${patientName}</div>
-<div style="margin-top: 6px;">${statusBadge(status)}</div>
-  `);
+  const grandTotalWords = `INR ${numberToWords(Math.round(grandTotal))} Only`;
+  const items: any[] = invoice.items || [];
 
-  // Classic bordered label/value grid — patient details on the left pair of
-  // columns, invoice meta on the right pair, matching a standard tax-invoice layout.
-  const getDetailsSection = () => `
-<div style="padding: 18px 40px 0;">
-      ${detailsGrid([
-    ["Patient Name", patientName, isStatement ? "Statement Date" : "Invoice No.", isStatement ? invoiceDate : String(invoiceNumber)],
-    ["Patient ID", displayPatientId, isStatement ? "Period Ending" : "Date", isStatement ? invoiceDate : invoiceDate],
-    ["Age / Gender", `${patientAge} / ${patientGender}`, "Due Date", dueDate],
-    ["Phone", patientPhone, "Status", status],
-  ])}
-</div>
-  `;
+  // Item rows
+  const itemsHtml = items.map((item: any, i: number) => `
+<tr>
+<td style="${tdCell("center")}">${i + 1}</td>
+<td style="${tdCell("left")}">${((item.item_type || "Service") as string).charAt(0).toUpperCase() + ((item.item_type || "Service") as string).slice(1).toLowerCase()}</td>
+<td style="${tdCell("center")}">${item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE}</td>
+<td style="${tdCell("center")}">1 NOS</td>
+<td style="${tdCell("right")}">₹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
+<td style="${tdCell("center")}">NOS</td>
+<td style="${tdCell("right", true)}">₹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
+</tr>`).join('');
 
-  const getItemsSection = () => `
-<div style="padding: 20px 40px 10px;">
-      ${sectionLabel("Invoice Details")}
-<table style="width:100%; border-collapse:collapse; border:1px solid ${LINE};">
-<thead>
-<tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
-            ${tableHeadCell("Invoice Number")}
-            ${tableHeadCell("HSN/SAC")}
-            ${tableHeadCell("Item Type")}
-            ${tableHeadCell("Total Amount", "right")}
-            ${tableHeadCell("Billed Amount", "right")}
-</tr>
-</thead>
-<tbody>
-          ${invoice.items && invoice.items.length > 0 ? invoice.items.map((item: any, i: number) => `
-<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
-<td style="padding:10px 12px; font-size:12px; font-weight:700; color:${INK};">${item.invoice_number || invoice.invoice_number || invoice.id || "—"}</td>
-<td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:600; color:${INK_MUTED}; text-transform:capitalize;">${(item.item_type || "Service").toLowerCase()}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; color:${INK_MUTED};">₹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:700; color:${INK};">₹${Number(item.billed_amount || 0).toLocaleString('en-IN')}</td>
-</tr>
-          `).join('') : `
-<tr><td colspan="5" style="padding:16px; text-align:center; font-size:12px; color:#93999e; font-style:italic;">No items found.</td></tr>
-          `}
-</tbody>
-</table>
-</div>
-  `;
+  // Discount row
+  const discountRowHtml = discountAmount > 0 ? `
+<tr>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("left")}; font-style:italic;">Less : DISCOUNT ALLOWED${discountPct > 0 ? ` ${discountPct}%` : ""}</td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("right")}"></td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("right", true)}">(-₹${discountAmount.toLocaleString('en-IN')})</td>
+</tr>` : "";
 
-  const getTotalsAndNotesSection = () => `
-<div style="padding: 10px 40px 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:32px;">
-<div style="flex:1;">
-<div style="font-size:10px; font-weight:800; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Payment Terms & Notes</div>
-<div style="font-size:11px; line-height:1.7; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
-          1. Payment is due within 7 days of invoice date.<br/>
-          2. Please make cheques payable to "${CLINIC_NAME}".<br/>
-          3. For online transfers, please use UPI ID: opalsmiles@upi.<br/>
-          4. This is a computer-generated invoice and does not require a physical signature.
-</div>
-        ${invoice.isComplimentary && invoice.complimentaryNote ? `
-<div style="margin-top:12px; padding:10px 12px; background:#f7f7f7; border:1px solid ${LINE}; border-radius:8px;">
-<div style="font-size:10px; font-weight:800; color:${INK}; text-transform:uppercase;">Complimentary Reason</div>
-<div style="font-size:11px; color:${INK_MUTED}; font-weight:500; margin-top:4px;">${invoice.complimentaryNote}</div>
-</div>
-        ` : ''}
-</div>
- 
-      <div style="width:270px;">
-<div style="border:1px solid ${LINE}; border-radius:8px; overflow:hidden;">
-<div style="padding:16px; background:#fafafa;">
-<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; color:${INK_MUTED};">
-<span>Subtotal</span>
-<strong style="color:${INK};">₹${subtotal.toLocaleString('en-IN')}</strong>
-</div>
-            ${discountAmount > 0 ? `
-<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; color:${INK_MUTED};">
-<span>Discount${invoice.discount && invoice.discountAmount ? ` (${invoice.discount}%)` : ''}</span>
-<strong style="color:${INK};">-₹${discountAmount.toLocaleString('en-IN')}</strong>
-</div>
-            ` : ''}
-            ${taxAmount > 0 ? `
-<div style="display:flex; justify-content:space-between; font-size:12px; color:${INK_MUTED};">
-<span>Tax (GST)${invoice.tax && invoice.taxAmount ? ` (${invoice.tax}%)` : ''}</span>
-<strong style="color:${INK};">₹${taxAmount.toLocaleString('en-IN')}</strong>
-</div>
-            ` : ''}
-</div>
-<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:${INK};">
-<span style="font-size:12px; font-weight:800; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">Grand Total</span>
-<span style="font-size:18px; font-weight:900; color:#ffffff;">₹${grandTotal.toLocaleString('en-IN')}</span>
-</div>
-          ${(paidAmount > 0 || pendingAmount > 0) ? `
-<div style="padding:12px 16px; background:#fafafa; border-top:1px dashed ${LINE};">
-<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:${INK};">
-<span>Amount Paid</span>
-<strong>₹${paidAmount.toLocaleString('en-IN')}</strong>
-</div>
-<div style="display:flex; justify-content:space-between; font-size:12px; color:${INK};">
-<span>Balance Due</span>
-<strong>₹${pendingAmount.toLocaleString('en-IN')}</strong>
-</div>
-</div>
-          ` : ''}
-</div>
-</div>
-</div>
-  `;
+  // Padding rows for fixed table height
+  const filledRows = items.length + (discountAmount > 0 ? 1 : 0);
+  const paddingCount = Math.max(0, 10 - filledRows);
+  const paddingRowsHtml = Array.from({ length: paddingCount }, () => `
+<tr style="height:26px;">
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("left")}"></td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("right")}"></td>
+<td style="${tdCell("center")}"></td>
+<td style="${tdCell("right", true)}"></td>
+</tr>`).join('');
 
-  const getFooter = () => getBrandFooter(`
-<div style="text-align:center;">
-<div style="width:200px; border-bottom:1px solid ${LINE}; margin-bottom:8px;"></div>
-<div style="font-size:13px; font-weight:800; color:${INK};">${displayDoctorName}</div>
-<div style="font-size:11px; color:${INK_MUTED}; font-weight:500;">Authorized Signatory</div>
-<div style="font-size:10px; color:#93999e; margin-top:2px;">${CLINIC_NAME}</div>
-</div>
-  `);
+  // Total row
+  const totalRowHtml = `
+<tr style="background:${PANEL_BG}; border-top:2px solid ${INK_BORDER};">
+<td colspan="3" style="padding:8px 10px; font-size:12px; font-weight:800; color:${INK}; text-align:right; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};">Total</td>
+<td style="padding:8px 10px; font-size:11px; font-weight:700; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};">${items.length} NOS</td>
+<td colspan="2" style="padding:8px 10px; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};"></td>
+<td style="padding:8px 10px; font-size:12px; font-weight:800; color:${INK}; text-align:right; border-top:2px solid ${INK_BORDER};">₹${grandTotal.toLocaleString('en-IN')}</td>
+</tr>`;
 
   const htmlContent = `
-<div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">
-      ${getHeader()}
-      ${getDetailsSection()}
-      ${getItemsSection()}
-      ${getTotalsAndNotesSection()}
-      ${getFooter()}
+<div style="width:794px; background:#fff; padding:28px 40px 16px; font-family:Arial,Helvetica,sans-serif; color:${INK}; box-sizing:border-box;">
+
+  <div style="text-align:center; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tax Invoice</div>
+
+  <div style="border:1.5px solid ${INK_BORDER}; background:#fff;">
+
+    <div style="padding:14px 18px; border-bottom:1px solid ${INK_BORDER}; display:flex; align-items:center; gap:14px;">
+      <img src="${logoImg}" style="height:56px; width:auto; object-fit:contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
+      <div>
+        <div style="font-size:15px; font-weight:800; color:${INK}; letter-spacing:0.3px;">${CLINIC_NAME}</div>
+        <div style="font-size:10.5px; font-weight:600; color:${INK_MUTED}; margin-top:2px;">${CLINIC_TAGLINE}</div>
+      </div>
+    </div>
+
+    <div style="display:flex; border-bottom:1px solid ${INK_BORDER};">
+      <div style="flex:1; padding:12px 18px; border-right:1px solid ${INK_BORDER};">
+        <div style="margin-bottom:9px;">
+          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient Name</div>
+          <div style="font-size:12px; font-weight:700; color:${INK};">${patientName}</div>
+        </div>
+        <div style="margin-bottom:9px;">
+          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Member ID</div>
+          <div style="font-size:12px; font-weight:700; color:${INK};">${memberId}</div>
+        </div>
+        <div>
+          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient ID</div>
+          <div style="font-size:12px; font-weight:700; color:${INK};">${displayPatientId}</div>
+        </div>
+      </div>
+      <div style="width:224px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid ${CELL_LINE};">
+          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">${isStatement ? "Statement Date" : "Invoice No."}</span>
+          <span style="font-size:11px; font-weight:700; color:${INK};">${isStatement ? invoiceDate : String(invoiceNumber)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Date</span>
+          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
+        </div>
+      </div>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; border-bottom:1px solid ${INK_BORDER};">
+      <thead>
+        <tr style="background:${PANEL_BG}; border-bottom:1px solid ${INK_BORDER};">
+          <th style="padding:8px 10px; width:6%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">Sr. No</th>
+          <th style="padding:8px 10px; width:30%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:left; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">Description</th>
+          <th style="padding:8px 10px; width:12%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">HSN/SAC</th>
+          <th style="padding:8px 10px; width:13%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">Quantity</th>
+          <th style="padding:8px 10px; width:13%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:right; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">Rate</th>
+          <th style="padding:8px 10px; width:8%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-bottom:1px solid ${INK_BORDER};">Per</th>
+          <th style="padding:8px 10px; width:18%; font-size:9px; font-weight:700; text-transform:uppercase; color:${INK}; text-align:right; border-bottom:1px solid ${INK_BORDER};">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+        ${discountRowHtml}
+        ${paddingRowsHtml}
+        ${totalRowHtml}
+      </tbody>
+    </table>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 18px; border-bottom:1px solid ${CELL_LINE};">
+      <div style="font-size:11px; color:${INK};">
+        <span style="font-weight:700;">Amount Chargeable (in words):</span> ${grandTotalWords}
+      </div>
+      <div style="font-size:10px; color:${INK_MUTED};">E. &amp; O.E</div>
+    </div>
+
+    ${paidAmount > 0 ? `
+    <div style="display:flex; justify-content:flex-end; gap:24px; padding:7px 18px; border-bottom:1px solid ${CELL_LINE}; font-size:11px; color:${INK};">
+      <span>Amount Paid: <strong>₹${paidAmount.toLocaleString('en-IN')}</strong></span>
+      <span>Balance Due: <strong>₹${pendingAmount.toLocaleString('en-IN')}</strong></span>
+    </div>` : ""}
+
+    <div style="background:${PANEL_BG}; border-top:1px solid ${INK_BORDER}; padding:16px 18px; display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div style="font-size:12px; font-weight:800; color:${INK}; margin-bottom:34px;">For Opal Smile Dental Studio</div>
+        <div style="width:140px; border-top:1px solid ${INK_MUTED}; margin-bottom:4px;"></div>
+        <div style="font-size:10px; color:${INK_MUTED}; font-weight:600;">Authorised Signatory</div>
+        <div style="font-size:9.5px; color:${INK_MUTED}; margin-top:10px;">${CLINIC_ADDRESS}</div>
+        <div style="font-size:9.5px; color:${INK_MUTED}; margin-top:2px;">Phone: ${CLINIC_PHONE} &nbsp;|&nbsp; Email: ${CLINIC_EMAIL}</div>
+        <div style="font-size:9.5px; color:${INK_MUTED}; margin-top:2px;">Instagram: ${CLINIC_INSTAGRAM}</div>
+      </div>
+      <div style="width:70px; height:70px; background:white; padding:3px; border:1px solid ${CELL_LINE}; border-radius:4px; flex-shrink:0;">
+        <img src="/opalsmiles-qr.png" style="width:100%; height:100%; object-fit:contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center; font-size:10px; color:${INK_MUTED}; font-style:italic; margin-top:10px;">
+    This is a Computer Generated Invoice
+  </div>
+
 </div>
   `;
 
