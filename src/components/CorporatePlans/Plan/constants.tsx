@@ -32,18 +32,27 @@ export const mkBenefit = (): PlanBenefit => ({
   description: '20% discount on all treatments',
 });
 
-export const mkForm = () => ({
-  name: '', companyName: '', code: '', description: '',
-  benefits: [mkBenefit()],
-  validFrom: new Date().toISOString().split('T')[0],
-  validTo: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-  maxMembers: undefined as number | undefined,
-  isActive: true, color: 'blue',
-  planCategory: 'corporate' as PlanCategory,
-  annualFee: undefined as number | undefined,
-  maxDependents: 0,
-  planTier: undefined as CorporatePlanTier | undefined,
-});
+export const mkForm = () => {
+  const today = new Date();
+  const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  const nextYear = new Date(today);
+  nextYear.setFullYear(today.getFullYear() + 1);
+  const localNextYear = `${nextYear.getFullYear()}-${String(nextYear.getMonth() + 1).padStart(2, '0')}-${String(nextYear.getDate()).padStart(2, '0')}`;
+
+  return {
+    name: '', companyName: '', code: '', description: '',
+    benefits: [mkBenefit()],
+    validFrom: localToday,
+    validTo: localNextYear,
+    maxMembers: undefined as number | undefined,
+    isActive: true, color: 'blue',
+    planCategory: 'corporate' as PlanCategory,
+    annualFee: undefined as number | undefined,
+    maxDependents: 0,
+    planTier: undefined as CorporatePlanTier | undefined,
+  };
+};
 
 export function autoDesc(b: PlanBenefit): string {
   switch (b.type) {

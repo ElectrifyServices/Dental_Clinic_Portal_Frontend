@@ -2,9 +2,10 @@ import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
 export interface CreateInvoiceItemVariables {
-  item_type: "CONSULTATION" | "TREATMENT_SESSION" | "CUSTOM";
+  item_type: "CONSULTATION" | "TREATMENT_SESSION" | "MEMBERSHIP";
   consultation_id?: string;
   treatment_session_id?: string;
+  membership_id?: string;
   description: string;
   total_amount: number;
   billed_amount: number;
