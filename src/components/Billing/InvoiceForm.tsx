@@ -722,7 +722,7 @@ export function InvoiceForm({
                 setFormData({ ...formData, date: e.target.value })
               }
               required
-              className="w-full px-4 py-2 border rounded-xl text-sm"
+              className="block w-full px-4 py-2 border rounded-xl text-sm"
             />
           </LabeledField>
         </div>
