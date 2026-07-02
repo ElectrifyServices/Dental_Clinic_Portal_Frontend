@@ -230,6 +230,15 @@ export function ModalRegistry() {
     handleUpdateCorporateEmployee,
   } = useAppData();
 
+  const matchingInvoice = useMemo(() => {
+    if (!selectedItemId) return null;
+    return invoices.find((i: any) => 
+      String(i.id) === String(selectedItemId) || 
+      String(i.invoice_number) === String(selectedItemId) ||
+      String(i.invoiceNumber) === String(selectedItemId)
+    ) || null;
+  }, [invoices, selectedItemId]);
+
   const activeDoctors = useMemo(
     () =>
       staffMembers.filter(
@@ -751,16 +760,16 @@ export function ModalRegistry() {
         />
       )}
 
-      {selectedItemId && invoices.find((i: any) => i.id === selectedItemId) && (
+      {selectedItemId && (matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
         <InvoiceViewer
-          invoiceId={selectedItemId}
+          invoiceId={matchingInvoice ? String(matchingInvoice.id) : selectedItemId}
           patientId={
-            invoices.find((i: any) => i.id === selectedItemId)?.patientId || 
-            invoices.find((i: any) => i.id === selectedItemId)?.patient_id ||
-            invoices.find((i: any) => i.id === selectedItemId)?.memberId ||
-            invoices.find((i: any) => i.id === selectedItemId)?.member_id
+            matchingInvoice?.patientId || 
+            matchingInvoice?.patient_id ||
+            matchingInvoice?.memberId ||
+            matchingInvoice?.member_id
           }
-          isMember={invoices.find((i: any) => i.id === selectedItemId)?.isMemberInvoice}
+          isMember={matchingInvoice?.isMemberInvoice}
           onClose={() => setSelectedItemId("")}
           onUpdateStatus={handleUpdateInvoiceStatus}
         />

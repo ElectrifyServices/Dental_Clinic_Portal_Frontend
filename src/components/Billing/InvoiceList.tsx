@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { BillingCard } from "./BillingCard";
 import {
   Plus,
   Eye,
@@ -29,6 +30,11 @@ import {
   MetricCard,
   toast,
   Pagination,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
 
@@ -577,9 +583,16 @@ export function InvoiceList({
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(groupedData.length / itemsPerPage);
-  const paginatedData = groupedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  const paginatedData = useMemo(() => {
+    return groupedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [groupedData, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, status]);
 
   return (
     <div className="space-y-3">
@@ -625,80 +638,166 @@ export function InvoiceList({
         <FilterTabs tabs={FILTERS} active={status} onChange={setStatus} />
       </div>
 
-      <DataTable
-        columns={columns}
-        data={paginatedData as any[]}
-        rowKey={(inv) => inv.id}
-        emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
-        emptyTitle="No invoices found"
-        emptySubtitle="Create your first invoice to get started."
-        footer={
-          totalPages > 1 ? (
-            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-              <Pagination
-                page={currentPage}
-                totalPages={totalPages}
-                totalItems={groupedData.length}
-                perPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          ) : undefined
-        }
-        onRowClick={(row: any) => {
-          if (row.allInvoices && row.allInvoices.length > 1) {
-            toggleRowExpanded(row.id);
-          }
-        }}
-        expandedRowIds={expandedRowIds}
-        rowClassName={(row: any) => {
-          const isExpandable = row.allInvoices && row.allInvoices.length > 1;
-          const isExpanded = isExpandable && expandedRowIds.has(row.id);
-          const status = row.status?.toLowerCase();
-          if (isExpanded) {
-            return "bg-blue-50/50 border-l-4 border-l-blue-500 font-semibold transition-all duration-150";
-          }
-          let baseClass = "";
-          if (status === "paid") {
-            baseClass = "bg-emerald-50/10 hover:bg-emerald-50/20";
-          } else if (status === "partially_paid") {
-            baseClass = "bg-amber-50/10 hover:bg-amber-50/20";
-          } else {
-            baseClass = "bg-card hover:bg-muted/15";
-          }
-          if (!isExpandable) {
-            baseClass += " cursor-default hover:bg-transparent";
-          }
-          return baseClass;
-        }}
-        renderExpandedRow={(groupedInv: any) => {
-          const olderInvoices = groupedInv.allInvoices.slice(1);
-          if (olderInvoices.length === 0) return null;
-          return (
-            <div className="p-4 pl-12 bg-muted/20 border-t border-b border-border/40 space-y-2">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                Previous Bills
+      {/* Desktop Table View */}
+      <div className="hidden lg:block">
+        <DataTable
+          columns={columns}
+          data={paginatedData as any[]}
+          rowKey={(inv) => inv.id}
+          emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
+          emptyTitle="No invoices found"
+          emptySubtitle="Create your first invoice to get started."
+          footer={
+            totalPages > 1 ? (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6 border-t border-border/50 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                  <Select
+                    value={String(itemsPerPage)}
+                    onValueChange={(val) => {
+                      setItemsPerPage(Number(val));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-20 h-8 text-xs">
+                      <SelectValue placeholder="10" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5" className="text-xs">5</SelectItem>
+                      <SelectItem value="10" className="text-xs">10</SelectItem>
+                      <SelectItem value="20" className="text-xs">20</SelectItem>
+                      <SelectItem value="50" className="text-xs">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Pagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  totalItems={groupedData.length}
+                  perPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
               </div>
-              <DataTable
-                columns={subColumns}
-                data={olderInvoices}
-                rowKey={(inv) => inv.id}
-                emptyTitle="No previous bills found"
-                rowClassName={(subRow: any) => {
-                  const status = subRow.status?.toLowerCase();
-                  if (status === "paid") {
-                    return "bg-emerald-50/10 hover:bg-emerald-50/20";
-                  }
-                  if (status === "partially_paid") {
-                    return "bg-amber-50/10 hover:bg-amber-50/20";
-                  }
-                  return "bg-card/70 hover:bg-muted/15";
-                }}
-              />
+            ) : undefined
+          }
+          onRowClick={(row: any) => {
+            if (row.allInvoices && row.allInvoices.length > 1) {
+              toggleRowExpanded(row.id);
+            }
+          }}
+          expandedRowIds={expandedRowIds}
+          rowClassName={(row: any) => {
+            const isExpandable = row.allInvoices && row.allInvoices.length > 1;
+            const isExpanded = isExpandable && expandedRowIds.has(row.id);
+            const status = row.status?.toLowerCase();
+            if (isExpanded) {
+              return "bg-blue-50/50 border-l-4 border-l-blue-500 font-semibold transition-all duration-150";
+            }
+            let baseClass = "";
+            if (status === "paid") {
+              baseClass = "bg-emerald-50/10 hover:bg-emerald-50/20";
+            } else if (status === "partially_paid") {
+              baseClass = "bg-amber-50/10 hover:bg-amber-50/20";
+            } else {
+              baseClass = "bg-card hover:bg-muted/15";
+            }
+            if (!isExpandable) {
+              baseClass += " cursor-default hover:bg-transparent";
+            }
+            return baseClass;
+          }}
+          renderExpandedRow={(groupedInv: any) => {
+            const olderInvoices = groupedInv.allInvoices.slice(1);
+            if (olderInvoices.length === 0) return null;
+            return (
+              <div className="p-4 pl-12 bg-muted/20 border-t border-b border-border/40 space-y-2">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                  Previous Bills
+                </div>
+                <DataTable
+                  columns={subColumns}
+                  data={olderInvoices}
+                  rowKey={(inv) => inv.id}
+                  emptyTitle="No previous bills found"
+                  onRowClick={(row: any) => onViewInvoice?.(row.id)}
+                  rowClassName={(subRow: any) => {
+                    const status = subRow.status?.toLowerCase();
+                    const baseClass = "cursor-pointer ";
+                    if (status === "paid") {
+                      return baseClass + "bg-emerald-50/10 hover:bg-emerald-50/20";
+                    }
+                    if (status === "partially_paid") {
+                      return baseClass + "bg-amber-50/10 hover:bg-amber-50/20";
+                    }
+                    return baseClass + "bg-card/70 hover:bg-muted/15";
+                  }}
+                />
+              </div>
+            );
+          }}
+        />
+      </div>
+
+      {/* Mobile/Tablet Card View */}
+      <div className="block lg:hidden space-y-4">
+        {paginatedData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-2xl border border-dashed border-border">
+            <FileText className="w-10 h-10 text-muted-foreground/40 mb-3" />
+            <p className="font-bold text-foreground text-sm">No invoices found</p>
+            <p className="text-muted-foreground text-xs mt-1">Create your first invoice to get started.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paginatedData.map((inv) => (
+                <BillingCard
+                  key={inv.id}
+                  invoice={inv}
+                  onView={(id) => onViewInvoice?.(id)}
+                  onHistory={setHistoryInvoice}
+                  onPay={setPayInvoice}
+                  onSend={(id) => onUpdateStatus?.(id, "sent")}
+                  onDelete={(id) => onDeleteInvoice?.(id)}
+                />
+              ))}
             </div>
-          );
-        }}
-      />
+
+            {totalPages > 1 && (
+              <div className="py-4 px-4 border border-border/50 bg-card rounded-2xl shadow-sm mt-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                    <Select
+                      value={String(itemsPerPage)}
+                      onValueChange={(val) => {
+                        setItemsPerPage(Number(val));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 text-xs">
+                        <SelectValue placeholder="10" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5" className="text-xs">5</SelectItem>
+                        <SelectItem value="10" className="text-xs">10</SelectItem>
+                        <SelectItem value="20" className="text-xs">20</SelectItem>
+                        <SelectItem value="50" className="text-xs">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Pagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    totalItems={groupedData.length}
+                    perPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {payInvoice && (
         <InvoicePaymentModal
