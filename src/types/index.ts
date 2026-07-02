@@ -18,12 +18,16 @@ export interface PlanDependent {
 }
 
 export type PlanBenefitType =
-  | 'flat_discount'        // X% off all services
-  | 'treatment_discount'   // X% off specific treatments
-  | 'free_consultations'   // N free consultations/year
-  | 'free_treatments'      // N free specific treatments
-  | 'capped_discount'      // X% off, max ₹Y per visit
-  | 'custom';              // Manually defined benefit
+  | 'flat_discount'            // X% off all services
+  | 'treatment_discount'       // X% off specific treatments
+  | 'free_consultations'       // N free consultations/year
+  | 'free_treatments'          // N free specific treatments
+  | 'capped_discount'          // X% off, max ₹Y per visit
+  | 'unlimited_consultations'  // Unlimited check-ups/consultations for 1 year
+  | 'complimentary_session'    // One-time complimentary session (e.g. cleaning + whitening)
+  | 'priority_scheduling'      // Priority appointment scheduling (no numeric value)
+  | 'fluoride_application'     // Fluoride application for kids, as needed (no numeric value)
+  | 'custom';                  // Manually defined benefit
 
 export interface PlanBenefit {
   id: string;
