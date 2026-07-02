@@ -374,3 +374,8 @@
     background-color: rgba(152, 162, 179, 0.55);
   }
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: auto;
+  cursor: pointer;
+}
