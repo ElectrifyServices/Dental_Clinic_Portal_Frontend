@@ -633,7 +633,7 @@ export function EmployeeFormModal({
                                 <li key={i} className="flex items-start gap-1.5">
                                   <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
                                   <span
-                                    className="leading-snug"
+                                    className="leading-snug whitespace-normal break-words break-all sm:break-normal"
                                     title={b}
                                   >
                                     {b}
