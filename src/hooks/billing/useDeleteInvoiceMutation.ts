@@ -14,6 +14,7 @@ export function useDeleteInvoiceMutation() {
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["unbilledItems"] });
       },
     },
   });

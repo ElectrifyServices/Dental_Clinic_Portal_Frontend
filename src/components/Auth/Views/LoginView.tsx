@@ -37,8 +37,8 @@ export function LoginView({ setView }: LoginViewProps) {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Header with Logo */}
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 shadow-xl shadow-slate-100/50 mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3 overflow-hidden">
-          <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+        <div className="w-28 h-28 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Welcome back
@@ -156,7 +156,7 @@ export function LoginView({ setView }: LoginViewProps) {
       </Form>
 
       {/* Demo Mode */}
-      <div className="mt-6 pt-5 border-t border-slate-100">
+      {/* <div className="mt-6 pt-5 border-t border-slate-100">
         <p className="text-center text-[10px] text-slate-400 mb-3 uppercase tracking-widest font-bold">No backend? Try demo</p>
         <Button
           type="button"
@@ -174,7 +174,7 @@ export function LoginView({ setView }: LoginViewProps) {
         <p className="text-center text-[10px] text-slate-400 mt-2">
           Uses local demo data · No internet required
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }

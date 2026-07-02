@@ -84,7 +84,7 @@ export function InvoiceViewer({
       setIsDownloading(true);
       // Yield to the event loop so the loading spinner appears before heavy processing
       await new Promise(resolve => setTimeout(resolve, 50));
-      
+
       const idToUse = patientId || invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
       const isMemberCheck = isMember || invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
       const queryParams: any = {};
@@ -103,35 +103,35 @@ export function InvoiceViewer({
       if (fetchedInvoices.length > 0) {
         let consolidatedItems: any[] = [];
         let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
-        
+
         fetchedInvoices.forEach((inv: any) => {
-           if (inv && inv.items) {
-             const itemsWithContext = inv.items.map((item: any) => ({
-                ...item,
-                invoice_number: inv.invoice_number || inv.id,
-                description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
-             }));
-             consolidatedItems = [...consolidatedItems, ...itemsWithContext];
-             totalSub += inv.subtotal || 0;
-             totalTax += inv.taxAmount || 0;
-             totalDiscount += inv.discountAmount || 0;
-             grandTotal += inv.total || 0;
-             totalPaid += inv.paidAmount || 0;
-             totalPending += inv.pendingAmount || 0;
-           }
+          if (inv && inv.items) {
+            const itemsWithContext = inv.items.map((item: any) => ({
+              ...item,
+              invoice_number: inv.invoice_number || inv.id,
+              description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
+            }));
+            consolidatedItems = [...consolidatedItems, ...itemsWithContext];
+            totalSub += inv.subtotal || 0;
+            totalTax += inv.taxAmount || 0;
+            totalDiscount += inv.discountAmount || 0;
+            grandTotal += inv.total || 0;
+            totalPaid += inv.paidAmount || 0;
+            totalPending += inv.pendingAmount || 0;
+          }
         });
-        
+
         const freshData = {
-           ...fetchedInvoices[0],
-           items: consolidatedItems,
-           subtotal: totalSub,
-           taxAmount: totalTax,
-           discountAmount: totalDiscount,
-           total: grandTotal,
-           paidAmount: totalPaid,
-           pendingAmount: totalPending,
-           invoice_number: "STATEMENT",
-           date: new Date().toISOString(),
+          ...fetchedInvoices[0],
+          items: consolidatedItems,
+          subtotal: totalSub,
+          taxAmount: totalTax,
+          discountAmount: totalDiscount,
+          total: grandTotal,
+          paidAmount: totalPaid,
+          pendingAmount: totalPending,
+          invoice_number: "STATEMENT",
+          date: new Date().toISOString(),
         };
         await generateInvoicePDF(freshData, patient);
       } else {
@@ -194,19 +194,19 @@ export function InvoiceViewer({
         {/* Status Banner */}
         <div
           className={`p-4 rounded-2xl flex items-center justify-between border ${invoice.status === "paid"
-              ? "bg-emerald-50 border-emerald-100"
-              : invoice.status === "overdue"
-                ? "bg-destructive/10 border-destructive/20"
-                : "bg-primary/10 border-primary/20"
+            ? "bg-emerald-50 border-emerald-100"
+            : invoice.status === "overdue"
+              ? "bg-destructive/10 border-destructive/20"
+              : "bg-primary/10 border-primary/20"
             }`}
         >
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-xl ${invoice.status === "paid"
-                  ? "bg-emerald-500 text-white"
-                  : invoice.status === "overdue"
-                    ? "bg-destructive/100 text-white"
-                    : "bg-primary/100 text-white"
+                ? "bg-emerald-500 text-white"
+                : invoice.status === "overdue"
+                  ? "bg-destructive/100 text-white"
+                  : "bg-primary/100 text-white"
                 }`}
             >
               <CreditCard className="w-5 h-5" />
@@ -214,10 +214,10 @@ export function InvoiceViewer({
             <div>
               <p
                 className={`text-xs font-bold uppercase tracking-wider ${invoice.status === "paid"
-                    ? "text-emerald-700"
-                    : invoice.status === "overdue"
-                      ? "text-destructive"
-                      : "text-primary"
+                  ? "text-emerald-700"
+                  : invoice.status === "overdue"
+                    ? "text-destructive"
+                    : "text-primary"
                   }`}
               >
                 Invoice Status
@@ -302,10 +302,10 @@ export function InvoiceViewer({
                 </div>
               </div>
               <div className="flex items-start gap-3 pt-2 border-t border-border/50">
-                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100 shadow-sm">
+                {/* <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100 shadow-sm">
                   <Calendar className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
                     Due Date
                   </p>
@@ -316,7 +316,7 @@ export function InvoiceViewer({
                       year: "numeric",
                     })}
                   </p>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
@@ -359,28 +359,28 @@ export function InvoiceViewer({
               </div>
               {invoice.discount > 0 && (
                 <div className="flex justify-between px-6 py-2">
-                  <span className="text-destructive">Total Discount</span>
-                  <span className="text-destructive">-₹{invoice.discount.toLocaleString()}</span>
+                  <span className="text-destructive">Total Discount ({invoice.discount}%)</span>
+                  <span className="text-destructive">-₹{(invoice.discountAmount ?? 0).toLocaleString()}</span>
                 </div>
               )}
               {invoice.tax > 0 && (
                 <div className="flex justify-between px-6 py-2">
-                  <span className="text-muted-foreground">GST (18%)</span>
-                  <span className="text-foreground">₹{invoice.tax.toLocaleString()}</span>
+                  <span className="text-muted-foreground">GST ({invoice.tax}%)</span>
+                  <span className="text-foreground">₹{(invoice.taxAmount ?? 0).toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between px-6 py-3.5 bg-primary/5 text-base font-black text-primary uppercase tracking-wider">
                 <span>Grand Total</span>
                 <span>₹{invoice.total.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between px-6 py-2.5 bg-emerald-50/40 text-emerald-700 font-bold uppercase tracking-wider">
+              {/* <div className="flex justify-between px-6 py-2.5 bg-emerald-50/40 text-emerald-700 font-bold uppercase tracking-wider">
                 <span>Paid Amount</span>
                 <span>₹{invoice.paidAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between px-6 py-2.5 bg-amber-50/40 text-amber-700 font-bold uppercase tracking-wider">
                 <span>Pending Amount</span>
                 <span>₹{invoice.pendingAmount.toLocaleString()}</span>
-              </div>
+              </div> */}
             </div>
           }
         />
@@ -444,12 +444,6 @@ export function InvoiceViewer({
                   header: "Paid",
                   align: "right",
                   render: (inv: any) => <span className="text-emerald-700">₹{(inv.paidAmount || 0).toLocaleString()}</span>,
-                },
-                {
-                  key: "pendingAmount",
-                  header: "Pending",
-                  align: "right",
-                  render: (inv: any) => <span className="text-amber-700">₹{(inv.pendingAmount || 0).toLocaleString()}</span>,
                 },
                 {
                   key: "status",

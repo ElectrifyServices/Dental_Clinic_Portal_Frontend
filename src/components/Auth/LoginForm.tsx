@@ -30,8 +30,8 @@ export function LoginForm() {
         {/* Top — Logo + headline */}
         <div className="relative p-12 pt-14">
           <div className="flex items-center gap-3.5 mb-14">
-            <div className="w-10 h-10 rounded-xl bg-white border border-white/10 flex items-center justify-center overflow-hidden p-1 shadow-lg shadow-blue-500/5">
-              <img src={logoImg} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2 shadow-lg">
+              <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-white font-extrabold text-[16px] tracking-tight">
               Opal Smiles Dental Studio
@@ -83,7 +83,7 @@ export function LoginForm() {
           ))}
 
           <p className="text-slate-600 text-xs pt-4">
-            © 2025 Opal Smiles Dental Studio · All rights reserved
+            © 2026 Opal Smiles Dental Studio · All rights reserved
           </p>
         </div>
       </div>

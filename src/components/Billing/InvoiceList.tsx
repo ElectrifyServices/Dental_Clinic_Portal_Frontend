@@ -286,20 +286,7 @@ export function InvoiceList({
         </span>
       ),
     },
-    {
-      key: "dueDate",
-      header: "Due Date",
-      render: (inv: Invoice) => (
-        <span className="text-muted-foreground">
-          {inv.dueDate
-            ? new Date(inv.dueDate).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-            })
-            : "—"}
-        </span>
-      ),
-    },
+
     {
       key: "amount",
       header: "Amount",
@@ -446,21 +433,7 @@ export function InvoiceList({
         </span>
       ),
     },
-    {
-      key: "dueDate",
-      header: "Due Date",
-      render: (inv: any) => (
-        <span className="text-muted-foreground">
-          {inv.dueDate
-            ? new Date(inv.dueDate).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            : "—"}
-        </span>
-      ),
-    },
+
     {
       key: "amount",
       header: "Amount",
