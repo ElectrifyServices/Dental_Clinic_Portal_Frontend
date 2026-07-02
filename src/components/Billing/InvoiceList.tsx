@@ -53,7 +53,7 @@ interface Invoice {
 interface InvoiceListProps {
   onCreateInvoice: () => void;
   onViewInvoice?: (id: string) => void;
-  onDeleteInvoice?: (id: string) => void;
+  onDeleteInvoice?: (id: string, invoiceNumber?: string) => void;
   invoices: Invoice[];
   onUpdateStatus?: (id: string, status: string) => void;
   search: string;
@@ -228,6 +228,7 @@ export function InvoiceList({
             ? new Date(inv.date).toLocaleDateString("en-IN", {
               day: "2-digit",
               month: "short",
+              year: "numeric",
             })
             : "—"}
         </span>
@@ -237,7 +238,6 @@ export function InvoiceList({
     {
       key: "amount",
       header: "Amount",
-      align: "right" as const,
       render: (inv: Invoice) => {
         const hasPaid = (inv as any).paidAmount > 0 || (inv as any).paid_amount > 0;
         const displayAmount = hasPaid ? ((inv as any).pendingAmount ?? (inv as any).pending_amount ?? 0) : (inv.total || inv.amount || 0);
@@ -268,88 +268,71 @@ export function InvoiceList({
       header: "Actions",
       align: "center" as const,
       render: (inv: Invoice) => (
-        <div className="flex items-center justify-center gap-1">
-          <div className="relative">
+        <div className="flex items-center justify-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewInvoice?.(inv.id);
+            }}
+            title="View Invoice"
+            className="w-7 h-7 text-primary hover:bg-primary/10 rounded-lg"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setHistoryInvoice(inv);
+            }}
+            title="Payment History"
+            className="w-7 h-7 text-amber-600 hover:bg-amber-50 rounded-lg"
+          >
+            <History className="w-3.5 h-3.5" />
+          </Button>
+          {inv.status !== "paid" && onUpdateStatus && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={(e) => openMenu(e, inv.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setPayInvoice(inv);
+              }}
+              title="Mark as Paid"
+              className="w-7 h-7 text-emerald-600 hover:bg-emerald-50 rounded-lg"
             >
-              <MoreVertical className="w-4 h-4" />
+              <IndianRupee className="w-3.5 h-3.5" />
             </Button>
-            {openMenuId === inv.id &&
-              createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => setOpenMenuId(null)}
-                  />
-                  <div
-                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                    style={{ top: menuPos.top, left: menuPos.left }}
-                  >
-                    <div className="p-1.5 space-y-0.5">
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          onViewInvoice?.(inv.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-primary" /> View Invoice
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setHistoryInvoice(inv);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <History className="w-4 h-4 text-amber-600" /> Payment History
-                      </Button>
-                      {inv.status !== "paid" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setPayInvoice(inv);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <IndianRupee className="w-4 h-4" /> Mark as Paid
-                        </Button>
-                      )}
-                      {inv.status === "draft" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            onUpdateStatus(inv.id, "sent");
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <Send className="w-4 h-4" /> Send to Patient
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          onDeleteInvoice?.(inv.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                </>,
-                document.body,
-              )}
-          </div>
+          )}
+          {inv.status === "draft" && onUpdateStatus && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(inv.id, "sent");
+              }}
+              title="Send to Patient"
+              className="w-7 h-7 text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              <Send className="w-3.5 h-3.5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteInvoice?.(inv.id, (inv as any).invoice_number || inv.id);
+            }}
+            title="Delete"
+            className="w-7 h-7 text-destructive hover:bg-destructive/10 rounded-lg"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
         </div>
       ),
     },
@@ -455,19 +438,6 @@ export function InvoiceList({
               </div>
             ) : undefined
           }
-          onRowClick={(row: any) => onViewInvoice?.(row.id)}
-          rowClassName={(row: any) => {
-            const status = row.status?.toLowerCase();
-            let baseClass = "cursor-pointer";
-            if (status === "paid") {
-              baseClass += " bg-emerald-50/10 hover:bg-emerald-50/20";
-            } else if (status === "partially_paid") {
-              baseClass += " bg-amber-50/10 hover:bg-amber-50/20";
-            } else {
-              baseClass += " bg-card hover:bg-muted/15";
-            }
-            return baseClass;
-          }}
         />
       </div>
 
@@ -490,7 +460,7 @@ export function InvoiceList({
                   onHistory={setHistoryInvoice}
                   onPay={setPayInvoice}
                   onSend={(id) => onUpdateStatus?.(id, "sent")}
-                  onDelete={(id) => onDeleteInvoice?.(id)}
+                  onDelete={(id, num) => onDeleteInvoice?.(id, num)}
                 />
               ))}
             </div>

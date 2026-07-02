@@ -522,7 +522,7 @@ export const downloadConsultationPDF = async ({
     ` : ''}
   `);
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Cinzel', serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
 
   let reportTitle = "Consultation Report";
   let fileNameSuffix = "full_report";
@@ -654,7 +654,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 </tr>`;
 
   const htmlContent = `
-<div style="width:794px; background:#fff; padding:28px 40px 16px; font-family:Arial,Helvetica,sans-serif; color:${INK}; box-sizing:border-box;">
+<div style="width:794px; background:#fff; padding:28px 40px 16px; font-family: 'Cinzel', serif; color:${INK}; box-sizing:border-box;">
 
   <div style="text-align:center; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Invoice</div>
 

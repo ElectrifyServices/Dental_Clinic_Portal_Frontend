@@ -183,7 +183,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      {(matchedCorporateEmp || formData.category === 'corporate') && (
+      {(matchedCorporateEmp || formData.category === 'corporate' || formData.category === 'membership') && (
         <>
           {matchedCorporateEmp ? (
             <Card className="border-primary/20 bg-primary/5">

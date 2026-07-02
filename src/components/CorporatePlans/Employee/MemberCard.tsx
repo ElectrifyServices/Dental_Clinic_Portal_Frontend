@@ -155,7 +155,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               {employee.dependents?.length > 0 || employee.familyCoverageLimit > 0 ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-full">
                   <Users className="w-3.5 h-3.5" />
-                  <span>{employee.dependents?.length ?? 0}/{employee.familyCoverageLimit ?? 0}</span>
+                  <span>{(employee.dependents?.length ?? 0) + 1}/{employee.familyCoverageLimit ?? 0}</span>
                 </span>
               ) : (
                 <span className="text-muted-foreground font-semibold italic inline-block py-0.5">Self</span>
