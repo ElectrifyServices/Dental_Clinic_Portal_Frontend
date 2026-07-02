@@ -1,4 +1,5 @@
 import { useApiQuery } from "../useApiQuery";
+import apiClient from "../../services/apiClient";
 
 export function normalizeInvoice(payload: any, expectedId?: string) {
   if (!payload) return null;
@@ -106,4 +107,9 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
     data: query.data ? normalizeInvoice(query.data, id) : null,
     allInvoices,
   };
+}
+
+export async function fetchInvoiceHistory(params?: any) {
+  const res = await apiClient.get("/invoice/history", { params });
+  return res.data;
 }

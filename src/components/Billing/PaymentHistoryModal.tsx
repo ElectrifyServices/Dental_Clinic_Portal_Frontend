@@ -3,8 +3,7 @@ import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknot
 import { useAppData } from "../../hooks/useAppData";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
-import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
-import apiClient from "../../services/apiClient";
+import { normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useState } from "react";
 
 interface PaymentHistoryModalProps {
@@ -41,7 +40,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         setIsDownloading(true);
         // Yield to the event loop so the loading spinner appears before heavy processing
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         const idToUse = invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
         const isMemberCheck = invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
         const queryParams: any = {};
@@ -49,12 +48,10 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           if (isMemberCheck) queryParams.member_id = idToUse;
           else queryParams.patient_id = idToUse;
         }
-        
-        const res = await apiClient.get('/invoice/history', { 
-          params: queryParams
-        });
-        
-        let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
+
+        const data = await fetchInvoiceHistory(queryParams);
+
+        let rawData = data?.responseObject?.data || data?.data || data?.invoices || data;
         if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
           rawData = rawData.invoices;
         }
@@ -63,35 +60,35 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         if (fetchedInvoices.length > 0) {
           let consolidatedItems: any[] = [];
           let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
-          
+
           fetchedInvoices.forEach((inv: any) => {
-             if (inv && inv.items) {
-             const itemsWithContext = inv.items.map((item: any) => ({
+            if (inv && inv.items) {
+              const itemsWithContext = inv.items.map((item: any) => ({
                 ...item,
                 invoice_number: inv.invoice_number || inv.id,
                 description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
-             }));
-             consolidatedItems = [...consolidatedItems, ...itemsWithContext];
-               totalSub += inv.subtotal || 0;
-               totalTax += inv.taxAmount || 0;
-               totalDiscount += inv.discountAmount || 0;
-               grandTotal += inv.total || 0;
-               totalPaid += inv.paidAmount || 0;
-               totalPending += inv.pendingAmount || 0;
-             }
+              }));
+              consolidatedItems = [...consolidatedItems, ...itemsWithContext];
+              totalSub += inv.subtotal || 0;
+              totalTax += inv.taxAmount || 0;
+              totalDiscount += inv.discountAmount || 0;
+              grandTotal += inv.total || 0;
+              totalPaid += inv.paidAmount || 0;
+              totalPending += inv.pendingAmount || 0;
+            }
           });
-          
+
           const freshData = {
-             ...fetchedInvoices[0],
-             items: consolidatedItems,
-             subtotal: totalSub,
-             taxAmount: totalTax,
-             discountAmount: totalDiscount,
-             total: grandTotal,
-             paidAmount: totalPaid,
-             pendingAmount: totalPending,
-             invoice_number: "STATEMENT",
-             date: new Date().toISOString(),
+            ...fetchedInvoices[0],
+            items: consolidatedItems,
+            subtotal: totalSub,
+            taxAmount: totalTax,
+            discountAmount: totalDiscount,
+            total: grandTotal,
+            paidAmount: totalPaid,
+            pendingAmount: totalPending,
+            invoice_number: "STATEMENT",
+            date: new Date().toISOString(),
           };
           await generateInvoicePDF(freshData, patient);
         } else {
@@ -117,25 +114,25 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
 
   const payments = Array.isArray(rawPayments)
     ? rawPayments.map((p: any) => ({
-        id: p.id || p.payment_id || p.transaction_id || `PAY-${p.invoice_id || invoice.id}-${Date.now()}`,
-        invoice_number: p.invoice_number || invoice.invoice_number || invoice.id,
-        date: p.payment_date || p.date || p.created_at || invoice.date,
-        amount: Number(p.amount ?? p.amount_paid ?? 0),
-        method: p.payment_method || p.method || "Cash",
-        status: p.status || p.payment_status || "Success",
-      }))
+      id: p.id || p.payment_id || p.transaction_id || `PAY-${p.invoice_id || invoice.id}-${Date.now()}`,
+      invoice_number: p.invoice_number || invoice.invoice_number || invoice.id,
+      date: p.payment_date || p.date || p.created_at || invoice.date,
+      amount: Number(p.amount ?? p.amount_paid ?? 0),
+      method: p.payment_method || p.method || "Cash",
+      status: p.status || p.payment_status || "Success",
+    }))
     : (isPaid
-        ? [
-            {
-              id: `PAY-${invoice.id}-1`,
-              invoice_number: invoice.invoice_number || invoice.id,
-              date: invoice.date,
-              amount: totalAmount,
-              method: "Cash",
-              status: "Success",
-            },
-          ]
-        : []);
+      ? [
+        {
+          id: `PAY-${invoice.id}-1`,
+          invoice_number: invoice.invoice_number || invoice.id,
+          date: invoice.date,
+          amount: totalAmount,
+          method: "Cash",
+          status: "Success",
+        },
+      ]
+      : []);
 
   return (
     <Modal
@@ -148,14 +145,14 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <Button variant="outline" onClick={handlePrint} className="gap-2">
               <Printer className="w-4 h-4" /> Print Invoice
             </Button>
             <Button variant="outline" onClick={handleDownload} className="gap-2" disabled={isDownloading}>
               <Download className="w-4 h-4" /> {isDownloading ? "Preparing..." : "Download PDF"}
             </Button>
-          </div>
+          </div> */}
         </div>
       }
     >
@@ -202,7 +199,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
             <Banknote className="w-4 h-4 text-primary" /> Transaction History
           </h3>
-          
+
           {payments.length > 0 ? (
             <DataTable
               columns={[

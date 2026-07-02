@@ -645,21 +645,31 @@ export function InvoiceList({
             </div>
           ) : undefined
         }
-        onRowClick={(row: any) => toggleRowExpanded(row.id)}
+        onRowClick={(row: any) => {
+          if (row.allInvoices && row.allInvoices.length > 1) {
+            toggleRowExpanded(row.id);
+          }
+        }}
         expandedRowIds={expandedRowIds}
         rowClassName={(row: any) => {
-          const isExpanded = expandedRowIds.has(row.id);
+          const isExpandable = row.allInvoices && row.allInvoices.length > 1;
+          const isExpanded = isExpandable && expandedRowIds.has(row.id);
           const status = row.status?.toLowerCase();
           if (isExpanded) {
             return "bg-blue-50/50 border-l-4 border-l-blue-500 font-semibold transition-all duration-150";
           }
+          let baseClass = "";
           if (status === "paid") {
-            return "bg-emerald-50/10 hover:bg-emerald-50/20";
+            baseClass = "bg-emerald-50/10 hover:bg-emerald-50/20";
+          } else if (status === "partially_paid") {
+            baseClass = "bg-amber-50/10 hover:bg-amber-50/20";
+          } else {
+            baseClass = "bg-card hover:bg-muted/15";
           }
-          if (status === "partially_paid") {
-            return "bg-amber-50/10 hover:bg-amber-50/20";
+          if (!isExpandable) {
+            baseClass += " cursor-default hover:bg-transparent";
           }
-          return "bg-card hover:bg-muted/15";
+          return baseClass;
         }}
         renderExpandedRow={(groupedInv: any) => {
           const olderInvoices = groupedInv.allInvoices.slice(1);
