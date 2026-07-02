@@ -87,7 +87,7 @@ export function InvoiceViewer({
 
       const idToUse = patientId || invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
       const isMemberCheck = isMember || invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
-      const queryParams: any = {};
+      const queryParams: any = { invoice_id: invoice.id };
       if (idToUse) {
         if (isMemberCheck) queryParams.member_id = idToUse;
         else queryParams.patient_id = idToUse;

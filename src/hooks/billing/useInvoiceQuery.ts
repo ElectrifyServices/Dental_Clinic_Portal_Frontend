@@ -77,7 +77,7 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
 
 export function useInvoiceQuery(id: string, patientId?: string, isMember?: boolean, options?: any) {
   const isMemberCheck = isMember || (patientId && (patientId.startsWith('EMP-') || patientId.startsWith('IND-') || patientId.startsWith('MEM-')));
-  const queryParams: any = {};
+  const queryParams: any = { invoice_id: id };
   if (patientId) {
     if (isMemberCheck) queryParams.member_id = patientId;
     else queryParams.patient_id = patientId;
