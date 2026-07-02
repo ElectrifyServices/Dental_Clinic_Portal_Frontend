@@ -169,42 +169,13 @@ export function InvoiceList({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [payInvoice, setPayInvoice] = useState<Invoice | null>(null);
   const [historyInvoice, setHistoryInvoice] = useState<Invoice | null>(null);
-  const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
-  const toggleRowExpanded = (id: string) => {
-    setExpandedRowIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
 
   const filtered = invoices;
 
-  const groupedData = useMemo(() => {
-    const groups: Record<string, Invoice[]> = {};
-    filtered.forEach((inv) => {
-      const key = inv.patientId || inv.patientName;
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(inv);
-    });
-
-    return Object.values(groups).map((groupInvoices) => {
-      const sorted = [...groupInvoices].sort((a, b) => {
-        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
-      });
-      const latest = sorted[0];
-      return {
-        ...latest,
-        latestInvoice: latest,
-        allInvoices: sorted,
-      };
+  const sortedData = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
     });
   }, [filtered]);
 
@@ -229,33 +200,9 @@ export function InvoiceList({
       key: "id",
       header: "Invoice",
       render: (inv: any) => (
-        <div className="flex items-center gap-1.5 min-w-[140px]">
-          {inv.allInvoices && inv.allInvoices.length > 1 ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleRowExpanded(inv.id);
-              }}
-              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center flex-shrink-0"
-            >
-              {expandedRowIds.has(inv.id) ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </button>
-          ) : (
-            <div className="w-5 h-5 flex-shrink-0" />
-          )}
-          <span className="font-mono text-xs font-bold text-foreground">
-            {inv.invoice_number || inv.id}
-          </span>
-          {inv.allInvoices && inv.allInvoices.length > 1 && (
-            <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100/80 font-bold px-2 py-0.5 rounded-full select-none shadow-sm flex-shrink-0">
-              +{inv.allInvoices.length - 1}
-            </span>
-          )}
-        </div>
+        <span className="font-mono text-xs font-bold text-foreground">
+          {inv.invoice_number || inv.id}
+        </span>
       ),
     },
     {
@@ -408,160 +355,15 @@ export function InvoiceList({
     },
   ];
 
-  const subColumns = [
-    {
-      key: "id",
-      header: "Invoice Number",
-      render: (inv: any) => (
-        <span className="font-mono text-xs font-bold text-foreground">
-          {inv.invoice_number || inv.id}
-        </span>
-      ),
-    },
-    {
-      key: "date",
-      header: "Date",
-      render: (inv: any) => (
-        <span className="text-muted-foreground">
-          {inv.date
-            ? new Date(inv.date).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            : "—"}
-        </span>
-      ),
-    },
 
-    {
-      key: "amount",
-      header: "Amount",
-      align: "right" as const,
-      render: (inv: any) => {
-        const hasPaid = inv.paidAmount > 0 || inv.paid_amount > 0;
-        const displayAmount = hasPaid ? (inv.pendingAmount ?? inv.pending_amount ?? 0) : (inv.total || inv.amount || 0);
-        return (
-          <span className="font-bold text-foreground">
-            ₹{displayAmount.toLocaleString()}
-          </span>
-        );
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (inv: any) => {
-        const meta = STATUS_META[inv.status?.toLowerCase()] || { variant: "gray", label: inv.status };
-        return (
-          <StatusBadge
-            variant={meta.variant as any}
-            className="text-[9px] uppercase font-bold px-2 py-0.5"
-          >
-            {inv.status}
-          </StatusBadge>
-        );
-      },
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      align: "center" as const,
-      render: (inv: any) => (
-        <div className="flex items-center justify-center gap-1">
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={(e) => openMenu(e, inv.id)}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-            {openMenuId === inv.id &&
-              createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => setOpenMenuId(null)}
-                  />
-                  <div
-                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                    style={{ top: menuPos.top, left: menuPos.left }}
-                  >
-                    <div className="p-1.5 space-y-0.5">
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          onViewInvoice?.(inv.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-primary" /> View Invoice
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setHistoryInvoice(inv);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <FileText className="w-4 h-4 text-amber-600" /> Payment History
-                      </Button>
-                      {inv.status !== "paid" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setPayInvoice(inv);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <IndianRupee className="w-4 h-4" /> Mark as Paid
-                        </Button>
-                      )}
-                      {inv.status === "draft" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            onUpdateStatus(inv.id, "sent");
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <Send className="w-4 h-4" /> Send to Patient
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          onDeleteInvoice?.(inv.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full justify-start text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                </>,
-                document.body,
-              )}
-          </div>
-        </div>
-      ),
-    },
-  ];
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   
   const paginatedData = useMemo(() => {
-    return groupedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  }, [groupedData, currentPage, itemsPerPage]);
+    return sortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [sortedData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -646,67 +448,25 @@ export function InvoiceList({
                 <Pagination
                   page={currentPage}
                   totalPages={totalPages}
-                  totalItems={groupedData.length}
+                  totalItems={sortedData.length}
                   perPage={itemsPerPage}
                   onPageChange={setCurrentPage}
                 />
               </div>
             ) : undefined
           }
-          onRowClick={(row: any) => {
-            if (row.allInvoices && row.allInvoices.length > 1) {
-              toggleRowExpanded(row.id);
-            }
-          }}
-          expandedRowIds={expandedRowIds}
+          onRowClick={(row: any) => onViewInvoice?.(row.id)}
           rowClassName={(row: any) => {
-            const isExpandable = row.allInvoices && row.allInvoices.length > 1;
-            const isExpanded = isExpandable && expandedRowIds.has(row.id);
             const status = row.status?.toLowerCase();
-            if (isExpanded) {
-              return "bg-blue-50/50 border-l-4 border-l-blue-500 font-semibold transition-all duration-150";
-            }
-            let baseClass = "";
+            let baseClass = "cursor-pointer";
             if (status === "paid") {
-              baseClass = "bg-emerald-50/10 hover:bg-emerald-50/20";
+              baseClass += " bg-emerald-50/10 hover:bg-emerald-50/20";
             } else if (status === "partially_paid") {
-              baseClass = "bg-amber-50/10 hover:bg-amber-50/20";
+              baseClass += " bg-amber-50/10 hover:bg-amber-50/20";
             } else {
-              baseClass = "bg-card hover:bg-muted/15";
-            }
-            if (!isExpandable) {
-              baseClass += " cursor-default hover:bg-transparent";
+              baseClass += " bg-card hover:bg-muted/15";
             }
             return baseClass;
-          }}
-          renderExpandedRow={(groupedInv: any) => {
-            const olderInvoices = groupedInv.allInvoices.slice(1);
-            if (olderInvoices.length === 0) return null;
-            return (
-              <div className="p-4 pl-12 bg-muted/20 border-t border-b border-border/40 space-y-2">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                  Previous Bills
-                </div>
-                <DataTable
-                  columns={subColumns}
-                  data={olderInvoices}
-                  rowKey={(inv) => inv.id}
-                  emptyTitle="No previous bills found"
-                  onRowClick={(row: any) => onViewInvoice?.(row.id)}
-                  rowClassName={(subRow: any) => {
-                    const status = subRow.status?.toLowerCase();
-                    const baseClass = "cursor-pointer ";
-                    if (status === "paid") {
-                      return baseClass + "bg-emerald-50/10 hover:bg-emerald-50/20";
-                    }
-                    if (status === "partially_paid") {
-                      return baseClass + "bg-amber-50/10 hover:bg-amber-50/20";
-                    }
-                    return baseClass + "bg-card/70 hover:bg-muted/15";
-                  }}
-                />
-              </div>
-            );
           }}
         />
       </div>
@@ -761,7 +521,7 @@ export function InvoiceList({
                   <Pagination
                     page={currentPage}
                     totalPages={totalPages}
-                    totalItems={groupedData.length}
+                    totalItems={sortedData.length}
                     perPage={itemsPerPage}
                     onPageChange={setCurrentPage}
                   />
