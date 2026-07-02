@@ -529,7 +529,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               setFormData((prev: any) => ({
                 ...prev,
                 selectedMembershipPlanId: val === "none" ? undefined : val,
-                category: val !== "none" ? "corporate" : (prev.category === "corporate" ? "regular" : prev.category),
+                category: val !== "none" ? "membership" : (prev.category === "corporate" || prev.category === "membership" ? "regular" : prev.category),
                 defaultDiscount: val !== "none" ? 0 : prev.defaultDiscount,
               }));
             }}
@@ -687,7 +687,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         {(() => {
-          const isCorporate = !!matchedCorporateEmp || formData.category === 'corporate';
+          // Lock the category dropdown only if a plan or employee is actually attached
+          const isCorporate = !!matchedCorporateEmp || !!formData.selectedMembershipPlanId || !!formData.corporatePlanId;
           return (
             <>
               <div>
@@ -695,7 +696,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   Patient Category
                 </Label>
                 <Select
-                  value={isCorporate ? "corporate" : (formData.category?.toLowerCase() || "regular")}
+                  value={isCorporate ? "membership" : (formData.category?.toLowerCase() || "regular")}
                   onValueChange={(val) => {
                     setFormData((prev: any) => ({
                       ...prev,
@@ -710,7 +711,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="regular">Regular</SelectItem>
-                    {isCorporate && <SelectItem value="corporate">Membership</SelectItem>}
+                    <SelectItem value="membership">Membership</SelectItem>
                     <SelectItem value="family">Family (Doctor's House)</SelectItem>
                     <SelectItem value="staff">Clinic Staff</SelectItem>
                     <SelectItem value="vip">VIP</SelectItem>

@@ -605,7 +605,7 @@ export const downloadConsultationPDF = async ({
     }
   `);
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Cinzel', serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
 
   let reportTitle = "Consultation Report";
   let fileNameSuffix = "full_report";

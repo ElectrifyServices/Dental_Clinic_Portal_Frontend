@@ -77,7 +77,8 @@ const MARITAL_STATUS_MAP: Record<string, string> = {
 
 const CATEGORY_MAP: Record<string, string> = {
   regular: "REGULAR",
-  corporate: "CORPORATE",
+  corporate: "MEMBERSHIP",
+  membership: "MEMBERSHIP",
   family: "FAMILY",
   staff: "CLINIC_STAFF",
   vip: "VIP",
@@ -157,7 +158,7 @@ export function mapFormDataToCreatePayload(
   // Membership / Corporate Plan
   if (formData.selectedMembershipPlanId) {
     payload.append('plan_id', formData.selectedMembershipPlanId);
-  } else if (formData.category === "corporate" && formData.corporatePlanId) {
+  } else if ((formData.category === "corporate" || formData.category === "membership") && formData.corporatePlanId) {
     payload.append('plan_id', formData.corporatePlanId);
   }
 

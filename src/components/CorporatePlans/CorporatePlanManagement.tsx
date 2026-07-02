@@ -121,39 +121,39 @@ export function CorporatePlanManagement({
     <div className="space-y-5">
 
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
-        {/* Top row: Search & New Plan button */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full items-stretch sm:items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search plans or company…"
-              className="w-full"
-            />
-          </div>
-          <Button onClick={openNew} className="gap-2 h-10 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 transition-all flex-shrink-0 px-4 justify-center">
+      <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+        {/* Search Input */}
+        <div className="flex-1 min-w-[200px] sm:min-w-[240px]">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search plans or company…"
+            className="w-full"
+          />
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <FilterTabs
+            tabs={CATEGORY_TABS}
+            active={categoryFilter}
+            onChange={(val) => setCategoryFilter(val as any)}
+          />
+        </div>
+        <div className="shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <FilterTabs
+            tabs={STATUS_TABS}
+            active={filter}
+            onChange={(val) => setFilter(val as any)}
+          />
+        </div>
+
+        {/* Action Button */}
+        <div className="flex w-full sm:w-auto items-center shrink-0 sm:ml-auto">
+          <Button onClick={openNew} className="gap-2 h-10 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 transition-all px-4 justify-center">
             <Plus className="w-4 h-4" />
             New Plan
           </Button>
-        </div>
-
-        {/* Bottom row: Filter Tabs */}
-        <div className="flex flex-wrap gap-2 w-full items-center border-t pt-3 border-border/50">
-          <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-shrink-0">
-            <FilterTabs
-              tabs={CATEGORY_TABS}
-              active={categoryFilter}
-              onChange={(val) => setCategoryFilter(val as any)}
-            />
-          </div>
-          <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-shrink-0">
-            <FilterTabs
-              tabs={STATUS_TABS}
-              active={filter}
-              onChange={(val) => setFilter(val as any)}
-            />
-          </div>
         </div>
       </div>
 

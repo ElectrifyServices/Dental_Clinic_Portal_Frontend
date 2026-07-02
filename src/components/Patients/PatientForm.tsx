@@ -48,7 +48,7 @@ export function PatientForm({
     handleImageUpload,
     handleConsentFormUpload,
     handleDentalFilesUpload,
-  } = usePatientForm(patient, corporateEmployees);
+  } = usePatientForm(patient);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   

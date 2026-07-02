@@ -5,7 +5,7 @@ import {
   patientSchema,
   type PatientFormData,
 } from "@/lib/schemas/patient.schema";
-import { generatePatientId, generateBarcode, calculateAge } from "./utils";
+import { generatePatientId, generateBarcode } from "./utils";
 import { useCheckEmployeeQuery } from "@/hooks/patients/useCheckEmployeeQuery";
 import { toast } from "@/components/ui";
 
@@ -20,14 +20,12 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "O_NEGATIVE": "O-",
 };
 
-export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
+export const usePatientForm = (patient: any) => {
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
-  const [lastAutoFilledEmpId, setLastAutoFilledEmpId] = useState<string | null>(
-    null,
-  );
+
   const [matchedCorporateEmp, setMatchedCorporateEmp] = useState<any>(null);
 
   // Extra non-schema fields needed by the form
@@ -44,11 +42,12 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     guardianSignature: "",
     category: "regular" as
       | "regular"
+      | "corporate"
+      | "membership"
       | "family"
       | "staff"
       | "vip"
-      | "complimentary"
-      | "corporate",
+      | "complimentary",
     defaultDiscount: 0,
     corporatePlanId: "",
     corporatePlanName: "",
@@ -228,7 +227,6 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
       setMatchedCorporateEmp(emp);
     } else {
       setMatchedCorporateEmp(null);
-      setLastAutoFilledEmpId(null);
     }
   }, [checkEmployeeResponse, phoneToSearch]);
 
@@ -246,7 +244,7 @@ export const usePatientForm = (patient: any, corporateEmployees: any[]) => {
     
     setExtraData((prev) => ({
       ...prev,
-      category: "corporate",
+      category: "membership",
       corporatePlanId: plan.plan_id || plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id,
       corporatePlanName: plan.plan_name || emp.company_name || emp.companyName || "Corporate Plan",
       corporateMemberId: emp.id || emp.emp_id || emp.employee_id || emp.employeeId,
