@@ -3,8 +3,7 @@ import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknot
 import { useAppData } from "../../hooks/useAppData";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
-import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
-import apiClient from "../../services/apiClient";
+import { normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useState } from "react";
 
 interface PaymentHistoryModalProps {
@@ -50,11 +49,9 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           else queryParams.patient_id = idToUse;
         }
 
-        const res = await apiClient.get('/invoice/history', {
-          params: queryParams
-        });
+        const data = await fetchInvoiceHistory(queryParams);
 
-        let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
+        let rawData = data?.responseObject?.data || data?.data || data?.invoices || data;
         if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
           rawData = rawData.invoices;
         }

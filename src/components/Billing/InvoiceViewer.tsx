@@ -13,8 +13,7 @@ import {
 import { Modal, Button, Badge, Card, CardContent, DataTable, Loading } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { useAppData } from "../../hooks/useAppData";
-import { useInvoiceQuery, normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
-import apiClient from "../../services/apiClient";
+import { useInvoiceQuery, normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 
 interface InvoiceViewerProps {
   invoiceId: string;
@@ -94,10 +93,8 @@ export function InvoiceViewer({
         else queryParams.patient_id = idToUse;
       }
 
-      const res = await apiClient.get('/invoice/history', { 
-        params: queryParams
-      });
-      let rawData = res.data?.responseObject?.data || res.data?.data || res.data?.invoices || res.data;
+      const data = await fetchInvoiceHistory(queryParams);
+      let rawData = data?.responseObject?.data || data?.data || data?.invoices || data;
       if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
         rawData = rawData.invoices;
       }
