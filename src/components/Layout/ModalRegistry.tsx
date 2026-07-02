@@ -232,8 +232,8 @@ export function ModalRegistry() {
 
   const matchingInvoice = useMemo(() => {
     if (!selectedItemId) return null;
-    return invoices.find((i: any) => 
-      String(i.id) === String(selectedItemId) || 
+    return invoices.find((i: any) =>
+      String(i.id) === String(selectedItemId) ||
       String(i.invoice_number) === String(selectedItemId) ||
       String(i.invoiceNumber) === String(selectedItemId)
     ) || null;
@@ -695,7 +695,7 @@ export function ModalRegistry() {
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
                 items: inv.items.map((item: any) => {
-                  let type: "CONSULTATION" | "TREATMENT_SESSION" | "CUSTOM" | "MEMBERSHIP" = "CUSTOM";
+                  let type: "CONSULTATION" | "TREATMENT_SESSION" | "MEMBERSHIP";
                   if (item.linkedType) {
                     if (item.linkedType.toLowerCase().includes("consultation")) type = "CONSULTATION";
                     else if (item.linkedType.toLowerCase().includes("treatment")) type = "TREATMENT_SESSION";
@@ -767,7 +767,7 @@ export function ModalRegistry() {
         <InvoiceViewer
           invoiceId={matchingInvoice ? String(matchingInvoice.id) : selectedItemId}
           patientId={
-            matchingInvoice?.patientId || 
+            matchingInvoice?.patientId ||
             matchingInvoice?.patient_id ||
             matchingInvoice?.memberId ||
             matchingInvoice?.member_id
