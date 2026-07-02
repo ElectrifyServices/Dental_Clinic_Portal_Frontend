@@ -63,6 +63,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [coveragePreset, setCoveragePreset] = useState<CoveragePreset>('self');
 
+  const today = new Date();
+  const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   const cfg = useFormConfig('corporate');
   const cfgAny = cfg as any;
   const { showToast } = useModal();
@@ -462,10 +465,22 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           {/* Dates + Max Members */}
           <div className="grid grid-cols-3 gap-4">
             <LabeledField label="Start Date *" error={errors.validFrom}>
-              <Input type="date" value={form.validFrom} onChange={e => handleFormChange('validFrom', e.target.value)} className="rounded-xl" />
+              <Input 
+                type="date" 
+                min={!editing ? localToday : undefined}
+                value={form.validFrom} 
+                onChange={e => handleFormChange('validFrom', e.target.value)} 
+                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+              />
             </LabeledField>
             <LabeledField label="End Date *" error={errors.validTo}>
-              <Input type="date" value={form.validTo} onChange={e => handleFormChange('validTo', e.target.value)} className="rounded-xl" />
+              <Input 
+                type="date" 
+                min={!editing ? localToday : undefined}
+                value={form.validTo} 
+                onChange={e => handleFormChange('validTo', e.target.value)} 
+                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+              />
             </LabeledField>
             <LabeledField label="Max Members">
               <Input

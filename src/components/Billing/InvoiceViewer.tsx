@@ -394,7 +394,7 @@ export function InvoiceViewer({
           </div>
         )}
 
-        {allInvoices && allInvoices.length > 1 && (
+        {/* {allInvoices && allInvoices.length > 1 && (
           <div className="space-y-3 pt-4 border-t border-border/80">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> All Bills for this Patient ({allInvoices.length})
@@ -459,7 +459,7 @@ export function InvoiceViewer({
               onRowClick={(inv: any) => setActiveId(inv.id)}
             />
           </div>
-        )}
+        )} */}
       </div>
     </Modal>
   );

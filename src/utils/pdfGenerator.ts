@@ -11,25 +11,25 @@ export type PDFReportType = 'FULL' | 'CLINICAL' | 'TREATMENT' | 'PRESCRIPTION';
 // so the document reads like a standard printed invoice, not a colored flyer.
 // ---------------------------------------------------------------------------
 const BRAND = "#4e6e65";        // header accent bar + footer band ONLY
-const INK = "#0f1115";          // primary body text — black
-const INK_MUTED = "#5a6168";    // secondary/muted body text — neutral gray, no green tint
-const LINE = "#d7dbde";         // table/section borders — neutral gray
+const INK = "#0f1115";          // primary body text â€” black
+const INK_MUTED = "#5a6168";    // secondary/muted body text â€” neutral gray, no green tint
+const LINE = "#d7dbde";         // table/section borders â€” neutral gray
 const PANEL = "#f7f8f8";        // neutral panel background (notes, alt rows)
 
 const CLINIC_NAME = "Opal Smiles Dental Studio";
 const CLINIC_TAGLINE = "Dental & Facial Aesthetics";
-const CLINIC_ADDRESS = "104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015";
+const CLINIC_ADDRESS = "104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat â€“ 380 015";
 const CLINIC_PHONE = "+91 99981 93256";
 const CLINIC_EMAIL = "hello@opalsmiles.in";
-const CLINIC_HOURS = "Mon–Sat: 10:00 AM – 8:00 PM | Emergency: 24 / 7";
+const CLINIC_HOURS = "Monâ€“Sat: 10:00 AM â€“ 8:00 PM | Emergency: 24 / 7";
 const CLINIC_INSTAGRAM = "@opalsmiles_dental";
 
 // Default SAC (Services Accounting Code) applied to line items that don't carry
 // their own code. 999312 = "Medical and dental services" (consultations, exams,
-// general/orthodontic/periodontic treatment — GST-exempt as of last check).
+// general/orthodontic/periodontic treatment â€” GST-exempt as of last check).
 // NOTE: this code is for *services*. If you ever bill a physical product/goods
 // line (retail item, appliance sold outright, etc.) that needs a proper HSN
-// goods code instead — don't default those rows to 999312. Pass `hsn_code` /
+// goods code instead â€” don't default those rows to 999312. Pass `hsn_code` /
 // `hsnCode` on the item to override per line.
 const DEFAULT_SAC_CODE = "999312";
 
@@ -134,7 +134,7 @@ function ageFromDOB(dob?: string): string | null {
 }
 
 /** Shared letterhead used across all PDF types. Brand color lives only in the
-*  top accent bar here — all text below it is plain ink/muted gray. */
+*  top accent bar here â€” all text below it is plain ink/muted gray. */
 function getLetterhead(rightBlock: string) {
   return `
 <div style="height:6px; background:${BRAND};"></div>
@@ -154,7 +154,7 @@ function getLetterhead(rightBlock: string) {
 }
 
 /** Shared footer band used across all PDF types. Brand color is the solid
-*  fill here — the only other place brand color appears besides the top bar. */
+*  fill here â€” the only other place brand color appears besides the top bar. */
 function getBrandFooter(signatureBlock: string) {
   return `
 <div style="margin-top:auto;">
@@ -179,7 +179,7 @@ function getBrandFooter(signatureBlock: string) {
   `;
 }
 
-/** Neutral black/gray status badge — no brand tint, so it reads correctly
+/** Neutral black/gray status badge â€” no brand tint, so it reads correctly
 *  next to the rest of the black-ink document. */
 function statusBadge(status: string) {
   const s = status.toLowerCase();
@@ -196,7 +196,7 @@ const sectionLabel = (text: string) =>
 const tableHeadCell = (text: string, align: string = "left") =>
   `<th style="padding:10px 12px; text-align:${align}; font-size:10px; font-weight:800; color:${INK}; text-transform:uppercase; letter-spacing:0.4px;">${text}</th>`;
 
-/** A bordered label/value grid — the classic "tax invoice" look — used for the
+/** A bordered label/value grid â€” the classic "tax invoice" look â€” used for the
 *  patient + invoice meta block. 4 columns: label | value | label | value. */
 function detailsGrid(rows: Array<[string, string, string, string]>) {
   return `
@@ -244,7 +244,7 @@ export const downloadConsultationPDF = async ({
     doctorObj?.specialization?.name ||
     doctorObj?.specialization ||
     "Dentistry";
-  const displayDoctorName = doctorName ? (doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`) : "—";
+  const displayDoctorName = doctorName ? (doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`) : "â€”";
 
   // Safely extract patient details from API payload structure
   let patientObj: any = {};
@@ -257,14 +257,14 @@ export const downloadConsultationPDF = async ({
   } else if (consultationData.responseObject?.patient) {
     patientObj = consultationData.responseObject.patient;
   }
-  const patientName = patientObj?.name || patient.patientName || "—";
-  const patientId = patientObj?.id || patient.id || "—";
+  const patientName = patientObj?.name || patient.patientName || "â€”";
+  const patientId = patientObj?.id || patient.id || "â€”";
   const patientCode = patientObj?.patient_code || patientObj?.patientCode || (patient as any).patient_code || (patient as any).patientCode;
-  const displayPatientId = patientCode || "NA";
-  const patientPhone = patientObj?.phone || patient.phone || "—";
-  const patientGender = patientObj?.gender || (patient as any).gender || "—";
-  const patientAge = patientObj?.age || ageFromDOB(patientObj?.dob || (patient as any).dob) || "—";
-  const patientBloodGroup = (patientObj?.blood_group || (patient as any).bloodGroup || "—").replace('_', ' ');
+  const displayPatientId = patientCode || (patientId === "â€”" ? "â€”" : patientId.split('-')[0]);
+  const patientPhone = patientObj?.phone || patient.phone || "â€”";
+  const patientGender = patientObj?.gender || (patient as any).gender || "â€”";
+  const patientAge = patientObj?.age || ageFromDOB(patientObj?.dob || (patient as any).dob) || "â€”";
+  const patientBloodGroup = (patientObj?.blood_group || (patient as any).bloodGroup || "â€”").replace('_', ' ');
 
   // Extract clinical observations, diagnosis, treatment plans, concern, notes, etc.
   const observations = consultationData.observations ||
@@ -307,7 +307,7 @@ export const downloadConsultationPDF = async ({
     consultationData.data?.additional_notes ||
     consultationData.data?.data?.recommendations ||
     consultationData.data?.data?.additional_notes ||
-    "—";
+    "â€”";
 
   // Dynamic tooth chart findings map merging
   const finalToothChart = { ...toothChartState };
@@ -348,7 +348,7 @@ export const downloadConsultationPDF = async ({
 
   const getHeader = () => getLetterhead(`
 <div style="font-size: 16px; font-weight: 800; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
-<div style="font-size: 12.5px; font-weight: 600; color: ${INK_MUTED}; margin-top: 4px;">Patient Code: ${displayPatientId}</div>
+<div style="font-size: 12.5px; font-weight: 600; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
 <div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
 <div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Age ${patientAge} / ${patientGender} / ${patientBloodGroup}</div>
   `);
@@ -362,7 +362,7 @@ export const downloadConsultationPDF = async ({
 </div>
 <div style="padding: 0 40px;">
       ${detailsGrid([
-    ["Patient Name", patientName, "Patient Code", displayPatientId],
+    ["Patient Name", patientName, "Patient ID", displayPatientId],
     ["Age / Gender", `${patientAge} / ${patientGender}`, "Phone", patientPhone],
     ["Doctor", displayDoctorName, "Specialization", specialization],
   ])}
@@ -437,9 +437,9 @@ export const downloadConsultationPDF = async ({
             ${treatmentsArray.map((t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
 <td style="padding:10px 12px; font-size:12px; font-weight:700; color:${INK};">#${t.tooth_number || t.tooth || 'General'}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:600; color:${INK};">${t.procedure || t.treatment_type || '—'}</td>
+<td style="padding:10px 12px; font-size:12px; font-weight:600; color:${INK};">${t.procedure || t.treatment_type || 'â€”'}</td>
 <td style="padding:10px 12px; font-size:12px; text-align:center; color:${INK_MUTED};">${Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:700; color:${INK};">₹${Number(t.est_cost || t.cost || 0).toLocaleString('en-IN')}</td>
+<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:700; color:${INK};">â‚¹${Number(t.est_cost || t.cost || 0).toLocaleString('en-IN')}</td>
 </tr>
             `).join('')}
 </tbody>
@@ -448,9 +448,9 @@ export const downloadConsultationPDF = async ({
     } else {
       treatmentsHtml = `
 <div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:13px; color:${INK_MUTED};">
-<strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "—"}<br/>
-<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "—"}<br/>
-<strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> ₹${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString('en-IN')}
+<strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "â€”"}<br/>
+<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "â€”"}<br/>
+<strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> â‚¹${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString('en-IN')}
 </div>
       `;
     }
@@ -582,13 +582,13 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const isStatement = (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
 
-  const patientName = invoice.patientName || patient?.name || "—";
-  const patientId = invoice.patientId || patient?.id || "—";
+  const patientName = invoice.patientName || patient?.name || "â€”";
+  const patientId = invoice.patientId || patient?.id || "â€”";
   const patientCode = invoice.patient_code || invoice.patientCode || patient?.patient_code || patient?.patientCode;
-  const displayPatientId = patientCode || "NA";
-  const memberId = invoice.memberId || invoice.member_id || patient?.memberId || patient?.member_id || "—";
+  const displayPatientId = patientCode || (patientId === "â€”" ? "â€”" : patientId.split('-')[0]);
+  const memberId = invoice.memberId || invoice.member_id || patient?.memberId || patient?.member_id || "â€”";
 
-  const invoiceNumber = invoice.invoice_number || invoice.id || "—";
+  const invoiceNumber = invoice.invoice_number || invoice.id || "â€”";
   const invoiceDate = invoice.date
     ? new Date(invoice.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -613,9 +613,9 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 <td style="${tdCell("left")}">${((item.item_type || "Service") as string).charAt(0).toUpperCase() + ((item.item_type || "Service") as string).slice(1).toLowerCase()}</td>
 <td style="${tdCell("center")}">${item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE}</td>
 <td style="${tdCell("center")}">1 NOS</td>
-<td style="${tdCell("right")}">₹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
+<td style="${tdCell("right")}">â‚¹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
 <td style="${tdCell("center")}">NOS</td>
-<td style="${tdCell("right", true)}">₹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
+<td style="${tdCell("right", true)}">â‚¹${Number(item.total_amount || 0).toLocaleString('en-IN')}</td>
 </tr>`).join('');
 
   // Discount row
@@ -627,7 +627,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 <td style="${tdCell("center")}"></td>
 <td style="${tdCell("right")}"></td>
 <td style="${tdCell("center")}"></td>
-<td style="${tdCell("right", true)}">(-₹${discountAmount.toLocaleString('en-IN')})</td>
+<td style="${tdCell("right", true)}">(-â‚¹${discountAmount.toLocaleString('en-IN')})</td>
 </tr>` : "";
 
   // Padding rows for fixed table height
@@ -650,13 +650,13 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 <td colspan="3" style="padding:8px 10px; font-size:12px; font-weight:800; color:${INK}; text-align:right; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};">Total</td>
 <td style="padding:8px 10px; font-size:11px; font-weight:700; color:${INK}; text-align:center; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};">${items.length} NOS</td>
 <td colspan="2" style="padding:8px 10px; border-right:1px solid ${CELL_LINE}; border-top:2px solid ${INK_BORDER};"></td>
-<td style="padding:8px 10px; font-size:12px; font-weight:800; color:${INK}; text-align:right; border-top:2px solid ${INK_BORDER};">₹${grandTotal.toLocaleString('en-IN')}</td>
+<td style="padding:8px 10px; font-size:12px; font-weight:800; color:${INK}; text-align:right; border-top:2px solid ${INK_BORDER};">â‚¹${grandTotal.toLocaleString('en-IN')}</td>
 </tr>`;
 
   const htmlContent = `
 <div style="width:794px; background:#fff; padding:28px 40px 16px; font-family:Arial,Helvetica,sans-serif; color:${INK}; box-sizing:border-box;">
 
-  <div style="text-align:center; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Tax Invoice</div>
+  <div style="text-align:center; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Invoice</div>
 
   <div style="border:1.5px solid ${INK_BORDER}; background:#fff;">
 
@@ -679,30 +679,15 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <div style="font-size:12px; font-weight:700; color:${INK};">${memberId}</div>
         </div>
         <div>
-          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient Code</div>
+          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient ID</div>
           <div style="font-size:12px; font-weight:700; color:${INK};">${displayPatientId}</div>
         </div>
       </div>
       <div style="width:224px;">
-        ${isStatement ? `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid ${CELL_LINE};">
-          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Statement Date</span>
-          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
-          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Date</span>
-          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
-        </div>
-        ` : `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid ${CELL_LINE};">
-          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Date</span>
-          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
-        </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
           <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Invoice No.</span>
           <span style="font-size:11px; font-weight:700; color:${INK};">${String(invoiceNumber)}</span>
         </div>
-        `}
       </div>
     </div>
 
@@ -735,8 +720,8 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
     ${paidAmount > 0 ? `
     <div style="display:flex; justify-content:flex-end; gap:24px; padding:7px 18px; border-bottom:1px solid ${CELL_LINE}; font-size:11px; color:${INK};">
-      <span>Amount Paid: <strong>₹${paidAmount.toLocaleString('en-IN')}</strong></span>
-      <span>Balance Due: <strong>₹${pendingAmount.toLocaleString('en-IN')}</strong></span>
+      <span>Amount Paid: <strong>â‚¹${paidAmount.toLocaleString('en-IN')}</strong></span>
+      <span>Balance Due: <strong>â‚¹${pendingAmount.toLocaleString('en-IN')}</strong></span>
     </div>` : ""}
 
     <div style="background:${PANEL_BG}; border-top:1px solid ${INK_BORDER}; padding:16px 18px; display:flex; justify-content:space-between; align-items:flex-start;">

@@ -70,7 +70,7 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
             <SelectItem value="regular">Regular</SelectItem>
             <SelectItem value="family">Family</SelectItem>
             <SelectItem value="clinic_staff">Clinic Staff</SelectItem>
-            <SelectItem value="CORPORATE">Membership</SelectItem>
+            <SelectItem value="membership">Membership</SelectItem>
             <SelectItem value="vip">VIP</SelectItem>
             <SelectItem value="complimentary">Complimentary</SelectItem>
           </SelectContent>
