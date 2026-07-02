@@ -11,28 +11,24 @@
   },
   "benefitTypes": [
     {
+      "value": "unlimited_consultations",
+      "label": "Unlimited Diagnostic Check-ups & Consultations (1 Year)"
+    },
+    {
+      "value": "complimentary_session",
+      "label": "Complimentary Teeth Cleaning & Whitening Session"
+    },
+    {
       "value": "flat_discount",
-      "label": "Percentage Discount (All Treatments)"
+      "label": "20% Discount on All Dental Treatments"
     },
     {
-      "value": "treatment_discount",
-      "label": "Treatment-Specific Discount"
+      "value": "priority_scheduling",
+      "label": "Priority Appointment Scheduling"
     },
     {
-      "value": "free_consultations",
-      "label": "Free Consultations"
-    },
-    {
-      "value": "free_treatments",
-      "label": "Free Treatments"
-    },
-    {
-      "value": "capped_discount",
-      "label": "Discount with Maximum Limit"
-    },
-    {
-      "value": "custom",
-      "label": "Custom Benefit"
+      "value": "fluoride_application",
+      "label": "Fluoride Application for Kids (As Needed)"
     }
   ],
   "planColors": [
