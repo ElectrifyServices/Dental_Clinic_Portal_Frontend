@@ -20,6 +20,7 @@ import {
   usePaidInvoicesQuery,
 } from "../../hooks/billing/useInvoiceStatsQuery";
 import { usePayInvoiceMutation } from "../../hooks/billing/usePayInvoiceMutation";
+import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
 import {
   Button,
   PageHeader,
@@ -116,6 +117,29 @@ export function InvoiceList({
   const { data: pendingInvoicesData } = usePendingInvoicesQuery();
   const { data: paidInvoicesData } = usePaidInvoicesQuery();
   const { mutateAsync: payInvoiceMutation } = usePayInvoiceMutation();
+  const { mutateAsync: sendInvoiceMutation } = useSendInvoiceMutation();
+
+  const handleSendInvoice = async (id: string) => {
+    try {
+      await sendInvoiceMutation({ id });
+      onUpdateStatus?.(id, "sent");
+      toast.success("Invoice queued for sending");
+    } catch (err: any) {
+      console.error("Failed to send invoice:", err);
+      const serverResponse = err.response?.data;
+      let errMsg = "";
+      if (serverResponse) {
+        const parsed = serverResponse.responseStatusList?.statusList?.[0];
+        if (parsed?.statusDesc) {
+          errMsg = parsed.statusDesc;
+        }
+      }
+      if (!errMsg) {
+        errMsg = err.status?.statusDesc || err.message || "Failed to send invoice";
+      }
+      toast.error(errMsg);
+    }
+  };
 
   const totalBilled = Number(
     totalBilledData?.responseObject?.data?.total_billed ??
@@ -375,18 +399,16 @@ export function InvoiceList({
                           <IndianRupee className="w-4 h-4" /> Mark as Paid
                         </Button>
                       )}
-                      {inv.status === "draft" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            onUpdateStatus(inv.id, "sent");
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <Send className="w-4 h-4" /> Send to Patient
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          handleSendInvoice(inv.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <Send className="w-4 h-4" /> Send
+                      </Button>
                       <Button
                         variant="ghost"
                         onClick={() => {
@@ -522,18 +544,16 @@ export function InvoiceList({
                           <IndianRupee className="w-4 h-4" /> Mark as Paid
                         </Button>
                       )}
-                      {inv.status === "draft" && onUpdateStatus && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            onUpdateStatus(inv.id, "sent");
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
-                        >
-                          <Send className="w-4 h-4" /> Send to Patient
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          handleSendInvoice(inv.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <Send className="w-4 h-4" /> Send
+                      </Button>
                       <Button
                         variant="ghost"
                         onClick={() => {
@@ -729,7 +749,7 @@ export function InvoiceList({
                   onView={(id) => onViewInvoice?.(id)}
                   onHistory={setHistoryInvoice}
                   onPay={setPayInvoice}
-                  onSend={(id) => onUpdateStatus?.(id, "sent")}
+                  onSend={handleSendInvoice}
                   onDelete={(id) => onDeleteInvoice?.(id)}
                 />
               ))}

@@ -128,11 +128,9 @@ export const BillingCard: React.FC<BillingCardProps> = ({
               <IndianRupee className="w-4 h-4 mr-2 text-emerald-600" /> Mark as Paid
             </DropdownMenuItem>
           )}
-          {statusLower === "draft" && (
-            <DropdownMenuItem onSelect={() => onSend(inv.id)}>
-              <Send className="w-4 h-4 mr-2 text-primary" /> Send to Patient
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem onSelect={() => onSend(inv.id)}>
+            <Send className="w-4 h-4 mr-2 text-primary" /> Send
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onDelete(inv.id)} className="text-destructive">
             <Trash2 className="w-4 h-4 mr-2" /> Delete
           </DropdownMenuItem>
