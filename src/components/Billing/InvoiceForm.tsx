@@ -69,13 +69,9 @@ export function InvoiceForm({
       patientId: (invoice as any)?.patientId ?? "",
       doctor: (invoice as any)?.doctor ?? "",
       date: invoice?.date ?? new Date().toISOString().split("T")[0],
-      dueDate:
-        invoice?.dueDate ??
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
+      dueDate: invoice?.dueDate ?? "",
       discount: invoice?.discount ?? 0,
-      tax: invoice?.tax ?? 18,
+      tax: invoice?.tax ?? 0,
       isComplimentary: (invoice as any)?.isComplimentary ?? false,
       complimentaryNote: (invoice as any)?.complimentaryNote ?? "",
       linkedItemIds: (invoice as any)?.linkedItemIds ?? [],
@@ -401,12 +397,10 @@ export function InvoiceForm({
   ]);
 
   const discountAmount = manualDiscount + planDiscountResult.totalDiscount;
-  const taxAmount = formData.isComplimentary
-    ? 0
-    : (Math.max(0, subtotal - discountAmount) * formData.tax) / 100;
+  const taxAmount = 0;
   const total = formData.isComplimentary
     ? 0
-    : Math.max(0, subtotal - discountAmount + taxAmount);
+    : Math.max(0, subtotal - discountAmount);
 
   const handleSubmit = (data: InvoiceFormData) => {
     onSave({
@@ -415,9 +409,9 @@ export function InvoiceForm({
       items,
       subtotal,
       discount: data.discount,
-      tax: data.tax,
+      tax: 0,
       discountAmount: discountAmount,
-      taxAmount: taxAmount,
+      taxAmount: 0,
       total: data.isComplimentary ? 0 : total,
       status: data.isComplimentary
         ? "complimentary"
@@ -731,17 +725,6 @@ export function InvoiceForm({
               className="w-full px-4 py-2 border rounded-xl text-sm"
             />
           </LabeledField>
-          <LabeledField label="Due Date" required>
-            <Input
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) =>
-                setFormData({ ...formData, dueDate: e.target.value })
-              }
-              required
-              className="w-full px-4 py-2 border rounded-xl text-sm"
-            />
-          </LabeledField>
         </div>
 
         {formData.patientId && patientInvoices.length > 0 && (
@@ -954,56 +937,30 @@ export function InvoiceForm({
                 />
               )}
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <LabeledField label="Discount %">
-                    <Input
-                      type="number"
-                      value={formData.isComplimentary ? 100 : formData.discount}
-                      disabled={formData.isComplimentary}
-                      onChange={(e) => {
-                        let valStr = e.target.value;
-                        if (/^0+[1-9]/.test(valStr)) {
-                          valStr = valStr.replace(/^0+/, '');
-                        } else if (/^0{2,}/.test(valStr)) {
-                          valStr = '0';
-                        }
-                        e.target.value = valStr;
-                        const val = parseFloat(valStr);
-                        setFormData({
-                          ...formData,
-                          discount: isNaN(val) ? 0 : Math.min(100, Math.max(0, val)),
-                        });
-                      }}
-                      min={0}
-                      max={100}
-                      className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
-                    />
-                  </LabeledField>
-                  <LabeledField label="Tax %">
-                    <Input
-                      type="number"
-                      value={formData.isComplimentary ? 0 : formData.tax}
-                      disabled={formData.isComplimentary}
-                      onChange={(e) => {
-                        let valStr = e.target.value;
-                        if (/^0+[1-9]/.test(valStr)) {
-                          valStr = valStr.replace(/^0+/, '');
-                        } else if (/^0{2,}/.test(valStr)) {
-                          valStr = '0';
-                        }
-                        e.target.value = valStr;
-                        const val = parseFloat(valStr);
-                        setFormData({
-                          ...formData,
-                          tax: isNaN(val) ? 0 : Math.min(100, Math.max(0, val)),
-                        });
-                      }}
-                      min={0}
-                      max={100}
-                      className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
-                    />
-                  </LabeledField>
-                </div>
+                <LabeledField label="Discount %">
+                  <Input
+                    type="number"
+                    value={formData.isComplimentary ? 100 : formData.discount}
+                    disabled={formData.isComplimentary}
+                    onChange={(e) => {
+                      let valStr = e.target.value;
+                      if (/^0+[1-9]/.test(valStr)) {
+                        valStr = valStr.replace(/^0+/, '');
+                      } else if (/^0{2,}/.test(valStr)) {
+                        valStr = '0';
+                      }
+                      e.target.value = valStr;
+                      const val = parseFloat(valStr);
+                      setFormData({
+                        ...formData,
+                        discount: isNaN(val) ? 0 : Math.min(100, Math.max(0, val)),
+                      });
+                    }}
+                    min={0}
+                    max={100}
+                    className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
+                  />
+                </LabeledField>
               </div>
             </CardContent>
           </Card>
@@ -1039,14 +996,7 @@ export function InvoiceForm({
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>
-                    GST ({formData.isComplimentary ? 0 : formData.tax}%)
-                  </span>
-                  <span className="font-bold">
-                    ₹{taxAmount.toLocaleString()}
-                  </span>
-                </div>
+
                 <div className="pt-3 border-t border-dashed border-border flex justify-between items-center">
                   <span className="text-sm font-black uppercase tracking-wider">
                     Final Total
