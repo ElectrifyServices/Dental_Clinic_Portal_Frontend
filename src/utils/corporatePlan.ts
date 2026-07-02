@@ -86,6 +86,21 @@ export function computePlanDiscount(
         }
         break;
       }
+      case 'unlimited_consultations': {
+        if (treatmentTypes.includes('consultation')) {
+          const d = 500;
+          totalDiscount += d;
+          applied.push({ benefit: b, discountAmount: d, label: 'Free consultation (unlimited)' });
+        }
+        break;
+      }
+      case 'complimentary_session': {
+        if (b.treatmentTypes?.length && treatmentTypes.some(t => b.treatmentTypes!.includes(t))) {
+          applied.push({ benefit: b, discountAmount: 0, label: b.description });
+        }
+        break;
+      }
+      // 'priority_scheduling' and 'fluoride_application' are non-billing amenities and intentionally have no discount case.
     }
   }
   return { totalDiscount: Math.min(totalDiscount, subtotal), applied };

@@ -112,7 +112,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         const mapBackendBenefitType = (t: string): string => ({
           FLAT_DISCOUNT: "flat_discount", TREATMENT_DISCOUNT: "treatment_discount",
           FREE_CONSULTATION: "free_consultations", FREE_TREATMENT_SERVICE: "free_treatments",
-          CAPPED_DISCOUNT: "capped_discount", CUSTOM: "custom",
+          CAPPED_DISCOUNT: "capped_discount",
+          UNLIMITED_CONSULTATION: "unlimited_consultations", COMPLIMENTARY_SESSION: "complimentary_session",
+          PRIORITY_SCHEDULING: "priority_scheduling", FLUORIDE_APPLICATION: "fluoride_application",
+          CUSTOM: "custom",
         }[t] || "custom");
 
         const benefits = (planData.benefits || []).map((b: any) => {
@@ -238,14 +241,19 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const mapBenefitType = (t: string): string => ({
     flat_discount: "FLAT_DISCOUNT", treatment_discount: "TREATMENT_DISCOUNT",
     free_consultations: "FREE_CONSULTATION", free_treatments: "FREE_TREATMENT_SERVICE",
-    capped_discount: "CAPPED_DISCOUNT", custom: "CUSTOM",
+    capped_discount: "CAPPED_DISCOUNT",
+    unlimited_consultations: "UNLIMITED_CONSULTATION", complimentary_session: "COMPLIMENTARY_SESSION",
+    priority_scheduling: "PRIORITY_SCHEDULING", fluoride_application: "FLUORIDE_APPLICATION",
+    custom: "CUSTOM",
   }[t] || "CUSTOM");
 
   const buildBenefitsPayload = (benefits: typeof form.benefits) =>
     benefits.map(b => {
-      const isFree = ["free_consultations", "free_treatments"].includes(b.type);
+      const isFree = ["free_consultations", "free_treatments", "unlimited_consultations", "complimentary_session"].includes(b.type);
+      const isFlagOnly = ["priority_scheduling", "fluoride_application"].includes(b.type);
       let clinical_procedures: string[] = [];
-      if (b.type === "free_consultations") clinical_procedures = ["Consultation"];
+      if (b.type === "free_consultations" || b.type === "unlimited_consultations") clinical_procedures = ["Consultation"];
+      else if (b.type === "fluoride_application") clinical_procedures = ["Fluoride Application"];
       else if (Array.isArray(b.treatmentTypes)) {
         clinical_procedures = b.treatmentTypes.map(t => {
           if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
@@ -254,11 +262,11 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       }
       return {
         type: mapBenefitType(b.type),
-        allocationCount: isFree ? b.value : 0,
+        allocationCount: isFlagOnly ? 0 : b.type === 'unlimited_consultations' ? -1 : (isFree ? b.value : 0),
         clinical_procedures,
         description: b.description || "",
         benifit_label: b.customName || b.description || "Benefit",
-        discount_percentage: !isFree ? b.value : 0,
+        discount_percentage: isFlagOnly ? 0 : (!isFree ? b.value : 0),
         max_amount: b.cap || 0,
       };
     });
@@ -642,8 +650,8 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                           className="rounded-xl"
                         />
                       </LabeledField>
-                    ) : (
-                      <LabeledField label={['free_consultations', 'free_treatments'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
+                    ) : ['priority_scheduling', 'unlimited_consultations', 'fluoride_application'].includes(b.type) ? null : (
+                      <LabeledField label={['free_consultations', 'free_treatments', 'complimentary_session'].includes(b.type) ? 'Number of Sessions' : 'Discount %'}>
                         <Input
                           type="number" min="0"
                           max={b.type.includes('discount') ? 100 : 999}
@@ -675,7 +683,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     )}
 
                     {/* Applicable treatments */}
-                    {(b.type === 'treatment_discount' || b.type === 'free_treatments') && (
+                    {(b.type === 'treatment_discount' || b.type === 'free_treatments' || b.type === 'complimentary_session') && (
                       <div className="md:col-span-3">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Applicable Treatments</Label>
                         <div className="flex flex-wrap gap-2">

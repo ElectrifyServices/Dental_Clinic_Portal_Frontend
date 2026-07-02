@@ -44,6 +44,10 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
         FREE_CONSULTATION: "free_consultations",
         FREE_TREATMENT_SERVICE: "free_treatments",
         CAPPED_DISCOUNT: "capped_discount",
+        UNLIMITED_CONSULTATION: "unlimited_consultations",
+        COMPLIMENTARY_SESSION: "complimentary_session",
+        PRIORITY_SCHEDULING: "priority_scheduling",
+        FLUORIDE_APPLICATION: "fluoride_application",
         CUSTOM: "custom",
       };
       return typeMap[backendType] || "custom";

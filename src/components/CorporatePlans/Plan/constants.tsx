@@ -1,5 +1,5 @@
 import React from 'react';
-import { Percent, Tag, Gift, Star, CheckCircle, Settings2 } from 'lucide-react';
+import { Percent, Tag, Gift, Star, CheckCircle, Settings2, Infinity as InfinityIcon, Sparkles, Zap, Baby } from 'lucide-react';
 import { PlanBenefitType, PlanBenefit, PlanCategory, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS } from '../../../utils/corporatePlan';
 
@@ -9,6 +9,10 @@ export const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
   free_consultations: <Gift className="w-3.5 h-3.5" />,
   free_treatments: <Star className="w-3.5 h-3.5" />,
   capped_discount: <CheckCircle className="w-3.5 h-3.5" />,
+  unlimited_consultations: <InfinityIcon className="w-3.5 h-3.5" />,
+  complimentary_session: <Sparkles className="w-3.5 h-3.5" />,
+  priority_scheduling: <Zap className="w-3.5 h-3.5" />,
+  fluoride_application: <Baby className="w-3.5 h-3.5" />,
   custom: <Settings2 className="w-3.5 h-3.5" />,
 };
 
@@ -60,6 +64,16 @@ export function autoDesc(b: PlanBenefit): string {
       return `${b.value} free ${list.join(', ') || 'treatment'}`;
     }
     case 'capped_discount': return `${b.value}% discount (max ₹${b.cap?.toLocaleString() || '...'} per visit)`;
+    case 'unlimited_consultations': return 'Unlimited diagnostic check-ups and consultations for one year';
+    case 'complimentary_session': {
+      const list = (b.treatmentTypes || []).map(t => {
+        if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+        return TREATMENT_LABELS[t] || t;
+      });
+      return `One complimentary ${list.join(', ') || 'teeth cleaning and whitening'} session`;
+    }
+    case 'priority_scheduling': return 'Priority appointment scheduling';
+    case 'fluoride_application': return 'Fluoride application for kids, as needed';
     case 'custom': return `${b.value}% off on ${b.customName || 'Custom Benefit'}`;
     default: return '';
   }
