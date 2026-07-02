@@ -218,15 +218,6 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             {formatLocalDate(invoice.date)}
           </span>
         </div>
-
-        <div className="flex flex-col gap-1">
-          <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
-            Due Date
-          </span>
-          <span className="text-muted-foreground font-medium">
-            {formatLocalDate(invoice.dueDate)}
-          </span>
-        </div>
       </div>
 
       {/* Previous Bills Trigger */}
