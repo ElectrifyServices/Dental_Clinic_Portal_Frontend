@@ -260,7 +260,7 @@ export const downloadConsultationPDF = async ({
   const patientName = patientObj?.name || patient.patientName || "—";
   const patientId = patientObj?.id || patient.id || "—";
   const patientCode = patientObj?.patient_code || patientObj?.patientCode || (patient as any).patient_code || (patient as any).patientCode;
-  const displayPatientId = patientCode || (patientId === "—" ? "—" : patientId.split('-')[0]);
+  const displayPatientId = patientCode || "NA";
   const patientPhone = patientObj?.phone || patient.phone || "—";
   const patientGender = patientObj?.gender || (patient as any).gender || "—";
   const patientAge = patientObj?.age || ageFromDOB(patientObj?.dob || (patient as any).dob) || "—";
@@ -348,7 +348,7 @@ export const downloadConsultationPDF = async ({
 
   const getHeader = () => getLetterhead(`
 <div style="font-size: 16px; font-weight: 800; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
-<div style="font-size: 12.5px; font-weight: 600; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
+<div style="font-size: 12.5px; font-weight: 600; color: ${INK_MUTED}; margin-top: 4px;">Patient Code: ${displayPatientId}</div>
 <div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
 <div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Age ${patientAge} / ${patientGender} / ${patientBloodGroup}</div>
   `);
@@ -362,7 +362,7 @@ export const downloadConsultationPDF = async ({
 </div>
 <div style="padding: 0 40px;">
       ${detailsGrid([
-    ["Patient Name", patientName, "Patient ID", displayPatientId],
+    ["Patient Name", patientName, "Patient Code", displayPatientId],
     ["Age / Gender", `${patientAge} / ${patientGender}`, "Phone", patientPhone],
     ["Doctor", displayDoctorName, "Specialization", specialization],
   ])}
@@ -585,7 +585,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const patientName = invoice.patientName || patient?.name || "—";
   const patientId = invoice.patientId || patient?.id || "—";
   const patientCode = invoice.patient_code || invoice.patientCode || patient?.patient_code || patient?.patientCode;
-  const displayPatientId = patientCode || (patientId === "—" ? "—" : patientId.split('-')[0]);
+  const displayPatientId = patientCode || "NA";
   const memberId = invoice.memberId || invoice.member_id || patient?.memberId || patient?.member_id || "—";
 
   const invoiceNumber = invoice.invoice_number || invoice.id || "—";
@@ -679,19 +679,30 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <div style="font-size:12px; font-weight:700; color:${INK};">${memberId}</div>
         </div>
         <div>
-          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient ID</div>
+          <div style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px;">Patient Code</div>
           <div style="font-size:12px; font-weight:700; color:${INK};">${displayPatientId}</div>
         </div>
       </div>
       <div style="width:224px;">
+        ${isStatement ? `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid ${CELL_LINE};">
-          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">${isStatement ? "Statement Date" : "Invoice No."}</span>
-          <span style="font-size:11px; font-weight:700; color:${INK};">${isStatement ? invoiceDate : String(invoiceNumber)}</span>
+          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Statement Date</span>
+          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
           <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Date</span>
           <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
         </div>
+        ` : `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid ${CELL_LINE};">
+          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Date</span>
+          <span style="font-size:11px; font-weight:700; color:${INK};">${invoiceDate}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+          <span style="font-size:9px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.4px;">Invoice No.</span>
+          <span style="font-size:11px; font-weight:700; color:${INK};">${String(invoiceNumber)}</span>
+        </div>
+        `}
       </div>
     </div>
 
