@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AppProvider } from "./contexts/AppContext";
 import { TenantProvider } from "./contexts/TenantContext";
 import { ModalProvider } from "./contexts/ModalContext";
+import { SidebarProvider } from "./contexts/SidebarContext";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { LoginForm } from "./components/Auth/LoginForm";
 import { getParsedPermissions } from "./utils/permission";
@@ -128,12 +129,14 @@ export default function App() {
       <AuthProvider>
         <AppProvider>
           <ModalProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/login" element={<AuthRouter />} />
-                <Route path="/*" element={<ProtectedRoutes />} />
-              </Routes>
-            </BrowserRouter>
+            <SidebarProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/login" element={<AuthRouter />} />
+                  <Route path="/*" element={<ProtectedRoutes />} />
+                </Routes>
+              </BrowserRouter>
+            </SidebarProvider>
             <Toaster />
             <OfflineDetector />
           </ModalProvider>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { User } from "lucide-react";
 import { ConfirmModal } from "@/components/ui";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { PatientStats } from "./PatientList/PatientStats";
 import { PatientFilters } from "./PatientList/PatientFilters";
 import { PatientCard } from "./PatientList/PatientCard";
@@ -50,16 +51,19 @@ export function PatientList({
   totalItems = 0,
   onPageChange,
 }: PatientListProps) {
+  const { collapsed } = useSidebar();
   const [localSearch, setLocalSearch] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : localSearch;
   const setSearchTerm = onSearchChange ?? setLocalSearch;
 
   const [localFilterStatus, setLocalFilterStatus] = useState("all");
-  const filterStatusVal = filterStatus !== undefined ? filterStatus : localFilterStatus;
+  const filterStatusVal =
+    filterStatus !== undefined ? filterStatus : localFilterStatus;
   const setFilterStatusVal = onFilterStatusChange ?? setLocalFilterStatus;
 
   const [localFilterCategory, setLocalFilterCategory] = useState("all");
-  const filterCategoryVal = filterCategory !== undefined ? filterCategory : localFilterCategory;
+  const filterCategoryVal =
+    filterCategory !== undefined ? filterCategory : localFilterCategory;
   const setFilterCategoryVal = onFilterCategoryChange ?? setLocalFilterCategory;
 
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -73,13 +77,18 @@ export function PatientList({
         (patient.email || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        (patient.patient_code || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.patient_code || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         (patient.id || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter =
-        filterStatusVal === "all" || (patient.status || "active").toLowerCase() === filterStatusVal.toLowerCase();
+        filterStatusVal === "all" ||
+        (patient.status || "active").toLowerCase() ===
+          filterStatusVal.toLowerCase();
       const matchesCategory =
         filterCategoryVal === "all" ||
-        (patient.category || "regular").toLowerCase() === filterCategoryVal.toLowerCase();
+        (patient.category || "regular").toLowerCase() ===
+          filterCategoryVal.toLowerCase();
       return matchesSearch && matchesFilter && matchesCategory;
     });
   }, [patients, searchTerm, filterStatusVal, filterCategoryVal]);
@@ -171,7 +180,11 @@ export function PatientList({
           </p>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className={
+          collapsed
+            ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+            : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+        }>
           {filteredPatients.map((patient) => (
             <PatientCard
               key={patient.id}
@@ -210,7 +223,6 @@ export function PatientList({
           />
         </div>
       )}
-
     </div>
   );
 }

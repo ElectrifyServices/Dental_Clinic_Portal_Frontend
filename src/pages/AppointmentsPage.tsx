@@ -10,7 +10,7 @@ import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 import { useCheckInAppointmentMutation } from "../hooks/appointments/useCheckInAppointmentMutation";
 import { useCheckInAfterRegistrationMutation } from "../hooks/appointments/useCheckInAfterRegistrationMutation";
 import { useDebounce } from "../hooks/useDebounce";
-import { toast } from "../components/ui";
+import { toast, PageHeader } from "../components/ui";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -177,16 +177,11 @@ export const AppointmentsPage: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Appointments
-          </h1>
-          <p className="text-xs text-muted-foreground font-medium">
-            Schedule and manage patient visits
-          </p>
-        </div>
-        <div className="flex items-center justify-between w-full md:w-auto gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl">
+      <PageHeader
+        title="Appointments"
+        subtitle="Schedule and manage patient visits"
+      >
+        <div className="flex items-center justify-between w-full md:w-auto gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
           <Button
             variant="ghost"
             onClick={() => setViewMode("calendar")}
@@ -212,7 +207,7 @@ export const AppointmentsPage: React.FC = () => {
             <span className="truncate">No Show ({noShowCount})</span>
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       <AppointmentStats appointments={appointments} />
 

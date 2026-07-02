@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, UserCheck, UserPlus, CreditCard } from 'lucide-react';
+import { useSidebar } from "../../../contexts/SidebarContext";
 
 interface Patient {
   id: string;
@@ -18,6 +19,7 @@ import { usePatientNewQuery } from '@/hooks/patients/usePatientNewQuery';
 import { usePatientOutstandingQuery } from '@/hooks/patients/usePatientOutstandingQuery';
 
 export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
+  const { collapsed } = useSidebar();
   const { data: totalData } = usePatientTotalQuery();
   const { data: activeData } = usePatientActiveQuery();
   const { data: newData } = usePatientNewQuery();
@@ -41,7 +43,11 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   const totalOutstanding = parseData(outstandingData) ?? patients.reduce((sum, p) => sum + (p.outstandingBalance || 0), 0);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+    <div className={
+      collapsed
+        ? "grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6"
+        : "grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-2 gap-3 md:gap-6 mb-6"
+    }>
       <MetricCard 
         label="Total Patients"
         value={totalPatients}

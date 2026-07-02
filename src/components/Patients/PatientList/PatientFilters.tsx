@@ -26,81 +26,80 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
   onAddPatient,
 }) => {
   return (
-    <div className="flex flex-col xl:flex-row xl:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm mb-6">
-      <div className="w-full xl:flex-1">
+    <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-6 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0">
+      {/* Search Input takes remaining space */}
+      <div className="flex-grow min-w-[100px] max-w-md xl:max-w-xl min-w-0">
         <SearchInput
           placeholder="Search by name, ID, phone or email..."
           value={searchTerm}
           onChange={setSearchTerm}
+          className="[&>input]:h-9 [&>input]:py-1 [&>input]:text-xs [&>input]:pl-9 [&>input]:min-w-0 w-full"
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
-        <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-          <Select
-            value={filterStatus}
-            onValueChange={setFilterStatus}
-          >
-            <SelectTrigger className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-[160px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filterCategory}
-            onValueChange={setFilterCategory}
-          >
-            <SelectTrigger className="h-11 px-4 border border-border rounded-xl text-sm font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-[160px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="regular">Regular</SelectItem>
-              <SelectItem value="family">Family</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="corporate">Membership</SelectItem>
-              <SelectItem value="vip">VIP</SelectItem>
-              <SelectItem value="complimentary">Complimentary</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="h-8 w-px bg-border hidden xl:block" />
-
-        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
-          <div className="flex items-center bg-muted p-1 rounded-xl border border-border/50 shrink-0">
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className="h-9 w-9 p-0 rounded-lg"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("table")}
-              className="h-9 w-9 p-0 rounded-lg"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <Button
-            onClick={onAddPatient}
-            className="gap-2 h-11 px-6 shadow-lg shadow-primary/10 flex-1 sm:flex-initial justify-center"
-          >
-            <Plus className="w-4 h-4" />
-            Add Patient
-          </Button>
-        </div>
+      {/* Status Select */}
+      <div className="shrink-0">
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="h-9 px-2 border border-border rounded-xl text-xs font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-28 text-left flex items-center justify-between gap-1">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      {/* Category Select */}
+      <div className="shrink-0">
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="h-9 px-2 border border-border rounded-xl text-xs font-bold bg-muted/50 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer w-32 text-left flex items-center justify-between gap-1">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="regular">Regular</SelectItem>
+            <SelectItem value="family">Family</SelectItem>
+            <SelectItem value="staff">Staff</SelectItem>
+            <SelectItem value="corporate">Membership</SelectItem>
+            <SelectItem value="vip">VIP</SelectItem>
+            <SelectItem value="complimentary">Complimentary</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Divider */}
+      <div className="h-6 w-px bg-border shrink-0" />
+
+      {/* View Toggle */}
+      <div className="flex items-center bg-muted p-0.5 rounded-lg border border-border/50 shrink-0">
+        <Button
+          variant={viewMode === "grid" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("grid")}
+          className="h-7 w-7 p-0 rounded-md"
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          variant={viewMode === "table" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setViewMode("table")}
+          className="h-7 w-7 p-0 rounded-md"
+        >
+          <List className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+
+      {/* Add Button */}
+      <Button
+        onClick={onAddPatient}
+        className="gap-1.5 h-9 px-3 shadow-lg shadow-primary/10 shrink-0 justify-center font-bold text-xs"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        <span>Add Patient</span>
+      </Button>
     </div>
   );
 };

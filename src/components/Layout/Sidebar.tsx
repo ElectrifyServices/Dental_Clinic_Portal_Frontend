@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -60,7 +61,7 @@ export function Sidebar() {
   const { state } = useAuth();
   const { tenant } = useTenant();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
   const role = state.user?.role;
   const perms = state.user?.permissions || [];
   const rawModulePerms = getParsedPermissions(state.user);
@@ -94,16 +95,25 @@ export function Sidebar() {
     if (item.group === "superadmin") return role === "superadmin";
     if (item.id === "patient-queue") return role === "doctor";
     if (item.group === "admin") {
-      if (role === "receptionist") return ["billing", "consent"].includes(item.id);
+      if (role === "receptionist")
+        return ["billing", "consent"].includes(item.id);
       return false;
     }
     return true;
   };
-// const visible = allItems.filter(canAccess);
-// for hide the component just add the condition below
-  const visible = allItems.filter(canAccess).filter(item => 
-    // Temporarily hidden items requested by user
-    !["dashboard", "emr", "consent", "inventory", "reports", "profit-sharing"].includes(item.id)
+  // const visible = allItems.filter(canAccess);
+  // for hide the component just add the condition below
+  const visible = allItems.filter(canAccess).filter(
+    (item) =>
+      // Temporarily hidden items requested by user
+      ![
+        "dashboard",
+        "emr",
+        "consent",
+        "inventory",
+        "reports",
+        "profit-sharing",
+      ].includes(item.id),
   );
   const visibleGroups = tenant.sidebar.groups.filter((g) =>
     visible.some((i) => i.group === g.id),
@@ -132,16 +142,22 @@ export function Sidebar() {
                    transition-all duration-150"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        {collapsed
-          ? <ChevronRight className="w-3.5 h-3.5" />
-          : <ChevronLeft className="w-3.5 h-3.5" />}
+        {collapsed ? (
+          <ChevronRight className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronLeft className="w-3.5 h-3.5" />
+        )}
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
       <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer mt-[3px]">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-200 transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-full h-full object-contain rounded-lg"
+            />
           </div>
           {!collapsed && (
             <div className="min-w-0">
@@ -183,16 +199,22 @@ export function Sidebar() {
                         variant="ghost"
                         className={[
                           "w-full justify-start rounded-xl text-[13px] font-medium outline-none select-none relative overflow-hidden group/btn border",
-                          collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : "h-10 px-3 gap-3",
+                          collapsed
+                            ? "justify-center px-0 h-10 w-10 mx-auto"
+                            : "h-10 px-3 gap-3",
                           isActive
                             ? "text-primary font-bold bg-primary/[0.03] border-primary/40"
                             : "text-slate-600 hover:text-primary hover:bg-slate-50 border-slate-200/50",
                           // Vertical border mask
                           "before:content-[''] before:absolute before:top-[5px] before:left-[-1px] before:w-[calc(100%+2px)] before:h-[calc(100%-10px)] before:bg-white before:transition-all before:duration-300 before:ease-in-out before:z-[1]",
-                          isActive ? "before:scale-y-0" : "before:scale-y-100 group-hover/btn:before:scale-y-0",
+                          isActive
+                            ? "before:scale-y-0"
+                            : "before:scale-y-100 group-hover/btn:before:scale-y-0",
                           // Horizontal border mask
                           "after:content-[''] after:absolute after:left-[5px] after:top-[-1px] after:h-[calc(100%+2px)] after:w-[calc(100%-10px)] after:bg-white after:transition-all after:duration-300 after:ease-in-out after:z-[1]",
-                          isActive ? "after:scale-x-0" : "after:scale-x-100 group-hover/btn:after:scale-x-0",
+                          isActive
+                            ? "after:scale-x-0"
+                            : "after:scale-x-100 group-hover/btn:after:scale-x-0",
                         ].join(" ")}
                       >
                         <NavLink
@@ -200,26 +222,30 @@ export function Sidebar() {
                           title={collapsed ? item.label : undefined}
                         >
                           {/* Icon wrapper */}
-                          <div className={[
-                            "flex-shrink-0 flex items-center justify-center transition-all duration-150 z-10",
-                            !collapsed ? "w-7 h-7 rounded-lg" : "",
-                            isActive && !collapsed
-                              ? "bg-primary/15"
-                              : !isActive && !collapsed
-                                ? "bg-slate-100 group-hover/btn:bg-primary/10"
-                                : "",
-                          ].join(" ")}>
-                            <Icon className={[
-                              "transition-transform duration-150 group-hover/btn:scale-105 z-10",
-                              collapsed ? "w-5 h-5" : "w-3.5 h-3.5",
-                              isActive ? "text-primary" : "text-slate-500 group-hover/btn:text-primary",
-                            ].join(" ")} />
+                          <div
+                            className={[
+                              "flex-shrink-0 flex items-center justify-center transition-all duration-150 z-10",
+                              !collapsed ? "w-7 h-7 rounded-lg" : "",
+                              isActive && !collapsed
+                                ? "bg-primary/15"
+                                : !isActive && !collapsed
+                                  ? "bg-slate-100 group-hover/btn:bg-primary/10"
+                                  : "",
+                            ].join(" ")}
+                          >
+                            <Icon
+                              className={[
+                                "transition-transform duration-150 group-hover/btn:scale-105 z-10",
+                                collapsed ? "w-5 h-5" : "w-3.5 h-3.5",
+                                isActive
+                                  ? "text-primary"
+                                  : "text-slate-500 group-hover/btn:text-primary",
+                              ].join(" ")}
+                            />
                           </div>
 
                           {!collapsed && (
-                            <span className="truncate z-10">
-                              {item.label}
-                            </span>
+                            <span className="truncate z-10">{item.label}</span>
                           )}
 
                           {/* Active bar in collapsed mode */}

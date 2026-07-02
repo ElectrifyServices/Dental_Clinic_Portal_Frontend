@@ -31,6 +31,7 @@ import {
   Loading,
   Pagination,
 } from "@/components/ui";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 interface DoctorManagementProps {
   staffMembers: UserType[];
@@ -100,6 +101,7 @@ export function DoctorManagement({
   onRoleFilterChange: propOnRoleFilterChange,
   isLoading,
 }: DoctorManagementProps) {
+  const { collapsed } = useSidebar();
   const [localSearch, setLocalSearch] = useState("");
   const [localRoleFilter, setLocalRoleFilter] = useState("all");
 
@@ -442,7 +444,11 @@ export function DoctorManagement({
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className={
+            collapsed
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          }>
           {filtered.length === 0 ? (
             <div className="col-span-full py-20 bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
               <Users className="w-12 h-12 text-muted-foreground/30 mb-4" />
