@@ -69,13 +69,9 @@ export function InvoiceForm({
       patientId: (invoice as any)?.patientId ?? "",
       doctor: (invoice as any)?.doctor ?? "",
       date: invoice?.date ?? new Date().toISOString().split("T")[0],
-      dueDate:
-        invoice?.dueDate ??
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
+      dueDate: invoice?.dueDate ?? "",
       discount: invoice?.discount ?? 0,
-      tax: invoice?.tax ?? 18,
+      tax: invoice?.tax ?? 0,
       isComplimentary: (invoice as any)?.isComplimentary ?? false,
       complimentaryNote: (invoice as any)?.complimentaryNote ?? "",
       linkedItemIds: (invoice as any)?.linkedItemIds ?? [],
@@ -90,19 +86,24 @@ export function InvoiceForm({
 
   const formData = form.watch();
 
-  const [selectedPrevInvoiceId, setSelectedPrevInvoiceId] = useState<string>("");
+  const [selectedPrevInvoiceId, setSelectedPrevInvoiceId] =
+    useState<string>("");
   const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
-  const [showAllInvoicesModal, setShowAllInvoicesModal] = useState<boolean>(false);
+  const [showAllInvoicesModal, setShowAllInvoicesModal] =
+    useState<boolean>(false);
 
   const { data: patientInvoicesData } = useInvoicesQuery(
-    { filters: { patient_id: formData.patientId ? [formData.patientId] : [] }, limit: 100 },
+    {
+      filters: { patient_id: formData.patientId ? [formData.patientId] : [] },
+      limit: 100,
+    },
     {
       enabled: !!formData.patientId,
       staleTime: 0,
       gcTime: 0,
       cacheTime: 0,
       refetchOnMount: "always",
-    }
+    },
   );
 
   const patientInvoices = useMemo(() => {
@@ -113,13 +114,19 @@ export function InvoiceForm({
       rawList = apiInvoices;
     } else if (apiInvoices && Array.isArray((apiInvoices as any).invoices)) {
       rawList = (apiInvoices as any).invoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.invoices)) {
+    } else if (
+      apiInvoices &&
+      Array.isArray((apiInvoices as any).data?.invoices)
+    ) {
       rawList = (apiInvoices as any).data.invoices;
     } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.data)) {
       rawList = (apiInvoices as any).data.data;
     } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
       rawList = (apiInvoices as any).data;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data)) {
+    } else if (
+      apiInvoices &&
+      Array.isArray((apiInvoices as any).responseObject?.data)
+    ) {
       rawList = (apiInvoices as any).responseObject.data;
     }
     return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
@@ -137,31 +144,52 @@ export function InvoiceForm({
 
   const { data: rawPatientsData } = usePatientQuery({
     search: patientSearchQuery || undefined,
-    filters: { isDropdown: [true] as any }
+    filters: { isDropdown: [true] as any },
   });
   const apiPatients = useMemo(() => {
     return Array.isArray(rawPatientsData)
       ? rawPatientsData
-      : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
+      : (rawPatientsData as any)?.data?.data ||
+          (rawPatientsData as any)?.data ||
+          [];
   }, [rawPatientsData]);
 
   const selectedPatient = useMemo(() => {
-    return apiPatients.find((p: any) => p.id === formData.patientId || p.name === formData.patientName);
+    return apiPatients.find(
+      (p: any) =>
+        p.id === formData.patientId || p.name === formData.patientName,
+    );
   }, [apiPatients, formData.patientId, formData.patientName]);
 
-  const cat = (selectedPatient?.category || selectedPatient?.patient_category || "").toLowerCase();
-  const isCorporate = cat === "corporate" || cat === "employee" || cat === "member" ||
-    selectedPatient?.corporatePlanId || selectedPatient?.companyId || selectedPatient?.company_id ||
-    selectedPatient?.is_member || selectedPatient?.is_employee || selectedPatient?.isMember || selectedPatient?.isEmployee ||
-    selectedPatient?.employeeId || selectedPatient?.employee_id || selectedPatient?.membership_id || selectedPatient?.membershipId;
+  const cat = (
+    selectedPatient?.category ||
+    selectedPatient?.patient_category ||
+    ""
+  ).toLowerCase();
+  const isCorporate =
+    cat === "corporate" ||
+    cat === "employee" ||
+    cat === "member" ||
+    selectedPatient?.corporatePlanId ||
+    selectedPatient?.companyId ||
+    selectedPatient?.company_id ||
+    selectedPatient?.is_member ||
+    selectedPatient?.is_employee ||
+    selectedPatient?.isMember ||
+    selectedPatient?.isEmployee ||
+    selectedPatient?.employeeId ||
+    selectedPatient?.employee_id ||
+    selectedPatient?.membership_id ||
+    selectedPatient?.membershipId;
 
-  const memberId = selectedPatient?.source === "member" ? selectedPatient.id :
-    selectedPatient?.corporateMemberId ||
-    selectedPatient?.member_id ||
-    selectedPatient?.memberId ||
-    selectedPatient?.primaryMemberId ||
-    (isCorporate ? selectedPatient.id : "");
-
+  const memberId =
+    selectedPatient?.source === "member"
+      ? selectedPatient.id
+      : selectedPatient?.corporateMemberId ||
+        selectedPatient?.member_id ||
+        selectedPatient?.memberId ||
+        selectedPatient?.primaryMemberId ||
+        (isCorporate ? selectedPatient.id : "");
 
   const { data: rawUnbilledData } = useUnbilledItemsQuery(
     formData.patientId,
@@ -172,19 +200,25 @@ export function InvoiceForm({
       gcTime: 0,
       cacheTime: 0,
       refetchOnMount: "always",
-    }
+    },
   );
 
   const outstandingBalance = useMemo(() => {
     if (!rawUnbilledData) return 0;
     const itemsList = Array.isArray(rawUnbilledData)
       ? rawUnbilledData
-      : (rawUnbilledData as any)?.data?.items || (rawUnbilledData as any)?.items || (rawUnbilledData as any)?.data || [];
+      : (rawUnbilledData as any)?.data?.items ||
+        (rawUnbilledData as any)?.items ||
+        (rawUnbilledData as any)?.data ||
+        [];
 
     if (!Array.isArray(itemsList)) return 0;
 
-    return itemsList
-      .reduce((sum: number, item: any) => sum + (Number(item.total || item.amount || item.cost || item.rate || 0)), 0);
+    return itemsList.reduce(
+      (sum: number, item: any) =>
+        sum + Number(item.total || item.amount || item.cost || item.rate || 0),
+      0,
+    );
   }, [rawUnbilledData]);
   const setFormData = (
     updater:
@@ -208,18 +242,25 @@ export function InvoiceForm({
     );
 
     // Direct plan lookup (primary member or individually enrolled patient)
-    const directPlan = corporatePlans.find(
-      (cp) => cp.id === (p?.corporatePlanId || p?.companyId),
-    ) || null;
+    const directPlan =
+      corporatePlans.find(
+        (cp) => cp.id === (p?.corporatePlanId || p?.companyId),
+      ) || null;
 
-    if (directPlan) return { activeCorporatePlan: directPlan, dependentOf: undefined };
+    if (directPlan)
+      return { activeCorporatePlan: directPlan, dependentOf: undefined };
 
     // Dependent lookup: check if this patient is a registered dependent
     if (formData.patientId) {
       const dep = getDependentByPatientId(formData.patientId);
       if (dep?.corporatePlanId) {
-        const depPlan = corporatePlans.find(cp => cp.id === dep.corporatePlanId) || null;
-        if (depPlan) return { activeCorporatePlan: depPlan, dependentOf: dep.primaryMemberName };
+        const depPlan =
+          corporatePlans.find((cp) => cp.id === dep.corporatePlanId) || null;
+        if (depPlan)
+          return {
+            activeCorporatePlan: depPlan,
+            dependentOf: dep.primaryMemberName,
+          };
       }
     }
 
@@ -230,7 +271,8 @@ export function InvoiceForm({
     if (!formData.patientId) return [];
     const list: any[] = [];
 
-    const unbilledObj = rawUnbilledData?.data?.unbilled_items || rawUnbilledData?.unbilled_items;
+    const unbilledObj =
+      rawUnbilledData?.data?.unbilled_items || rawUnbilledData?.unbilled_items;
 
     if (unbilledObj) {
       const apiConsultations = unbilledObj.consultations || [];
@@ -241,7 +283,9 @@ export function InvoiceForm({
         list.push({
           id: c.id,
           type: c.type || "consultation",
-          description: c.description || `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})`,
+          description:
+            c.description ||
+            `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})`,
           rate: c.final_amount ?? c.amount ?? c.original_amount ?? 0,
           date: c.date,
           doctor_name: c.doctor_name || c.doctorName,
@@ -265,7 +309,8 @@ export function InvoiceForm({
         list.push({
           id: m.id,
           type: m.type || "membership",
-          description: m.description || m.plan_name || m.planName || "Membership Fee",
+          description:
+            m.description || m.plan_name || m.planName || "Membership Fee",
           rate: m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0,
           date: m.date,
           status: m.status,
@@ -305,7 +350,9 @@ export function InvoiceForm({
       linkedType: pItem.type,
     } as any;
     setItems(
-      currentItems.length === 1 && !currentItems[0].description && currentItems[0].rate === 0
+      currentItems.length === 1 &&
+        !currentItems[0].description &&
+        currentItems[0].rate === 0
         ? [newItem]
         : [...currentItems, newItem],
     );
@@ -350,12 +397,10 @@ export function InvoiceForm({
   ]);
 
   const discountAmount = manualDiscount + planDiscountResult.totalDiscount;
-  const taxAmount = formData.isComplimentary
-    ? 0
-    : (Math.max(0, subtotal - discountAmount) * formData.tax) / 100;
+  const taxAmount = 0;
   const total = formData.isComplimentary
     ? 0
-    : Math.max(0, subtotal - discountAmount + taxAmount);
+    : Math.max(0, subtotal - discountAmount);
 
   const handleSubmit = (data: InvoiceFormData) => {
     onSave({
@@ -364,9 +409,9 @@ export function InvoiceForm({
       items,
       subtotal,
       discount: data.discount,
-      tax: data.tax,
+      tax: 0,
       discountAmount: discountAmount,
-      taxAmount: taxAmount,
+      taxAmount: 0,
       total: data.isComplimentary ? 0 : total,
       status: data.isComplimentary
         ? "complimentary"
@@ -407,8 +452,8 @@ export function InvoiceForm({
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
-                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                    )
+                        (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                      )
                     : null;
                 setSelectedPrevInvoiceId("");
                 setFormData({
@@ -417,26 +462,33 @@ export function InvoiceForm({
                   patientName: p?.name || "",
                   patientId: val,
                   linkedItemIds: [],
-                  discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
+                  discount: Math.min(100, Math.max(0, cp ? cp.discountPercent : p?.defaultDiscount || 0)),
                 });
               }}
               onSearchChange={setPatientSearchInput}
               options={[
                 { label: "Select Phone", value: "none" },
-                ...apiPatients.filter((p: any) => p.phone).map((p: any) => ({
-                  label: `${p.phone} (${p.name})`,
-                  searchLabel: `${p.phone} ${p.name}`,
-                  value: p.id,
-                  patient: p,
-                }))
+                ...apiPatients
+                  .filter((p: any) => p.phone)
+                  .map((p: any) => ({
+                    label: `${p.phone} (${p.name})`,
+                    searchLabel: `${p.phone} ${p.name}`,
+                    value: p.id,
+                    patient: p,
+                  })),
               ]}
               renderOption={(option: any) => {
-                if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
+                if (option.value === "none")
+                  return <span className="truncate pr-2">{option.label}</span>;
                 const p = option.patient;
-                if (!p) return <span className="truncate pr-2">{option.label}</span>;
+                if (!p)
+                  return <span className="truncate pr-2">{option.label}</span>;
 
-                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
 
                 return (
                   <div className="flex items-center gap-3 py-1">
@@ -447,11 +499,12 @@ export function InvoiceForm({
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as any).style.display = 'none';
+                            (e.target as any).style.display = "none";
                             const parent = (e.target as any).parentElement;
                             if (parent) {
-                              const fallback = parent.querySelector('.avatar-fallback');
-                              if (fallback) fallback.classList.remove('hidden');
+                              const fallback =
+                                parent.querySelector(".avatar-fallback");
+                              if (fallback) fallback.classList.remove("hidden");
                             }
                           }}
                         />
@@ -465,8 +518,12 @@ export function InvoiceForm({
                       </div>
                     )}
                     <div className="flex flex-col min-w-0">
-                      <span className="font-bold text-foreground text-xs leading-tight">{p.phone}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">{p.name}</span>
+                      <span className="font-bold text-foreground text-xs leading-tight">
+                        {p.phone}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">
+                        {p.name}
+                      </span>
                     </div>
                   </div>
                 );
@@ -476,8 +533,11 @@ export function InvoiceForm({
                 const p = option.patient;
                 if (!p) return option.label;
 
-                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
 
                 return (
                   <div className="flex items-center gap-2">
@@ -488,11 +548,13 @@ export function InvoiceForm({
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as any).style.display = 'none';
+                            (e.target as any).style.display = "none";
                             const parent = (e.target as any).parentElement;
                             if (parent) {
-                              const fallback = parent.querySelector('.avatar-fallback-val');
-                              if (fallback) fallback.classList.remove('hidden');
+                              const fallback = parent.querySelector(
+                                ".avatar-fallback-val",
+                              );
+                              if (fallback) fallback.classList.remove("hidden");
                             }
                           }}
                         />
@@ -505,7 +567,9 @@ export function InvoiceForm({
                         {initial}
                       </div>
                     )}
-                    <span className="font-bold text-foreground text-sm truncate">{p.phone}</span>
+                    <span className="font-bold text-foreground text-sm truncate">
+                      {p.phone}
+                    </span>
                   </div>
                 );
               }}
@@ -523,8 +587,8 @@ export function InvoiceForm({
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
-                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                    )
+                        (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                      )
                     : null;
                 setSelectedPrevInvoiceId("");
                 setFormData({
@@ -533,7 +597,7 @@ export function InvoiceForm({
                   patientPhone: p?.phone || "",
                   patientId: val,
                   linkedItemIds: [],
-                  discount: cp ? cp.discountPercent : p?.defaultDiscount || 0,
+                  discount: Math.min(100, Math.max(0, cp ? cp.discountPercent : p?.defaultDiscount || 0)),
                 });
               }}
               onSearchChange={setPatientSearchInput}
@@ -544,15 +608,20 @@ export function InvoiceForm({
                   searchLabel: `${p.name} ${p.phone || ""}`,
                   value: p.id,
                   patient: p,
-                }))
+                })),
               ]}
               renderOption={(option: any) => {
-                if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
+                if (option.value === "none")
+                  return <span className="truncate pr-2">{option.label}</span>;
                 const p = option.patient;
-                if (!p) return <span className="truncate pr-2">{option.label}</span>;
+                if (!p)
+                  return <span className="truncate pr-2">{option.label}</span>;
 
-                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
 
                 return (
                   <div className="flex items-center gap-3 py-1">
@@ -563,11 +632,12 @@ export function InvoiceForm({
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as any).style.display = 'none';
+                            (e.target as any).style.display = "none";
                             const parent = (e.target as any).parentElement;
                             if (parent) {
-                              const fallback = parent.querySelector('.avatar-fallback');
-                              if (fallback) fallback.classList.remove('hidden');
+                              const fallback =
+                                parent.querySelector(".avatar-fallback");
+                              if (fallback) fallback.classList.remove("hidden");
                             }
                           }}
                         />
@@ -581,8 +651,14 @@ export function InvoiceForm({
                       </div>
                     )}
                     <div className="flex flex-col min-w-0">
-                      <span className="font-bold text-foreground text-xs leading-tight">{p.name}</span>
-                      {p.phone && <span className="text-[10px] text-muted-foreground mt-0.5">{p.phone}</span>}
+                      <span className="font-bold text-foreground text-xs leading-tight">
+                        {p.name}
+                      </span>
+                      {p.phone && (
+                        <span className="text-[10px] text-muted-foreground mt-0.5">
+                          {p.phone}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
@@ -592,8 +668,11 @@ export function InvoiceForm({
                 const p = option.patient;
                 if (!p) return option.label;
 
-                const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name ? p.name.trim().charAt(0).toUpperCase() : "?";
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
 
                 return (
                   <div className="flex items-center gap-2">
@@ -604,11 +683,13 @@ export function InvoiceForm({
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as any).style.display = 'none';
+                            (e.target as any).style.display = "none";
                             const parent = (e.target as any).parentElement;
                             if (parent) {
-                              const fallback = parent.querySelector('.avatar-fallback-val');
-                              if (fallback) fallback.classList.remove('hidden');
+                              const fallback = parent.querySelector(
+                                ".avatar-fallback-val",
+                              );
+                              if (fallback) fallback.classList.remove("hidden");
                             }
                           }}
                         />
@@ -621,7 +702,9 @@ export function InvoiceForm({
                         {initial}
                       </div>
                     )}
-                    <span className="font-bold text-foreground text-sm truncate">{p.name}</span>
+                    <span className="font-bold text-foreground text-sm truncate">
+                      {p.name}
+                    </span>
                   </div>
                 );
               }}
@@ -631,7 +714,6 @@ export function InvoiceForm({
             />
           </LabeledField>
 
-
           <LabeledField label="Invoice Date" required>
             <Input
               type="date"
@@ -640,18 +722,7 @@ export function InvoiceForm({
                 setFormData({ ...formData, date: e.target.value })
               }
               required
-              className="w-full px-4 py-2 border rounded-xl text-sm"
-            />
-          </LabeledField>
-          <LabeledField label="Due Date" required>
-            <Input
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) =>
-                setFormData({ ...formData, dueDate: e.target.value })
-              }
-              required
-              className="w-full px-4 py-2 border rounded-xl text-sm"
+              className="block w-full px-4 py-2 border rounded-xl text-sm"
             />
           </LabeledField>
         </div>
@@ -667,7 +738,8 @@ export function InvoiceForm({
                   Patient Invoices Detected
                 </p>
                 <p className="text-xs font-bold text-slate-800 mt-0.5">
-                  This patient has {patientInvoices.length} previous bills recorded.
+                  This patient has {patientInvoices.length} previous bills
+                  recorded.
                 </p>
               </div>
             </div>
@@ -703,7 +775,9 @@ export function InvoiceForm({
                     Outstanding Payment Detected
                   </p>
                   <p className="text-xs font-bold text-rose-900 mt-0.5 break-words">
-                    This patient has a pending balance of ₹{outstandingBalance.toLocaleString()} from previous invoices.
+                    This patient has a pending balance of ₹
+                    {outstandingBalance.toLocaleString()} from previous
+                    invoices.
                   </p>
                 </div>
               </div>
@@ -713,7 +787,9 @@ export function InvoiceForm({
 
         {formData.patientName &&
           (() => {
-            const p = apiPatients.find((p: any) => p.name === formData.patientName);
+            const p = apiPatients.find(
+              (p: any) => p.name === formData.patientName,
+            );
             if (["family", "staff", "complimentary"].includes(p?.category))
               return (
                 <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in">
@@ -733,10 +809,15 @@ export function InvoiceForm({
                   <Button
                     size="sm"
                     onClick={() => {
-                      const disc =
-                        p.defaultDiscount !== undefined
-                          ? p.defaultDiscount
-                          : 100;
+                      const disc = Math.min(
+                        100,
+                        Math.max(
+                          0,
+                          p.defaultDiscount !== undefined
+                            ? p.defaultDiscount
+                            : 100,
+                        ),
+                      );
                       setFormData((prev) => ({
                         ...prev,
                         isComplimentary: disc === 100,
@@ -771,7 +852,8 @@ export function InvoiceForm({
               size="sm"
               variant="outline"
               onClick={() => {
-                const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+                const currentItems = (form.getValues("items") ??
+                  []) as InvoiceItem[];
                 setItems([
                   ...currentItems,
                   {
@@ -796,8 +878,10 @@ export function InvoiceForm({
                 commonServices={commonServices}
                 onUpdate={updateItem}
                 onRemove={(id) => {
-                  const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
-                  const lid = (currentItems.find((i) => i.id === id) as any)?.linkedId;
+                  const currentItems = (form.getValues("items") ??
+                    []) as InvoiceItem[];
+                  const lid = (currentItems.find((i) => i.id === id) as any)
+                    ?.linkedId;
                   if (lid)
                     setFormData((prev) => ({
                       ...prev,
@@ -853,36 +937,30 @@ export function InvoiceForm({
                 />
               )}
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <LabeledField label="Discount %">
-                    <Input
-                      type="number"
-                      value={formData.isComplimentary ? 100 : formData.discount}
-                      disabled={formData.isComplimentary}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          discount: parseFloat(e.target.value) || 0,
-                        })
+                <LabeledField label="Discount %">
+                  <Input
+                    type="number"
+                    value={formData.isComplimentary ? 100 : formData.discount}
+                    disabled={formData.isComplimentary}
+                    onChange={(e) => {
+                      let valStr = e.target.value;
+                      if (/^0+[1-9]/.test(valStr)) {
+                        valStr = valStr.replace(/^0+/, '');
+                      } else if (/^0{2,}/.test(valStr)) {
+                        valStr = '0';
                       }
-                      className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
-                    />
-                  </LabeledField>
-                  <LabeledField label="Tax %">
-                    <Input
-                      type="number"
-                      value={formData.isComplimentary ? 0 : formData.tax}
-                      disabled={formData.isComplimentary}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          tax: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
-                    />
-                  </LabeledField>
-                </div>
+                      e.target.value = valStr;
+                      const val = parseFloat(valStr);
+                      setFormData({
+                        ...formData,
+                        discount: isNaN(val) ? 0 : Math.min(100, Math.max(0, val)),
+                      });
+                    }}
+                    min={0}
+                    max={100}
+                    className="w-full px-3 py-2 border rounded-xl text-sm font-bold disabled:bg-muted/50"
+                  />
+                </LabeledField>
               </div>
             </CardContent>
           </Card>
@@ -896,11 +974,14 @@ export function InvoiceForm({
               <div className="space-y-1.5 pt-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span className="font-bold">₹{subtotal.toLocaleString()}</span>
+                  <span className="font-bold">
+                    ₹{subtotal.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm text-destructive">
                   <span>
-                    Discount ({formData.isComplimentary ? 100 : formData.discount}
+                    Discount (
+                    {formData.isComplimentary ? 100 : formData.discount}
                     %)
                   </span>
                   <span className="font-bold">
@@ -915,12 +996,7 @@ export function InvoiceForm({
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>
-                    GST ({formData.isComplimentary ? 0 : formData.tax}%)
-                  </span>
-                  <span className="font-bold">₹{taxAmount.toLocaleString()}</span>
-                </div>
+
                 <div className="pt-3 border-t border-dashed border-border flex justify-between items-center">
                   <span className="text-sm font-black uppercase tracking-wider">
                     Final Total
@@ -965,27 +1041,33 @@ export function InvoiceForm({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {patientInvoices.map((inv, idx) => (
-                    <tr key={idx} className="hover:bg-muted/20 transition-colors">
+                    <tr
+                      key={idx}
+                      className="hover:bg-muted/20 transition-colors"
+                    >
                       <td className="px-4 py-3 font-mono text-xs font-bold text-foreground">
                         {inv.invoice_number || inv.id}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {inv.date
                           ? new Date(inv.date).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
                           : "—"}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-foreground">
                         ₹{inv.total.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${inv.status === "paid"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          : "bg-amber-50 text-amber-700 border border-amber-100"
-                          }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                            inv.status === "paid"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              : "bg-amber-50 text-amber-700 border border-amber-100"
+                          }`}
+                        >
                           {inv.status}
                         </span>
                       </td>

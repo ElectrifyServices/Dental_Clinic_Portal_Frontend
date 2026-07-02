@@ -363,12 +363,7 @@ export function InvoiceViewer({
                   <span className="text-destructive">-₹{(invoice.discountAmount ?? 0).toLocaleString()}</span>
                 </div>
               )}
-              {invoice.tax > 0 && (
-                <div className="flex justify-between px-6 py-2">
-                  <span className="text-muted-foreground">GST ({invoice.tax}%)</span>
-                  <span className="text-foreground">₹{(invoice.taxAmount ?? 0).toLocaleString()}</span>
-                </div>
-              )}
+
               <div className="flex justify-between px-6 py-3.5 bg-primary/5 text-base font-black text-primary uppercase tracking-wider">
                 <span>Grand Total</span>
                 <span>₹{invoice.total.toLocaleString()}</span>
@@ -399,7 +394,7 @@ export function InvoiceViewer({
           </div>
         )}
 
-        {allInvoices && allInvoices.length > 1 && (
+        {/* {allInvoices && allInvoices.length > 1 && (
           <div className="space-y-3 pt-4 border-t border-border/80">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> All Bills for this Patient ({allInvoices.length})
@@ -464,7 +459,7 @@ export function InvoiceViewer({
               onRowClick={(inv: any) => setActiveId(inv.id)}
             />
           </div>
-        )}
+        )} */}
       </div>
     </Modal>
   );

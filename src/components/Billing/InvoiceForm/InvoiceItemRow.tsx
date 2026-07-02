@@ -80,7 +80,17 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
           type="number"
           value={item.rate}
           readOnly={isLinked}
-          onChange={e => onUpdate(item.id, 'rate', parseFloat(e.target.value) || 0)}
+          onChange={e => {
+            let valStr = e.target.value;
+            if (/^0+[1-9]/.test(valStr)) {
+              valStr = valStr.replace(/^0+/, '');
+            } else if (/^0{2,}/.test(valStr)) {
+              valStr = '0';
+            }
+            e.target.value = valStr;
+            const val = parseFloat(valStr);
+            onUpdate(item.id, 'rate', isNaN(val) ? 0 : Math.max(0, val));
+          }}
           className={`w-full px-3 h-10 border rounded-lg text-sm font-bold text-right outline-none ${
             isLinked ? 'bg-indigo-100 border-indigo-200 text-indigo-900 cursor-not-allowed' : 'bg-card border-border focus:ring-2 focus:ring-primary/20'
           }`}

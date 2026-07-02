@@ -161,7 +161,6 @@ export const PreviousBillsModal: React.FC<PreviousBillsModalProps> = ({
                     </div>
                     <div className="text-xs text-muted-foreground font-medium flex items-center gap-3">
                       <span>Date: {formatLocalDate(oldInv.date)}</span>
-                      <span>Due: {formatLocalDate(oldInv.dueDate)}</span>
                     </div>
                   </div>
 

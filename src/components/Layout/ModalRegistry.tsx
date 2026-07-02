@@ -232,8 +232,8 @@ export function ModalRegistry() {
 
   const matchingInvoice = useMemo(() => {
     if (!selectedItemId) return null;
-    return invoices.find((i: any) => 
-      String(i.id) === String(selectedItemId) || 
+    return invoices.find((i: any) =>
+      String(i.id) === String(selectedItemId) ||
       String(i.invoice_number) === String(selectedItemId) ||
       String(i.invoiceNumber) === String(selectedItemId)
     ) || null;
@@ -695,16 +695,18 @@ export function ModalRegistry() {
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
                 items: inv.items.map((item: any) => {
-                  let type: "CONSULTATION" | "TREATMENT_SESSION" | "CUSTOM" = "CUSTOM";
+                  let type: "CONSULTATION" | "TREATMENT_SESSION" | "MEMBERSHIP";
                   if (item.linkedType) {
                     if (item.linkedType.toLowerCase().includes("consultation")) type = "CONSULTATION";
                     else if (item.linkedType.toLowerCase().includes("treatment")) type = "TREATMENT_SESSION";
+                    else if (item.linkedType.toLowerCase().includes("membership")) type = "MEMBERSHIP";
                   }
 
                   return {
                     item_type: type,
                     consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
                     treatment_session_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
+                    membership_id: type === "MEMBERSHIP" ? item.linkedId : undefined,
                     description: item.description,
                     total_amount: item.amount,
                     billed_amount: item.amount,
@@ -765,7 +767,7 @@ export function ModalRegistry() {
         <InvoiceViewer
           invoiceId={matchingInvoice ? String(matchingInvoice.id) : selectedItemId}
           patientId={
-            matchingInvoice?.patientId || 
+            matchingInvoice?.patientId ||
             matchingInvoice?.patient_id ||
             matchingInvoice?.memberId ||
             matchingInvoice?.member_id
