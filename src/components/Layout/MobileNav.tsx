@@ -22,9 +22,16 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const PRIMARY_ITEMS = [
-  { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
-  { id: "appointments", label: "Calendar", icon: Calendar, roles: ["all"] },
+  // Temporarily hidden dashboard as per request
+  // { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
   { id: "patients", label: "Patients", icon: Users, roles: ["all"] },
+  { id: "appointments", label: "Calendar", icon: Calendar, roles: ["all"] },
+  {
+    id: "membership",
+    label: "Membership",
+    icon: Building2,
+    roles: ["admin", "superadmin"],
+  },
   {
     id: "patient-queue",
     label: "Queue",
@@ -60,6 +67,12 @@ const MENU_ITEMS = [
     roles: ["admin", "superadmin", "receptionist"],
   },
   {
+    id: "staff",
+    label: "Staff",
+    icon: UserCheck,
+    roles: ["admin", "superadmin"],
+  },
+  {
     id: "inventory",
     label: "Inventory",
     icon: Package,
@@ -72,12 +85,6 @@ const MENU_ITEMS = [
   //   icon: BarChart3,
   //   roles: ["admin", "superadmin"],
   // },
-  {
-    id: "staff",
-    label: "Staff",
-    icon: UserCheck,
-    roles: ["admin", "superadmin"],
-  },
   // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
   // {
   //   id: "profit-sharing",
@@ -85,12 +92,13 @@ const MENU_ITEMS = [
   //   icon: DollarSign,
   //   roles: ["admin", "superadmin"],
   // },
-  {
-    id: "membership",
-    label: "Membership",
-    icon: Building2,
-    roles: ["admin", "superadmin"],
-  },
+  // Commented out from drawer menu because it is now in bottom primary tabs
+  // {
+  //   id: "membership",
+  //   label: "Membership",
+  //   icon: Building2,
+  //   roles: ["admin", "superadmin"],
+  // },
 ];
 
 const PERMISSION_MAP: Record<string, string[]> = {
@@ -155,7 +163,7 @@ export function MobileNav() {
             {/* Drag handle */}
             <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5" />
             <div className="flex items-center justify-between mb-5 border-b border-border/50 pb-3">
-              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">All Modules</h4>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">All APPS</h4>
               <Button
                 variant="ghost"
                 size="icon-sm"
