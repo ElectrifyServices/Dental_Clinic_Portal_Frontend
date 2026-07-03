@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import logoImg from "../logo-removebg.png";
+import logoImg from "../logo.png";
 
 export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION";
 
@@ -22,7 +22,7 @@ const CLINIC_ADDRESS =
   "104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat — 380 015";
 const CLINIC_PHONE = "+91 99981 93256";
 const CLINIC_EMAIL = "rajal.shah@opalsmiles.com";
-const CLINIC_HOURS = "Mon–Sat: 10:00 AM – 8:00 PM";
+const CLINIC_HOURS = "Mon-Sat: 10:00 AM – 8:00 PM";
 const CLINIC_INSTAGRAM = "@opalsmiles_dental";
 
 // Default SAC (Services Accounting Code) applied to line items that don't carry
@@ -862,23 +862,12 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const firstItemDate = isStatement ? statementDateFormatted : invoiceDate;
 
   // Member ID (from invoice or member object)
-  const memberId =
-    invoice.member_id ||
-    invoice.memberId ||
-    invoice.member?.id ||
-    patient?.member_id ||
-    patient?.memberId ||
-    "—";
+  const memberId = invoice?.member?.member_id || "—";
 
   const rows: Array<[string, string, string, string]> = [
     ["Patient Name", patientName, "Date", firstItemDate],
     ["Patient ID", "—", "Invoice No.", firstInvoiceNumber],
-    [
-      "Member ID",
-      memberId !== "—" ? memberId.split("-")[0] : "—",
-      "Phone",
-      phone,
-    ],
+    ["Member ID", memberId, "Phone", phone],
   ];
 
   const itemsHtml = items
@@ -944,7 +933,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Member ID</span>
-              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">${memberId !== "—" ? memberId.split("-")[0] : "—"}</span>
+              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">${memberId !== "—" ? memberId : "—"}</span>
             </div>
           </div>
 
@@ -1022,9 +1011,10 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   `;
 
   pdfContainer.innerHTML = htmlContent;
+  console.log(invoice);
 
   await renderContainerToPDF(
     pdfContainer,
-    `Invoice_${invoice.invoice_number || invoice.id}_${patientName}.pdf`,
+    `Invoice_${firstInvoiceNumber || invoice.id}.pdf`,
   );
 };

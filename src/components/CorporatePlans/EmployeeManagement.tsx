@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Edit2, Upload, Building2, User,
   Users, Phone, Search,
   MoreHorizontal, ArrowRightLeft,
-  UserPlus, Zap,
+  UserPlus, Zap, Send,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
@@ -15,6 +15,7 @@ import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmploy
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
 import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
+import { useRegenerateInvoiceMutation } from '../../hooks/corporate/useRegenerateInvoiceMutation';
 import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
@@ -44,6 +45,7 @@ export function EmployeeManagement({
 
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
+  const regenerateInvoiceMutation = useRegenerateInvoiceMutation();
 
   const [tab, setTab] = useState<'list' | 'import'>('list');
   const [search, setSearch] = useState('');
@@ -194,6 +196,24 @@ export function EmployeeManagement({
       setDeleteDep(null);
     } catch (err: any) {
       showToast(err?.message || "Failed to remove family member", "error");
+    }
+  };
+
+  const handleResendInvoice = async (emp: CorporateEmployee) => {
+    if (!emp.corporatePlanId) {
+      showToast('No plan associated with this member', 'error');
+      return;
+    }
+    try {
+      await regenerateInvoiceMutation.mutateAsync({
+        memberId: emp.id,
+        plan_id: emp.corporatePlanId,
+      });
+      showToast(`Invoice resent successfully for ${emp.name}`, 'success');
+    } catch (e: any) {
+      const d = (e as any).response?.data || e;
+      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || (e as any).message || 'Failed to resend invoice';
+      showToast(msg, 'error');
     }
   };
 
@@ -428,12 +448,15 @@ export function EmployeeManagement({
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setEditEmp(e); setShowForm(true); }}>
                 <Edit2 className="w-4 h-4 mr-2 text-primary" /> Edit Member
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setChangePlanEmp(e); }}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); handleResendInvoice(e); }}>
+                <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
               </DropdownMenuItem>
               {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
                 <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
@@ -554,6 +577,7 @@ export function EmployeeManagement({
                           onEdit={() => { setEditEmp(e); setShowForm(true); }}
                           onChangePlan={() => setChangePlanEmp(e)}
                           onDelete={() => setDeleteEmp(e)}
+                          onResendInvoice={() => handleResendInvoice(e)}
                           onToggleStatus={async () => {
                             if (e.status === 'EXPIRED') return;
                             try {
