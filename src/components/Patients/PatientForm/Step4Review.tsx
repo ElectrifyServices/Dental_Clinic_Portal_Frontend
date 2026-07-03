@@ -106,12 +106,14 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 <User className="w-5 h-5 text-primary" />
                 Patient Personal Details
               </h4>
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary font-bold"
-              >
-                {formData.patientId}
-              </Badge>
+              {isCheckIn && formData.patientId && (
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary font-bold"
+                >
+                  {formData.patientId}
+                </Badge>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">

@@ -79,20 +79,22 @@ const STATUS_META: Record<
   cancelled: { label: "Cancelled", variant: "gray" },
 };
 
-export function formatIndianCurrency(num: number): string {
-  if (num >= 10000000) { // 1 Crore
-    const val = num / 10000000;
+export function formatIndianCurrency(num: number | undefined | null): string {
+  if (num === undefined || num === null || isNaN(Number(num))) return "0";
+  const n = Number(num);
+  if (n >= 10000000) { // 1 Crore
+    const val = n / 10000000;
     return val % 1 === 0 ? val.toFixed(0) + "Cr" : val.toFixed(1) + "Cr";
   }
-  if (num >= 100000) { // 1 Lakh
-    const val = num / 100000;
+  if (n >= 100000) { // 1 Lakh
+    const val = n / 100000;
     return val % 1 === 0 ? val.toFixed(0) + "L" : val.toFixed(1) + "L";
   }
-  if (num >= 1000) { // 1 Thousand
-    const val = num / 1000;
+  if (n >= 1000) { // 1 Thousand
+    const val = n / 1000;
     return val % 1 === 0 ? val.toFixed(0) + "k" : val.toFixed(1) + "k";
   }
-  return num.toLocaleString("en-IN");
+  return n.toLocaleString("en-IN");
 }
 
 const FILTERS = [
