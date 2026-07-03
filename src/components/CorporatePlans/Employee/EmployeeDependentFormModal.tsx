@@ -83,27 +83,25 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
     try {
       const payload = {
         plan_id: employee.corporatePlanId,
-        name: formData.name,
-        phone: formData.phone || '',
-        // email: formData.email || '',
-        // gender: formData.gender?.toUpperCase() || 'MALE',
-        // date_of_birth: formData.dateOfBirth || '2000-01-01',
-        relationship_type: formData.relationship.toUpperCase(),
-        parent_member_id: employee.id,
-        expiry_date: employee.eligible_date || '2025-12-31',
-        status: formData.isActive ? 'ACTIVE' : 'INACTIVE',
+        name: employee.name,
+        phone: employee.phone || '',
+        status: employee.isActive ? 'ACTIVE' : 'INACTIVE',
+        family_members: [
+          {
+            ...(editDep ? { id: editDep.id } : {}),
+            name: formData.name,
+            relationship_type: formData.relationship.toUpperCase(),
+            phone: formData.phone || undefined,
+          }
+        ]
       };
 
-      if (editDep) {
-        await updateMemberMutation.mutateAsync({
-          id: editDep.id,
-          ...payload
-        });
-        showToast("Family member updated successfully", "success");
-      } else {
-        await createMemberMutation.mutateAsync(payload);
-        showToast("Family member added successfully", "success");
-      }
+      await updateMemberMutation.mutateAsync({
+        id: employee.id,
+        ...payload
+      });
+      
+      showToast(editDep ? "Family member updated successfully" : "Family member added successfully", "success");
       onSave();
       setShowForm(false);
       setFormData({ gender: 'male', isActive: true });
