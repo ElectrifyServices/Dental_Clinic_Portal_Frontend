@@ -259,31 +259,11 @@ export function InvoiceList({
       header: "Invoice",
       render: (inv: any) => (
         <div className="flex items-center gap-1.5 min-w-[140px]">
-          {inv.allInvoices && inv.allInvoices.length > 1 ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleRowExpanded(inv.id);
-              }}
-              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center flex-shrink-0"
-            >
-              {expandedRowIds.has(inv.id) ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </button>
-          ) : (
-            <div className="w-5 h-5 flex-shrink-0" />
-          )}
+          {/* Chevron expand/collapse button removed as per request */}
+          {/* +N count badge removed as per request */}
           <span className="font-mono text-xs font-bold text-foreground">
             {inv.invoice_number || inv.id}
           </span>
-          {inv.allInvoices && inv.allInvoices.length > 1 && (
-            <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100/80 font-bold px-2 py-0.5 rounded-full select-none shadow-sm flex-shrink-0">
-              +{inv.allInvoices.length - 1}
-            </span>
-          )}
         </div>
       ),
     },
