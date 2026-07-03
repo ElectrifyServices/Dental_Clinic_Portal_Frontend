@@ -10,10 +10,11 @@ import {
   CreditCard,
   Stethoscope,
 } from "lucide-react";
-import { Modal, Button, Badge, Card, CardContent, DataTable, Loading } from "@/components/ui";
+import { Modal, Button, Badge, Card, CardContent, DataTable, Loading, toast } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { useAppData } from "../../hooks/useAppData";
 import { useInvoiceQuery, normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
+import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
 
 interface InvoiceViewerProps {
   invoiceId: string;
@@ -33,6 +34,8 @@ export function InvoiceViewer({
   const { patients, corporatePlans } = useAppData();
   const [activeId, setActiveId] = useState(invoiceId);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const { mutateAsync: sendInvoiceMutation } = useSendInvoiceMutation();
 
   useEffect(() => {
     setActiveId(invoiceId);
@@ -87,7 +90,7 @@ export function InvoiceViewer({
 
       const idToUse = patientId || invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
       const isMemberCheck = isMember || invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
-      const queryParams: any = {};
+      const queryParams: any = { invoice_id: invoice.id };
       if (idToUse) {
         if (isMemberCheck) queryParams.member_id = idToUse;
         else queryParams.patient_id = idToUse;
@@ -145,6 +148,31 @@ export function InvoiceViewer({
     }
   };
 
+  const handleSend = async () => {
+    setIsSending(true);
+    try {
+      await sendInvoiceMutation({ id: invoice.id });
+      onUpdateStatus?.(invoice.id, "sent");
+      toast.success("Invoice queued for sending");
+    } catch (err: any) {
+      console.error("Failed to send invoice:", err);
+      const serverResponse = err.response?.data;
+      let errMsg = "";
+      if (serverResponse) {
+        const parsed = serverResponse.responseStatusList?.statusList?.[0];
+        if (parsed?.statusDesc) {
+          errMsg = parsed.statusDesc;
+        }
+      }
+      if (!errMsg) {
+        errMsg = err.status?.statusDesc || err.message || "Failed to send invoice";
+      }
+      toast.error(errMsg);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const statusColors: Record<
     string,
     string
@@ -167,15 +195,14 @@ export function InvoiceViewer({
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3 w-full">
           <div className="flex gap-2">
-            {invoice.status === "draft" && onUpdateStatus && (
-              <Button
-                onClick={() => onUpdateStatus(invoice.id, "sent")}
-                variant="outline"
-                className="gap-2"
-              >
-                <Send className="w-4 h-4" /> Send to Patient
-              </Button>
-            )}
+            <Button
+              onClick={handleSend}
+              variant="outline"
+              className="gap-2"
+              disabled={isSending}
+            >
+              <Send className="w-4 h-4" /> {isSending ? "Sending..." : "Send"}
+            </Button>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleDownload} className="gap-2" disabled={isDownloading}>

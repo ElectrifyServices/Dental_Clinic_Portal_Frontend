@@ -265,6 +265,7 @@ export function EmployeeFormModal({
           plan.benefits
             ?.map((b: any) => b.description || b.benifit_label)
             .join(", ") || "No specific benefits listed";
+        const benefitsArray = plan.benefits?.map((b: any) => b.description || b.benifit_label).filter(Boolean) || [];
         const planType =
           (plan as any).plan_type || plan.planCategory || "Unknown";
         return {
@@ -274,6 +275,7 @@ export function EmployeeFormModal({
           fee,
           limit,
           benefitsSummary,
+          benefitsArray,
           planType,
         };
       });
@@ -578,10 +580,11 @@ export function EmployeeFormModal({
                     const isSelected = form.corporatePlanId === opt.value;
                     const isExpanded = !!expandedBenefits[opt.value];
                     const benefits =
-                      opt.benefitsSummary &&
-                      opt.benefitsSummary !== "No specific benefits listed"
-                        ? opt.benefitsSummary.split(", ")
-                        : [];
+                      opt.benefitsArray?.length > 0
+                        ? opt.benefitsArray
+                        : (opt.benefitsSummary && opt.benefitsSummary !== "No specific benefits listed"
+                            ? opt.benefitsSummary.split(", ")
+                            : []);
                     return (
                       <div
                         key={opt.value}
@@ -630,7 +633,7 @@ export function EmployeeFormModal({
                                 <li key={i} className="flex items-start gap-1.5">
                                   <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
                                   <span
-                                    className="leading-snug truncate"
+                                    className="leading-snug"
                                     title={b}
                                   >
                                     {b}

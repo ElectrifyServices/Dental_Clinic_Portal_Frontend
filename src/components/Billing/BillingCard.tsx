@@ -42,7 +42,7 @@ interface BillingCardProps {
   onHistory: (invoice: Invoice) => void;
   onPay: (invoice: Invoice) => void;
   onSend: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, invoiceNumber?: string) => void;
 }
 
 const AVATAR_COLORS = [
@@ -105,47 +105,79 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   const ActionMenu = ({ inv }: { inv: Invoice }) => {
     const statusLower = inv.status?.toLowerCase() || "draft";
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(inv.id);
+          }}
+          title="View Invoice"
+          className="w-8 h-8 text-primary hover:bg-primary/10 rounded-lg"
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onHistory(inv);
+          }}
+          title="Payment History"
+          className="w-8 h-8 text-amber-600 hover:bg-amber-50 rounded-lg"
+        >
+          <History className="w-4 h-4" />
+        </Button>
+        {statusLower !== "paid" && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPay(inv);
+            }}
+            title="Mark as Paid"
+            className="w-8 h-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
           >
-            <MoreVertical className="w-4 h-4" />
+            <IndianRupee className="w-4 h-4" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={() => onView(inv.id)}>
-            <Eye className="w-4 h-4 mr-2 text-primary" /> View Invoice
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onHistory(inv)}>
-            <History className="w-4 h-4 mr-2 text-amber-600" /> Payment History
-          </DropdownMenuItem>
-          {statusLower !== "paid" && (
-            <DropdownMenuItem onSelect={() => onPay(inv)}>
-              <IndianRupee className="w-4 h-4 mr-2 text-emerald-600" /> Mark as Paid
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onSelect={() => onSend(inv.id)}>
-            <Send className="w-4 h-4 mr-2 text-primary" /> Send
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onDelete(inv.id)} className="text-destructive">
-            <Trash2 className="w-4 h-4 mr-2" /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+        {statusLower === "draft" && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSend(inv.id);
+            }}
+            title="Send to Patient"
+            className="w-8 h-8 text-blue-600 hover:bg-blue-50 rounded-lg"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(inv.id, inv.invoice_number || inv.id);
+          }}
+          title="Delete"
+          className="w-8 h-8 text-destructive hover:bg-destructive/10 rounded-lg"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
     );
   };
 
   return (
     <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
       {/* Patient Header */}
-      <div 
-        className="flex items-start justify-between gap-2 cursor-pointer hover:opacity-90 active:opacity-85 transition-opacity"
-        onClick={() => onView(invoice.id)}
-      >
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(

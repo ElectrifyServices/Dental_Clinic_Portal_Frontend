@@ -31,8 +31,8 @@ export const BillingPage: React.FC = () => {
         invoices={invoices}
         onCreateInvoice={() => setActiveModal("invoiceForm")}
         onViewInvoice={(id: string) => setSelectedItemId(id)}
-        onDeleteInvoice={(id: string) =>
-          confirmDelete("Delete Invoice", `Delete invoice ${id}?`, () => handleDeleteInvoice(id))
+        onDeleteInvoice={(id: string, num?: string) =>
+          confirmDelete("Delete Invoice", `Delete invoice ${num || id}?`, () => handleDeleteInvoice(id))
         }
         onUpdateStatus={handleUpdateInvoiceStatus}
         search={searchInput}

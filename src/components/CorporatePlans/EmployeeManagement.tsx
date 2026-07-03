@@ -380,7 +380,7 @@ export function EmployeeManagement({
         const limit = e.familyCoverageLimit ?? 0;
         return count > 0 || limit > 0 ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1 rounded-full">
-            <Users className="w-3 h-3" /> {count}/{limit}
+            <Users className="w-3 h-3" /> {count + 1}/{limit}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground/50 italic">Self</span>
@@ -453,61 +453,55 @@ export function EmployeeManagement({
     <div className="space-y-4">
       {tab === 'list' ? (
         <>
-          {/* Filters */}
-          <div className="flex flex-col gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
-            {/* Top row: Search & Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full items-stretch sm:items-center justify-between">
-              {/* Search Input grows dynamically */}
-              <div className="flex-1 min-w-0">
-                <SearchInput
-                  value={search}
-                  onChange={val => { setSearch(val); setPage(1); }}
-                  placeholder="Search by name, phone…"
-                  className="w-full"
-                />
-              </div>
-
-              {/* Action Buttons grouped side-by-side */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto shrink-0 flex-shrink-0">
-                <Button onClick={() => setTab('import')} variant="outline" className="gap-2 w-full sm:w-auto rounded-xl h-10 border-border/60 hover:bg-slate-50 flex-1 sm:flex-none">
-                  <Upload className="w-4 h-4" /> Import
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-2 w-full sm:w-auto rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 flex-1 sm:flex-none px-4">
-                  <Plus className="w-4 h-4" /> Add Member
-                </Button>
-              </div>
+          {/* Controls Container */}
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+            {/* Search Input */}
+            <div className="flex-1 min-w-[200px] sm:min-w-[240px]">
+              <SearchInput
+                value={search}
+                onChange={val => { setSearch(val); setPage(1); }}
+                placeholder="Search by name, phone…"
+                className="w-full"
+              />
             </div>
 
-            {/* Bottom row: Filter Tabs & Plan Select */}
-            <div className="flex flex-col gap-3 w-full sm:flex-row sm:items-center sm:justify-start border-t pt-3 border-border/50">
-              {/* Filter Tabs wrapper with touch-friendly swipe layout */}
-              <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-shrink-0">
-                <FilterTabs
-                  tabs={planTypeTabs}
-                  active={planTypeFilter}
-                  onChange={handlePlanTypeChange}
-                />
-              </div>
+            {/* Filter Tabs */}
+            <div className="shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <FilterTabs
+                tabs={planTypeTabs}
+                active={planTypeFilter}
+                onChange={handlePlanTypeChange}
+              />
+            </div>
 
-              {/* Plan Select */}
-              <div className="w-full sm:w-48 flex-shrink-0">
-                <Select
-                  value={selectedPlanFilter}
-                  onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
-                >
-                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
-                    <SelectValue placeholder="Filter by Plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
-                    {availablePlanOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Plan Select */}
+            <div className="w-[180px] shrink-0">
+              <Select
+                value={selectedPlanFilter}
+                onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
+              >
+                <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                  <SelectValue placeholder="Filter by Plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
+                  {availablePlanOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex w-full sm:w-auto items-center gap-2 shrink-0 sm:ml-auto">
+              <Button onClick={() => setTab('import')} variant="outline" className="flex-1 sm:flex-none gap-2 rounded-xl h-10 border-border/60 hover:bg-slate-50">
+                <Upload className="w-4 h-4" /> Import
+              </Button>
+              <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="flex-1 sm:flex-none gap-2 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-4">
+                <Plus className="w-4 h-4" /> Add Member
+              </Button>
             </div>
           </div>
 
