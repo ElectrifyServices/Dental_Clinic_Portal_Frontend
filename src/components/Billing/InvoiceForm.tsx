@@ -26,6 +26,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
+  Loading,
 } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { PendingItems } from "./InvoiceForm/PendingItems";
@@ -150,8 +151,8 @@ export function InvoiceForm({
     return Array.isArray(rawPatientsData)
       ? rawPatientsData
       : (rawPatientsData as any)?.data?.data ||
-          (rawPatientsData as any)?.data ||
-          [];
+      (rawPatientsData as any)?.data ||
+      [];
   }, [rawPatientsData]);
 
   const selectedPatient = useMemo(() => {
@@ -186,12 +187,12 @@ export function InvoiceForm({
     selectedPatient?.source === "member"
       ? selectedPatient.id
       : selectedPatient?.corporateMemberId ||
-        selectedPatient?.member_id ||
-        selectedPatient?.memberId ||
-        selectedPatient?.primaryMemberId ||
-        (isCorporate ? selectedPatient.id : "");
+      selectedPatient?.member_id ||
+      selectedPatient?.memberId ||
+      selectedPatient?.primaryMemberId ||
+      (isCorporate ? selectedPatient.id : "");
 
-  const { data: rawUnbilledData } = useUnbilledItemsQuery(
+  const { data: rawUnbilledData, isLoading: isUnbilledLoading } = useUnbilledItemsQuery(
     formData.patientId,
     memberId,
     {
@@ -208,9 +209,9 @@ export function InvoiceForm({
     const itemsList = Array.isArray(rawUnbilledData)
       ? rawUnbilledData
       : (rawUnbilledData as any)?.data?.items ||
-        (rawUnbilledData as any)?.items ||
-        (rawUnbilledData as any)?.data ||
-        [];
+      (rawUnbilledData as any)?.items ||
+      (rawUnbilledData as any)?.data ||
+      [];
 
     if (!Array.isArray(itemsList)) return 0;
 
@@ -452,8 +453,8 @@ export function InvoiceForm({
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
-                        (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                      )
+                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                    )
                     : null;
                 setSelectedPrevInvoiceId("");
                 setFormData({
@@ -587,8 +588,8 @@ export function InvoiceForm({
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
-                        (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                      )
+                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                    )
                     : null;
                 setSelectedPrevInvoiceId("");
                 setFormData({
@@ -836,12 +837,18 @@ export function InvoiceForm({
               );
           })()}
 
-        <PendingItems
-          pendingItems={pendingItems}
-          linkedItemIds={formData.linkedItemIds}
-          onAdd={addPendingItem}
-          onRemove={removePendingItem}
-        />
+        {isUnbilledLoading ? (
+          <div className="flex justify-center py-6 border border-border/50 rounded-2xl bg-muted/20">
+            <Loading type="spinner" text="Loading pending Bills..." />
+          </div>
+        ) : (
+          <PendingItems
+            pendingItems={pendingItems}
+            linkedItemIds={formData.linkedItemIds}
+            onAdd={addPendingItem}
+            onRemove={removePendingItem}
+          />
+        )}
 
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
@@ -1051,10 +1058,10 @@ export function InvoiceForm({
                       <td className="px-4 py-3 text-muted-foreground">
                         {inv.date
                           ? new Date(inv.date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
                           : "—"}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-foreground">
@@ -1062,11 +1069,10 @@ export function InvoiceForm({
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                            inv.status === "paid"
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${inv.status === "paid"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
                               : "bg-amber-50 text-amber-700 border border-amber-100"
-                          }`}
+                            }`}
                         >
                           {inv.status}
                         </span>

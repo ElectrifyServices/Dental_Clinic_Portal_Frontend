@@ -23,6 +23,7 @@ import {
   SelectValue,
   Card,
   ContentCard,
+  Loading,
 } from "../../ui";
 import {
   CorporateEmployee,
@@ -278,7 +279,8 @@ export function EmployeeFormModal({
           benefitsArray,
           planType,
         };
-      });
+      })
+      .sort((a, b) => Number(a.fee) - Number(b.fee));
   }, [activePlans]);
 
   const validateForm = () => {
@@ -538,11 +540,8 @@ export function EmployeeFormModal({
     >
       <div className="space-y-6 relative min-h-[200px]">
         {isFetching && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-50 rounded-2xl transition-all duration-300">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin shadow-md" />
-            <p className="text-xs font-bold text-primary tracking-wide animate-pulse">
-              Loading employee details from API...
-            </p>
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center z-50 rounded-2xl transition-all duration-300">
+            <Loading type="spinner" text="Loading employee details from API..." />
           </div>
         )}
         {/* Personal Details Card */}
@@ -575,7 +574,7 @@ export function EmployeeFormModal({
                   No active membership plans available.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
                   {planOptions.map((opt) => {
                     const isSelected = form.corporatePlanId === opt.value;
                     const isExpanded = !!expandedBenefits[opt.value];
@@ -591,7 +590,7 @@ export function EmployeeFormModal({
                         onClick={() =>
                           handleFormChange("corporatePlanId", opt.value)
                         }
-                        className={`relative flex flex-col p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${
                           isSelected
                             ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
                             : "border-border bg-white hover:border-muted-foreground/30"
@@ -627,13 +626,13 @@ export function EmployeeFormModal({
                         </div>
 
                         {benefits.length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-dashed border-border/60">
+                          <div className="mt-auto pt-2 border-t border-dashed border-border/60">
                             <ul className="space-y-1 text-[11px] text-muted-foreground">
                               {(isExpanded ? benefits : benefits.slice(0, 2)).map((b, i) => (
                                 <li key={i} className="flex items-start gap-1.5">
                                   <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
                                   <span
-                                    className="leading-snug whitespace-normal break-words break-all sm:break-normal"
+                                    className="leading-snug whitespace-normal break-words sm:break-normal w-full"
                                     title={b}
                                   >
                                     {b}

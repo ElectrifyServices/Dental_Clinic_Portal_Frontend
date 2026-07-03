@@ -15,6 +15,7 @@ export const PatientsPage: React.FC = () => {
     patientPage, setPatientPage,
     totalItems, totalPages,
     refetchPatients,
+    isPatientsLoading,
   } = useAppData();
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export const PatientsPage: React.FC = () => {
       />
       <PatientList
         patients={patients}
+        isLoading={isPatientsLoading}
         onAddPatient={handleAddPatient}
         onViewPatient={handleViewPatient}
         onEditPatient={handleEditPatient}

@@ -35,6 +35,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
+  Loading,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
 
@@ -60,6 +61,7 @@ interface InvoiceListProps {
   setSearch: (val: string) => void;
   status: string;
   setStatus: (val: string) => void;
+  isLoading?: boolean;
 }
 
 const STATUS_META: Record<
@@ -110,12 +112,13 @@ export function InvoiceList({
   setSearch,
   status,
   setStatus,
+  isLoading,
 }: InvoiceListProps) {
   // Stats APIs
   const { data: totalBilledData } = useTotalBilledQuery();
   const { data: pendingInvoicesData } = usePendingInvoicesQuery();
   const { data: paidInvoicesData } = usePaidInvoicesQuery();
-  const { mutateAsync: payInvoiceMutation } = usePayInvoiceMutation();
+  const { mutateAsync: payInvoiceMutation, isPending: isPaying } = usePayInvoiceMutation();
 
   const totalBilled = Number(
     totalBilledData?.responseObject?.data?.total_billed ??
@@ -237,10 +240,9 @@ export function InvoiceList({
 
     {
       key: "amount",
-      header: "Amount",
+      header: "Grand Total",
       render: (inv: Invoice) => {
-        const hasPaid = (inv as any).paidAmount > 0 || (inv as any).paid_amount > 0;
-        const displayAmount = hasPaid ? ((inv as any).pendingAmount ?? (inv as any).pending_amount ?? 0) : (inv.total || inv.amount || 0);
+        const displayAmount = (inv as any).grand_total || (inv as any).grandTotal || inv.total || inv.amount || 0;
         return (
           <span className="font-bold text-foreground">
             ₹{displayAmount.toLocaleString()}
@@ -396,9 +398,13 @@ export function InvoiceList({
         <FilterTabs tabs={FILTERS} active={status} onChange={setStatus} />
       </div>
 
-      {/* Desktop Table View */}
-      <div className="hidden lg:block">
-        <DataTable
+      {isLoading ? (
+        <Loading type="spinner" text="Loading invoices..." className="py-20" />
+      ) : (
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <DataTable
           columns={columns}
           data={paginatedData as any[]}
           rowKey={(inv) => inv.id}
@@ -501,10 +507,13 @@ export function InvoiceList({
           </>
         )}
       </div>
+      </>
+      )}
 
       {payInvoice && (
         <InvoicePaymentModal
           invoice={payInvoice}
+          isProcessing={isPaying}
           onClose={() => setPayInvoice(null)}
           onConfirmPayment={async (id, method, amount) => {
             try {

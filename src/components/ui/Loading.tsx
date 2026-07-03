@@ -1,6 +1,6 @@
 import React from "react";
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface LoadingProps {
   className?: string;
@@ -11,9 +11,34 @@ interface LoadingProps {
 export function Loading({ className, type = "skeleton", text }: LoadingProps) {
   if (type === "spinner") {
     return (
-      <div className={cn("flex flex-col items-center justify-center p-8 gap-3 text-muted-foreground", className)}>
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        {text && <p className="text-sm font-medium">{text}</p>}
+      <div className={cn("flex flex-col items-center justify-center py-12 gap-4 w-full", className)}>
+        <div className="flex items-center justify-center gap-1.5 h-8">
+          <motion.div
+            className="w-2.5 bg-primary rounded-full"
+            initial={{ height: 10 }}
+            animate={{ height: [10, 32, 10] }}
+            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0 }}
+          />
+          <motion.div
+            className="w-2.5 bg-primary rounded-full"
+            initial={{ height: 10 }}
+            animate={{ height: [10, 32, 10] }}
+            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+          />
+          <motion.div
+            className="w-2.5 bg-primary rounded-full"
+            initial={{ height: 10 }}
+            animate={{ height: [10, 32, 10] }}
+            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+          />
+          <motion.div
+            className="w-2.5 bg-primary rounded-full"
+            initial={{ height: 10 }}
+            animate={{ height: [10, 32, 10] }}
+            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.45 }}
+          />
+        </div>
+        {text && <p className="text-sm font-medium text-muted-foreground">{text}</p>}
       </div>
     );
   }

@@ -6,7 +6,7 @@ import { PatientStats } from "./PatientList/PatientStats";
 import { PatientFilters } from "./PatientList/PatientFilters";
 import { PatientCard } from "./PatientList/PatientCard";
 import { PatientTable } from "./PatientList/PatientTable";
-import { Pagination } from "@/components/ui";
+import { Pagination, Loading } from "@/components/ui";
 import { Patient } from "@/types";
 
 interface PatientListProps {
@@ -29,6 +29,7 @@ interface PatientListProps {
   totalPages?: number;
   totalItems?: number;
   onPageChange?: (page: number) => void;
+  isLoading?: boolean;
 }
 
 export function PatientList({
@@ -50,6 +51,7 @@ export function PatientList({
   totalPages = 1,
   totalItems = 0,
   onPageChange,
+  isLoading,
 }: PatientListProps) {
   const { collapsed } = useSidebar();
   const [localSearch, setLocalSearch] = useState("");
@@ -169,7 +171,9 @@ export function PatientList({
         onAddPatient={() => onAddPatient()}
       />
 
-      {filteredPatients.length === 0 ? (
+      {isLoading ? (
+        <Loading type="spinner" text="Loading patients..." className="py-20" />
+      ) : filteredPatients.length === 0 ? (
         <div className="bg-card rounded-2xl border border-dashed border-border py-20 text-center">
           <User className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-foreground">

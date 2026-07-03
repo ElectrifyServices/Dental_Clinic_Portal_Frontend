@@ -259,15 +259,14 @@ export function TreatmentList({
                 {sessions.slice(0, 6).map((s: any, i: number) => (
                   <div
                     key={i}
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      s.status === "completed"
+                    className={`w-1.5 h-1.5 rounded-full ${s.status === "completed"
                         ? "bg-emerald-500"
                         : s.status === "cancelled"
-                        ? "bg-red-500"
-                        : s.status === "in-progress" || s.status === "in_progress"
-                        ? "bg-primary animate-pulse"
-                        : "bg-border"
-                    }`}
+                          ? "bg-red-500"
+                          : s.status === "in-progress" || s.status === "in_progress"
+                            ? "bg-primary animate-pulse"
+                            : "bg-border"
+                      }`}
                   />
                 ))}
                 {totalSessions > 6 && (
@@ -406,9 +405,9 @@ export function TreatmentList({
                   variant="ghost"
                   onClick={() => handleStatusFilter(s)}
                   className={`flex items-center gap-1.5 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 ${(s === "all" && statusFilter.length === 0) ||
-                      (s !== "all" && statusFilter.includes(s))
-                      ? "bg-card text-primary shadow-sm border border-border"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    (s !== "all" && statusFilter.includes(s))
+                    ? "bg-card text-primary shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                 >
                   {s === "all" ? "All Plans" : STATUS_META[s]?.label ?? s}
