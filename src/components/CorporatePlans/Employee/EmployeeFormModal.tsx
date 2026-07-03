@@ -107,6 +107,8 @@ export function EmployeeFormModal({
   const [expandedBenefits, setExpandedBenefits] = useState<
     Record<string, boolean>
   >({});
+  // Family members from API response — populated when editing
+  const [apiDependents, setApiDependents] = useState<any[]>([]);
 
   const todayStr = React.useMemo(() => {
     const d = new Date();
@@ -147,8 +149,30 @@ export function EmployeeFormModal({
       Number(selectedPlan.maxDependents) ||
       0
     : 0;
+
+  // Merge API-fetched family members with localStorage dependents (deduplicate by id)
+  const mergedDependents = React.useMemo(() => {
+    const localDeps = existingDependents || [];
+    if (!apiDependents.length) return localDeps;
+    // Prefer API data; supplement with any local-only entries not yet in API
+    const apiIds = new Set(apiDependents.map((d: any) => d.id));
+    const localOnly = localDeps.filter((d) => !apiIds.has(d.id));
+    return [
+      ...apiDependents.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        relationship: d.relationship_type || d.relationship || "",
+        dateOfBirth: d.date_of_birth ? d.date_of_birth.split("T")[0] : "",
+        gender: d.gender || "male",
+        phone: d.phone || "",
+        status: d.status,
+      })),
+      ...localOnly,
+    ];
+  }, [apiDependents, existingDependents]);
+
   const totalDependents =
-    (existingDependents?.length ?? 0) + pendingDependents.length;
+    (mergedDependents?.length ?? 0) + pendingDependents.length;
 
   const empCfgAny = empCfg as any;
   const personalSection = React.useMemo(() => {
@@ -171,48 +195,77 @@ export function EmployeeFormModal({
     if (showForm) {
       if (editEmp) {
         if (employeeDetails) {
-          const empData = employeeDetails.data || employeeDetails;
+          // Unwrap nested API response — handle all possible shapes
+          const raw = employeeDetails;
+          const empData =
+            raw?.data?.data ||
+            raw?.data?.member ||
+            raw?.data?.employee ||
+            raw?.data ||
+            raw;
+
           const activeEnrollment =
             empData.enrollments?.find((en: any) => en.status === "ACTIVE") ||
             empData.enrollments?.[0];
-          const planId = activeEnrollment?.plan_id || "";
+          const planId = activeEnrollment?.plan_id || editEmp.corporatePlanId || "";
           const plan = activePlans.find((p) => p.id === planId);
           const expiryDate = activeEnrollment?.expiry_date || "";
 
           setForm({
-            id: empData.id,
-            employeeId: empData.id || "",
-            name: empData.name || "",
-            phone: empData.phone || "",
-            email: empData.email || "",
-            gender: empData.gender?.toLowerCase() || "male",
+            id: empData.id || editEmp.id,
+            employeeId: empData.emp_id || empData.id || editEmp.employeeId || "",
+            name: empData.name || editEmp.name || "",
+            phone: empData.phone || editEmp.phone || "",
+            email: empData.email || editEmp.email || "",
+            gender: (empData.gender?.toLowerCase()) || editEmp.gender || "male",
             dateOfBirth: empData.date_of_birth
               ? empData.date_of_birth.split("T")[0]
-              : "",
-            designation: "",
-            department: "",
-            companyName: activeEnrollment?.plan?.company_name || "",
+              : editEmp.dateOfBirth || "",
+            designation: empData.designation || editEmp.designation || "",
+            department: empData.department || editEmp.department || "",
+            companyName:
+              activeEnrollment?.plan?.company_name ||
+              empData.company_name ||
+              editEmp.companyName || "",
             corporatePlanId: planId,
             corporatePlanName:
-              activeEnrollment?.plan?.plan_name || plan?.name || "",
+              activeEnrollment?.plan?.plan_name ||
+              plan?.name ||
+              editEmp.corporatePlanName || "",
             enrolledAt:
               activeEnrollment?.enrollment_date ||
               empData.created_at ||
-              editEmp.enrolledAt ||
-              "",
-            eligible_date: expiryDate ? expiryDate.split("T")[0] : "",
-            isActive: empData.status === "ACTIVE",
+              editEmp.enrolledAt || "",
+            eligible_date: expiryDate
+              ? expiryDate.split("T")[0]
+              : editEmp.eligible_date || "",
+            isActive:
+              empData.status === "ACTIVE" ||
+              (empData.status === undefined ? editEmp.isActive : false),
             patientId: empData.patient_id || editEmp.patientId,
-            coverageType: (empData.family_members?.length > 0
-              ? "family"
-              : "self") as CoverageType,
+            coverageType: (
+              (empData.family_members?.length > 0 || editEmp.dependents?.length > 0)
+                ? "family"
+                : "self"
+            ) as CoverageType,
           });
+
+          // Seed family members directly from API response
+          if (Array.isArray(empData.family_members) && empData.family_members.length > 0) {
+            setApiDependents(empData.family_members);
+          }
         } else {
+          // Fallback: use the editEmp object directly while API loads
           setForm({ ...editEmp });
+          // Seed from editEmp.dependents if available
+          if (Array.isArray(editEmp.dependents) && editEmp.dependents.length > 0) {
+            setApiDependents(editEmp.dependents);
+          }
         }
       } else {
         setForm(EMPTY_EMP());
         setPendingDependents([]);
+        setApiDependents([]);
       }
       setFormErrors({});
       setShowAddDepForm(false);
@@ -220,10 +273,9 @@ export function EmployeeFormModal({
       setExpandedBenefits({});
     }
   }, [showForm, editEmp, employeeDetails, activePlans]);
-
   React.useEffect(() => {
     if (showForm && maxDependents > 0) {
-      const existingCount = existingDependents?.length || 0;
+      const existingCount = mergedDependents?.length || 0;
       const targetPendingCount = Math.max(0, maxDependents - 1 - existingCount);
 
       setPendingDependents((prev) => {
@@ -249,7 +301,8 @@ export function EmployeeFormModal({
     } else if (showForm && maxDependents === 0) {
       setPendingDependents([]);
     }
-  }, [maxDependents, showForm, existingDependents?.length]);
+  }, [maxDependents, showForm, mergedDependents?.length]);
+
 
   const handleFormChange = (name: string, value: any) => {
     if (name === "name") {
@@ -728,9 +781,9 @@ export function EmployeeFormModal({
               </div>
 
               {/* Existing (saved) dependents */}
-              {existingDependents && existingDependents.length > 0 && (
+              {mergedDependents && mergedDependents.length > 0 && (
                 <div className="space-y-2">
-                  {existingDependents.map((dep: PlanDependent) => (
+                  {mergedDependents.map((dep: any) => (
                     <div
                       key={dep.id}
                       className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border"
@@ -783,8 +836,8 @@ export function EmployeeFormModal({
                     >
                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
                         Dependent{" "}
-                        {existingDependents
-                          ? existingDependents.length + index + 1
+                        {mergedDependents
+                          ? mergedDependents.length + index + 1
                           : index + 1}
                       </Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
