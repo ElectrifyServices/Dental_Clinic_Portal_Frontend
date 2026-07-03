@@ -19,8 +19,8 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
   if (isLoading) {
     return (
       <Modal title="Payment History" onClose={onClose} size="lg" icon={<History className="w-4 h-4" />}>
-        <div className="flex items-center justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex flex-col justify-center items-center h-96 space-y-4">
+          <Loading type="equalizer" text="Loading payment history..." />
         </div>
       </Modal>
     );

@@ -105,7 +105,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   const ActionMenu = ({ inv }: { inv: Invoice }) => {
     const statusLower = inv.status?.toLowerCase() || "draft";
     return (
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
         <Button
           variant="ghost"
           size="icon"
@@ -113,8 +113,8 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             e.stopPropagation();
             onView(inv.id);
           }}
-          title="View Invoice"
-          className="w-8 h-8 text-primary hover:bg-primary/10 rounded-lg"
+          title="View"
+          className="w-8 h-8 text-indigo-600 hover:bg-indigo-50 rounded-lg"
         >
           <Eye className="w-4 h-4" />
         </Button>
@@ -177,8 +177,8 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   return (
     <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
       {/* Patient Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-[140px]">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(
               invoice.patientName
@@ -193,13 +193,13 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             {invoice.phone && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
-                <span>{invoice.phone}</span>
+                <span className="truncate">{invoice.phone}</span>
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           <StatusBadge
             variant={mainMeta.variant}
             className="text-[9px] uppercase font-bold px-2 py-0.5 tracking-wider"

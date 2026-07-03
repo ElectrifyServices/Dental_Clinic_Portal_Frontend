@@ -15,7 +15,7 @@ export const BillingPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus, refetchInvoices } = useAppData({
+  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus, refetchInvoices, isInvoicesLoading } = useAppData({
     invoiceSearch: search,
     invoiceStatus: status,
   });
@@ -29,6 +29,7 @@ export const BillingPage: React.FC = () => {
     <div className="space-y-6">
       <InvoiceList
         invoices={invoices}
+        isLoading={isInvoicesLoading}
         onCreateInvoice={() => setActiveModal("invoiceForm")}
         onViewInvoice={(id: string) => setSelectedItemId(id)}
         onDeleteInvoice={(id: string, num?: string) =>

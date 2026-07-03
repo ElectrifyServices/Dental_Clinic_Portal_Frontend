@@ -620,11 +620,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 {form.benefits.length > 1 && (
                   <Button
                     type="button"
+                    variant="ghost"
                     onClick={(e) => {
                       e.stopPropagation();
                       setForm({ ...form, benefits: form.benefits.filter((_, i) => i !== idx) });
                     }}
-                    className="absolute top-3 right-3 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                    className="absolute top-3 right-3 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

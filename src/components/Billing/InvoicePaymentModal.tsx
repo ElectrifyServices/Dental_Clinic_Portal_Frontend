@@ -1,13 +1,14 @@
 import { Label } from "@/components/ui/Label";
 import { useState } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle2, ChevronRight } from "lucide-react";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, Loading } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface InvoicePaymentModalProps {
   invoice: any;
   onClose: () => void;
   onConfirmPayment: (invoiceId: string, method: string, amount: number) => void;
+  isProcessing?: boolean;
 }
 
 const PAYMENT_METHODS = [
@@ -47,6 +48,7 @@ export function InvoicePaymentModal({
   invoice,
   onClose,
   onConfirmPayment,
+  isProcessing,
 }: InvoicePaymentModalProps) {
   const [method, setMethod] = useState("cash");
 
@@ -74,7 +76,12 @@ export function InvoicePaymentModal({
         </div>
       }
     >
-      <div className="space-y-6 py-2">
+      <div className="space-y-6 py-2 relative">
+        {isProcessing && (
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl">
+            <Loading type="equalizer" text="Processing Payment..." />
+          </div>
+        )}
         {/* Manual Amount Input */}
         <div className="space-y-2">
           <Label className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest px-1">
