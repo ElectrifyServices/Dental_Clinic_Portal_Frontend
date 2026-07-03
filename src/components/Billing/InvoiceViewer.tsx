@@ -40,29 +40,16 @@ export function InvoiceViewer({
 
   const { data: invoice, allInvoices, isLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
 
-  if (isLoading) {
+  if (isLoading || error || !invoice) {
     return (
       <Modal
-        title={`Invoice ${invoiceId}`}
+        title="Invoice Details"
         onClose={onClose}
         size="2xl"
         icon={<FileText className="w-4 h-4" />}
       >
-        <Loading type="spinner" text="Loading invoice details..." />
-      </Modal>
-    );
-  }
-
-  if (error || !invoice) {
-    return (
-      <Modal
-        title={`Invoice ${invoiceId}`}
-        onClose={onClose}
-        size="2xl"
-        icon={<FileText className="w-4 h-4" />}
-      >
-        <div className="p-6 text-center text-destructive">
-          Failed to load invoice details. Please try again.
+        <div className="flex flex-col justify-center items-center h-96 space-y-4">
+          <Loading type="equalizer" text="Loading invoice details..." />
         </div>
       </Modal>
     );
@@ -158,7 +145,7 @@ export function InvoiceViewer({
 
   return (
     <Modal
-      title={`Invoice ${invoice.invoice_number || invoice.id}`}
+      title={invoice.invoice_number ? `Invoice ${invoice.invoice_number}` : "Invoice Details"}
       onClose={onClose}
       size="2xl"
       icon={<FileText className="w-4 h-4" />}

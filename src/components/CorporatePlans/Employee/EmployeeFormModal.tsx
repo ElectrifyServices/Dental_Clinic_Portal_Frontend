@@ -252,6 +252,9 @@ export function EmployeeFormModal({
   }, [maxDependents, showForm, existingDependents?.length]);
 
   const handleFormChange = (name: string, value: any) => {
+    if (name === "name") {
+      value = typeof value === 'string' ? value.replace(/[^a-zA-Z\s]/g, "") : value;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -780,7 +783,7 @@ export function EmployeeFormModal({
                           <Input
                             value={dep.name}
                             onChange={(e) => {
-                              const val = e.target.value;
+                              const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
                               setPendingDependents((prev) =>
                                 prev.map((d, i) =>
                                   i === index ? { ...d, name: val } : d,
@@ -857,9 +860,10 @@ export function EmployeeFormModal({
                       </Label>
                       <Input
                         value={addDepForm.name}
-                        onChange={(e) =>
-                          setAddDepForm((p) => ({ ...p, name: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                          setAddDepForm((p) => ({ ...p, name: val }));
+                        }}
                         placeholder="Full name"
                         className="rounded-xl text-sm"
                       />

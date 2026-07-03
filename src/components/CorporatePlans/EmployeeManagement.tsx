@@ -401,7 +401,7 @@ export function EmployeeManagement({
                 refetch();
               } catch {}
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
+            className={`inline-flex items-center justify-center min-w-[90px] gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
               isExpired
                 ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
                 : e.isActive
