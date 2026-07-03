@@ -170,7 +170,7 @@ function getLetterhead(rightBlock: string) {
       M.D.S PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
   </div>
-  <img src="${logoImg}" style="width:90px; height:60px; object-fit:contain; display:block; flex-shrink:0;" crossorigin="anonymous" />
+  <img src="${logoImg}" style="width:100px; height:72px; object-fit:contain; display:block; flex-shrink:0;" crossorigin="anonymous" />
 </div>
   `;
 }
@@ -193,16 +193,16 @@ function getBrandFooter(signatureBlock: string) {
 </div>
 <div style="height:12px;"></div>
 <div style="background:${BRAND}; padding:14px 40px; color:#ffffff;">
-<div style="display:flex; flex-direction:row; align-items:center; margin-bottom:4px;">
-  ${iconLocation}<span style="font-size:10.5px; font-weight:700; margin-bottom:12px;">${CLINIC_ADDRESS}</span>
+<div style="display:flex; flex-direction:row; align-items:center; margin-bottom:4px; justify-content:center;">
+  ${iconLocation}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_ADDRESS}</span>
 </div>
-<div style="display:flex; flex-direction:row; align-items:center; gap:20px; margin-bottom:4px;">
-  <div style="display:flex; flex-direction:row; align-items:center;">${iconPhone}<span style="font-size:10px; font-weight:500; margin-bottom:12px;">${CLINIC_PHONE}</span></div>
-  <div style="display:flex; flex-direction:row; align-items:center;">${iconEmail}<span style="font-size:10px; font-weight:500; margin-bottom:12px;">${CLINIC_EMAIL}</span></div>
-  <div style="display:flex; flex-direction:row; align-items:center;">${iconInstagram}<span style="font-size:10px; font-weight:500; margin-bottom:12px;">${CLINIC_INSTAGRAM}</span></div>
+<div style="display:flex; flex-direction:row; align-items:center; gap:20px; margin-bottom:4px; justify-content:center;">
+  <div style="display:flex; flex-direction:row; align-items:center; ">${iconPhone}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_PHONE}</span></div>
+  <div style="display:flex; flex-direction:row; align-items:center; ">${iconEmail}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_EMAIL}</span></div>
+  <div style="display:flex; flex-direction:row; align-items:center; ">${iconInstagram}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_INSTAGRAM}</span></div>
 </div>
-<div style="font-size:10px; font-weight:500; opacity:0.85;">${CLINIC_HOURS}</div>
-<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:11px; font-weight:500; opacity:0.9; letter-spacing:0.3px;">
+<div style="font-size:13px; font-weight:400; opacity:0.85; text-align:center;">${CLINIC_HOURS}</div>
+<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:400; opacity:0.9; letter-spacing:0.3px;">
   This is a computer generated Invoice
 </div>
 </div>
@@ -220,14 +220,14 @@ function statusBadge(status: string) {
       : s === "overdue"
         ? { bg: "#fbe9e9", fg: "#9c2626" }
         : { bg: "#eef0f1", fg: INK };
-  return `<span style="padding:4px 12px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; background:${palette.bg}; color:${palette.fg};">${status}</span>`;
+  return `<span style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; background:${palette.bg}; color:${palette.fg};">${status}</span>`;
 }
 
 const sectionLabel = (text: string) =>
-  `<div style="font-size:11px; font-weight:800; color:${INK}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">${text}</div>`;
+  `<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">${text}</div>`;
 
 const tableHeadCell = (text: string, align: string = "left") =>
-  `<th style="padding:10px 12px; text-align:${align}; font-size:10px; font-weight:800; color:${INK}; text-transform:uppercase; letter-spacing:0.4px;">${text}</th>`;
+  `<th style="padding:10px 12px; text-align:${align}; font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.4px;">${text}</th>`;
 
 /** A bordered label/value grid â€” the classic "tax invoice" look â€” used for the
  *  patient + invoice meta block. 4 columns: label | value | label | value. */
@@ -239,10 +239,10 @@ function detailsGrid(rows: Array<[string, string, string, string]>) {
       .map(
         (row) => `
 <tr>
-<td style="width:16%; padding:9px 12px; font-size:10px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[0]}</td>
-<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:700; color:${INK}; border:1px solid ${LINE};">${row[1]}</td>
-<td style="width:16%; padding:9px 12px; font-size:10px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[2]}</td>
-<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:700; color:${INK}; border:1px solid ${LINE};">${row[3]}</td>
+<td style="width:16%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[0]}</td>
+<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK}; border:1px solid ${LINE};">${row[1]}</td>
+<td style="width:16%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[2]}</td>
+<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK}; border:1px solid ${LINE};">${row[3]}</td>
 </tr>
         `,
       )
@@ -413,16 +413,16 @@ export const downloadConsultationPDF = async ({
 
   const getHeader = () =>
     getLetterhead(`
-<div style="font-size: 16px; font-weight: 800; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
-<div style="font-size: 12.5px; font-weight: 600; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
-<div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
-<div style="font-size: 11.5px; font-weight: 500; color: ${INK_MUTED}; margin-top: 2px;">Age ${patientAge} / ${patientGender} / ${patientBloodGroup}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">Age ${patientAge} / ${patientGender} / ${patientBloodGroup}</div>
   `);
 
   const getPatientInfo = (title: string) => `
 <div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
-<div style="font-size:12px; font-weight:800; color:${INK}; text-transform:uppercase; letter-spacing:1px;">${title}</div>
-<div style="text-align:right; font-size:11px; color:${INK_MUTED}; font-weight:600;">
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px;">${title}</div>
+<div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
 </div>
@@ -446,7 +446,7 @@ export const downloadConsultationPDF = async ({
       ? `
 <div style="margin-bottom:16px;">
           ${sectionLabel("Chief Complaint")}
-<div style="font-size:13px; line-height:1.5; color:${INK}; font-weight:500;">${patientConcern}</div>
+<div style="font-size:12px; line-height:1.5; color:${INK}; font-weight:400;">${patientConcern}</div>
 </div>
       `
       : ""
@@ -454,18 +454,18 @@ export const downloadConsultationPDF = async ({
 <div style="display:flex; flex-direction:row; justify-content:space-between; width:100%; gap:24px;">
 <div style="flex:1;">
           ${sectionLabel("Clinical Observations")}
-<div style="font-size:13px; line-height:1.6; color:${INK};">
+<div style="font-size:12px; line-height:1.6; color:${INK};">
             ${observations || `<span style="color:#93999e; font-style:italic;">No observations recorded.</span>`}
 </div>
           ${Object.keys(finalToothChart).length > 0
       ? `
 <div style="margin-top:14px;">
-<div style="font-size:10px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; margin-bottom:6px;">Tooth Findings</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; margin-bottom:6px;">Tooth Findings</div>
 <div style="display:flex; flex-wrap:wrap; gap:4px;">
                  ${Object.entries(finalToothChart)
         .map(
           ([num, cond]) =>
-            `<span style="font-size:11px; padding: 4px 8px; border-radius:4px; background:${PANEL}; border:1px solid ${LINE}; color:${INK}; font-weight:600;">#${num}: ${cond}</span>`,
+            `<span style="font-size:12px; padding: 4px 8px; border-radius:4px; background:${PANEL}; border:1px solid ${LINE}; color:${INK}; font-weight:400;">#${num}: ${cond}</span>`,
         )
         .join("")}
 </div>
@@ -476,7 +476,7 @@ export const downloadConsultationPDF = async ({
 </div>
 <div style="flex:1;">
           ${sectionLabel("Diagnosis")}
-<div style="font-size:13px; line-height:1.6; color:${INK};">
+<div style="font-size:12px; line-height:1.6; color:${INK};">
             ${diagnosis || `<span style="color:#93999e; font-style:italic;">No diagnosis provided.</span>`}
 </div>
 </div>
@@ -497,7 +497,7 @@ export const downloadConsultationPDF = async ({
           (url: string, i: number) => `
 <div style="width:30%; border:1px solid ${LINE}; border-radius:10px; overflow:hidden; background:${PANEL}; box-sizing:border-box;">
 <img src="${url}" style="width:100%; height:130px; object-fit:cover;" />
-<div style="padding:6px; text-align:center; font-size:10px; color:${INK_MUTED}; font-weight:700; background:#ffffff;">Image #${i + 1}</div>
+<div style="padding:6px; text-align:center; font-size:12px; color:${INK_MUTED}; font-weight:400; background:#ffffff;">Image #${i + 1}</div>
 </div>
           `,
         )
@@ -525,10 +525,10 @@ export const downloadConsultationPDF = async ({
           .map(
             (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
-<td style="padding:10px 12px; font-size:12px; font-weight:700; color:${INK};">#${t.tooth_number || t.tooth || "General"}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:600; color:${INK};">${t.procedure || t.treatment_type || "â€”"}</td>
+<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">#${t.tooth_number || t.tooth || "General"}</td>
+<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${t.procedure || t.treatment_type || "â€”"}</td>
 <td style="padding:10px 12px; font-size:12px; text-align:center; color:${INK_MUTED};">${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:700; color:${INK};">â‚¹${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}</td>
+<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">â‚¹${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}</td>
 </tr>
             `,
           )
@@ -538,7 +538,7 @@ export const downloadConsultationPDF = async ({
       `;
     } else {
       treatmentsHtml = `
-<div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:13px; color:${INK_MUTED};">
+<div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:12px; color:${INK_MUTED};">
 <strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "â€”"}<br/>
 <strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "â€”"}<br/>
 <strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> â‚¹${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString("en-IN")}
@@ -551,7 +551,7 @@ export const downloadConsultationPDF = async ({
         ${sectionLabel("Treatment Planning & Procedures")}
         ${treatmentsHtml}
 <div style="margin-top:16px;">
-<div style="font-size:10px; font-weight:800; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
 <div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
             ${recommendations}
 </div>
@@ -559,7 +559,7 @@ export const downloadConsultationPDF = async ({
         ${additionalNotes
         ? `
 <div style="margin-top:12px;">
-<div style="font-size:10px; font-weight:800; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Additional Clinical Notes</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Additional Clinical Notes</div>
 <div style="font-size:12px; line-height:1.5; color:${INK_MUTED};">${additionalNotes}</div>
 </div>
         `
@@ -572,8 +572,8 @@ export const downloadConsultationPDF = async ({
   const getPrescriptionSection = () => `
 <div style="padding: 8px 40px 10px;">
 <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
-<div style="font-size:14px; font-weight:800; color:${INK};">Rx</div>
-<div style="font-size:11px; font-weight:800; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
+<div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
 </div>
 <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${LINE};">
 <thead>
@@ -592,7 +592,7 @@ export const downloadConsultationPDF = async ({
         (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
 <td style="padding:10px 12px; font-size:12px; color:#93999e;">${i + 1}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:700; color:${INK};">${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}</td>
+<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}</td>
 <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.dosage || "-"} (${p.timing || "-"})</td>
 <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.frequency || "-"}</td>
 <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}</td>
@@ -610,13 +610,13 @@ export const downloadConsultationPDF = async ({
     getBrandFooter(`
 <div style="text-align:center;">
 <div style="width:200px; border-bottom:1px solid ${LINE}; margin-bottom:8px;"></div>
-<div style="font-size:13px; font-weight:800; color:${INK};">${displayDoctorName}</div>
-<div style="font-size:11px; color:${INK_MUTED}; font-weight:500;">${specialization}</div>
-<div style="font-size:10px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
+<div style="font-size:12px; font-weight:400; color:${INK};">${displayDoctorName}</div>
+<div style="font-size:12px; color:${INK_MUTED}; font-weight:400;">${specialization}</div>
+<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
 </div>
     ${isFollowUp && followUpDate
         ? `
-<div style="position:absolute; left:40px; font-size:12px; color:${INK}; font-weight:700; border:1px solid ${LINE}; padding:6px 12px; border-radius:4px;">
+<div style="position:absolute; left:40px; font-size:12px; color:${INK}; font-weight:400; border:1px solid ${LINE}; padding:6px 12px; border-radius:4px;">
         Next Follow-Up: ${new Date(followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
 </div>
     `
@@ -842,10 +842,10 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const getHeader = () =>
     getLetterhead(`
-    <div style="font-size: 14px; font-weight: 800; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">
+    <div style="font-size: 14px; font-weight: 400; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">
       ${isStatement ? "Consolidated Statement" : "Invoice"}
     </div>
-    <div style="font-size: 16px; font-weight: 800; color: ${INK}; margin-top: 4px; text-transform: capitalize;">
+    <div style="font-size: 16px; font-weight: 400; color: ${INK}; margin-top: 4px; text-transform: capitalize;">
       ${patientName}
     </div>
     <div style="margin-top: 6px;">
@@ -880,7 +880,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
       const displayDescription =
         item.description &&
           item.description.toLowerCase() !== itemType.toLowerCase()
-          ? `<div style="font-size:9.5px; color:${INK_MUTED}; margin-top:2px;">${item.description}</div>`
+          ? `<div style="font-size:12px; margin-top:2px;">${item.description}</div>`
           : "";
 
       const hsnCode = item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE;
@@ -889,13 +889,13 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
       return `
       <tr style="border-bottom:1px solid ${LINE};">
-        <td style="padding:12px 12px; font-size:11px; font-weight:700; text-align:center; width:10%;">${i + 1}</td>
-        <td style="padding:12px 12px; font-size:11px; font-weight:500; text-align:center; width:15%;">${hsnCode}</td>
-        <td style="padding:12px 12px; font-size:11px; font-weight:600; text-align:left; width:45%;">
+        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:10%;">${i + 1}</td>
+        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:15%;">${hsnCode}</td>
+        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:left; width:45%;">
           <div>${formattedType}</div>
           ${displayDescription}
         </td>
-        <td style="padding:12px 12px; font-size:11px; font-weight:700; text-align:right; width:15%;">${formatCurrency(totalVal)}</td>
+        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:right; width:15%;">${formatCurrency(totalVal)}</td>
         
       </tr>
     `;
@@ -904,15 +904,15 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const signatureBlock = `
     <div style="text-align:right; font-family:'Inter',sans-serif; margin-right:12px;">
-      <div style="font-size:10px; font-weight:500; margin-bottom:20px">${"for Opal Smiles Dental Studio"}</div>
-      <div style="font-size:8px; margin-top:10px;">Authorized Signatory</div>
+      <div style="font-size:12px; font-weight:400; margin-bottom:20px">${"for Opal Smiles Dental Studio"}</div>
+      <div style="font-size:10px; margin-top:10px;">Authorized Signatory</div>
     </div>
   `;
 
   const htmlContent = `
     <div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box; font-family: 'Cinzel', serif;">
 
-      <div style="text-align:center; font-size:15px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px;">
+      <div style="text-align:center; font-size:15px; font-weight:400; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px;">
         ${"Invoice"}
       </div>
 
@@ -924,16 +924,16 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <!-- Left column -->
           <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient Name</span>
-              <span style="font-size:11.5px; font-weight:700; color:${INK}; text-align:right;">${patientName}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient Name</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${patientName}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient ID</span>
-              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">—</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient ID</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">—</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Member ID</span>
-              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">${memberId !== "—" ? memberId : "—"}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Member ID</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${memberId !== "—" ? memberId : "—"}</span>
             </div>
           </div>
 
@@ -943,16 +943,16 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <!-- Right column -->
           <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Date</span>
-              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">${firstItemDate}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Date</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${firstItemDate}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Invoice No.</span>
-              <span style="font-size:11px; font-weight:700; color:${INK}; text-align:right;">${firstInvoiceNumber}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Invoice No.</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${firstInvoiceNumber}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:9.5px; font-weight:700; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Phone</span>
-              <span style="font-size:11px; font-weight:600; color:${INK}; text-align:right;">${phone}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Phone</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${phone}</span>
             </div>
           </div>
         </div>
@@ -963,10 +963,10 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <table style="width:100%; border-collapse:collapse; margin-top:8px; border-bottom:1.5px solid ${LINE};">
             <thead>
               <tr style="border-top:1.5px solid ${LINE}; border-bottom:1.5px solid ${LINE}; background:#fafafa;">
-                <th style="padding:10px 12px; text-align:center; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; width:10%;">Sr. No</th>
-                <th style="padding:10px 12px; text-align:center; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; width:15%;">HSN/SAC</th>
-                <th style="padding:10px 12px; text-align:left; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; width:45%;">Item Type</th>
-                <th style="padding:10px 12px; text-align:right; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; width:15%;">Amount</th>
+                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%;">Sr. No</th>
+                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%;">HSN/SAC</th>
+                <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:45%;">Item Type</th>
+                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%;">Amount</th>
             
               </tr>
             </thead>
@@ -982,14 +982,14 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             <table style="width:100%; border-collapse:collapse; font-size:12px; color:${INK};">
               <tbody>
                 <tr>
-                  <td style="padding:5px 0; color:${INK_MUTED}; font-weight:600;">Total Amount</td>
-                  <td style="padding:5px 0; text-align:right; font-weight:700; padding-right:10px;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
+                  <td style="padding:5px 0; font-size:12px; font-weight:400;">Total Amount</td>
+                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
                 </tr>
                 ${discountAmount > 0
       ? `
                 <tr>
-                  <td style="padding:5px 0; color:${INK_MUTED}; font-weight:600;">Discount (${discountPct}%)</td>
-                  <td style="padding:5px 0; text-align:right; font-weight:700; color:#9c2626;">-${formatCurrency(discountAmount)}</td>
+                  <td style="padding:5px 0; color:${INK_MUTED}; font-weight:400;">Discount (${discountPct}%)</td>
+                  <td style="padding:5px 0; text-align:right; font-weight:400; color:#9c2626;">-${formatCurrency(discountAmount)}</td>
                 </tr>`
       : ""
     }
@@ -997,7 +997,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
               </tbody>
             </table>
             <div style="background:${BRAND}; color:#ffffff; border-radius:6px; padding:10px 14px 25px 14px; text-align:center; margin-top:4px;">
-              <span style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; ">Grand Total &nbsp; ${formatCurrency(grandTotal)}</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; ">Grand Total &nbsp; ${formatCurrency(grandTotal)}</span>
             </div>
           </div>
         </div>
@@ -1011,7 +1011,6 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   `;
 
   pdfContainer.innerHTML = htmlContent;
-  console.log(invoice);
 
   await renderContainerToPDF(
     pdfContainer,
