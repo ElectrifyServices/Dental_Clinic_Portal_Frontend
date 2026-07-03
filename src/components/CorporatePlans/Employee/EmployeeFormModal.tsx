@@ -144,10 +144,10 @@ export function EmployeeFormModal({
 
   const maxDependents = selectedPlan
     ? Number((selectedPlan as any).family_coverage_limit) ||
-      Number((selectedPlan as any).familyCoverageLimit) ||
-      Number(selectedPlan.limit) ||
-      Number(selectedPlan.maxDependents) ||
-      0
+    Number((selectedPlan as any).familyCoverageLimit) ||
+    Number(selectedPlan.limit) ||
+    Number(selectedPlan.maxDependents) ||
+    0
     : 0;
 
   // Merge API-fetched family members with localStorage dependents (deduplicate by id)
@@ -348,7 +348,7 @@ export function EmployeeFormModal({
     const hasIncompleteDependent = pendingDependents.some(
       (dep) => dep.name?.trim() && !dep.relationship?.trim()
     );
-    const hasIncompleteAddDepForm = 
+    const hasIncompleteAddDepForm =
       showAddDepForm && addDepForm.name?.trim() && !addDepForm.relationship?.trim();
 
     if (hasIncompleteDependent || hasIncompleteAddDepForm) {
@@ -590,7 +590,7 @@ export function EmployeeFormModal({
               }
             >
               {createEmployeeMutation.isPending ||
-              updateEmployeeMutation.isPending ? (
+                updateEmployeeMutation.isPending ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
@@ -649,19 +649,18 @@ export function EmployeeFormModal({
                       opt.benefitsArray?.length > 0
                         ? opt.benefitsArray
                         : (opt.benefitsSummary && opt.benefitsSummary !== "No specific benefits listed"
-                            ? opt.benefitsSummary.split(", ")
-                            : []);
+                          ? opt.benefitsSummary.split(", ")
+                          : []);
                     return (
                       <div
                         key={opt.value}
                         onClick={() =>
                           handleFormChange("corporatePlanId", opt.value)
                         }
-                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${
-                          isSelected
+                        className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
                             ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
                             : "border-border bg-white hover:border-muted-foreground/30"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex flex-col min-w-0">
@@ -803,7 +802,7 @@ export function EmployeeFormModal({
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="icon"
                           className="text-primary hover:bg-primary/10 rounded-xl"
@@ -819,7 +818,7 @@ export function EmployeeFormModal({
                           disabled={removeDependentMutation.isLoading}
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   ))}
