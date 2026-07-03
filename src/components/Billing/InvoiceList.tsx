@@ -109,7 +109,7 @@ export function InvoiceList({
   onCreateInvoice,
   onDeleteInvoice,
   onViewInvoice,
-  invoices,
+  invoices = [],
   onUpdateStatus,
   search,
   setSearch,
@@ -121,7 +121,7 @@ export function InvoiceList({
   const { data: totalBilledData } = useTotalBilledQuery();
   const { data: pendingInvoicesData } = usePendingInvoicesQuery();
   const { data: paidInvoicesData } = usePaidInvoicesQuery();
-  const { mutateAsync: payInvoiceMutation } = usePayInvoiceMutation();
+  const { mutateAsync: payInvoiceMutation, isPending: isPaying } = usePayInvoiceMutation();
   const { mutateAsync: sendInvoiceMutation } = useSendInvoiceMutation();
 
   const handleSendInvoice = async (id: string) => {
@@ -212,7 +212,7 @@ export function InvoiceList({
     });
   };
 
-  const filtered = invoices;
+  const filtered = invoices || [];
 
   const groupedData = useMemo(() => {
     const groups: Record<string, Invoice[]> = {};
