@@ -39,6 +39,7 @@ import { useDependentsQuery } from "../../../hooks/corporate/useDependentsQuery"
 import { useAddDependentMutation } from "../../../hooks/corporate/useAddDependentMutation";
 import { useRemoveDependentMutation } from "../../../hooks/corporate/useRemoveDependentMutation";
 import { useUpdateDependentMutation } from "../../../hooks/corporate/useUpdateDependentMutation";
+import { useDeleteEmployeeMutation } from "../../../hooks/corporate/useDeleteEmployeeMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 
@@ -126,6 +127,7 @@ export function EmployeeFormModal({
   const addDependentMutation = useAddDependentMutation();
   const removeDependentMutation = useRemoveDependentMutation();
   const updateDependentMutation = useUpdateDependentMutation();
+  const deleteEmployeeMutation = useDeleteEmployeeMutation();
 
   const { data: employeeDetails, isLoading: isFetching } = useEmployeeQuery(
     editEmp?.id || undefined,
@@ -397,7 +399,8 @@ export function EmployeeFormModal({
   };
 
   const handleRemoveExistingDependent = async (depId: string) => {
-    await removeDependentMutation.mutateAsync({ id: depId });
+    setApiDependents((prev) => prev.filter((d) => d.id !== depId));
+    await deleteEmployeeMutation.mutateAsync({ id: depId });
     refetchDependents();
   };
 
@@ -809,16 +812,16 @@ export function EmployeeFormModal({
                           onClick={() => handleEditDependent(dep, true)}
                         >
                           <Edit className="w-4 h-4" />
-                        </Button>
+                        </Button> */}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:bg-destructive/10 rounded-xl"
                           onClick={() => handleRemoveExistingDependent(dep.id)}
-                          disabled={removeDependentMutation.isLoading}
+                          disabled={deleteEmployeeMutation.isPending}
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button> */}
+                        </Button>
                       </div>
                     </div>
                   ))}
