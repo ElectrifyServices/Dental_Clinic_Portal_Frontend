@@ -76,7 +76,7 @@ export function CorporatePlanCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         whileHover={{ y: -5, boxShadow: "0 12px 20px -8px rgba(15,23,42,0.08), 0 4px 6px -2px rgba(15,23,42,0.03)" }}
-        className={`group relative border border-slate-200 flex flex-col h-fit transition-all duration-300 border-t-4 ${theme.border} ${expanded ? 'z-20 shadow-lg rounded-t-3xl rounded-b-none' : 'z-10 rounded-3xl'
+        className={`group relative border border-slate-200 flex flex-col transition-all duration-300 border-t-4 ${theme.border} ${expanded ? 'z-20 shadow-lg rounded-t-3xl rounded-b-none' : 'z-10 rounded-3xl'
           }`}
       >
         <div className="p-5 flex-1 flex flex-col">
@@ -229,7 +229,7 @@ export function CorporatePlanCard({
           {expanded ? 'Show Less' : 'View Benefits'}
         </Button>
 
-        {/* ── Expanded benefit detail (Absolute position to overlay below card) ── */}
+        {/* ── Expanded benefit detail (inline flow, no absolute positioning) ── */}
         <AnimatePresence>
           {expanded && (
             <motion.div
@@ -238,33 +238,35 @@ export function CorporatePlanCard({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="absolute left-[-1px] right-[-1px] top-[calc(100%-1px)] z-50 overflow-hidden px-4 pb-4 pt-2 bg-white border-x border-b border-slate-200 shadow-xl rounded-b-[22px] space-y-2"
+              className="overflow-hidden"
             >
-              {plan.benefits.map(b => (
-                <div
-                  key={b.id}
-                  className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-200 shadow-xs hover:border-slate-200 transition-colors"
-                >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${theme.bg} border border-current/10 text-xs`}>
-                    {BENEFIT_ICONS[b.type]}
+              <div className="px-4 pb-20 pt-2 bg-white border-t border-slate-200 rounded-b-[22px] space-y-2">
+                {plan.benefits.map(b => (
+                  <div
+                    key={b.id}
+                    className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-200 shadow-xs hover:border-slate-200 transition-colors"
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${theme.bg} border border-current/10 text-xs`}>
+                      {BENEFIT_ICONS[b.type]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[9px] font-black text-slate-800 uppercase tracking-wider">
+                        {BENEFIT_LABELS[b.type] ?? b.type}
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug font-medium">{b.description}</p>
+                      {b.treatmentTypes?.length ? (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {b.treatmentTypes.map(t => (
+                            <span key={t} className="text-[7.5px] font-extrabold bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-md text-slate-400 uppercase tracking-wide">
+                              {TREATMENT_LABELS[t] || t}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[9px] font-black text-slate-800 uppercase tracking-wider">
-                      {BENEFIT_LABELS[b.type] ?? b.type}
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug font-medium">{b.description}</p>
-                    {b.treatmentTypes?.length ? (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {b.treatmentTypes.map(t => (
-                          <span key={t} className="text-[7.5px] font-extrabold bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-md text-slate-400 uppercase tracking-wide">
-                            {TREATMENT_LABELS[t] || t}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

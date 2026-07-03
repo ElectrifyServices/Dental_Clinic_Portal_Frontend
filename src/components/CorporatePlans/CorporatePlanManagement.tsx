@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Zap, CreditCard } from 'lucide-react';
 import { CorporatePlan, PlanCategory } from '../../types';
-import { Button, Loading, SearchInput, FilterTabs, Pagination } from '../ui';
+import { Button, Loading, SearchInput, FilterTabs, Pagination, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
 import { useModal } from '../../contexts/ModalContext';
@@ -132,18 +132,61 @@ export function CorporatePlanManagement({
           />
         </div>
 
-        {/* Filter Tabs Container */}
+        {/* Filter Tabs / Select Container */}
         <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
-          <FilterTabs
-            tabs={CATEGORY_TABS}
-            active={categoryFilter}
-            onChange={(val) => setCategoryFilter(val as any)}
-          />
-          <FilterTabs
-            tabs={STATUS_TABS}
-            active={filter}
-            onChange={(val) => setFilter(val as any)}
-          />
+          {/* Category Filter - Desktop */}
+          <div className="hidden sm:block">
+            <FilterTabs
+              tabs={CATEGORY_TABS}
+              active={categoryFilter}
+              onChange={(val) => setCategoryFilter(val as any)}
+            />
+          </div>
+          {/* Category Filter - Mobile */}
+          <div className="block sm:hidden w-[130px] shrink-0">
+            <Select
+              value={categoryFilter}
+              onValueChange={(val) => setCategoryFilter(val as any)}
+            >
+              <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_TABS.map(tab => (
+                  <SelectItem key={tab.value} value={tab.value} className="text-xs">
+                    {tab.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter - Desktop */}
+          <div className="hidden sm:block">
+            <FilterTabs
+              tabs={STATUS_TABS}
+              active={filter}
+              onChange={(val) => setFilter(val as any)}
+            />
+          </div>
+          {/* Status Filter - Mobile */}
+          <div className="block sm:hidden w-[110px] shrink-0">
+            <Select
+              value={filter}
+              onValueChange={(val) => setFilter(val as any)}
+            >
+              <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_TABS.map(tab => (
+                  <SelectItem key={tab.value} value={tab.value} className="text-xs">
+                    {tab.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Action Button */}
