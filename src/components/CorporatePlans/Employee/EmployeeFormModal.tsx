@@ -291,6 +291,17 @@ export function EmployeeFormModal({
     if (!form.name?.trim()) errs.name = "Required";
     if (!form.phone?.trim()) errs.phone = "Required";
     if (!form.corporatePlanId) errs.corporatePlanId = "Assign a corporate plan";
+
+    const hasIncompleteDependent = pendingDependents.some(
+      (dep) => dep.name?.trim() && !dep.relationship?.trim()
+    );
+    const hasIncompleteAddDepForm = 
+      showAddDepForm && addDepForm.name?.trim() && !addDepForm.relationship?.trim();
+
+    if (hasIncompleteDependent || hasIncompleteAddDepForm) {
+      errs.submit = "Relationship is mandatory if a family member's name is provided.";
+    }
+
     setFormErrors(errs);
     return !Object.keys(errs).length;
   };
@@ -796,7 +807,7 @@ export function EmployeeFormModal({
                         </div>
                         <div>
                           <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
-                            Relationship
+                            Relationship {dep.name?.trim() && <span className="text-destructive font-bold">*</span>}
                           </Label>
                           <Select
                             value={dep.relationship}
