@@ -639,7 +639,8 @@ export function EmployeeFormModal({
                           )}
                         </div>
 
-                        {benefits.length > 0 && (
+                        {/* Commented out benefits as requested */}
+                        {/* benefits.length > 0 && (
                           <div className="mt-auto pt-2 border-t border-dashed border-border/60">
                             <ul className="space-y-1 text-[11px] text-muted-foreground">
                               {(isExpanded ? benefits : benefits.slice(0, 2)).map((b, i) => (
@@ -680,7 +681,7 @@ export function EmployeeFormModal({
                               </button>
                             )}
                           </div>
-                        )}
+                        ) */}
                       </div>
                     );
                   })}

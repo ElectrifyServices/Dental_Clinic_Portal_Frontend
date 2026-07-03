@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Phone, Users, User, Building2, MoreHorizontal,
-  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp
+  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import {
@@ -21,6 +21,7 @@ interface MemberCardProps {
   isStatusPending: boolean;
   onEditDependent: (dep: any) => void;
   onDeleteDependent: (dep: any) => void;
+  onResendInvoice: () => void;
 }
 
 // Avatar color cycling logic matching EmployeeManagement
@@ -47,6 +48,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   isStatusPending,
   onEditDependent,
   onDeleteDependent,
+  onResendInvoice,
 }) => {
   const avatarGrad = (name: string) =>
     AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -102,12 +104,15 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onSelect={onEdit}>
                 <Edit2 className="w-4 h-4 mr-2 text-primary" /> Edit Member
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onChangePlan}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onResendInvoice}>
+                <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onDelete} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
