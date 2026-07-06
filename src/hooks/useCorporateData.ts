@@ -5,15 +5,16 @@ import { CorporatePlan, PlanBenefitType } from '../types';
 import { useMemo } from 'react';
 import { mapProcedureLabelToKey } from '../constants/consent.constants';
 
-export function useCorporateData(params?: { search?: string; status?: string; planType?: string; }) {
+export function useCorporateData(params?: { search?: string; status?: string; planType?: string; enabled?: boolean; }) {
   const [localPlans, setLocalPlans] = useLocalStorage<any[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<any[]>('corporateEmployees', []);
 
   const isEnabled = useMemo(() => {
+    if (params?.enabled === false) return false;
     const path = window.location.pathname;
     const allowed = path.includes('/membership') || path.includes('/patients') || path.includes('/billing') || path.includes('/patient-queue') || path.includes('/appointments') || path.includes('/dashboard');
     return allowed;
-  }, []);
+  }, [params?.enabled]);
 
   const { data: apiPlansData, refetch: refetchPlans, isLoading: isPlansLoading } = useCorporatePlansQuery({
     enabled: isEnabled,
@@ -178,12 +179,27 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
     );
   };
 
+  const handleChangeEmployeePlan = (
+    empId: string,
+    newPlanId: string,
+    newPlanName: string,
+  ) => {
+    setCorporateEmployees((prev) =>
+      prev.map((e) =>
+        e.id === empId
+          ? { ...e, corporatePlanId: newPlanId, corporatePlanName: newPlanName }
+          : e,
+      ),
+    );
+  };
+
   return {
     corporatePlans, setCorporatePlans: setLocalPlans,
     corporateEmployees, setCorporateEmployees,
     handleSaveCorporatePlan, handleDeleteCorporatePlan, handleToggleCorporatePlan,
     handleSaveEmployee, handleDeleteEmployee, handleBulkSaveEmployees,
     handleDeleteCorporateEmployee, handleUpdateCorporateEmployee,
+    handleChangeEmployeePlan,
     isPlansLoading,
     refetchCorporate: refetchPlans,
   };

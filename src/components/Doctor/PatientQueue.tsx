@@ -14,7 +14,7 @@ import {
 import ConsultationHistoryModal from "./ConsultationHistoryModal";
 import { DirectConsultationPopup } from "./DirectConsultationPopup";
 import { QueueCard } from "./PatientQueue/QueueCard";
-import { Pagination } from "@/components/ui";
+import { Pagination, PageHeader } from "@/components/ui";
 
 interface QueuedPatient {
   id: string;
@@ -143,57 +143,26 @@ export function PatientQueue({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header bg-gradient-to-r from-primary/10 to-indigo-50/30 p-6 rounded-3xl border border-primary/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center shadow-sm border border-primary/20 shrink-0">
-            <Stethoscope className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">
-              Consultation Queue
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-              <span className="text-sm font-medium text-muted-foreground">
-                Dr. {doctorName}
+      <PageHeader
+        title="Consultation Queue"
+        subtitle={`Dr. ${doctorName}`}
+        action={
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              <span className="text-sm font-bold text-amber-600">
+                {waitingCount} Waiting
               </span>
-              <span className="w-1 h-1 bg-muted rounded-full hidden sm:inline" />
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-amber-600">
-                    {waitingCount} Waiting
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-primary">
-                    {inConsultationCount} Consulting
-                  </span>
-                </div>
-              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
+              <span className="text-sm font-bold text-primary">
+                {inConsultationCount} Consulting
+              </span>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white shadow-sm self-start md:self-auto">
-          <Clock className="w-5 h-5 text-blue-500" />
-          <div className="text-right">
-            <div className="text-lg font-black text-foreground leading-none">
-              {new Date().toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              })}
-            </div>
-            <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">
-              {new Date().toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "short",
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col xl:flex-row xl:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">

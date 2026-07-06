@@ -42,13 +42,17 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight leading-tight">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+    <div className="flex flex-row items-center justify-between gap-4 mb-6">
+      <div className="flex-1 min-w-[120px]">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
       </div>
       {children}
-      {action && <div className="flex items-center justify-end gap-2 flex-shrink-0 w-full md:w-auto">{action}</div>}
+      {action && (
+        <div className="flex flex-row items-center justify-end gap-2 shrink-0">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

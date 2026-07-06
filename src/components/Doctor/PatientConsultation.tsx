@@ -343,8 +343,8 @@ export function PatientConsultation({
         type,
         patient: {
           ...patient,
-          gender: patient.patientHistory?.gender || (patient as any).gender || "—",
-          bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "—",
+          gender: patient.patientHistory?.gender || (patient as any).gender || "-",
+          bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "-",
         },
         consultationData: finalConsultationData,
         toothChartState,
@@ -624,6 +624,7 @@ export function PatientConsultation({
         ) : viewMode === "history" ? (
           <PreviousConsultationsView
             consultations={consultations}
+            patient={patient}
             isLoading={isLoadingHistory}
             isError={isHistoryError}
             searchVal={historySearch}
@@ -672,7 +673,7 @@ export function PatientConsultation({
               <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
                 <div>
                   <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
-                  <div className="text-sm font-black text-foreground">Phone: {patient.phone || "—"}</div>
+                  <div className="text-sm font-black text-foreground">Phone: {patient.phone || "-"}</div>
                 </div>
                 <Button
                   type="button"

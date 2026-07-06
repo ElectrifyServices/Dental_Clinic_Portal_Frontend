@@ -8,13 +8,13 @@
 @layer base {
   :root {
     /* ── Brand reference (backwards compat) ───────────────────────── */
-    --brand-50:  239 246 255;
-    --brand-100: 219 234 254;
-    --brand-200: 191 219 254;
-    --brand-500:  59 130 246;
-    --brand-600:  37  99 235;
-    --brand-700:  29  78 216;
-    --brand-800:  30  64 175;
+    --brand-50:  240 243 242;
+    --brand-100: 218 226 224;
+    --brand-200: 191 206 202;
+    --brand-500:  95 115 109;
+    --brand-600:  75  92  87;
+    --brand-700:  60  73  69;
+    --brand-800:  45  55  52;
 
     /* ── Surface & Layout ─────────────────────────────────────────── */
     --background:  247 249 252;   /* #F7F9FC — page bg, makes cards pop  */
@@ -34,15 +34,15 @@
     --muted-foreground: 152 162 179;   /* #98A2B3                         */
 
     /* ── Primary ──────────────────────────────────────────────────── */
-    --primary:           37  99 235;   /* #2563EB                         */
+    --primary:           95 115 109;   /* #2563EB                         */
     --primary-foreground:255 255 255;
 
     /* ── Secondary / tonal hover ──────────────────────────────────── */
-    --secondary:         239 246 255;  /* #EFF6FF — sidebar hover, tonal  */
-    --secondary-foreground:37 99 235;  /* primary on secondary            */
+    --secondary:         240 243 242;  /* #EFF6FF — sidebar hover, tonal  */
+    --secondary-foreground:75 92 87;  /* primary on secondary            */
 
     /* ── Accent (alias for secondary in this system) ─────────────── */
-    --accent:            239 246 255;  /* #EFF6FF                         */
+    --accent:            240 243 242;  /* #EFF6FF                         */
 
     /* ── Ternary (teal) ───────────────────────────────────────────── */
     --ternary:            20 184 166;

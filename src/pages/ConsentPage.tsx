@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Loading } from "@/components/ui/Loading";
-import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { ConsentFormList } from "../components/Consent/ConsentFormList";
 import { useConsentFormsQuery } from "../hooks/patients/useConsentFormsQuery";
@@ -9,7 +8,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 
 export function ConsentPage() {
-  const { staffMembers, patients } = useAppData();
   const { setActiveModal, setSelectedConsentForm, confirmDelete, showToast } = useModal();
   const { doctors: apiDoctors } = useDoctorsListQuery();
 
@@ -57,13 +55,10 @@ export function ConsentPage() {
   }
 
   const mappedForms = consentFormsList.map((form: any) => {
-    // Attempt to map doctor name
-    const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
     const patientIdStr = form.patient?.id || form.patient_id;
-    const patientObj = patients.find((p: any) => p.id === patientIdStr);
     return {
       id: form.id,
-      patientName: form.patient?.name || form.patient_name || patientObj?.name || "Unknown",
+      patientName: form.patient?.name || form.patient_name || "Unknown",
       patientId: patientIdStr || "",
       treatmentType: form.procedure_type || "",
       createdDate: form.created_at || new Date().toISOString(),
@@ -76,7 +71,7 @@ export function ConsentPage() {
       alternativeTreatments: form.alternative_risks || "",
       witnessName: form.witness_name || "",
       witnessSignature: form.witness_signature || "",
-      doctorName: form.doctor_name || doctorObj?.name || "Attending Dentist",
+      doctorName: form.doctor_name || "Attending Dentist",
       status: !form.signed_on ? "PENDING" : (form.status || "PENDING"),
     };
   });

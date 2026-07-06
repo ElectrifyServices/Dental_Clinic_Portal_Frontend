@@ -7,7 +7,7 @@ import {
   Filter, X, Loader2, FileText, Edit, Play, MoreVertical
 } from "lucide-react";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
-import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui";
+import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, PageHeader, Loading } from "@/components/ui";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -358,28 +358,15 @@ export function TreatmentList({
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-primary/5 p-6 rounded-3xl border border-primary/10 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center shadow-sm border border-primary/20">
-            <Stethoscope className="w-7 h-7 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Treatment Plans</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                {totalItems} Records Total
-              </span>
-              <span className="w-1 h-1 bg-muted rounded-full" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                ₹{totals.revenue.toLocaleString()} Projected
-              </span>
-            </div>
-          </div>
-        </div>
-        <Button onClick={onAddTreatment} size="lg" className="h-12 px-6 shadow-xl shadow-primary/10 gap-2">
-          <Plus className="w-4 h-4" /> New Treatment Plan
-        </Button>
-      </div>
+      <PageHeader
+        title="Treatment Plans"
+        subtitle={`${totalItems} Records Total • ₹${totals.revenue.toLocaleString()} Projected`}
+        action={
+          <Button onClick={onAddTreatment} size="lg" className="h-10 shadow-sm gap-2">
+            <Plus className="w-4 h-4" /> New Treatment Plan
+          </Button>
+        }
+      />
 
       <TreatmentStats totals={totals} isLoading={isLoading} />
       {/* Filter bar */}
@@ -498,30 +485,7 @@ export function TreatmentList({
         }
       >
         {isLoading ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  {["Patient & Procedure", "Tooth", "Doctor", "Date", "Cost", "Status", "Next Session", "Actions"].map((h, i) => (
-                    <th key={h} className={`px-6 py-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest ${i === 4 || i === 7 ? "text-right" : ""}`}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-6 py-4">
-                        <div className="h-4 bg-muted rounded animate-pulse" style={{ width: `${60 + Math.random() * 30}%` }} />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Loading type="spinner" text="Loading treatments..." />
         ) : (
           <DataTable
             columns={columns}

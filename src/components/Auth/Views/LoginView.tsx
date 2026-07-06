@@ -89,14 +89,14 @@ export function LoginView({ setView }: LoginViewProps) {
                   <FormLabel className="text-[13px] font-bold text-slate-700">
                     Password
                   </FormLabel>
-                  {/* <Button
+                  <Button
                     variant="ghost"
                     type="button"
                     onClick={() => setView('forgot')}
                     className="text-[12px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-bold transition-colors p-0 h-auto"
                   >
                     Forgot password?
-                  </Button> */}
+                  </Button>
                 </div>
                 <FormControl>
                   <div className="relative group">

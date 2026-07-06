@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useAppData } from '../hooks/useAppData';
+import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
 import { Button } from '@/components/ui';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
@@ -11,7 +11,7 @@ import { SmartAlerts } from '../components/Dashboard/SmartAlerts';
 import { AppointmentStatusWidget, DoctorPerformanceWidget } from '../components/Dashboard/DashboardWidgets';
 
 export const DashboardPage: React.FC = () => {
-  const { appointments } = useAppData();
+  const { appointments } = useAppointmentData();
   const { state } = useAuth();
   const { setActiveModal, setSelectedPatientId, setPreFilledPatientData, setPatientFormType } = useModal();
 

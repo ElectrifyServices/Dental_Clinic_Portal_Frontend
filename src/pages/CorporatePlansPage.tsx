@@ -3,7 +3,7 @@ import { CreditCard, Zap, Users, Shield } from "lucide-react";
 import { CorporatePlanManagement } from "../components/CorporatePlans/CorporatePlanManagement";
 import { EmployeeManagement } from "../components/CorporatePlans/EmployeeManagement";
 import { QuickRegistrationFlow } from "../components/CorporatePlans/QuickRegistration/QuickRegistrationFlow";
-import { useAppData } from "../hooks/useAppData";
+import { useCorporateData } from "../hooks/useCorporateData";
 import { PageHeader } from "../components/ui";
 import { useSidebar } from "../contexts/SidebarContext";
 
@@ -71,10 +71,10 @@ export const CorporatePlansPage: React.FC = () => {
     handleChangeEmployeePlan,
     isPlansLoading,
     refetchCorporate,
-  } = useAppData({
-    corporateSearch: debouncedSearch,
-    corporateStatus: filter === "all" ? undefined : filter.toUpperCase(),
-    corporatePlanType:
+  } = useCorporateData({
+    search: debouncedSearch,
+    status: filter === "all" ? undefined : filter.toUpperCase(),
+    planType:
       category === "all"
         ? undefined
         : category === "corporate"

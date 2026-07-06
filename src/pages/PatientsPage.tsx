@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useAppData } from "../hooks/useAppData";
+import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
 import { PatientList } from "../components/Patients/PatientList";
@@ -7,7 +7,7 @@ import { toast, PageHeader } from "../components/ui";
 
 export const PatientsPage: React.FC = () => {
   const {
-    patients, appointments, treatments, invoices,
+    patients,
     handleSavePatient, handleDeletePatient, handleUpdatePatientStatus,
     patientSearch, setPatientSearch,
     patientStatus, setPatientStatus,
@@ -16,7 +16,7 @@ export const PatientsPage: React.FC = () => {
     totalItems, totalPages,
     refetchPatients,
     isPatientsLoading,
-  } = useAppData();
+  } = usePatientData();
 
   useEffect(() => {
     if (refetchPatients) {
@@ -29,7 +29,7 @@ export const PatientsPage: React.FC = () => {
   } = useModal();
 
   const handleExportPatient = (id: string) =>
-    exportPatientReport(id, patients, appointments, treatments, invoices);
+    exportPatientReport(id);
 
   const handleViewPatient = (id: string) => {
     setSelectedPatientId(id);

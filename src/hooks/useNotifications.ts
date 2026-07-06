@@ -1,7 +1,10 @@
 import { useMemo, useState, useEffect } from "react";
-import { useAppData } from "./useAppData";
 import { useAuth } from "../contexts/AuthContext";
 import { getParsedPermissions } from "../utils/permission";
+import { useLocalStorage } from "./useLocalStorage";
+import { usePatientQuery } from "./patients/usePatientQuery";
+import { useAppointmentsListQuery } from "./appointments/useAppointmentsListQuery";
+import { useInventoryListQuery } from "./inventory/useInventoryListQuery";
 
 export interface AppNotification {
   id: string;
@@ -15,7 +18,6 @@ export interface AppNotification {
 }
 
 export function useNotifications() {
-  const { appointments, inventory, queuedPatients, patients } = useAppData();
   const { state } = useAuth();
   
   const user = state.user;
@@ -64,14 +66,101 @@ export function useNotifications() {
     localStorage.setItem("dismissed_notification_ids", JSON.stringify(dismissedIds));
   }, [dismissedIds]);
 
+  // 1. Fetch appointments
+  const isApptEnabled = hasModuleAccess(["APPOINTMENT", "APPPOINTMENT", "APPOINTMENTS"], true);
+  const { data: apiAppointments } = useAppointmentsListQuery({
+    page: 1,
+    limit: 1000,
+  }, {
+    enabled: isApptEnabled,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 2. Fetch inventory
+  const isInventoryEnabled = hasModuleAccess(["INVENTORY"], role === "admin" || role === "superadmin");
+  const { data: apiInventory } = useInventoryListQuery(undefined, {
+    enabled: isInventoryEnabled,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 3. Fetch patients
+  const isBillingEnabled = hasModuleAccess(["BILLING"], role === "admin" || role === "receptionist");
+  const { data: apiPatients } = usePatientQuery({
+    page: 1,
+    limit: 100,
+  }, {
+    enabled: isBillingEnabled,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 4. Local storage queued patients
+  const [queuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
+
+  // Map/normalize data
+  const patientsList = useMemo(() => {
+    let rawList: any[] = [];
+    if (Array.isArray(apiPatients)) {
+      rawList = apiPatients;
+    } else if (apiPatients && Array.isArray((apiPatients as any).patients)) {
+      rawList = (apiPatients as any).patients;
+    } else if (apiPatients && Array.isArray((apiPatients as any).data?.patients)) {
+      rawList = (apiPatients as any).data.patients;
+    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data)) {
+      rawList = (apiPatients as any).data.data;
+    } else if (apiPatients && Array.isArray((apiPatients as any).data)) {
+      rawList = (apiPatients as any).data;
+    }
+    return rawList;
+  }, [apiPatients]);
+
+  const appointmentsList = useMemo(() => {
+    let rawList: any[] = [];
+    if (Array.isArray(apiAppointments)) {
+      rawList = apiAppointments;
+    } else if (apiAppointments && Array.isArray((apiAppointments as any).appointments)) {
+      rawList = (apiAppointments as any).appointments;
+    } else if (apiAppointments && Array.isArray((apiAppointments as any).data?.appointments)) {
+      rawList = (apiAppointments as any).data.appointments;
+    } else if (apiAppointments && Array.isArray((apiAppointments as any).data?.data)) {
+      rawList = (apiAppointments as any).data.data;
+    } else if (apiAppointments && Array.isArray((apiAppointments as any).data)) {
+      rawList = (apiAppointments as any).data;
+    }
+
+    return rawList.map((a: any) => ({
+      ...a,
+      id: a.id,
+      patientName: a.patient_name || a.patientName,
+      patientPhone: a.patient_phone || a.patientPhone,
+      doctorName: a.doctor?.name || a.doctorName || "Doctor",
+      date: a.date,
+      time: a.start_time_ist || a.start_time || a.time,
+      treatment: a.specific_treatment || a.treatment || "",
+      treatmentType: a.treatment_type || a.treatmentType || "",
+      status: (a.status || "scheduled").toLowerCase().replace(/_/g, "-"),
+    }));
+  }, [apiAppointments]);
+
+  const inventoryList = useMemo(() => {
+    let rawList: any[] = [];
+    if (Array.isArray(apiInventory)) {
+      rawList = apiInventory;
+    } else if (apiInventory && Array.isArray((apiInventory as any).data)) {
+      rawList = (apiInventory as any).data;
+    } else if (apiInventory && Array.isArray((apiInventory as any).data?.data)) {
+      rawList = (apiInventory as any).data.data;
+    }
+    return rawList;
+  }, [apiInventory]);
+
   const dynamicNotifications = useMemo(() => {
     const list: AppNotification[] = [];
     const todayStr = new Date().toISOString().split("T")[0];
 
     // 1. Low Stock Alerts (Inventory module)
     if (hasModuleAccess(["INVENTORY"], role === "admin" || role === "superadmin")) {
-      if (Array.isArray(inventory)) {
-        inventory.forEach((item) => {
+      if (Array.isArray(inventoryList)) {
+        inventoryList.forEach((item) => {
           const current = item.currentStock ?? item.current_stock ?? 0;
           const min = item.minStock ?? item.min_stock ?? 0;
           if (current < min) {
@@ -111,8 +200,8 @@ export function useNotifications() {
 
     // 3. Billing Dues / Outstanding balances (Billing module)
     if (hasModuleAccess(["BILLING"], role === "admin" || role === "receptionist")) {
-      if (Array.isArray(patients)) {
-        patients.forEach((p) => {
+      if (Array.isArray(patientsList)) {
+        patientsList.forEach((p) => {
           const balance = parseFloat(String(p.outstandingBalance || 0).replace(/,/g, ""));
           if (balance > 1000) {
             const id = `billing-due-${p.id}`;
@@ -133,8 +222,8 @@ export function useNotifications() {
 
     // 4. Appointments Today & Summary (Appointments module)
     if (hasModuleAccess(["APPOINTMENT", "APPPOINTMENT", "APPOINTMENTS"], true)) {
-      if (Array.isArray(appointments)) {
-        const todayAppts = appointments.filter((a) => {
+      if (Array.isArray(appointmentsList)) {
+        const todayAppts = appointmentsList.filter((a) => {
           if (!a.date) return false;
           try {
             const aDate = new Date(a.date).toISOString().split("T")[0];
@@ -179,7 +268,7 @@ export function useNotifications() {
     return list
       .filter((n) => !dismissedIds.includes(n.id))
       .sort((a, b) => b.timestamp - a.timestamp);
-  }, [appointments, inventory, queuedPatients, patients, readIds, dismissedIds, role, rawModulePerms, hasAll]);
+  }, [appointmentsList, inventoryList, queuedPatients, patientsList, readIds, dismissedIds, role, rawModulePerms, hasAll]);
 
   const unreadCount = useMemo(() => {
     return dynamicNotifications.filter((n) => !n.isRead).length;

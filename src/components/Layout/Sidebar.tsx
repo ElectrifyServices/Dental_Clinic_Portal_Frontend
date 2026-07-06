@@ -101,20 +101,7 @@ export function Sidebar() {
     }
     return true;
   };
-  // const visible = allItems.filter(canAccess);
-  // for hide the component just add the condition below
-  const visible = allItems.filter(canAccess).filter(
-    (item) =>
-      // Temporarily hidden items requested by user
-      ![
-        "dashboard",
-        "emr",
-        "consent",
-
-        "reports",
-        "profit-sharing",
-      ].includes(item.id),
-  );
+  const visible = allItems.filter(canAccess);
   const visibleGroups = tenant.sidebar.groups.filter((g) =>
     visible.some((i) => i.group === g.id),
   );

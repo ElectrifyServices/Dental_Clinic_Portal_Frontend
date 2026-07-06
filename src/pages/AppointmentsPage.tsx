@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
-import { useAppData } from "../hooks/useAppData";
+import { useAppointmentData } from "../hooks/useAppointmentData";
+import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
 import { AppointmentCalendar } from "../components/Appointments/AppointmentCalendar";
 import { AppointmentList } from "../components/Appointments/AppointmentList";
@@ -16,8 +17,6 @@ export const AppointmentsPage: React.FC = () => {
   const {
     appointments,
     noShowAppointments,
-    staffMembers,
-    patients,
     handleDeleteAppointment,
     handleUpdateAppointmentStatus,
     apptSearch,
@@ -29,9 +28,9 @@ export const AppointmentsPage: React.FC = () => {
     selectedDoctorId,
     setSelectedDoctorId,
     refetchAppointments,
-    refetchStaff,
-    setQueuedPatients,
-  } = useAppData();
+  } = useAppointmentData();
+
+  const { patients, setQueuedPatients } = usePatientData();
   const {
     setActiveModal,
     setSelectedAppointment,
@@ -50,13 +49,10 @@ export const AppointmentsPage: React.FC = () => {
     if (refetchAppointments) {
       refetchAppointments();
     }
-    if (refetchStaff) {
-      refetchStaff();
-    }
     if (refetchDoctors) {
       refetchDoctors();
     }
-  }, [refetchAppointments, refetchStaff, refetchDoctors]);
+  }, [refetchAppointments, refetchDoctors]);
 
 
 

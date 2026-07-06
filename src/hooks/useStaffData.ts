@@ -6,13 +6,14 @@ import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutati
 import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useStaffData(params?: { search?: string; role?: string }) {
+export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean }) {
   const queryClient = useQueryClient();
   const isEnabled = useMemo(() => {
+    if (params?.enabled === false) return false;
     const path = window.location.pathname;
     const isExcluded = path.includes('/inventory') || path.includes('/membership');
     return !isExcluded;
-  }, []);
+  }, [params?.enabled]);
 
   const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(params, { enabled: isEnabled });
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
@@ -207,5 +208,6 @@ export function useStaffData(params?: { search?: string; role?: string }) {
     handleSaveEMR, handleDeleteEMR,
     handleSaveConsentForm, handleDeleteConsentForm,
     refetchStaff,
+    isLoading: isStaffLoading,
   };
 }

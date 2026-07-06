@@ -92,8 +92,8 @@ export function LoginForm() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-16 bg-[#F8FAFC]">
         <div className="card w-full max-w-[440px] p-8 lg:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           {view === 'login' && <LoginView setView={setView} />}
-          {/* {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
-          {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />} */}
+          {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
+          {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
         </div>
       </div>
     </div>

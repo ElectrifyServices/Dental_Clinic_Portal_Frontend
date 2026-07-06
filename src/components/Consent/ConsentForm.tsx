@@ -299,7 +299,7 @@ export function ConsentForm({
           (isOfflineUploadOnly ? (
             <Button
               onClick={handleSubmit}
-              className="gap-2 shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="gap-2 shadow-lg shadow-primary/20"
             >
               <Save className="w-4 h-4" /> Finalize Consent (Upload)
             </Button>

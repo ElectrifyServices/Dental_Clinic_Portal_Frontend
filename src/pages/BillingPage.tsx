@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAppData } from "../hooks/useAppData";
+import { useInvoiceData } from "../hooks/useInvoiceData";
 import { useModal } from "../contexts/ModalContext";
 import { InvoiceList } from "../components/Billing/InvoiceList";
 
@@ -15,9 +15,9 @@ export const BillingPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus, refetchInvoices, isInvoicesLoading } = useAppData({
-    invoiceSearch: search,
-    invoiceStatus: status,
+  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus, refetchInvoices, isInvoicesLoading } = useInvoiceData({
+    search: search,
+    status: status,
   });
   const { setActiveModal, setSelectedItemId, confirmDelete } = useModal();
 

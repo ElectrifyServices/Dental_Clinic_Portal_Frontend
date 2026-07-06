@@ -24,11 +24,13 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
 export function apiPrescToUi(p: any) {
   return {
     id: p.id,
-    medicine: p.medicine_name,
+    medicine: p.medicine_id || p.medicine?.id || p.medicine_name || "",
+    medicineName: p.medicine?.name || p.medicineName || p.medicine_name || "",
     dosage: p.dosage,
     timing: p.timing,
     frequency: p.frequency,
-    duration: `${p.duration} ${p.duration_type?.toLowerCase() ?? ""}`,
+    duration: p.duration?.toString() || "",
+    durationUnit: p.duration_type || "Days",
     qty: String(p.qty),
     instructions: p.instructions ?? "",
   };
@@ -63,7 +65,8 @@ export function toUiTreatment(plan: TreatmentPlanResponse) {
     notes: plan.clinical_notes ?? "",
     prescriptions: (plan.prescriptions ?? []).map(apiPrescToUi),
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
-    images: (plan as any).images ?? [],
+    images: ((plan as any).attachments || (plan as any).images || []).map((a: any) => typeof a === 'string' ? a : (a.file_url || a.url || a.path || "")).filter(Boolean),
+    attachments: (plan as any).attachments || [],
   };
 }
 

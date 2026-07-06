@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Phone, Users, User, Building2, MoreHorizontal,
-  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send
+  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send, MessageCircle
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import {
@@ -22,6 +22,7 @@ interface MemberCardProps {
   onEditDependent: (dep: any) => void;
   onDeleteDependent: (dep: any) => void;
   onResendInvoice: () => void;
+  onWhatsAppHistory: () => void;
 }
 
 // Avatar color cycling logic matching EmployeeManagement
@@ -49,6 +50,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   onEditDependent,
   onDeleteDependent,
   onResendInvoice,
+  onWhatsAppHistory,
 }) => {
   const avatarGrad = (name: string) =>
     AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -113,6 +115,9 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onResendInvoice}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onWhatsAppHistory}>
+                <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onDelete} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove

@@ -16,7 +16,7 @@ export default {
         primary: {
           DEFAULT:   'rgb(var(--primary) / <alpha-value>)',
           foreground:'rgb(var(--primary-foreground) / <alpha-value>)',
-          hover:     '#1D4ED8',
+          hover:     '#4B5C57',
         },
         secondary: {
           DEFAULT:   'rgb(var(--secondary) / <alpha-value>)',
@@ -65,7 +65,7 @@ export default {
         'card':       '0 1px 3px rgba(16,24,40,0.06)',
         'card-hover': '0 4px 12px rgba(16,24,40,0.08)',
         'modal':      '0 8px 32px rgba(16,24,40,0.12)',
-        'nav':        '0 2px 8px rgba(37,99,235,0.20)',
+        'nav':        '0 2px 8px rgba(95,115,109,0.20)',
       },
       fontSize: {
         'display': ['2rem', { lineHeight: '1.2', fontWeight: '700' }],

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useAppData } from "../hooks/useAppData";
+import { useStaffData } from "../hooks/useStaffData";
 import { useModal } from "../contexts/ModalContext";
 import { DoctorManagement } from "../components/Staff/DoctorManagement";
-import { useStaffQuery } from "../hooks/staff/useStaffQuery";
 
 export const StaffPage: React.FC = () => {
   const [search, setSearch] = useState("");
@@ -16,11 +15,7 @@ export const StaffPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { staffMembers, handleDeleteStaff, handleUpdateStaffStatus, refetchStaff } = useAppData({
-    search: debouncedSearch,
-    role: roleFilter,
-  });
-  const { isLoading } = useStaffQuery({
+  const { staffMembers, handleDeleteStaff, handleUpdateStaffStatus, refetchStaff, isLoading } = useStaffData({
     search: debouncedSearch,
     role: roleFilter,
   });

@@ -10,9 +10,9 @@ export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION";
 // Everything else (labels, table text, totals, badges) is plain black/gray
 // so the document reads like a standard printed invoice, not a colored flyer.
 // ---------------------------------------------------------------------------
-const BRAND = "#506761"; // header accent bar + footer band ONLY
-const INK = "#0f1115"; // primary body text â€” black
-const INK_MUTED = "#506761"; // secondary/muted body text
+const BRAND = "#5F736D"; // header accent bar + footer band ONLY
+const INK = "#0f1115"; // primary body text - black
+const INK_MUTED = "#5F736D"; // secondary/muted body text
 const LINE = "#d7dbde"; // table/section borders — neutral gray
 const PANEL = "#f7f8f8"; // neutral panel background (notes, alt rows)
 
@@ -30,7 +30,7 @@ const CLINIC_INSTAGRAM = "@opalsmiles_dental";
 // general/orthodontic/periodontic treatment — GST-exempt as of last check).
 // NOTE: this code is for *services*. If you ever bill a physical product/goods
 // line (retail item, appliance sold outright, etc.) that needs a proper HSN
-// goods code instead â€” don't default those rows to 999312. Pass `hsn_code` /
+// goods code instead - don't default those rows to 999312. Pass `hsn_code` /
 // `hsnCode` on the item to override per line.
 const DEFAULT_SAC_CODE = "999312";
 
@@ -170,7 +170,7 @@ function getLetterhead(rightBlock: string) {
       M.D.S PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
   </div>
-  <img src="${logoImg}" style="width:100px; height:72px; object-fit:contain; display:block; flex-shrink:0;" crossorigin="anonymous" />
+  <img src="${logoImg}" style="height:180px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
 </div>
   `;
 }
@@ -192,7 +192,13 @@ function getBrandFooter(signatureBlock: string) {
 </div>
 </div>
 <div style="height:12px;"></div>
-<div style="background:${BRAND}; padding:14px 40px; color:#ffffff;">
+<div style="background:${BRAND}; padding:14px 40px; color:#ffffff; position:relative;">
+<div style="position:absolute; right:40px; top:16px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+  <div style="background:#ffffff; padding:4px; border-radius:6px; margin-bottom:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+    <img src="/opalsmiles-qr.png" style="width:46px; height:46px; display:block;" crossorigin="anonymous" />
+  </div>
+  <div style="font-size:7.5px; opacity:0.95; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Scan to visit</div>
+</div>
 <div style="display:flex; flex-direction:row; align-items:center; margin-bottom:4px; justify-content:center;">
   ${iconLocation}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_ADDRESS}</span>
 </div>
@@ -210,7 +216,7 @@ function getBrandFooter(signatureBlock: string) {
   `;
 }
 
-/** Neutral black/gray status badge â€” no brand tint, so it reads correctly
+/** Neutral black/gray status badge - no brand tint, so it reads correctly
  *  next to the rest of the black-ink document. */
 function statusBadge(status: string) {
   const s = status.toLowerCase();
@@ -229,7 +235,7 @@ const sectionLabel = (text: string) =>
 const tableHeadCell = (text: string, align: string = "left") =>
   `<th style="padding:10px 12px; text-align:${align}; font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.4px;">${text}</th>`;
 
-/** A bordered label/value grid â€” the classic "tax invoice" look â€” used for the
+/** A bordered label/value grid - the classic "tax invoice" look - used for the
  *  patient + invoice meta block. 4 columns: label | value | label | value. */
 function detailsGrid(rows: Array<[string, string, string, string]>) {
   return `
@@ -286,7 +292,7 @@ export const downloadConsultationPDF = async ({
     ? doctorName.toLowerCase().startsWith("dr.")
       ? doctorName
       : `Dr. ${doctorName}`
-    : "â€”";
+    : "-";
 
   // Safely extract patient details from API payload structure
   let patientObj: any = {};
@@ -299,25 +305,35 @@ export const downloadConsultationPDF = async ({
   } else if (consultationData.responseObject?.patient) {
     patientObj = consultationData.responseObject.patient;
   }
-  const patientName = patientObj?.name || patient.patientName || "â€”";
-  const patientId = patientObj?.id || patient.id || "â€”";
+  const patientName = patientObj?.name || patient.patientName || "-";
+  const patientId = patientObj?.id || patient.id || "-";
   const patientCode =
     patientObj?.patient_code ||
     patientObj?.patientCode ||
     (patient as any).patient_code ||
     (patient as any).patientCode;
   const displayPatientId =
-    patientCode || (patientId === "â€”" ? "â€”" : patientId.split("-")[0]);
-  const patientPhone = patientObj?.phone || patient.phone || "â€”";
-  const patientGender = patientObj?.gender || (patient as any).gender || "â€”";
-  const patientAge =
-    patientObj?.age ||
-    ageFromDOB(patientObj?.dob || (patient as any).dob) ||
-    "â€”";
+    patientCode || (patientId === "-" ? "-" : patientId.split("-")[0]);
+  const patientPhone = patientObj?.phone || patient.phone || "-";
+  const patientGender = patientObj?.gender || (patient as any).gender || "-";
+  let patientDobRaw = patientObj?.date_of_birth || patientObj?.dob || (patient as any).date_of_birth || (patient as any).dob;
+  let patientDob = "-";
+  if (patientDobRaw) {
+    try {
+      const d = new Date(patientDobRaw);
+      if (!isNaN(d.getTime())) {
+        patientDob = d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+      } else {
+        patientDob = patientDobRaw;
+      }
+    } catch(e) {
+      patientDob = patientDobRaw;
+    }
+  }
   const patientBloodGroup = (
     patientObj?.blood_group ||
     (patient as any).bloodGroup ||
-    "â€”"
+    "-"
   ).replace("_", " ");
 
   // Extract clinical observations, diagnosis, treatment plans, concern, notes, etc.
@@ -368,7 +384,7 @@ export const downloadConsultationPDF = async ({
     consultationData.data?.additional_notes ||
     consultationData.data?.data?.recommendations ||
     consultationData.data?.data?.additional_notes ||
-    "â€”";
+    "-";
 
   // Dynamic tooth chart findings map merging
   const finalToothChart = { ...toothChartState };
@@ -416,7 +432,7 @@ export const downloadConsultationPDF = async ({
 <div style="font-size: 12px; font-weight: 400; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
 <div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
 <div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
-<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">Age ${patientAge} / ${patientGender} / ${patientBloodGroup}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">DOB ${patientDob} / ${patientGender} / ${patientBloodGroup}</div>
   `);
 
   const getPatientInfo = (title: string) => `
@@ -430,8 +446,8 @@ export const downloadConsultationPDF = async ({
       ${detailsGrid([
     ["Patient Name", patientName, "Patient ID", displayPatientId],
     [
-      "Age / Gender",
-      `${patientAge} / ${patientGender}`,
+      "DOB / Gender",
+      `${patientDob} / ${patientGender}`,
       "Phone",
       patientPhone,
     ],
@@ -526,9 +542,9 @@ export const downloadConsultationPDF = async ({
             (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
 <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">#${t.tooth_number || t.tooth || "General"}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${t.procedure || t.treatment_type || "â€”"}</td>
+<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${t.procedure || t.treatment_type || "-"}</td>
 <td style="padding:10px 12px; font-size:12px; text-align:center; color:${INK_MUTED};">${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">â‚¹${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}</td>
+<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">Rs. ${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}</td>
 </tr>
             `,
           )
@@ -539,9 +555,9 @@ export const downloadConsultationPDF = async ({
     } else {
       treatmentsHtml = `
 <div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:12px; color:${INK_MUTED};">
-<strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "â€”"}<br/>
-<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "â€”"}<br/>
-<strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> â‚¹${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString("en-IN")}
+<strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "-"}<br/>
+<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "-"}<br/>
+<strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> Rs. ${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString("en-IN")}
 </div>
       `;
     }

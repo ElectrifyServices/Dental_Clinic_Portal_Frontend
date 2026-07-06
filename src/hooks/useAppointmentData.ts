@@ -7,7 +7,7 @@ import { useRestoreAppointmentStatusMutation } from './appointments/useRestoreAp
 import { useDebounce } from './useDebounce';
 import { toast } from '../components/ui';
 
-export function useAppointmentData() {
+export function useAppointmentData(params?: { enabled?: boolean }) {
   const queryClient = useQueryClient();
   const [apptSearch, setApptSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -35,10 +35,11 @@ export function useAppointmentData() {
   }, [selectedDate, apptFilter, selectedDoctorId]);
 
   const isEnabled = useMemo(() => {
+    if (params?.enabled === false) return false;
     const path = window.location.pathname;
     const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/membership') || path.includes('/consent') || path.includes('/treatments');
     return !isExcluded;
-  }, []);
+  }, [params?.enabled]);
 
   const { data: apiResponse } = useAppointmentsListQuery({
     page: 1,
