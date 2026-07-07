@@ -53,7 +53,7 @@ import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
 import { useCreateInvoiceMutation, CreateInvoiceVariables } from "../../hooks/billing/useCreateInvoiceMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function ModalRegistry() {
+function ModalRegistryContent() {
   const queryClient = useQueryClient();
   const {
     activeModal,
@@ -200,6 +200,16 @@ export function ModalRegistry() {
     };
   }, [editConsultationRaw]);
 
+  const enabledFlags = useMemo(() => ({
+    patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    appointments: ["appointmentForm"].includes(activeModal || ""),
+    invoices: ["invoiceViewer", "invoiceForm"].includes(activeModal || ""),
+    treatments: ["treatmentForm", "diagnoseForm"].includes(activeModal || ""),
+    staff: ["appointmentForm", "doctorSchedule", "salaryModal", "salaryHistory", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    inventory: ["inventoryForm", "restockForm", "consumeForm", "adjustForm"].includes(activeModal || ""),
+    corporate: ["addCorporateMember", "patientForm"].includes(activeModal || ""),
+  }), [activeModal]);
+
   const {
     patients,
     appointments,
@@ -228,7 +238,7 @@ export function ModalRegistry() {
     handleBulkSavePatients,
     handleDeleteCorporateEmployee,
     handleUpdateCorporateEmployee,
-  } = useAppData();
+  } = useAppData({ enabled: enabledFlags });
 
   const matchingInvoice = useMemo(() => {
     if (!selectedItemId) return null;
@@ -253,7 +263,7 @@ export function ModalRegistry() {
   );
 
   const handleExportPatient = (id: string) =>
-    exportPatientReport(id, patients, appointments, treatments, invoices);
+    exportPatientReport(id);
 
   const { mutateAsync: createAppointmentMutation } = useCreateAppointmentMutation();
   const { mutateAsync: updateAppointmentMutation } = useUpdateAppointmentMutation();
@@ -1329,7 +1339,17 @@ export function ModalRegistry() {
         />
       )}
 
-      {confirmConfig.show && (
+    </>
+  );
+}
+
+export function ModalRegistry() {
+  const { activeModal, confirmConfig, setConfirmConfig } = useModal();
+  return (
+    <>
+      {activeModal && <ModalRegistryContent />}
+
+      {confirmConfig?.show && (
         <ConfirmModal
           title={confirmConfig.title}
           message={confirmConfig.message}

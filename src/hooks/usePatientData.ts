@@ -14,7 +14,7 @@ import { useAllergiesQuery } from './patients/useAllergiesQuery';
 import { useBulkImportEmployeeMutation } from './corporate/useBulkImportEmployeeMutation';
 import { useDebounce } from './useDebounce';
 
-export function usePatientData() {
+export function usePatientData(params?: { enabled?: boolean }) {
   const queryClient = useQueryClient();
 
   // Search & filter state – these drive the API query
@@ -43,10 +43,11 @@ export function usePatientData() {
   }, [debouncedSearch, patientStatus, patientCategory]);
 
   const isEnabled = useMemo(() => {
+    if (params?.enabled === false) return false;
     const path = window.location.pathname;
     const isExcluded = path.includes('/inventory') || path.includes('/profit-sharing') || path.includes('/staff') || path.includes('/membership');
     return !isExcluded;
-  }, []);
+  }, [params?.enabled]);
 
   const { data: apiPatients, isLoading: isPatientsLoading } = usePatientQuery({
     page: patientPage,

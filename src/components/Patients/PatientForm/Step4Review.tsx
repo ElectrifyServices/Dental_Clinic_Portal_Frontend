@@ -99,7 +99,8 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="border-secondary bg-card shadow-sm overflow-hidden">
+        <div className="space-y-4">
+          <Card className="border-secondary bg-card shadow-sm overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -164,7 +165,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                   {formData.maritalStatus || "N/A"}
                 </p>
               </div>
-              <div className="col-span-2 space-y-1 min-w-0">
+              <div className="space-y-1 min-w-0">
                 <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
                   Occupation
                 </span>
@@ -172,6 +173,15 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                   {formData.occupation || "N/A"}
                 </p>
               </div>
+              <div className="space-y-1 min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
+                  Referred By
+                </span>
+                <p className="font-semibold text-foreground truncate block" title={formData.referredBy || "N/A"}>
+                  {formData.referredBy || "N/A"}
+                </p>
+              </div>
+
               <div className="col-span-2 space-y-1">
                 <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                   Residential Address
@@ -200,20 +210,102 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 </p>
               </div>
 
-              {formData.selectedMembershipPlanId && (
+              {formData.category === 'membership' || formData.corporatePlanId ? (
                 <div className="col-span-2 p-3 bg-primary/10 border border-primary/20 rounded-xl">
                   <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" />
-                    Enrolling in Membership Plan
+                    Enrolling in Corporate/Membership Plan
                   </span>
                   <p className="font-bold text-foreground text-sm">
-                    {corporatePlans.find(p => p.id === formData.selectedMembershipPlanId)?.name || "Selected Plan"}
+                    {formData.corporatePlanName || corporatePlans.find((p: any) => p.id === formData.corporatePlanId)?.name || "Corporate Plan"}
                   </p>
+                  {formData.corporateMemberId && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Member ID: {formData.corporateMemberId}
+                    </p>
+                  )}
                 </div>
-              )}
+              ) : null}
             </div>
           </CardContent>
         </Card>
+
+        {/* Previous Dentist Card moved to Left Column */}
+        <Card className="border-secondary bg-card shadow-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <h4 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                Previous Dentist / Doctor Details
+              </h4>
+              {formData.previousDoctorName || formData.previousClinicName || formData.previousClinicAddress ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
+                        Doctor Name
+                      </span>
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorName ? `Dr. ${formData.previousDoctorName}` : "—"}>
+                        {formData.previousDoctorName ? `Dr. ${formData.previousDoctorName}` : "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
+                        Clinic Name
+                      </span>
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousClinicName || "—"}>
+                        {formData.previousClinicName || "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
+                        Doctor Phone
+                      </span>
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorPhone || "—"}>
+                        {formData.previousDoctorPhone || "—"}
+                      </p>
+                    </div>
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
+                        Last Visit Date
+                      </span>
+                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousLastVisitDate || "—"}>
+                        {formData.previousLastVisitDate || "—"}
+                      </p>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                        Clinic Address
+                      </span>
+                      <p className="font-semibold text-foreground text-sm line-clamp-2" title={formData.previousClinicAddress}>
+                        {formData.previousClinicAddress || "—"}
+                      </p>
+                    </div>
+
+
+                    {formData.previousTreatments?.length > 0 && (
+                      <div className="col-span-2 space-y-1">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block mb-1">
+                          Previous Treatments
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {formData.previousTreatments.map((t: string) => (
+                            <Badge key={t} variant="secondary" className="text-[9px] px-2 py-0 bg-muted text-muted-foreground">
+                              {t}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground/60 italic">
+                  No previous dentist details provided
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="space-y-4">
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
@@ -279,106 +371,54 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                       </span>
                     )}
                   </div>
-                </div>
-                <div className="p-4 bg-primary/5 border-2 border-primary/20 border-l-primary border-l-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:bg-primary/10">
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1.5">
-                    Past Dental History
-                  </span>
-                  <p className="text-sm text-foreground font-semibold leading-relaxed line-clamp-3" title={formData.pastDentalHistory}>
-                    {formData.pastDentalHistory ||
-                      "No previous history provided"}
-                  </p>
-                  
-                  {formData.dentalFiles && formData.dentalFiles.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-primary/10">
-                      <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-2">
-                        Uploaded Images / X-rays
+                  {formData.allergyOther && (
+                    <div className="mt-3 pt-2 border-t border-destructive/10">
+                      <span className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest block mb-1">
+                        Other Allergies
                       </span>
-                      <div className="grid grid-cols-4 gap-2">
-                        {formData.dentalFiles.map((file: any, index: number) => (
-                          <DentalFileThumbnail key={index} file={file} index={index} />
-                        ))}
-                      </div>
+                      <p className="text-sm font-medium text-foreground">{formData.allergyOther}</p>
+                    </div>
+                  )}
+                  {formData.allergyNotes && (
+                    <div className="mt-2">
+                      <span className="text-[10px] font-bold text-destructive/60 uppercase tracking-widest block mb-1">
+                        Notes
+                      </span>
+                      <p className="text-sm font-medium text-foreground">{formData.allergyNotes}</p>
                     </div>
                   )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-secondary bg-card shadow-sm overflow-hidden">
-            <CardContent className="p-3 md:p-4">
-              <h4 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                Previous Dentist / Doctor Details
-              </h4>
-              {formData.previousDoctorName || formData.previousClinicName || formData.previousClinicAddress ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
-                        Doctor Name
-                      </span>
-                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorName ? `Dr. ${formData.previousDoctorName}` : "—"}>
-                        Dr. {formData.previousDoctorName || "—"}
-                      </p>
-                    </div>
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
-                        Clinic Name
-                      </span>
-                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousClinicName || "—"}>
-                        {formData.previousClinicName || "—"}
-                      </p>
-                    </div>
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
-                        Doctor Phone
-                      </span>
-                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousDoctorPhone || "—"}>
-                        {formData.previousDoctorPhone || "—"}
-                      </p>
-                    </div>
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block truncate">
-                        Last Visit Date
-                      </span>
-                      <p className="font-semibold text-foreground text-sm truncate block" title={formData.previousLastVisitDate || "—"}>
-                        {formData.previousLastVisitDate || "—"}
-                      </p>
-                    </div>
-                    <div className="col-span-2 space-y-1">
-                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-                        Clinic Address
-                      </span>
-                      <p className="font-semibold text-foreground text-sm line-clamp-2" title={formData.previousClinicAddress}>
-                        {formData.previousClinicAddress || "—"}
-                      </p>
-                    </div>
-
-                    {formData.previousTreatments?.length > 0 && (
-                      <div className="col-span-2 space-y-1">
-                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest block mb-1">
-                          Previous Treatments
+                {(formData.pastDentalHistory || (formData.dentalFiles && formData.dentalFiles.length > 0)) && (
+                  <div className="p-4 bg-primary/5 border-2 border-primary/20 border-l-primary border-l-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:bg-primary/10">
+                    {formData.pastDentalHistory && (
+                      <>
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1.5">
+                          Past Dental History
                         </span>
-                        <div className="flex flex-wrap gap-1">
-                          {formData.previousTreatments.map((t: string) => (
-                            <Badge key={t} variant="secondary" className="text-[9px] px-2 py-0 bg-muted text-muted-foreground">
-                              {t}
-                            </Badge>
+                        <p className="text-sm text-foreground font-semibold leading-relaxed line-clamp-3" title={formData.pastDentalHistory}>
+                          {formData.pastDentalHistory}
+                        </p>
+                      </>
+                    )}
+                    
+                    {formData.dentalFiles && formData.dentalFiles.length > 0 && (
+                      <div className={formData.pastDentalHistory ? "mt-3 pt-3 border-t border-primary/10" : ""}>
+                        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest block mb-2">
+                          Uploaded Images / X-rays
+                        </span>
+                        <div className="grid grid-cols-4 gap-2">
+                          {formData.dentalFiles.map((file: any, index: number) => (
+                            <DentalFileThumbnail key={index} file={file} index={index} />
                           ))}
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground/60 italic">
-                  No previous dentist details provided
-                </p>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
+
 
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
@@ -450,6 +490,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">
                     {formData.guardianSignature ? "Guardian Signature" : "Patient Signature"}
+                    {formData.guardianName && formData.guardianSignature ? ` (${formData.guardianName})` : ""}
                   </span>
                   <Badge
                     variant="outline"

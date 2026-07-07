@@ -93,9 +93,15 @@ export function SearchableSelect({
   const handleCreate = async () => {
     if (onCreateOption && searchQuery.trim()) {
       const query = searchQuery.trim();
-      const createdValue = await onCreateOption(query);
-      handleSelect(typeof createdValue === 'string' ? createdValue : query);
-      setIsOpen(false);
+      try {
+        const createdValue = await onCreateOption(query);
+        if (createdValue) {
+          handleSelect(typeof createdValue === 'string' ? createdValue : query);
+          setIsOpen(false);
+        }
+      } catch (error) {
+        // Do not add the option or close the popover if creation fails
+      }
     }
   };
 

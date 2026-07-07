@@ -1,4 +1,4 @@
-import { useAppData } from "../hooks/useAppData";
+import { useStaffData } from "../hooks/useStaffData";
 import { useModal } from "../contexts/ModalContext";
 import { EMRList } from "../components/EMR/EMRList";
 import { generateEMRPDF } from "../components/EMR/EMRViewer";
@@ -7,8 +7,7 @@ import { useMemo, useState } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 
 export function MedicalRecordsPage() {
-  const { patients, treatments, invoices, appointments, staffMembers } =
-    useAppData();
+  const { staffMembers } = useStaffData();
   const { setActiveModal, setSelectedEMRRecord, showToast } = useModal();
 
   const [search, setSearch] = useState("");

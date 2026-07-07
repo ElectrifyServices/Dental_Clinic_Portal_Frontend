@@ -4,36 +4,91 @@ import { normalizePatient } from "../hooks/patients/usePatientDetailQuery";
 import logoImg from '../logo.png';
 
 export const exportPatientReport = async (
-  patientId: string,
-  patients: any[],
-  appointments: any[],
-  treatments: any[],
-  invoices: any[]
+  patientId: string
 ) => {
-  let patient = patients.find((p) => p.id === patientId);
-  if (!patient) return;
+  let patient: any = null;
 
   try {
     const res = await apiClient.request({ url: `/patient/${patientId}`, method: 'get' });
     const parsed = parseApiResponse(res.data);
     if (parsed.data) {
-      const detailedPatient = normalizePatient(parsed.data);
-      if (detailedPatient) {
-        patient = { ...patient, ...detailedPatient };
-      }
+      patient = normalizePatient(parsed.data);
     }
   } catch (err) {
   }
 
-  const patientAppointments = appointments.filter(
-    (a) => a.patientId === patient.id || a.patientPhone === patient.phone,
-  );
-  const patientTreatments = treatments.filter(
-    (t) => t.patientId === patient.id,
-  );
-  const patientInvoices = invoices.filter(
-    (inv) => inv.patientId === patient.id,
-  );
+  if (!patient) return;
+
+  // 1. Fetch appointments
+  let patientAppointments: any[] = [];
+  try {
+    const aptRes = await apiClient.request({ url: `/patient/appointment-history/${patientId}`, method: 'get' });
+    const parsed = parseApiResponse(aptRes.data);
+    const rawList = parsed.data || [];
+    patientAppointments = rawList.map((a: any) => ({
+      ...a,
+      id: a.id,
+      patientName: a.patient_name || a.patientName,
+      patientPhone: a.patient_phone || a.patientPhone,
+      doctorName: a.doctor?.name || a.doctorName || "Doctor",
+      date: a.date,
+      time: a.start_time_ist || a.start_time || a.time,
+      treatment: a.specific_treatment || a.treatment || "",
+      treatmentType: a.treatment_type || a.treatmentType || "",
+      fee: a.treatment_cost || a.cost || a.fee || 0,
+      cost: a.treatment_cost || a.cost || 0,
+      status: (a.status || "scheduled").toLowerCase().replace(/_/g, "-"),
+      patientConcern: a.concern || a.patientConcern || "",
+      concern: a.concern,
+      notes: a.notes,
+      doctorId: a.doctor_id || a.doctor?.id,
+      patientId: a.patient_id,
+      duration: a.slot_duration_mins || a.duration || 15,
+    }));
+  } catch (err) {}
+
+  // 2. Fetch treatments
+  let patientTreatments: any[] = [];
+  try {
+    const treatRes = await apiClient.request({
+      url: `/treatment/list`,
+      method: 'post',
+      data: { filters: { patientId: [patientId] }, all: true }
+    });
+    const parsed = parseApiResponse(treatRes.data);
+    const rawList = parsed.data?.data || parsed.data || [];
+    patientTreatments = rawList.map((t: any) => ({
+      ...t,
+      id: t.id,
+      name: t.procedure || t.name || "",
+      date: t.treatment_date ? t.treatment_date.split('T')[0] : "",
+      notes: t.notes || "",
+      cost: t.est_cost || t.cost || 0,
+      status: (t.status || "planned").toLowerCase(),
+      patientId: t.patient_id,
+    }));
+  } catch (err) {}
+
+  // 3. Fetch invoices
+  let patientInvoices: any[] = [];
+  try {
+    const invRes = await apiClient.request({
+      url: `/invoice/list`,
+      method: 'post',
+      data: { filters: { patient_id: [patientId] } }
+    });
+    const parsed = parseApiResponse(invRes.data);
+    const rawList = parsed.data?.invoices || parsed.data || [];
+    patientInvoices = rawList.map((inv: any) => ({
+      ...inv,
+      id: inv.id,
+      invoice_number: inv.invoice_number || inv.invoiceNumber || inv.id,
+      date: inv.created_at || inv.date,
+      total: inv.grand_total || inv.total || 0,
+      status: (inv.status || "").toLowerCase(),
+      patientId: inv.patient_id,
+    }));
+  } catch (err) {}
   const prescriptions = patient.prescriptionHistory || [];
 
   const allergiesList = patient.allergyNames?.length ? patient.allergyNames : patient.allergies;

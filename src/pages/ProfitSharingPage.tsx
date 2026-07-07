@@ -9,13 +9,15 @@ import {
   FileText,
   PieChart,
 } from "lucide-react";
-import { useAppData } from "../hooks/useAppData";
+import { useTreatmentData } from "../hooks/useTreatmentData";
+import { useStaffData } from "../hooks/useStaffData";
 import { MetricCard, PageHeader, Card, Button, Input, DataTable } from "../components/ui";
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
 
 export const ProfitSharingPage: React.FC = () => {
-  const { treatments, staffMembers } = useAppData();
+  const { treatments } = useTreatmentData();
+  const { staffMembers } = useStaffData();
   const doctorsWithSchedules = useMemo(
     () =>
       staffMembers.filter(

@@ -50,7 +50,7 @@ export function TreatmentForm({
     } else if (dataObj && Array.isArray(dataObj.data)) {
       rawList = dataObj.data;
     }
-    
+
     const mapped = rawList.map((p: any) => ({
       ...p,
       id: p.id,
@@ -158,7 +158,7 @@ export function TreatmentForm({
     form.setValue(name as keyof typeof formData, value as any, {
       shouldValidate: true,
     });
-    
+
     if (name === "patientName") {
       const patient = allPatients.find(
         (p) => (typeof p === "string" ? p : p.name) === value
@@ -168,7 +168,7 @@ export function TreatmentForm({
         typeof patient === "object" ? patient.id : form.getValues("patientId") || ""
       );
     }
-    
+
     if (name === "procedure") {
       handleProcedureChange(value);
     }
@@ -253,7 +253,7 @@ export function TreatmentForm({
             const files = Array.from(e.target.files || []);
             const urls = files.map((f) => URL.createObjectURL(f));
             form.setValue("images", [...(formData.images || []), ...urls]);
-            
+
             const currentFiles = form.getValues("rawFiles") || [];
             form.setValue("rawFiles", [...currentFiles, ...files]);
           }}

@@ -15,20 +15,30 @@ export const useAppData = (params?: {
   corporatePlanType?: string;
   invoiceSearch?: string;
   invoiceStatus?: string;
+  enabled?: {
+    patients?: boolean;
+    appointments?: boolean;
+    invoices?: boolean;
+    treatments?: boolean;
+    staff?: boolean;
+    inventory?: boolean;
+    corporate?: boolean;
+  };
 }) => {
-  const patientData = usePatientData();
-  const apptData = useAppointmentData();
+  const patientData = usePatientData({ enabled: params?.enabled?.patients });
+  const apptData = useAppointmentData({ enabled: params?.enabled?.appointments });
   const invoiceData = useInvoiceData({
     search: params?.invoiceSearch,
     status: params?.invoiceStatus,
-  });
-  const treatmentData = useTreatmentData();
-  const staffData = useStaffData(params);
+  }, { enabled: params?.enabled?.invoices });
+  const treatmentData = useTreatmentData({ enabled: params?.enabled?.treatments });
+  const staffData = useStaffData({ ...params, enabled: params?.enabled?.staff });
   const inventoryData = useInventoryData();
   const corpData = useCorporateData({
     search: params?.corporateSearch,
     status: params?.corporateStatus,
     planType: params?.corporatePlanType,
+    enabled: params?.enabled?.corporate,
   });
 
   const { mutateAsync: deleteInvoice } = useDeleteInvoiceMutation();

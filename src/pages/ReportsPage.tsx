@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useAppData } from "../hooks/useAppData";
 import { ReportsDashboard } from "../components/Reports/ReportsDashboard";
 

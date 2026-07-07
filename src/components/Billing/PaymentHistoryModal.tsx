@@ -1,6 +1,6 @@
 import { Modal, Button, Card, CardContent, DataTable, StatusBadge, Loading } from "@/components/ui";
 import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknote } from "lucide-react";
-import { useAppData } from "../../hooks/useAppData";
+import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
 import { normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
@@ -12,9 +12,12 @@ interface PaymentHistoryModalProps {
 }
 
 export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalProps) {
-  const { patients } = useAppData();
-  const { data: fetchedPayments, isLoading } = usePaymentHistoryQuery(invoice.id);
+  const patientId = invoice.patientId || invoice.patient_id;
+  const { data: patient, isLoading: isPatientLoading } = usePatientDetailQuery(patientId, !!patientId);
+  const { data: fetchedPayments, isLoading: isPaymentsLoading } = usePaymentHistoryQuery(invoice.id);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  const isLoading = isPaymentsLoading || isPatientLoading;
 
   if (isLoading) {
     return (
@@ -25,10 +28,6 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
       </Modal>
     );
   }
-
-  const patient = patients.find(
-    (p) => p.id === invoice.patientId || p.name === invoice.patientName
-  );
 
   const handlePrint = () => {
     window.print();

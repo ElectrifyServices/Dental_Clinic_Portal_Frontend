@@ -11,7 +11,8 @@ import {
   toApiUpdatePlan,
 } from '../utils/treatmentPlanUtils';
 
-export function useTreatmentData() {
+export function useTreatmentData(params?: { enabled?: boolean }) {
+  const isEnabled = params?.enabled !== false;
   
   const [filters, setFilters] = useState<TreatmentPlansFilters>({
     page: 1,
@@ -30,7 +31,7 @@ export function useTreatmentData() {
     isLoading,
     refetch,
     isFetching
-  } = useTreatmentPlansQuery(filters);
+  } = useTreatmentPlansQuery(filters, { enabled: isEnabled });
 
   
   const {

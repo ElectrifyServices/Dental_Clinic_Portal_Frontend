@@ -60,14 +60,11 @@ export function useStep2MedicalHistory({
       const res = await createMedicalHistory.mutateAsync({ name: val, is_custom: true });
       const newId = res?.data?.id || res?.data?.medical_history_id || res?.id || res?.medical_history_id;
       if (newId) {
-        if (!selectedMedicalHistory.includes(newId)) {
-          const updated = [...selectedMedicalHistory, newId];
-          setSelectedMedicalHistory(updated);
-          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
-        }
         return newId;
       }
+      throw new Error("Failed to create medical condition");
     } catch (error) {
+      throw error;
     }
   };
 
@@ -98,14 +95,11 @@ export function useStep2MedicalHistory({
       const res = await createAllergy.mutateAsync({ allergy_name: val, is_custom: true });
       const newId = res?.data?.id || res?.data?.allergy_id || res?.id || res?.allergy_id;
       if (newId) {
-        if (!selectedAllergies.includes(newId)) {
-          const updated = [...selectedAllergies, newId];
-          setSelectedAllergies(updated);
-          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
-        }
         return newId;
       }
+      throw new Error("Failed to create allergy");
     } catch (error) {
+      throw error;
     }
   };
 

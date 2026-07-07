@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Edit2, Upload, Building2, User,
   Users, Phone, Search,
   MoreHorizontal, ArrowRightLeft,
-  UserPlus, Zap, Send,
+  UserPlus, Zap, Send, MessageCircle,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
@@ -24,6 +24,7 @@ import { getDependentsByMember, removeDependent, notifyDependentChange } from '.
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 import { MemberCard } from './Employee/MemberCard';
+import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -63,6 +64,7 @@ export function EmployeeManagement({
   const [deleteDep, setDeleteDep] = useState<any | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
   const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
+  const [whatsappHistoryEmp, setWhatsappHistoryEmp] = useState<CorporateEmployee | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -458,6 +460,9 @@ export function EmployeeManagement({
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); handleResendInvoice(e); }}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setWhatsappHistoryEmp(e); }}>
+                <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
+              </DropdownMenuItem>
               {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
                 <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
               </DropdownMenuItem> */}
@@ -608,6 +613,7 @@ export function EmployeeManagement({
                           onChangePlan={() => setChangePlanEmp(e)}
                           onDelete={() => setDeleteEmp(e)}
                           onResendInvoice={() => handleResendInvoice(e)}
+                          onWhatsAppHistory={() => setWhatsappHistoryEmp(e)}
                           onToggleStatus={async () => {
                             if (e.status === 'EXPIRED') return;
                             try {
@@ -677,18 +683,6 @@ export function EmployeeManagement({
           employee={addDependentEmp}
           editDep={editDep}
           onSave={() => { setAddDependentEmp(null); setEditDep(null); refetch(); }}
-        />
-      )}
-
-      {deleteEmp && (
-        <ConfirmModal
-          title="Remove Member"
-          message={`Remove ${deleteEmp.name} from the membership list? Their patient record will remain but the plan association will be cleared.`}
-          confirmLabel="Remove"
-          variant="danger"
-          isLoading={deleteEmployeeMutation.isPending}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteEmp(null)}
         />
       )}
 
@@ -795,6 +789,24 @@ export function EmployeeManagement({
           </div>
         </Modal>
       )}
+
+      {deleteEmp && (
+        <ConfirmModal
+          title="Remove Member"
+          message={`Remove ${deleteEmp.name} from the membership list? Their patient record will remain but the plan association will be cleared.`}
+          confirmLabel="Remove"
+          variant="danger"
+          isLoading={deleteEmployeeMutation.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteEmp(null)}
+        />
+      )}
+
+      <WhatsAppHistoryModal
+        isOpen={!!whatsappHistoryEmp}
+        onClose={() => setWhatsappHistoryEmp(null)}
+        employee={whatsappHistoryEmp}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   ExternalLink,
   X,
+  User,
 } from "lucide-react";
 import {
   Modal,
@@ -359,82 +360,44 @@ function AttachmentPreview({
   const isImage = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
   const isPdf = ext === "pdf";
 
-  return ReactDOM.createPortal(
-    <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center p-4"
-      style={{ zIndex: 99999 }}
-      onClick={onClose}
+  return (
+    <Modal
+      title={fileName || "Attachment"}
+      onClose={onClose}
+      size="3xl"
+      icon={<ImageIcon className="w-4 h-4 text-primary" />}
     >
-      <div
-        className="relative bg-white rounded-2xl overflow-hidden max-w-4xl max-h-[90vh] w-full shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <ImageIcon className="w-4 h-4 text-primary" />
-            <span className="font-bold text-sm text-foreground truncate max-w-xs">
-              {fileName || "Attachment"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(url, "_blank", "noopener,noreferrer");
-              }}
-              className="gap-1.5 text-xs font-bold"
+      <div className="flex items-center justify-center p-4 min-h-[50vh]">
+        {isImage ? (
+          <img
+            src={url}
+            alt={fileName || "Attachment"}
+            className="max-w-full max-h-[70vh] object-contain rounded-lg shadow"
+          />
+        ) : isPdf ? (
+          <iframe
+            src={url}
+            className="w-full h-[70vh] rounded-lg border-0"
+            title={fileName || "PDF Attachment"}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground font-semibold mb-4">
+              Preview not available for this file type
+            </p>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors"
             >
-              <ExternalLink className="w-3.5 h-3.5" /> Open in new tab
-            </Button> */}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+              <ExternalLink className="w-4 h-4" /> Download / Open File
+            </a>
           </div>
-        </div>
-        {/* Content */}
-        <div className="overflow-auto max-h-[75vh] flex items-center justify-center bg-muted/20 p-4">
-          {isImage ? (
-            <img
-              src={url}
-              alt={fileName || "Attachment"}
-              className="max-w-full max-h-[70vh] object-contain rounded-lg shadow"
-            />
-          ) : isPdf ? (
-            <iframe
-              src={url}
-              className="w-full h-[70vh] rounded-lg border-0"
-              title={fileName || "PDF Attachment"}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground font-semibold mb-4">
-                Preview not available for this file type
-              </p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" /> Download / Open File
-              </a>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </div>,
-    document.body
+    </Modal>
   );
 }
 
@@ -500,17 +463,17 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
       type: (latestItem.record_type || latestItem.type || record.type || "consultation").toLowerCase(),
       title: latestItem.title || record.title || "—",
       content: latestItem.content || record.content || "—",
-      doctorName: record.doctorName || "—",
+      doctorName: latestItem.doctor?.name || record.doctorName || "—",
       attachments: extractAttachments(latestItem).length > 0
         ? extractAttachments(latestItem)
         : extractAttachments(record),
       timeline: rawList.map((item: any) => ({
         id: item.id,
-        title: item.title || "—",
-        content: item.content || "—",
+        title: item.title || "N/A",
+        content: item.content || "N/A",
         date: item.created_at || item.date || new Date().toISOString(),
         category: (item.record_type || item.type || "consultation").toLowerCase(),
-        doctorName: record.doctorName || "—",
+        doctorName: item.doctor?.name || item.doctorName || record.doctorName || "N/A",
         attachments: extractAttachments(item),
       })),
     };
@@ -596,42 +559,44 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
       >
         <div className="space-y-6">
           {/* ── Patient Identity Card ── */}
-          <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 via-blue-50/50 to-indigo-50/30">
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-primary/5 rounded-full" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-indigo-500/5 rounded-full" />
-            <div className="relative p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-primary/20 flex-shrink-0">
-                {initials}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-black text-foreground tracking-tight mb-1">
-                  {detailedRecord.patientName}
-                </h2>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Last Record:{" "}
-                    {new Date(detailedRecord.date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+          <div className="relative overflow-hidden rounded-2xl border border-[#4e6e65]/15 bg-gradient-to-br from-[#4e6e65]/[0.08] via-[#4e6e65]/[0.03] to-transparent shadow-sm">
+            <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#4e6e65]/[0.07] rounded-full" />
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-[#c9a24b]/[0.08] rounded-full" />
+            <div className="relative p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1 min-w-0 w-full">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4e6e65] to-[#33473f] flex items-center justify-center text-white text-xl font-black shadow-lg shadow-[#4e6e65]/25 flex-shrink-0">
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-black text-foreground tracking-tight mb-1">
+                    {detailedRecord.patientName}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Last Record:{" "}
+                      {new Date(detailedRecord.date).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                    <Badge variant={categoryMeta.variant} className="text-[9px] font-black uppercase tracking-widest px-2.5 h-5">
+                      {(detailedRecord.type || "consultation").replace(/[-_]/g, " ").toUpperCase()}
+                    </Badge>
                   </div>
-                  <Badge variant={categoryMeta.variant} className="text-[9px] font-black uppercase tracking-widest px-2.5 h-5">
-                    {(detailedRecord.type || "consultation").replace(/[-_]/g, " ").toUpperCase()}
-                  </Badge>
                 </div>
               </div>
-              <div className="flex gap-4 sm:gap-6 flex-shrink-0">
-                <div className="text-center">
-                  <p className="text-2xl font-black text-primary">{filteredTimeline.length}</p>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Records</p>
+              <div className="flex gap-6 sm:gap-8 flex-shrink-0 w-full sm:w-auto border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-8 border-[#4e6e65]/15">
+                <div className="text-center flex-1 sm:flex-initial">
+                  <p className="text-2xl font-black text-[#4e6e65]">{filteredTimeline.length}</p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Records</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-black text-indigo-600">
+                <div className="text-center flex-1 sm:flex-initial">
+                  <p className="text-2xl font-black text-[#c9a24b]">
                     {new Set(filteredTimeline.map((t: any) => t.category)).size}
                   </p>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Categories</p>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Categories</p>
                 </div>
               </div>
             </div>
@@ -659,8 +624,8 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
           {/* ── Medical History Section Header ── */}
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2.5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Activity className="w-3.5 h-3.5 text-primary" />
+              <div className="w-7 h-7 rounded-lg bg-[#4e6e65]/10 flex items-center justify-center">
+                <Activity className="w-3.5 h-3.5 text-[#4e6e65]" />
               </div>
               Medical History
             </h3>
@@ -673,7 +638,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
 
           {/* ── Timeline ── */}
           {filteredTimeline.length > 0 ? (
-            <div className="space-y-3">
+            <div className="relative border-l-2 border-border/80 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-6">
               {filteredTimeline.map((item: any, idx: number) => {
                 const meta = getCategoryMeta(item.category);
                 const formattedDate = item.date
@@ -682,51 +647,58 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                       month: "short",
                       year: "numeric",
                     })
-                  : "—";
+                  : "N/A";
 
                 return (
-                  <div
-                    key={item.id || idx}
-                    className={`group relative rounded-2xl border border-border/50 border-l-4 ${meta.border} bg-card hover:shadow-md transition-all duration-200 overflow-hidden`}
-                  >
-                    <div className="p-4">
-                      {/* Card Header */}
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-9 h-9 rounded-xl ${meta.iconBg} flex items-center justify-center flex-shrink-0`}>
-                            {meta.icon}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-black text-sm text-foreground truncate">{item.title || "—"}</p>
-                            <Badge variant={meta.variant} className="text-[8px] font-black uppercase tracking-widest px-2 h-4 mt-0.5">
+                  <div key={item.id || idx} className="relative group">
+                    {/* Timeline Node (Floating Icon on the left line) */}
+                    <span className="absolute -left-[41px] sm:-left-[49px] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/85 shadow-sm ring-4 ring-card group-hover:scale-110 transition-transform duration-200">
+                      <div className={`flex h-6 w-6 items-center justify-center rounded-full ${meta.iconBg}`}>
+                        {meta.icon}
+                      </div>
+                    </span>
+
+                    {/* Timeline Content Card */}
+                    <div className="bg-card border border-border/60 hover:border-[#4e6e65]/30 rounded-2xl hover:shadow-md transition-all duration-300 p-4 sm:p-5">
+                      {/* Top Row: Title, Category & Date */}
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 mb-3.5">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-sm sm:text-base text-foreground tracking-tight leading-snug mb-1">
+                            {item.title || "N/A"}
+                          </h4>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant={meta.variant} className="text-[8px] font-black uppercase tracking-widest px-2 h-5 inline-flex items-center">
                               {meta.label}
                             </Badge>
+                            {item.doctorName && item.doctorName !== "—" && item.doctorName !== "N/A" && (
+                              <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5 bg-muted/40 px-2 py-0.5 rounded-full">
+                                <User className="w-3 h-3 text-muted-foreground/60" />
+                                Dr. {item.doctorName}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="flex-shrink-0 text-right">
-                          <time className={`text-[10px] font-black ${meta.color} ${meta.bg} border ${meta.border.replace("border-l-", "border-")} px-2.5 py-1 rounded-full uppercase tracking-widest`}>
+
+                        {/* Date */}
+                        <div className="flex-shrink-0 flex items-center gap-1.5 sm:flex-col sm:items-end">
+                          <span className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-widest bg-muted/40 sm:bg-transparent px-2 py-0.5 sm:px-0 rounded-full">
                             {formattedDate}
-                          </time>
-                          {item.doctorName && item.doctorName !== "—" && (
-                            <p className="text-[10px] text-muted-foreground font-semibold mt-1">{item.doctorName}</p>
-                          )}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Content */}
-                      {item.content && item.content !== "—" && (
-                        <div className="ml-12">
-                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap font-medium bg-muted/30 rounded-xl px-3 py-2.5 border border-border/30">
-                            {item.content}
-                          </p>
+                      {/* Clinical Content */}
+                      {item.content && item.content !== "—" && item.content !== "N/A" && (
+                        <div className="text-xs sm:text-sm text-muted-foreground/90 leading-relaxed font-medium bg-muted/20 border border-border/30 rounded-xl p-3 sm:p-4 whitespace-pre-wrap">
+                          {item.content}
                         </div>
                       )}
 
                       {/* ── Attachments ── */}
                       {item.attachments && item.attachments.length > 0 && (
-                        <div className="ml-12 mt-3">
+                        <div className="mt-4 pt-3 border-t border-border/40">
                           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <Camera className="w-3 h-3" /> Attachments ({item.attachments.length})
+                            <Camera className="w-3 h-3 text-[#4e6e65]" /> Attachments ({item.attachments.length})
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {item.attachments.map((att: any, aIdx: number) => {
@@ -736,7 +708,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                                 <button
                                   key={aIdx}
                                   onClick={() => { setPreviewUrl(att.url); setPreviewFileName(att.name); }}
-                                  className={`group/att flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all text-xs font-semibold text-foreground`}
+                                  className="group/att flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 hover:border-[#4e6e65]/40 hover:bg-[#4e6e65]/5 transition-all text-xs font-semibold text-foreground"
                                 >
                                   {isImage ? (
                                     <div className="w-8 h-8 rounded-md overflow-hidden border border-border/30 flex-shrink-0">
@@ -748,7 +720,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                                     </div>
                                   )}
                                   <span className="max-w-[120px] truncate">{att.name || `File ${aIdx + 1}`}</span>
-                                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover/att:text-primary flex-shrink-0" />
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover/att:text-[#4e6e65] flex-shrink-0" />
                                 </button>
                               );
                             })}

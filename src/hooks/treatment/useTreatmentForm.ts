@@ -14,7 +14,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       patientId: treatment?.patientId ?? "",
       procedure: treatment?.procedure ?? "",
       tooth: treatment?.tooth ?? "",
-      date: treatment?.date ?? new Date().toISOString().split("T")[0],
+      date: (treatment?.treatment_date || treatment?.date)
+        ? new Date(treatment.treatment_date || treatment.date).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
       notes: treatment?.notes ?? "",
       cost: treatment?.cost ?? 0,
       status: treatment?.status ?? "planned",
@@ -30,24 +32,24 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   });
 
   const [prescriptions, setPrescriptions] = useState<Prescription[]>(
-    treatment?.prescriptions?.length > 0 
-      ? treatment.prescriptions 
+    treatment?.prescriptions?.length > 0
+      ? treatment.prescriptions
       : [{
-          id: Date.now().toString(),
-          medicine: "",
-          dosage: "",
-          timing: "",
-          frequency: "",
-          duration: "",
-          durationUnit: "Days",
-          qty: "",
-          instructions: "",
-        }]
+        id: Date.now().toString(),
+        medicine: "",
+        dosage: "",
+        timing: "",
+        frequency: "",
+        duration: "",
+        durationUnit: "Days",
+        qty: "",
+        instructions: "",
+      }]
   );
 
   const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>(
-    Array.isArray(treatment?.sessions) && treatment.sessions.length > 0 
-      ? treatment.sessions 
+    Array.isArray(treatment?.sessions) && treatment.sessions.length > 0
+      ? treatment.sessions
       : []
   );
 
@@ -55,7 +57,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   const watchedProcedure = form.watch("procedure");
   const watchedDate = form.watch("date");
 
-  
+
   useEffect(() => {
     if (watchedProcedure && treatmentTemplates[watchedProcedure as keyof typeof treatmentTemplates]) {
       if (treatmentSessions.length === 0 || !treatment?.id) {
@@ -64,7 +66,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     }
   }, [watchedProcedure]);
 
-  
+
   useEffect(() => {
     if (treatmentSessions.length > 0 && watchedDate && treatmentSessions[0]?.suggestedDate !== watchedDate) {
       updateAllSessionDates(watchedDate);
@@ -108,9 +110,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     return template.sessions.map((session, index) => {
       const sessionDate = new Date(baseDateObj);
       sessionDate.setDate(baseDateObj.getDate() + (session.gap || 0));
-      
+
       const sessionCost = Math.round(totalCost / template.sessions.length);
-      
+
       return {
         id: `session-${Date.now()}-${index}-${Math.random()}`,
         sessionNumber: index + 1,
@@ -135,13 +137,13 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     const template = treatmentTemplates[procedure as keyof typeof treatmentTemplates];
     if (template) {
       form.setValue("cost", template.totalCost);
-      
+
       const sessions = generateSessionsFromTemplate(
-        procedure, 
-        form.getValues("date"), 
+        procedure,
+        form.getValues("date"),
         template.totalCost
       );
-      
+
       if (sessions && sessions.length > 0) {
         setTreatmentSessions(sessions);
       } else {
@@ -180,7 +182,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     form.setValue("status", "in-progress");
     if (plan.patientId) form.setValue("patientId", plan.patientId);
     if (plan.prescriptions) setPrescriptions(plan.prescriptions);
-    
+
     const sessions = generateSessionsFromTemplate(plan.procedure, form.getValues("date"), plan.cost);
     if (sessions && sessions.length > 0) {
       setTreatmentSessions(sessions);
@@ -228,7 +230,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
             updated.timing = dosageMappings[value].timing;
             updated.frequency = dosageMappings[value].frequency;
           }
-          
+
           const dosageStr = updated.dosage || "";
           const durationVal = parseFloat(updated.duration) || 0;
           const durationUnit = updated.durationUnit || "Days";
@@ -242,7 +244,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
           if (parts.length === 3) {
             dosageSum = parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0);
           }
-          
+
           if (dosageSum > 0 && durationVal > 0) {
             updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
           }
@@ -281,10 +283,24 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       const submitData = {
         ...data,
         id: treatment?.id,
-        prescriptions: prescriptions.filter((p) => p.medicine?.trim() !== ""),
-        sessions: treatmentSessions,
+        prescriptions: prescriptions
+          .filter((p) => p.medicine?.trim() !== "")
+          .map((p) => {
+            const { id, ...rest } = p;
+            if (id && id.length === 36 && id.includes("-")) {
+              return { id, ...rest };
+            }
+            return rest;
+          }),
+        sessions: treatmentSessions.map((s) => {
+          const { id, ...rest } = s;
+          if (id && id.length === 36 && id.includes("-")) {
+            return { id, ...rest };
+          }
+          return rest;
+        }),
         cost: parseFloat(String(data.cost)),
-      };    
+      };
       onSave(submitData);
     };
   };

@@ -3,21 +3,22 @@ import React, { useMemo, useEffect, useState } from "react";
 import { useConsultationData } from "../hooks/useConsultationData";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useAppData } from "../hooks/useAppData";
+import { usePatientData } from "../hooks/usePatientData";
+import { useStaffData } from "../hooks/useStaffData";
+import { useAppointmentData } from "../hooks/useAppointmentData";
 import { PatientQueue } from "../components/Doctor/PatientQueue";
 import { useDebounce } from "../hooks/useDebounce";
 import { Loader2 } from "lucide-react";
+import { Loading } from "@/components/ui";
 
 export const ConsultationPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const {
-    patients,
-    staffMembers,
-    appointments,
-  } = useAppData();
+  const { patients } = usePatientData();
+  const { staffMembers } = useStaffData();
+  const { appointments } = useAppointmentData();
 
   const {
     consultations,
@@ -284,17 +285,7 @@ export const ConsultationPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-96 space-y-4">
-        <div className="relative flex items-center justify-center">
-          <div className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-primary/20 opacity-75"></div>
-          <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
-        </div>
-        <p className="text-muted-foreground text-sm font-medium animate-pulse">
-          Loading consultations...
-        </p>
-      </div>
-    );
+    return <Loading type="spinner" text="Loading consultations..." />;
   }
 
   return (

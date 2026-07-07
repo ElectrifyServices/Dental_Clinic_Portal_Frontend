@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Download,
   Printer,
@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { Modal, Button, Badge, Card, CardContent, DataTable, Loading, toast } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
-import { useAppData } from "../../hooks/useAppData";
+import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
+import { useCorporatePlansQuery } from "../../hooks/corporate/useCorporatePlansQuery";
 import { useInvoiceQuery, normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
 
@@ -31,7 +32,6 @@ export function InvoiceViewer({
   onClose,
   onUpdateStatus,
 }: InvoiceViewerProps) {
-  const { patients, corporatePlans } = useAppData();
   const [activeId, setActiveId] = useState(invoiceId);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -41,7 +41,35 @@ export function InvoiceViewer({
     setActiveId(invoiceId);
   }, [invoiceId]);
 
-  const { data: invoice, allInvoices, isLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
+  const { data: invoice, allInvoices, isLoading: isInvoiceLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
+
+  const resolvedPatientId = patientId || invoice?.patientId;
+  const { data: patient, isLoading: isPatientLoading } = usePatientDetailQuery(resolvedPatientId, !!resolvedPatientId);
+
+  const corporatePlanId = invoice?.corporatePlanId;
+  const { data: corporatePlansData } = useCorporatePlansQuery({
+    enabled: !!corporatePlanId,
+  });
+
+  const corporatePlan = useMemo(() => {
+    if (!corporatePlanId || !corporatePlansData) return null;
+    let plansArray: any[] = [];
+    const raw = corporatePlansData;
+    if (Array.isArray(raw)) {
+      plansArray = raw;
+    } else if (raw && Array.isArray((raw as any).data)) {
+      plansArray = (raw as any).data;
+    }
+    const found = plansArray.find((p: any) => p.id === corporatePlanId);
+    if (!found) return null;
+    return {
+      id: found.id,
+      name: found.plan_name || found.name,
+      companyName: found.company_name || found.companyName,
+    };
+  }, [corporatePlansData, corporatePlanId]);
+
+  const isLoading = isInvoiceLoading || isPatientLoading;
 
   if (isLoading || error || !invoice) {
     return (
@@ -57,13 +85,6 @@ export function InvoiceViewer({
       </Modal>
     );
   }
-
-  const patient = patients.find(
-    (p) => p.id === invoice.patientId || p.name === invoice.patientName,
-  );
-  const corporatePlan = invoice.corporatePlanId
-    ? corporatePlans.find((cp) => cp.id === invoice.corporatePlanId)
-    : null;
 
 
 

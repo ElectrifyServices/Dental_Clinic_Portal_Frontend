@@ -2,11 +2,12 @@ import { useInvoicesQuery } from './billing/useInvoicesQuery';
 import { normalizeInvoice } from './billing/useInvoiceQuery';
 import { useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDeleteInvoiceMutation } from './billing/useDeleteInvoiceMutation';
 
-export function useInvoiceData(params?: { search?: string; status?: string }) {
+export function useInvoiceData(params?: { search?: string; status?: string }, options?: { enabled?: boolean }) {
   const queryClient = useQueryClient();
 
-  const isEnabled = true;
+  const isEnabled = options?.enabled !== false;
 
   const queryParams = useMemo(() => {
     const filters: any = {};
@@ -25,6 +26,21 @@ export function useInvoiceData(params?: { search?: string; status?: string }) {
     queryParams,
     { enabled: isEnabled }
   );
+
+  const { mutateAsync: deleteInvoice } = useDeleteInvoiceMutation();
+
+  const handleDeleteInvoice = async (id: string) => {
+    try {
+      await deleteInvoice({ id });
+    } catch (err) {
+      // Error handled by mutation/toast
+    }
+  };
+
+  const handleUpdateInvoiceStatus = (id: string, status: string) => {
+    queryClient.invalidateQueries({ queryKey: ["patients"] });
+    queryClient.invalidateQueries({ queryKey: ["invoices"] });
+  };
 
   const refetchInvoices = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['invoices'] });
@@ -59,6 +75,8 @@ export function useInvoiceData(params?: { search?: string; status?: string }) {
     setInvoices,
     isInvoicesLoading,
     refetchInvoices,
+    handleDeleteInvoice,
+    handleUpdateInvoiceStatus,
   };
 }
 

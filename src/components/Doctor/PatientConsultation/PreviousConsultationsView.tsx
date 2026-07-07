@@ -12,11 +12,15 @@ import {
   AlertCircle,
   X,
   Filter,
+  Download,
+  Activity
 } from "lucide-react";
 import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, Input } from "@/components/ui";
+import { downloadConsultationPDF } from "../../../utils/pdfGenerator";
 
 interface PreviousConsultationsViewProps {
   consultations: any;
+  patient?: any;
   isLoading: boolean;
   isError: boolean;
   searchVal: string;
@@ -30,6 +34,7 @@ interface PreviousConsultationsViewProps {
 
 export function PreviousConsultationsView({
   consultations,
+  patient,
   isLoading,
   isError,
   searchVal,
@@ -41,6 +46,19 @@ export function PreviousConsultationsView({
   onClearFilters,
 }: PreviousConsultationsViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<string | null>(null);
+
+  const handleDownloadPDF = (record: any, type: any) => {
+    if (!patient) {
+      console.error("Patient details missing for PDF download");
+      return;
+    }
+    const pdfData = {
+      ...record,
+      patient: patient
+    };
+    downloadConsultationPDF(pdfData, type);
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -170,55 +188,100 @@ export function PreviousConsultationsView({
             return (
               <Card
                 key={c.id}
-                className={`group relative overflow-hidden transition-all duration-400 bg-card rounded-2xl ${
+                className={`group relative overflow-visible transition-all duration-400 bg-card rounded-2xl ${
                   isExpanded
-                    ? "border-primary/30 shadow-xl shadow-primary/5 ring-1 ring-primary/20"
+                    ? "border-primary/30 shadow-xl shadow-primary/5 ring-1 ring-primary/20 z-10"
                     : "border-border/60 shadow-sm hover:border-primary/40 hover:shadow-md"
                 }`}
               >
                 {/* Left accent bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-300 ${isExpanded ? "bg-primary" : "bg-muted-foreground/20 group-hover:bg-primary/50"}`} />
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl transition-colors duration-300 ${isExpanded ? "bg-primary" : "bg-muted-foreground/20 group-hover:bg-primary/50"}`} />
 
                 {/* Collapsible Header */}
                 <div
                   onClick={() => toggleExpand(c.id)}
-                  className="p-5 pl-7 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer select-none transition-colors hover:bg-muted/10 gap-4 sm:gap-0"
+                  className="p-5 pl-7 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer select-none transition-colors hover:bg-muted/5 gap-4 sm:gap-0"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="block text-[15px] font-black text-foreground">
-                          {formatDate(c.created_at).split(',')[0]}
-                        </span>
-                        <span className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                          {formatDate(c.created_at).split(',')[1]}
-                        </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-1 min-w-0 pr-4">
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 w-full h-3 bg-primary/10" />
+                        <span className="block text-lg font-black leading-none mt-1">{formatDate(c.created_at).split(',')[0].split(' ')[0]}</span>
+                        <span className="block text-[9px] font-bold uppercase tracking-widest mt-0.5">{formatDate(c.created_at).split(',')[0].split(' ').slice(1).join(' ')}</span>
                       </div>
                     </div>
 
-                    <div className="hidden sm:block h-10 w-[1px] bg-border" />
+                    <div className="hidden sm:block h-10 w-[1px] bg-border shrink-0" />
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 border border-border/50">
-                        <User className="w-4 h-4" />
+                    <div className="flex flex-col gap-1.5 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="bg-muted/50 text-[10px] uppercase font-bold text-muted-foreground border-border/50 gap-1.5 pl-1.5">
+                           <div className="w-4 h-4 rounded-full bg-background flex items-center justify-center shadow-sm">
+                              <Stethoscope className="w-2.5 h-2.5 text-primary" />
+                           </div>
+                           Dr. {c.doctor?.name || "Unknown"}
+                        </Badge>
+                        {c.is_follow_up && (
+                          <Badge variant="amber" className="text-[10px] uppercase font-black tracking-widest py-0.5 px-2 rounded-md shadow-sm border border-amber-200">
+                            Follow-Up
+                          </Badge>
+                        )}
+                        {c.total_estimated_cost > 0 && (
+                          <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-md ml-auto sm:ml-0">
+                            ₹{c.total_estimated_cost}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        Treated by <span className="text-foreground font-bold">{c.doctor?.name || "Dr. Sharma"}</span>
-                      </span>
+                      <p className="text-sm font-medium text-foreground truncate max-w-md">
+                        {c.diagnosis_desc ? (
+                          <span><span className="text-muted-foreground">Dx:</span> {c.diagnosis_desc}</span>
+                        ) : (
+                          <span className="italic text-muted-foreground text-xs">No primary diagnosis specified</span>
+                        )}
+                      </p>
                     </div>
-
-                    {c.is_follow_up && (
-                      <Badge variant="amber" className="text-[10px] uppercase font-black tracking-widest py-1 px-3 rounded-full shadow-sm sm:ml-2">
-                        Follow-Up
-                      </Badge>
-                    )}
                   </div>
 
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors shrink-0 ${isExpanded ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-muted text-muted-foreground border border-border/50"}`}>
-                    <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative">                      
+                      {activeDownloadMenuId === c.id && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <Button
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'CLINICAL'); setActiveDownloadMenuId(null); }}
+                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto rounded-none"
+                          >
+                            <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'TREATMENT'); setActiveDownloadMenuId(null); }}
+                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto rounded-none"
+                          >
+                            <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'PRESCRIPTION'); setActiveDownloadMenuId(null); }}
+                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto rounded-none"
+                          >
+                            <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                          </Button>
+                          <div className="h-px bg-muted my-1" />
+                          <Button
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'FULL'); setActiveDownloadMenuId(null); }}
+                            className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto rounded-none"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isExpanded ? "bg-primary/10 text-primary" : "bg-transparent text-muted-foreground"}`}>
+                      <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                    </div>
                   </div>
                 </div>
 
@@ -375,7 +438,7 @@ export function PreviousConsultationsView({
                             data={c.treatments || c.treatment_plans}
                             rowKey={(t: any) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
                           />
-                        </div>
+                         </div>
                       ) : (
                         <div className="bg-card border border-dashed border-border/60 rounded-xl p-5 text-center flex items-center justify-center gap-2">
                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
