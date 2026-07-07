@@ -3,7 +3,7 @@ import { useTreatmentPlansQuery, TreatmentPlansFilters } from './treatment/useTr
 import { useTreatmentPlanQuery } from './treatment/useTreatmentPlanQuery';
 import { useCreateTreatmentPlanMutation } from './treatment/useCreateTreatmentPlanMutation';
 import { useUpdateTreatmentPlanMutation } from './treatment/useUpdateTreatmentPlanMutation';
-import { useMarkTreatmentPlanDoneMutation } from './treatment/useMarkTreatmentPlanDoneMutation';
+
 import { useUpdateTreatmentPlanStatusMutation } from './treatment/useUpdateTreatmentPlanStatusMutation';
 import {
   toUiTreatment,
@@ -83,7 +83,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
 
   const createPlan = useCreateTreatmentPlanMutation();
   const updatePlan = useUpdateTreatmentPlanMutation();
-  const markDone = useMarkTreatmentPlanDoneMutation();
+
   const updateStatus = useUpdateTreatmentPlanStatusMutation();
 
   
@@ -248,22 +248,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     return createdUi;
   };
 
-  const handleMarkCompleted = async (id: string) => {
-    const updated = await markDone.mutateAsync({ id });
-    const updatedUi = toUiTreatment(updated);
-    setLocalTreatments((prev) => [
-      ...prev.filter((item) => item && item.id !== updatedUi.id),
-      updatedUi,
-    ]);
-    await refetch(); 
-    
-    
-    if (selectedTreatmentId === id) {
-      await refreshSingleTreatment();
-    }
-    
-    return updatedUi;
-  };
+
 
   const handleStartTreatment = async (id: string) => {
     const updated = await updateStatus.mutateAsync({ id, status: 'IN_PROGRESS' });
@@ -336,7 +321,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     
     handleSaveTreatment,
     handleUpdateConsultation,
-    handleMarkCompleted,
+
     handleStartTreatment,
     
     

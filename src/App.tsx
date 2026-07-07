@@ -133,6 +133,8 @@ export default function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<AuthRouter />} />
+                  <Route path="/reset-password" element={<AuthRouter />} />
+                  <Route path="/auth/reset-password" element={<AuthRouter />} />
                   <Route path="/*" element={<ProtectedRoutes />} />
                 </Routes>
               </BrowserRouter>

@@ -86,7 +86,14 @@ apiClient.interceptors.response.use(
     const url = originalRequest.url ?? "";
 
     //  Skip interceptor for auth APIs
-    if (url.includes("/login") || url.includes("/auth/login")) {
+    if (
+      url.includes("/login") ||
+      url.includes("/auth/login") ||
+      url.includes("/verify-email") ||
+      url.includes("/forgot-password") ||
+      url.includes("/change-password") ||
+      url.includes("/reset-password")
+    ) {
       return Promise.reject(error);
     }
 

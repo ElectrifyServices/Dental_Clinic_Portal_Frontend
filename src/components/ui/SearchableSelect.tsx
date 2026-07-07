@@ -123,11 +123,16 @@ export function SearchableSelect({
               ? "Loading..."
               : isMulti
                 ? (Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder)
-                : (
-                    options.find(opt => getOptionValue(opt) === value) 
-                      ? (renderValue ? renderValue(options.find(opt => getOptionValue(opt) === value)) : getOptionLabel(options.find(opt => getOptionValue(opt) === value)!))
-                      : displayValue || value
-                  ) || placeholder}
+                : (() => {
+                    const foundOpt = options.find(opt => getOptionValue(opt) === value);
+                    if (foundOpt) {
+                      return renderValue ? renderValue(foundOpt) : getOptionLabel(foundOpt);
+                    }
+                    // If value exists but option not found in list (loading / no match), show displayValue or placeholder
+                    if (displayValue) return displayValue;
+                    if (value && value !== "none") return placeholder;
+                    return placeholder;
+                  })()}
           </div>
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </Button>

@@ -66,7 +66,6 @@ interface TreatmentListProps {
   onViewTreatment: (id: string) => void;
   onEditTreatment: (id: string) => void;
   onManageSessions: (id: string) => void;
-  onMarkCompleted: (id: string) => void;
   onStartTreatment: (id: string) => void;
 }
 
@@ -76,7 +75,6 @@ interface AdvancedFilters {
 }
 
 const PER_PAGE = 10;
-
 
 export function TreatmentList({
   treatments,
@@ -90,7 +88,6 @@ export function TreatmentList({
   onViewTreatment,
   onEditTreatment,
   onManageSessions,
-  onMarkCompleted,
   onStartTreatment,
 }: TreatmentListProps) {
   const [search, setSearch] = useState("");
@@ -340,7 +337,7 @@ export function TreatmentList({
               )}
 
               {treatment.status === "in-progress" && (
-                <DropdownMenuItem onClick={() => onMarkCompleted(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-emerald-50 rounded-xl flex items-center gap-3 text-emerald-700 cursor-pointer">
+                <DropdownMenuItem onClick={() => onManageSessions(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-emerald-50 rounded-xl flex items-center gap-3 text-emerald-700 cursor-pointer">
                   <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                     <CheckCircle className="w-4 h-4" />
                   </div>

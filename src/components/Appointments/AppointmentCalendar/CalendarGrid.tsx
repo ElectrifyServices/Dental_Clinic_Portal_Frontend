@@ -151,7 +151,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               borderClass = "border-transparent hover:border-border/50";
             } else if (currentDoctorId && scheduleState) {
               borderClass = isWorkingDay 
-                ? "border-emerald-400/50 shadow-[0_4px_12px_-2px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_16px_-2px_rgba(16,185,129,0.4)] hover:border-emerald-500" 
+                ? "border-primary/50 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:border-primary/80" 
                 : "border-red-300/50 shadow-[0_4px_12px_-2px_rgba(239,68,68,0.15)] hover:shadow-[0_6px_16px_-2px_rgba(239,68,68,0.25)] hover:border-red-400/80";
             } 
             if (isSelected && !isToday) {

@@ -773,7 +773,7 @@ function ModalRegistryContent() {
         />
       )}
 
-      {selectedItemId && (matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
+      {selectedItemId && (activeModal === "invoiceViewer" || matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
         <InvoiceViewer
           invoiceId={matchingInvoice ? String(matchingInvoice.id) : selectedItemId}
           patientId={
@@ -783,7 +783,7 @@ function ModalRegistryContent() {
             matchingInvoice?.member_id
           }
           isMember={matchingInvoice?.isMemberInvoice}
-          onClose={() => setSelectedItemId("")}
+          onClose={() => { setSelectedItemId(""); setActiveModal(null); }}
           onUpdateStatus={handleUpdateInvoiceStatus}
         />
       )}

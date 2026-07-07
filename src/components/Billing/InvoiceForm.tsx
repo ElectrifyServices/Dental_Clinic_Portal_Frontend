@@ -1041,16 +1041,14 @@ export function InvoiceForm({
                     <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
                       Status
                     </th>
-                    <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[10px] tracking-wider text-center">
-                      Action
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {patientInvoices.map((inv, idx) => (
                     <tr
                       key={idx}
-                      className="hover:bg-muted/20 transition-colors"
+                      className="hover:bg-muted/20 transition-colors cursor-pointer"
+                      onClick={() => setViewingInvoiceId(inv.id)}
                     >
                       <td className="px-4 py-3 font-mono text-xs font-bold text-foreground">
                         {inv.invoice_number || inv.id}
@@ -1076,17 +1074,6 @@ export function InvoiceForm({
                         >
                           {inv.status}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => setViewingInvoiceId(inv.id)}
-                          className="text-primary hover:underline font-bold"
-                        >
-                          View Details
-                        </Button>
                       </td>
                     </tr>
                   ))}

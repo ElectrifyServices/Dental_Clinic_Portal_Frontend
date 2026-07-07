@@ -55,15 +55,7 @@ export const TreatmentsPage: React.FC = () => {
     }
   };
 
-  const wrappedHandleMarkCompleted = async (id: string) => {
-    try {
-      await handleMarkCompleted(id);
-      showToast("Treatment marked as completed!");
-      refetch();
-    } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to update", "error");
-    }
-  };
+
 
   const wrappedHandleStartTreatment = async (id: string) => {
     try {
@@ -101,7 +93,6 @@ export const TreatmentsPage: React.FC = () => {
           setSelectedItemId(id);
           setActiveModal("sessionManager");
         }}
-        onMarkCompleted={wrappedHandleMarkCompleted}
         onStartTreatment={wrappedHandleStartTreatment}
       />
     </div>

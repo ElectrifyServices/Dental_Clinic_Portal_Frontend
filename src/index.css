@@ -310,18 +310,23 @@
   }
 
   .filter-tabs {
-    @apply flex items-center bg-muted p-1 rounded-md border border-border gap-0.5;
+    @apply flex items-center bg-muted p-1 rounded-md border border-border gap-0.5 overflow-x-auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .filter-tab {
-    @apply px-4 py-1.5 text-xs font-medium text-muted-foreground
+    @apply px-3 py-1.5 text-xs font-medium text-muted-foreground
            rounded-sm hover:text-foreground hover:bg-card/60
-           transition-colors duration-150;
+           transition-colors duration-150 shrink-0 whitespace-nowrap;
   }
 
   .filter-tab-active {
-    @apply px-4 py-1.5 text-xs font-semibold text-primary
-           bg-card shadow-sm rounded-sm border border-border/60;
+    @apply px-3 py-1.5 text-xs font-semibold text-primary
+           bg-card shadow-sm rounded-sm border border-border/60 shrink-0 whitespace-nowrap;
   }
 
   /* ─────────────────────────────────────────────────────────────────
