@@ -12,7 +12,7 @@ export function LoginForm() {
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans">
       {/* ── Left Panel ─────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[45%] relative flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0a1128] via-[#0f1e3c] to-[#162a5b]">
+      <div className="hidden lg:flex lg:w-[45%] relative flex-col justify-between overflow-hidden bg-gradient-to-br from-[#121917] via-[#222c29] to-[#3a4743]">
         {/* Subtle grid texture */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -24,8 +24,8 @@ export function LoginForm() {
         />
 
         {/* Dynamic accent blobs */}
-        <div className="absolute -bottom-32 -left-32 w-[450px] h-[450px] rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-[450px] h-[450px] rounded-full bg-emerald-600/15 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-[#5f736d]/10 blur-3xl pointer-events-none" />
 
         {/* Top — Logo + headline */}
         <div className="relative p-12 pt-14">
@@ -38,13 +38,13 @@ export function LoginForm() {
             </span>
           </div>
 
-          <p className="text-blue-400/80 text-xs uppercase tracking-[0.2em] font-bold mb-3">
+          <p className="text-[#a7c5bd]/80 text-xs uppercase tracking-[0.2em] font-bold mb-3">
             Back-Office Portal
           </p>
           <h2 className="text-[2.6rem] font-black text-white leading-[1.15] tracking-tight mb-5">
             Streamlined
             <br />
-            <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">Clinic</span> Operations
+            <span className="bg-gradient-to-r from-[#a7c5bd] to-[#d4e2de] bg-clip-text text-transparent">Clinic</span> Operations
           </h2>
           <p className="text-slate-400 text-[15px] leading-relaxed max-w-xs mb-8">
             Complete Opal Smiles Dental Studio operations — appointments, patient records,

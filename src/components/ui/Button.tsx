@@ -40,23 +40,50 @@ const buttonVariants = cva(
   },
 )
 
-const Button = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button"> &
-    VariantProps<typeof buttonVariants> & { asChild?: boolean }
->(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot.Root : "button"
-  return (
-    <Comp
-      ref={ref}
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-})
+import { Loader2 } from "lucide-react"
+
+export interface ButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+  loading?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", asChild = false, loading = false, disabled, children, ...props }, ref) => {
+    if (asChild) {
+      const Comp = Slot.Root
+      return (
+        <Comp
+          ref={ref}
+          data-slot="button"
+          data-variant={variant}
+          data-size={size}
+          className={cn(buttonVariants({ variant, size, className }))}
+          disabled={disabled || loading}
+          {...props}
+        />
+      )
+    }
+
+    return (
+      <button
+        ref={ref}
+        data-slot="button"
+        data-variant={variant}
+        data-size={size}
+        className={cn("relative inline-flex items-center justify-center", buttonVariants({ variant, size, className }))}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && (
+          <Loader2 className="w-4 h-4 animate-spin text-current shrink-0" />
+        )}
+        {children}
+      </button>
+    )
+  }
+)
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
