@@ -201,7 +201,7 @@ function ModalRegistryContent() {
   }, [editConsultationRaw]);
 
   const enabledFlags = useMemo(() => ({
-    patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer", "emrForm"].includes(activeModal || ""),
     appointments: ["appointmentForm"].includes(activeModal || ""),
     invoices: ["invoiceViewer", "invoiceForm"].includes(activeModal || ""),
     treatments: ["treatmentForm", "diagnoseForm"].includes(activeModal || ""),

@@ -99,7 +99,7 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await checkInAppointment({ id: appt.id });
     } catch (err) {
-      /* console.error removed */
+      toast.error("Failed to update appointment check-in status");
     }
     setPendingCheckInAppt(appt);
     if (existing) {
@@ -159,7 +159,7 @@ export const AppointmentsPage: React.FC = () => {
             patient_id: patientId
           });
         } catch (err) {
-          // Backend consultation queue error
+          toast.error("Failed to add patient to consultation queue");
         }
         
         toast.success("Patient checked in directly");
