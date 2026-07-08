@@ -245,7 +245,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
         </div>
       </div>
 
-      {/* Previous Bills Trigger — commented out as per request */}
+      {/* This button will be used in the second version, that's why we can't remove it, we have just kept it commented out.  */}
       {/* {hasMultiple && (
         <div className="pt-2">
           <Button

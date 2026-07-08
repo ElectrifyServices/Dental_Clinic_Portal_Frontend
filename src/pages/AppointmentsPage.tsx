@@ -159,7 +159,7 @@ export const AppointmentsPage: React.FC = () => {
             patient_id: patientId
           });
         } catch (err) {
-          console.error("Backend consultation queue error:", err);
+          // Backend consultation queue error
         }
         
         toast.success("Patient checked in directly");

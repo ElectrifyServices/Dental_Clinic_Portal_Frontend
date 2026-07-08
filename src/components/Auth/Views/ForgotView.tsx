@@ -66,7 +66,6 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       setIsVerified(true);
       toast.success("Email verified successfully!");
     } catch (error: any) {
-      console.error("Verify Email API Error:", error);
       const msg = error.message || "Failed to verify email. Backend might be down.";
       setEmailError(msg);
       toast.error(msg);
@@ -85,7 +84,6 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       toast.success("Password reset link sent to your email!");
       setView('forgot-sent');
     } catch (error: any) {
-      console.error("Forgot Password API Error:", error);
       const msg = error.message || "Failed to send reset link";
       setEmailError(msg);
       toast.error(msg);

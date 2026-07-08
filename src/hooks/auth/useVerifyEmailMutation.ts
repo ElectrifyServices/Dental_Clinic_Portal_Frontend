@@ -10,12 +10,9 @@ interface VerifyEmailResponse {
   };
 }
 
-// ─── API Definition ───────────────────────────────────────────────────────────
-const VERIFY_EMAIL_ENDPOINT = "/auth/verify-email";
-
 export function useVerifyEmailMutation() {
   return useApiMutation<VerifyEmailResponse, VerifyEmailVariables>({
-    endpoint: VERIFY_EMAIL_ENDPOINT,
+    endpoint: "/auth/verify-email",
     method: "post",
   });
 }
