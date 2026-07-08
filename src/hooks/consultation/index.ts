@@ -5,3 +5,4 @@ export * from "./useCreateConsultationMutation";
 export * from "./useUpdateConsultationMutation";
 export * from "./useCompleteConsultationMutation";
 export * from "./useDeleteConsultationMutation";
+export * from "./useSendConsultationMutation";

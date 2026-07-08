@@ -384,9 +384,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   name="expiryDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Expiry Date <span className="text-destructive">*</span>
-                      </FormLabel>
+                      <FormLabel>Expiry Date</FormLabel>
                       <FormControl>
                         <Input {...field} type="date" />
                       </FormControl>

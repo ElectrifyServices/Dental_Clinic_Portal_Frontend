@@ -23,7 +23,7 @@ import { getParsedPermissions } from "../../utils/permission";
 
 const PRIMARY_ITEMS = [
   // Temporarily hidden dashboard as per request
-  { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
+  // { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
   { id: "patients", label: "Patients", icon: Users, roles: ["all"] },
   { id: "appointments", label: "Calendar", icon: Calendar, roles: ["all"] },
   {
@@ -79,19 +79,19 @@ const MENU_ITEMS = [
     roles: ["admin", "superadmin"],
   },
   // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
-  {
-    id: "reports",
-    label: "Reports",
-    icon: BarChart3,
-    roles: ["admin", "superadmin"],
-  },
+  // {
+  //   id: "reports",
+  //   label: "Reports",
+  //   icon: BarChart3,
+  //   roles: ["admin", "superadmin"],
+  // },
   // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
-  {
-    id: "profit-sharing",
-    label: "Profit",
-    icon: DollarSign,
-    roles: ["admin", "superadmin"],
-  },
+  // {
+  //   id: "profit-sharing",
+  //   label: "Profit",
+  //   icon: DollarSign,
+  //   roles: ["admin", "superadmin"],
+  // },
   // Commented out from drawer menu because it is now in bottom primary tabs
   // {
   //   id: "membership",

@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import {
   FileText, MoreVertical, Edit, Clock,
-  Play, CheckCircle, Calendar,
+  Play, CheckCircle, Calendar, Download, Loader2
 } from "lucide-react";
 import { createPortal } from "react-dom";
+import { toast } from "@/components/ui";
+import { downloadCompletedTreatmentPDF } from "../../../utils/pdfGenerator";
+import { useDownloadTreatmentMutation } from "../../../hooks/treatment/useDownloadTreatmentMutation";
 
 interface TreatmentTableRowProps {
   treatment: any;
@@ -21,6 +24,22 @@ export function TreatmentTableRow({
 }: TreatmentTableRowProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [downloading, setDownloading] = useState(false);
+  const { mutateAsync: downloadTreatment } = useDownloadTreatmentMutation();
+
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      setDownloading(true);
+      toast.loading("Generating PDF...", { id: "pdf-download" });
+      const data = await downloadTreatment({ id });
+      await downloadCompletedTreatmentPDF(data);
+      toast.success("PDF downloaded successfully!", { id: "pdf-download" });
+    } catch (err: any) {
+      toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const openMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -151,6 +170,22 @@ export function TreatmentTableRow({
           >
             <FileText className="w-4 h-4" />
           </Button>
+
+          {(treatment.status === "completed" || treatment.status === "COMPLETED") && (
+            <Button
+              variant="ghost"
+              onClick={() => handleDownloadPDF(treatment.id)}
+              disabled={downloading}
+              className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
+              title="Download PDF"
+            >
+              {downloading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+            </Button>
+          )}
 
           <div className="relative">
             <Button
