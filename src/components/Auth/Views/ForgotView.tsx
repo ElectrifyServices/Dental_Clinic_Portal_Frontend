@@ -1,9 +1,12 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import { Button, Loading } from "@/components/ui";
+import { Button, Loading, toast } from "@/components/ui";
 import { Mail, ArrowRight, Lock, Key, ArrowLeft, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
 import logoImg from "../../../logo.png";
 import { useState } from "react";
+import { useVerifyEmailMutation } from "@/hooks/auth/useVerifyEmailMutation";
+import { useForgotPasswordMutation } from "@/hooks/auth/useForgotPasswordMutation";
+import { useChangePasswordMutation } from "@/hooks/auth/useChangePasswordMutation";
 
 interface ForgotViewProps {
   setView: (view: 'login' | 'forgot' | 'forgot-sent') => void;
@@ -25,6 +28,10 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { mutateAsync: verifyEmail } = useVerifyEmailMutation();
+  const { mutateAsync: forgotPassword } = useForgotPasswordMutation();
+  const { mutateAsync: changePassword } = useChangePasswordMutation();
 
   // Email Validation Logic
   const validateEmail = (email: string) => {
@@ -49,23 +56,40 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
     }
   };
 
-  const handleVerifyEmail = () => {
+  const handleVerifyEmail = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     if (!validateEmail(resetEmail)) return;
+    setEmailError("");
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await verifyEmail({ email: resetEmail });
       setIsVerified(true);
-    }, 1200);
+      toast.success("Email verified successfully!");
+    } catch (error: any) {
+      const msg = error.message || "Failed to verify email. Backend might be down.";
+      setEmailError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSendResetLink = (e: React.FormEvent) => {
+  const handleSendResetLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(resetEmail)) return;
+    setEmailError("");
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await forgotPassword({ email: resetEmail });
+      toast.success("Password reset link sent to your email!");
       setView('forgot-sent');
-    }, 1200);
+    } catch (error: any) {
+      const msg = error.message || "Failed to send reset link";
+      setEmailError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Password Validation Logic
@@ -81,18 +105,25 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
   const passwordsMatch = newPassword === confirmPassword;
   const isFormValid = oldPassword.length > 0 && isPasswordSecure && passwordsMatch;
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      import("react-hot-toast").then((module) => {
-        module.default.success("Password updated successfully!");
+    try {
+      await changePassword({
+        email: resetEmail,
+        oldPassword,
+        newPassword,
+        confirmPassword
       });
+      toast.success("Password updated successfully!");
       setShowChangeModal(false);
       setView('login');
-    }, 1200);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to change password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -292,7 +323,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
           </div>
 
           <form
-            onSubmit={handleSendResetLink}
+            onSubmit={!isVerified ? handleVerifyEmail : handleSendResetLink}
             className="space-y-4"
           >
             <div>

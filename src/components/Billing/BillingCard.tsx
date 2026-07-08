@@ -223,11 +223,6 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             <span className="font-mono font-bold text-foreground">
               {invoice.invoice_number || invoice.id}
             </span>
-            {hasMultiple && (
-              <span className="text-[9px] bg-indigo-50 text-indigo-600 border border-indigo-100/80 font-bold px-1.5 py-0.5 rounded-full select-none">
-                +{invoice.allInvoices.length - 1}
-              </span>
-            )}
           </div>
         </div>
 
@@ -250,8 +245,8 @@ export const BillingCard: React.FC<BillingCardProps> = ({
         </div>
       </div>
 
-      {/* Previous Bills Trigger */}
-      {hasMultiple && (
+      {/* This button will be used in the second version, that's why we can't remove it, we have just kept it commented out.  */}
+      {/* {hasMultiple && (
         <div className="pt-2">
           <Button
             variant="ghost"
@@ -274,7 +269,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             />
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

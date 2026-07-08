@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React, { useState } from 'react';
-import { User, Mail, Phone, Upload, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Upload, Eye, EyeOff, Check } from 'lucide-react';
 import { LabeledField } from '@/components/ui';
 
 interface Step1Props {
@@ -17,6 +17,16 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const password = formData.password || "";
+  const criteria = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+  };
+  const showMismatchError = formData.confirmPassword !== "" && password !== formData.confirmPassword;
+  const passwordsMatch = password === formData.confirmPassword;
 
   const generatePassword = () => {
     const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -158,6 +168,46 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 </Button>
               </div>
             </div>
+
+            {password && (
+              <div className="mt-2.5 p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-2 text-xs animate-in fade-in duration-200">
+                <p className="font-bold text-slate-700 mb-1">Password must contain:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.length ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
+                    {criteria.length ? (
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
+                    )}
+                    <span>8+ characters</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.uppercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
+                    {criteria.uppercase ? (
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
+                    )}
+                    <span>1 uppercase letter</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.lowercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
+                    {criteria.lowercase ? (
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
+                    )}
+                    <span>1 lowercase letter</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.number ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
+                    {criteria.number ? (
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
+                    )}
+                    <span>1 number (0-9)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </LabeledField>
 
           <LabeledField label="Confirm Password" required error={errors.confirmPassword?.message}>
@@ -181,6 +231,17 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </Button>
             </div>
+            
+            {showMismatchError && (
+              <p className="text-xs text-rose-500 font-medium mt-1 animate-in fade-in slide-in-from-top-1">
+                Passwords do not match
+              </p>
+            )}
+            {formData.confirmPassword && passwordsMatch && (
+              <p className="text-xs text-emerald-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
+                <Check className="w-3 h-3 stroke-[3] text-emerald-600" /> Passwords match
+              </p>
+            )}
           </LabeledField>
         </div>
       )}

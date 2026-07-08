@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Building2, Shield, Users } from "lucide-react";
 import { LoginView } from "./Views/LoginView";
 import { ForgotView } from "./Views/ForgotView";
 import { ForgotSentView } from "./Views/ForgotSentView";
+import { ResetPasswordView } from "./Views/ResetPasswordView";
 import logoImg from "../../logo.png";
 
 export function LoginForm() {
-  const [view, setView] = useState<'login' | 'forgot' | 'forgot-sent'>('login');
+  const location = useLocation();
+  const isResetPath = location.pathname.toLowerCase().includes('reset-password');
+  const [view, setView] = useState<'login' | 'forgot' | 'forgot-sent' | 'reset'>(isResetPath ? 'reset' : 'login');
   const [resetEmail, setResetEmail] = useState('');
+
+  useEffect(() => {
+    if (location.pathname.toLowerCase().includes('reset-password')) {
+      setView('reset');
+    } else if (location.pathname.toLowerCase() === '/login' || location.pathname === '/') {
+      setView('login');
+    }
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans">
@@ -88,12 +100,13 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* ── Right Panel ─────────────────────────────────── */}
+      {/*Right Panel*/}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-16 bg-[#F8FAFC]">
         <div className="card w-full max-w-[440px] p-8 lg:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
           {view === 'login' && <LoginView setView={setView} />}
           {view === 'forgot' && <ForgotView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
           {view === 'forgot-sent' && <ForgotSentView setView={setView} resetEmail={resetEmail} setResetEmail={setResetEmail} />}
+          {view === 'reset' && <ResetPasswordView />}
         </div>
       </div>
     </div>

@@ -225,19 +225,38 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
           if (matchedCorporateEmp.corporate_plan || matchedCorporateEmp.membership) {
             const cp = matchedCorporateEmp.corporate_plan || matchedCorporateEmp.membership;
+            
+            // Try to find the detailed plan from corporatePlans to get full benefits if not in cp
+            const actualPlan = corporatePlans?.find((p: any) => p.id === cp.plan_id || p.id === cp.id);
+            const benefitsSrc = cp.benefits || actualPlan?.benefits || [];
+            
             plan = {
-              name: cp.plan_name,
-              code: cp.plan_code || "MEMBERSHIP",
-              validTo: cp.valid_till || cp.expiry_date ? new Date(cp.valid_till || cp.expiry_date).toLocaleDateString() : "Lifetime",
-              benefits: cp.benefits?.map((b: any) => ({
+              name: cp.plan_name || actualPlan?.name || "Membership Plan",
+              code: cp.plan_code || actualPlan?.code || "MEMBERSHIP",
+              validTo: cp.valid_till || cp.expiry_date ? new Date(cp.valid_till || cp.expiry_date).toLocaleDateString("en-IN") : "Lifetime",
+              benefits: benefitsSrc.map((b: any) => ({
                 id: b.id || Math.random().toString(),
                 description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
-              })) || [],
-              companyName: matchedCorporateEmp.company_name || cp.company_name || "Membership Plan"
+              })),
+              companyName: matchedCorporateEmp.company_name || cp.company_name || "Membership Plan",
+              enrollmentId: cp.enrollment_id || matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id
             };
           } else {
             const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
-            plan = corporatePlans.find((cp: any) => cp.id === planId);
+            const actualPlan = corporatePlans.find((cp: any) => cp.id === planId);
+            if (actualPlan) {
+              plan = {
+                name: actualPlan.name,
+                code: actualPlan.code || "MEMBERSHIP",
+                validTo: "Lifetime",
+                benefits: actualPlan.benefits?.map((b: any) => ({
+                  id: b.id || Math.random().toString(),
+                  description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
+                })) || [],
+                companyName: actualPlan.companyName || actualPlan.name,
+                enrollmentId: matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id
+              };
+            }
           }
 
           return (
@@ -254,10 +273,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                       Click to Auto-Fill
                     </span>
                   </p>
-                  <p className="text-xs text-primary-foreground/80">
-                    {matchedCorporateEmp.company_name || plan?.companyName} ·
-                    ID:{" "}
-                    {matchedCorporateEmp.emp_id || matchedCorporateEmp.employeeId || matchedCorporateEmp.id}
+                  <p className="text-xs text-primary-foreground/80 truncate">
+                    {plan?.companyName} · ID: {plan?.enrollmentId}
                   </p>
                 </div>
                 {plan && (

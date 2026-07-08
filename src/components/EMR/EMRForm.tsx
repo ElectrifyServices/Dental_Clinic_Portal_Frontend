@@ -51,11 +51,26 @@ export function EMRForm({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { data: rawPatientsData } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  
+  const extractPatients = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    const target = data.responseObject !== undefined ? data.responseObject : data;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.patients)) return target.patients;
+      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    }
+    return [];
+  };
+
   const apiPatients = useMemo(() => {
-    return Array.isArray(rawPatientsData) 
-      ? rawPatientsData 
-      : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
-  }, [rawPatientsData]);
+    const list = extractPatients(rawPatientsData);
+    if (list.length > 0) return list;
+    return extractPatients(allPatients);
+  }, [rawPatientsData, allPatients]);
 
   const form = useForm<EmrFormData>({
     resolver: zodResolver(emrSchema) as any,

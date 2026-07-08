@@ -134,7 +134,7 @@ export function TreatmentPlanning({
     },
     {
       key: "cost",
-      header: "Est. Cost (₹)",
+      header: "Cost (₹)",
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
       render: (plan: TreatmentPlan, index: number) => (
         <Input

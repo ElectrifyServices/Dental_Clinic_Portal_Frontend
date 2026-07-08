@@ -99,7 +99,7 @@ export const AppointmentsPage: React.FC = () => {
     try {
       await checkInAppointment({ id: appt.id });
     } catch (err) {
-      /* console.error removed */
+      toast.error("Failed to update appointment check-in status");
     }
     setPendingCheckInAppt(appt);
     if (existing) {
@@ -159,13 +159,14 @@ export const AppointmentsPage: React.FC = () => {
             patient_id: patientId
           });
         } catch (err) {
-          console.error("Backend consultation queue error:", err);
+          toast.error("Failed to add patient to consultation queue");
         }
+        
+        toast.success("Patient checked in directly");
       } else {
-        toast.warning("Patient checked in, but could not be added to consultation queue because patient ID is missing. Please verify the patient profile.");
+        setPendingCheckInAppt(appt);
+        setActiveModal("patientNotFound");
       }
-
-      toast.success("Patient checked in directly");
     } catch (err) {
       toast.error("Failed to check in patient directly");
     }

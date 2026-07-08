@@ -201,7 +201,7 @@ function ModalRegistryContent() {
   }, [editConsultationRaw]);
 
   const enabledFlags = useMemo(() => ({
-    patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer", "emrForm"].includes(activeModal || ""),
     appointments: ["appointmentForm"].includes(activeModal || ""),
     invoices: ["invoiceViewer", "invoiceForm"].includes(activeModal || ""),
     treatments: ["treatmentForm", "diagnoseForm"].includes(activeModal || ""),
@@ -773,7 +773,7 @@ function ModalRegistryContent() {
         />
       )}
 
-      {selectedItemId && (matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
+      {selectedItemId && (activeModal === "invoiceViewer" || matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
         <InvoiceViewer
           invoiceId={matchingInvoice ? String(matchingInvoice.id) : selectedItemId}
           patientId={
@@ -783,7 +783,7 @@ function ModalRegistryContent() {
             matchingInvoice?.member_id
           }
           isMember={matchingInvoice?.isMemberInvoice}
-          onClose={() => setSelectedItemId("")}
+          onClose={() => { setSelectedItemId(""); setActiveModal(null); }}
           onUpdateStatus={handleUpdateInvoiceStatus}
         />
       )}

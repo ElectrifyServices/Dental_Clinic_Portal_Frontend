@@ -26,7 +26,6 @@ import {
   PageHeader,
   DataTable,
   SearchInput,
-  FilterTabs,
   StatusBadge,
   MetricCard,
   toast,
@@ -590,14 +589,27 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search by patient name or invoice ID…"
-          className="flex-1"
+          className="flex-1 min-w-0"
         />
-        <FilterTabs tabs={FILTERS} active={status} onChange={setStatus} />
+        <div className="shrink-0">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTERS.map((f) => (
+                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (

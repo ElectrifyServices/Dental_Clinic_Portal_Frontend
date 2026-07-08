@@ -34,6 +34,19 @@ const CLINIC_INSTAGRAM = "@opalsmiles_dental";
 // `hsnCode` on the item to override per line.
 const DEFAULT_SAC_CODE = "999312";
 
+// ---------------------------------------------------------------------------
+// Pagination constants
+// PAGE_WIDTH_PX / PAGE_HEIGHT_PX describe one A4 page in the *source* CSS
+// pixel space that the offscreen container is rendered in (before the 1.5x
+// html2canvas scale factor is applied). These replace the old hardcoded
+// `min-height:1123px` assumption baked into the template strings — that
+// inline min-height is still present for a nice single-page preview, but the
+// actual page count/height used for the PDF is always computed dynamically
+// from real measured content, never assumed.
+// ---------------------------------------------------------------------------
+const PAGE_WIDTH_PX = 794;
+const PAGE_HEIGHT_PX = 1123;
+
 interface PDFGeneratorParams {
   type: PDFReportType;
   patient: {
@@ -73,8 +86,85 @@ async function waitForAssets(node: HTMLElement) {
   }
 }
 
-/** Renders an offscreen container to a multi-page A4 PDF and saves it.
- *  Uses JPEG compression and per-page canvas slicing to keep file size small. */
+/**
+ * Walks every element marked `data-avoid-break` inside the container and
+ * computes a set of page-end offsets (in px, relative to the container's
+ * top) such that:
+ *  - each page is at most `pageHeightPx` tall
+ *  - no marked element (table row, card, section block) is ever split
+ *    across two pages — if a naive page boundary would land inside one,
+ *    the boundary is pulled back to that element's top instead, and the
+ *    leftover space simply flows onto the next page.
+ *
+ * `contentHeight` must exclude the footer — the footer is handled
+ * separately by the caller so it can always be pinned to the final page.
+ */
+function computeContentPageBreaks(
+  container: HTMLElement,
+  contentHeight: number,
+  pageHeightPx: number,
+): number[] {
+  if (contentHeight <= pageHeightPx) return [contentHeight];
+
+  const containerTop = container.getBoundingClientRect().top;
+
+  const blocks = Array.from(
+    container.querySelectorAll<HTMLElement>("[data-avoid-break]"),
+  )
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      return { top: r.top - containerTop, bottom: r.bottom - containerTop };
+    })
+    // Only blocks that actually live in the content region matter here.
+    .filter((b) => b.bottom <= contentHeight + 0.5)
+    .sort((a, b) => a.top - b.top);
+
+  const breaks: number[] = [];
+  let pageStart = 0;
+
+  while (pageStart < contentHeight - 0.5) {
+    let end = Math.min(pageStart + pageHeightPx, contentHeight);
+
+    if (end < contentHeight) {
+      // If this boundary would slice through a protected block, pull it
+      // back to the top of that block instead — the block (and everything
+      // after it) spills onto the next page in full.
+      const straddled = blocks.find((b) => b.top < end && b.bottom > end);
+      if (straddled && straddled.top > pageStart) {
+        end = straddled.top;
+      }
+    }
+
+    // Safety net: never allow a zero/negative-height page (e.g. a single
+    // block taller than a full page) — fall back to a hard cut rather than
+    // looping forever.
+    if (end <= pageStart) {
+      end = Math.min(pageStart + pageHeightPx, contentHeight);
+    }
+
+    breaks.push(end);
+    pageStart = end;
+  }
+
+  return breaks;
+}
+
+/**
+ * Renders an offscreen container to a multi-page A4 PDF and saves it.
+ *
+ * Pagination is fully dynamic:
+ *  - Content height is measured from the real DOM, never assumed.
+ *  - Page breaks avoid slicing through anything marked `data-avoid-break`
+ *    (table rows, cards, section blocks).
+ *  - The footer (marked `data-footer`) is always placed on the final page.
+ *    Only the final page's height is padded (via the flex column's
+ *    `margin-top:auto` on the footer) so the footer sits flush against the
+ *    true bottom of that last page — no trailing blank space, and the
+ *    footer is never split or stranded mid-page.
+ *  - Earlier pages are never padded/stretched — they end as soon as their
+ *    content does (or as soon as break-avoidance requires), which is
+ *    standard, expected pagination behavior.
+ */
 async function renderContainerToPDF(
   pdfContainer: HTMLElement,
   fileName: string,
@@ -82,13 +172,69 @@ async function renderContainerToPDF(
   document.body.appendChild(pdfContainer);
   await waitForAssets(pdfContainer);
 
+  // The flex column (the element that actually carries min-height:1123px
+  // and has the footer with margin-top:auto) is the single root node built
+  // into pdfContainer's innerHTML. We resize *that* element, not the plain
+  // absolutely-positioned wrapper around it.
+  const pageEl = (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
+
   try {
+    const containerTop = pdfContainer.getBoundingClientRect().top;
+    const footerEl = pdfContainer.querySelector<HTMLElement>("[data-footer]");
+
+    const footerHeight = footerEl
+      ? footerEl.getBoundingClientRect().height
+      : 0;
+    // Content height = everything above the footer. Measured *before* any
+    // resizing, while the container is still auto-sized to its natural
+    // content — so the footer's top edge is exactly where content ends.
+    const contentHeight = footerEl
+      ? footerEl.getBoundingClientRect().top - containerTop
+      : pdfContainer.scrollHeight;
+
+    const contentBreaks = computeContentPageBreaks(
+      pdfContainer,
+      contentHeight,
+      PAGE_HEIGHT_PX,
+    );
+
+    const lastPageStart =
+      contentBreaks.length > 1 ? contentBreaks[contentBreaks.length - 2] : 0;
+    const lastPageUsed = contentHeight - lastPageStart;
+    const footerFitsOnLastContentPage =
+      PAGE_HEIGHT_PX - lastPageUsed >= footerHeight;
+
+    let pageBreaks: number[];
+    let finalContainerHeight: number;
+
+    if (footerFitsOnLastContentPage) {
+      // Footer shares the last content page — pad just that page out to a
+      // full page height so the footer lands flush at the very bottom.
+      finalContainerHeight = lastPageStart + PAGE_HEIGHT_PX;
+      pageBreaks = [...contentBreaks.slice(0, -1), finalContainerHeight];
+    } else {
+      // No room left on the last content page — give the footer its own
+      // dedicated final page.
+      finalContainerHeight = contentHeight + PAGE_HEIGHT_PX;
+      pageBreaks = [...contentBreaks, finalContainerHeight];
+    }
+
+    // Only the overall (last-page-inclusive) height is touched. Earlier
+    // pages are untouched — their length is whatever content/break-avoidance
+    // naturally produced.
+    pageEl.style.height = `${finalContainerHeight}px`;
+    // Let layout settle (footer's margin-top:auto re-flows to the new
+    // bottom) before we rasterize.
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+
     const canvas = await html2canvas(pdfContainer, {
       scale: 1.5,
       useCORS: true,
       backgroundColor: "#ffffff",
-      width: 794,
-      windowWidth: 794,
+      width: PAGE_WIDTH_PX,
+      windowWidth: PAGE_WIDTH_PX,
+      height: finalContainerHeight,
+      windowHeight: finalContainerHeight,
     });
 
     const pdf = new jsPDF({
@@ -98,39 +244,40 @@ async function renderContainerToPDF(
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const scaleFactor = canvas.width / PAGE_WIDTH_PX;
 
-    // How many canvas-pixels map to one PDF page
-    const pageCanvasHeight = Math.floor((canvas.width * pdfHeight) / pdfWidth);
-    const totalPages = Math.ceil(canvas.height / pageCanvasHeight);
-
-    for (let page = 0; page < totalPages; page++) {
+    let prevBreakPx = 0;
+    for (let page = 0; page < pageBreaks.length; page++) {
       if (page > 0) pdf.addPage();
 
-      // Slice only the portion of the canvas that belongs to this page
-      const sliceHeight = Math.min(
-        pageCanvasHeight,
-        canvas.height - page * pageCanvasHeight,
+      const sliceStartPx = prevBreakPx;
+      const sliceEndPx = pageBreaks[page];
+      prevBreakPx = sliceEndPx;
+
+      const sourceY = Math.round(sliceStartPx * scaleFactor);
+      const sourceHeight = Math.round(
+        (sliceEndPx - sliceStartPx) * scaleFactor,
       );
+      if (sourceHeight <= 0) continue;
 
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceHeight;
+      pageCanvas.height = sourceHeight;
       const ctx = pageCanvas.getContext("2d")!;
       ctx.drawImage(
         canvas,
         0,
-        page * pageCanvasHeight, // source Y
+        sourceY, // source Y
         canvas.width,
-        sliceHeight, // source dimensions
+        sourceHeight, // source dimensions
         0,
         0,
         canvas.width,
-        sliceHeight, // dest dimensions
+        sourceHeight, // dest dimensions
       );
 
       const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.75);
-      const imgHeightOnPage = (sliceHeight * pdfWidth) / canvas.width;
+      const imgHeightOnPage = (sourceHeight * pdfWidth) / canvas.width;
 
       pdf.addImage(pageImgData, "JPEG", 0, 0, pdfWidth, imgHeightOnPage);
     }
@@ -176,7 +323,9 @@ function getLetterhead(rightBlock: string) {
 }
 
 /** Shared footer band used across all PDF types. Brand color is the solid
- *  fill here — the only other place brand color appears besides the top bar. */
+ *  fill here — the only other place brand color appears besides the top bar.
+ *  Marked with `data-footer` so renderContainerToPDF can always pin it to
+ *  the bottom of the final page. */
 function getBrandFooter(signatureBlock: string) {
   const svgStyle = `display:block; flex-shrink:0; margin-right:6px;`;
   const iconPhone = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.36 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
@@ -185,7 +334,7 @@ function getBrandFooter(signatureBlock: string) {
   const iconLocation = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 
   return `
-<div style="margin-top:auto;">
+<div style="margin-top:auto;" data-footer="true">
 <div style="padding: 14px 40px 0;">
 <div style="display:flex; justify-content:flex-end;">
           ${signatureBlock}
@@ -326,7 +475,7 @@ export const downloadConsultationPDF = async ({
       } else {
         patientDob = patientDobRaw;
       }
-    } catch(e) {
+    } catch (e) {
       patientDob = patientDobRaw;
     }
   }
@@ -460,14 +609,14 @@ export const downloadConsultationPDF = async ({
 <div style="padding: 16px 40px 10px;">
       ${patientConcern
       ? `
-<div style="margin-bottom:16px;">
+<div style="margin-bottom:16px;" data-avoid-break="true">
           ${sectionLabel("Chief Complaint")}
 <div style="font-size:12px; line-height:1.5; color:${INK}; font-weight:400;">${patientConcern}</div>
 </div>
       `
       : ""
     }
-<div style="display:flex; flex-direction:row; justify-content:space-between; width:100%; gap:24px;">
+<div style="display:flex; flex-direction:row; justify-content:space-between; width:100%; gap:24px;" data-avoid-break="true">
 <div style="flex:1;">
           ${sectionLabel("Clinical Observations")}
 <div style="font-size:12px; line-height:1.6; color:${INK};">
@@ -511,7 +660,7 @@ export const downloadConsultationPDF = async ({
           ${xrayFiles
         .map(
           (url: string, i: number) => `
-<div style="width:30%; border:1px solid ${LINE}; border-radius:10px; overflow:hidden; background:${PANEL}; box-sizing:border-box;">
+<div style="width:30%; border:1px solid ${LINE}; border-radius:10px; overflow:hidden; background:${PANEL}; box-sizing:border-box;" data-avoid-break="true">
 <img src="${url}" style="width:100%; height:130px; object-fit:cover;" />
 <div style="padding:6px; text-align:center; font-size:12px; color:${INK_MUTED}; font-weight:400; background:#ffffff;">Image #${i + 1}</div>
 </div>
@@ -540,7 +689,7 @@ export const downloadConsultationPDF = async ({
             ${treatmentsArray
           .map(
             (t: any, i: number) => `
-<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
+<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">#${t.tooth_number || t.tooth || "General"}</td>
 <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${t.procedure || t.treatment_type || "-"}</td>
 <td style="padding:10px 12px; font-size:12px; text-align:center; color:${INK_MUTED};">${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}</td>
@@ -554,7 +703,7 @@ export const downloadConsultationPDF = async ({
       `;
     } else {
       treatmentsHtml = `
-<div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:12px; color:${INK_MUTED};">
+<div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:12px; color:${INK_MUTED};" data-avoid-break="true">
 <strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "-"}<br/>
 <strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "-"}<br/>
 <strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> Rs. ${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString("en-IN")}
@@ -566,7 +715,7 @@ export const downloadConsultationPDF = async ({
 <div style="padding: 8px 40px 10px;">
         ${sectionLabel("Treatment Planning & Procedures")}
         ${treatmentsHtml}
-<div style="margin-top:16px;">
+<div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
 <div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
             ${recommendations}
@@ -574,7 +723,7 @@ export const downloadConsultationPDF = async ({
 </div>
         ${additionalNotes
         ? `
-<div style="margin-top:12px;">
+<div style="margin-top:12px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Additional Clinical Notes</div>
 <div style="font-size:12px; line-height:1.5; color:${INK_MUTED};">${additionalNotes}</div>
 </div>
@@ -606,7 +755,7 @@ export const downloadConsultationPDF = async ({
           ${filledPrescriptions
       .map(
         (p: any, i: number) => `
-<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}">
+<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:10px 12px; font-size:12px; color:#93999e;">${i + 1}</td>
 <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}</td>
 <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.dosage || "-"} (${p.timing || "-"})</td>
@@ -904,7 +1053,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
       const billedVal = Number(item.billed_amount || item.amount || 0);
 
       return `
-      <tr style="border-bottom:1px solid ${LINE};">
+      <tr style="border-bottom:1px solid ${LINE};" data-avoid-break="true">
         <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:10%;">${i + 1}</td>
         <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:15%;">${hsnCode}</td>
         <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:left; width:45%;">
@@ -936,7 +1085,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
       <div style="padding: 0 40px; display:flex; flex-direction:column; gap:12px; margin-top:8px;">
 
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0; background:#f9fafb; border-radius:10px; padding:12px 20px; border:1px solid ${LINE}; margin-bottom:2px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0; background:#f9fafb; border-radius:10px; padding:12px 20px; border:1px solid ${LINE}; margin-bottom:2px;" data-avoid-break="true">
           <!-- Left column -->
           <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -993,7 +1142,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
         </div>
 
 
-        <div style="display:flex; justify-content:flex-end; margin-top:4px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:flex-end; margin-top:4px; margin-bottom:8px;" data-avoid-break="true">
           <div style="min-width:280px; display:flex; flex-direction:column; gap:4px;">
             <table style="width:100%; border-collapse:collapse; font-size:12px; color:${INK};">
               <tbody>
