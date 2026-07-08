@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText, Trash2,
   AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera, Edit, Save, X, Check, Loader2, CheckCircle,
-  FileCode, User, HeartPulse, FileSpreadsheet
+  FileCode, User, HeartPulse, FileSpreadsheet, Send
 } from "lucide-react";
 import apiClient from "../../../services/apiClient";
 import { parseApiResponse } from "../../../services/parseApiResponse";
@@ -15,15 +15,26 @@ import { SearchableSelect, Button, Label, Loading, Card, CardContent } from "@/c
 interface HistoryDetailProps {
   record: any;
   onDownloadPDF: (record: any, type: any) => void;
+  onSendPDF: (record: any, type: any) => void;
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
 }
 
-export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryDetailProps) {
+export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick }: HistoryDetailProps) {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
+  const [showSendMenu, setShowSendMenu] = useState(false);
   const [fullRecord, setFullRecord] = useState<any>(record);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
   const [appointment, setAppointment] = useState<any>(null);
   const [isLoadingAppt, setIsLoadingAppt] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setShowPrintMenu(false);
+      setShowSendMenu(false);
+    };
+    window.addEventListener("click", handleGlobalClick);
+    return () => window.removeEventListener("click", handleGlobalClick);
+  }, []);
 
   const getMedicalHistoryText = () => {
     if (fullRecord.conditions) return fullRecord.conditions;
@@ -380,6 +391,67 @@ export function HistoryDetail({ record, onDownloadPDF, onDeleteClick }: HistoryD
                     >
                       <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
                     </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative flex-1 md:flex-initial">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSendMenu(!showSendMenu);
+                    setShowPrintMenu(false);
+                  }}
+                  className={`w-full md:w-auto flex items-center justify-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl transition-all border shadow-sm ${showSendMenu
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/45"
+                    }`}
+                >
+                  <Send className="w-4.5 h-4.5" /> Send Report
+                </Button>
+                {showSendMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSendPDF(fullRecord, "CLINICAL");
+                        setShowSendMenu(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                    >
+                      <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSendPDF(fullRecord, "TREATMENT");
+                        setShowSendMenu(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                    >
+                      <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSendPDF(fullRecord, "PRESCRIPTION");
+                        setShowSendMenu(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                    >
+                      <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
+                    </Button>
+                    <div className="h-px bg-muted my-1.5" />
+                    {/* <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSendPDF(fullRecord, "FULL");
+                        setShowSendMenu(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                    >
+                      <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
+                    </Button> */}
                   </div>
                 )}
               </div>

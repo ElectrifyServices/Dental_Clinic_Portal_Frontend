@@ -11,6 +11,8 @@ import {
   Pill,
   FileText,
   Trash2,
+  Send,
+  Loader2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 
@@ -33,6 +35,7 @@ interface HistoryListProps {
   onSetActiveMenuId: (id: number | null) => void;
   onSelectRecord: (record: any) => void;
   onDownloadPDF: (record: any, type: any) => void;
+  onSendPDF: (record: any, type: any) => void;
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
   safePage: number;
   PAGE_SIZE: number;
@@ -57,12 +60,14 @@ export function HistoryList({
   onSetActiveMenuId,
   onSelectRecord,
   onDownloadPDF,
+  onSendPDF,
   onDeleteClick,
   safePage,
   PAGE_SIZE,
   isLoading = false,
 }: HistoryListProps) {
   const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<number | null>(null);
+  const [activeSendMenuId, setActiveSendMenuId] = useState<number | null>(null);
 
   const initials = (name: string) => {
     if (!name) return "??";
@@ -96,7 +101,7 @@ export function HistoryList({
   };
 
   return (
-    <div className="flex flex-col h-full" onClick={() => setActiveDownloadMenuId(null)}>
+    <div className="flex flex-col h-full" onClick={() => { setActiveDownloadMenuId(null); setActiveSendMenuId(null); }}>
       <div className="flex-shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -310,11 +315,74 @@ export function HistoryList({
                           }}
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
                         >
-                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary                       
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
                         </Button>
                       </div>
                     )}
-{/* This button can be enabled in the future, so for now it's just been commented out. */}
+
+                    <Button
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSendMenuId(activeSendMenuId === item.id ? null : item.id);
+                        setActiveDownloadMenuId(null);
+                      }}
+                      className={`h-auto p-1.5 rounded-md transition-colors ${activeSendMenuId === item.id ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
+                      title="Send Report"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+
+                    {activeSendMenuId === item.id && (
+                      <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSendPDF(item, 'CLINICAL');
+                            setActiveSendMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSendPDF(item, 'TREATMENT');
+                            setActiveSendMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSendPDF(item, 'PRESCRIPTION');
+                            setActiveSendMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto"
+                        >
+                          <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
+                        </Button>
+                        <div className="h-px bg-muted my-1" />
+                        {/* <Button
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSendPDF(item, 'FULL');
+                            setActiveSendMenuId(null);
+                          }}
+                          className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary                       
+                        </Button> */}
+                      </div>
+                    )}
+                    {/* This button can be enabled in the future, so for now it's just been commented out. */}
                     {/* <Button variant="ghost" onClick={(e) => onDeleteClick(item.id, e)} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors h-auto" title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </Button> */}

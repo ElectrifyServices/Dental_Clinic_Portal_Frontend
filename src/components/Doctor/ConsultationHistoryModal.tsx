@@ -7,6 +7,7 @@ import {
 import { Modal, Button, ConfirmModal, toast, Pagination } from "@/components/ui";
 import { useConsultationsQuery } from "../../hooks/consultation/useConsultationsQuery";
 import { useDeleteConsultationMutation } from "../../hooks/consultation/useDeleteConsultationMutation";
+import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 import { useDebounce } from "../../hooks/useDebounce";
 
@@ -159,6 +160,21 @@ export default function ConsultationHistoryModal({
     }
   };
 
+  const { mutateAsync: sendConsultation } = useSendConsultationMutation();
+
+  const handleSendPDF = async (
+    record: any,
+    type: PDFReportType = "FULL"
+  ) => {
+    const toastId = toast.loading(`Sending ${type.toLowerCase().replace('_', ' ')} report...`);
+    try {
+      await sendConsultation({ id: String(record.id), type: type as any });
+      toast.success("Report sent successfully!", { id: toastId });
+    } catch (err: any) {
+      toast.error("Failed to send report: " + (err.message || ""), { id: toastId });
+    }
+  };
+
   const totalRecords = useMemo(() => {
     if (!apiData) return 0;
     if (apiData.data?.pagination?.total_items !== undefined) return apiData.data.pagination.total_items;
@@ -265,6 +281,7 @@ export default function ConsultationHistoryModal({
           <HistoryDetail
             record={selectedRecord}
             onDownloadPDF={handleDownloadPDF}
+            onSendPDF={handleSendPDF}
             onDeleteClick={(id, e) => {
               e.stopPropagation();
               setDeleteConfirmId(id);
@@ -290,6 +307,7 @@ export default function ConsultationHistoryModal({
             onSetActiveMenuId={setActiveMenuId}
             onSelectRecord={setSelectedRecord}
             onDownloadPDF={handleDownloadPDF}
+            onSendPDF={handleSendPDF}
             onDeleteClick={(id, e) => {
               e.stopPropagation();
               setDeleteConfirmId(id);

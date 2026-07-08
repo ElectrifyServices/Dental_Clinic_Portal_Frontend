@@ -307,17 +307,36 @@ function ageFromDOB(dob?: string): string | null {
   const age = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
   return age >= 0 ? String(age) : null;
 }
+/** New premium header: large curved brand-color panel top-left (pure CSS,
+ *  no SVG/image), large logo sitting on top of the curve, thin vertical
+ *  divider, and static doctor info on the right. Old thin top strip +
+ *  left-doctor/right-logo layout removed as requested.
+ *  `rightBlock` kept in the signature for call-site compatibility (same as
+ *  before — not rendered here, matching prior behavior). */
 function getLetterhead(rightBlock: string) {
   return `
-<div style="height:6px; background:${BRAND};"></div>
-<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${LINE};">
-  <div style="display:flex; flex-direction:column; justify-content:center; gap:2px; margin-bottom:20px;">
+<div style="position:relative; height:6px; background:${BRAND};"></div>
+<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${LINE}; position:relative; overflow:hidden;">
+  <!-- Decorative green curved background shape in top-left corner -->
+  <div style="
+    position:absolute;
+    top:-20px;
+    left:-20px;
+    width:200px;
+    height:250px;
+    background:${BRAND};
+    border-radius:0 0 100% 0;
+    opacity:0.08;
+    pointer-events:none;
+    z-index:0;
+  "></div>
+  <div style="display:flex; flex-direction:column; justify-content:center; gap:2px; margin-bottom:20px; position:relative; z-index:1;">
     <div style="font-size: 14px; font-weight: 800; color: ${BRAND}; text-transform: uppercase; letter-spacing: 0.3px;">DR. RAJAL SHAH</div>
     <div style="font-size: 9.5px; font-weight: 700; color: ${INK}; margin-top: 3px; text-transform: uppercase; line-height: 1.3; letter-spacing: 0.2px;">
       M.D.S PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
   </div>
-  <img src="${logoImg}" style="height:180px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
+  <img src="${logoImg}" style="height:180px; width:auto; display:block; flex-shrink:0; position:relative; z-index:1;" crossorigin="anonymous" />
 </div>
   `;
 }
@@ -822,6 +841,182 @@ export const downloadConsultationPDF = async ({
   await renderContainerToPDF(
     pdfContainer,
     `${patient.patientName}_${fileNameSuffix}_${new Date().toISOString().split("T")[0]}.pdf`,
+  );
+};
+
+export const downloadCompletedTreatmentPDF = async (treatment: any) => {
+  const pdfContainer = makeOffscreenContainer();
+
+  // Safely extract the inner treatment plan object if nested under "data"
+  const treatmentObj = treatment?.data || treatment || {};
+
+  // Safely extract doctor & patient details
+  const doctorName = treatmentObj.doctor?.name || treatmentObj.doctorName || "-";
+  const displayDoctorName = doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`;
+  const specialization = treatmentObj.doctor?.specialization?.name || treatmentObj.doctor?.specialization || "Dentistry";
+
+  const patientName = treatmentObj.patient?.name || treatmentObj.patientName || "-";
+  const patientId = treatmentObj.patient?.id || treatmentObj.patientId || "-";
+  const patientCode = treatmentObj.patient?.patient_code || treatmentObj.patient?.patientCode || "-";
+  const displayPatientId = patientCode !== "-" ? patientCode : (patientId === "-" ? "-" : patientId.split("-")[0]);
+  const patientPhone = treatmentObj.patient?.phone || treatmentObj.patientPhone || "-";
+  const patientGender = treatmentObj.patient?.gender || "-";
+  const patientDobRaw = treatmentObj.patient?.date_of_birth || treatmentObj.patient?.dob || "-";
+  let patientDob = "-";
+  if (patientDobRaw && patientDobRaw !== "-") {
+    try {
+      const d = new Date(patientDobRaw);
+      if (!isNaN(d.getTime())) {
+        patientDob = d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+      }
+    } catch {
+      patientDob = patientDobRaw;
+    }
+  }
+
+  const procedure = treatmentObj.procedure || "-";
+  const tooth = treatmentObj.tooth_number || treatmentObj.tooth || "General";
+  const dateRaw = treatmentObj.treatment_date || treatmentObj.date || treatmentObj.created_at;
+  const treatmentDate = dateRaw
+    ? new Date(dateRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    : "-";
+
+  const getHeader = () =>
+    getLetterhead(`
+<div style="font-size: 12px; font-weight: 400; color: ${INK}; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 4px;">Patient ID: ${displayPatientId}</div>
+<div style="font-size: 12px; font-weight: 400; color: ${INK_MUTED}; margin-top: 2px;">Phone: ${patientPhone}</div>
+    `);
+
+  const getPatientInfo = () => `
+<div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px;">COMPLETED TREATMENT SUMMARY</div>
+<div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
+<span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+</div>
+</div>
+<div style="padding: 0 40px;">
+      ${detailsGrid([
+    ["Patient Name", patientName, "Patient ID", displayPatientId],
+    ["Phone", patientPhone, "Procedure", procedure],
+    ["Doctor", displayDoctorName, "Tooth", `#${tooth}`],
+  ])}
+</div>
+  `;
+
+  // Sessions section
+  const sessions = treatmentObj.sessions || [];
+  let sessionsHtml = "";
+  if (sessions.length > 0) {
+    sessionsHtml = `
+<div style="padding: 16px 40px 10px;" data-avoid-break="true">
+  ${sectionLabel("Treatment Session Logs")}
+  <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE}; margin-top:10px;">
+    <thead>
+      <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
+        ${tableHeadCell("Session")}
+        ${tableHeadCell("Date")}
+        ${tableHeadCell("Findings")}
+        ${tableHeadCell("Work Done")}
+        ${tableHeadCell("Session Fee", "right")}
+      </tr>
+    </thead>
+    <tbody>
+      ${sessions
+        .map(
+          (s: any, idx: number) => `
+        <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
+          <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">Visit #${s.visit_number || idx + 1}</td>
+          <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</td>
+          <td style="padding:10px 12px; font-size:12px; color:${INK};">${s.session_findings || s.findings || "-"}</td>
+          <td style="padding:10px 12px; font-size:12px; color:${INK};">${s.work_done || "-"}</td>
+          <td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">₹${Number(s.session_fee || 0).toLocaleString("en-IN")}</td>
+        </tr>
+      `
+        )
+        .join("")}
+    </tbody>
+  </table>
+</div>
+    `;
+  }
+
+  // Prescriptions section
+  const prescriptions = treatmentObj.prescriptions || [];
+  let prescriptionsHtml = "";
+  if (prescriptions.length > 0) {
+    prescriptionsHtml = `
+<div style="padding: 8px 40px 10px;" data-avoid-break="true">
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
+    <div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
+    <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
+  </div>
+  <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE};">
+    <thead>
+      <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
+        ${tableHeadCell("Sr. No.")}
+        ${tableHeadCell("Medicine")}
+        ${tableHeadCell("Dosage")}
+        ${tableHeadCell("Freq")}
+        ${tableHeadCell("Duration")}
+        ${tableHeadCell("Qty")}
+      </tr>
+    </thead>
+    <tbody>
+      ${prescriptions
+        .map(
+          (p: any, idx: number) => {
+            const medicineName = p.medicine?.name || p.medicine_name || p.medicineName || "-";
+            return `
+              <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
+                <td style="padding:10px 12px; font-size:12px; color:#93999e;">${idx + 1}</td>
+                <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${medicineName}</td>
+                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.dosage || "-"} (${p.timing || "-"})</td>
+                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.frequency || "-"}</td>
+                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}</td>
+                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.qty || "-"}</td>
+              </tr>
+            `;
+          }
+        )
+        .join("")}
+    </tbody>
+  </table>
+</div>
+    `;
+  }
+
+  // Clinical notes
+  let clinicalNotesHtml = "";
+  if (treatmentObj.clinical_notes) {
+    clinicalNotesHtml = `
+<div style="padding: 16px 40px 10px;" data-avoid-break="true">
+  ${sectionLabel("Clinical Notes")}
+  <div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
+    ${treatmentObj.clinical_notes}
+  </div>
+</div>
+    `;
+  }
+
+  const getFooter = () =>
+    getBrandFooter(`
+<div style="text-align:center;">
+<div style="width:200px; border-bottom:1px solid ${LINE}; margin-bottom:8px;"></div>
+<div style="font-size:12px; font-weight:400; color:${INK};">${displayDoctorName}</div>
+<div style="font-size:12px; color:${INK_MUTED}; font-weight:400;">${specialization}</div>
+<div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
+</div>
+  `);
+
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Cinzel', serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
+  htmlContent += getPatientInfo() + clinicalNotesHtml + sessionsHtml + prescriptionsHtml + getFooter() + "</div>";
+
+  pdfContainer.innerHTML = htmlContent;
+
+  await renderContainerToPDF(
+    pdfContainer,
+    `${patientName}_completed_treatment_${new Date().toISOString().split("T")[0]}.pdf`
   );
 };
 

@@ -4,10 +4,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search, Plus, Clock, CheckCircle, Calendar,
   Stethoscope, ChevronLeft, ChevronRight,
-  Filter, X, Loader2, FileText, Edit, Play, MoreVertical
+  Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download
 } from "lucide-react";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
-import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, PageHeader, Loading } from "@/components/ui";
+import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, PageHeader, Loading, toast } from "@/components/ui";
+import { downloadCompletedTreatmentPDF } from "../../utils/pdfGenerator";
+import { useDownloadTreatmentMutation } from "../../hooks/treatment/useDownloadTreatmentMutation";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -91,6 +93,23 @@ export function TreatmentList({
   onStartTreatment,
 }: TreatmentListProps) {
   const [search, setSearch] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { mutateAsync: downloadTreatment } = useDownloadTreatmentMutation();
+
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      setDownloadingId(id);
+      toast.loading("Generating PDF...", { id: "pdf-download" });
+      const data = await downloadTreatment({ id });
+      await downloadCompletedTreatmentPDF(data);
+      toast.success("PDF downloaded successfully!", { id: "pdf-download" });
+    } catch (err: any) {
+      toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const [statusFilter, setStatusFilter] = useState<string[]>([]);   // UI values
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({});
@@ -301,6 +320,23 @@ export function TreatmentList({
                 </div>
                 View Details
               </DropdownMenuItem>
+
+              {(treatment.status === "completed" || treatment.status === "COMPLETED") && (
+                <DropdownMenuItem 
+                  onClick={() => handleDownloadPDF(treatment.id)} 
+                  disabled={downloadingId === treatment.id}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
+                >
+                  <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                    {downloadingId === treatment.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                  </div>
+                  Download PDF
+                </DropdownMenuItem>
+              )}
 
               {treatment.status !== "completed" && (
                 <DropdownMenuItem onClick={() => onEditTreatment(treatment.id)} className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer">

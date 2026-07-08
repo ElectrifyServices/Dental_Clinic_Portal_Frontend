@@ -137,7 +137,7 @@ export function Header() {
       <div className="flex items-center gap-1.5 flex-shrink-0">
 
         {/* Notifications */}
-        <Popover>
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
@@ -215,7 +215,7 @@ export function Header() {
               )}
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover> */}
 
         {/* User menu */}
         <Popover>
