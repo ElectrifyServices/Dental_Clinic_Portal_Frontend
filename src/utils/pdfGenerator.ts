@@ -307,6 +307,7 @@ function ageFromDOB(dob?: string): string | null {
   const age = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
   return age >= 0 ? String(age) : null;
 }
+
 /** New premium header: large curved brand-color panel top-left (pure CSS,
  *  no SVG/image), large logo sitting on top of the curve, thin vertical
  *  divider, and static doctor info on the right. Old thin top strip +
@@ -315,28 +316,22 @@ function ageFromDOB(dob?: string): string | null {
  *  before — not rendered here, matching prior behavior). */
 function getLetterhead(rightBlock: string) {
   return `
-<div style="position:relative; height:6px; background:${BRAND};"></div>
-<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${LINE}; position:relative; overflow:hidden;">
-  <!-- Decorative green curved background shape in top-left corner -->
-  <div style="
-    position:absolute;
-    top:-20px;
-    left:-20px;
-    width:200px;
-    height:250px;
-    background:${BRAND};
-    border-radius:0 0 100% 0;
-    opacity:0.08;
-    pointer-events:none;
-    z-index:0;
-  "></div>
-  <div style="display:flex; flex-direction:column; justify-content:center; gap:2px; margin-bottom:20px; position:relative; z-index:1;">
-    <div style="font-size: 14px; font-weight: 800; color: ${BRAND}; text-transform: uppercase; letter-spacing: 0.3px;">DR. RAJAL SHAH</div>
-    <div style="font-size: 9.5px; font-weight: 700; color: ${INK}; margin-top: 3px; text-transform: uppercase; line-height: 1.3; letter-spacing: 0.2px;">
-      M.D.S PROSTHODONTIST &amp; IMPLANTOLOGIST
+<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${LINE}; position:relative; overflow:hidden; background:#ffffff; min-height:120px;">
+    <!-- Left: Doctor Name & Title -->
+  <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1;">
+    <div style="font-size: 20px; font-weight: 700; color: #5F736D; letter-spacing: 0.5px; text-transform: uppercase; line-height:1.3;">DR. RAJAL SHAH</div>
+    <div style="font-size: 12px; font-weight: 500; color: ${INK_MUTED}; margin-top: 4px; letter-spacing: 0.2px; line-height:1.3; text-transform: uppercase;">
+      MDS PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
   </div>
-  <img src="${logoImg}" style="height:180px; width:auto; display:block; flex-shrink:0; position:relative; z-index:1;" crossorigin="anonymous" />
+  
+  <!-- Vertical Divider Line -->
+  <div style="width:1.5px; height:70px; background:#5F736D; position:relative; z-index:1;"></div>
+
+  <!-- Right: Logo -->
+  <div style="display:flex; align-items:center; gap:0; position:relative; z-index:1;">
+    <img src="${logoImg}" style="height:200px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
+  </div>
 </div>
   `;
 }
@@ -345,12 +340,50 @@ function getLetterhead(rightBlock: string) {
  *  fill here — the only other place brand color appears besides the top bar.
  *  Marked with `data-footer` so renderContainerToPDF can always pin it to
  *  the bottom of the final page. */
-function getBrandFooter(signatureBlock: string) {
-  const svgStyle = `display:block; flex-shrink:0; margin-right:6px;`;
-  const iconPhone = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.36 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
-  const iconEmail = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
-  const iconInstagram = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`;
-  const iconLocation = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+/** Shared footer band used across all PDF types. Brand color is the solid
+ *  fill here — the only other place brand color appears besides the top bar.
+ *  Marked with `data-footer` so renderContainerToPDF can always pin it to
+ *  the bottom of the final page. */
+/** Shared footer band used across all PDF types. Brand color is the solid
+ *  fill here — the only other place brand color appears besides the top bar.
+ *  Marked with `data-footer` so renderContainerToPDF can always pin it to
+ *  the bottom of the final page. */
+/** Shared footer band used across all PDF types. Brand color is the solid
+ *  fill here — the only other place brand color appears besides the top bar.
+ *  Marked with `data-footer` so renderContainerToPDF can always pin it to
+ *  the bottom of the final page. */
+function getBrandFooter(signatureBlock: string, isInvoice: boolean = false) {
+  // FIX: SVG ko inline-flex banaya aur align-items:center ke saath
+  // taaki icon apne parent container ke andar center ho
+  const svgStyle = `
+display:block;
+width:14px;
+height:14px;
+flex-shrink:0;
+overflow:visible;
+vertical-align:middle;
+`;
+  const iconPhone = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.36 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  const iconEmail = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  const iconInstagram = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="${svgStyle}"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`;
+  const iconLocation = `
+<svg
+xmlns="http://www.w3.org/2000/svg"
+width="14"
+height="14"
+viewBox="0 0 24 24"
+fill="#ffffff"
+style="display:block;width:14px;height:14px;"
+>
+<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
+</svg>`;
+
+  const computerGeneratedBlock = isInvoice
+    ? `
+<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:600; opacity:0.9; letter-spacing:0.3px;">
+  This is a computer generated Invoice
+</div>`
+    : "";
 
   return `
 <div style="margin-top:auto;" data-footer="true">
@@ -360,25 +393,186 @@ function getBrandFooter(signatureBlock: string) {
 </div>
 </div>
 <div style="height:12px;"></div>
-<div style="background:${BRAND}; padding:14px 40px; color:#ffffff; position:relative;">
-<div style="position:absolute; right:40px; top:16px; text-align:center; display:flex; flex-direction:column; align-items:center;">
-  <div style="background:#ffffff; padding:4px; border-radius:6px; margin-bottom:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-    <img src="/opalsmiles-qr.png" style="width:46px; height:46px; display:block;" crossorigin="anonymous" />
+<div style="background:${BRAND}; padding:14px 40px; min-height:90px; color:#ffffff; display:flex; flex-direction:row; align-items:center; justify-content:space-between; box-sizing:border-box;">
+  
+  <!-- Left column: Contact info -->
+  <div
+style="
+flex:1;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+padding-right:20px;
+box-sizing:border-box;
+height:100%;
+">
+    <!-- Address - Single line with proper alignment -->
+<div
+style="
+margin-bottom:6px;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:6px;
+flex-wrap:nowrap;
+">
+
+<span
+style="
+display:flex;
+align-items:center;
+justify-content:center;
+width:14px;
+height:14px;
+flex-shrink:0;
+align-self:center;
+">
+${iconLocation}
+</span>
+
+<span
+style="
+font-size:13px;
+font-weight:400;
+line-height:1.4;
+">
+${CLINIC_ADDRESS}
+</span>
+
+</div>
+
+<!-- Phone, Email, Instagram -->
+<div style="
+margin-bottom:6px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:16px;
+flex-wrap:wrap;
+">
+
+  <!-- Phone -->
+  <span
+    style="
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      white-space:nowrap;
+    "
+  >
+    <span
+      style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:14px;
+        height:14px;
+        margin-top:1px;
+        flex-shrink:0;
+      "
+    >
+      ${iconPhone}
+    </span>
+
+    <span style="font-size:13px;font-weight:400;line-height:1.4;">
+      ${CLINIC_PHONE}
+    </span>
+  </span>
+
+  <!-- Email -->
+  <span
+    style="
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      white-space:nowrap;
+    "
+  >
+    <span
+      style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:14px;
+        height:14px;
+        margin-top:1px;
+        flex-shrink:0;
+      "
+    >
+      ${iconEmail}
+    </span>
+
+    <span style="font-size:13px;font-weight:400;line-height:1.4;">
+      ${CLINIC_EMAIL}
+    </span>
+  </span>
+
+  <!-- Instagram -->
+  <span
+    style="
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      white-space:nowrap;
+    "
+  >
+    <span
+      style="
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:14px;
+        height:14px;
+        margin-top:1px;
+        flex-shrink:0;
+      "
+    >
+      ${iconInstagram}
+    </span>
+
+    <span style="font-size:13px;font-weight:400;line-height:1.4;">
+      ${CLINIC_INSTAGRAM}
+    </span>
+  </span>
+
+</div>
+
+<!-- Hours -->
+<div
+  style="
+    font-size:13px;
+    font-weight:400;
+    opacity:0.85;
+    text-align:center;
+    line-height:1.4;
+  "
+>
+  ${CLINIC_HOURS}
+</div>
+
+${computerGeneratedBlock}
+</div>
+
+  <!-- Right column: QR Code -->
+  <div style="text-align:center; display:flex; height:100%; flex-direction:column; align-items:center; flex-shrink:0; justify-content:center; margin-left:10px;">
+<div style="
+background:#ffffff;
+padding:4px;
+border-radius:6px;
+margin-bottom:6px;
+box-shadow:0 2px 4px rgba(0,0,0,0.1);
+display:inline-block;
+line-height:0;
+">
+      <img src="/opalsmiles-qr.png" style="width:46px; height:46px; display:block;" crossorigin="anonymous" />
+    </div>
+    <div style="font-size:7.5px; opacity:0.95; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; line-height:1.2;">Scan to visit</div>
   </div>
-  <div style="font-size:7.5px; opacity:0.95; text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Scan to visit</div>
-</div>
-<div style="display:flex; flex-direction:row; align-items:center; margin-bottom:4px; justify-content:center;">
-  ${iconLocation}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_ADDRESS}</span>
-</div>
-<div style="display:flex; flex-direction:row; align-items:center; gap:20px; margin-bottom:4px; justify-content:center;">
-  <div style="display:flex; flex-direction:row; align-items:center; ">${iconPhone}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_PHONE}</span></div>
-  <div style="display:flex; flex-direction:row; align-items:center; ">${iconEmail}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_EMAIL}</span></div>
-  <div style="display:flex; flex-direction:row; align-items:center; ">${iconInstagram}<span style="font-size:13px; font-weight:400; margin-bottom:12px;">${CLINIC_INSTAGRAM}</span></div>
-</div>
-<div style="font-size:13px; font-weight:400; opacity:0.85; text-align:center;">${CLINIC_HOURS}</div>
-<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:400; opacity:0.9; letter-spacing:0.3px;">
-  This is a computer generated Invoice
-</div>
+
 </div>
 </div>
   `;
@@ -400,12 +594,19 @@ function statusBadge(status: string) {
 const sectionLabel = (text: string) =>
   `<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">${text}</div>`;
 
+const makeCellContent = (content: string, align: string = "left", extraStyle: string = "") => {
+  const justify = align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
+  return `<div style="display:flex; align-items:center; justify-content:${justify}; width:100%; min-height:100%; padding:12px 12px; box-sizing:border-box; line-height:1.2; text-align:${align}; ${extraStyle}">${content}</div>`;
+};
+
 const tableHeadCell = (text: string, align: string = "left") =>
-  `<th style="padding:10px 12px; text-align:${align}; font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.4px;">${text}</th>`;
+  `<th style="padding:0; text-align:${align}; font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.4px; vertical-align:middle;">${makeCellContent(text, align)}</th>`;
 
 /** A bordered label/value grid - the classic "tax invoice" look - used for the
  *  patient + invoice meta block. 4 columns: label | value | label | value. */
 function detailsGrid(rows: Array<[string, string, string, string]>) {
+  const labelStyle = `font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px;`;
+  const valueStyle = `font-size:12px; font-weight:400; color:${INK};`;
   return `
 <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE}; margin-top:16px;">
 <tbody>
@@ -413,10 +614,10 @@ function detailsGrid(rows: Array<[string, string, string, string]>) {
       .map(
         (row) => `
 <tr>
-<td style="width:16%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[0]}</td>
-<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK}; border:1px solid ${LINE};">${row[1]}</td>
-<td style="width:16%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.3px; background:${PANEL}; border:1px solid ${LINE};">${row[2]}</td>
-<td style="width:34%; padding:9px 12px; font-size:12px; font-weight:400; color:${INK}; border:1px solid ${LINE};">${row[3]}</td>
+<td style="width:16%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[0], "left", labelStyle)}</td>
+<td style="width:34%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[1], "left", valueStyle)}</td>
+<td style="width:16%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[2], "left", labelStyle)}</td>
+<td style="width:34%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[3], "left", valueStyle)}</td>
 </tr>
         `,
       )
@@ -450,17 +651,8 @@ export const downloadConsultationPDF = async ({
     doctorObj = consultationData.responseObject.doctor;
   }
 
-  const doctorName = doctorObj?.name || patient.doctorName || "";
-  const specialization =
-    doctorObj?.personal_profile?.specialization?.name ||
-    doctorObj?.specialization?.name ||
-    doctorObj?.specialization ||
-    "Dentistry";
-  const displayDoctorName = doctorName
-    ? doctorName.toLowerCase().startsWith("dr.")
-      ? doctorName
-      : `Dr. ${doctorName}`
-    : "-";
+  const displayDoctorName = "DR. RAJAL SHAH";
+  const specialization = "Prosthodontist & Implantologist";
 
   // Safely extract patient details from API payload structure
   let patientObj: any = {};
@@ -605,14 +797,14 @@ export const downloadConsultationPDF = async ({
 
   const getPatientInfo = (title: string) => `
 <div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
-<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px;">${title}</div>
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">${title}</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
 </div>
 <div style="padding: 0 40px;">
       ${detailsGrid([
-    ["Patient Name", patientName, "Patient ID", displayPatientId],
+    ["Name", patientName, "Patient ID", displayPatientId],
     [
       "DOB / Gender",
       `${patientDob} / ${patientGender}`,
@@ -709,10 +901,10 @@ export const downloadConsultationPDF = async ({
           .map(
             (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">#${t.tooth_number || t.tooth || "General"}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${t.procedure || t.treatment_type || "-"}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:center; color:${INK_MUTED};">${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}</td>
-<td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">Rs. ${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`#${t.tooth_number || t.tooth || "General"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${t.procedure || t.treatment_type || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}`, "center", `font-size:12px; color:${INK_MUTED};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`Rs. ${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>
 </tr>
             `,
           )
@@ -775,12 +967,12 @@ export const downloadConsultationPDF = async ({
       .map(
         (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-<td style="padding:10px 12px; font-size:12px; color:#93999e;">${i + 1}</td>
-<td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}</td>
-<td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.dosage || "-"} (${p.timing || "-"})</td>
-<td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.frequency || "-"}</td>
-<td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}</td>
-<td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.qty || "-"}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
 </tr>
           `,
       )
@@ -806,9 +998,9 @@ export const downloadConsultationPDF = async ({
     `
         : ""
       }
-  `);
+  `, false);
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Cinzel', serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
 
   let reportTitle = "Consultation Report";
   let fileNameSuffix = "full_report";
@@ -851,9 +1043,8 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const treatmentObj = treatment?.data || treatment || {};
 
   // Safely extract doctor & patient details
-  const doctorName = treatmentObj.doctor?.name || treatmentObj.doctorName || "-";
-  const displayDoctorName = doctorName.toLowerCase().startsWith("dr.") ? doctorName : `Dr. ${doctorName}`;
-  const specialization = treatmentObj.doctor?.specialization?.name || treatmentObj.doctor?.specialization || "Dentistry";
+  const displayDoctorName = "DR. RAJAL SHAH";
+  const specialization = "Prosthodontist & Implantologist";
 
   const patientName = treatmentObj.patient?.name || treatmentObj.patientName || "-";
   const patientId = treatmentObj.patient?.id || treatmentObj.patientId || "-";
@@ -890,14 +1081,14 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 
   const getPatientInfo = () => `
 <div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
-<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px;">COMPLETED TREATMENT SUMMARY</div>
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">COMPLETED TREATMENT SUMMARY</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
 </div>
 <div style="padding: 0 40px;">
       ${detailsGrid([
-    ["Patient Name", patientName, "Patient ID", displayPatientId],
+    ["Name", patientName, "Patient ID", displayPatientId],
     ["Phone", patientPhone, "Procedure", procedure],
     ["Doctor", displayDoctorName, "Tooth", `#${tooth}`],
   ])}
@@ -910,7 +1101,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   if (sessions.length > 0) {
     sessionsHtml = `
 <div style="padding: 16px 40px 10px;" data-avoid-break="true">
-  ${sectionLabel("Treatment Session Logs")}
+  ${sectionLabel("Treatment Session")}
   <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE}; margin-top:10px;">
     <thead>
       <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
@@ -926,11 +1117,11 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
         .map(
           (s: any, idx: number) => `
         <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-          <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">Visit #${s.visit_number || idx + 1}</td>
-          <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</td>
-          <td style="padding:10px 12px; font-size:12px; color:${INK};">${s.session_findings || s.findings || "-"}</td>
-          <td style="padding:10px 12px; font-size:12px; color:${INK};">${s.work_done || "-"}</td>
-          <td style="padding:10px 12px; font-size:12px; text-align:right; font-weight:400; color:${INK};">₹${Number(s.session_fee || 0).toLocaleString("en-IN")}</td>
+          <td style="padding:0; vertical-align:middle;">${makeCellContent(`Visit #${s.visit_number || idx + 1}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+          <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+          <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.session_findings || s.findings || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
+          <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.work_done || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
+          <td style="padding:0; vertical-align:middle;">${makeCellContent(`₹${Number(s.session_fee || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>
         </tr>
       `
         )
@@ -949,7 +1140,6 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 <div style="padding: 8px 40px 10px;" data-avoid-break="true">
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
     <div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
-    <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
   </div>
   <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE};">
     <thead>
@@ -969,12 +1159,12 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
             const medicineName = p.medicine?.name || p.medicine_name || p.medicineName || "-";
             return `
               <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-                <td style="padding:10px 12px; font-size:12px; color:#93999e;">${idx + 1}</td>
-                <td style="padding:10px 12px; font-size:12px; font-weight:400; color:${INK};">${medicineName}</td>
-                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.dosage || "-"} (${p.timing || "-"})</td>
-                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.frequency || "-"}</td>
-                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}</td>
-                <td style="padding:10px 12px; font-size:12px; color:${INK_MUTED};">${p.qty || "-"}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${medicineName}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
+                <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
               </tr>
             `;
           }
@@ -1007,9 +1197,9 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 <div style="font-size:12px; color:${INK_MUTED}; font-weight:400;">${specialization}</div>
 <div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
 </div>
-  `);
+  `, false);
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Cinzel', serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;">${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
   htmlContent += getPatientInfo() + clinicalNotesHtml + sessionsHtml + prescriptionsHtml + getFooter() + "</div>";
 
   pdfContainer.innerHTML = htmlContent;
@@ -1165,12 +1355,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     invoice.patient?.phone ||
     "—";
 
-  const doctorName = invoice.doctor || patient?.doctorName || "";
-  const displayDoctorName = doctorName
-    ? doctorName.toLowerCase().startsWith("dr.")
-      ? doctorName
-      : `Dr. ${doctorName}`
-    : "Dr. General Dentist";
+  const displayDoctorName = "DR. RAJAL SHAH";
 
   const statementDateFormatted = invoiceDate;
 
@@ -1225,7 +1410,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const memberId = invoice?.member?.member_id || "—";
 
   const rows: Array<[string, string, string, string]> = [
-    ["Patient Name", patientName, "Date", firstItemDate],
+    ["Name", patientName, "Date", firstItemDate],
     ["Patient ID", "—", "Invoice No.", firstInvoiceNumber],
     ["Member ID", memberId, "Phone", phone],
   ];
@@ -1249,14 +1434,15 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
       return `
       <tr style="border-bottom:1px solid ${LINE};" data-avoid-break="true">
-        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:10%;">${i + 1}</td>
-        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:center; width:15%;">${hsnCode}</td>
-        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:left; width:45%;">
-          <div>${formattedType}</div>
-          ${displayDescription}
+        <td style="padding:0; vertical-align:middle; width:10%;">${makeCellContent(`${i + 1}`, "center", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${hsnCode}`, "center", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:45%;">
+          <div style="padding:12px 12px; font-size:12px; font-weight:400; text-align:left; line-height:1.2;">
+            <div>${formattedType}</div>
+            ${displayDescription}
+          </div>
         </td>
-        <td style="padding:12px 12px; font-size:12px; font-weight:400; text-align:right; width:15%;">${formatCurrency(totalVal)}</td>
-        
+        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${formatCurrency(totalVal)}`, "right", `font-size:12px; font-weight:400;`)}</td>
       </tr>
     `;
     })
@@ -1270,10 +1456,12 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   `;
 
   const htmlContent = `
-    <div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box; font-family: 'Cinzel', serif;">
+    <div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box; font-family: 'Inter', sans-serif;">
 
-      <div style="text-align:center; font-size:15px; font-weight:400; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px;">
-        ${"Invoice"}
+      <div style="height:20px; background:${BRAND}; width:100%;"></div>
+
+      <div style="text-align:center; font-size:15px; font-weight:400; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px; font-family: 'Cinzel', serif;">
+        Invoice
       </div>
 
       ${getHeader()}
@@ -1284,7 +1472,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <!-- Left column -->
           <div style="display:flex; flex-direction:column; gap:10px; flex:1;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient Name</span>
+              <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Name</span>
               <span style="font-size:12px; font-weight:400; text-align:right;">${patientName}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -1323,11 +1511,10 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           <table style="width:100%; border-collapse:collapse; margin-top:8px; border-bottom:1.5px solid ${LINE};">
             <thead>
               <tr style="border-top:1.5px solid ${LINE}; border-bottom:1.5px solid ${LINE}; background:#fafafa;">
-                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%;">Sr. No</th>
-                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%;">HSN/SAC</th>
-                <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:45%;">Item Type</th>
-                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%;">Amount</th>
-            
+                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%; vertical-align:middle; line-height:1.4;">Sr. No</th>
+                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">HSN/SAC</th>
+                <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:45%; vertical-align:middle; line-height:1.4;">Item Type</th>
+                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -1342,14 +1529,14 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             <table style="width:100%; border-collapse:collapse; font-size:12px; color:${INK};">
               <tbody>
                 <tr>
-                  <td style="padding:5px 0; font-size:12px; font-weight:400;">Total Amount</td>
-                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
+                  <td style="padding:5px 0; font-size:12px; font-weight:400; vertical-align:middle;">Total Amount</td>
+                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px; vertical-align:middle;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
                 </tr>
                 ${discountAmount > 0
       ? `
                 <tr>
-                  <td style="padding:5px 0; color:${INK_MUTED}; font-weight:400;">Discount (${discountPct}%)</td>
-                  <td style="padding:5px 0; text-align:right; font-weight:400; color:#9c2626;">-${formatCurrency(discountAmount)}</td>
+                  <td style="padding:5px 0; color:${INK_MUTED}; font-weight:400; vertical-align:middle;">Discount (${discountPct}%)</td>
+                  <td style="padding:5px 0; text-align:right; font-weight:400; color:#9c2626; vertical-align:middle;">-${formatCurrency(discountAmount)}</td>
                 </tr>`
       : ""
     }
@@ -1365,7 +1552,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
       </div>
 
 
-      ${getBrandFooter(signatureBlock)}
+      ${getBrandFooter(signatureBlock, true)}
 
     </div>
   `;

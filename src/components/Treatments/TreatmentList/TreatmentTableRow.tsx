@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import {
   FileText, MoreVertical, Edit, Clock,
-  Play, CheckCircle, Calendar, Download, Loader2
+  Play, CheckCircle, Calendar, Download, Loader2, MessageCircle
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { toast } from "@/components/ui";
 import { downloadCompletedTreatmentPDF } from "../../../utils/pdfGenerator";
 import { useDownloadTreatmentMutation } from "../../../hooks/treatment/useDownloadTreatmentMutation";
+import { useSendWhatsappTreatmentMutation } from "../../../hooks/treatment/useSendWhatsappTreatmentMutation";
 
 interface TreatmentTableRowProps {
   treatment: any;
@@ -25,7 +26,9 @@ export function TreatmentTableRow({
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [downloading, setDownloading] = useState(false);
+  const [sending, setSending] = useState(false);
   const { mutateAsync: downloadTreatment } = useDownloadTreatmentMutation();
+  const { mutateAsync: sendWhatsapp } = useSendWhatsappTreatmentMutation();
 
   const handleDownloadPDF = async (id: string) => {
     try {
@@ -38,6 +41,19 @@ export function TreatmentTableRow({
       toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleSendWhatsApp = async (id: string) => {
+    try {
+      setSending(true);
+      toast.loading("Sending via WhatsApp...", { id: "whatsapp-send" });
+      await sendWhatsapp({ id });
+      toast.success("Treatment plan sent to WhatsApp successfully", { id: "whatsapp-send" });
+    } catch (err: any) {
+      toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -172,19 +188,35 @@ export function TreatmentTableRow({
           </Button>
 
           {(treatment.status === "completed" || treatment.status === "COMPLETED") && (
-            <Button
-              variant="ghost"
-              onClick={() => handleDownloadPDF(treatment.id)}
-              disabled={downloading}
-              className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
-              title="Download PDF"
-            >
-              {downloading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => handleDownloadPDF(treatment.id)}
+                disabled={downloading}
+                className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
+                title="Download PDF"
+              >
+                {downloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() => handleSendWhatsApp(treatment.id)}
+                disabled={sending}
+                className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
+                title="Send WhatsApp"
+              >
+                {sending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                )}
+              </Button>
+            </>
           )}
 
           <div className="relative">

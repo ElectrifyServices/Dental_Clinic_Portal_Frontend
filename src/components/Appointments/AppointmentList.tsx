@@ -53,7 +53,9 @@ const TYPE_FILTERS = [
 const PER_PAGE = 10;
 
 const formatTime = (t: string) => {
-  if (!t || t.includes("AM") || t.includes("PM")) return t || "—";
+  if (!t) return "—";
+  const upper = t.toUpperCase();
+  if (upper.includes("AM") || upper.includes("PM")) return upper;
   const [h, m] = t.split(":");
   let hr = parseInt(h);
   const ap = hr >= 12 ? "PM" : "AM";

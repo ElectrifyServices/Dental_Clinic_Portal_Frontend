@@ -65,9 +65,20 @@ export function ConsentForm({
   const { doctors: apiDoctors, isLoading: isDoctorsLoading } = useDoctorsListQuery();
   const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({ filters: { isDropdown: [true] as any } });
   
-  const apiPatients = Array.isArray(rawPatientsData) 
-    ? rawPatientsData 
-    : (rawPatientsData as any)?.data?.data || (rawPatientsData as any)?.data || [];
+  const apiPatients = (() => {
+    if (!rawPatientsData) return [];
+    if (Array.isArray(rawPatientsData)) return rawPatientsData;
+    const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.patients)) return target.patients;
+      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    }
+    return [];
+  })();
 
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(() => {
     if (form?.treatmentType) {

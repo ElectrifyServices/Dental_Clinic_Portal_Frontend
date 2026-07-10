@@ -113,7 +113,9 @@ export function AppointmentCalendar({
   ];
 
   const formatTime = (time: string) => {
-    if (!time || time.includes("AM") || time.includes("PM")) return time || "—";
+    if (!time) return "—";
+    const upper = time.toUpperCase();
+    if (upper.includes("AM") || upper.includes("PM")) return upper;
     const [h, m] = time.split(":");
     let hr = parseInt(h);
     const ap = hr >= 12 ? "PM" : "AM";

@@ -148,11 +148,18 @@ export function InvoiceForm({
     filters: { isDropdown: [true] as any },
   });
   const apiPatients = useMemo(() => {
-    return Array.isArray(rawPatientsData)
-      ? rawPatientsData
-      : (rawPatientsData as any)?.data?.data ||
-      (rawPatientsData as any)?.data ||
-      [];
+    if (!rawPatientsData) return [];
+    if (Array.isArray(rawPatientsData)) return rawPatientsData;
+    const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.patients)) return target.patients;
+      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    }
+    return [];
   }, [rawPatientsData]);
 
   const selectedPatient = useMemo(() => {
