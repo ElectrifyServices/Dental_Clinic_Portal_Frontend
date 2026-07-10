@@ -78,6 +78,8 @@ export function usePatientData(params?: { enabled?: boolean }) {
       rawList = (apiPatients as any).patients;
     } else if (apiPatients && Array.isArray((apiPatients as any).data?.patients)) {
       rawList = (apiPatients as any).data.patients;
+    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data?.data)) {
+      rawList = (apiPatients as any).data.data.data;
     } else if (apiPatients && Array.isArray((apiPatients as any).data?.data)) {
       rawList = (apiPatients as any).data.data;
     } else if (apiPatients && Array.isArray((apiPatients as any).data)) {

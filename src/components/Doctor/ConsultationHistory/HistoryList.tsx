@@ -369,7 +369,7 @@ export function HistoryList({
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
                         </Button>
                         <div className="h-px bg-muted my-1" />
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -379,7 +379,7 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
                         >
                           <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary                       
-                        </Button> */}
+                        </Button>
                       </div>
                     )}
                     {/* This button can be enabled in the future, so for now it's just been commented out. */}

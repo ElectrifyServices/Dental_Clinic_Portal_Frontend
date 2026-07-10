@@ -145,7 +145,8 @@ export function DoctorBooking({
 
   const formatTime = (time: string) => {
     if (!time) return "";
-    if (time.includes("AM") || time.includes("PM")) return time;
+    const upper = time.toUpperCase();
+    if (upper.includes("AM") || upper.includes("PM")) return upper;
     const cleanTime = time.replace(".", ":");
     const [hourStr, minute] = cleanTime.split(":");
     let hour = parseInt(hourStr);

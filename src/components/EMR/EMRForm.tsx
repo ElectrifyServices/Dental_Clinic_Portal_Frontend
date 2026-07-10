@@ -58,6 +58,7 @@ export function EMRForm({
     const target = data.responseObject !== undefined ? data.responseObject : data;
     if (Array.isArray(target)) return target;
     if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
       if (Array.isArray(target.data?.data)) return target.data.data;
       if (Array.isArray(target.data)) return target.data;
       if (Array.isArray(target.patients)) return target.patients;

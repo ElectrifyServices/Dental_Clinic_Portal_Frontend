@@ -15,6 +15,9 @@ export function useSendConsultationMutation() {
       if (variables.type === "TREATMENT") {
         return `/consultations/${variables.id}/Treatment-plan`;
       }
+      if (variables.type === "FULL") {
+        return `/consultations/${variables.id}/send-full-summary`;
+      }
       return `/consultations/${variables.id}/prescriptions`;
     },
     method: "post",
@@ -24,6 +27,11 @@ export function useSendConsultationMutation() {
         "x-tenant-id": tenantId,
       };
     },
-    transformRequest: (variables) => ({ type: variables.type }),
+    transformRequest: (variables) => {
+      if (variables.type === "FULL") {
+        return undefined;
+      }
+      return { type: variables.type };
+    },
   });
 }

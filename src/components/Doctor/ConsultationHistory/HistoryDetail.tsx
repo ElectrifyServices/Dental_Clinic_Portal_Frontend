@@ -442,7 +442,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
                     </Button>
                     <div className="h-px bg-muted my-1.5" />
-                    {/* <Button
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSendPDF(fullRecord, "FULL");
@@ -451,7 +451,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                       className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
                     >
                       <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
-                    </Button> */}
+                    </Button>
                   </div>
                 )}
               </div>

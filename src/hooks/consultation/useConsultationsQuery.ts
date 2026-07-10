@@ -64,8 +64,8 @@ export function useConsultationsQuery(
         const body: any = {};
 
         // Pagination
-        if (filters.page !== undefined) body.page = filters.page;
-        if (filters.limit !== undefined) body.limit = filters.limit;
+        if (filters.page !== undefined) body.page = filters.page || 1;
+        if (filters.limit !== undefined) body.limit = filters.limit || 10;
         if (filters.all !== undefined) body.all = filters.all;
 
         // Search

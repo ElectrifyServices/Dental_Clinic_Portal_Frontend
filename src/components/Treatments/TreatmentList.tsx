@@ -4,12 +4,14 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search, Plus, Clock, CheckCircle, Calendar,
   Stethoscope, ChevronLeft, ChevronRight,
-  Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download
+  Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download,
+  MessageCircle
 } from "lucide-react";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
 import { ContentCard, Button, DataTable, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, PageHeader, Loading, toast } from "@/components/ui";
 import { downloadCompletedTreatmentPDF } from "../../utils/pdfGenerator";
 import { useDownloadTreatmentMutation } from "../../hooks/treatment/useDownloadTreatmentMutation";
+import { useSendWhatsappTreatmentMutation } from "../../hooks/treatment/useSendWhatsappTreatmentMutation";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -94,7 +96,9 @@ export function TreatmentList({
 }: TreatmentListProps) {
   const [search, setSearch] = useState("");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [sendingWhatsappId, setSendingWhatsappId] = useState<string | null>(null);
   const { mutateAsync: downloadTreatment } = useDownloadTreatmentMutation();
+  const { mutateAsync: sendWhatsapp } = useSendWhatsappTreatmentMutation();
 
   const handleDownloadPDF = async (id: string) => {
     try {
@@ -107,6 +111,19 @@ export function TreatmentList({
       toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const handleSendWhatsApp = async (id: string) => {
+    try {
+      setSendingWhatsappId(id);
+      toast.loading("Sending via WhatsApp...", { id: "whatsapp-send" });
+      await sendWhatsapp({ id });
+      toast.success("Treatment plan sent to WhatsApp successfully", { id: "whatsapp-send" });
+    } catch (err: any) {
+      toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
+    } finally {
+      setSendingWhatsappId(null);
     }
   };
 
@@ -322,20 +339,37 @@ export function TreatmentList({
               </DropdownMenuItem>
 
               {(treatment.status === "completed" || treatment.status === "COMPLETED") && (
-                <DropdownMenuItem 
-                  onClick={() => handleDownloadPDF(treatment.id)} 
-                  disabled={downloadingId === treatment.id}
-                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
-                >
-                  <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                    {downloadingId === treatment.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                  </div>
-                  Download PDF
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem 
+                    onClick={() => handleDownloadPDF(treatment.id)} 
+                    disabled={downloadingId === treatment.id}
+                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
+                  >
+                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                      {downloadingId === treatment.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                    </div>
+                    Download PDF
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem 
+                    onClick={() => handleSendWhatsApp(treatment.id)} 
+                    disabled={sendingWhatsappId === treatment.id}
+                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
+                  >
+                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                      {sendingWhatsappId === treatment.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      )}
+                    </div>
+                    Send WhatsApp
+                  </DropdownMenuItem>
+                </>
               )}
 
               {treatment.status !== "completed" && (
