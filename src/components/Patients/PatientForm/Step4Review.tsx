@@ -388,6 +388,14 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     </div>
                   )}
                 </div>
+                {formData.habit && (
+                  <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-xl mt-3">
+                    <span className="text-[10px] font-bold text-secondary-foreground/60 uppercase tracking-widest block mb-1">
+                      Habits
+                    </span>
+                    <p className="text-sm font-medium text-foreground whitespace-pre-wrap">{formData.habit}</p>
+                  </div>
+                )}
                 {(formData.pastDentalHistory || (formData.dentalFiles && formData.dentalFiles.length > 0)) && (
                   <div className="p-4 bg-primary/5 border-2 border-primary/20 border-l-primary border-l-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:bg-primary/10">
                     {formData.pastDentalHistory && (

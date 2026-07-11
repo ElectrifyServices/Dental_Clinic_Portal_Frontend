@@ -19,6 +19,7 @@ import { PreviousConsultationsView } from "./PatientConsultation/PreviousConsult
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { usePatientConsultationsQuery } from "../../hooks/consultation/usePatientConsultationsQuery";
+import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import toast from "react-hot-toast";
 
@@ -117,7 +118,7 @@ export function PatientConsultation({
   const debouncedDateFrom = useDebounce(historyDateFrom, 300);
   const debouncedDateTo = useDebounce(historyDateTo, 300);
   const [toothChartState, setToothChartState] = useState<
-    Record<number, string[]>
+    Record<string, string[]>
   >(initialData?.toothChartState || {});
 
   const [consultationData, setConsultationData] = useState<ConsultationData>(
@@ -239,6 +240,8 @@ export function PatientConsultation({
       }));
 
       const updatedPlans = [...filteredPlans, ...newPlans].sort((a, b) => {
+        if (a.tooth === "FM") return -1;
+        if (b.tooth === "FM") return 1;
         const toothDiff = parseInt(a.tooth) - parseInt(b.tooth);
         if (toothDiff !== 0) return toothDiff;
         return a.condition.localeCompare(b.condition);
@@ -289,6 +292,8 @@ export function PatientConsultation({
     consultationData.followUpRequired ? followUpDoctorId : null,
     consultationData.followUpRequired ? followUpDate : null
   );
+
+  const sendMutation = useSendConsultationMutation();
 
   const availableSlots = React.useMemo(() => {
     if (!slotsData?.data?.slots) return [];
@@ -349,6 +354,17 @@ export function PatientConsultation({
         consultationData: finalConsultationData,
         toothChartState,
       });
+
+      // Fire and forget the send API call so the user receives the document
+      try {
+        const cId = initialData?.id || (patient as any).consultationId || patient.id;
+        if (cId && cId.length === 36 && !cId.startsWith("WALK-")) {
+          await sendMutation.mutateAsync({ id: cId, type });
+        }
+      } catch (sendErr) {
+        console.warn("Could not trigger send API call:", sendErr);
+      }
+
       toast.success("PDF Downloaded successfully!", { id: toastId });
     } catch (error) {
       toast.error("Failed to generate PDF", { id: toastId });
@@ -420,7 +436,7 @@ export function PatientConsultation({
             dosageSum = parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0);
           }
           
-          if (dosageSum > 0 && durationVal > 0) {
+          if (field !== "qty" && dosageSum > 0 && durationVal > 0) {
             updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
           }
           return updated;

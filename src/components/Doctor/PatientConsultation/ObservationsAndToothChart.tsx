@@ -5,8 +5,8 @@ import { Activity, Stethoscope } from "lucide-react";
 import { ToothChart } from "../ToothChart";
 
 interface ObservationsAndToothChartProps {
-  toothChartState: Record<number, string[]>;
-  onChartChange: (state: Record<number, string[]>) => void;
+  toothChartState: Record<string, string[]>;
+  onChartChange: (state: Record<string, string[]>) => void;
   observations: string;
   diagnosis: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;

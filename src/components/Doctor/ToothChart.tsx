@@ -1,14 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { useState, useEffect } from "react";
 
-type ConditionId =
-  | "normal"
-  | "caries"
-  | "missing"
-  | "restored"
-  | "endo"
-  | "crown"
-  | "extract";
+type ConditionId = string;
 
 interface Condition {
   id: ConditionId;
@@ -19,20 +12,20 @@ interface Condition {
 }
 
 interface ToothSVGProps {
-  num: number;
+  num: string;
   conditionIds: ConditionId[] | undefined;
   activeMode: ConditionId;
 }
 
 interface ToothCellProps {
-  num: number;
+  num: string;
   conditionIds: ConditionId[] | undefined;
   isLower: boolean;
   activeMode: ConditionId;
   onClick: () => void;
 }
 
-type ToothState = Record<number, ConditionId[]>;
+type ToothState = Record<string, ConditionId[]>;
 
 const CONDITIONS: Condition[] = [
   {
@@ -84,6 +77,13 @@ const CONDITIONS: Condition[] = [
     stroke: "#A32D2D",
     textColor: "#791F1F",
   },
+  {
+    id: "other",
+    label: "Other",
+    fill: "#E2E8F0",
+    stroke: "#64748B",
+    textColor: "#334155",
+  },
 ];
 
 const UPPER_TEETH: number[] = [
@@ -121,11 +121,22 @@ function getToothType(
 }
 
 function getCondition(id: ConditionId | undefined): Condition {
-  return CONDITIONS.find((c) => c.id === id) ?? CONDITIONS[0];
+  const found = CONDITIONS.find((c) => c.id === id);
+  if (found) return found;
+  if (id && id !== "normal") {
+    return {
+      id: id,
+      label: id,
+      fill: "#E2E8F0",
+      stroke: "#64748B",
+      textColor: "#334155",
+    };
+  }
+  return CONDITIONS[0];
 }
 
 function ToothSVG({ num, conditionIds, activeMode }: ToothSVGProps) {
-  const type = getToothType(num);
+  const type = num === "FM" ? "molar" : getToothType(parseInt(num));
   const activeConditionId = conditionIds?.includes(activeMode) ? activeMode : (conditionIds && conditionIds.length > 0 ? conditionIds[conditionIds.length - 1] : "normal");
   const cond = getCondition(activeConditionId);
   const missing = conditionIds?.includes("missing");
@@ -246,11 +257,12 @@ export function ToothChart({
 }: {
   onChartChange?: (state: ToothState) => void;
   initialState?: ToothState;
-  defaultChartType?: "adult" | "pediatric";
+  defaultChartType?: "adult" | "pediatric" | "full_mouth";
 } = {}) {
   const [toothState, setToothState] = useState<ToothState>(initialState || {});
   const [activeMode, setActiveMode] = useState<ConditionId>("caries");
-  const [chartType, setChartType] = useState<"adult" | "pediatric">(defaultChartType);
+  const [customCondition, setCustomCondition] = useState("");
+  const [chartType, setChartType] = useState<"adult" | "pediatric" | "full_mouth">(defaultChartType as any);
 
   useEffect(() => {
     onChartChange?.(toothState);
@@ -262,27 +274,28 @@ export function ToothChart({
     }
   }, [defaultChartType]);
 
-  const clickTooth = (num: number): void => {
+  const clickTooth = (num: string): void => {
+    const modeToApply = activeMode === "other" && customCondition.trim() !== "" ? customCondition.trim() : activeMode;
     setToothState((prev) => {
       const next: ToothState = { ...prev };
-      if (activeMode === "normal") {
+      if (modeToApply === "normal") {
         delete next[num];
       } else {
         const current = next[num] || [];
-        if (current.includes(activeMode)) {
-          next[num] = current.filter((id) => id !== activeMode);
+        if (current.includes(modeToApply)) {
+          next[num] = current.filter((id) => id !== modeToApply);
           if (next[num].length === 0) {
             delete next[num];
           }
         } else {
-          next[num] = [...current, activeMode];
+          next[num] = [...current, modeToApply];
         }
       }
       return next;
     });
   };
 
-  const removeFinding = (num: number, cid: ConditionId): void => {
+  const removeFinding = (num: string, cid: ConditionId): void => {
     setToothState((prev) => {
       const next: ToothState = { ...prev };
       if (next[num]) {
@@ -302,17 +315,25 @@ export function ToothChart({
     Object.entries(toothState) as [string, ConditionId[]][]
   )
     .filter(([, v]) => v && v.length > 0 && !v.includes("normal"))
-    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+    .sort((a, b) => {
+      if (a[0] === "FM") return -1;
+      if (b[0] === "FM") return 1;
+      return parseInt(a[0]) - parseInt(b[0]);
+    });
 
   const hasAdultFindings = findings.some(([num]) => {
+    if (num === "FM") return false;
     const n = parseInt(num);
     return UPPER_TEETH.includes(n) || LOWER_TEETH.includes(n);
   });
 
   const hasPediatricFindings = findings.some(([num]) => {
+    if (num === "FM") return false;
     const n = parseInt(num);
     return UPPER_PRIMARY.includes(n) || LOWER_PRIMARY.includes(n);
   });
+
+  const hasFullMouthFindings = findings.some(([num]) => num === "FM");
 
   return (
     <div
@@ -349,46 +370,30 @@ export function ToothChart({
       >
         <span style={{ fontSize: 11, fontWeight: "bold", color: "#888780", textTransform: "uppercase", letterSpacing: "0.05em" }}>Chart Type:</span>
         <div style={{ display: "inline-flex", background: "#f1efef", padding: 3, borderRadius: 8 }}>
-          <button
+          <Button
             type="button"
-            onClick={() => !hasPediatricFindings && setChartType("adult")}
-            disabled={hasPediatricFindings}
-            style={{
-              padding: "4px 12px",
-              fontSize: 11,
-              fontWeight: chartType === "adult" ? "bold" : "500",
-              borderRadius: 6,
-              border: "none",
-              background: chartType === "adult" ? "#fff" : "transparent",
-              color: hasPediatricFindings ? "#aaa" : chartType === "adult" ? "#2563eb" : "#666",
-              boxShadow: chartType === "adult" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-              cursor: hasPediatricFindings ? "not-allowed" : "pointer",
-              transition: "all 0.15s",
-              opacity: hasPediatricFindings ? 0.6 : 1,
-            }}
+            onClick={() => setChartType("adult")}
+            variant={chartType === "adult" ? "default" : "ghost"}
+            size="sm"
           >
             Adult (Permanent)
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            onClick={() => !hasAdultFindings && setChartType("pediatric")}
-            disabled={hasAdultFindings}
-            style={{
-              padding: "4px 12px",
-              fontSize: 11,
-              fontWeight: chartType === "pediatric" ? "bold" : "500",
-              borderRadius: 6,
-              border: "none",
-              background: chartType === "pediatric" ? "#fff" : "transparent",
-              color: hasAdultFindings ? "#aaa" : chartType === "pediatric" ? "#2563eb" : "#666",
-              boxShadow: chartType === "pediatric" ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-              cursor: hasAdultFindings ? "not-allowed" : "pointer",
-              transition: "all 0.15s",
-              opacity: hasAdultFindings ? 0.6 : 1,
-            }}
+            onClick={() => setChartType("pediatric")}
+            variant={chartType === "pediatric" ? "default" : "ghost"}
+            size="sm"
           >
             Pediatric (Primary)
-          </button>
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setChartType("full_mouth")}
+            variant={chartType === "full_mouth" ? "default" : "ghost"}
+            size="sm"
+          >
+            Full Mouth
+          </Button>
         </div>
       </div>
 
@@ -427,6 +432,25 @@ export function ToothChart({
         })}
       </div>
 
+      {activeMode === "other" && (
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+          <input
+            type="text"
+            placeholder="Enter custom condition..."
+            value={customCondition}
+            onChange={(e) => setCustomCondition(e.target.value)}
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              borderRadius: 6,
+              border: "1px solid #ccc",
+              width: "250px",
+              outline: "none",
+            }}
+          />
+        </div>
+      )}
+
       {/* Chart */}
       <div
         className="scrollbar-thin"
@@ -438,43 +462,57 @@ export function ToothChart({
           overflowX: "auto",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: 9,
-            fontWeight: 500,
-            color: "#bbb",
-            padding: "0 4px",
-            marginBottom: 2,
-          }}
-        >
-          <span>{chartType === "adult" ? "Q1 — upper right" : "Q5 — upper right"}</span>
-          <span>{chartType === "adult" ? "Q2 — upper left" : "Q6 — upper left"}</span>
-        </div>
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 500,
-            color: "#aaa",
-            textAlign: "center",
-            marginBottom: 4,
-          }}
-        >
-          Maxilla (upper)
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
-          {upperTeeth.map((num) => (
-            <ToothCell
-              key={num}
-              num={num}
-              conditionIds={toothState[num]}
-              isLower={false}
-              activeMode={activeMode}
-              onClick={() => clickTooth(num)}
-            />
-          ))}
-        </div>
+        {chartType === "full_mouth" ? (
+          <div style={{ padding: "2rem 0", textAlign: "center" }}>
+            <div style={{ marginBottom: "1rem", color: "#666", fontSize: 13 }}>Apply selected condition to Full Mouth:</div>
+            <Button
+              type="button"
+              onClick={() => clickTooth("FM")}
+              variant="outline"
+              className="px-6 border-border/60 hover:bg-muted/50"
+            >
+              Apply to Full Mouth
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 9,
+                fontWeight: 500,
+                color: "#bbb",
+                padding: "0 4px",
+                marginBottom: 2,
+              }}
+            >
+              <span>{chartType === "adult" ? "Q1 — upper right" : "Q5 — upper right"}</span>
+              <span>{chartType === "adult" ? "Q2 — upper left" : "Q6 — upper left"}</span>
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 500,
+                color: "#aaa",
+                textAlign: "center",
+                marginBottom: 4,
+              }}
+            >
+              Maxilla (upper)
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
+              {upperTeeth.map((num) => (
+                <ToothCell
+                  key={num}
+                  num={num.toString()}
+                  conditionIds={toothState[num.toString()]}
+                  isLower={false}
+                  activeMode={activeMode}
+                  onClick={() => clickTooth(num.toString())}
+                />
+              ))}
+            </div>
 
         <div
           style={{
@@ -497,43 +535,45 @@ export function ToothChart({
           <div style={{ flex: 1, minWidth: chartType === "adult" ? 200 : 120, height: 0.5, background: "#444" }} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
-          {lowerTeeth.map((num) => (
-            <ToothCell
-              key={num}
-              num={num}
-              conditionIds={toothState[num]}
-              isLower={true}
-              activeMode={activeMode}
-              onClick={() => clickTooth(num)}
-            />
-          ))}
-        </div>
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 500,
-            color: "#aaa",
-            textAlign: "center",
-            marginTop: 4,
-          }}
-        >
-          Mandible (lower)
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: 9,
-            fontWeight: 500,
-            color: "#bbb",
-            padding: "0 4px",
-            marginTop: 2,
-          }}
-        >
-          <span>{chartType === "adult" ? "Q4 — lower right" : "Q8 — lower right"}</span>
-          <span>{chartType === "adult" ? "Q3 — lower left" : "Q7 — lower left"}</span>
-        </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 2, minWidth: chartType === "adult" ? 540 : 360 }}>
+              {lowerTeeth.map((num) => (
+                <ToothCell
+                  key={num}
+                  num={num.toString()}
+                  conditionIds={toothState[num.toString()]}
+                  isLower={true}
+                  activeMode={activeMode}
+                  onClick={() => clickTooth(num.toString())}
+                />
+              ))}
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 500,
+                color: "#aaa",
+                textAlign: "center",
+                marginTop: 4,
+              }}
+            >
+              Mandible (lower)
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 9,
+                fontWeight: 500,
+                color: "#bbb",
+                padding: "0 4px",
+                marginTop: 2,
+              }}
+            >
+              <span>{chartType === "adult" ? "Q4 — lower right" : "Q8 — lower right"}</span>
+              <span>{chartType === "adult" ? "Q3 — lower left" : "Q7 — lower left"}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Legend */}
@@ -621,9 +661,9 @@ export function ToothChart({
                       gap: 4,
                     }}
                   >
-                    #{num} — {c.label}
+                    #{num === "FM" ? "Full Mouth" : num} — {c.label}
                     <span
-                      onClick={() => removeFinding(parseInt(num), cid)}
+                      onClick={() => removeFinding(num, cid)}
                       style={{
                         cursor: "pointer",
                         opacity: 0.6,

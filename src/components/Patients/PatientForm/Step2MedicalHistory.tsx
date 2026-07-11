@@ -183,6 +183,20 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
+      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3 mt-4">
+        <Label className="block text-sm font-semibold text-muted-foreground mb-1">
+          Habits
+        </Label>
+        <Textarea
+          name="habit"
+          value={formData.habit}
+          onChange={handleChange}
+          rows={2}
+          className="w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary border-input bg-card"
+          placeholder="E.g. Smoking, Tobacco chewing, Alcohol consumption, etc."
+        />
+      </div>
+
       {(matchedCorporateEmp || formData.category === 'corporate' || formData.category === 'membership') && (
         <>
           {matchedCorporateEmp ? (
