@@ -176,15 +176,14 @@ async function renderContainerToPDF(
   // and has the footer with margin-top:auto) is the single root node built
   // into pdfContainer's innerHTML. We resize *that* element, not the plain
   // absolutely-positioned wrapper around it.
-  const pageEl = (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
+  const pageEl =
+    (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
 
   try {
     const containerTop = pdfContainer.getBoundingClientRect().top;
     const footerEl = pdfContainer.querySelector<HTMLElement>("[data-footer]");
 
-    const footerHeight = footerEl
-      ? footerEl.getBoundingClientRect().height
-      : 0;
+    const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
     // Content height = everything above the footer. Measured *before* any
     // resizing, while the container is still auto-sized to its natural
     // content — so the footer's top edge is exactly where content ends.
@@ -427,6 +426,7 @@ width:14px;
 height:14px;
 flex-shrink:0;
 align-self:center;
+padding-top:15px;
 ">
 ${iconLocation}
 </span>
@@ -471,6 +471,7 @@ flex-wrap:wrap;
         height:14px;
         margin-top:1px;
         flex-shrink:0;
+        padding-top:15px;
       "
     >
       ${iconPhone}
@@ -500,6 +501,7 @@ flex-wrap:wrap;
         height:14px;
         margin-top:1px;
         flex-shrink:0;
+        padding-top:15px;
       "
     >
       ${iconEmail}
@@ -529,6 +531,7 @@ flex-wrap:wrap;
         height:14px;
         margin-top:1px;
         flex-shrink:0;
+        padding-top:15px;
       "
     >
       ${iconInstagram}
@@ -594,9 +597,18 @@ function statusBadge(status: string) {
 const sectionLabel = (text: string) =>
   `<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">${text}</div>`;
 
-const makeCellContent = (content: string, align: string = "left", extraStyle: string = "") => {
-  const justify = align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
-  return `<div style="display:flex; align-items:center; justify-content:${justify}; width:100%; min-height:100%; padding:12px 12px; box-sizing:border-box; line-height:1.2; text-align:${align}; ${extraStyle}">${content}</div>`;
+const makeCellContent = (
+  content: string,
+  align: string = "left",
+  extraStyle: string = "",
+) => {
+  const justify =
+    align === "center"
+      ? "center"
+      : align === "right"
+        ? "flex-end"
+        : "flex-start";
+  return `<div style="display:flex; align-items:center; justify-content:${justify}; width:100%; min-height:100%; padding: 10px 12px 20px 12px; box-sizing:border-box; line-height:1.2; text-align:${align}; ${extraStyle}">${content}</div>`;
 };
 
 const tableHeadCell = (text: string, align: string = "left") =>
@@ -676,13 +688,21 @@ export const downloadConsultationPDF = async ({
     patientCode || (patientId === "-" ? "-" : patientId.split("-")[0]);
   const patientPhone = patientObj?.phone || patient.phone || "-";
   const patientGender = patientObj?.gender || (patient as any).gender || "-";
-  let patientDobRaw = patientObj?.date_of_birth || patientObj?.dob || (patient as any).date_of_birth || (patient as any).dob;
+  let patientDobRaw =
+    patientObj?.date_of_birth ||
+    patientObj?.dob ||
+    (patient as any).date_of_birth ||
+    (patient as any).dob;
   let patientDob = "-";
   if (patientDobRaw) {
     try {
       const d = new Date(patientDobRaw);
       if (!isNaN(d.getTime())) {
-        patientDob = d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+        patientDob = d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
       } else {
         patientDob = patientDobRaw;
       }
@@ -796,7 +816,7 @@ export const downloadConsultationPDF = async ({
   `);
 
   const getPatientInfo = (title: string) => `
-<div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
+<div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
 <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">${title}</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
@@ -983,7 +1003,8 @@ export const downloadConsultationPDF = async ({
   `;
 
   const getFooter = () =>
-    getBrandFooter(`
+    getBrandFooter(
+      `
 <div style="text-align:center;">
 <div style="width:200px; border-bottom:1px solid ${LINE}; margin-bottom:8px;"></div>
 <div style="font-size:12px; font-weight:400; color:${INK};">${displayDoctorName}</div>
@@ -998,7 +1019,9 @@ export const downloadConsultationPDF = async ({
     `
         : ""
       }
-  `, false);
+  `,
+      false,
+    );
 
   let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
 
@@ -1046,19 +1069,34 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const displayDoctorName = "DR. RAJAL SHAH";
   const specialization = "Prosthodontist & Implantologist";
 
-  const patientName = treatmentObj.patient?.name || treatmentObj.patientName || "-";
+  const patientName =
+    treatmentObj.patient?.name || treatmentObj.patientName || "-";
   const patientId = treatmentObj.patient?.id || treatmentObj.patientId || "-";
-  const patientCode = treatmentObj.patient?.patient_code || treatmentObj.patient?.patientCode || "-";
-  const displayPatientId = patientCode !== "-" ? patientCode : (patientId === "-" ? "-" : patientId.split("-")[0]);
-  const patientPhone = treatmentObj.patient?.phone || treatmentObj.patientPhone || "-";
+  const patientCode =
+    treatmentObj.patient?.patient_code ||
+    treatmentObj.patient?.patientCode ||
+    "-";
+  const displayPatientId =
+    patientCode !== "-"
+      ? patientCode
+      : patientId === "-"
+        ? "-"
+        : patientId.split("-")[0];
+  const patientPhone =
+    treatmentObj.patient?.phone || treatmentObj.patientPhone || "-";
   const patientGender = treatmentObj.patient?.gender || "-";
-  const patientDobRaw = treatmentObj.patient?.date_of_birth || treatmentObj.patient?.dob || "-";
+  const patientDobRaw =
+    treatmentObj.patient?.date_of_birth || treatmentObj.patient?.dob || "-";
   let patientDob = "-";
   if (patientDobRaw && patientDobRaw !== "-") {
     try {
       const d = new Date(patientDobRaw);
       if (!isNaN(d.getTime())) {
-        patientDob = d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+        patientDob = d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
       }
     } catch {
       patientDob = patientDobRaw;
@@ -1067,9 +1105,14 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 
   const procedure = treatmentObj.procedure || "-";
   const tooth = treatmentObj.tooth_number || treatmentObj.tooth || "General";
-  const dateRaw = treatmentObj.treatment_date || treatmentObj.date || treatmentObj.created_at;
+  const dateRaw =
+    treatmentObj.treatment_date || treatmentObj.date || treatmentObj.created_at;
   const treatmentDate = dateRaw
-    ? new Date(dateRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    ? new Date(dateRaw).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "-";
 
   const getHeader = () =>
@@ -1080,7 +1123,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
     `);
 
   const getPatientInfo = () => `
-<div style="padding: 12px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
+<div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
 <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">COMPLETED TREATMENT SUMMARY</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
@@ -1123,7 +1166,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.work_done || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`₹${Number(s.session_fee || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>
         </tr>
-      `
+      `,
         )
         .join("")}
     </tbody>
@@ -1154,10 +1197,10 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
     </thead>
     <tbody>
       ${prescriptions
-        .map(
-          (p: any, idx: number) => {
-            const medicineName = p.medicine?.name || p.medicine_name || p.medicineName || "-";
-            return `
+        .map((p: any, idx: number) => {
+          const medicineName =
+            p.medicine?.name || p.medicine_name || p.medicineName || "-";
+          return `
               <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
                 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
                 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${medicineName}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
@@ -1167,8 +1210,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
                 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
               </tr>
             `;
-          }
-        )
+        })
         .join("")}
     </tbody>
   </table>
@@ -1190,23 +1232,32 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   }
 
   const getFooter = () =>
-    getBrandFooter(`
+    getBrandFooter(
+      `
 <div style="text-align:center;">
 <div style="width:200px; border-bottom:1px solid ${LINE}; margin-bottom:8px;"></div>
 <div style="font-size:12px; font-weight:400; color:${INK};">${displayDoctorName}</div>
 <div style="font-size:12px; color:${INK_MUTED}; font-weight:400;">${specialization}</div>
 <div style="font-size:12px; color:#93999e; margin-top:2px;">(Signature/Seal)</div>
 </div>
-  `, false);
+  `,
+      false,
+    );
 
   let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
-  htmlContent += getPatientInfo() + clinicalNotesHtml + sessionsHtml + prescriptionsHtml + getFooter() + "</div>";
+  htmlContent +=
+    getPatientInfo() +
+    clinicalNotesHtml +
+    sessionsHtml +
+    prescriptionsHtml +
+    getFooter() +
+    "</div>";
 
   pdfContainer.innerHTML = htmlContent;
 
   await renderContainerToPDF(
     pdfContainer,
-    `${patientName}_completed_treatment_${new Date().toISOString().split("T")[0]}.pdf`
+    `${patientName}_completed_treatment_${new Date().toISOString().split("T")[0]}.pdf`,
   );
 };
 
