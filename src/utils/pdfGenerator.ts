@@ -861,7 +861,7 @@ export const downloadConsultationPDF = async ({
                  ${Object.entries(finalToothChart)
         .map(
           ([num, cond]) =>
-            `<span style="font-size:12px; padding: 4px 8px; border-radius:4px; background:${PANEL}; border:1px solid ${LINE}; color:${INK}; font-weight:400;">#${num}: ${cond}</span>`,
+            `<span style="font-size:12px; padding: 4px 8px; border-radius:4px; background:${PANEL}; border:1px solid ${LINE}; color:${INK}; font-weight:400;">${num === "FM" ? "Full Mouth" : `#${num}`}: ${cond}</span>`,
         )
         .join("")}
 </div>
@@ -921,7 +921,7 @@ export const downloadConsultationPDF = async ({
           .map(
             (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`#${t.tooth_number || t.tooth || "General"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${(t.tooth_number || t.tooth) === "FM" ? "Full Mouth" : `#${t.tooth_number || t.tooth || "General"}`}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${t.procedure || t.treatment_type || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}`, "center", `font-size:12px; color:${INK_MUTED};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`Rs. ${Number(t.est_cost || t.cost || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>

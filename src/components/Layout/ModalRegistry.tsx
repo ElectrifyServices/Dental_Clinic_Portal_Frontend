@@ -571,7 +571,9 @@ function ModalRegistryContent() {
               }
 
               // Map tooth chart state to tooth_findings array
-              const tooth_findings = Object.entries(d.toothChartState || {}).flatMap(([toothNum, conditions]) => {
+              const tooth_findings = Object.entries(d.toothChartState || {})
+                .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
+                .flatMap(([toothNum, conditions]) => {
                 if (!Array.isArray(conditions)) return [];
                 return conditions.map((cond: string) => {
                   const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
@@ -580,14 +582,17 @@ function ModalRegistryContent() {
                   else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
                   else if (condStr === 'normal') mappedCondition = 'HEALTHY';
 
+                  const isFM = toothNum === "FM";
                   const n = parseInt(toothNum);
                   let cType = "ADULT";
-                  if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
+                  if (isFM) {
+                    cType = "ADULT"; // Backend strictly requires ADULT or PEDIATRIC
+                  } else if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
                     cType = "PEDIATRIC";
                   }
 
                   return {
-                    tooth_number: parseInt(toothNum),
+                    tooth_number: isFM ? -1 : n,
                     condition: mappedCondition,
                     chart_type: cType
                   };
@@ -595,14 +600,20 @@ function ModalRegistryContent() {
               });
 
               // Map treatment plans to treatments array
-              const treatments = (d.treatmentPlans || []).map((tp: any) => ({
-                tooth_number: parseInt(tp.tooth),
-                procedure: tp.procedure,
-                total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
-                duration_min: parseInt((tp.duration || "15").replace(/\D/g, "")) || 15,
-                est_cost: parseFloat(tp.cost) || 0,
-                treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0]
-              }));
+              const treatments = (d.treatmentPlans || [])
+                .filter((tp: any) => tp.tooth === "FM" || !isNaN(parseInt(tp.tooth)))
+                .map((tp: any) => {
+                const isFM = tp.tooth === "FM";
+                return {
+                  tooth_number: isFM ? -1 : parseInt(tp.tooth),
+                  procedure: tp.procedure,
+                  total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
+                  duration_min: parseInt((tp.duration || "15").replace(/\D/g, "")) || 15,
+                  est_cost: parseFloat(tp.cost) || 0,
+                  treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0],
+                  is_active: tp.isActive ?? true
+                };
+              });
 
               // Map prescriptions array
               const prescriptions = (d.prescriptions || [])

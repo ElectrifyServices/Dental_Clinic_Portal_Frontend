@@ -318,8 +318,8 @@ export function PreviousConsultationsView({
                                   <div className="flex flex-wrap gap-2">
                                     {c.tooth_findings.map((f: any, i: number) => (
                                       <div key={i} className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/60 rounded-lg pr-3 py-1 text-sm font-semibold shadow-sm">
-                                        <span className="bg-amber-100 text-amber-800 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
-                                          {f.tooth_number}
+                                        <span className="bg-amber-100 text-amber-800 px-2 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
+                                          {f.tooth_number === "FM" ? "FM" : f.tooth_number}
                                         </span>
                                         <span className="text-amber-900">{f.condition}</span>
                                       </div>
@@ -399,7 +399,7 @@ export function PreviousConsultationsView({
                                   const tooth = t.tooth_number !== undefined ? t.tooth_number : t.tooth;
                                   return (
                                     <span className="font-black text-xs bg-muted px-2 py-1.5 rounded-md border border-border/50 shadow-sm">
-                                      {tooth ? `#${tooth}` : "All"}
+                                      {tooth === "FM" ? "Full Mouth" : (tooth ? `#${tooth}` : "All")}
                                     </span>
                                   );
                                 },

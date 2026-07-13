@@ -204,19 +204,33 @@ export const ConsultationPage: React.FC = () => {
   const onCompleteConsultation = async (consultationData: any) => {
     try {
       // Map tooth chart state to tooth_findings array
-      const tooth_findings = Object.entries(consultationData.toothChartState || {}).map(([toothNum, condition]) => ({
-        tooth_number: parseInt(toothNum),
-        condition: condition
-      }));
+      const tooth_findings = Object.entries(consultationData.toothChartState || {})
+        .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
+        .map(([toothNum, condition]) => {
+          const isFM = toothNum === "FM";
+          const finding: any = {
+            tooth_number: isFM ? -1 : parseInt(toothNum),
+            condition: Array.isArray(condition) ? condition.join(", ") : condition
+          };
+          if (isFM) finding.chart_type = "ADULT";
+          return finding;
+        });
 
       // Map treatment plans to treatments array
-      const treatments = (consultationData.treatmentPlans || []).map((tp: any) => ({
-        tooth_number: parseInt(tp.tooth),
-        procedure: tp.procedure,
-        total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
-        est_cost: parseFloat(tp.cost) || 0,
-        is_active: tp.isActive ?? true
-      }));
+      const treatments = (consultationData.treatmentPlans || [])
+        .filter((tp: any) => tp.tooth === "FM" || !isNaN(parseInt(tp.tooth)))
+        .map((tp: any) => {
+          const isFM = tp.tooth === "FM";
+          return {
+            tooth_number: isFM ? -1 : parseInt(tp.tooth),
+            procedure: tp.procedure,
+            total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
+            duration_min: tp.duration ? parseInt(tp.duration) : 15,
+            est_cost: parseFloat(tp.cost) || 0,
+            treatment_date: tp.planDate || new Date().toISOString().split('T')[0],
+            is_active: tp.isActive ?? true
+          };
+        });
 
       // Map prescriptions array
       const prescriptions = (consultationData.prescriptions || [])

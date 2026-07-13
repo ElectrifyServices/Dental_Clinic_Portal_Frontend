@@ -588,7 +588,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                     key={finding.id || finding.tooth_number}
                     className={`border rounded-lg px-3 py-1.5 text-xs flex items-center gap-2.5 shadow-sm font-bold ${getToothConditionBadgeStyle(finding.condition)}`}
                   >
-                    <span className="font-black">Tooth #{finding.tooth_number}</span>
+                    <span className="font-black">{finding.tooth_number === "FM" ? "Full Mouth" : `Tooth #${finding.tooth_number}`}</span>
                     <span className="opacity-90">{finding.condition.replace("_", " ")}</span>
                   </div>
                 ))}
@@ -618,7 +618,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                     {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: any, index: number) => (
                       <div key={tp.id || tp.tooth_number || index} className="bg-slate-50 border border-border/40 rounded-lg p-3 text-sm flex justify-between items-center font-bold">
                         <span className="text-foreground">
-                          Tooth #{tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
+                          {(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "FM" ? "Full Mouth" : `Tooth #${tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}`}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
                         </span>
                         {(tp.cost > 0 || tp.est_cost > 0) && (
                           <span className="text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">₹{(tp.cost || tp.est_cost).toLocaleString()}</span>
