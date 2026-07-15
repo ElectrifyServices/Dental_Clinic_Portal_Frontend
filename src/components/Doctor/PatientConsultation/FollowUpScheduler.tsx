@@ -85,7 +85,7 @@ export function FollowUpScheduler({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Assign Doctor
               </Label>
               <Select
@@ -107,7 +107,7 @@ export function FollowUpScheduler({
             </div>
 
             <div>
-              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Preferred Date
               </Label>
               <Input
@@ -129,7 +129,7 @@ export function FollowUpScheduler({
 
           {!bookedFollowUp && (
             <div className="space-y-4">
-              <Label className="block text-[10px] font-bold text-primary uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 uppercase tracking-widest">
                 Available Slots
               </Label>
               {availableSlots.length > 0 ? (

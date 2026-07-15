@@ -303,11 +303,11 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
     }
 
     return (
-      <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto" onClick={() => setShowPrintMenu(false)}>
+      <div className="space-y-1.5" onClick={() => setShowPrintMenu(false)}>
         {/* Patient Header Card */}
         <Card className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
-          <CardContent className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-4 shrink-0">
+          <CardContent className="p-2.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5">
+            <div className="flex items-center gap-2.5 shrink-0">
               <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100">
                 {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
               </div>
@@ -316,9 +316,9 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                   {fullRecord.patient?.name || "Unknown Patient"}
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-bold text-muted-foreground">
-                  {fullRecord.patient?.id && (
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-[10px] font-bold">
-                      ID: {String(fullRecord.patient.id).split("-")[0]}
+                  {fullRecord.patient && (
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-[10px] font-bold" title="Patient Code">
+                      Code: {fullRecord.patient.patient_code || String(fullRecord.patient.id).split("-")[0]}
                     </span>
                   )}
                   {fullRecord.patient?.phone && (
@@ -326,8 +326,9 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                       <Phone className="w-3 h-3 text-primary/70" /> {fullRecord.patient.phone}
                     </span>
                   )}
-                  <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded text-[11px]">
-                    <Clock className="w-3 h-3 text-primary/70" /> {fmt(fullRecord.created_at || fullRecord.createdAt)}
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded text-[11px]" title="Consultation Date">
+                    <Clock className="w-3 h-3 text-primary/70" />
+                    <span className="font-semibold text-foreground/80">Date:</span> {fmt(fullRecord.created_at || fullRecord.createdAt)}
                   </span>
                 </div>
               </div>
@@ -349,14 +350,14 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                   <Printer className="w-4.5 h-4.5" /> Download Report
                 </Button>
                 {showPrintMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "CLINICAL");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
                     </Button>
@@ -366,7 +367,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onDownloadPDF(fullRecord, "TREATMENT");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
                     </Button>
@@ -376,7 +377,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onDownloadPDF(fullRecord, "PRESCRIPTION");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
                     </Button>
@@ -387,7 +388,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onDownloadPDF(fullRecord, "FULL");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
                     </Button>
@@ -410,14 +411,14 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                   <Send className="w-4.5 h-4.5" /> Send Report
                 </Button>
                 {showSendMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSendPDF(fullRecord, "CLINICAL");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
                     </Button>
@@ -427,7 +428,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onSendPDF(fullRecord, "TREATMENT");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
                     </Button>
@@ -437,7 +438,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onSendPDF(fullRecord, "PRESCRIPTION");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
                     </Button>
@@ -448,7 +449,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                         onSendPDF(fullRecord, "FULL");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-3 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex items-center gap-3 transition-colors bg-transparent border-transparent"
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
                     </Button>
@@ -467,7 +468,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         </Card>
 
         {/* Grid containing Vitals, Medical History & General findings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {/* Medical History Card */}
           {(() => {
             const conditionsText = getMedicalHistoryText();
@@ -476,12 +477,12 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             if (!hasHistory) return null;
             return (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-2.5 space-y-1.5">
                   <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                     <Stethoscope className="w-4.5 h-4.5 text-primary" />
                     <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
                   </div>
-                  <div className="space-y-3 text-sm font-semibold">
+                  <div className="space-y-1.5 text-sm font-semibold">
                     {allergiesText && (
                       <div>
                         <span className="text-[10px] font-bold text-red-500 block mb-0.5 uppercase tracking-wider">Allergies</span>
@@ -509,7 +510,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
           {/* Vitals Card */}
           {(fullRecord.bp || fullRecord.height || fullRecord.weight || fullRecord.bmi) && (
             <Card className="border-border/70 rounded-xl shadow-sm">
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-2.5 space-y-1.5">
                 <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                   <HeartPulse className="w-4.5 h-4.5 text-blue-600" />
                   <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Patient Vitals</h4>
@@ -547,10 +548,10 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
 
         {/* Observations & Diagnosis */}
         {(fullRecord.observations_desc || fullRecord.diagnosis_desc) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {fullRecord.observations_desc && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-2.5 space-y-1.5">
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                     <AlertCircle className="w-4 h-4 text-primary" /> Observations
                   </p>
@@ -562,7 +563,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             )}
             {fullRecord.diagnosis_desc && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-2.5 space-y-1.5">
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                     <Stethoscope className="w-4.5 h-4.5 text-primary" /> Diagnosis
                   </p>
@@ -578,7 +579,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Tooth Chart Findings */}
         {fullRecord.tooth_findings && fullRecord.tooth_findings.length > 0 && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center">
                 <Activity className="w-4.5 h-4.5 mr-2 text-primary" /> Tooth Chart Findings
               </p>
@@ -604,7 +605,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
           fullRecord.treatmentPlan ||
           fullRecord.treatment_plan) && (
             <Card className="border-border/70 rounded-xl shadow-sm">
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-2.5 space-y-1.5">
                 <p className="text-xs font-black text-emerald-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                   <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-600" /> Treatment Planning
                 </p>
@@ -634,7 +635,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Prescriptions */}
         {hasValidPrescriptions(fullRecord.prescriptions) && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-indigo-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 <Pill className="w-4.5 h-4.5 text-indigo-600" /> Prescribed Medicines
               </p>
@@ -663,10 +664,10 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
 
         {/* Recommendations, Tests & Next Visit */}
         {(fullRecord.recommendations || fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {fullRecord.recommendations && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-4 space-y-2.5">
+                <CardContent className="p-2.5 space-y-1.5">
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
                     <Check className="w-4 h-4 text-primary" /> Recommendations
                   </p>
@@ -676,7 +677,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             )}
             {(fullRecord.tests || fullRecord.next_visit || fullRecord.nextVisit) && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="p-2.5 space-y-1.5">
                   {fullRecord.tests && (
                     <div>
                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2 mb-2">
@@ -702,7 +703,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Lab Reports */}
         {((fullRecord.labFiles && fullRecord.labFiles.length > 0) || (fullRecord.lab_files && fullRecord.lab_files.length > 0)) && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 🔬 Lab Reports
               </p>
@@ -730,7 +731,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Notes */}
         {fullRecord.additional_notes && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-2.5">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-amber-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 <FileText className="w-4.5 h-4.5 text-amber-600" /> Additional Notes
               </p>
@@ -740,9 +741,9 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         )}
 
         {/* Cost & Follow-up Badges */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {fullRecord.total_estimated_cost !== undefined && fullRecord.total_estimated_cost > 0 && (
-            <div className="bg-gradient-to-r from-emerald-50 to-white border border-emerald-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div className="bg-gradient-to-r from-emerald-50 to-white border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between shadow-sm">
               <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5 uppercase tracking-wider">
                 <IndianRupee className="w-4.5 h-4.5 text-emerald-600" /> Total Procedure Fee
               </span>
@@ -750,7 +751,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             </div>
           )}
           {fullRecord.is_follow_up && fullRecord.follow_up_date && !appointment && (
-            <div className="bg-gradient-to-r from-purple-50 to-white border border-purple-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="bg-gradient-to-r from-purple-50 to-white border border-purple-200 rounded-xl p-2.5 flex items-center gap-3 shadow-sm">
               <Calendar className="w-4.5 h-4.5 text-purple-600 flex-shrink-0" />
               <div>
                 <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest block mb-0.5">Follow-up Date</span>
@@ -762,12 +763,12 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
 
         {/* Associated Appointment & Scheduling Section */}
         {isLoadingAppt ? (
-          <div className="border border-purple-200 bg-purple-50/10 p-4 rounded-xl flex items-center justify-center gap-2 shadow-sm">
+          <div className="border border-purple-200 bg-purple-50/10 p-3 rounded-xl flex items-center justify-center gap-2 shadow-sm">
             <Loader2 className="w-4.5 h-4.5 text-purple-600 animate-spin" />
             <span className="text-xs font-bold text-purple-700">Checking scheduled appointments...</span>
           </div>
         ) : appointment ? (
-          <div className="border border-purple-200 bg-purple-50/10 p-4 rounded-xl space-y-4 shadow-sm">
+          <div className="border border-purple-200 bg-purple-50/10 p-2 rounded-xl space-y-2 shadow-sm">
             <div className="flex items-center justify-between border-b border-purple-200/50 pb-2.5">
               <h4 className="text-xs font-black text-purple-800 flex items-center uppercase tracking-widest">
                 <Calendar className="w-4.5 h-4.5 mr-2 text-purple-600" />
@@ -786,7 +787,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             </div>
 
             {!editMode ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-semibold">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-sm font-semibold">
                 <div className="bg-white border border-purple-100 p-3 rounded-lg shadow-sm">
                   <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest block mb-0.5">Assigned Doctor</span>
                   <span className="text-foreground text-sm font-bold">{getDoctorName()}</span>
@@ -801,8 +802,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   <div>
                     <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                       Assign Doctor
@@ -912,7 +913,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Clinical Images */}
         {fullRecord.images && fullRecord.images.length > 0 && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 <ImageIcon className="w-4.5 h-4.5 text-primary/70" /> Clinical Images
               </p>
@@ -931,10 +932,48 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
           </Card>
         )}
 
+        {/* Attachments */}
+        {fullRecord.attachments && fullRecord.attachments.length > 0 && (
+          <Card className="border-border/70 rounded-xl shadow-sm">
+            <CardContent className="p-2.5 space-y-1.5">
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
+                <FileText className="w-4.5 h-4.5 text-primary/70" /> Attachments
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {fullRecord.attachments.map((attachment: any, idx: number) => {
+                  const isImage = attachment.file_type?.startsWith("image/") || attachment.file_name?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                  return isImage ? (
+                    <img
+                      key={attachment.id || idx}
+                      src={attachment.file_url}
+                      alt={attachment.file_name}
+                      title={attachment.file_name}
+                      className="w-20 h-20 rounded-xl object-cover border border-border cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-300"
+                      onClick={() => window.open(attachment.file_url, "_blank")}
+                    />
+                  ) : (
+                    <a
+                      key={attachment.id || idx}
+                      href={attachment.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={attachment.file_name}
+                      className="bg-muted hover:bg-primary/5 border border-border rounded-xl w-20 h-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center text-xs shadow-sm font-bold text-primary hover:underline transition-all duration-200"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span className="truncate w-full">{attachment.file_name}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* X-Ray Reports */}
         {fullRecord.xrayFiles && fullRecord.xrayFiles.length > 0 && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-2.5 space-y-1.5">
               <p className="text-xs font-black text-primary uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 <Camera className="w-4.5 h-4.5 text-primary/70" /> X-Ray Reports
               </p>
@@ -957,7 +996,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
   } catch (error: any) {
     console.error("Error in HistoryDetail render:", error);
     return (
-      <div className="p-6 text-center space-y-4 bg-red-50/20 border border-red-100 rounded-xl">
+      <div className="p-6 text-center space-y-2 bg-red-50/20 border border-red-100 rounded-xl">
         <p className="text-red-500 font-bold">Failed to display history details.</p>
         <p className="text-xs text-muted-foreground font-mono">{error?.stack || error?.message || String(error)}</p>
       </div>
