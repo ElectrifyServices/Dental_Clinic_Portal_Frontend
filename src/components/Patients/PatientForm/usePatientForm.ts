@@ -57,6 +57,7 @@ export const usePatientForm = (patient: any) => {
     rawDentalFiles: [] as File[],
     rawConsentFormFile: null as File | null,
     consentFormUrl: "",
+    habit: "",
   });
 
   const form = useForm<PatientFormData>({
@@ -190,6 +191,7 @@ export const usePatientForm = (patient: any) => {
         category: patient.patient_category ? patient.patient_category.toLowerCase() : (patient.category || "regular"),
         defaultDiscount: patient.discount_percentage !== undefined ? patient.discount_percentage : (patient.defaultDiscount !== undefined ? patient.defaultDiscount : 0),
         isFOC: patient.is_foc || patient.isFOC || false,
+        habit: patient.habits || patient.habit || "",
       };
 
       for (const [k, v] of Object.entries(merged)) {

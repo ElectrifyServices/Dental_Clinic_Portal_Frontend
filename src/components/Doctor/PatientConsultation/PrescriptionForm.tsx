@@ -166,6 +166,7 @@ export function PrescriptionForm({
                 isCreating={isCreating}
                 onDeleteOption={handleDeleteClick}
                 isDeletingValue={deletingId}
+                capitalizeWords={true}
                 className="w-full h-10 border-green-200 focus:ring-green-500"
               />
             </div>

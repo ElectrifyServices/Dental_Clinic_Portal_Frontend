@@ -894,18 +894,14 @@ export function EmployeeFormModal({
                           <Input
                             value={dep.phone}
                             onChange={(e) => {
-                              const val = e.target.value
-                                .replace(/\D/g, "")
-                                .slice(0, 10);
                               setPendingDependents((prev) =>
                                 prev.map((d, i) =>
-                                  i === index ? { ...d, phone: val } : d,
+                                  i === index ? { ...d, phone: e.target.value.replace(/[a-zA-Z]/g, "") } : d,
                                 ),
                               );
                             }}
-                            placeholder="Optional (10 digits)"
+                            placeholder="Optional"
                             className="rounded-xl text-sm"
-                            maxLength={10}
                           />
                         </div>
                       </div>
@@ -964,14 +960,10 @@ export function EmployeeFormModal({
                       <Input
                         value={addDepForm.phone}
                         onChange={(e) => {
-                          const val = e.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 10);
-                          setAddDepForm((p) => ({ ...p, phone: val }));
+                          setAddDepForm((p) => ({ ...p, phone: e.target.value.replace(/[a-zA-Z]/g, "") }));
                         }}
-                        placeholder="Optional (10 digits)"
+                        placeholder="Optional"
                         className="rounded-xl text-sm"
-                        maxLength={10}
                       />
                     </div>
                   </div>
