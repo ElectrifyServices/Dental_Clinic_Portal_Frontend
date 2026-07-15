@@ -298,13 +298,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <Input
               type="tel"
               name="previousDoctorPhone"
-              maxLength={10}
               value={formData.previousDoctorPhone}
               onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                const digits = e.target.value.replace(/[a-zA-Z]/g, '');
                 setFormData((prev: any) => ({ ...prev, previousDoctorPhone: digits }));
               }}
-              placeholder="Digits only"
+              placeholder="Phone number"
             />
           </div>
           <div>

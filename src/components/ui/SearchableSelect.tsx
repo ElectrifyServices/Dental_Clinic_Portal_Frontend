@@ -25,6 +25,7 @@ interface SearchableSelectProps {
   displayValue?: React.ReactNode | string;
   renderOption?: (option: any) => React.ReactNode;
   renderValue?: (option: any) => React.ReactNode;
+  capitalizeWords?: boolean;
 }
 
 export function SearchableSelect({
@@ -46,6 +47,7 @@ export function SearchableSelect({
   displayValue,
   renderOption,
   renderValue,
+  capitalizeWords = false,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -147,8 +149,12 @@ export function SearchableSelect({
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
-              onSearchChange?.(e.target.value);
+              let val = e.target.value;
+              if (capitalizeWords) {
+                val = val.replace(/\b\w/g, (c) => c.toUpperCase());
+              }
+              setSearchQuery(val);
+              onSearchChange?.(val);
             }}
             className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground transition-all duration-200 focus:pl-10"
           />
