@@ -187,6 +187,13 @@ export function toUiTreatment(plan: TreatmentPlanResponse | any) {
 }
 
 export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
+  const extractToothNumber = (toothStr: string) => {
+    if (!toothStr || toothStr === "—") return undefined;
+    if (toothStr === "FM") return -1;
+    const match = toothStr.match(/^(\d+)/);
+    return match ? parseInt(match[1]) : undefined;
+  };
+
   const prescriptions = (formData.prescriptions ?? [])
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({
@@ -213,7 +220,7 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   return {
     patient_id: formData.patientId,
     doctor_id: formData.doctorId,
-    tooth_number: formData.tooth ? parseInt(formData.tooth) : undefined,
+    tooth_number: extractToothNumber(formData.tooth),
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
@@ -227,6 +234,13 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
 }
 
 export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
+  const extractToothNumber = (toothStr: string) => {
+    if (!toothStr || toothStr === "—") return undefined;
+    if (toothStr === "FM") return -1;
+    const match = toothStr.match(/^(\d+)/);
+    return match ? parseInt(match[1]) : undefined;
+  };
+
   const prescriptions = (formData.prescriptions ?? [])
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({

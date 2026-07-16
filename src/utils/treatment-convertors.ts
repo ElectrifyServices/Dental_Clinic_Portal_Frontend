@@ -204,6 +204,7 @@ export function toUiTreatment(plan: any) {
 export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   const extractToothNumber = (toothStr: string) => {
     if (!toothStr || toothStr === "—") return undefined;
+    if (toothStr === "FM") return -1;
     const match = toothStr.match(/^(\d+)/);
     return match ? parseInt(match[1]) : undefined;
   };
@@ -248,6 +249,7 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
 export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
   const extractToothNumber = (toothStr: string) => {
     if (!toothStr || toothStr === "—") return undefined;
+    if (toothStr === "FM") return -1;
     const match = toothStr.match(/^(\d+)/);
     return match ? parseInt(match[1]) : undefined;
   };
