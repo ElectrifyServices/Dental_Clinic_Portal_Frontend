@@ -20,6 +20,7 @@ export interface TreatmentSessionResponse {
   start_time?: string;
   duration_min?: number;
   session_fee: string;
+  paid_amount?: number | null;
   clinical_objectives?: string;
   work_done?: string;
   session_findings?: string;
@@ -28,20 +29,69 @@ export interface TreatmentSessionResponse {
   created_at: string;
   plan: {
     id: string;
+    consultation_id?: string;
     procedure: string;
     tooth_number?: number;
     patient: { id: string; name: string };
     doctor: { id: string; staff: { name: string } };
   };
-  appointment?: { id: string; status: string; date: string; start_time: string };
+  appointment?: {
+    id: string;
+    status: string;
+    date: string;
+    start_time?: string;
+    start_time_ist?: string;
+    time?: string;
+  };
   prescriptions?: any[];
+  attachments?: ConsultationFeedbackAttachment[];
 }
 
 export interface SessionsResponse {
   total: number;
   completed: number;
   projected_revenue: number;
+  total_fees?: string | number;
+  inprogress?: number;
   sessions: TreatmentSessionResponse[];
+  consultation_id?: string;
+  prescriptions?: PlanPrescription[];
+}
+
+export interface PlanPrescription {
+  id?: string;
+  session_id?: string;
+  medicine_id?: string;
+  medicine?: { name?: string };
+  medicine_name?: string;
+  medicineName?: string;
+  dosage?: string;
+  timing?: string;
+  frequency?: string;
+  duration?: number | string;
+  duration_type?: string;
+  qty?: number | string;
+  instructions?: string;
+}
+
+export interface ConsultationFeedbackAttachment {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_size?: number;
+  file_type?: string;
+  file_extension?: string;
+  uploaded_at?: string;
+}
+
+export interface ConsultationFeedbackItem {
+  id: string;
+  diagnosis_desc?: string;
+  observations_desc?: string;
+  treatment_plan_desc?: string;
+  additional_notes?: string;
+  prescriptions?: PlanPrescription[];
+  attachments?: ConsultationFeedbackAttachment[];
 }
 
 // ─── Get Sessions (Session Management modal) ───────────────────────────────────
@@ -59,6 +109,23 @@ export function useTreatmentSessionsQuery(
     options: {
       enabled,
       staleTime: 0,  // always fresh — doctor may have just updated
+    },
+  });
+}
+
+export function useTreatmentConsultationFeedbackQuery(
+  treatmentId?: string,
+  options?: { enabled?: boolean },
+) {
+  const enabled = (options?.enabled ?? true) && !!treatmentId;
+
+  return useApiQuery<ConsultationFeedbackItem[]>({
+    queryKey: ["treatmentConsultationFeedback", treatmentId],
+    endpoint: `/treatment/consultation/${treatmentId}`,
+    method: "get",
+    options: {
+      enabled,
+      staleTime: 0,
     },
   });
 }
@@ -154,10 +221,12 @@ export function useUpdateTreatmentSessionMutation() {
 export interface CompleteSessionVariables {
   planId: string;
   sessionId: string;
+  paid_amount?: number;
   work_done?: string;
   session_findings?: string;
   next_session_plan?: string;
   prescriptions?: any[];
+  attachments?: File[];
 }
 
 export function useCompleteTreatmentSessionMutation() {
@@ -168,7 +237,28 @@ export function useCompleteTreatmentSessionMutation() {
       `/treatment/${variables.planId}/sessions/${variables.sessionId}/complete`,
     method: "patch",
     headers: getAuthHeaders,
-    transformRequest: ({ planId: _p, sessionId: _s, ...rest }) => rest,
+    transformRequest: ({ planId: _p, sessionId: _s, attachments, ...rest }) => {
+      if (!attachments?.length) return rest;
+
+      const formData = new FormData();
+
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+          return;
+        }
+
+        formData.append(key, String(value));
+      });
+
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      return formData;
+    },
     options: {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["treatmentSessions", variables.planId] });

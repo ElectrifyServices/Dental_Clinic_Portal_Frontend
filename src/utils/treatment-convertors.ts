@@ -22,15 +22,7 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
   return map[status] ?? "PLANNED";
 }
 
-// Convert UI session to API CreateTreatmentSessionDto
 export function convertSessionToApi(session: any) {
-  // Extract tooth number from string like "14 (Upper Right 1st Premolar)"
-  const extractToothNumber = (toothStr: string) => {
-    if (!toothStr) return undefined;
-    const match = toothStr.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : undefined;
-  };
-
   return {
     visit_date: session.scheduledDate || session.suggestedDate,
     start_time: session.startTime || "09:00 AM",
@@ -40,7 +32,6 @@ export function convertSessionToApi(session: any) {
   };
 }
 
-// Convert API session to UI format
 export function apiSessionToUi(s: any): TreatmentSession {
   return {
     id: s.id,
@@ -77,34 +68,146 @@ export function apiPrescToUi(p: any) {
   };
 }
 
+function firstDefined<T>(...values: T[]): T | undefined {
+  return values.find((value) => value !== undefined && value !== null && value !== "");
+}
+
+function normalizeToothValue(plan: any) {
+  const rawTooth = firstDefined(
+    plan.tooth_number,
+    plan.toothNumber,
+    plan.tooth,
+    plan.tooth_no,
+  );
+
+  if (rawTooth === -1 || rawTooth === "-1" || rawTooth === "FM") {
+    return "FM";
+  }
+
+  if (rawTooth === 0 || rawTooth === "0") {
+    return "—";
+  }
+
+  return rawTooth ? String(rawTooth) : "—";
+}
+
+function normalizeDoctorName(plan: any) {
+  return firstDefined(
+    plan.doctor?.name,
+    plan.doctor?.staff?.name,
+    plan.doctor?.personal_profile?.staff?.name,
+    plan.personal_profile?.staff?.name,
+    plan.staff?.name,
+    plan.doctorName,
+    plan.doctor_name,
+    plan.doctor?.full_name,
+    plan.assigned_doctor_name,
+    "",
+  ) as string;
+}
+
+function normalizePatientName(plan: any) {
+  return firstDefined(
+    plan.patient?.name,
+    plan.patient_name,
+    plan.patientName,
+    plan.name,
+    plan.patient_details?.name,
+    plan.appointment?.patient_name,
+    "",
+  ) as string;
+}
+
+function normalizePatientId(plan: any) {
+  return firstDefined(
+    plan.patient_id,
+    plan.patient?.id,
+    plan.patientId,
+    plan.id,
+    "",
+  ) as string;
+}
+
+function normalizeProcedure(plan: any) {
+  return firstDefined(
+    plan.procedure,
+    plan.treatment_name,
+    plan.treatmentName,
+    plan.name,
+    "",
+  ) as string;
+}
+
+function normalizeCost(plan: any) {
+  return Number(firstDefined(
+    plan.est_cost,
+    plan.cost,
+    plan.amount,
+    plan.final_amount,
+    plan.total_amount,
+    0,
+  ) ?? 0);
+}
+
+function normalizeDate(plan: any) {
+  return firstDefined(
+    plan.treatment_date,
+    plan.treatmentDate,
+    plan.date,
+    plan.created_at,
+    plan.createdAt,
+    "",
+  ) as string;
+}
+
+function normalizeNextAppointment(plan: any) {
+  return firstDefined(
+    plan.next_appointment,
+    plan.nextAppointment,
+    plan.next_session_date,
+    plan.nextSessionDate,
+    "",
+  ) as string;
+}
+
 export function toUiTreatment(plan: any) {
+  const rawStatus = plan.overall_status ?? plan.overallStatus ?? plan.status;
+
   return {
     id: plan.id,
-    patientName: plan.patient?.name ?? "",
-    patientId: plan.patient_id,
-    procedure: plan.procedure,
-    tooth: plan.tooth_number ? String(plan.tooth_number) : "—",
-    doctorName: plan.doctor?.name || plan.doctor?.staff?.name || plan.doctor?.personal_profile?.staff?.name || plan.doctorName || plan.doctor_name || "",
+    patientName: normalizePatientName(plan),
+    patientId: normalizePatientId(plan),
+    patientCode: plan.patient_code ?? plan.patientCode ?? plan.patient?.patient_code ?? "",
+    procedure: normalizeProcedure(plan),
+    tooth: normalizeToothValue(plan),
+    doctorName: normalizeDoctorName(plan),
     doctorId: plan.doctor_id,
-    date: (plan.treatment_date || plan.treatmentDate || plan.date || plan.created_at || "").split('T')[0] || "",
-    cost: Number(plan.est_cost ?? 0),
-    status: apiStatusToUi(plan.status),
-    nextAppointment: plan.next_appointment ?? "",
-    notes: plan.clinical_notes ?? "",
+    date: String(normalizeDate(plan)).split("T")[0] || "",
+    cost: normalizeCost(plan),
+    status: rawStatus ? apiStatusToUi(rawStatus) : "planned",
+    overall_status: rawStatus,
+    overallStatus: rawStatus,
+    treatment_plan_count: Number(plan.treatment_plan_count ?? plan.treatmentPlanCount ?? 0),
+    treatmentPlanCount: Number(plan.treatment_plan_count ?? plan.treatmentPlanCount ?? 0),
+    total_treatment_cost: Number(plan.total_treatment_cost ?? plan.totalTreatmentCost ?? normalizeCost(plan)),
+    totalTreatmentCost: Number(plan.total_treatment_cost ?? plan.totalTreatmentCost ?? normalizeCost(plan)),
+    status_breakdown: plan.status_breakdown ?? plan.statusBreakdown ?? {},
+    statusBreakdown: plan.status_breakdown ?? plan.statusBreakdown ?? {},
+    phone: plan.phone ?? plan.patient?.phone ?? "",
+    nextAppointment: normalizeNextAppointment(plan),
+    notes: plan.clinical_notes ?? plan.notes ?? "",
     prescriptions: (plan.prescriptions ?? []).map(apiPrescToUi),
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
   };
 }
 
 export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
-  // Extract tooth number from string (e.g., "14 (Upper Right 1st Premolar)" -> 14)
   const extractToothNumber = (toothStr: string) => {
     if (!toothStr || toothStr === "—") return undefined;
     const match = toothStr.match(/^(\d+)/);
     return match ? parseInt(match[1]) : undefined;
   };
 
-  // Convert prescriptions to API format
   const prescriptions = (formData.prescriptions ?? [])
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({
@@ -118,7 +221,6 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
       instructions: p.instructions ?? "",
     }));
 
-  // Convert sessions to CreateTreatmentSessionDto format
   const sessions = (formData.sessions ?? [])
     .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
@@ -144,14 +246,12 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
 }
 
 export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
-  // Extract tooth number from string
   const extractToothNumber = (toothStr: string) => {
     if (!toothStr || toothStr === "—") return undefined;
     const match = toothStr.match(/^(\d+)/);
     return match ? parseInt(match[1]) : undefined;
   };
 
-  // Convert prescriptions to API format
   const prescriptions = (formData.prescriptions ?? [])
     .filter((p: any) => p.medicine?.trim())
     .map((p: any) => ({
@@ -166,20 +266,19 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       instructions: p.instructions ?? "",
     }));
 
-  // Convert sessions to API format for update
   const sessions = (formData.sessions ?? [])
     .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
-      id: s.id?.startsWith("session-") ? undefined : s.id, // Only include real IDs, not temp ones
+      id: s.id?.startsWith("session-") ? undefined : s.id,
       visit_date: s.scheduledDate || s.suggestedDate,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       session_fee: s.cost || 0,
       clinical_objectives: s.notes || s.description || "",
       status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
-              s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
-              s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
-              s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
+        s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
+        s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
+        s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
       work_done: s.workDone,
       session_findings: s.findings,
       next_session_plan: s.nextPlan,
@@ -196,12 +295,10 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     doctor_id: formData.doctorId,
   };
 
-  // Only include if there are prescriptions
   if (prescriptions.length > 0) {
     updateData.prescriptions = prescriptions;
   }
 
-  // Only include if there are sessions
   if (sessions.length > 0) {
     updateData.sessions = sessions;
   }

@@ -17,6 +17,7 @@ export function useUpdateTreatmentPlanStatusMutation() {
     options: {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.id] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlanStats"] });
       },

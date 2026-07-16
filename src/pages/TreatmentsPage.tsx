@@ -15,6 +15,9 @@ export const TreatmentsPage: React.FC = () => {
   const {
     treatments,
     isLoading,
+    isInitialLoading,
+    isTableFetching,
+    isStatsLoading,
     totals,
     handleSaveTreatment,
     handleMarkCompleted,
@@ -29,6 +32,8 @@ export const TreatmentsPage: React.FC = () => {
     clearSelectedTreatment,
   } = useTreatmentData();
 
+  const previousModalRef = React.useRef<string | null>(null);
+
   React.useEffect(() => {
     if (selectedItemId) {
       fetchSingleTreatment(selectedItemId);
@@ -40,6 +45,21 @@ export const TreatmentsPage: React.FC = () => {
   React.useEffect(() => {
     refetch();
   }, [refetch]);
+
+  React.useEffect(() => {
+    const previousModal = previousModalRef.current;
+    const shouldRefreshAfterClose =
+      (previousModal === "treatmentForm" ||
+        previousModal === "sessionManager" ||
+        previousModal === "treatmentViewer") &&
+      activeModal === null;
+
+    if (shouldRefreshAfterClose) {
+      refetch();
+    }
+
+    previousModalRef.current = activeModal;
+  }, [activeModal, refetch]);
 
   const wrappedHandleSaveTreatment = async (formData: any, sessions: any[]) => {
     try {
@@ -68,11 +88,13 @@ export const TreatmentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex h-full min-h-0 flex-col gap-2">
       <TreatmentList
         treatments={treatments}
         totals={totals}
-        isLoading={isLoading}
+        isLoading={isInitialLoading}
+        isTableFetching={isTableFetching}
+        isStatsLoading={isStatsLoading}
         totalItems={totalItems}
         totalPages={totalPages}
         currentPage={currentPage}
