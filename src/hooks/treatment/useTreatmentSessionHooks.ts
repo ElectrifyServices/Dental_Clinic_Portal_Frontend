@@ -174,6 +174,7 @@ export function useAddTreatmentSessionMutation() {
         queryClient.invalidateQueries({ queryKey: ["treatmentSessions", variables.planId] });
         // Refresh list so next_appointment column updates
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlanStats"] });
       },
@@ -210,6 +211,7 @@ export function useUpdateTreatmentSessionMutation() {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["treatmentSessions", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.planId] });
       },
     },
@@ -263,6 +265,7 @@ export function useCompleteTreatmentSessionMutation() {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["treatmentSessions", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlanStats"] });
         // If session had an appointment, refresh appointment queries too

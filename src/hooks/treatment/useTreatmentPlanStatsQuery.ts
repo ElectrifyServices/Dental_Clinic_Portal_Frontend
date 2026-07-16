@@ -1,4 +1,5 @@
 // hooks/treatment/useTreatmentPlanStatsQuery.ts
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
 export interface TreatmentPlanStats {
@@ -110,7 +111,7 @@ export function useTreatmentPlanStatsQuery(
     options: {
       enabled: options?.enabled ?? true,
       staleTime: 0,
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
     },
   });
 }

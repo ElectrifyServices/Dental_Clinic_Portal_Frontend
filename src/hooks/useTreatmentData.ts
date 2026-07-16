@@ -34,13 +34,10 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     isFetching
   } = useTreatmentPlansQuery(filters, { enabled: isEnabled });
 
-  const { data: statsRaw, isLoading: isStatsLoading } = useTreatmentPlanStatsQuery({
-    doctorId: filters.filters?.doctorId,
-    status: filters.filters?.status,
-    procedure: filters.filters?.procedure,
-    startDate: filters.startDate,
-    endDate: filters.endDate,
-  }, { enabled: isEnabled });
+  const { data: statsRaw, isLoading: isStatsLoading } = useTreatmentPlanStatsQuery(
+    undefined,
+    { enabled: isEnabled }
+  );
 
   
   const {

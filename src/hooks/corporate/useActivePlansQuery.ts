@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
 export function useActivePlansQuery(options?: { enabled?: boolean }) {
@@ -10,7 +11,7 @@ export function useActivePlansQuery(options?: { enabled?: boolean }) {
     options: {
       enabled,
       staleTime: 5 * 60 * 1000,
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
     },
   });
 }
