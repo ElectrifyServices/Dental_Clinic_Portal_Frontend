@@ -49,7 +49,7 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-row items-center justify-between gap-4 mb-6">
+    <div className="flex flex-row items-center justify-between gap-0 mb-0">
       <div className="flex-1 min-w-[120px]">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}

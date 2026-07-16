@@ -652,7 +652,7 @@ export function TreatmentList({
   ];
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] min-w-0 flex-col gap-3 overflow-hidden sm:gap-4">
+    <div className="flex h-[calc(103vh-7.5rem)] min-w-0 flex-col gap-3 overflow-hidden sm:gap-4">
       <PageHeader
         title="Treatment Plans"
         action={
