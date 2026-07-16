@@ -654,6 +654,7 @@ export function TreatmentList({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-hidden sm:gap-4">
       <PageHeader
+        className="shrink-0"
         title="Treatment Plans"
         action={
           <Button onClick={onAddTreatment} size="lg" className="h-10 w-full justify-center shadow-sm gap-2 sm:w-auto">
