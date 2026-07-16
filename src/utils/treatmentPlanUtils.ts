@@ -151,6 +151,31 @@ function normalizeNextAppointment(plan: any) {
   ) as string;
 }
 
+function extractToothNumber(toothValue?: string) {
+  if (!toothValue) return undefined;
+
+  const raw = String(toothValue).trim();
+  const rawLower = raw.toLowerCase();
+
+  if (
+    raw === "—" ||
+    raw === "-" ||
+    rawLower === "fm" ||
+    rawLower === "full mouth" ||
+    rawLower === "multiple teeth"
+  ) {
+    return undefined;
+  }
+
+  const match = raw.match(/^(\d{2})/);
+  if (!match) return undefined;
+
+  const toothNumber = parseInt(match[1], 10);
+  if (Number.isNaN(toothNumber)) return undefined;
+
+  return toothNumber;
+}
+
 export function toUiTreatment(plan: TreatmentPlanResponse | any) {
   const rawStatus = plan.overall_status ?? plan.overallStatus ?? plan.status;
 
@@ -213,7 +238,7 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
   return {
     patient_id: formData.patientId,
     doctor_id: formData.doctorId,
-    tooth_number: formData.tooth ? parseInt(formData.tooth) : undefined,
+    tooth_number: extractToothNumber(formData.tooth),
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
@@ -243,7 +268,7 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
 
   return {
     id: formData.id,
-    tooth_number: formData.tooth ? parseInt(formData.tooth) : undefined,
+    tooth_number: extractToothNumber(formData.tooth),
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
