@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Loading } from "@/components/ui/Loading";
 import React, { useState } from "react";
 import {
   Search,
@@ -191,10 +192,7 @@ export function HistoryList({
       <div className="flex-1 overflow-y-auto p-4 relative">
         {isLoading && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
-            <div className="flex flex-col items-center gap-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span className="text-xs font-medium text-muted-foreground">Loading consultations...</span>
-            </div>
+            <Loading type="spinner" text="Loading consultations..." />
           </div>
         )}
         {pageData.length === 0 ? (
@@ -221,7 +219,9 @@ export function HistoryList({
                       </div>
                       <div className="min-w-0">
                         <CardTitle className="text-base truncate">{item.patient?.name || "Unknown Patient"}</CardTitle>
-                        <CardDescription className="text-xs truncate">ID: {item.patient?.id?.split('-')[0] || "—"}</CardDescription>
+                        <CardDescription className="text-xs truncate" title="Patient Code">
+                          ID : {item.patient?.patient_code || item.patient?.id?.split('-')[0] || "—"}
+                        </CardDescription>
                       </div>
                     </div>
                     <span className="text-[9px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0 border border-green-200">
@@ -242,9 +242,9 @@ export function HistoryList({
                     )}
                   </p>
                   <div className="flex justify-between items-center text-xs text-muted-foreground pt-3 border-t border-border">
-                    <span className="flex items-center gap-1.5 font-medium">
+                    <span className="flex items-center gap-1.5 font-medium" title="Consultation Date">
                       <Activity className="w-3.5 h-3.5" />
-                      {fmtShort(item.created_at)}
+                      <span className="font-semibold text-foreground mr-1">Date:</span> {fmtShort(item.created_at)}
                     </span>
                     {item.total_estimated_cost > 0 && (
                       <span className="font-bold text-foreground bg-muted px-2 py-0.5 rounded-md">
@@ -378,7 +378,7 @@ export function HistoryList({
                           }}
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto"
                         >
-                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary                       
+                          <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
                         </Button>
                       </div>
                     )}

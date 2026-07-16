@@ -783,6 +783,7 @@ export function PatientConsultation({
 
             <AdditionalNotes
               consultationNotes={consultationData.consultationNotes}
+              recommendations={consultationData.recommendations}
               onChange={handleChange}
             />
           </form>

@@ -31,7 +31,9 @@ export const ConsultationPage: React.FC = () => {
     totalItems,
     totalPages,
     currentPage,
-    handlePageChange
+    handlePageChange,
+    handleLimitChange,
+    filters
   } = useConsultationData();
 
   const queuedPatients = useMemo(() => {
@@ -46,10 +48,10 @@ export const ConsultationPage: React.FC = () => {
         appointmentId: c.appointmentId || c.appointment_id || "",
         patientName: c.patientName,
         patientPhone: c.patientPhone,
-        appointmentTime: c.appointmentTime || new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        appointmentTime: c.appointmentTime || new Date(c.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         treatmentType: c.treatmentType || c.diagnosis || "General Consultation",
         patientConcern: c.patientConcern || c.observations || "",
-        checkInTime: new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        checkInTime: new Date(c.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         status: status,
         slotDurationMins: c.slotDurationMins,
         specificTreatment: c.specificTreatment,
@@ -303,7 +305,7 @@ export const ConsultationPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-120px)] flex flex-col">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
@@ -325,6 +327,8 @@ export const ConsultationPage: React.FC = () => {
         totalPages={totalPages}
         totalItems={totalItems}
         onPageChange={handlePageChange}
+        perPage={filters.limit || 10}
+        onPerPageChange={handleLimitChange}
       />
     </div>
   );
