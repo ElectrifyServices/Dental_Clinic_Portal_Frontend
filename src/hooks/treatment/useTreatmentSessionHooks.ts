@@ -240,19 +240,31 @@ export function useCompleteTreatmentSessionMutation() {
     method: "patch",
     headers: getAuthHeaders,
     transformRequest: ({ planId: _p, sessionId: _s, attachments, ...rest }) => {
+      const appendFormValue = (formData: FormData, data: any, parentKey?: string) => {
+        if (data === null || data === undefined) return;
+
+        if (data instanceof File) {
+          formData.append(parentKey || "", data);
+        } else if (Array.isArray(data)) {
+          data.forEach((value, index) => {
+            appendFormValue(formData, value, `${parentKey}[${index}]`);
+          });
+        } else if (typeof data === "object") {
+          Object.keys(data).forEach((key) => {
+            appendFormValue(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+          });
+        } else {
+          formData.append(parentKey || "", String(data));
+        }
+      };
+
       if (!attachments?.length) return rest;
 
       const formData = new FormData();
 
       Object.entries(rest).forEach(([key, value]) => {
         if (value === undefined || value === null) return;
-
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-          return;
-        }
-
-        formData.append(key, String(value));
+        appendFormValue(formData, value, key);
       });
 
       attachments.forEach((file) => {
