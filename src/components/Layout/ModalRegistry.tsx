@@ -584,6 +584,7 @@ function ModalRegistryContent() {
               }
 
               // Map tooth chart state to tooth_findings array
+              const standardConditions = ['normal', 'caries', 'missing', 'restored', 'endo', 'crown', 'extract', 'other'];
               const tooth_findings = Object.entries(d.toothChartState || {})
                 .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
                 .flatMap(([toothNum, conditions]) => {
@@ -591,9 +592,18 @@ function ModalRegistryContent() {
                 return conditions.map((cond: string) => {
                   const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
                   let mappedCondition = condStr.toUpperCase();
+                  let otherCondition = null;
+
                   if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
                   else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
                   else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+                  else if (!standardConditions.includes(condStr)) {
+                     mappedCondition = 'OTHER';
+                     otherCondition = cond;
+                  } else if (condStr === 'other') {
+                     mappedCondition = 'OTHER';
+                     otherCondition = null;
+                  }
 
                   const isFM = toothNum === "FM";
                   const n = parseInt(toothNum);
@@ -607,6 +617,7 @@ function ModalRegistryContent() {
                   return {
                     tooth_number: isFM ? -1 : n,
                     condition: mappedCondition,
+                    other_condition: otherCondition,
                     chart_type: cType
                   };
                 });

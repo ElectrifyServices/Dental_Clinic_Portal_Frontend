@@ -590,7 +590,9 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                     className={`border rounded-lg px-3 py-1.5 text-xs flex items-center gap-2.5 shadow-sm font-bold ${getToothConditionBadgeStyle(finding.condition)}`}
                   >
                     <span className="font-black">{finding.tooth_number === "FM" ? "Full Mouth" : `Tooth #${finding.tooth_number}`}</span>
-                    <span className="opacity-90">{finding.condition.replace("_", " ")}</span>
+                    <span className="opacity-90">
+                      {finding.condition === 'OTHER' && finding.other_condition ? finding.other_condition : finding.condition.replace("_", " ")}
+                    </span>
                   </div>
                 ))}
               </div>
