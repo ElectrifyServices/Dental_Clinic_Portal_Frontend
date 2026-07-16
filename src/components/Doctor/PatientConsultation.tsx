@@ -59,7 +59,7 @@ interface PatientConsultationProps {
   initialData?: any;
   onDraftUpdate?: (data: any) => void;
   onClose: () => void;
-  onCompleteConsultation: (consultationData: any) => void;
+  onCompleteConsultation: (consultationData: any) => Promise<any>;
   onCreateTreatment?: (treatmentData: any) => void;
 }
 
@@ -108,6 +108,7 @@ export function PatientConsultation({
 }: PatientConsultationProps) {
   const { state } = useAuth();
   const [isCompleted, setIsCompleted] = useState(false);
+  const [createdConsultationId, setCreatedConsultationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -359,7 +360,7 @@ export function PatientConsultation({
     try {
       let finalConsultationData = { ...consultationData };
       try {
-        const consultationId = initialData?.id || (patient as any).consultationId || patient.id;
+        const consultationId = createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
         // Only fetch if it looks like a valid UUID (36 chars)
         if (consultationId && consultationId.length === 36) {
           const detailData = await fetchConsultationDetail(consultationId, type);
@@ -384,7 +385,7 @@ export function PatientConsultation({
 
       // Fire and forget the send API call so the user receives the document
       try {
-        const cId = initialData?.id || (patient as any).consultationId || patient.id;
+        const cId = createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
         if (cId && cId.length === 36 && !cId.startsWith("WALK-")) {
           await sendMutation.mutateAsync({ id: cId, type });
         }
@@ -574,7 +575,7 @@ export function PatientConsultation({
     setLoading(true);
     try {
       const selectedDoctor = formDoctors.find((d: any) => d.id === directDoctorId);
-      await onCompleteConsultation({
+      const res = await onCompleteConsultation({
         id: patient.id,
         patientId: patient.patientId || patient.id,
         patientName: patient.patientName || (patient as any).name || "",
@@ -596,6 +597,9 @@ export function PatientConsultation({
         directPatientPhone,
         isDirect: (patient as any).isDirect,
       });
+      if (res && res.id) {
+        setCreatedConsultationId(res.id);
+      }
       setIsCompleted(true);
       const idToUse = patient.patientId || patient.id;
       if (idToUse && !idToUse.startsWith("WALK-")) {
@@ -714,10 +718,8 @@ export function PatientConsultation({
                     placeholder="Enter Phone Number"
                     value={directPatientPhone}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      if (val.length <= 10) {
-                        setDirectPatientPhone(val);
-                      }
+                      const val = e.target.value.replace(/[a-zA-Z]/g, "");
+                      setDirectPatientPhone(val);
                     }}
                     className="bg-background text-sm font-bold border-border/80"
                   />
@@ -855,6 +857,7 @@ export function PatientConsultation({
 
             <AdditionalNotes
               consultationNotes={consultationData.consultationNotes}
+              recommendations={consultationData.recommendations}
               onChange={handleChange}
             />
           </form>

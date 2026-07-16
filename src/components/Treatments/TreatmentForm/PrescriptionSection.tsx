@@ -191,6 +191,7 @@ export function PrescriptionSection({
                 isCreating={isCreating}
                 onDeleteOption={handleDeleteClick}
                 isDeletingValue={deletingId}
+                capitalizeWords={true}
                 className="w-full h-10 border-emerald-200 focus:ring-emerald-500 rounded-lg"
               />
             </div>

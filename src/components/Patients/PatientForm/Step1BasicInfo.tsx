@@ -357,19 +357,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="tel"
             name="phone"
-            maxLength={10}
             value={formData.phone || ""}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-              setFormData((prev: any) => ({ ...prev, phone: digits }));
-            }}
-            disabled={!!formData.id}
+            onChange={handleChange}
             className={
               validationErrors.phone
                 ? "border-destructive bg-destructive/5"
-                : (!!formData.id ? "bg-muted cursor-not-allowed opacity-70" : "")
+                : ""
             }
-            placeholder="e.g. 9876543210"
+            placeholder="e.g. +1 (980) 333-2381"
           />
           {validationErrors.phone && (
             <p className="text-destructive text-xs mt-1 flex items-center">
@@ -745,7 +740,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 <Input
                   type="number"
                   name="defaultDiscount"
-                  value={formData.defaultDiscount || 0}
+                  value={formData.defaultDiscount === "" ? "" : (formData.defaultDiscount ?? 0)}
                   onChange={(e) => {
                     const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
                     setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
@@ -884,10 +879,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Input
             type="tel"
             name="emergencyContact"
-            maxLength={10}
             value={formData.emergencyContact || ""}
             onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+              const digits = e.target.value.replace(/[a-zA-Z]/g, '');
               setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
             }}
             placeholder="Emergency contact phone number"

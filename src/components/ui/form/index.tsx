@@ -313,7 +313,7 @@ export function FormPhoneInput<
               type="tel"
               value={field.value ?? ""}
               onChange={(e) =>
-                field.onChange(e.target.value.replace(/\D/g, ""))
+                field.onChange(e.target.value.replace(/[a-zA-Z]/g, ""))
               }
               maxLength={15}
               placeholder="98765 43210"

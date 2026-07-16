@@ -186,10 +186,9 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
             <div>
               <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Phone *</Label>
               <Input value={form.phone} onChange={e => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setForm(p => ({ ...p, phone: val }));
+                setForm(p => ({ ...p, phone: e.target.value.replace(/[a-zA-Z]/g, "") }));
               }}
-                placeholder="Phone number (10 digits)" className="rounded-xl" maxLength={10} />
+                placeholder="Phone number" className="rounded-xl" />
               {errors.phone && <p className="text-red-500 text-[10px] mt-1">{errors.phone}</p>}
             </div>
             {/* <div>
@@ -290,9 +289,8 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
                       <div className="sm:col-span-2">
                         <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Phone</Label>
                         <Input value={dep.phone} onChange={e => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                          setPendingDependents(prev => prev.map((d, i) => i === index ? { ...d, phone: val } : d));
-                        }} placeholder="Optional (10 digits)" className="rounded-xl text-sm" maxLength={10} />
+                          setPendingDependents(prev => prev.map((d, i) => i === index ? { ...d, phone: e.target.value.replace(/[a-zA-Z]/g, "") } : d));
+                        }} placeholder="Optional" className="rounded-xl text-sm" />
                       </div>
                     </div>
                   </div>

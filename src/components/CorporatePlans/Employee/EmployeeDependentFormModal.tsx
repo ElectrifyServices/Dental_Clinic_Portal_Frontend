@@ -158,14 +158,10 @@ export function EmployeeDependentFormModal({ showForm, setShowForm, employee, ed
             <Input
               value={formData.phone || ''}
               onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
-                if (val.length <= 10) {
-                  setFormData({ ...formData, phone: val });
-                }
+                setFormData({ ...formData, phone: e.target.value.replace(/[a-zA-Z]/g, "") });
               }}
-              placeholder="10-digit number"
+              placeholder="Optional"
               className="rounded-xl text-sm"
-              maxLength={10}
             />
           </div>
 

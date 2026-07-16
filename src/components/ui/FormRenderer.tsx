@@ -117,7 +117,7 @@ export function FormRenderer({
     const raw = e.target.value;
     let parsed: any = raw;
     if (field.type === 'phone') {
-      parsed = raw.replace(/\D/g, '').slice(0, 10);
+      parsed = raw.replace(/[a-zA-Z]/g, "");
     } else if (type === 'number') {
       parsed = raw === '' ? '' : Number(raw);
     } else if (type === 'checkbox') {
@@ -252,7 +252,7 @@ export function FormRenderer({
             min={field.validation?.min}
             max={field.validation?.max}
             minLength={field.validation?.minLength}
-            maxLength={field.type === 'phone' ? 10 : field.validation?.maxLength}
+            maxLength={field.validation?.maxLength}
             className={inputCls}
           />
         );

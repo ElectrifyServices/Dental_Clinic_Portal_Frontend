@@ -27,6 +27,7 @@ export interface CreatePatientPayload {
   past_dental_history?: string;
   medical_histories?: string[];
   allergies?: string[];
+  habits?: string;
 
   // Previous dentist
   previous_doctor_name?: string;
@@ -140,6 +141,9 @@ export function mapFormDataToCreatePayload(
     : [];
   allergies.filter(isUUID).forEach((id: string) => payload.append('allergy_ids', id));
 
+  // Habits
+  if (formData.habit) payload.append('habits', formData.habit);
+
   // Past Dental History
   if (formData.pastDentalHistory) payload.append('past_dental_history', formData.pastDentalHistory);
 
@@ -180,8 +184,9 @@ export function mapFormDataToCreatePayload(
   if (formData.isFOC) {
     payload.append('freeOfCost', 'true');
     payload.append('discount_percentage', '100');
-  } else if (formData.defaultDiscount !== undefined) {
-    payload.append('discount_percentage', String(formData.defaultDiscount));
+  } else {
+    const val = formData.defaultDiscount === "" || formData.defaultDiscount === undefined || isNaN(Number(formData.defaultDiscount)) ? 0 : Number(formData.defaultDiscount);
+    payload.append('discount_percentage', String(val));
   }
 
   // Convert base64 signature to File

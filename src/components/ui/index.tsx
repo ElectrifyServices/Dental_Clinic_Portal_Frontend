@@ -31,6 +31,13 @@ import {
   CardHeader,
   CardTitle,
 } from "./Card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
 export * from "./DropdownMenu";
 
 // ─── PageHeader ───────────────────────────────────────────────────────────────
@@ -451,9 +458,10 @@ interface PaginationProps {
   totalItems: number;
   perPage: number;
   onPageChange: (p: number) => void;
+  onPerPageChange?: (size: number) => void;
 }
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange }: PaginationProps) {
+  if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
@@ -461,9 +469,28 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
   );
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-xs text-muted-foreground">
-        Showing <span className="font-semibold text-foreground">{start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
-      </p>
+      <div className="flex items-center gap-4">
+        <p className="text-xs text-muted-foreground">
+          Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
+        </p>
+        {onPerPageChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">Rows:</span>
+            <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
+              <SelectTrigger className="h-7 text-xs px-2 w-[65px]">
+                <SelectValue placeholder={String(perPage)} />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)} className="text-xs">
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}
