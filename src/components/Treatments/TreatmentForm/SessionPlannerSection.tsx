@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { Calendar, Plus, Trash2, Clock, DollarSign, FileText } from "lucide-react";
+import { Calendar, Plus, Trash2, Clock, DollarSign, FileText, IndianRupee } from "lucide-react";
 
 interface SessionPlannerSectionProps {
   sessions: any[];
@@ -56,28 +56,26 @@ export function SessionPlannerSection({
         {sessions.map((session, index) => (
           <div
             key={session.id}
-            className={`p-5 rounded-2xl border transition-all hover:shadow-md relative group ${
-              session.status === "completed"
-                ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
-                : session.status === "in-progress"
-                  ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800"
-                  : session.status === "cancelled"
-                    ? "bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
-                    : "bg-muted/30 border-border"
-            }`}
+            className={`p-5 rounded-2xl border transition-all hover:shadow-md relative group ${session.status === "completed"
+              ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
+              : session.status === "in-progress"
+                ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800"
+                : session.status === "cancelled"
+                  ? "bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+                  : "bg-muted/30 border-border"
+              }`}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3 flex-1">
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                    session.status === "completed"
-                      ? "bg-emerald-600 text-white"
-                      : session.status === "in-progress"
-                        ? "bg-blue-600 text-white"
-                        : session.isRequired
-                          ? "bg-primary text-white"
-                          : "bg-muted-foreground/40 text-white"
-                  }`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${session.status === "completed"
+                    ? "bg-emerald-600 text-white"
+                    : session.status === "in-progress"
+                      ? "bg-blue-600 text-white"
+                      : session.isRequired
+                        ? "bg-primary text-white"
+                        : "bg-muted-foreground/40 text-white"
+                    }`}
                 >
                   {index + 1}
                 </div>
@@ -148,7 +146,7 @@ export function SessionPlannerSection({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"].map((t) => {
+                      {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((t) => {
                         const [h, m] = t.split(":").map(Number);
                         const ampm = h < 12 ? "AM" : "PM";
                         const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
@@ -192,7 +190,7 @@ export function SessionPlannerSection({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                    <DollarSign className="w-3 h-3" />
+                    <IndianRupee className="w-3 h-3" />
                     Session Fee (₹)
                   </Label>
                   <Input

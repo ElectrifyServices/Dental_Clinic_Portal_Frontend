@@ -31,7 +31,7 @@ export function ClinicalImages({
           <Input
             type="file"
             multiple
-            accept="image/*"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
             onChange={onImageUpload}
             className="hidden"
             id="image-upload"
