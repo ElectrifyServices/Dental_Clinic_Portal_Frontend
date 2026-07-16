@@ -236,7 +236,7 @@
 
   .data-table tbody tr {
     @apply border-b border-divider
-           hover:bg-secondary/40 hover:scale-[1.002]
+           hover:bg-secondary/40
            transition-all duration-150 ease-out;
   }
 
