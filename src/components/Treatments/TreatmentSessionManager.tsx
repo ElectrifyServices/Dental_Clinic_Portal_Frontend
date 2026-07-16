@@ -1167,11 +1167,12 @@ export function TreatmentSessionManager({
       onClose={onClose}
       size="5xl"
       icon={<Calendar className="w-5 h-5" />}
+      bodyClassName="overflow-hidden"
     >
-      <div className="space-y-8">
+      <div className="flex h-full min-h-0 flex-col gap-8 overflow-hidden">
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 shrink-0 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Total Sessions"
             value={totalSessions}
@@ -1204,7 +1205,7 @@ export function TreatmentSessionManager({
         </div>
 
         {/* Timeline header */}
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Clock8 className="w-5 h-5 text-primary" />
@@ -1234,52 +1235,58 @@ export function TreatmentSessionManager({
         </div>
 
         {/* Sessions list */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : sessions.length > 0 ? (
-          <div className="space-y-6">
-            {groupedSessions.inProgress.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.inProgress.map(renderSessionCard)}</div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : sessions.length > 0 ? (
+            <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-6">
+                {groupedSessions.inProgress.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.inProgress.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.upcoming.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.upcoming.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.completed.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.completed.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.cancelled.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.cancelled.map(renderSessionCard)}</div>
+                  </div>
+                )}
               </div>
-            )}
-            {groupedSessions.upcoming.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.upcoming.map(renderSessionCard)}</div>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed w-full">
+                <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="font-semibold text-muted-foreground">No Sessions Scheduled</h3>
+                <p className="text-sm text-muted-foreground/60 mt-1">Click "Add Session" to create the first session</p>
               </div>
-            )}
-            {groupedSessions.completed.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.completed.map(renderSessionCard)}</div>
-              </div>
-            )}
-            {groupedSessions.cancelled.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.cancelled.map(renderSessionCard)}</div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed">
-            <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="font-semibold text-muted-foreground">No Sessions Scheduled</h3>
-            <p className="text-sm text-muted-foreground/60 mt-1">Click "Add Session" to create the first session</p>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* Add session modal */}
         {showNewSession && (
