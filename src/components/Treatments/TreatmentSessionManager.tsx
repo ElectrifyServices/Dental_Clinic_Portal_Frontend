@@ -1167,9 +1167,9 @@ export function TreatmentSessionManager({
       onClose={onClose}
       size="5xl"
       icon={<Calendar className="w-5 h-5" />}
-      bodyClassName="overflow-hidden"
+      bodyClassName="flex min-h-0 flex-col overflow-hidden"
     >
-      <div className="flex h-full min-h-0 flex-col gap-8 overflow-hidden">
+      <div className="flex flex-1 min-h-0 flex-col gap-8 overflow-hidden">
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-4 shrink-0 sm:grid-cols-2 lg:grid-cols-4">
@@ -1241,7 +1241,7 @@ export function TreatmentSessionManager({
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : sessions.length > 0 ? (
-            <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+            <div className="h-full max-h-[calc(100vh-23rem)] overflow-y-auto pr-1 custom-scrollbar">
               <div className="space-y-6">
                 {groupedSessions.inProgress.length > 0 && (
                   <div>
