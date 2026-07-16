@@ -10,8 +10,8 @@ export function MainLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-6 min-w-0">
-          <div className="w-full mx-auto p-3 max-w-[1600px]">
+        <main className="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-1 min-w-0">
+          <div className="w-full h-full min-h-0 mx-auto p-3 max-w-[1600px]">
             <Outlet />
           </div>
         </main>

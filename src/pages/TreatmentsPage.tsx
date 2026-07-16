@@ -88,7 +88,7 @@ export const TreatmentsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <TreatmentList
         treatments={treatments}
         totals={totals}

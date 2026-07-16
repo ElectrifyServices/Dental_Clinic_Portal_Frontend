@@ -49,7 +49,7 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-row items-center justify-between gap-4 mb-6">
+    <div className="flex flex-row items-center justify-between gap-0 mb-0">
       <div className="flex-1 min-w-[120px]">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
@@ -122,6 +122,7 @@ interface ModalProps {
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "5xl";
   icon?: React.ReactNode;
+  bodyClassName?: string;
 }
 const MODAL_SIZES: Record<string, string> = {
   sm:  "max-w-sm",
@@ -136,7 +137,7 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon }: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -172,7 +173,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
             <X className="w-4 h-4" />
           </button>
         </DialogHeader>
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">{children}</div>
+        <div className={cn("p-6 overflow-y-auto flex-1 custom-scrollbar", bodyClassName)}>{children}</div>
         {footer && (
           <DialogFooter className="px-6 py-4 border-t border-border bg-muted/40 sticky bottom-0 z-20">
             {footer}

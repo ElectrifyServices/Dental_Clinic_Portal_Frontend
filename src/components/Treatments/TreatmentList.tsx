@@ -652,7 +652,7 @@ export function TreatmentList({
   ];
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] min-w-0 flex-col gap-3 overflow-hidden sm:gap-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-3 overflow-hidden sm:gap-4">
       <PageHeader
         title="Treatment Plans"
         action={
@@ -844,7 +844,7 @@ export function TreatmentList({
           ) : null
         }
       >
-        {isLoading || isTableFetching ? (
+        {isLoading ? (
           <div className="flex min-h-[360px] items-center justify-center px-4">
             <Loading type="spinner" text="Loading treatments..." />
           </div>
