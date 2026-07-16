@@ -231,7 +231,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
 
   const handleSaveTreatment = async (treatment: any) => {
     const isEdit = Boolean(
-      treatment.id && apiTreatments.some((plan: any) => plan && plan.id === treatment.id),
+      treatment.id && treatment.id !== "new" && treatment.id !== "create",
     );
 
     if (isEdit) {
