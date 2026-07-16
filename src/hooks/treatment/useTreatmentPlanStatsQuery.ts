@@ -110,6 +110,7 @@ export function useTreatmentPlanStatsQuery(
     options: {
       enabled: options?.enabled ?? true,
       staleTime: 0,
+      keepPreviousData: true,
     },
   });
 }

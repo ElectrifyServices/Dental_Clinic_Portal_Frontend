@@ -199,6 +199,7 @@ export function TreatmentForm({
           <BasicInfoSection
             formData={formData}
             handleChange={handleChange}
+            doctorError={form.formState.errors.doctorId?.message}
             allPatients={apiPatients}
             doctors={apiDoctors}
             procedures={procedures}

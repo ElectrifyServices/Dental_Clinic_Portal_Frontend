@@ -8,6 +8,7 @@ import { SearchableSelect } from "@/components/ui";
 interface BasicInfoSectionProps {
   formData: any;
   handleChange: (e: React.ChangeEvent<any>) => void;
+  doctorError?: string;
   allPatients: any[];
   doctors: any[];
   procedures: string[];
@@ -22,6 +23,7 @@ interface BasicInfoSectionProps {
 export function BasicInfoSection({
   formData,
   handleChange,
+  doctorError,
   allPatients,
   doctors,
   procedures,
@@ -200,6 +202,7 @@ export function BasicInfoSection({
       <div className="space-y-2">
         <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Assigned Doctor
+          <span className="text-red-500 ml-1">*</span>
         </Label>
         <SearchableSelect
           value={formData.doctorId}
@@ -257,6 +260,9 @@ export function BasicInfoSection({
           )}
           placeholder="Select Doctor"
         />
+        {doctorError && (
+          <p className="text-xs font-medium text-red-500 mt-1">{doctorError}</p>
+        )}
       </div>
     </div>
   );

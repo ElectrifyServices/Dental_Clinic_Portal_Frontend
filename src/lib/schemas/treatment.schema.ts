@@ -32,7 +32,7 @@ export const treatmentSchema = z.object({
   images: z.array(z.string()).default([]),
   rawFiles: z.array(z.any()).optional().default([]),
   existingImages: z.array(z.string()).optional().default([]),
-  doctorId: z.string().default('1'),
+  doctorId: z.string().min(1, 'Assigned doctor is required'),
   doctorName: z.string().optional(),
   prescriptions: z.array(prescriptionItemSchema).default([]),
   sessions: z.array(sessionSchema).default([]),

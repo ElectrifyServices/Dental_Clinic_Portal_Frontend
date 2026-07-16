@@ -51,7 +51,7 @@ export const exportPatientReport = async (
   let patientTreatments: any[] = [];
   try {
     const treatRes = await apiClient.request({
-      url: `/treatment/list`,
+      url: `treatment/patient/list`,
       method: 'post',
       data: { filters: { patientId: [patientId] }, all: true }
     });
