@@ -844,7 +844,7 @@ export function TreatmentList({
           ) : null
         }
       >
-        {isLoading ? (
+        {isLoading || isTableFetching ? (
           <div className="flex min-h-[360px] items-center justify-center px-4">
             <Loading type="spinner" text="Loading treatments..." />
           </div>
@@ -878,15 +878,6 @@ export function TreatmentList({
               emptyTitle="No treatments found"
               emptySubtitle={search || statusFilter.length ? "Adjust your search or clear filters." : "Create a new treatment plan."}
             />
-
-            {isTableFetching && treatments.length > 0 ? (
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[49px] z-20 flex items-center justify-center bg-background/35 backdrop-blur-[1px]">
-                <div className="flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Updating rows...
-                </div>
-              </div>
-            ) : null}
           </div>
         )}
       </ContentCard>
