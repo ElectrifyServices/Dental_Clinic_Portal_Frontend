@@ -3,6 +3,7 @@ import { useTreatmentPlansQuery, TreatmentPlansFilters } from './treatment/useTr
 import { useTreatmentPlanQuery } from './treatment/useTreatmentPlanQuery';
 import { useCreateTreatmentPlanMutation } from './treatment/useCreateTreatmentPlanMutation';
 import { useUpdateTreatmentPlanMutation } from './treatment/useUpdateTreatmentPlanMutation';
+import { useTreatmentPlanStatsQuery } from './treatment/useTreatmentPlanStatsQuery';
 
 import { useUpdateTreatmentPlanStatusMutation } from './treatment/useUpdateTreatmentPlanStatusMutation';
 import {
@@ -17,7 +18,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
   const [filters, setFilters] = useState<TreatmentPlansFilters>({
     page: 1,
     limit: 10,
-    sortBy: 'createdAt',
+    sortBy: 'created_at',
     sortOrder: 'DESC',
   });
 
@@ -32,6 +33,14 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     refetch,
     isFetching
   } = useTreatmentPlansQuery(filters, { enabled: isEnabled });
+
+  const { data: statsRaw, isLoading: isStatsLoading } = useTreatmentPlanStatsQuery({
+    doctorId: filters.filters?.doctorId,
+    status: filters.filters?.status,
+    procedure: filters.filters?.procedure,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+  }, { enabled: isEnabled });
 
   
   const {
@@ -193,7 +202,7 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
   const handleParamsChange = useCallback((params: {
     page: number;
     search: string;
-    filters: { status?: string[] };
+    filters: { status?: string[]; doctorId?: string[]; procedure?: string[] };
     startDate?: Date;
     endDate?: Date;
   }) => {
@@ -202,16 +211,23 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
       search: params.search || undefined,
     };
 
-    if (params.filters.status?.length) {
-      next.filters = { ...filters.filters, status: params.filters.status };
-    } else {
-      
-      const { status: _removed, ...restFilters } = filters.filters ?? {};
-      next.filters = Object.keys(restFilters).length ? restFilters : undefined;
-    }
+    const currentFilters = { ...(filters.filters ?? {}) };
+
+    if (params.filters.status?.length) currentFilters.status = params.filters.status;
+    else delete currentFilters.status;
+
+    if (params.filters.doctorId?.length) currentFilters.doctorId = params.filters.doctorId;
+    else delete currentFilters.doctorId;
+
+    if (params.filters.procedure?.length) currentFilters.procedure = params.filters.procedure;
+    else delete currentFilters.procedure;
+
+    next.filters = Object.keys(currentFilters).length ? currentFilters : undefined;
 
     if (params.startDate) next.startDate = params.startDate;
+    else next.startDate = undefined;
     if (params.endDate) next.endDate = params.endDate;
+    else next.endDate = undefined;
 
     setFilters(prev => ({ ...prev, ...next }));
   }, [filters.filters]);
@@ -278,25 +294,21 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
   };
 
   
-  const summary = plansRaw?.summary || plansRaw?.data?.summary || {
-    all: 0,
-    active: 0,
-    completed: 0,
+  const stats = (statsRaw as any)?.data || statsRaw || {
+    total: 0,
     planned: 0,
+    in_progress: 0,
+    completed: 0,
     cancelled: 0,
-    revenue: 0,
-    averageCost: 0,
-    minCost: 0,
-    maxCost: 0,
-    statusBreakdown: {},
+    projected_revenue: 0,
   };
 
   const totals = {
-    all: summary.all || 0,
-    active: summary.active || 0,
-    completed: summary.completed || 0,
-    planned: summary.planned || 0,
-    revenue: summary.revenue || 0,
+    all: Number(stats.total || 0),
+    active: Number(stats.in_progress || 0),
+    completed: Number(stats.completed || 0),
+    planned: Number(stats.planned || 0),
+    revenue: Number(stats.projected_revenue || 0),
   };
 
   return {
@@ -305,7 +317,10 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     setTreatments,
     completedConsultations,
     setCompletedConsultations,
-    isLoading: isLoading || isFetching,
+    isLoading: isLoading || isFetching || isStatsLoading,
+    isInitialLoading: isLoading && !plansRaw,
+    isTableFetching: isFetching,
+    isStatsLoading,
     totals,
     totalItems: plansRaw?.pagination?.total || plansRaw?.data?.pagination?.total || 0,
     totalPages: plansRaw?.pagination?.totalPages || plansRaw?.data?.pagination?.totalPages || 1,

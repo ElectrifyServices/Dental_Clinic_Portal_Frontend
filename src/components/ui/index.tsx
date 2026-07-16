@@ -270,26 +270,42 @@ interface MetricCardProps {
   variant?: "primary" | "emerald" | "amber" | "rose" | "indigo" | "gray";
   trend?: string | { value: string; isUp: boolean };
   className?: string;
+  interactive?: boolean;
 }
-export function MetricCard({ label, value, icon, variant = "gray", trend, className }: MetricCardProps) {
+export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true }: MetricCardProps) {
   const variants = {
-    primary: "bg-primary/10 text-primary group-hover:bg-primary/20",
-    emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
-    amber:   "bg-amber-50  text-amber-600 group-hover:bg-amber-100",
-    rose:    "bg-rose-50   text-rose-600 group-hover:bg-rose-100",
-    indigo:  "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
-    gray:    "bg-muted     text-muted-foreground group-hover:bg-muted/80",
+    primary: "bg-primary/10 text-primary",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber:   "bg-amber-50  text-amber-600",
+    rose:    "bg-rose-50   text-rose-600",
+    indigo:  "bg-indigo-50 text-indigo-600",
+    gray:    "bg-muted     text-muted-foreground",
+  };
+  const hoverVariants = {
+    primary: "group-hover:bg-primary/20",
+    emerald: "group-hover:bg-emerald-100",
+    amber:   "group-hover:bg-amber-100",
+    rose:    "group-hover:bg-rose-100",
+    indigo:  "group-hover:bg-indigo-100",
+    gray:    "group-hover:bg-muted/80",
   };
 
   return (
-    <Card className={cn("p-5 md:p-6 hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 transition-all duration-300 ease-out cursor-pointer group", className)}>
+    <Card className={cn(
+      "p-4 sm:p-5 md:p-6 transition-all duration-300 ease-out group",
+      interactive ? "hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 cursor-pointer" : "cursor-default",
+      className
+    )}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200 group-hover:text-primary/80">
+          <p className={cn(
+            "text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200",
+            interactive ? "group-hover:text-primary/80" : "",
+          )}>
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-[32px] font-bold text-foreground leading-none transition-transform duration-300 group-hover:translate-x-0.5">{value}</span>
+            <span className="text-[28px] sm:text-[32px] font-bold text-foreground leading-none">{value}</span>
             {trend && (
               <span className={cn("text-xs font-semibold",
                 typeof trend === "object"
@@ -305,7 +321,11 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
             )}
           </div>
         </div>
-        <div className={cn("w-11 h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105", variants[variant])}>
+        <div className={cn(
+          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-300",
+          variants[variant],
+          interactive ? hoverVariants[variant] : "",
+        )}>
           {icon}
         </div>
       </div>
@@ -333,11 +353,14 @@ interface DataTableProps<T> {
   expandedRowIds?: Set<string>;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T, idx: number) => string;
+  className?: string;
+  scrollClassName?: string;
+  disableRowAnimation?: boolean;
 }
-export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false }: DataTableProps<T>) {
   return (
-    <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className={cn("card overflow-hidden flex flex-col min-h-0", className)}>
+      <div className={cn("overflow-x-auto flex-1 min-h-0", scrollClassName)}>
         <table className="data-table">
           <thead>
             <tr>
@@ -366,32 +389,44 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
             ) : (
               data.map((row, idx) => {
                 const key = rowKey(row) || `row-${idx}`;
+                const rowClasses = cn(
+                  onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
+                  rowClassName?.(row, idx)
+                );
+
                 return (
                   <React.Fragment key={key}>
-                    <motion.tr
-                      key={key}
-                      onClick={() => onRowClick?.(row)}
-                      className={cn(
-                        onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
-                        rowClassName?.(row, idx)
-                      )}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
-                    >
-                      {columns.map((col) => (
-                        <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
-                          {col.render(row, idx)}
-                        </td>
-                      ))}
-                    </motion.tr>
+                    {disableRowAnimation ? (
+                      <tr key={key} onClick={() => onRowClick?.(row)} className={rowClasses}>
+                        {columns.map((col) => (
+                          <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
+                            {col.render(row, idx)}
+                          </td>
+                        ))}
+                      </tr>
+                    ) : (
+                      <motion.tr
+                        key={key}
+                        onClick={() => onRowClick?.(row)}
+                        className={rowClasses}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
+                      >
+                        {columns.map((col) => (
+                          <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
+                            {col.render(row, idx)}
+                          </td>
+                        ))}
+                      </motion.tr>
+                    )}
                     {(() => {
                       if (!renderExpandedRow || !expandedRowIds?.has(key)) return null;
                       const content = renderExpandedRow(row);
                       if (!content) return null;
                       return (
                         <tr>
-                          <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">
+                          <td colSpan={columns.length} className="p-0  border-border bg-transparent">
                             {content}
                           </td>
                         </tr>

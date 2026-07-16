@@ -1152,7 +1152,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
         ${tableHeadCell("Date")}
         ${tableHeadCell("Findings")}
         ${tableHeadCell("Work Done")}
-        ${tableHeadCell("Session Fee", "right")}
+        
       </tr>
     </thead>
     <tbody>
@@ -1164,7 +1164,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.session_findings || s.findings || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.work_done || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
-          <td style="padding:0; vertical-align:middle;">${makeCellContent(`₹${Number(s.session_fee || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+         
         </tr>
       `,
         )

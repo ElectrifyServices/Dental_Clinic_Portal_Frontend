@@ -4,7 +4,7 @@ import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
-import { Modal, Button, Input, Label } from "@/components/ui";
+import { Modal, Button, Input, Label, SearchableSelect } from "@/components/ui";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
@@ -21,6 +21,7 @@ import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlo
 import { usePatientConsultationsQuery } from "../../hooks/consultation/usePatientConsultationsQuery";
 import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
 interface PatientConsultationProps {
@@ -105,12 +106,16 @@ export function PatientConsultation({
   onClose,
   onCompleteConsultation,
 }: PatientConsultationProps) {
+  const { state } = useAuth();
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [directPatientName, setDirectPatientName] = useState((patient as any).isDirect ? (patient.patientName || "") : "");
   const [directPatientPhone, setDirectPatientPhone] = useState((patient as any).isDirect ? (patient.phone || "") : "");
+  const [directDoctorId, setDirectDoctorId] = useState(
+    (patient as any).isDirect ? (patient.doctorId || "") : "",
+  );
   const [historySearch, setHistorySearch] = useState("");
   const [historyDateFrom, setHistoryDateFrom] = useState("");
   const [historyDateTo, setHistoryDateTo] = useState("");
@@ -262,6 +267,28 @@ export function PatientConsultation({
 
   const { doctors: apiDoctors } = useDoctorsListQuery();
   const formDoctors = apiDoctors && apiDoctors.length > 0 ? apiDoctors : doctors;
+
+  useEffect(() => {
+    if (!(patient as any).isDirect || !formDoctors?.length) return;
+
+    const loggedInUserId = state.user?.id || "";
+    const loggedInUserRole = String(state.user?.role || "").toLowerCase();
+    const hasSelectedDoctor = formDoctors.some((d: any) => d.id === directDoctorId);
+
+    if (hasSelectedDoctor) return;
+
+    if (loggedInUserRole === "doctor") {
+      const matchingDoctor = formDoctors.find((d: any) => d.id === loggedInUserId);
+      if (matchingDoctor) {
+        setDirectDoctorId(matchingDoctor.id);
+        return;
+      }
+    }
+
+    if (patient.doctorId && formDoctors.some((d: any) => d.id === patient.doctorId)) {
+      setDirectDoctorId(patient.doctorId);
+    }
+  }, [patient, formDoctors, directDoctorId, state.user]);
 
   useEffect(() => {
     if (formDoctors && formDoctors.length > 0) {
@@ -491,6 +518,10 @@ export function PatientConsultation({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if ((patient as any).isDirect && !directDoctorId) {
+      newErrors.directDoctorId = "Doctor is required.";
+    }
+
     if (consultationData.followUpRequired && !selectedSlot) {
       newErrors.followUpSlot = "Please select a follow-up time slot.";
     }
@@ -534,10 +565,15 @@ export function PatientConsultation({
         alert("Patient phone number is required for direct consultation.");
         return;
       }
+      if (!directDoctorId) {
+        setErrors((prev) => ({ ...prev, directDoctorId: "Doctor is required." }));
+        return;
+      }
     }
     if (!validateForm()) return;
     setLoading(true);
     try {
+      const selectedDoctor = formDoctors.find((d: any) => d.id === directDoctorId);
       await onCompleteConsultation({
         id: patient.id,
         patientId: patient.patientId || patient.id,
@@ -548,8 +584,10 @@ export function PatientConsultation({
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
         consultationDate: new Date().toISOString(),
-        doctorId: patient.doctorId || "1",
-        doctorName: patient.doctorName || "Dr. Sharma",
+        doctorId: (patient as any).isDirect ? directDoctorId : (patient.doctorId || "1"),
+        doctorName: (patient as any).isDirect
+          ? (selectedDoctor?.name || "")
+          : (patient.doctorName || "Dr. Sharma"),
         status: "completed",
         followUpDoctorId,
         followUpDate,
@@ -658,7 +696,7 @@ export function PatientConsultation({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {(patient as any).isDirect ? (
-              <div className="mx-6 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+              <div className="mx-6 grid grid-cols-1 md:grid-cols-3 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
                   <Input
@@ -683,6 +721,42 @@ export function PatientConsultation({
                     }}
                     className="bg-background text-sm font-bold border-border/80"
                   />
+                </div>
+                <div className="space-y-1 text-left">
+                  <Label className="text-xs font-bold text-primary">Doctor <span className="text-red-500">*</span></Label>
+                  <SearchableSelect
+                    value={directDoctorId}
+                    onChange={(val) => {
+                      setDirectDoctorId(val);
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.directDoctorId;
+                        return next;
+                      });
+                    }}
+                    options={formDoctors.map((doc: any) => ({
+                      label: doc.name,
+                      value: doc.id,
+                      phone: doc.phone,
+                      specialization: doc.specialization,
+                      searchLabel: `${doc.name} ${doc.phone || ""}`,
+                    }))}
+                    renderOption={(doc: any) => (
+                      <div className="flex flex-col min-w-0 py-1">
+                        <span className="font-bold text-foreground text-xs">{doc.label}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone || "No phone"}
+                        </span>
+                      </div>
+                    )}
+                    renderValue={(option: any) => (
+                      <span className="font-bold text-foreground">{option.label}</span>
+                    )}
+                    placeholder="Select Doctor"
+                  />
+                  {errors.directDoctorId && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{errors.directDoctorId}</p>
+                  )}
                 </div>
               </div>
             ) : (

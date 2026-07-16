@@ -1,4 +1,5 @@
 import {
+  MessageSquareText,
   Download,
   Stethoscope,
   User,
@@ -13,9 +14,13 @@ import {
   Clock as ClockIcon,
   CalendarDays,
   Edit2,
+  ExternalLink,
+  Paperclip,
 } from "lucide-react";
+import { useState } from "react";
 import { Modal, Button, ContentCard, Badge } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
+import { ConsultationFeedback } from "./ConsultationFeedback";
 
 interface TreatmentViewerProps {
   treatmentId: string; // Changed from treatment: any to treatmentId
@@ -34,6 +39,7 @@ export function TreatmentViewer({
   onStartTreatment,
   onManageSessions,
 }: TreatmentViewerProps) {
+  const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
 
   // Fetch treatment data using the ID
   const { data: treatmentData, isLoading, error } = useTreatmentPlanQuery(treatmentId, {
@@ -217,6 +223,13 @@ export function TreatmentViewer({
     }
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const statusVariant = (
     treatment.status === "COMPLETED"
       ? "green"
@@ -272,14 +285,14 @@ export function TreatmentViewer({
             >
               Edit Plan
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowConsultationFeedback(true)}
+              className="gap-2"
+            >
+              <MessageSquareText className="w-4 h-4" /> Consultation Feedback
+            </Button>
           </div>
-          {/* <Button
-            variant="ghost"
-            onClick={handleDownload}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <Download className="w-4 h-4" /> Download Report
-          </Button> */}
         </div>
       }
     >
@@ -339,7 +352,7 @@ export function TreatmentViewer({
                 <span className="text-sm font-black text-foreground">
                   {new Date(treatment.treatment_date).toLocaleDateString("en-IN", {
                     day: "2-digit",
-                    month: "short",
+                    month: "2-digit",
                     year: "numeric",
                   })}
                 </span>
@@ -372,7 +385,7 @@ export function TreatmentViewer({
           </ContentCard>
 
           <ContentCard
-            title="Financial Status"
+            title="Estimated Cost"
             icon={<IndianRupee className="w-5 h-5" />}
             className="bg-indigo-50/50 border-indigo-100"
           >
@@ -392,7 +405,7 @@ export function TreatmentViewer({
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-                <Activity className="w-4 h-4 text-blue-500" /> Treatment Sessions
+                <Activity className="w-4 h-4 text-blue-500" /> 
               </h3>
               {totalSessions > 0 && (
                 <div className="flex items-center gap-2">
@@ -450,7 +463,7 @@ export function TreatmentViewer({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ml-11">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-11">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                             <div>
@@ -462,7 +475,7 @@ export function TreatmentViewer({
                                   "en-IN",
                                   {
                                     day: "2-digit",
-                                    month: "short",
+                                    month: "2-digit",
                                     year: "numeric",
                                   }
                                 )}
@@ -482,17 +495,7 @@ export function TreatmentViewer({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />
-                            <div>
-                              <p className="text-[9px] font-black uppercase text-muted-foreground">
-                                Fee
-                              </p>
-                              <p className="text-xs font-semibold">
-                                ₹{parseInt(session.session_fee).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
+                        
 
                           <div className="flex items-center gap-2">
                             {getSessionStatusIcon(session.status)}
@@ -511,7 +514,10 @@ export function TreatmentViewer({
                         </div>
 
                         {/* Additional session details */}
-                        {(session.work_done || session.session_findings || session.next_session_plan) && (
+                        {(session.work_done ||
+                          session.session_findings ||
+                          session.next_session_plan ||
+                          session.attachments?.length > 0) && (
                           <div className="mt-4 ml-11 p-3 bg-muted/30 rounded-lg border border-border/50">
                             {session.work_done && (
                               <div className="mb-2">
@@ -535,6 +541,47 @@ export function TreatmentViewer({
                                   Next Session Plan
                                 </p>
                                 <p className="text-sm">{session.next_session_plan}</p>
+                              </div>
+                            )}
+                            {session.attachments?.length > 0 && (
+                              <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-3 pt-3 border-t border-border/50" : ""}>
+                                <p className="text-[9px] font-black uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
+                                  <Paperclip className="w-3.5 h-3.5 text-emerald-600" />
+                                  Attachments
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {session.attachments.map((attachment: any) => {
+                                    const fileSize = formatFileSize(Number(attachment.file_size));
+                                    const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
+                                      .filter(Boolean)
+                                      .join(" | ");
+
+                                    return (
+                                      <a
+                                        key={attachment.id || attachment.file_url}
+                                        href={attachment.file_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                                      >
+                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                                          <FileText className="w-4 h-4" />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                          <span className="block truncate">
+                                            {attachment.file_name || "Attachment"}
+                                          </span>
+                                          {fileMeta && (
+                                            <span className="block text-[10px] font-bold text-muted-foreground">
+                                              {fileMeta}
+                                            </span>
+                                          )}
+                                        </span>
+                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                                      </a>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -599,6 +646,13 @@ export function TreatmentViewer({
           </div>
         )}
       </div>
+      {showConsultationFeedback && (
+        <ConsultationFeedback
+          treatmentId={treatmentId}
+          patientName={treatment.patient?.name || treatment.patientName}
+          onClose={() => setShowConsultationFeedback(false)}
+        />
+      )}
     </Modal>
   );
 }

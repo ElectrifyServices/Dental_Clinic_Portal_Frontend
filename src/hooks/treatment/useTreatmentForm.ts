@@ -4,31 +4,83 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { treatmentSchema, type TreatmentFormData } from "@/lib/schemas/treatment.schema";
 import { treatmentTemplates } from "@/constants/treatment-template.constants";
 import type { Prescription, TreatmentSession } from "@/types/treatment.types";
-import { dosageMappings } from "@/constants/treatment.constants";
+import { dosageMappings, procedures, teeth } from "@/constants/treatment.constants";
 
 export function useTreatmentForm(treatment?: any, patients?: any[], allTreatments?: any[]) {
+  const normalizeToothForForm = (toothValue?: string) => {
+    if (!toothValue) return "";
+    const raw = String(toothValue).trim();
+    const exact = teeth.find((tooth) => tooth === raw);
+    if (exact) return exact;
+
+    const prefixed = teeth.find((tooth) => tooth.startsWith(`${raw} `) || tooth.startsWith(`${raw}(`));
+    if (prefixed) return prefixed;
+
+    if (raw.toLowerCase() === "fm" || raw.toLowerCase() === "full mouth") {
+      return teeth.find((tooth) => tooth.toLowerCase() === "full mouth") || raw;
+    }
+
+    if (raw.toLowerCase() === "multiple teeth") {
+      return teeth.find((tooth) => tooth.toLowerCase() === "multiple teeth") || raw;
+    }
+
+    return raw;
+  };
+
+  const normalizeProcedureForForm = (procedureValue?: string) => {
+    if (!procedureValue) return "";
+    const raw = String(procedureValue).trim();
+    const rawLower = raw.toLowerCase();
+
+    const exact = procedures.find((procedure) => procedure.toLowerCase() === rawLower);
+    if (exact) return exact;
+
+    const aliases: Record<string, string> = {
+      "teeth cleaning": "Teeth Cleaning & Scaling",
+      cleaning: "Teeth Cleaning & Scaling",
+      scaling: "Teeth Cleaning & Scaling",
+      rct: "Root Canal Treatment",
+      "root canal": "Root Canal Treatment",
+      crown: "Crown Placement",
+      extraction: "Tooth Extraction",
+      implant: "Dental Implant",
+      filling: "Dental Filling",
+    };
+
+    if (aliases[rawLower]) return aliases[rawLower];
+
+    const partial = procedures.find((procedure) => {
+      const procedureLower = procedure.toLowerCase();
+      return procedureLower.includes(rawLower) || rawLower.includes(procedureLower);
+    });
+
+    return partial || raw;
+  };
+
+  const buildDefaultValues = (currentTreatment?: any) => ({
+    patientName: currentTreatment?.patientName ?? "",
+    patientId: currentTreatment?.patientId ?? "",
+    procedure: normalizeProcedureForForm(currentTreatment?.procedure),
+    tooth: normalizeToothForForm(currentTreatment?.tooth),
+    date: (currentTreatment?.treatment_date || currentTreatment?.date)
+      ? new Date(currentTreatment.treatment_date || currentTreatment.date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    notes: currentTreatment?.notes ?? "",
+    cost: currentTreatment?.cost ?? 0,
+    status: currentTreatment?.status ?? "planned",
+    nextAppointment: currentTreatment?.nextAppointment ?? "",
+    images: currentTreatment?.images ?? [],
+    rawFiles: [],
+    existingImages: currentTreatment?.images ?? [],
+    doctorId: currentTreatment?.doctorId ?? "",
+    doctorName: currentTreatment?.doctorName ?? "",
+    prescriptions: [],
+    sessions: [],
+  });
+
   const form = useForm<TreatmentFormData>({
     resolver: zodResolver(treatmentSchema) as any,
-    defaultValues: {
-      patientName: treatment?.patientName ?? "",
-      patientId: treatment?.patientId ?? "",
-      procedure: treatment?.procedure ?? "",
-      tooth: treatment?.tooth ?? "",
-      date: (treatment?.treatment_date || treatment?.date)
-        ? new Date(treatment.treatment_date || treatment.date).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      notes: treatment?.notes ?? "",
-      cost: treatment?.cost ?? 0,
-      status: treatment?.status ?? "planned",
-      nextAppointment: treatment?.nextAppointment ?? "",
-      images: treatment?.images ?? [],
-      rawFiles: [],
-      existingImages: treatment?.images ?? [],
-      doctorId: treatment?.doctorId ?? "",
-      doctorName: treatment?.doctorName ?? "",
-      prescriptions: [],
-      sessions: [],
-    },
+    defaultValues: buildDefaultValues(treatment),
   });
 
   const [prescriptions, setPrescriptions] = useState<Prescription[]>(
@@ -56,6 +108,30 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   const formData = form.watch();
   const watchedProcedure = form.watch("procedure");
   const watchedDate = form.watch("date");
+
+  useEffect(() => {
+    form.reset(buildDefaultValues(treatment));
+    setPrescriptions(
+      treatment?.prescriptions?.length > 0
+        ? treatment.prescriptions
+        : [{
+          id: Date.now().toString(),
+          medicine: "",
+          dosage: "",
+          timing: "",
+          frequency: "",
+          duration: "",
+          durationUnit: "Days",
+          qty: "",
+          instructions: "",
+        }]
+    );
+    setTreatmentSessions(
+      Array.isArray(treatment?.sessions) && treatment.sessions.length > 0
+        ? treatment.sessions
+        : []
+    );
+  }, [treatment, form]);
 
 
   useEffect(() => {
