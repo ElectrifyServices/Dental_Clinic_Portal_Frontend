@@ -759,12 +759,9 @@ export const downloadConsultationPDF = async ({
     "";
   const recommendations =
     consultationData.recommendations ||
-    consultationData.additional_notes ||
     consultationData.data?.recommendations ||
-    consultationData.data?.additional_notes ||
     consultationData.data?.data?.recommendations ||
-    consultationData.data?.data?.additional_notes ||
-    "-";
+    "";
 
   // Dynamic tooth chart findings map merging
   const finalToothChart = { ...toothChartState };
@@ -946,17 +943,11 @@ export const downloadConsultationPDF = async ({
 <div style="padding: 8px 40px 10px;">
         ${sectionLabel("Treatment Planning & Procedures")}
         ${treatmentsHtml}
+        ${recommendations && recommendations !== "-"
+        ? `
 <div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
-            ${recommendations}
-</div>
-</div>
-        ${additionalNotes
-        ? `
-<div style="margin-top:12px;" data-avoid-break="true">
-<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Additional Clinical Notes</div>
-<div style="font-size:12px; line-height:1.5; color:${INK_MUTED};">${additionalNotes}</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap;">${recommendations}</div>
 </div>
         `
         : ""
@@ -999,6 +990,15 @@ export const downloadConsultationPDF = async ({
       .join("")}
 </tbody>
 </table>
+        ${additionalNotes
+        ? `
+<div style="margin-top:16px;" data-avoid-break="true">
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Additional Notes</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap;">${additionalNotes}</div>
+</div>
+        `
+        : ""
+      }
 </div>
   `;
 
