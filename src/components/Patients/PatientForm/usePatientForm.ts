@@ -289,19 +289,7 @@ export const usePatientForm = (patient: any) => {
         errors.email = "Please enter a valid email address";
     }
     if (stepNumber === 2) {
-      const prevDocName = form.getValues("previousDoctorName")?.trim();
-      const prevClinicName = form.getValues("previousClinicName")?.trim();
-      const prevPhone = form.getValues("previousDoctorPhone")?.trim();
-      const prevAddress = form.getValues("previousClinicAddress")?.trim();
-      const prevDate = form.getValues("previousLastVisitDate")?.trim();
-      const anyFilled = prevDocName || prevClinicName || prevPhone || prevAddress || prevDate;
-      
-      if (anyFilled) {
-        if (!prevDocName) errors.previousDoctorName = "Previous Doctor Name is required";
-        if (!prevClinicName) errors.previousClinicName = "Clinic Name is required";
-        if (!prevAddress) errors.previousClinicAddress = "Clinic Address is required";
-        if (!prevDate) errors.previousLastVisitDate = "Last Visit Date is required";
-      }
+      // Previous Dentist Details validation removed as per request
     }
     if (stepNumber === 3) {
       // Signature is optional as per request

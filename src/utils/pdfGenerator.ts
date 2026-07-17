@@ -1147,7 +1147,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 
   const getPatientInfo = () => `
 <div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
-<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">COMPLETED TREATMENT SUMMARY</div>
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">TREATMENT & PROCEDURE COMPLETED</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>

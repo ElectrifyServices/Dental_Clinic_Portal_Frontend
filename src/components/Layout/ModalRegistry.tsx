@@ -162,8 +162,33 @@ function ModalRegistryContent() {
       };
     });
 
+    let parsedFollowUpDate = data.followUpDate || data.follow_up_date || "";
+    let parsedFollowUpDoctorId = undefined;
+    let parsedSelectedSlot = null;
+
+    if (data.follow_up_appointments && data.follow_up_appointments.length > 0) {
+      const fu = data.follow_up_appointments[0];
+      if (fu.date) parsedFollowUpDate = fu.date.split("T")[0];
+      if (fu.start_time) {
+        const dateObj = new Date(fu.start_time);
+        if (!isNaN(dateObj.getTime()) && fu.start_time.includes("T")) {
+            const hr = String(dateObj.getHours()).padStart(2, '0');
+            const min = String(dateObj.getMinutes()).padStart(2, '0');
+            parsedSelectedSlot = `${hr}:${min}`;
+        } else {
+            parsedSelectedSlot = fu.start_time.substring(0, 5);
+        }
+      }
+      if (fu.personal_profile?.staff?.id) {
+        parsedFollowUpDoctorId = fu.personal_profile.staff.id;
+      }
+    }
+
     return {
       toothChartState,
+      followUpDoctorId: parsedFollowUpDoctorId,
+      followUpDate: parsedFollowUpDate,
+      selectedSlot: parsedSelectedSlot,
       consultationData: {
         observations: data.observations_desc || data.observations || "",
         diagnosis: data.diagnosis_desc || data.diagnosis || "",
@@ -196,7 +221,7 @@ function ModalRegistryContent() {
         tests: data.tests || "",
         nextVisit: data.nextVisit || data.next_visit || "",
         consultationDate: data.consultationDate || data.consultation_date || new Date().toISOString().split("T")[0],
-        followUpDate: data.followUpDate || data.follow_up_date || "",
+        followUpDate: parsedFollowUpDate,
         startTreatmentToday: data.startTreatmentToday || data.start_treatment_today || false,
       }
     };
