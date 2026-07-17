@@ -1,6 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
-import apiClient from "@/services/apiClient";
-import { parseApiResponse, type ApiResponse } from "@/services/parseApiResponse";
+import { useApiMutation } from "../useApiMutation";
 import type { CalendarProvider } from "@/types/calendarIntegration.types";
 
 export interface ConnectCalendarResponse {
@@ -13,21 +11,21 @@ interface ConnectCalendarRawResponse {
 }
 
 export function useConnectCalendarMutation() {
-  return useMutation<ConnectCalendarResponse, any, Lowercase<CalendarProvider>>({
-    mutationFn: async (provider) => {
-      const res = await apiClient.get<ApiResponse<ConnectCalendarRawResponse>>(
-        `/calendarIntegration/connect/${provider}`
-      );
-      const parsed = parseApiResponse(res.data);
+  const mutation = useApiMutation<ConnectCalendarRawResponse, Lowercase<CalendarProvider>>({
+    getEndpoint: (provider) => `/calendarIntegration/connect/${provider}`,
+    method: "get",
+    transformRequest: () => undefined,
+  });
 
-      if (parsed.status && (parsed.status.statusCode < 200 || parsed.status.statusCode >= 300)) {
-        throw new Error(parsed.status.statusDesc || "Failed to start calendar connection");
-      }
-      const authUrl = parsed.data?.authUrl ?? parsed.data?.data?.authUrl;
+  return {
+    ...mutation,
+    mutateAsync: async (provider: Lowercase<CalendarProvider>): Promise<ConnectCalendarResponse> => {
+      const raw = await mutation.mutateAsync(provider);
+      const authUrl = raw?.authUrl ?? raw?.data?.authUrl;
       if (!authUrl) {
         throw new Error("No authorization URL returned");
       }
       return { authUrl };
     },
-  });
+  };
 }

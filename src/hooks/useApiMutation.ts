@@ -8,7 +8,7 @@ import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
 interface MutationProps<TData, TVariables> {
   endpoint?: string;
   getEndpoint?: (variables: TVariables) => string;
-  method?: "post" | "put" | "patch" | "delete";
+  method?: "get" | "post" | "put" | "patch" | "delete";
   options?: Omit<UseMutationOptions<TData, any, TVariables>, "mutationFn">;
   transformRequest?: (variables: TVariables) => any;
   headers?: any | ((variables: TVariables) => any);
