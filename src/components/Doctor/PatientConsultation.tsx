@@ -475,7 +475,7 @@ export function PatientConsultation({
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []).filter(file => file.type.startsWith("image/"));
     const imageUrls = files.map((file) => URL.createObjectURL(file));
     setConsultationData((prev) => ({
       ...prev,
@@ -519,8 +519,13 @@ export function PatientConsultation({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if ((patient as any).isDirect && !directDoctorId) {
-      newErrors.directDoctorId = "Doctor is required.";
+    if ((patient as any).isDirect) {
+      if (!directPatientName.trim()) {
+        newErrors.directPatientName = "Patient name is required.";
+      }
+      if (!directPatientPhone.trim()) {
+        newErrors.directPatientPhone = "Phone number is required.";
+      }
     }
 
     if (consultationData.followUpRequired && !selectedSlot) {
@@ -557,20 +562,6 @@ export function PatientConsultation({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((patient as any).isDirect) {
-      if (!directPatientName.trim()) {
-        alert("Patient name is required for direct consultation.");
-        return;
-      }
-      if (!directPatientPhone.trim()) {
-        alert("Patient phone number is required for direct consultation.");
-        return;
-      }
-      if (!directDoctorId) {
-        setErrors((prev) => ({ ...prev, directDoctorId: "Doctor is required." }));
-        return;
-      }
-    }
     if (!validateForm()) return;
     setLoading(true);
     try {
@@ -700,31 +691,47 @@ export function PatientConsultation({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {(patient as any).isDirect ? (
-              <div className="mx-6 grid grid-cols-1 md:grid-cols-3 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+              <div className="mx-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
                   <Input
                     type="text"
+                    name="directPatientName"
                     placeholder="Enter Patient Name"
                     value={directPatientName}
-                    onChange={(e) => setDirectPatientName(e.target.value)}
+                    onChange={(e) => {
+                      setDirectPatientName(e.target.value);
+                      if (errors.directPatientName) {
+                        setErrors((prev) => { const n = { ...prev }; delete n.directPatientName; return n; });
+                      }
+                    }}
                     className="bg-background text-sm font-bold border-border/80"
                   />
+                  {errors.directPatientName && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{errors.directPatientName}</p>
+                  )}
                 </div>
                 <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Phone Number <span className="text-red-500">*</span></Label>
                   <Input
                     type="text"
+                    name="directPatientPhone"
                     placeholder="Enter Phone Number"
                     value={directPatientPhone}
                     onChange={(e) => {
                       const val = e.target.value.replace(/[a-zA-Z]/g, "");
                       setDirectPatientPhone(val);
+                      if (errors.directPatientPhone) {
+                        setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });
+                      }
                     }}
                     className="bg-background text-sm font-bold border-border/80"
                   />
+                  {errors.directPatientPhone && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{errors.directPatientPhone}</p>
+                  )}
                 </div>
-                <div className="space-y-1 text-left">
+                {/* <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Doctor <span className="text-red-500">*</span></Label>
                   <SearchableSelect
                     value={directDoctorId}
@@ -759,7 +766,7 @@ export function PatientConsultation({
                   {errors.directDoctorId && (
                     <p className="text-xs font-medium text-red-500 mt-1">{errors.directDoctorId}</p>
                   )}
-                </div>
+                </div> */}
               </div>
             ) : (
               <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
