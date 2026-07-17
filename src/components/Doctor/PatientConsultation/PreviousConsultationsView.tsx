@@ -321,7 +321,9 @@ export function PreviousConsultationsView({
                                         <span className="bg-amber-100 text-amber-800 px-2 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
                                           {f.tooth_number === "FM" ? "FM" : f.tooth_number}
                                         </span>
-                                        <span className="text-amber-900">{f.condition}</span>
+                                        <span className="text-amber-900">
+                                          {f.condition === 'OTHER' && f.other_condition ? f.other_condition : f.condition}
+                                        </span>
                                       </div>
                                     ))}
                                   </div>

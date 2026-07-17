@@ -63,7 +63,6 @@ interface ConsultationRecord {
   xrayFiles?: string[];
 }
 
-const PAGE_SIZE = 8;
 
 export default function ConsultationHistoryModal({
   onClose,
@@ -79,13 +78,14 @@ export default function ConsultationHistoryModal({
   const [endDateStr, setEndDateStr] = useState("");
   const [filterSort, setFilterSort] = useState<"newest" | "oldest">("newest");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
   const isDeletingRef = useRef(false);
 
   const queryParams = useMemo(() => {
     const params: any = {
       page,
-      limit: PAGE_SIZE,
+      limit: pageSize,
       filters: { status: ['COMPLETED'] }
     };
 
@@ -194,8 +194,8 @@ export default function ConsultationHistoryModal({
     if (apiData.data && typeof apiData.data.totalPages === 'number') return apiData.data.totalPages;
     if (apiData.data?.pagination && typeof apiData.data.pagination.totalPages === 'number') return apiData.data.pagination.totalPages;
     if (apiData.pagination && typeof apiData.pagination.totalPages === 'number') return apiData.pagination.totalPages;
-    return Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
-  }, [apiData, totalRecords]);
+    return Math.max(1, Math.ceil(totalRecords / pageSize));
+  }, [apiData, totalRecords, pageSize]);
 
   const safePage = Math.min(page, totalPages);
   const pageData = data;
@@ -263,14 +263,18 @@ export default function ConsultationHistoryModal({
         )
       }
       footer={
-        !selectedRecord && totalRecords > PAGE_SIZE ? (
+        !selectedRecord && totalRecords > 0 ? (
           <div className="w-full">
             <Pagination
               page={safePage}
               totalPages={totalPages}
               totalItems={totalRecords}
-              perPage={PAGE_SIZE}
+              perPage={pageSize}
               onPageChange={setPage}
+              onPerPageChange={(newSize) => {
+                setPageSize(newSize);
+                setPage(1);
+              }}
             />
           </div>
         ) : null
@@ -313,7 +317,7 @@ export default function ConsultationHistoryModal({
               setDeleteConfirmId(id);
             }}
             safePage={safePage}
-            PAGE_SIZE={PAGE_SIZE}
+            PAGE_SIZE={pageSize}
             isLoading={isFetching}
           />
         )}

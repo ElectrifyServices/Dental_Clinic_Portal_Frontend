@@ -31,6 +31,13 @@ import {
   CardHeader,
   CardTitle,
 } from "./Card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
 export * from "./DropdownMenu";
 
 // ─── PageHeader ───────────────────────────────────────────────────────────────
@@ -42,7 +49,7 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-row items-center justify-between gap-4 mb-6">
+    <div className="flex flex-row items-center justify-between gap-0 mb-0">
       <div className="flex-1 min-w-[120px]">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
@@ -115,6 +122,7 @@ interface ModalProps {
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "5xl";
   icon?: React.ReactNode;
+  bodyClassName?: string;
 }
 const MODAL_SIZES: Record<string, string> = {
   sm:  "max-w-sm",
@@ -129,7 +137,7 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon }: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -165,7 +173,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
             <X className="w-4 h-4" />
           </button>
         </DialogHeader>
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">{children}</div>
+        <div className={cn("p-6 overflow-y-auto flex-1 custom-scrollbar", bodyClassName)}>{children}</div>
         {footer && (
           <DialogFooter className="px-6 py-4 border-t border-border bg-muted/40 sticky bottom-0 z-20">
             {footer}
@@ -270,26 +278,42 @@ interface MetricCardProps {
   variant?: "primary" | "emerald" | "amber" | "rose" | "indigo" | "gray";
   trend?: string | { value: string; isUp: boolean };
   className?: string;
+  interactive?: boolean;
 }
-export function MetricCard({ label, value, icon, variant = "gray", trend, className }: MetricCardProps) {
+export function MetricCard({ label, value, icon, variant = "gray", trend, className, interactive = true }: MetricCardProps) {
   const variants = {
-    primary: "bg-primary/10 text-primary group-hover:bg-primary/20",
-    emerald: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
-    amber:   "bg-amber-50  text-amber-600 group-hover:bg-amber-100",
-    rose:    "bg-rose-50   text-rose-600 group-hover:bg-rose-100",
-    indigo:  "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
-    gray:    "bg-muted     text-muted-foreground group-hover:bg-muted/80",
+    primary: "bg-primary/10 text-primary",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber:   "bg-amber-50  text-amber-600",
+    rose:    "bg-rose-50   text-rose-600",
+    indigo:  "bg-indigo-50 text-indigo-600",
+    gray:    "bg-muted     text-muted-foreground",
+  };
+  const hoverVariants = {
+    primary: "group-hover:bg-primary/20",
+    emerald: "group-hover:bg-emerald-100",
+    amber:   "group-hover:bg-amber-100",
+    rose:    "group-hover:bg-rose-100",
+    indigo:  "group-hover:bg-indigo-100",
+    gray:    "group-hover:bg-muted/80",
   };
 
   return (
-    <Card className={cn("p-5 md:p-6 hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 transition-all duration-300 ease-out cursor-pointer group", className)}>
+    <Card className={cn(
+      "p-4 sm:p-5 md:p-6 transition-all duration-300 ease-out group",
+      interactive ? "hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 cursor-pointer" : "cursor-default",
+      className
+    )}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200 group-hover:text-primary/80">
+          <p className={cn(
+            "text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 transition-colors duration-200",
+            interactive ? "group-hover:text-primary/80" : "",
+          )}>
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-[32px] font-bold text-foreground leading-none transition-transform duration-300 group-hover:translate-x-0.5">{value}</span>
+            <span className="text-[28px] sm:text-[32px] font-bold text-foreground leading-none">{value}</span>
             {trend && (
               <span className={cn("text-xs font-semibold",
                 typeof trend === "object"
@@ -305,7 +329,11 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
             )}
           </div>
         </div>
-        <div className={cn("w-11 h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105", variants[variant])}>
+        <div className={cn(
+          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-300",
+          variants[variant],
+          interactive ? hoverVariants[variant] : "",
+        )}>
           {icon}
         </div>
       </div>
@@ -333,11 +361,14 @@ interface DataTableProps<T> {
   expandedRowIds?: Set<string>;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T, idx: number) => string;
+  className?: string;
+  scrollClassName?: string;
+  disableRowAnimation?: boolean;
 }
-export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtitle, rowKey, footer, renderExpandedRow, expandedRowIds, onRowClick, rowClassName, className, scrollClassName, disableRowAnimation = false }: DataTableProps<T>) {
   return (
-    <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className={cn("card overflow-hidden flex flex-col min-h-0", className)}>
+      <div className={cn("overflow-x-auto flex-1 min-h-0", scrollClassName)}>
         <table className="data-table">
           <thead>
             <tr>
@@ -366,32 +397,44 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
             ) : (
               data.map((row, idx) => {
                 const key = rowKey(row) || `row-${idx}`;
+                const rowClasses = cn(
+                  onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
+                  rowClassName?.(row, idx)
+                );
+
                 return (
                   <React.Fragment key={key}>
-                    <motion.tr
-                      key={key}
-                      onClick={() => onRowClick?.(row)}
-                      className={cn(
-                        onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
-                        rowClassName?.(row, idx)
-                      )}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
-                    >
-                      {columns.map((col) => (
-                        <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
-                          {col.render(row, idx)}
-                        </td>
-                      ))}
-                    </motion.tr>
+                    {disableRowAnimation ? (
+                      <tr key={key} onClick={() => onRowClick?.(row)} className={rowClasses}>
+                        {columns.map((col) => (
+                          <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
+                            {col.render(row, idx)}
+                          </td>
+                        ))}
+                      </tr>
+                    ) : (
+                      <motion.tr
+                        key={key}
+                        onClick={() => onRowClick?.(row)}
+                        className={rowClasses}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.25) }}
+                      >
+                        {columns.map((col) => (
+                          <td key={col.key} style={{ textAlign: col.align || "left" }} className={col.className}>
+                            {col.render(row, idx)}
+                          </td>
+                        ))}
+                      </motion.tr>
+                    )}
                     {(() => {
                       if (!renderExpandedRow || !expandedRowIds?.has(key)) return null;
                       const content = renderExpandedRow(row);
                       if (!content) return null;
                       return (
                         <tr>
-                          <td colSpan={columns.length} className="p-0 border-b border-border bg-muted/10">
+                          <td colSpan={columns.length} className="p-0  border-border bg-transparent">
                             {content}
                           </td>
                         </tr>
@@ -416,9 +459,10 @@ interface PaginationProps {
   totalItems: number;
   perPage: number;
   onPageChange: (p: number) => void;
+  onPerPageChange?: (size: number) => void;
 }
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange }: PaginationProps) {
+  if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
@@ -426,9 +470,28 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
   );
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-xs text-muted-foreground">
-        Showing <span className="font-semibold text-foreground">{start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
-      </p>
+      <div className="flex items-center gap-4">
+        <p className="text-xs text-muted-foreground">
+          Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
+        </p>
+        {onPerPageChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">Rows:</span>
+            <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
+              <SelectTrigger className="h-7 text-xs px-2 w-[65px]">
+                <SelectValue placeholder={String(perPage)} />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)} className="text-xs">
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}

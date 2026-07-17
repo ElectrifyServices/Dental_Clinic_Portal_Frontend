@@ -61,6 +61,8 @@ interface PatientQueueProps {
   currentPage?: number;
   totalPages?: number;
   totalItems?: number;
+  perPage?: number;
+  onPerPageChange?: (limit: number) => void;
   onPageChange?: (page: number) => void;
 }
 
@@ -83,6 +85,8 @@ export function PatientQueue({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
+  perPage = 10,
+  onPerPageChange,
   onPageChange,
 }: PatientQueueProps) {
   const [localSearchTerm, setLocalSearchTerm] = useState("");
@@ -141,11 +145,11 @@ export function PatientQueue({
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col gap-6 min-h-0">
       {/* Header */}
       <PageHeader
         title="Consultation Queue"
-        subtitle={`Dr. ${doctorName}`}
+        subtitle={doctorName}
         action={
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
             <div className="flex items-center gap-1.5 shrink-0">
@@ -239,39 +243,42 @@ export function PatientQueue({
       </div>
 
       {/* Patient Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredPatients.map((patient) => {
-          const fullPatient = patients.find(
-            (p) =>
-              p.phone === patient.patientPhone ||
-              p.name === patient.patientName,
-          );
-          return (
-            <QueueCard
-              key={patient.id}
-              patient={patient}
-              fullPatient={fullPatient}
-              getStatusColor={getStatusColor}
-              getStatusIcon={getStatusIcon}
-              onUpdatePatientStatus={onUpdatePatientStatus}
-              onSelectPatient={onSelectPatient}
-              onEditConsultation={onEditConsultation}
-            />
-          );
-        })}
-      </div>
-
-      {totalPages > 1 && onPageChange && (
-        <div className="mt-6 flex justify-end">
-          <Pagination
-            page={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            perPage={10}
-            onPageChange={onPageChange}
-          />
+      <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 pr-2 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+          {filteredPatients.map((patient) => {
+            const fullPatient = patients.find(
+              (p) =>
+                p.phone === patient.patientPhone ||
+                p.name === patient.patientName,
+            );
+            return (
+              <QueueCard
+                key={patient.id}
+                patient={patient}
+                fullPatient={fullPatient}
+                getStatusColor={getStatusColor}
+                getStatusIcon={getStatusIcon}
+                onUpdatePatientStatus={onUpdatePatientStatus}
+                onSelectPatient={onSelectPatient}
+                onEditConsultation={onEditConsultation}
+              />
+            );
+          })}
         </div>
-      )}
+
+        {totalPages > 1 && onPageChange && (
+          <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              perPage={perPage}
+              onPageChange={onPageChange}
+              onPerPageChange={onPerPageChange}
+            />
+          </div>
+        )}
+      </div>
 
       {showDirectPopup && (
         <DirectConsultationPopup

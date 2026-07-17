@@ -759,12 +759,19 @@ export const downloadConsultationPDF = async ({
     "";
   const recommendations =
     consultationData.recommendations ||
-    consultationData.additional_notes ||
     consultationData.data?.recommendations ||
-    consultationData.data?.additional_notes ||
     consultationData.data?.data?.recommendations ||
-    consultationData.data?.data?.additional_notes ||
-    "-";
+    "";
+
+  const treatmentPlanDesc =
+    consultationData.treatment_plan_desc ||
+    consultationData.consultation?.treatment_plan_desc ||
+    consultationData.data?.treatment_plan_desc ||
+    consultationData.data?.consultation?.treatment_plan_desc ||
+    consultationData.data?.data?.treatment_plan_desc ||
+    consultationData.treatmentPlan ||
+    consultationData.treatment_plan_description ||
+    "";
 
   // Dynamic tooth chart findings map merging
   const finalToothChart = { ...toothChartState };
@@ -779,7 +786,11 @@ export const downloadConsultationPDF = async ({
   if (Array.isArray(toothFindingsArray)) {
     toothFindingsArray.forEach((finding: any) => {
       if (finding.tooth_number && finding.condition) {
-        finalToothChart[finding.tooth_number] = finding.condition;
+        if (finding.condition === 'OTHER' && finding.other_condition) {
+          finalToothChart[finding.tooth_number] = finding.other_condition;
+        } else {
+          finalToothChart[finding.tooth_number] = typeof finding.condition === 'string' ? finding.condition.replace('_', ' ') : finding.condition;
+        }
       }
     });
   }
@@ -936,7 +947,7 @@ export const downloadConsultationPDF = async ({
       treatmentsHtml = `
 <div style="background:#fff; border:1px solid ${LINE}; padding:15px; border-radius:8px; font-size:12px; color:${INK_MUTED};" data-avoid-break="true">
 <strong>Procedure:</strong> ${consultationData.treatmentProcedure || consultationData.procedure || "-"}<br/>
-<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${consultationData.treatmentPlan || consultationData.treatment_plan_description || "-"}<br/>
+<strong style="display:inline-block; margin-top:6px;">Plan:</strong> ${treatmentPlanDesc || "-"}<br/>
 <strong style="display:inline-block; margin-top:6px;">Sessions:</strong> ${consultationData.treatmentSessions || 1} | <strong>Estimated Cost:</strong> Rs. ${(consultationData.treatmentCost || consultationData.cost || 0).toLocaleString("en-IN")}
 </div>
       `;
@@ -946,17 +957,20 @@ export const downloadConsultationPDF = async ({
 <div style="padding: 8px 40px 10px;">
         ${sectionLabel("Treatment Planning & Procedures")}
         ${treatmentsHtml}
+        ${treatmentPlanDesc && treatmentPlanDesc !== "-" && (treatmentsArray && treatmentsArray.length > 0)
+        ? `
+<div style="margin-top:16px;" data-avoid-break="true">
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Treatment Plan Description</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap;">${treatmentPlanDesc}</div>
+</div>
+        `
+        : ""
+      }
+        ${recommendations && recommendations !== "-"
+        ? `
 <div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px;">
-            ${recommendations}
-</div>
-</div>
-        ${additionalNotes
-        ? `
-<div style="margin-top:12px;" data-avoid-break="true">
-<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Additional Clinical Notes</div>
-<div style="font-size:12px; line-height:1.5; color:${INK_MUTED};">${additionalNotes}</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap;">${recommendations}</div>
 </div>
         `
         : ""
@@ -999,6 +1013,15 @@ export const downloadConsultationPDF = async ({
       .join("")}
 </tbody>
 </table>
+        ${additionalNotes
+        ? `
+<div style="margin-top:16px;" data-avoid-break="true">
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Additional Notes</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap;">${additionalNotes}</div>
+</div>
+        `
+        : ""
+      }
 </div>
   `;
 
@@ -1124,7 +1147,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 
   const getPatientInfo = () => `
 <div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
-<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">COMPLETED TREATMENT SUMMARY</div>
+<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">TREATMENT & PROCEDURE COMPLETED</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
 <span>Date: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
@@ -1152,7 +1175,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
         ${tableHeadCell("Date")}
         ${tableHeadCell("Findings")}
         ${tableHeadCell("Work Done")}
-        ${tableHeadCell("Session Fee", "right")}
+        
       </tr>
     </thead>
     <tbody>
@@ -1164,7 +1187,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.session_findings || s.findings || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.work_done || "-"}`, "left", `font-size:12px; color:${INK};`)}</td>
-          <td style="padding:0; vertical-align:middle;">${makeCellContent(`₹${Number(s.session_fee || 0).toLocaleString("en-IN")}`, "right", `font-size:12px; font-weight:400; color:${INK};`)}</td>
+         
         </tr>
       `,
         )

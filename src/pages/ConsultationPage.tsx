@@ -31,7 +31,9 @@ export const ConsultationPage: React.FC = () => {
     totalItems,
     totalPages,
     currentPage,
-    handlePageChange
+    handlePageChange,
+    handleLimitChange,
+    filters
   } = useConsultationData();
 
   const queuedPatients = useMemo(() => {
@@ -46,10 +48,10 @@ export const ConsultationPage: React.FC = () => {
         appointmentId: c.appointmentId || c.appointment_id || "",
         patientName: c.patientName,
         patientPhone: c.patientPhone,
-        appointmentTime: c.appointmentTime || new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        appointmentTime: c.appointmentTime || new Date(c.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         treatmentType: c.treatmentType || c.diagnosis || "General Consultation",
         patientConcern: c.patientConcern || c.observations || "",
-        checkInTime: new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        checkInTime: new Date(c.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         status: status,
         slotDurationMins: c.slotDurationMins,
         specificTreatment: c.specificTreatment,
@@ -204,16 +206,43 @@ export const ConsultationPage: React.FC = () => {
   const onCompleteConsultation = async (consultationData: any) => {
     try {
       // Map tooth chart state to tooth_findings array
+      const standardConditions = ['normal', 'caries', 'missing', 'restored', 'endo', 'crown', 'extract', 'other'];
       const tooth_findings = Object.entries(consultationData.toothChartState || {})
         .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
-        .map(([toothNum, condition]) => {
-          const isFM = toothNum === "FM";
-          const finding: any = {
-            tooth_number: isFM ? -1 : parseInt(toothNum),
-            condition: Array.isArray(condition) ? condition.join(", ") : condition
-          };
-          if (isFM) finding.chart_type = "ADULT";
-          return finding;
+        .flatMap(([toothNum, conditions]) => {
+          if (!Array.isArray(conditions)) return [];
+          return conditions.map((cond: string) => {
+            const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
+            let mappedCondition = condStr.toUpperCase();
+            let otherCondition = null;
+
+            if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
+            else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
+            else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+            else if (!standardConditions.includes(condStr)) {
+               mappedCondition = 'OTHER';
+               otherCondition = cond;
+            } else if (condStr === 'other') {
+               mappedCondition = 'OTHER';
+               otherCondition = null;
+            }
+
+            const isFM = toothNum === "FM";
+            const n = parseInt(toothNum);
+            let cType = "ADULT";
+            if (isFM) {
+              cType = "ADULT"; // Backend strictly requires ADULT or PEDIATRIC
+            } else if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
+              cType = "PEDIATRIC";
+            }
+
+            return {
+              tooth_number: isFM ? -1 : n,
+              condition: mappedCondition,
+              other_condition: otherCondition,
+              chart_type: cType
+            };
+          });
         });
 
       // Map treatment plans to treatments array
@@ -303,7 +332,7 @@ export const ConsultationPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-120px)] flex flex-col">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
@@ -325,6 +354,8 @@ export const ConsultationPage: React.FC = () => {
         totalPages={totalPages}
         totalItems={totalItems}
         onPageChange={handlePageChange}
+        perPage={filters.limit || 10}
+        onPerPageChange={handleLimitChange}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
 export interface EmployeeListFilters {
@@ -43,7 +44,7 @@ export function useEmployeesQuery(variables: EmployeeListVariables, options?: { 
       enabled,
       staleTime: 0,
       refetchOnMount: "always",
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
     },
   });
 }

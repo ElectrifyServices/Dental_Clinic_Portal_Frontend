@@ -113,6 +113,7 @@ export function useCreateTreatmentPlanMutation() {
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
+        queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlanStats"] });
       },
     },

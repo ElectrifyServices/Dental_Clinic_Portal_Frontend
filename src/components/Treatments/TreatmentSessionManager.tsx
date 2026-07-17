@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Calendar, Clock, Plus, CheckCircle, Loader2, ChevronDown, ChevronUp,
   IndianRupee, Activity, X,
   TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
-  Stethoscope, BadgeCheck, Sparkle, Sparkles, Pill,
+  Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
 } from "lucide-react";
 import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
+import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 
 import {
   useTreatmentSessionsQuery,
@@ -17,15 +18,33 @@ import {
   TreatmentSessionResponse,
   PlanPrescription,
 } from "../../hooks/treatment/useTreatmentSessionHooks";
+import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
 import { useModal } from "../../contexts/ModalContext";
+import { ConsultationFeedback } from "./ConsultationFeedback";
 
 interface TreatmentSessionManagerProps {
   treatmentId: string;
   patientName: string;
   procedure: string;
   toothNumber?: number;
+  doctorId?: string;
   doctorName?: string;
   onClose: () => void;
+}
+
+interface SessionScheduleDraft {
+  date: string;
+  time: string;
+  duration: number;
+}
+
+interface InlineSessionSchedulerProps {
+  doctorId?: string;
+  draft: SessionScheduleDraft;
+  onChange: (patch: Partial<SessionScheduleDraft>) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+  isSaving: boolean;
 }
 
 const STATUS_CONFIG: Record<string, {
@@ -78,17 +97,230 @@ const STATUS_CONFIG: Record<string, {
   },
 };
 
+const getTodayInputValue = () => {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().split("T")[0];
+};
+
+const convert12to24 = (time12?: string) => {
+  if (!time12) return "";
+  const trimmed = time12.trim();
+  if (!trimmed.includes(" ")) return trimmed;
+
+  const [timePart, modifier] = trimmed.split(" ");
+  let [hours, minutes] = timePart.split(":");
+
+  if (!hours || !minutes || !modifier) return trimmed;
+  if (hours === "12") hours = "00";
+  if (modifier.toUpperCase() === "PM") {
+    hours = String(parseInt(hours, 10) + 12);
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes}`;
+};
+
+const format24HourTime = (value: string) => {
+  const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return value;
+
+  const hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const normalizedHours = hours % 12 || 12;
+  return `${String(normalizedHours).padStart(2, "0")}:${minutes} ${suffix}`;
+};
+
+function InlineSessionScheduler({
+  doctorId,
+  draft,
+  onChange,
+  onCancel,
+  onConfirm,
+  isSaving,
+}: InlineSessionSchedulerProps) {
+  const { data: slotsResponse, isLoading } = useAvailableSlotsQuery(
+    doctorId || null,
+    draft.date || null,
+  );
+
+  const slots = useMemo(() => {
+    if (!slotsResponse?.data?.slots || !draft.date) return [];
+
+    return slotsResponse.data.slots.map((slot) => {
+      const time24 = convert12to24(slot.time);
+      const slotDateTime = new Date(`${draft.date}T${time24}:00`);
+      const isPast =
+        draft.date === getTodayInputValue() &&
+        !Number.isNaN(slotDateTime.getTime()) &&
+        slotDateTime.getTime() < Date.now();
+
+      return {
+        time12: slot.time,
+        time24,
+        appointmentCount: slot.appointment_count || 0,
+        isDisabled: slot.disabled === true || isPast,
+      };
+    });
+  }, [draft.date, slotsResponse]);
+
+  const canConfirm = Boolean(doctorId && draft.date && draft.time);
+
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center">
+          <Calendar className="w-4 h-4 text-emerald-700" />
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase tracking-wider text-emerald-700">
+            Schedule Session
+          </p>
+          <p className="text-[11px] text-emerald-700/70">
+            Choose a visit date and confirm a slot.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
+            Date
+          </Label>
+          <Input
+            type="date"
+            value={draft.date}
+            min={getTodayInputValue()}
+            onChange={(e) => onChange({ date: e.target.value, time: "" })}
+            className="rounded-xl border-emerald-200 bg-white"
+          />
+        </div>
+        {/* <div>
+          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
+            Selected Time
+          </Label>
+          <Input
+            type="time"
+            value={draft.time}
+            onChange={(e) => onChange({ time: e.target.value })}
+            className="rounded-xl border-emerald-200 bg-white"
+          />
+        </div> */}
+        <div>
+          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
+            Duration
+          </Label>
+          <Select
+            value={String(draft.duration)}
+            onValueChange={(value) => onChange({ duration: parseInt(value, 10) })}
+          >
+            <SelectTrigger className="rounded-xl border-emerald-200 bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                <SelectItem key={minutes} value={String(minutes)}>
+                  {minutes} minutes
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {doctorId && draft.date ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-emerald-700" />
+            <p className="text-sm font-bold text-foreground">Available Slots</p>
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />}
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-11 rounded-xl bg-emerald-100 animate-pulse" />
+              ))}
+            </div>
+          ) : slots.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+              {slots.map((slot) => {
+                const isSelected = draft.time === slot.time24;
+                return (
+                  <Button
+                    key={slot.time24}
+                    type="button"
+                    disabled={slot.isDisabled}
+                    onClick={() => !slot.isDisabled && onChange({ time: slot.time24 })}
+                    className={[
+                      "h-11 rounded-xl border text-[11px] font-bold transition-all",
+                      isSelected
+                        ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-600"
+                        : slot.isDisabled
+                          ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
+                          : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300",
+                    ].join(" ")}
+                  >
+                    {slot.time12} ({slot.appointmentCount})
+                  </Button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              No slots available for the selected date.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Select a date to load available slots.
+        </p>
+      )}
+
+      {!doctorId && (
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          This treatment has no linked doctor, so slots cannot be loaded.
+        </p>
+      )}
+
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={onCancel} className="flex-1 rounded-xl">
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          disabled={!canConfirm || isSaving}
+          className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+          Confirm Slot
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function TreatmentSessionManager({
   treatmentId,
   patientName,
   procedure,
   toothNumber,
+  doctorId,
   doctorName,
   onClose,
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
+  const { data: treatmentPlanResponse } = useTreatmentPlanQuery(treatmentId, {
+    enabled: !!treatmentId,
+  });
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
+  const treatmentPlan = (treatmentPlanResponse as any)?.data ?? treatmentPlanResponse;
+  const assignedDoctorId =
+    treatmentPlan?.doctor_id ||
+    treatmentPlan?.doctor?.id ||
+    doctorId;
 
   // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
   // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.
@@ -110,6 +342,13 @@ export function TreatmentSessionManager({
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
+  const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
+  const [schedulingSessionId, setSchedulingSessionId] = useState<string | null>(null);
+  const [scheduleDraft, setScheduleDraft] = useState<SessionScheduleDraft>({
+    date: "",
+    time: "",
+    duration: 45,
+  });
 
   const [newSession, setNewSession] = useState({
     date: "",
@@ -126,6 +365,7 @@ export function TreatmentSessionManager({
   });
 
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
 
   const addPrescription = () => {
     setPrescriptions((prev) => [
@@ -212,7 +452,7 @@ export function TreatmentSessionManager({
 
   const totalSessions: number   = responseData?.total ?? 0;
   const completedCount: number  = responseData?.completed ?? 0;
-  const projectedRevenue: number = responseData?.projected_revenue ?? 0;
+  const totalFees: number = Number(responseData?.total_fees ?? responseData?.projected_revenue ?? 0);
   const sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
 
   const groupedSessions = useMemo(() => {
@@ -228,25 +468,70 @@ export function TreatmentSessionManager({
     };
   }, [sessions]);
 
-  const currentSession = sessions.find(s =>
-    s.status?.toUpperCase().replace("-", "_") === "IN_PROGRESS"
-  );
+  const openConsultationFeedback = () => {
+    if (!treatmentId) {
+      showToast("Consultation feedback is not available for this treatment.", "error");
+      return;
+    }
+    setShowConsultationFeedback(true);
+  };
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
   const formatDate = (d?: string) => {
-    if (!d) return "Date TBD";
-    return new Date(d).toLocaleDateString("en-IN", {
-      weekday: "short", day: "2-digit", month: "short", year: "numeric",
+    if (!d) return "Not Scheduled";
+    const dateOnlyMatch = d.match(/^(\d{4}-\d{2}-\d{2})/);
+    const parsed = dateOnlyMatch
+      ? new Date(`${dateOnlyMatch[1]}T00:00:00`)
+      : new Date(d);
+
+    if (Number.isNaN(parsed.getTime())) return "Not Scheduled";
+
+    return parsed.toLocaleDateString("en-IN", {
+      weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
     });
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getSessionDate = (session: TreatmentSessionResponse) =>
+    session.visit_date ||
+    (session as any).scheduledDate ||
+    (session as any).suggestedDate;
+
   const formatTime = (t?: string) => {
-    if (!t) return "TBD";
+    if (!t) return "Time Pending";
     if (t.includes("AM") || t.includes("PM")) return t;
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(t)) {
+      return format24HourTime(t);
+    }
     try {
-      return new Date(t).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+      const parsed = new Date(t);
+      if (Number.isNaN(parsed.getTime())) return t;
+      return parsed.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
     } catch { return t; }
+  };
+
+  const getSessionTime = (session: TreatmentSessionResponse) => {
+    const explicitTime =
+      session.appointment?.start_time_ist ||
+      session.appointment?.start_time ||
+      session.appointment?.time ||
+      session.start_time ||
+      (session as any).startTime ||
+      (session as any).time;
+
+    if (explicitTime) return explicitTime;
+
+    const sessionDate = getSessionDate(session);
+    if (sessionDate?.includes("T")) return sessionDate;
+
+    return undefined;
   };
 
   const toggleExpand = (id: string) =>
@@ -255,6 +540,25 @@ export function TreatmentSessionManager({
       n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
+
+  const startSchedulingSession = (session: TreatmentSessionResponse) => {
+    setSchedulingSessionId(session.id);
+    setScheduleDraft({
+      date: getTodayInputValue(),
+      time: convert12to24(getSessionTime(session)),
+      duration: session.duration_min ?? 45,
+    });
+    setExpandedSessions((prev) => {
+      const next = new Set(prev);
+      next.add(session.id);
+      return next;
+    });
+  };
+
+  const cancelSchedulingSession = () => {
+    setSchedulingSessionId(null);
+    setScheduleDraft({ date: "", time: "", duration: 45 });
+  };
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -280,22 +584,69 @@ export function TreatmentSessionManager({
   };
 
   const handleUpdateStatus = async (
-    sessionId: string,
+    session: TreatmentSessionResponse,
     newStatus: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
   ) => {
     if (newStatus === "COMPLETED") {
       setCompleteForm({ work_done: "", session_findings: "", next_session_plan: "" });
       setPrescriptions([]);
-      setCompletingId(sessionId);
+      setSessionAttachments([]);
+      setCompletingId(session.id);
+      return;
+    }
+    if (newStatus === "SCHEDULED") {
+      startSchedulingSession(session);
       return;
     }
     try {
-      await updateSession.mutateAsync({ planId: treatmentId, sessionId, status: newStatus });
+      await updateSession.mutateAsync({ planId: treatmentId, sessionId: session.id, status: newStatus });
+      if (schedulingSessionId === session.id) {
+        cancelSchedulingSession();
+      }
       showToast(`Session updated to ${STATUS_CONFIG[newStatus]?.label}`);
       refetch();
     } catch (err: any) {
       showToast(err?.response?.data?.message ?? "Failed to update", "error");
     }
+  };
+
+  const handleConfirmScheduledSession = async (session: TreatmentSessionResponse) => {
+    if (!scheduleDraft.date) {
+      showToast("Please select a date", "error");
+      return;
+    }
+    if (!scheduleDraft.time) {
+      showToast("Please select a slot", "error");
+      return;
+    }
+
+    try {
+      await updateSession.mutateAsync({
+        planId: treatmentId,
+        sessionId: session.id,
+        status: "SCHEDULED",
+        visit_date: scheduleDraft.date,
+        start_time: scheduleDraft.time,
+        duration_min: scheduleDraft.duration,
+      });
+      showToast("Session scheduled successfully!");
+      cancelSchedulingSession();
+      refetch();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message ?? "Failed to schedule session", "error");
+    }
+  };
+
+  const handleSessionAttachmentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setSessionAttachments((prev) => [...prev, ...files]);
+    e.target.value = "";
+  };
+
+  const removeSessionAttachment = (index: number) => {
+    setSessionAttachments((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
   };
 
   const handleCompleteSession = async (sessionId: string) => {
@@ -329,6 +680,7 @@ export function TreatmentSessionManager({
         sessionId,
         ...completeForm,
         prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
+        attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
       });
       showToast(completedCount + 1 >= totalSessions
         ? "All sessions completed! Treatment plan done!"
@@ -336,11 +688,21 @@ export function TreatmentSessionManager({
       setCompletingId(null);
       setCompleteForm({ work_done: "", session_findings: "", next_session_plan: "" });
       setPrescriptions([]);
+      setSessionAttachments([]);
       refetch();
     } catch (err: any) {
       showToast(err?.response?.data?.message ?? "Failed to complete", "error");
     }
   };
+
+  useEffect(() => {
+    if (
+      schedulingSessionId &&
+      !sessions.some((session) => session.id === schedulingSessionId)
+    ) {
+      cancelSchedulingSession();
+    }
+  }, [schedulingSessionId, sessions]);
 
   const handleUpdateClinicalNotes = async (sessionId: string) => {
     try {
@@ -362,9 +724,8 @@ export function TreatmentSessionManager({
     const isCompleting  = completingId === session.id;
     const isExpanded    = expandedSessions.has(session.id);
     const isEditing     = editingClinicalNotes === session.id;
-    const appointmentTime = session.appointment?.start_time
-      ? formatTime(session.appointment.start_time)
-      : formatTime(session.start_time);
+    const isScheduling  = schedulingSessionId === session.id;
+    const appointmentTime = formatTime(getSessionTime(session));
 
     // Prescriptions already merged in sessions useMemo
     const sessionRx: PlanPrescription[] = (session.prescriptions as PlanPrescription[]) ?? [];
@@ -384,31 +745,45 @@ export function TreatmentSessionManager({
                   </div>
                   <div>
                     <h4 className="font-black text-foreground">Session {session.visit_number}</h4>
-                    <p className="text-xs text-muted-foreground">{formatDate(session.visit_date)}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(getSessionDate(session))}</p>
                   </div>
-                  <Badge variant={cfg.badgeVariant as any} className="ml-auto">{cfg.label}</Badge>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
-                    <span className="font-medium">{appointmentTime || "TBD"} • {session.duration_min ?? 45} min</span>
+                    <span className="font-medium">{appointmentTime} • {session.duration_min ?? 45} min</span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <IndianRupee className="w-4 h-4" />
-                    <span className="font-medium">₹{Number(session.session_fee).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ClipboardList className="w-4 h-4" />
-                    <span className="truncate text-xs">{session.clinical_objectives || "No objectives set"}</span>
-                  </div>
+                  
+                  {normalizedStatus === "COMPLETED" && (
+                 
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                  
+                      Clinical Objectives :
+                      <span className="truncate text-xs">{session.clinical_objectives || "No objectives set"}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {normalizedStatus === "SCHEDULED" && !isScheduling && (
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startSchedulingSession(session);
+                    }}
+                    className="h-9 w-9 rounded-xl border-amber-200 bg-amber-50 p-0 text-amber-700 hover:bg-amber-100"
+                    title="Reschedule session"
+                    aria-label="Reschedule session"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
                 {normalizedStatus !== "COMPLETED" && normalizedStatus !== "CANCELLED" && (
                   <div onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={normalizedStatus}
-                      onValueChange={(val) => handleUpdateStatus(session.id, val as any)}
+                      onValueChange={(val) => handleUpdateStatus(session, val as any)}
                       disabled={updateSession.isPending}
                     >
                       <SelectTrigger className={`text-[10px] h-auto font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}>
@@ -434,6 +809,18 @@ export function TreatmentSessionManager({
           {/* ── Expanded Content ── */}
           {isExpanded && (
             <div className="border-t p-5 bg-muted/10 space-y-4">
+              {isScheduling && (
+                <InlineSessionScheduler
+                  doctorId={assignedDoctorId || session.plan?.doctor?.id}
+                  draft={scheduleDraft}
+                  onChange={(patch) =>
+                    setScheduleDraft((prev) => ({ ...prev, ...patch }))
+                  }
+                  onCancel={cancelSchedulingSession}
+                  onConfirm={() => handleConfirmScheduledSession(session)}
+                  isSaving={updateSession.isPending}
+                />
+              )}
 
               {/* Clinical objectives */}
               <div>
@@ -443,8 +830,10 @@ export function TreatmentSessionManager({
                   </p>
                   {!isEditing && normalizedStatus !== "COMPLETED" && (
                     <Button
+                      type="button"
+                      variant="outline"
                       onClick={(e) => { e.stopPropagation(); setEditingClinicalNotes(session.id); setEditNotes(session.clinical_objectives ?? ""); }}
-                      className="text-[10px] font-semibold text-primary hover:underline"
+                      className="h-8 rounded-lg border-primary bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
                     >
                       Edit
                     </Button>
@@ -481,6 +870,18 @@ export function TreatmentSessionManager({
                   <p className="text-sm leading-relaxed">{session.work_done}</p>
                 </div>
               )}
+              {normalizedStatus === "COMPLETED" && (
+                <div>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <IndianRupee className="w-3 h-3" /> Paid Amount
+                  </p>
+                  <p className="text-sm leading-relaxed font-semibold">
+                    {session.paid_amount != null && Number(session.paid_amount) > 0
+                      ? "\u20B9" + Number(session.paid_amount).toLocaleString("en-IN")
+                      : "NA"}
+                  </p>
+                </div>
+              )}
 
               {/* Clinical findings */}
               {session.session_findings && (
@@ -499,6 +900,47 @@ export function TreatmentSessionManager({
                     <Sparkle className="w-3 h-3" /> Next Session Plan
                   </p>
                   <p className="text-sm leading-relaxed">{session.next_session_plan}</p>
+                </div>
+              )}
+
+              {session.attachments?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-2">
+                    <Paperclip className="w-3 h-3" /> Attachments
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {session.attachments.map((attachment) => {
+                      const fileSize = formatFileSize(Number(attachment.file_size));
+                      const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
+                        .filter(Boolean)
+                        .join(" | ");
+
+                      return (
+                        <a
+                          key={attachment.id || attachment.file_url}
+                          href={attachment.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/60"
+                        >
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                            <FileText className="w-4 h-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-bold text-foreground">
+                              {attachment.file_name || "Attachment"}
+                            </span>
+                            {fileMeta && (
+                              <span className="block text-[11px] font-semibold text-muted-foreground">
+                                {fileMeta}
+                              </span>
+                            )}
+                          </span>
+                          <ExternalLink className="w-4 h-4 shrink-0 text-muted-foreground" />
+                        </a>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -596,10 +1038,22 @@ export function TreatmentSessionManager({
             icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
             footer={
               <div className="flex gap-3 w-full">
-                <Button variant="outline" onClick={() => setCompletingId(null)} className="flex-1">Cancel</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCompletingId(null);
+                    setSessionAttachments([]);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
                 <Button
                   onClick={() => handleCompleteSession(session.id)}
-                  disabled={completeSession.isPending || (!completeForm.work_done && !completeForm.session_findings)}
+                  disabled={
+                    completeSession.isPending ||
+                    (!completeForm.work_done && !completeForm.session_findings)
+                  }
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2 text-white"
                 >
                   {completeSession.isPending
@@ -615,7 +1069,7 @@ export function TreatmentSessionManager({
                 <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
                 <Textarea rows={3} placeholder="Describe the procedures performed..." value={completeForm.work_done}
                   onChange={(e) => setCompleteForm(p => ({ ...p, work_done: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" autoFocus />
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
               </div>
               <div>
                 <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
@@ -628,6 +1082,66 @@ export function TreatmentSessionManager({
                 <Textarea rows={2} placeholder="Recommended follow-up..." value={completeForm.next_session_plan}
                   onChange={(e) => setCompleteForm(p => ({ ...p, next_session_plan: e.target.value }))}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
+              </div>
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <Paperclip className="w-4 h-4 text-emerald-600" />
+                  <Label className="text-sm font-semibold">Attachments</Label>
+                </div>
+                <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
+                  <Input
+                    id={`session-attachments-${session.id}`}
+                    type="file"
+                    multiple
+                    onChange={handleSessionAttachmentUpload}
+                    className="hidden"
+                  />
+                  <Label
+                    htmlFor={`session-attachments-${session.id}`}
+                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-5 text-center transition-colors hover:bg-emerald-50"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Upload files</p>
+                      <p className="text-xs text-muted-foreground">
+                        Select one or more files to attach with this completed session
+                      </p>
+                    </div>
+                  </Label>
+
+                  {sessionAttachments.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {sessionAttachments.map((file, index) => (
+                        <div
+                          key={`${file.name}-${file.size}-${index}`}
+                          className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2"
+                        >
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-foreground">{file.name}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {file.size >= 1024 * 1024
+                                ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
+                                : `${Math.max(1, Math.round(file.size / 1024))} KB`}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => removeSessionAttachment(index)}
+                            className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="border-t pt-4">
                 <PrescriptionForm
@@ -648,67 +1162,50 @@ export function TreatmentSessionManager({
 
   return (
     <Modal
-      title="Treatment Sessions"
-      subtitle={`${patientName} • ${procedure}${toothNumber ? ` • Tooth #${toothNumber}` : ""}`}
+      title="Treatment Session"
+      subtitle={`${patientName} ${procedure}${toothNumber ? ` • Tooth #${toothNumber}` : ""}`}
       onClose={onClose}
       size="5xl"
       icon={<Calendar className="w-5 h-5" />}
-      footer={<div className="flex justify-end w-full"><Button variant="outline" onClick={onClose}>Close</Button></div>}
+      bodyClassName="flex min-h-0 flex-col overflow-hidden"
     >
-      <div className="space-y-8">
+      <div className="flex flex-1 min-h-0 flex-col gap-8 overflow-hidden">
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 shrink-0 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Total Sessions"
             value={totalSessions}
             icon={<Calendar className="w-5 h-5 text-primary" />}
             variant="primary"
+            interactive={false}
           />
           <MetricCard
             label="Completed"
             value={completedCount}
             icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
             variant="emerald"
-            trend={totalSessions > 0 ? `${Math.round(sessionProgress)}%` : undefined}
+            interactive={false}
+          
           />
           <MetricCard
-            label="Projected Revenue"
-            value={`₹${Number(projectedRevenue).toLocaleString()}`}
+            label="Estimated Cost"
+            value={`₹${totalFees.toLocaleString("en-IN")}`}
             icon={<TrendingUp className="w-5 h-5 text-indigo-600" />}
             variant="indigo"
+            interactive={false}
           />
           <MetricCard
             label="In Progress"
             value={groupedSessions.inProgress.length}
             icon={<Activity className="w-5 h-5 text-rose-600" />}
             variant="rose"
+            interactive={false}
           />
         </div>
 
-        {/* Active session banner */}
-        {currentSession && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200">
-            <div className="flex items-center gap-3 mb-3">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Currently Active Session</span>
-            </div>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h3 className="font-black text-lg">Session {currentSession.visit_number}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(currentSession.visit_date)} at {formatTime(currentSession.start_time)}
-                </p>
-              </div>
-              <Button onClick={() => handleUpdateStatus(currentSession.id, "COMPLETED")} className="bg-blue-600 hover:bg-blue-700 gap-2">
-                <CheckCircle className="w-4 h-4" /> Mark Complete
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Timeline header */}
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Clock8 className="w-5 h-5 text-primary" />
@@ -722,58 +1219,74 @@ export function TreatmentSessionManager({
               )}
             </div>
           </div>
-          <Button onClick={() => setShowNewSession(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Session
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={openConsultationFeedback}
+              className="gap-2"
+            >
+              <MessageSquareText className="w-4 h-4" /> Consultation Feedback
+            </Button>
+            <Button onClick={() => setShowNewSession(true)} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Session
+            </Button>
+          </div>
         </div>
 
         {/* Sessions list */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : sessions.length > 0 ? (
-          <div className="space-y-6">
-            {groupedSessions.inProgress.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.inProgress.map(renderSessionCard)}</div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : sessions.length > 0 ? (
+            <div className="h-full max-h-[calc(100vh-23rem)] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-6">
+                {groupedSessions.inProgress.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.inProgress.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.upcoming.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.upcoming.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.completed.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.completed.map(renderSessionCard)}</div>
+                  </div>
+                )}
+                {groupedSessions.cancelled.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
+                    </h4>
+                    <div className="space-y-3">{groupedSessions.cancelled.map(renderSessionCard)}</div>
+                  </div>
+                )}
               </div>
-            )}
-            {groupedSessions.upcoming.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.upcoming.map(renderSessionCard)}</div>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed w-full">
+                <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="font-semibold text-muted-foreground">No Sessions Scheduled</h3>
+                <p className="text-sm text-muted-foreground/60 mt-1">Click "Add Session" to create the first session</p>
               </div>
-            )}
-            {groupedSessions.completed.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.completed.map(renderSessionCard)}</div>
-              </div>
-            )}
-            {groupedSessions.cancelled.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
-                </h4>
-                <div className="space-y-3">{groupedSessions.cancelled.map(renderSessionCard)}</div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed">
-            <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="font-semibold text-muted-foreground">No Sessions Scheduled</h3>
-            <p className="text-sm text-muted-foreground/60 mt-1">Click "Add Session" to create the first session</p>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* Add session modal */}
         {showNewSession && (
@@ -836,6 +1349,14 @@ export function TreatmentSessionManager({
                 placeholder="Describe the goals for this session..." />
             </div>
           </Modal>
+        )}
+
+        {showConsultationFeedback && (
+          <ConsultationFeedback
+            treatmentId={treatmentId}
+            patientName={patientName}
+            onClose={() => setShowConsultationFeedback(false)}
+          />
         )}
 
       </div>

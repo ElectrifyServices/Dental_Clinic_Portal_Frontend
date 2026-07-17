@@ -22,7 +22,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const [patientStatus, setPatientStatus] = useState('all');
   const [patientCategory, setPatientCategory] = useState('all');
   const [patientPage, setPatientPage] = useState(1);
-  const patientLimit = 10;
+  const patientLimit = 50;
 
   const apiFilters = useMemo(() => {
     const filters: Record<string, string[]> = {};

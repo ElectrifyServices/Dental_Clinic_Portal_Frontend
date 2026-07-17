@@ -52,6 +52,8 @@ import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/co
 import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
 import { useCreateInvoiceMutation, CreateInvoiceVariables } from "../../hooks/billing/useCreateInvoiceMutation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
+import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 
 function ModalRegistryContent() {
   const queryClient = useQueryClient();
@@ -160,8 +162,33 @@ function ModalRegistryContent() {
       };
     });
 
+    let parsedFollowUpDate = data.followUpDate || data.follow_up_date || "";
+    let parsedFollowUpDoctorId = undefined;
+    let parsedSelectedSlot = null;
+
+    if (data.follow_up_appointments && data.follow_up_appointments.length > 0) {
+      const fu = data.follow_up_appointments[0];
+      if (fu.date) parsedFollowUpDate = fu.date.split("T")[0];
+      if (fu.start_time) {
+        const dateObj = new Date(fu.start_time);
+        if (!isNaN(dateObj.getTime()) && fu.start_time.includes("T")) {
+            const hr = String(dateObj.getHours()).padStart(2, '0');
+            const min = String(dateObj.getMinutes()).padStart(2, '0');
+            parsedSelectedSlot = `${hr}:${min}`;
+        } else {
+            parsedSelectedSlot = fu.start_time.substring(0, 5);
+        }
+      }
+      if (fu.personal_profile?.staff?.id) {
+        parsedFollowUpDoctorId = fu.personal_profile.staff.id;
+      }
+    }
+
     return {
       toothChartState,
+      followUpDoctorId: parsedFollowUpDoctorId,
+      followUpDate: parsedFollowUpDate,
+      selectedSlot: parsedSelectedSlot,
       consultationData: {
         observations: data.observations_desc || data.observations || "",
         diagnosis: data.diagnosis_desc || data.diagnosis || "",
@@ -194,11 +221,22 @@ function ModalRegistryContent() {
         tests: data.tests || "",
         nextVisit: data.nextVisit || data.next_visit || "",
         consultationDate: data.consultationDate || data.consultation_date || new Date().toISOString().split("T")[0],
-        followUpDate: data.followUpDate || data.follow_up_date || "",
+        followUpDate: parsedFollowUpDate,
         startTreatmentToday: data.startTreatmentToday || data.start_treatment_today || false,
       }
     };
   }, [editConsultationRaw]);
+
+  const { data: editTreatmentRaw, isLoading: isEditTreatmentLoading } = useTreatmentPlanQuery(
+    selectedItemId || undefined,
+    { enabled: activeModal === "treatmentForm" && !!selectedItemId }
+  );
+
+  const editTreatmentData = useMemo(() => {
+    if (!editTreatmentRaw) return null;
+    const treatmentData = (editTreatmentRaw as any)?.data?.data || (editTreatmentRaw as any)?.data || editTreatmentRaw;
+    return treatmentData ? toUiTreatment(treatmentData) : null;
+  }, [editTreatmentRaw]);
 
   const enabledFlags = useMemo(() => ({
     patients: ["appointmentForm", "invoiceForm", "patientDetails", "diagnoseForm", "consentForm", "consentViewer", "emrForm"].includes(activeModal || ""),
@@ -571,6 +609,7 @@ function ModalRegistryContent() {
               }
 
               // Map tooth chart state to tooth_findings array
+              const standardConditions = ['normal', 'caries', 'missing', 'restored', 'endo', 'crown', 'extract', 'other'];
               const tooth_findings = Object.entries(d.toothChartState || {})
                 .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
                 .flatMap(([toothNum, conditions]) => {
@@ -578,9 +617,18 @@ function ModalRegistryContent() {
                 return conditions.map((cond: string) => {
                   const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
                   let mappedCondition = condStr.toUpperCase();
+                  let otherCondition = null;
+
                   if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
                   else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
                   else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+                  else if (!standardConditions.includes(condStr)) {
+                     mappedCondition = 'OTHER';
+                     otherCondition = cond;
+                  } else if (condStr === 'other') {
+                     mappedCondition = 'OTHER';
+                     otherCondition = null;
+                  }
 
                   const isFM = toothNum === "FM";
                   const n = parseInt(toothNum);
@@ -594,6 +642,7 @@ function ModalRegistryContent() {
                   return {
                     tooth_number: isFM ? -1 : n,
                     condition: mappedCondition,
+                    other_condition: otherCondition,
                     chart_type: cType
                   };
                 });
@@ -630,9 +679,11 @@ function ModalRegistryContent() {
                   instructions: p.instructions || ''
                 }));
 
-              const validDoctorId = selectedPatientForDiagnose.doctorId && selectedPatientForDiagnose.doctorId !== "1"
-                ? selectedPatientForDiagnose.doctorId
-                : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
+              const validDoctorId = d.doctorId && d.doctorId !== "1"
+                ? d.doctorId
+                : selectedPatientForDiagnose.doctorId && selectedPatientForDiagnose.doctorId !== "1"
+                  ? selectedPatientForDiagnose.doctorId
+                  : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
 
               const isWalkIn = resolvedPatientId && String(resolvedPatientId).startsWith("WALK-");
               const apiPayload: any = {
@@ -761,7 +812,7 @@ function ModalRegistryContent() {
         />
       )}
 
-      {activeModal === "treatmentForm" && (
+      {activeModal === "treatmentForm" && (!selectedItemId || editTreatmentData) && (
         <TreatmentForm
           onClose={() => {
             setActiveModal(null);
@@ -775,13 +826,28 @@ function ModalRegistryContent() {
           }}
           treatment={
             selectedItemId
-              ? treatments.find((t: any) => t.id === selectedItemId)
+              ? editTreatmentData
               : null
           }
           patients={patients}
           doctors={activeDoctors}
           treatments={treatments}
         />
+      )}
+
+      {activeModal === "treatmentForm" && selectedItemId && isEditTreatmentLoading && (
+        <Modal
+          title="Edit Treatment Plan"
+          onClose={() => {
+            setActiveModal(null);
+            setSelectedItemId("");
+          }}
+          size="lg"
+        >
+          <div className="flex min-h-[220px] items-center justify-center">
+            <div className="text-sm font-semibold text-muted-foreground">Loading treatment plan...</div>
+          </div>
+        </Modal>
       )}
 
       {selectedItemId && (activeModal === "invoiceViewer" || matchingInvoice || String(selectedItemId).startsWith("INV-")) && (
@@ -871,6 +937,10 @@ function ModalRegistryContent() {
           }
           procedure={
             treatments.find((t: any) => t.id === selectedItemId)?.procedure ||
+            ""
+          }
+          doctorId={
+            treatments.find((t: any) => t.id === selectedItemId)?.doctorId ||
             ""
           }
           sessions={

@@ -40,8 +40,11 @@ export function ClinicalImages({
           {images.length === 0 ? (
             <div className="text-center flex flex-col items-center justify-center py-4">
               <Camera className="w-8 h-8 text-muted-foreground/60 mb-2" />
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground mb-1">
                 Upload clinical photos or other relevant images
+              </p>
+              <p className="text-[10px] text-muted-foreground/60 mb-3">
+                Supported formats: All image types (JPG, PNG, GIF, WEBP, etc.)
               </p>
               <Label
                 htmlFor="image-upload"

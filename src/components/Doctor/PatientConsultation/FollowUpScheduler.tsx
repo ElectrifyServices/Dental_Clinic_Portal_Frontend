@@ -17,6 +17,7 @@ interface FollowUpSchedulerProps {
   followUpDoctorId: string;
   followUpDate: string;
   selectedSlot: string | null;
+  initialSelectedSlot?: string | null;
   availableSlots: { time24: string; time12: string; appointmentCount: number; disabled?: boolean }[];
   doctors: any[];
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -33,6 +34,7 @@ export function FollowUpScheduler({
   followUpDoctorId,
   followUpDate,
   selectedSlot,
+  initialSelectedSlot,
   availableSlots,
   doctors,
   onFollowUpRequiredChange,
@@ -85,7 +87,7 @@ export function FollowUpScheduler({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Assign Doctor
               </Label>
               <Select
@@ -107,7 +109,7 @@ export function FollowUpScheduler({
             </div>
 
             <div>
-              <Label className="block text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Preferred Date
               </Label>
               <Input
@@ -129,7 +131,7 @@ export function FollowUpScheduler({
 
           {!bookedFollowUp && (
             <div className="space-y-4">
-              <Label className="block text-[10px] font-bold text-primary uppercase tracking-widest">
+              <Label className="block text-[10px] font-bold text-blue-900 uppercase tracking-widest">
                 Available Slots
               </Label>
               {availableSlots.length > 0 ? (
@@ -138,6 +140,8 @@ export function FollowUpScheduler({
                     {availableSlots.map((slot) => {
                       const isApiDisabled = slot.disabled === true;
                       const isSelected = selectedSlot === slot.time24;
+                      const isInitiallyBooked = initialSelectedSlot === slot.time24;
+                      
                       return (
                         <Button
                           key={slot.time24}
@@ -148,12 +152,16 @@ export function FollowUpScheduler({
                             relative px-3 py-1.5 rounded-xl text-[11px] font-bold border-2 transition-all duration-150 flex items-center gap-1.5
                             ${isApiDisabled
                               ? "bg-red-50 text-red-400 border-red-200 cursor-not-allowed line-through opacity-70"
-                              : isSelected
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
-                                : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
+                              : isInitiallyBooked
+                                ? isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200 scale-105"
+                                  : "bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200 hover:border-blue-400 cursor-pointer"
+                                : isSelected
+                                  ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200 scale-105"
+                                  : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
                             }
                           `}
-                          title={isApiDisabled ? "This slot is blocked" : `Select ${slot.time12}`}
+                          title={isApiDisabled ? "This slot is blocked" : isInitiallyBooked ? `Currently Booked: ${slot.time12}` : `Select ${slot.time12}`}
                         >
                           {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />)}
                           {isApiDisabled ? slot.time12 : `${slot.time12} (${slot.appointmentCount})`}
@@ -170,6 +178,10 @@ export function FollowUpScheduler({
                     <span className="flex items-center gap-1">
                       <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-600" />
                       Selected
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-sm inline-block bg-blue-600" />
+                      Booked
                     </span>
                   </p>
                 </div>

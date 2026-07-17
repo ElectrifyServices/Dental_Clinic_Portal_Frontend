@@ -1,4 +1,5 @@
 // hooks/treatment/useTreatmentPlansQuery.ts
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 import { TreatmentPlanResponse } from "./useCreateTreatmentPlanMutation";
 
@@ -127,7 +128,7 @@ export function useTreatmentPlansQuery(
   const requestBody = buildRequestBody();
 
   // Use a consistent endpoint without query string parameters
-  const endpoint = `/treatment/list`;
+  const endpoint = `treatment/patient/list`;
 
   return useApiQuery<TreatmentPlansResponse>({
     queryKey: ["treatmentPlans", filters],
@@ -137,6 +138,7 @@ export function useTreatmentPlansQuery(
     options: {
       enabled: options?.enabled ?? true,
       staleTime: 0,
+      placeholderData: keepPreviousData,
     },
   });
 }
