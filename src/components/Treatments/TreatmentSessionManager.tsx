@@ -479,13 +479,13 @@ export function TreatmentSessionManager({
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
   const formatDate = (d?: string) => {
-    if (!d) return "Date TBD";
+    if (!d) return "Not Scheduled";
     const dateOnlyMatch = d.match(/^(\d{4}-\d{2}-\d{2})/);
     const parsed = dateOnlyMatch
       ? new Date(`${dateOnlyMatch[1]}T00:00:00`)
       : new Date(d);
 
-    if (Number.isNaN(parsed.getTime())) return "Date TBD";
+    if (Number.isNaN(parsed.getTime())) return "Not Scheduled";
 
     return parsed.toLocaleDateString("en-IN", {
       weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
@@ -505,7 +505,7 @@ export function TreatmentSessionManager({
     (session as any).suggestedDate;
 
   const formatTime = (t?: string) => {
-    if (!t) return "TBD";
+    if (!t) return "Time Pending";
     if (t.includes("AM") || t.includes("PM")) return t;
     if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(t)) {
       return format24HourTime(t);

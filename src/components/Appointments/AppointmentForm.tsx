@@ -62,7 +62,7 @@ export function AppointmentForm({
 
   const initialDoctorId = appointment?.doctorId ?? appointment?.doctor_id ?? (doctors && doctors.length > 0 ? doctors[0].id : "1");
   const initialDoctor = doctors?.find((d: any) => String(d.id) === String(initialDoctorId));
-  const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? (initialDoctor?.consultationFee ? Number(initialDoctor.consultationFee) : 500);
+  const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? 0;
   const defaultDoctorName = appointment?.doctorName ?? appointment?.doctor_name ?? (initialDoctor?.name || "Dr. Sharma");
 
   const form = useForm<AppointmentFormData>({
@@ -276,9 +276,10 @@ export function AppointmentForm({
               form.setValue("doctorId", val);
               const selectedDoctor = doctors.find((d: any) => d.id === val);
               form.setValue("doctorName", selectedDoctor?.name);
-              if (selectedDoctor && selectedDoctor.consultationFee) {
-                form.setValue("fee", Number(selectedDoctor.consultationFee), { shouldValidate: true });
-              }
+              // Fee is defaulted to 0 and shouldn't automatically override manual input
+              // if (selectedDoctor && selectedDoctor.consultationFee) {
+              //   form.setValue("fee", Number(selectedDoctor.consultationFee), { shouldValidate: true });
+              // }
             }}
           />
           <TreatmentFields

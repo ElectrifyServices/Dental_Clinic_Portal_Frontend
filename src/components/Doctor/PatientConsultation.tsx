@@ -845,6 +845,7 @@ export function PatientConsultation({
               followUpDoctorId={followUpDoctorId}
               followUpDate={followUpDate}
               selectedSlot={selectedSlot}
+              initialSelectedSlot={initialData?.selectedSlot}
               availableSlots={availableSlots}
               doctors={formDoctors}
               onFollowUpRequiredChange={handleChange}

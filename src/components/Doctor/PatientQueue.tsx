@@ -243,7 +243,7 @@ export function PatientQueue({
       </div>
 
       {/* Patient Cards */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 pr-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 pr-2 pb-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
           {filteredPatients.map((patient) => {
             const fullPatient = patients.find(
@@ -265,20 +265,20 @@ export function PatientQueue({
             );
           })}
         </div>
-      </div>
 
-      {totalPages > 1 && onPageChange && (
-        <div className="mt-auto flex justify-end shrink-0 pt-2 border-t border-border">
-          <Pagination
-            page={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            perPage={perPage}
-            onPageChange={onPageChange}
-            onPerPageChange={onPerPageChange}
-          />
-        </div>
-      )}
+        {totalPages > 1 && onPageChange && (
+          <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              perPage={perPage}
+              onPageChange={onPageChange}
+              onPerPageChange={onPerPageChange}
+            />
+          </div>
+        )}
+      </div>
 
       {showDirectPopup && (
         <DirectConsultationPopup
