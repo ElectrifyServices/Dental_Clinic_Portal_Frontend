@@ -149,7 +149,6 @@ export function PatientQueue({
       {/* Header */}
       <PageHeader
         title="Consultation Queue"
-        subtitle={doctorName}
         action={
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
             <div className="flex items-center gap-1.5 shrink-0">

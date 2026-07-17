@@ -92,8 +92,17 @@ export function AppointmentList({
   nextWeek.setDate(nextWeek.getDate() + 7);
   const nextWeekStr = `${nextWeek.getFullYear()}-${String(nextWeek.getMonth() + 1).padStart(2, "0")}-${String(nextWeek.getDate()).padStart(2, "0")}`;
 
-  const [startDate, setStartDate] = useState<string>(selectedDate || todayStr);
-  const [endDate, setEndDate] = useState<string>(nextWeekStr);
+  const initialFilter = apptFilter !== undefined ? apptFilter : "all";
+  const [startDate, setStartDate] = useState<string>(() => {
+    if (selectedDate) return selectedDate;
+    if (initialFilter === "today" || initialFilter === "week") return todayStr;
+    return "";
+  });
+  const [endDate, setEndDate] = useState<string>(() => {
+    if (initialFilter === "today") return todayStr;
+    if (initialFilter === "week") return nextWeekStr;
+    return "";
+  });
 
   const { doctors } = useDoctorsListQuery();
 
@@ -118,12 +127,6 @@ export function AppointmentList({
       } else {
         dateMatch = aDateString === startDate;
       }
-    }
-    if (filter === "today")
-      return searchMatch && new Date(a.date).toDateString() === today.toDateString();
-    if (filter === "week") {
-      const diff = (new Date(a.date).getTime() - today.getTime()) / 86400000;
-      return searchMatch && diff >= 0 && diff <= 7;
     }
     return searchMatch && dateMatch;
   });
@@ -372,6 +375,17 @@ export function AppointmentList({
               onClick={() => {
                 setFilter(f.id);
                 setPage(1);
+                if (f.id === "today") {
+                  setStartDate(todayStr);
+                  setEndDate(todayStr);
+                  setSelectedDate?.(todayStr);
+                } else if (f.id === "week") {
+                  setStartDate(todayStr);
+                  setEndDate(nextWeekStr);
+                } else if (f.id === "all") {
+                  setStartDate("");
+                  setEndDate("");
+                }
               }}
               className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all h-9 ${
                 filter === f.id

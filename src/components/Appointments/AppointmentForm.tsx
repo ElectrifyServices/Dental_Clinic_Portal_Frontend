@@ -262,6 +262,12 @@ export function AppointmentForm({
               setSuggestion(null);
             }}
             errors={errors}
+            patients={patients}
+            onSelectPatient={(name, phone) => {
+              form.setValue("patientName", name, { shouldValidate: true });
+              form.setValue("patientPhone", phone, { shouldValidate: true });
+              setSuggestion(null);
+            }}
           />
           <ScheduleFields
             date={formData.date}

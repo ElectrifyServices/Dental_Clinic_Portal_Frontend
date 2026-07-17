@@ -661,7 +661,7 @@ export function ToothChart({
                       gap: 4,
                     }}
                   >
-                    #{num === "FM" ? "Full Mouth" : num} — {c.label}
+                    {num === "FM" || String(num) === "-1" ? "Full Mouth" : `#${num}`} — {c.label}
                     <span
                       onClick={() => removeFinding(num, cid)}
                       style={{

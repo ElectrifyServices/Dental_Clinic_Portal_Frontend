@@ -67,7 +67,7 @@ export function TreatmentPlanning({
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
       render: (plan: TreatmentPlan) => (
         <span className="font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-lg">
-          {plan.tooth === "FM" ? "Full Mouth" : `#${plan.tooth}`} {plan.condition ? `(${conditionLabels[plan.condition] || plan.condition})` : ""}
+          {plan.tooth === "FM" || String(plan.tooth) === "-1" ? "Full Mouth" : `#${plan.tooth}`} {plan.condition ? `(${conditionLabels[plan.condition] || plan.condition})` : ""}
         </span>
       ),
     },

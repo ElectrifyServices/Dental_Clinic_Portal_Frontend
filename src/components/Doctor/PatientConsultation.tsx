@@ -566,6 +566,10 @@ export function PatientConsultation({
     setLoading(true);
     try {
       const selectedDoctor = formDoctors.find((d: any) => d.id === directDoctorId);
+      
+      let cleanedNotes = consultationData.consultationNotes || "";
+      cleanedNotes = cleanedNotes.replace(/(?:^|\n)\s*(?:\d+\.|[•\-])\s*$/, "").trimEnd();
+
       const res = await onCompleteConsultation({
         id: patient.id,
         patientId: patient.patientId || patient.id,
@@ -573,6 +577,7 @@ export function PatientConsultation({
         patientPhone: patient.phone || (patient as any).patientPhone || "",
         appointmentId: patient.appointmentId,
         ...consultationData,
+        consultationNotes: cleanedNotes,
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
         consultationDate: new Date().toISOString(),
@@ -612,7 +617,7 @@ export function PatientConsultation({
       subtitle={
         viewMode === "history"
           ? "Complete dental checkup records and prescription history"
-          : (patient.patientConcern || patient.treatmentType)
+          : undefined
       }
       onClose={onClose}
       size="5xl"

@@ -270,7 +270,7 @@ export const TreatmentsTab = ({
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
-                          <span className="font-bold">#{treatment.tooth}</span>
+                          <span className="font-bold">{String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}</span>
                         </p>
                         <p className="text-[10px] text-muted-foreground font-mono mt-1">
                           {new Date(treatment.date).toLocaleDateString()}
@@ -315,7 +315,7 @@ export const TreatmentsTab = ({
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Tooth:{" "}
-                          <span className="font-bold">#{treatment.tooth}</span>
+                          <span className="font-bold">{String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}</span>
                         </p>
                       </div>
                     </div>
@@ -353,8 +353,8 @@ export const TreatmentsTab = ({
                         <p className="font-semibold text-muted-foreground">
                           {treatment.procedure}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Tooth: #{treatment.tooth}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Tooth: {String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}
                         </p>
                       </div>
                     </div>

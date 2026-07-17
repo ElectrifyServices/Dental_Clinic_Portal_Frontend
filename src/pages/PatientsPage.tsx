@@ -13,6 +13,7 @@ export const PatientsPage: React.FC = () => {
     patientStatus, setPatientStatus,
     patientCategory, setPatientCategory,
     patientPage, setPatientPage,
+    patientLimit, setPatientLimit,
     totalItems, totalPages,
     refetchPatients,
     isPatientsLoading,
@@ -93,6 +94,8 @@ export const PatientsPage: React.FC = () => {
         onFilterCategoryChange={setPatientCategory}
         currentPage={patientPage}
         onPageChange={setPatientPage}
+        limit={patientLimit}
+        onLimitChange={setPatientLimit}
         totalPages={totalPages}
         totalItems={totalItems}
       />
