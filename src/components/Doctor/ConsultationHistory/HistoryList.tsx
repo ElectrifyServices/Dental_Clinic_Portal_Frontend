@@ -190,25 +190,31 @@ export function HistoryList({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
+        {isLoading && pageData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 min-h-[300px]">
             <Loading type="spinner" text="Loading consultations..." />
           </div>
-        )}
-        {pageData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-muted rounded-full p-4 mb-3">
-              <Search className="w-8 h-8 text-muted-foreground/60" />
-            </div>
-            <h3 className="text-sm font-medium text-muted-foreground">
-              No results found
-            </h3>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Try a different search term or clear filters
-            </p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
+                <Loading type="spinner" text="Loading consultations..." />
+              </div>
+            )}
+            {pageData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="bg-muted rounded-full p-4 mb-3">
+                  <Search className="w-8 h-8 text-muted-foreground/60" />
+                </div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  No results found
+                </h3>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Try a different search term or clear filters
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {pageData.map((item, idx) => (
               <Card key={item.id} className="flex flex-col hover:shadow-md transition-shadow">
                 <CardHeader className="p-4 pb-3 border-b">
@@ -391,6 +397,8 @@ export function HistoryList({
               </Card>
             ))}
           </div>
+            )}
+          </>
         )}
       </div>
     </div>

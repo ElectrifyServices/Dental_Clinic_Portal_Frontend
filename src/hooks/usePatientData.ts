@@ -22,7 +22,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const [patientStatus, setPatientStatus] = useState('all');
   const [patientCategory, setPatientCategory] = useState('all');
   const [patientPage, setPatientPage] = useState(1);
-  const patientLimit = 50;
+  const [patientLimit, setPatientLimit] = useState(10);
 
   const apiFilters = useMemo(() => {
     const filters: Record<string, string[]> = {};
@@ -259,7 +259,9 @@ export function usePatientData(params?: { enabled?: boolean }) {
     refetchPatients,
     patientPage,
     setPatientPage,
-    totalItems: (apiPatients as any)?.pagination?.total_items || (apiPatients as any)?.data?.pagination?.total_items || (apiPatients as any)?.total || 0,
-    totalPages: (apiPatients as any)?.pagination?.total_pages || (apiPatients as any)?.data?.pagination?.total_pages || (apiPatients as any)?.totalPages || 1,
+    totalItems: (apiPatients as any)?.pagination?.total || (apiPatients as any)?.pagination?.total_items || (apiPatients as any)?.data?.pagination?.total || (apiPatients as any)?.data?.pagination?.total_items || (apiPatients as any)?.total || (apiPatients as any)?.total_elements || (apiPatients as any)?.totalElements || (apiPatients as any)?.count || patients.length || 0,
+    totalPages: (apiPatients as any)?.pagination?.totalPages || (apiPatients as any)?.pagination?.total_pages || (apiPatients as any)?.data?.pagination?.totalPages || (apiPatients as any)?.data?.pagination?.total_pages || (apiPatients as any)?.totalPages || (apiPatients as any)?.total_pages || Math.max(1, Math.ceil(patients.length / patientLimit)),
+    patientLimit,
+    setPatientLimit,
   };
 }

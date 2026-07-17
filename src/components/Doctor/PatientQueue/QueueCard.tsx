@@ -188,7 +188,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 line-clamp-2">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100">
                 {patient.patientConcern}
               </div>
             </div>
@@ -199,7 +199,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Notes
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 line-clamp-2">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100">
                 {patient.appointmentNotes}
               </div>
             </div>

@@ -325,7 +325,7 @@ export function TreatmentViewer({
                   Tooth
                 </span>
                 <span className="text-sm font-black text-foreground">
-                  #{treatment.tooth_number}
+                  {String(treatment.tooth_number) === "-1" || String(treatment.tooth_number) === "FM" ? "Full Mouth" : `#${treatment.tooth_number}`}
                 </span>
               </div>
               <div className="flex justify-between items-center">

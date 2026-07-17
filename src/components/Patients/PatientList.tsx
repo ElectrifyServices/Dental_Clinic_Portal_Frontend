@@ -28,7 +28,9 @@ interface PatientListProps {
   currentPage?: number;
   totalPages?: number;
   totalItems?: number;
+  limit?: number;
   onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
   isLoading?: boolean;
 }
 
@@ -50,7 +52,9 @@ export function PatientList({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
+  limit = 10,
   onPageChange,
+  onLimitChange,
   isLoading,
 }: PatientListProps) {
   const { collapsed } = useSidebar();
@@ -94,6 +98,14 @@ export function PatientList({
       return matchesSearch && matchesFilter && matchesCategory;
     });
   }, [patients, searchTerm, filterStatusVal, filterCategoryVal]);
+
+  const isServerPaginated = totalItems > filteredPatients.length;
+  const displayPatients = isServerPaginated
+    ? filteredPatients
+    : filteredPatients.slice((currentPage - 1) * limit, currentPage * limit);
+  
+  const displayTotalItems = isServerPaginated ? totalItems : filteredPatients.length;
+  const displayTotalPages = isServerPaginated ? totalPages : Math.ceil(filteredPatients.length / limit);
 
   const printBarcode = (patient: Patient) => {
     const codeData = patient.barcode || patient.id || "0000";
@@ -189,7 +201,7 @@ export function PatientList({
             ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
             : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
         }>
-          {filteredPatients.map((patient) => (
+          {displayPatients.map((patient) => (
             <PatientCard
               key={patient.id}
               patient={patient}
@@ -205,7 +217,7 @@ export function PatientList({
         </div>
       ) : (
         <PatientTable
-          patients={filteredPatients}
+          patients={displayPatients}
           onView={onViewPatient}
           onEdit={onEditPatient}
           onDelete={onDeletePatient}
@@ -216,14 +228,15 @@ export function PatientList({
         />
       )}
 
-      {totalPages > 1 && onPageChange && (
+      {(displayTotalItems > 0) && onPageChange && (
         <div className="mt-6 flex justify-end">
           <Pagination
             page={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            perPage={10}
+            totalPages={displayTotalPages}
+            totalItems={displayTotalItems}
+            perPage={limit}
             onPageChange={onPageChange}
+            onPerPageChange={onLimitChange}
           />
         </div>
       )}

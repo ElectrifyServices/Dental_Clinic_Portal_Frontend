@@ -1,9 +1,9 @@
 import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText, Trash2,
-  AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera, Edit, Save, X, Check, Loader2, CheckCircle,
-  FileCode, User, HeartPulse, FileSpreadsheet, Send
+  Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText,
+  AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera, Edit, Save, Check, Loader2, CheckCircle,
+  HeartPulse, FileSpreadsheet, Send
 } from "lucide-react";
 import apiClient from "../../../services/apiClient";
 import { parseApiResponse } from "../../../services/parseApiResponse";
@@ -19,7 +19,7 @@ interface HistoryDetailProps {
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
 }
 
-export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick }: HistoryDetailProps) {
+export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick: _onDeleteClick }: HistoryDetailProps) {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [showSendMenu, setShowSendMenu] = useState(false);
   const [fullRecord, setFullRecord] = useState<any>(record);
@@ -93,7 +93,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         const response = await apiClient.get(`/consultations/${record.id}`);
         const parsed = parseApiResponse(response.data);
         if (parsed.data) {
-          const detailedData = parsed.data.data || parsed.data;
+          const detailedData = (parsed.data as any).data || parsed.data;
           setFullRecord({ ...record, ...detailedData });
 
           // Try to get associated appointment directly from the response or record
@@ -136,7 +136,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             setAppointment(appt);
           } else if (!hasExplicitFollowUpArray) {
             // Search appointment using patient ID and follow-up date if no array was provided
-            const patientId = parsed.data.patient_id || parsed.data.patientId || record.patient_id || record.patientId;
+            const patientId = (parsed.data as any).patient_id || (parsed.data as any).patientId || record.patient_id || record.patientId;
             if (patientId) {
               setIsLoadingAppt(true);
               const apptListRes = await apiClient.post("/appointment/list", {
@@ -148,7 +148,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                 apptListRes.data?.data?.appointments ||
                 apptListRes.data?.appointments || [];
               if (Array.isArray(appts) && appts.length > 0) {
-                const followUpDateStr = parsed.data.follow_up_date || record.follow_up_date;
+                const followUpDateStr = (parsed.data as any).follow_up_date || record.follow_up_date;
                 if (followUpDateStr) {
                   const targetDate = new Date(followUpDateStr).toDateString();
                   const match = appts.find((a: any) => new Date(a.date).toDateString() === targetDate);
@@ -303,11 +303,11 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
     }
 
     return (
-      <div className="space-y-1.5" onClick={() => setShowPrintMenu(false)}>
+      <div className="space-y-4" onClick={() => setShowPrintMenu(false)}>
         {/* Patient Header Card */}
         <Card className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
-          <CardContent className="p-2.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5">
-            <div className="flex items-center gap-2.5 shrink-0">
+          <CardContent className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100">
                 {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
               </div>
@@ -468,7 +468,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         </Card>
 
         {/* Grid containing Vitals, Medical History & General findings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Medical History Card */}
           {(() => {
             const conditionsText = getMedicalHistoryText();
@@ -477,7 +477,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             if (!hasHistory) return null;
             return (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-2.5 space-y-1.5">
+                <CardContent className="p-5 space-y-3">
                   <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                     <Stethoscope className="w-4.5 h-4.5 text-primary" />
                     <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Medical History</h4>
@@ -510,7 +510,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
           {/* Vitals Card */}
           {(fullRecord.bp || fullRecord.height || fullRecord.weight || fullRecord.bmi) && (
             <Card className="border-border/70 rounded-xl shadow-sm">
-              <CardContent className="p-2.5 space-y-1.5">
+              <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                   <HeartPulse className="w-4.5 h-4.5 text-blue-600" />
                   <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Patient Vitals</h4>
@@ -548,11 +548,11 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
 
         {/* Observations & Diagnosis */}
         {(fullRecord.observations_desc || fullRecord.diagnosis_desc) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {fullRecord.observations_desc && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-2.5 space-y-1.5">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
+                <CardContent className="p-5 space-y-3">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-b border-border/40 pb-2">
                     <AlertCircle className="w-4 h-4 text-primary" /> Observations
                   </p>
                   <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-primary/45 pl-3 py-0.5">
@@ -563,8 +563,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
             )}
             {fullRecord.diagnosis_desc && (
               <Card className="border-border/70 rounded-xl shadow-sm">
-                <CardContent className="p-2.5 space-y-1.5">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 border-b border-border/40 pb-2">
+                <CardContent className="p-5 space-y-3">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-b border-border/40 pb-2">
                     <Stethoscope className="w-4.5 h-4.5 text-primary" /> Diagnosis
                   </p>
                   <div className="text-foreground text-sm font-medium leading-relaxed whitespace-pre-wrap border-l-4 border-indigo-500/45 pl-3 py-0.5">
@@ -579,7 +579,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Tooth Chart Findings */}
         {fullRecord.tooth_findings && fullRecord.tooth_findings.length > 0 && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-2.5 space-y-1.5">
+            <CardContent className="p-5 space-y-3">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest border-b border-border/40 pb-2 flex items-center">
                 <Activity className="w-4.5 h-4.5 mr-2 text-primary" /> Tooth Chart Findings
               </p>
@@ -589,7 +589,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                     key={finding.id || finding.tooth_number}
                     className={`border rounded-lg px-3 py-1.5 text-xs flex items-center gap-2.5 shadow-sm font-bold ${getToothConditionBadgeStyle(finding.condition)}`}
                   >
-                    <span className="font-black">{finding.tooth_number === "FM" ? "Full Mouth" : `Tooth #${finding.tooth_number}`}</span>
+                    <span className="font-black">{finding.tooth_number === "FM" || String(finding.tooth_number) === "-1" ? "Full Mouth" : `Tooth #${finding.tooth_number}`}</span>
                     <span className="opacity-90">
                       {finding.condition === 'OTHER' && finding.other_condition ? finding.other_condition : finding.condition.replace("_", " ")}
                     </span>
@@ -607,7 +607,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
           fullRecord.treatmentPlan ||
           fullRecord.treatment_plan) && (
             <Card className="border-border/70 rounded-xl shadow-sm">
-              <CardContent className="p-2.5 space-y-1.5">
+              <CardContent className="p-5 space-y-3">
                 <p className="text-xs font-black text-emerald-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                   <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-600" /> Treatment Planning
                 </p>
@@ -621,7 +621,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
                     {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: any, index: number) => (
                       <div key={tp.id || tp.tooth_number || index} className="bg-slate-50 border border-border/40 rounded-lg p-3 text-sm flex justify-between items-center font-bold">
                         <span className="text-foreground">
-                          {(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "FM" ? "Full Mouth" : `Tooth #${tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}`}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
+                          {(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "FM" || String(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "-1" ? "Full Mouth" : `Tooth #${tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}`}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
                         </span>
                         {(tp.cost > 0 || tp.est_cost > 0) && (
                           <span className="text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">₹{(tp.cost || tp.est_cost).toLocaleString()}</span>
@@ -637,7 +637,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick 
         {/* Prescriptions */}
         {hasValidPrescriptions(fullRecord.prescriptions) && (
           <Card className="border-border/70 rounded-xl shadow-sm">
-            <CardContent className="p-2.5 space-y-1.5">
+            <CardContent className="p-5 space-y-3">
               <p className="text-xs font-black text-indigo-800 uppercase tracking-widest border-b border-border/40 pb-2 flex items-center gap-2">
                 <Pill className="w-4.5 h-4.5 text-indigo-600" /> Prescribed Medicines
               </p>
