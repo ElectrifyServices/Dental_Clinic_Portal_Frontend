@@ -675,6 +675,7 @@ export * from "./Label";
 export * from "./Textarea";
 export * from "./Select";
 export * from "./Checkbox";
+export * from "./Switch";
 export * from "./Separator";
 export * from "./Tooltip";
 export * from "./Dialog";
