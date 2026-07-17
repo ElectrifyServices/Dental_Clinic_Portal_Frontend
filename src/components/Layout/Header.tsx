@@ -20,6 +20,7 @@ import { useModal } from "../../contexts/ModalContext";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
 import { GlobalSearch } from "./GlobalSearch";
+import { useNavigate } from "react-router-dom";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -53,6 +54,7 @@ const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
 export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
+  const navigate = useNavigate();
   const { setActiveModal, showConfirm } = useModal();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
 
@@ -244,6 +246,15 @@ export function Header() {
               <p className="text-sm font-semibold text-foreground truncate">{state.user?.name}</p>
               <p className="text-xs text-muted-foreground mt-0.5 truncate">{state.user?.email}</p>
             </div>
+            {state.user?.role === "doctor" && (
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/calendar-integration")}
+                className="w-full flex items-center justify-start gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors rounded-none h-auto"
+              >
+                <Calendar className="w-4 h-4 text-muted-foreground" /> Calendar Sync
+              </Button>
+            )}
             <Button
               variant="ghost"
               onClick={() => showConfirm("Sign Out", "Are you sure you want to sign out?", async () => { await logout(); }, "Sign Out", "danger")}

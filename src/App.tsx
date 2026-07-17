@@ -22,6 +22,8 @@ import { ReportsPage } from "./pages/ReportsPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { CorporatePlansPage } from "./pages/CorporatePlansPage";
 import ConsultationPage from "./pages/ConsultationPage";
+import { CalendarIntegrationPage } from "./pages/CalendarIntegrationPage";
+import { CalendarIntegrationCallbackPage } from "./pages/CalendarIntegrationCallbackPage";
 
 const PERMISSION_MAP: Record<string, string[]> = {
   dashboard: ["DASHBOARD"],
@@ -107,6 +109,8 @@ function ProtectedRoutes() {
         <Route path="/reports" element={<GuardedRoute path="/reports" element={<ReportsPage />} />} />
         <Route path="/inventory" element={<GuardedRoute path="/inventory" element={<InventoryPage />} />} />
         <Route path="/membership" element={<GuardedRoute path="/membership" element={<CorporatePlansPage />} />} />
+        <Route path="/calendar-integration" element={<CalendarIntegrationPage />} />
+        <Route path="/calendar-integration/callback" element={<CalendarIntegrationCallbackPage />} />
         <Route path="*" element={<Navigate to={defaultPath} replace />} />
       </Route>
     </Routes>
