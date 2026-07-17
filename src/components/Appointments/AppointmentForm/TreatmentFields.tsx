@@ -62,6 +62,17 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
     }
   }, [treatmentType, customOptions]);
 
+  const handleFeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) {
+      e.target.value = val.replace(/^0+/, '');
+    }
+    if (val === '') {
+      e.target.value = '0';
+    }
+    onChange(e);
+  };
+
   const allOptions = [...TREATMENT_OPTIONS, ...customOptions];
   const isOtherSelected = treatmentType === "other/ not sure";
 
@@ -163,16 +174,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
               type="number"
               name="fee"
               value={fee}
-              onChange={(e) => {
-                let val = e.target.value;
-                if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) {
-                  e.target.value = val.replace(/^0+/, '');
-                }
-                if (val === '') {
-                  e.target.value = '0';
-                }
-                onChange(e);
-              }}
+              onChange={handleFeeChange}
               className="h-11 pl-8 rounded-xl bg-muted/50 border-border focus:bg-card font-bold"
             />
             <IndianRupee className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />

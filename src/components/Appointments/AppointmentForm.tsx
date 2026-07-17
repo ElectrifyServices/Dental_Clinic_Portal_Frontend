@@ -276,10 +276,6 @@ export function AppointmentForm({
               form.setValue("doctorId", val);
               const selectedDoctor = doctors.find((d: any) => d.id === val);
               form.setValue("doctorName", selectedDoctor?.name);
-              // Fee is defaulted to 0 and shouldn't automatically override manual input
-              // if (selectedDoctor && selectedDoctor.consultationFee) {
-              //   form.setValue("fee", Number(selectedDoctor.consultationFee), { shouldValidate: true });
-              // }
             }}
           />
           <TreatmentFields
@@ -292,13 +288,6 @@ export function AppointmentForm({
             onChange={handleChange}
             onTreatmentTypeChange={(val) => {
               form.setValue("treatmentType", val, { shouldValidate: true });
-              const selectedOption = appointmentTypes.find(
-                (opt) => opt.label === val || opt.value === val
-              );
-              // Commented out to ensure the Assigned Specialist's consultation fee is not overridden
-              // if (selectedOption && selectedOption.fee !== undefined) {
-              //   form.setValue("fee", selectedOption.fee, { shouldValidate: true });
-              // }
             }}
           />
         </fieldset>
