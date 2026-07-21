@@ -23,7 +23,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { Popover, PopoverTrigger, PopoverContent, toast } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
 import { GlobalSearch } from "./GlobalSearch";
 import { useNavigate } from "react-router-dom";
@@ -72,8 +72,8 @@ export function Header() {
     try {
       setDownloadingBlank(type);
       await downloadBlankPDF(type);
-    } catch (err) {
-      console.error("Failed to download blank PDF:", err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to download blank PDF. Please try again.");
     } finally {
       setDownloadingBlank(null);
     }

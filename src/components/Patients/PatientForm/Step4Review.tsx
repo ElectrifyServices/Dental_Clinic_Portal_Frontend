@@ -17,10 +17,41 @@ interface Step4Props {
 const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, index }) => {
   const [failed, setFailed] = React.useState(false);
   const src = file.data || file.url || file;
-  const isImage = typeof src === 'string' && (src.startsWith('data:image/') || src.match(/\.(jpeg|jpg|gif|png)$/i));
+  const isImage = typeof src === 'string' && (src.startsWith('data:image/') || src.match(/\.(jpeg|jpg|gif|png|webp)$/i));
+
+  const handleOpen = () => {
+    if (!src) return;
+    if (typeof src === 'string' && src.startsWith('data:')) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${file.name || "Clinical Image Preview"}</title>
+              <style>
+                body { margin: 0; background: #0b0f19; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, sans-serif; }
+                img { max-width: 95vw; max-height: 95vh; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 8px; }
+              </style>
+            </head>
+            <body>
+              <img src="${src}" alt="${file.name || "Preview"}" />
+            </body>
+          </html>
+        `);
+        win.document.close();
+      }
+    } else if (typeof src === 'string') {
+      window.open(src, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
-    <div className="relative border border-secondary rounded-lg overflow-hidden h-16 bg-background flex items-center justify-center group shadow-sm">
+    <div
+      onClick={handleOpen}
+      className="relative border border-secondary rounded-lg overflow-hidden h-16 bg-background flex items-center justify-center group shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      title={file.name || "Click to open image in new tab"}
+    >
       {isImage && !failed ? (
         <img
           src={src}
@@ -38,7 +69,7 @@ const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, ind
           )}
         </div>
       )}
-      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] truncate px-1 text-center py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[8px] truncate px-1 text-center py-0.5 opacity-0 group-hover:opacity-100 transition-opacity font-semibold">
         {file.name || `File ${index + 1}`}
       </span>
     </div>

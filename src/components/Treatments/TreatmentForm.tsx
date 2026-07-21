@@ -213,6 +213,9 @@ export function TreatmentForm({
     
     // If it's a saved treatment plan on the backend, trigger API call
     if (treatment?.id && !String(completingSession.id).startsWith("session-")) {
+      // try/catch block handles async API failures and date parsing errors,
+      // preventing unhandled promise rejections/app crashes while providing
+      // user-facing toast error notifications without using console logs.
       try {
         let nextSessionPayload: any = {};
         if (scheduleNext && nextSessionDraft.date) {
@@ -236,6 +239,7 @@ export function TreatmentForm({
           const time24 = formatTimeTo24h(nextSessionDraft.time);
           let formattedNextVisitDate = nextSessionDraft.date;
           if (nextSessionDraft.date) {
+            // Safely parse date to ISO string; fallback to raw date string on parsing error
             try {
               const dateTimeStr = nextSessionDraft.date.includes("T")
                 ? nextSessionDraft.date
@@ -245,6 +249,7 @@ export function TreatmentForm({
                 formattedNextVisitDate = d.toISOString();
               }
             } catch (e) {
+              // Fallback to unparsed date string if Date constructor throws
               formattedNextVisitDate = nextSessionDraft.date;
             }
           }
@@ -271,7 +276,8 @@ export function TreatmentForm({
           attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
         });
       } catch (err: any) {
-        console.error("Failed to complete session on backend:", err);
+        // Catch backend API errors & display user-friendly UI error toast without console logs
+        toast.error(err?.message || "Failed to complete session on backend");
       }
     }
 

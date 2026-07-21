@@ -6,8 +6,35 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect, Button } from '@/components/ui';
-import { X, AlertTriangle, FileText, Pill, Stethoscope, Scissors, Syringe, Zap, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
+import { X, Eye, AlertTriangle, FileText, Pill, Stethoscope, Scissors, Syringe, Zap, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
+
+export const openImageInNewTab = (src: string, title?: string) => {
+  if (!src) return;
+  if (src.startsWith("data:")) {
+    const win = window.open();
+    if (win) {
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${title || "Clinical Image Preview"}</title>
+            <style>
+              body { margin: 0; background: #0b0f19; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, sans-serif; }
+              img { max-width: 95vw; max-height: 95vh; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 8px; }
+            </style>
+          </head>
+          <body>
+            <img src="${src}" alt="${title || "Preview"}" />
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+  } else {
+    window.open(src, "_blank", "noopener,noreferrer");
+  }
+};
 
 interface Step2Props {
   formData: any;
@@ -416,11 +443,15 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         {formData.dentalFiles?.length > 0 && (
           <div className="flex flex-wrap gap-4 mt-2">
             {formData.dentalFiles.map((file: any, index: number) => {
-              const fileUrl = file.url || (file.file ? URL.createObjectURL(file.file) : null);
-              const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpeg|jpg|png|gif|webp)$/i);
+              const fileUrl = file.data || file.url || (file.file ? URL.createObjectURL(file.file) : null);
+              const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpeg|jpg|png|gif|webp)$/i) || (typeof fileUrl === 'string' && fileUrl.startsWith('data:image/'));
               
               return (
-                <div key={index} className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 flex-shrink-0 flex items-center justify-center">
+                <div
+                  key={index}
+                  className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 flex-shrink-0 flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                  onClick={() => fileUrl && openImageInNewTab(fileUrl, file.name)}
+                >
                   {isImage && fileUrl ? (
                     <img src={fileUrl} alt={file.name} className="w-full h-full object-cover" />
                   ) : (
@@ -428,25 +459,42 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   )}
                   
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
-                    <span className="text-[9px] text-white text-center truncate w-full mb-1" title={file.name}>
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 gap-1">
+                    <span className="text-[9px] text-white text-center font-semibold truncate w-full" title={file.name}>
                       {file.name}
                     </span>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon-xs"
-                      onClick={() => {
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
-                          rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
-                        }));
-                      }}
-                      className="h-6 w-6 rounded-full"
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (fileUrl) openImageInNewTab(fileUrl, file.name);
+                        }}
+                        className="h-6 w-6 rounded-full bg-white/20 text-white hover:bg-white/40"
+                        title="View Full Size"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
+                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
+                          }));
+                        }}
+                        className="h-6 w-6 rounded-full"
+                        title="Delete Image"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );

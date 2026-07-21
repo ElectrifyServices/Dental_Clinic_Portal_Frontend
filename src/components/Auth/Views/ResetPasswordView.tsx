@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
 import { Lock, Eye, EyeOff, Check, X } from "lucide-react";
-import logoImg from "../../../logo.png";
+const logoImg = "/Portal_logo.png";
 import { useResetPasswordMutation } from "@/hooks/auth/useResetPasswordMutation";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
@@ -137,7 +137,7 @@ export function ResetPasswordView() {
       )}
 
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-20 h-20 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
+        <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
           <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
@@ -152,14 +152,14 @@ export function ResetPasswordView() {
         <div>
           <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">New Password</Label>
           <div className="relative group">
-            <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+            <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
             <Input
               type={showNewPassword ? "text" : "password"}
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter new password"
-              className="pl-10 pr-11"
+              className="pl-10 pr-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
             />
             <Button
               variant="ghost"
@@ -220,14 +220,14 @@ export function ResetPasswordView() {
         <div>
           <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">Confirm New Password</Label>
           <div className="relative group">
-            <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+            <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
             <Input
               type={showConfirmPassword ? "text" : "password"}
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              className="pl-10 pr-11"
+              className="pl-10 pr-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
             />
             <Button
               variant="ghost"
@@ -249,11 +249,6 @@ export function ResetPasswordView() {
               Passwords do not match
             </p>
           )}
-          {confirmPassword && passwordsMatch && (
-            <p className="text-xs text-emerald-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
-              <Check className="w-3 h-3 stroke-[3] text-emerald-600" /> Passwords match
-            </p>
-          )}
         </div>
 
         {formError && (
@@ -267,7 +262,7 @@ export function ResetPasswordView() {
         <Button
           type="submit"
           size="lg"
-          className="w-full mt-4"
+          className="w-full mt-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
           disabled={!isFormValid || isLoading}
           loading={isLoading}
         >

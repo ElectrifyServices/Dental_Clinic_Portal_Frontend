@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
 import { Mail, ArrowRight, Lock, Key, ArrowLeft, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
-import logoImg from "../../../logo.png";
+const logoImg = "/Portal_logo.png";
 import { useState } from "react";
 import { useVerifyEmailMutation } from "@/hooks/auth/useVerifyEmailMutation";
 import { useForgotPasswordMutation } from "@/hooks/auth/useForgotPasswordMutation";
@@ -153,27 +153,22 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <div>
               <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">Old Password</Label>
               <div className="relative group">
-                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
                 <Input
                   type={showOldPassword ? "text" : "password"}
                   required
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   placeholder="Enter old password"
-                  className="pl-10 pr-11"
+                  className="pl-10 pr-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
                 />
                 <Button
-                  variant="ghost"
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowOldPassword(!showOldPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hover:bg-transparent transition-colors p-0.5 h-auto"
-                  aria-label={showOldPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 h-auto"
                 >
-                  {showOldPassword ? (
-                    <EyeOff className="w-[15px] h-[15px]" />
-                  ) : (
-                    <Eye className="w-[15px] h-[15px]" />
-                  )}
+                  {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
@@ -181,27 +176,22 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <div>
               <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">New Password</Label>
               <div className="relative group">
-                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
                 <Input
                   type={showNewPassword ? "text" : "password"}
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
-                  className="pl-10 pr-11"
+                  className="pl-10 pr-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
                 />
                 <Button
-                  variant="ghost"
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hover:bg-transparent transition-colors p-0.5 h-auto"
-                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 h-auto"
                 >
-                  {showNewPassword ? (
-                    <EyeOff className="w-[15px] h-[15px]" />
-                  ) : (
-                    <Eye className="w-[15px] h-[15px]" />
-                  )}
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
 
@@ -250,27 +240,22 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <div>
               <Label className="text-[13px] font-bold text-slate-700 block mb-1.5">Confirm New Password</Label>
               <div className="relative group">
-                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+                <Lock className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="pl-10 pr-11"
+                  className="pl-10 pr-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
                 />
                 <Button
-                  variant="ghost"
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hover:bg-transparent transition-colors p-0.5 h-auto"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 h-auto"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-[15px] h-[15px]" />
-                  ) : (
-                    <Eye className="w-[15px] h-[15px]" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
 
@@ -290,7 +275,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <Button
               type="submit"
               size="lg"
-              className="w-full mt-4"
+              className="w-full mt-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
               disabled={!isFormValid || isLoading}
               loading={isLoading}
             >
@@ -299,7 +284,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
             <Button
               type="button"
               variant="ghost"
-              className="w-full mt-2"
+              className="w-full mt-2 text-slate-600 hover:text-slate-900"
               onClick={() => setShowChangeModal(false)}
               disabled={isLoading}
             >
@@ -311,7 +296,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
         <>
           {/* Header with Logo */}
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-28 h-28 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
+            <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
               <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
@@ -331,7 +316,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                 Email address
               </Label>
               <div className="relative group">
-                <Mail className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-blue-600" />
+                <Mail className="w-[15px] h-[15px] text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
                 <Input
                   type="email"
                   required
@@ -339,7 +324,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
                   value={resetEmail}
                   onChange={handleEmailChange}
                   placeholder="you@clinic.com"
-                  className="pl-10"
+                  className="pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-600 rounded-xl"
                 />
               </div>
               {emailError && (
@@ -353,34 +338,34 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
               <Button
                 type="button"
                 size="lg"
-                className="w-full mt-2"
+                className="w-full mt-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
                 onClick={handleVerifyEmail}
                 loading={isLoading}
               >
                 <span>Verify</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
               <div className="flex flex-col gap-3 mt-2">
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
                   loading={isLoading}
                 >
                   <span>Send Reset Link</span>
-                  <Mail className="w-4 h-4" />
+                  <Mail className="w-4 h-4 ml-1" />
                 </Button>
                 <Button
                   type="button"
                   size="lg"
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl"
                   onClick={() => setShowChangeModal(true)}
                   disabled={isLoading}
                 >
                   <span>Change Password</span>
-                  <Key className="w-4 h-4" />
+                  <Key className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             )}
@@ -392,7 +377,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
               type="button"
               onClick={() => setView('login')}
               disabled={isLoading}
-              className="text-[13px] text-blue-600 hover:text-blue-700 hover:bg-transparent font-bold transition-colors p-0 h-auto"
+              className="text-[13px] text-indigo-600 hover:text-indigo-700 hover:bg-transparent font-bold transition-colors p-0 h-auto"
             >
               Back to Login
             </Button>
