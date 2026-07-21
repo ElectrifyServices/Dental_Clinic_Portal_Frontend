@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useMedicalHistoriesQuery } from "../../../hooks/patients/useMedicalHistoriesQuery";
 import { useAllergiesQuery } from "../../../hooks/patients/useAllergiesQuery";
 import { getFileUrl } from "../../../services/apiClient";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface Step4Props {
   formData: any;
@@ -129,7 +130,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                   Phone Number
                 </span>
                 <p className="font-semibold text-foreground flex items-center gap-2 truncate block" title={formData.phone}>
-                  {formData.phone}
+                  {formatPhoneWithCountryCode(formData.phone, formData.country_code)}
                 </p>
               </div>
               <div className="space-y-1 min-w-0">

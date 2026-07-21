@@ -65,6 +65,7 @@ export const usePatientForm = (patient: any) => {
     defaultValues: {
       name: "",
       email: "",
+      country_code: "+91",
       phone: "",
       dateOfBirth: "",
       gender: "",

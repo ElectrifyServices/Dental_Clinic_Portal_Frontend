@@ -5,7 +5,9 @@ import {
   PDFReportType,
 } from "../../utils/pdfGenerator";
 import { Modal, Button, Input, Label, SearchableSelect } from "@/components/ui";
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
+import { formatPhoneWithCountryCode } from "../../utils/phoneUtils";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
 import { ObservationsAndToothChart } from "./PatientConsultation/ObservationsAndToothChart";
@@ -113,6 +115,7 @@ export function PatientConsultation({
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [directPatientName, setDirectPatientName] = useState((patient as any).isDirect ? (patient.patientName || "") : "");
+  const [directCountryCode, setDirectCountryCode] = useState((patient as any).isDirect ? ((patient as any).country_code || "+91") : "+91");
   const [directPatientPhone, setDirectPatientPhone] = useState((patient as any).isDirect ? (patient.phone || "") : "");
   const [directDoctorId, setDirectDoctorId] = useState(
     (patient as any).isDirect ? (patient.doctorId || "") : "",
@@ -598,6 +601,7 @@ export function PatientConsultation({
         followUpDate,
         followUpTime: selectedSlot,
         directPatientName,
+        directCountryCode,
         directPatientPhone,
         isDirect: (patient as any).isDirect,
       });
@@ -726,20 +730,28 @@ export function PatientConsultation({
                 </div>
                 <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Phone Number <span className="text-red-500">*</span></Label>
-                  <Input
-                    type="text"
-                    name="directPatientPhone"
-                    placeholder="Enter Phone Number"
-                    value={directPatientPhone}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[a-zA-Z]/g, "");
-                      setDirectPatientPhone(val);
-                      if (errors.directPatientPhone) {
-                        setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });
-                      }
-                    }}
-                    className="bg-background text-sm font-bold border-border/80"
-                  />
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    <CountryCodeSelect
+                      value={directCountryCode}
+                      onChange={(val) => setDirectCountryCode(val)}
+                      className="bg-background text-sm font-bold border-border/80 h-10"
+                    />
+                    <Input
+                      type="text"
+                      name="directPatientPhone"
+                      maxLength={10}
+                      placeholder="Enter Phone Number"
+                      value={directPatientPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setDirectPatientPhone(val);
+                        if (errors.directPatientPhone) {
+                          setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });
+                        }
+                      }}
+                      className="bg-background text-sm font-bold border-border/80 flex-1 h-10"
+                    />
+                  </div>
                   {errors.directPatientPhone && (
                     <p className="text-xs font-medium text-red-500 mt-1">{errors.directPatientPhone}</p>
                   )}
@@ -785,7 +797,7 @@ export function PatientConsultation({
               <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
                 <div>
                   <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
-                  <div className="text-sm font-black text-foreground">Phone: {patient.phone || "-"}</div>
+                  <div className="text-sm font-black text-foreground">Phone: {formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</div>
                 </div>
                 <Button
                   type="button"

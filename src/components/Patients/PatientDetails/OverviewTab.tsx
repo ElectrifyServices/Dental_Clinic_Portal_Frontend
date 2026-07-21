@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui";
 import { PlanCoverageCard } from "./PlanCoverageCard";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface OverviewTabProps {
   patient: any;
@@ -59,7 +60,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <Phone className="w-5 h-5 text-muted-foreground/60 mr-3" />
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">{patient.phone}</p>
+              <p className="font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</p>
             </div>
           </div>
           <div className="flex items-center">

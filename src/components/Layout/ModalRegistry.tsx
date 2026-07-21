@@ -192,7 +192,10 @@ function ModalRegistryContent() {
     let parsedFollowUpDoctorId = undefined;
     let parsedSelectedSlot = null;
 
-    if (data.follow_up_appointments && data.follow_up_appointments.length > 0) {
+    const hasFollowUpArray = Array.isArray(data.follow_up_appointments);
+    const hasFollowUpAppointments = hasFollowUpArray && data.follow_up_appointments.length > 0;
+
+    if (hasFollowUpAppointments) {
       const fu = data.follow_up_appointments[0];
       if (fu.date) parsedFollowUpDate = fu.date.split("T")[0];
       if (fu.start_time) {
@@ -210,6 +213,10 @@ function ModalRegistryContent() {
       }
     }
 
+    const isFollowUpRequired = hasFollowUpArray
+      ? (hasFollowUpAppointments || !!parsedFollowUpDate)
+      : (data.is_follow_up || data.followUpRequired || false);
+
     return {
       toothChartState,
       followUpDoctorId: parsedFollowUpDoctorId,
@@ -220,7 +227,7 @@ function ModalRegistryContent() {
         diagnosis: data.diagnosis_desc || data.diagnosis || "",
         treatmentPlan: data.treatment_plan_desc || data.treatmentPlan || "",
         treatmentCost: data.total_estimated_cost || data.treatmentCost || 0,
-        followUpRequired: data.is_follow_up || data.followUpRequired || false,
+        followUpRequired: isFollowUpRequired,
         consultationNotes: data.additional_notes || data.consultationNotes || "",
         requiresTreatment: treatments.length > 0,
         treatmentPlans: treatments,
@@ -479,6 +486,7 @@ function ModalRegistryContent() {
               const payload = {
                 doctor_id: apt.doctorId,
                 patient_name: apt.patientName,
+                country_code: apt.country_code || "+91",
                 patient_phone: apt.patientPhone,
                 date: apt.date,
                 start_time: apt.time,
@@ -740,6 +748,7 @@ function ModalRegistryContent() {
                 patient_name: isWalkIn
                   ? (selectedPatientForDiagnose.patientName || selectedPatientForDiagnose.name || d.patientName || d.directPatientName)
                   : (d.isDirect && !resolvedPatientId ? d.directPatientName : undefined),
+                country_code: d.directCountryCode || d.country_code || "+91",
                 patient_phone: isWalkIn
                   ? (selectedPatientForDiagnose.phone || selectedPatientForDiagnose.patientPhone || d.patientPhone || d.directPatientPhone)
                   : (d.isDirect && !resolvedPatientId ? d.directPatientPhone : undefined),

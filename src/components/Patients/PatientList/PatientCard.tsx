@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 import { getFileUrl } from "../../../services/apiClient";
 import { Button } from "@/components/ui/Button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui";
@@ -183,7 +184,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <SimpleTooltip content={`Phone: ${patient.phone || "N/A"}`}>
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-                <span className="font-bold truncate">{patient.phone}</span>
+                <span className="font-bold truncate">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</span>
               </div>
             </SimpleTooltip>
             <SimpleTooltip content={`Email: ${patient.email || "N/A"}`}>

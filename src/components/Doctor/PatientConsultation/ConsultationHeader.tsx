@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { X, Stethoscope, User } from "lucide-react";
 import { toTitleCase } from "@/utils/stringUtils";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface Patient {
   id: string;
@@ -113,7 +114,7 @@ export function ConsultationHeader({
                     Phone
                   </p>
                   <p className="text-sm font-bold text-blue-900">
-                    {patient.phone || "N/A"}
+                    {formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}
                   </p>
                 </div>
               </div>

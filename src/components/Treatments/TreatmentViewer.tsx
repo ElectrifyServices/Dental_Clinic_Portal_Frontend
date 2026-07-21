@@ -115,7 +115,20 @@ export function TreatmentViewer({
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
               <p><strong>Patient:</strong> ${treatment.patient?.name || treatment.patientName}</p>
               <p><strong>Procedure:</strong> ${treatment.procedure}</p>
-              <p><strong>Tooth:</strong> ${treatment.tooth_number}</p>
+              <p><strong>Tooth:</strong> ${(() => {
+                if (!treatment.tooth_number) return "-";
+                const parts = String(treatment.tooth_number).split(",").map(p => p.trim());
+                let hasFm = false;
+                const formatted = parts.map(p => {
+                  if (p === "-1" || p.toUpperCase() === "FM" || p.toUpperCase() === "FULL MOUTH") {
+                    hasFm = true;
+                    return "FM";
+                  }
+                  return p;
+                });
+                const display = formatted.join(", ");
+                return hasFm ? `<span title="Full Mouth" style="cursor:help; font-weight:bold; color:#059669;">${display}</span>` : display;
+              })()}</p>
               <p><strong>Doctor:</strong> ${treatment.doctor?.name || treatment.doctorName}</p>
               <p><strong>Date:</strong> ${new Date(treatment.treatment_date).toLocaleDateString()}</p>
               <p><strong>Status:</strong> ${treatment.status}</p>
@@ -245,7 +258,19 @@ export function TreatmentViewer({
   return (
     <Modal
       title={treatment.procedure}
-      subtitle={`${treatment.patient?.name || treatment.patientName} • Tooth ${treatment.tooth_number}`}
+      subtitle={`${treatment.patient?.name || treatment.patientName} • ${(() => {
+        if (!treatment.tooth_number) return "Tooth -";
+        const parts = String(treatment.tooth_number).split(",").map(p => p.trim());
+        let hasFm = false;
+        const formatted = parts.map(p => {
+          if (p === "-1" || p.toUpperCase() === "FM" || p.toUpperCase() === "FULL MOUTH") {
+            hasFm = true;
+            return "FM";
+          }
+          return p;
+        });
+        return `Tooth ${formatted.join(", ")}${hasFm ? " (Full Mouth)" : ""}`;
+      })()}`}
       onClose={onClose}
       size="5xl"
       icon={<Stethoscope className="w-5 h-5" />}

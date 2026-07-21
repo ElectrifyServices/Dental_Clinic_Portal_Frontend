@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import {
   Select,
   SelectContent,
@@ -354,18 +355,29 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number <span className="text-destructive">*</span>
           </Label>
-          <Input
-            type="tel"
-            name="phone"
-            value={formData.phone || ""}
-            onChange={handleChange}
-            className={
-              validationErrors.phone
-                ? "border-destructive bg-destructive/5"
-                : ""
-            }
-            placeholder="e.g. +1 (980) 333-2381"
-          />
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <CountryCodeSelect
+              value={formData.country_code || "+91"}
+              onChange={(val) => setFormData((prev: any) => ({ ...prev, country_code: val }))}
+              className="h-10 sm:h-11 rounded-xl"
+            />
+            <Input
+              type="tel"
+              name="phone"
+              maxLength={10}
+              value={formData.phone || ""}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                handleChange(e);
+              }}
+              className={`flex-1 h-10 sm:h-11 rounded-xl ${
+                validationErrors.phone
+                  ? "border-destructive bg-destructive/5"
+                  : ""
+              }`}
+              placeholder="e.g. 98765 43210"
+            />
+          </div>
           {validationErrors.phone && (
             <p className="text-destructive text-xs mt-1 flex items-center">
               <AlertTriangle className="w-3 h-3 mr-1" />
