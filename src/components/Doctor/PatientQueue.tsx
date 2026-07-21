@@ -241,43 +241,56 @@ export function PatientQueue({
         </div>
       </div>
 
-      {/* Patient Cards */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 pr-2 pb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-          {filteredPatients.map((patient) => {
-            const fullPatient = patients.find(
-              (p) =>
-                p.phone === patient.patientPhone ||
-                p.name === patient.patientName,
-            );
-            return (
-              <QueueCard
-                key={patient.id}
-                patient={patient}
-                fullPatient={fullPatient}
-                getStatusColor={getStatusColor}
-                getStatusIcon={getStatusIcon}
-                onUpdatePatientStatus={onUpdatePatientStatus}
-                onSelectPatient={onSelectPatient}
-                onEditConsultation={onEditConsultation}
-              />
-            );
-          })}
-        </div>
-
-        {totalPages > 1 && onPageChange && (
-          <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              totalItems={totalItems}
-              perPage={perPage}
-              onPageChange={onPageChange}
-              onPerPageChange={onPerPageChange}
-            />
+      {filteredPatients.length > 0 ? (
+        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 pr-2 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+            {filteredPatients.map((patient) => {
+              const fullPatient = patients.find(
+                (p) =>
+                  p.phone === patient.patientPhone ||
+                  p.name === patient.patientName,
+              );
+              return (
+                <QueueCard
+                  key={patient.id}
+                  patient={patient}
+                  fullPatient={fullPatient}
+                  getStatusColor={getStatusColor}
+                  getStatusIcon={getStatusIcon}
+                  onUpdatePatientStatus={onUpdatePatientStatus}
+                  onSelectPatient={onSelectPatient}
+                  onEditConsultation={onEditConsultation}
+                />
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {totalPages > 1 && onPageChange && (
+            <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                perPage={perPage}
+                onPageChange={onPageChange}
+                onPerPageChange={onPerPageChange}
+              />
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center py-12 bg-card rounded-2xl border border-border shadow-sm min-h-[300px]">
+          <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-10 h-10 text-muted-foreground/50" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground mb-1">No patients found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm text-center px-6">
+            {searchTerm || filterStatus !== "ALL"
+              ? "Try adjusting your search criteria or filters."
+              : "Patients will appear here once they check in for their appointments."}
+          </p>
+        </div>
+      )}
 
       {showDirectPopup && (
         <DirectConsultationPopup
@@ -302,21 +315,6 @@ export function PatientQueue({
           onClose={() => setShowHistory(false)}
           patients={patients}
         />
-      )}
-
-      {/* Empty State */}
-      {filteredPatients.length === 0 && (
-        <div className="card text-center py-12">
-          <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Search className="w-12 h-12 text-muted-foreground/60" />
-          </div>
-          <h3 className="empty-state-title">No patients found</h3>
-          <p className="text-muted-foreground mb-4 px-6">
-            {searchTerm || filterStatus !== "all"
-              ? "Try adjusting your search criteria or filters."
-              : "Patients will appear here once they check in for their appointments."}
-          </p>
-        </div>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ interface TreatmentPlan {
   sessions: number;
   duration?: string;
   cost: number;
+  discount?: number;
   isActive?: boolean;
   status: string;
   condition?: string;
@@ -28,6 +29,7 @@ const conditionLabels: Record<string, string> = {
 };
 
 interface TreatmentPlanningProps {
+  toothChartState: Record<string, string[]>;
   requiresTreatment: boolean;
   treatmentPlans: TreatmentPlan[];
   treatmentPlanText: string;
@@ -40,10 +42,13 @@ interface TreatmentPlanningProps {
   onTreatmentCostBlur: (value: string) => void;
   followUpRequired: boolean;
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onAddPlan?: () => void;
+  onRemovePlan?: (index: number) => void;
   errors?: Record<string, string>;
 }
 
 export function TreatmentPlanning({
+  toothChartState,
   requiresTreatment,
   treatmentPlans,
   treatmentPlanText,
@@ -56,20 +61,59 @@ export function TreatmentPlanning({
   onTreatmentCostBlur,
   followUpRequired,
   onFollowUpRequiredChange,
+  onAddPlan,
+  onRemovePlan,
   errors = {},
 }: TreatmentPlanningProps) {
-  const totalPlannedCost = treatmentPlans.reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+  const totalPlannedCost = treatmentPlans.reduce((sum, p) => {
+    const cost = Number(p.cost) || 0;
+    const discountPct = Number(p.discount) || 0;
+    const discountAmt = (cost * discountPct) / 100;
+    return sum + Math.max(0, cost - discountAmt);
+  }, 0);
+
+  // Generate options for the tooth dropdown based on findings
+  const findingOptions = React.useMemo(() => {
+    if (!toothChartState) return [];
+    const pairs = Object.entries(toothChartState).flatMap(([toothNum, conditions]) => {
+      const condArray = Array.isArray(conditions) ? conditions : [conditions];
+      return condArray
+        .filter((c) => c !== "normal")
+        .map((cond) => ({
+          tooth: toothNum,
+          condition: cond,
+        }));
+    });
+
+    return pairs.map((pair) => {
+      const displayTooth = pair.tooth === "FM" || String(pair.tooth) === "-1" ? "Full Mouth" : pair.tooth;
+      const displayCond = conditionLabels[pair.condition] || pair.condition;
+      return {
+        label: `${displayTooth} (${displayCond})`,
+        value: `${displayTooth} (${displayCond})`
+      };
+    });
+  }, [toothChartState]);
 
   const columns = [
     {
       key: "tooth",
       header: "Tooth",
-      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan) => (
-        <span className="font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-lg">
-          {plan.tooth === "FM" || String(plan.tooth) === "-1" ? "Full Mouth" : `#${plan.tooth}`} {plan.condition ? `(${conditionLabels[plan.condition] || plan.condition})` : ""}
-        </span>
-      ),
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider min-w-[200px]",
+      render: (plan: TreatmentPlan, index: number) => {
+        const valueArray = plan.tooth ? plan.tooth.split(",").map(s => s.trim()).filter(Boolean) : [];
+        return (
+          <SearchableSelect
+            isMulti
+            value={valueArray}
+            onChange={(val: string[]) => onUpdatePlan(index, "tooth", val.join(", "))}
+            options={findingOptions.length > 0 ? findingOptions : [{ label: "No findings available", value: "" }]}
+            placeholder="Select Teeth"
+            searchPlaceholder="Search tooth..."
+            className="h-9 font-semibold text-xs rounded-lg border-purple-200"
+          />
+        );
+      },
     },
     {
       key: "procedure",
@@ -86,50 +130,16 @@ export function TreatmentPlanning({
             "Tooth Extraction",
             "Teeth Cleaning",
             "Orthodontic Treatment",
-            "Dental Implant"
+            "Dental Implant",
+            "Dental Bridge",
+            "Removable Partial Denture (RPD)",
+            "Complete Denture",
+            "No Treatment Required"
           ]}
           placeholder="Select Procedure"
           searchPlaceholder="Search procedure..."
           className="h-9 font-semibold text-xs rounded-lg border-purple-200"
         />
-      ),
-    },
-    {
-      key: "sessions",
-      header: "Sessions",
-      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan, index: number) => (
-        <Input
-          type="number"
-          min="1"
-          value={plan.sessions}
-          onChange={(e) => onUpdatePlan(index, "sessions", parseInt(e.target.value) || 1)}
-          className="w-16 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-        />
-      ),
-    },
-    {
-      key: "duration",
-      header: "Duration",
-      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan, index: number) => (
-        <Select
-          value={plan.duration || "15 mins"}
-          onValueChange={(val) => onUpdatePlan(index, "duration", val)}
-        >
-          <SelectTrigger className="w-24 h-11 px-3 text-sm border border-purple-200 rounded-xl focus:ring-purple-500 focus:outline-none">
-            <SelectValue placeholder="Select duration" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="10 mins">10 mins</SelectItem>
-            <SelectItem value="15 mins">15 mins</SelectItem>
-            <SelectItem value="20 mins">20 mins</SelectItem>
-            <SelectItem value="30 mins">30 mins</SelectItem>
-            <SelectItem value="45 mins">45 mins</SelectItem>
-            <SelectItem value="60 mins">60 mins</SelectItem>
-          </SelectContent>
-        </Select>
       ),
     },
     {
@@ -148,27 +158,85 @@ export function TreatmentPlanning({
       ),
     },
     {
-      key: "planDate",
-      header: "Plan Date",
-      align: "center" as const,
-      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider text-center",
-      render: (plan: TreatmentPlan, index: number) => {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        const day = String(today.getDate()).padStart(2, "0");
-        const todayStr = `${year}-${month}-${day}`;
-        return (
-          <Input
-            type="date"
-            value={plan.planDate || ""}
-            onChange={(e) => onUpdatePlan(index, "planDate", e.target.value)}
-            min={todayStr}
-            className="w-full min-w-[130px] px-2 py-1 text-xs border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-card"
-          />
-        );
-      },
+      key: "discount",
+      header: "Discount (%)",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <Input
+          type="number"
+          min="0"
+          max="100"
+          value={plan.discount === 0 ? "" : (plan.discount || "")}
+          onChange={(e) => {
+            const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+            onUpdatePlan(index, "discount", val);
+          }}
+          onInput={(e: React.FormEvent<HTMLInputElement>) => {
+            const target = e.currentTarget;
+            let val = parseInt(target.value) || 0;
+            if (val > 100) {
+              target.value = "100";
+            } else if (val < 0) {
+              target.value = "0";
+            }
+          }}
+          className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+          placeholder="Discount %"
+        />
+      ),
     },
+    {
+      key: "sessions",
+      header: "Sessions",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      render: (plan: TreatmentPlan, index: number) => (
+        <Input
+          type="number"
+          min="1"
+          value={plan.sessions || 1}
+          onChange={(e) => onUpdatePlan(index, "sessions", Math.max(1, parseInt(e.target.value) || 1))}
+          className="w-20 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+          placeholder="Sessions"
+        />
+      ),
+    },
+    // {
+    //   key: "planDate",
+    //   header: "Plan Date",
+    //   align: "center" as const,
+    //   className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider text-center",
+    //   render: (plan: TreatmentPlan, index: number) => {
+    //     const today = new Date();
+    //     const year = today.getFullYear();
+    //     const month = String(today.getMonth() + 1).padStart(2, "0");
+    //     const day = String(today.getDate()).padStart(2, "0");
+    //     const todayStr = `${year}-${month}-${day}`;
+    //     return (
+    //       <Input
+    //         type="date"
+    //         value={plan.planDate || ""}
+    //         onChange={(e) => onUpdatePlan(index, "planDate", e.target.value)}
+    //         min={todayStr}
+    //         className="w-full min-w-[130px] px-2 py-1 text-xs border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-card"
+    //       />
+    //     );
+    //   },
+    // },
+    {
+      key: "actions",
+      header: "",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider w-10",
+      render: (_: any, index: number) => (
+        <button
+          type="button"
+          onClick={() => onRemovePlan?.(index)}
+          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          title="Remove Plan"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        </button>
+      )
+    }
   ];
 
   return (
@@ -202,7 +270,20 @@ export function TreatmentPlanning({
 
             {treatmentPlans.length === 0 && (
               <div className="text-center py-6 text-purple-400 italic text-sm">
-                No teeth selected in the chart above
+                No treatment plans added yet.
+              </div>
+            )}
+
+            {onAddPlan && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={onAddPlan}
+                  className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  Add Procedure
+                </button>
               </div>
             )}
 

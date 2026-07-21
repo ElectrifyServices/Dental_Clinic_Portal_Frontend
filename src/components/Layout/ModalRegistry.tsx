@@ -31,7 +31,7 @@ import { AdjustForm } from "../Inventory/AdjustForm";
 import { InventoryHistoryViewer } from "../Inventory/InventoryHistoryViewer";
 import { QuickRegistrationModal } from "../CorporatePlans/QuickRegistration/QuickRegistrationModal";
 import { EmployeeFormModal } from "../CorporatePlans/Employee/EmployeeFormModal";
-import { ConfirmModal, Modal, Button, toast } from "../ui";
+import { ConfirmModal, Modal, Button, toast, Loading } from "../ui";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
 import { useUpdateAppointmentMutation } from "../../hooks/appointments/useUpdateAppointmentMutation";
@@ -125,19 +125,45 @@ function ModalRegistryContent() {
       availableConditionsByTooth[tf.tooth_number].push(mappedCond);
     });
 
+    const condLabels: Record<string, string> = {
+      caries: "Caries",
+      missing: "Missing",
+      restored: "Restored",
+      endo: "Endo / RCT",
+      crown: "Crown",
+      extract: "For Extraction",
+    };
+
     const treatments = (data.treatment_plans || data.treatments || []).map((t: any) => {
-      let condition = '';
-      if (availableConditionsByTooth[t.tooth_number] && availableConditionsByTooth[t.tooth_number].length > 0) {
-        condition = availableConditionsByTooth[t.tooth_number].shift();
+      let toothNums: any[] = [];
+      if (Array.isArray(t.tooth_number)) {
+        toothNums = t.tooth_number;
+      } else if (t.tooth_number !== undefined && t.tooth_number !== null) {
+        toothNums = [t.tooth_number];
       }
+
+      const toothStrArray = toothNums.map((tn) => {
+        const key = String(tn);
+        const displayTooth = key === "-1" || key === "FM" ? "Full Mouth" : key;
+        
+        const conds = availableConditionsByTooth[key] || [];
+        const cond = conds.length > 0 ? conds.shift() : '';
+        const displayCond = cond ? (condLabels[cond] || cond) : '';
+        
+        if (displayCond) {
+          return `${displayTooth} (${displayCond})`;
+        }
+        return displayTooth;
+      });
+
       return {
-        id: t.id || `plan-${t.tooth_number}-${Date.now()}`,
-        tooth: t.tooth_number?.toString() || "",
-        condition: condition,
+        id: t.id || `plan-${toothNums.join('-')}-${Date.now()}`,
+        tooth: toothStrArray.join(", "),
         procedure: t.procedure || "",
-        sessions: t.sessions?.length || t.total_sessions || 1,
+        sessions: t.total_sessions || t.sessions?.length || 1,
         duration: t.duration ? `${t.duration} mins` : "15 mins",
-        cost: t.est_cost || 0,
+        cost: parseFloat(t.est_cost) || 0,
+        discount: parseFloat(t.discount_value) || 0,
         isActive: t.is_active ?? true,
         planDate: t.treatment_date ? t.treatment_date.split('T')[0] : new Date().toISOString().split('T')[0],
       };
@@ -650,19 +676,41 @@ function ModalRegistryContent() {
 
               // Map treatment plans to treatments array
               const treatments = (d.treatmentPlans || [])
-                .filter((tp: any) => tp.tooth === "FM" || !isNaN(parseInt(tp.tooth)))
                 .map((tp: any) => {
-                const isFM = tp.tooth === "FM";
-                return {
-                  tooth_number: isFM ? -1 : parseInt(tp.tooth),
-                  procedure: tp.procedure,
-                  total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
-                  duration_min: parseInt((tp.duration || "15").replace(/\D/g, "")) || 15,
-                  est_cost: parseFloat(tp.cost) || 0,
-                  treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0],
-                  is_active: tp.isActive ?? true
-                };
-              });
+                  let toothArray: number[] = [];
+                  if (Array.isArray(tp.tooth)) {
+                    toothArray = tp.tooth.map((t: any) => {
+                      const str = String(t).trim();
+                      if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
+                      const parsed = parseInt(str);
+                      return isNaN(parsed) ? null : parsed;
+                    }).filter((n: any) => n !== null) as number[];
+                  } else if (typeof tp.tooth === "string" && tp.tooth.trim()) {
+                    toothArray = tp.tooth.split(",").map((s: string) => {
+                      const str = s.trim();
+                      if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
+                      const parsed = parseInt(str);
+                      return isNaN(parsed) ? null : parsed;
+                    }).filter((n: any) => n !== null) as number[];
+                  } else if (typeof tp.tooth === "number") {
+                    toothArray = [tp.tooth];
+                  }
+
+                  if (toothArray.length === 0) {
+                    toothArray = [-1]; // Fallback to -1 / FM
+                  }
+
+                  return {
+                    tooth_number: toothArray,
+                    procedure: tp.procedure,
+                    total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
+                    duration_min: parseInt((tp.duration || "15").replace(/\D/g, "")) || 15,
+                    est_cost: parseFloat(tp.cost) || 0,
+                    discount_value: parseFloat(tp.discount) || 0,
+                    treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0],
+                    is_active: tp.isActive ?? true
+                  };
+                });
 
               // Map prescriptions array
               const prescriptions = (d.prescriptions || [])
@@ -845,7 +893,7 @@ function ModalRegistryContent() {
           size="lg"
         >
           <div className="flex min-h-[220px] items-center justify-center">
-            <div className="text-sm font-semibold text-muted-foreground">Loading treatment plan...</div>
+            <Loading type="spinner" text="Loading treatment plan..." />
           </div>
         </Modal>
       )}

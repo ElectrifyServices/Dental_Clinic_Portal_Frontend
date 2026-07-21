@@ -107,10 +107,10 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
     await deleteAppointment({ id });
   };
 
-  const handleUpdateAppointmentStatus = async (id: string, status: string) => {
+  const handleUpdateAppointmentStatus = async (id: string, status: string, cancelledReason?: string) => {
     if (status === 'no-show') {
       try {
-        await markNoShow({ id });
+        await markNoShow({ id, cancelled_reason: cancelledReason || "" });
         toast.success("Appointment marked as No-Show!");
       } catch (err: any) {
         toast.error(err?.response?.data?.message || err?.message || "Failed to mark as no-show");

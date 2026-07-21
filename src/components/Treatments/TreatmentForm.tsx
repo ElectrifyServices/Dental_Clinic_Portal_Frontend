@@ -1,9 +1,11 @@
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
+import { Input } from "@/components/ui/Input";
 import React from "react";
-import { Save, Stethoscope } from "lucide-react";
+import { Save, Stethoscope, CheckCircle, Loader2, Paperclip, Upload, FileText, X } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import { procedures, teeth } from "@/constants/treatment.constants";
+import { useCompleteTreatmentSessionMutation, useAddTreatmentSessionMutation } from "@/hooks/treatment/useTreatmentSessionHooks";
 import type { TreatmentFormProps } from "@/types/treatment.types";
 import { useTreatmentForm } from "@/hooks/treatment/useTreatmentForm";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -149,6 +151,148 @@ export function TreatmentForm({
     handleSubmit,
   } = useTreatmentForm(treatment, allPatients, allTreatments);
 
+  // Complete Session Modal states
+  const completeSessionMutation = useCompleteTreatmentSessionMutation();
+  const addSessionMutation = useAddTreatmentSessionMutation();
+
+  const [completingSession, setCompletingSession] = React.useState<any | null>(null);
+  const [completeForm, setCompleteForm] = React.useState({
+    work_done: "",
+    session_findings: "",
+    next_session_plan: "",
+    session_fee: 0,
+    discount_percentage: 0,
+    paid_amount: 0,
+  });
+  const [scheduleNext, setScheduleNext] = React.useState(false);
+  const [nextSessionDraft, setNextSessionDraft] = React.useState({
+    date: "",
+    time: "09:00 AM",
+    duration: 45,
+    cost: 0,
+    clinical_objectives: "",
+  });
+  const [sessionAttachments, setSessionAttachments] = React.useState<File[]>([]);
+
+  const handleOpenCompleteSession = (session: any) => {
+    // Find previous completed sessions in treatmentSessions
+    const completedList = treatmentSessions.filter(s => s.status === "completed" || s.status === "COMPLETED");
+    const lastCompleted = completedList.length > 0 ? completedList[completedList.length - 1] : null;
+
+    const fallbackFee = lastCompleted ? (Number(lastCompleted.session_fee || lastCompleted.cost) || 0) : 0;
+    const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
+    const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
+
+    const currentFee = Number(session.session_fee || session.cost) || fallbackFee;
+    const currentDiscount = Number(session.session_fee || session.cost) === 0 ? fallbackDiscount : 0;
+    const currentPaid = Number(session.session_fee || session.cost) === 0 ? fallbackPaid : (currentFee - (currentFee * currentDiscount) / 100);
+
+    setCompleteForm({
+      work_done: session.work_done || session.workDone || "",
+      session_findings: session.session_findings || session.findings || "",
+      next_session_plan: "",
+      session_fee: currentFee,
+      discount_percentage: currentDiscount,
+      paid_amount: currentPaid,
+    });
+    setSessionAttachments([]);
+    setScheduleNext(false);
+    setNextSessionDraft({
+      date: new Date().toISOString().split("T")[0],
+      time: "09:00 AM",
+      duration: 45,
+      cost: currentFee,
+      clinical_objectives: "",
+    });
+    setCompletingSession(session);
+  };
+
+  const handleSaveCompletedSession = async () => {
+    if (!completingSession) return;
+    
+    // If it's a saved treatment plan on the backend, trigger API call
+    if (treatment?.id && !String(completingSession.id).startsWith("session-")) {
+      try {
+        await completeSessionMutation.mutateAsync({
+          planId: treatment.id,
+          sessionId: completingSession.id,
+          ...completeForm,
+          attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
+        });
+
+        if (scheduleNext && nextSessionDraft.date) {
+          try {
+            await addSessionMutation.mutateAsync({
+              planId: treatment.id,
+              visit_date: nextSessionDraft.date,
+              start_time: nextSessionDraft.time,
+              duration_min: nextSessionDraft.duration,
+              session_fee: nextSessionDraft.cost,
+              clinical_objectives: nextSessionDraft.clinical_objectives,
+            });
+          } catch (addErr) {
+            console.error("Failed to schedule next session:", addErr);
+          }
+        }
+      } catch (err: any) {
+        console.error("Failed to complete session on backend:", err);
+      }
+    }
+
+    // Always update the session in the local treatmentForm state
+    updateSession(completingSession.id, {
+      status: "completed",
+      workDone: completeForm.work_done,
+      work_done: completeForm.work_done,
+      findings: completeForm.session_findings,
+      session_findings: completeForm.session_findings,
+      cost: completeForm.session_fee,
+      session_fee: completeForm.session_fee,
+      discount_percentage: completeForm.discount_percentage,
+      paid_amount: completeForm.paid_amount,
+    });
+
+    // If next session was scheduled locally, add it to the local treatmentSessions list
+    if (scheduleNext && nextSessionDraft.date) {
+      const newSessionNumber = treatmentSessions.length + 1;
+      const newSess = {
+        id: `session-${Date.now()}-${Math.random()}`,
+        sessionNumber: newSessionNumber,
+        name: `Session ${newSessionNumber}`,
+        description: nextSessionDraft.clinical_objectives || "Next session",
+        suggestedDate: nextSessionDraft.date,
+        scheduledDate: nextSessionDraft.date,
+        startTime: nextSessionDraft.time,
+        duration: nextSessionDraft.duration,
+        status: "scheduled",
+        isFlexible: true,
+        isRequired: false,
+        isOptional: true,
+        cost: nextSessionDraft.cost,
+        session_fee: nextSessionDraft.cost,
+        isModified: true,
+        notes: nextSessionDraft.clinical_objectives,
+        clinical_objectives: nextSessionDraft.clinical_objectives,
+      };
+      
+      // Update form sessions value
+      form.setValue("sessions", [...treatmentSessions, newSess] as any);
+    }
+
+    setCompletingSession(null);
+  };
+
+  const handleSessionAttachmentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setSessionAttachments((prev) => [...prev, ...files]);
+    e.target.value = "";
+  };
+
+  const removeSessionAttachment = (index: number) => {
+    setSessionAttachments((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+  };
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -221,6 +365,7 @@ export function TreatmentForm({
             onRemoveSession={removeSession}
             onUpdateSession={updateSession}
             baseDate={formData.date}
+            onCompleteSessionTrigger={handleOpenCompleteSession}
           />
         </div>
 
@@ -279,6 +424,246 @@ export function TreatmentForm({
           }}
         />
       </form>
+
+      {completingSession && (
+        <Modal
+          title={`Complete Session ${completingSession.visit_number || completingSession.sessionNumber || ""}`}
+          subtitle="Record what was done today"
+          onClose={() => setCompletingSession(null)}
+          size="5xl"
+          icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
+          footer={
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCompletingSession(null);
+                  setSessionAttachments([]);
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveCompletedSession}
+                disabled={
+                  completeSessionMutation.isPending ||
+                  (!completeForm.work_done && !completeForm.session_findings)
+                }
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2 text-white"
+              >
+                {completeSessionMutation.isPending
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <CheckCircle className="w-4 h-4" />}
+                Complete Session
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-left">
+            <div>
+              <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
+              <Textarea rows={3} placeholder="Describe the procedures performed..." value={completeForm.work_done}
+                onChange={(e) => setCompleteForm(p => ({ ...p, work_done: e.target.value }))}
+                className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
+            </div>
+            <div>
+              <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
+              <Textarea rows={3} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
+                onChange={(e) => setCompleteForm(p => ({ ...p, session_findings: e.target.value }))}
+                className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t pt-4">
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Total Cost (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Total Cost"
+                  value={completeForm.session_fee || ""}
+                  onChange={(e) => {
+                    const cost = parseInt(e.target.value) || 0;
+                    setCompleteForm(p => {
+                      const discountAmt = (cost * p.discount_percentage) / 100;
+                      const net = Math.max(0, cost - discountAmt);
+                      return { ...p, session_fee: cost, paid_amount: net };
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Discount (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Discount %"
+                  value={completeForm.discount_percentage || ""}
+                  onChange={(e) => {
+                    const pct = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                    setCompleteForm(p => {
+                      const discountAmt = (p.session_fee * pct) / 100;
+                      const net = Math.max(0, p.session_fee - discountAmt);
+                      return { ...p, discount_percentage: pct, paid_amount: net };
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Paid Amount (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Paid Amount"
+                  value={completeForm.paid_amount || ""}
+                  onChange={(e) => setCompleteForm(p => ({ ...p, paid_amount: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold block mb-2">Pending Amount (₹)</Label>
+                <Input
+                  type="number"
+                  disabled
+                  placeholder="Pending Amount"
+                  value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * completeForm.discount_percentage) / 100 - completeForm.paid_amount)}
+                  className="w-full px-3 py-2 rounded-xl border bg-slate-50 font-bold text-red-600 outline-none cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="form-schedule-next-session"
+                  checked={scheduleNext}
+                  onChange={(e) => setScheduleNext(e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
+                />
+                <Label htmlFor="form-schedule-next-session" className="text-sm font-bold text-muted-foreground cursor-pointer">
+                  Schedule Next Session (Optional)
+                </Label>
+              </div>
+
+              {scheduleNext && (
+                <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
+                      <Input
+                        type="date"
+                        value={nextSessionDraft.date}
+                        onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
+                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold block mb-2">Time</Label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. 10:00 AM"
+                        value={nextSessionDraft.time}
+                        onChange={(e) => setNextSessionDraft(p => ({ ...p, time: e.target.value }))}
+                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold block mb-2">Duration (Min)</Label>
+                      <Input
+                        type="number"
+                        min="15"
+                        value={nextSessionDraft.duration}
+                        onChange={(e) => setNextSessionDraft(p => ({ ...p, duration: parseInt(e.target.value) || 45 }))}
+                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold block mb-2">Session Fee (₹)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={nextSessionDraft.cost}
+                        onChange={(e) => setNextSessionDraft(p => ({ ...p, cost: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold block mb-2">Clinical Objectives / Next Session Plan</Label>
+                    <Textarea
+                      rows={2}
+                      placeholder="Next session targets..."
+                      value={nextSessionDraft.clinical_objectives}
+                      onChange={(e) => setNextSessionDraft(p => ({ ...p, clinical_objectives: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white resize-none font-medium"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-emerald-600" />
+                <Label className="text-sm font-semibold">Attachments</Label>
+              </div>
+              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
+                <Input
+                  id="form-session-attachments"
+                  type="file"
+                  multiple
+                  onChange={handleSessionAttachmentUpload}
+                  className="hidden"
+                />
+                <Label
+                  htmlFor="form-session-attachments"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-5 text-center transition-colors hover:bg-emerald-50"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Upload files</p>
+                    <p className="text-xs text-muted-foreground">
+                      Select one or more files to attach with this completed session
+                    </p>
+                  </div>
+                </Label>
+
+                {sessionAttachments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {sessionAttachments.map((file, idx) => (
+                      <div
+                        key={`${file.name}-${idx}`}
+                        className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{file.name}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => removeSessionAttachment(idx)}
+                          className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Modal>
   );
 }

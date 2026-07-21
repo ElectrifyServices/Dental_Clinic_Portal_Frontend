@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 interface AppointmentActionMenuProps {
   appointment: any;
   onEdit?: (id: string) => void;
-  onUpdateStatus?: (id: string, status: string) => void;
+  onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
   onDelete?: (id: string) => void;
   onCheckIn?: (appointment: any) => void;
   onDirectCheckIn?: (appointment: any) => void;

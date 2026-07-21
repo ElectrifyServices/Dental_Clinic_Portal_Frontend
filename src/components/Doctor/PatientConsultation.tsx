@@ -167,7 +167,19 @@ export function PatientConsultation({
       rawXrays: [] as File[],
       labFiles: [] as { name: string; url: string; type: string }[],
       selectedTeeth: [] as string[],
-      treatmentPlans: [] as any[],
+      treatmentPlans: initialData?.consultationData?.treatmentPlans || [
+        {
+          id: `plan-${Date.now()}`,
+          tooth: "",
+          procedure: "",
+          sessions: 1,
+          cost: 0,
+          discount: 0,
+          isActive: true,
+          planDate: new Date().toISOString().split("T")[0],
+          status: "planned",
+        }
+      ],
     },
   );
   // ── Follow-up state ────────────────────────────────────────────────────────
@@ -210,60 +222,38 @@ export function PatientConsultation({
     });
   }, [consultationData, toothChartState, followUpDoctorId, followUpDate, selectedSlot]);
 
-  // Sync toothChartState with treatmentPlans
-  useEffect(() => {
-    const pairs = Object.entries(toothChartState).flatMap(([toothNum, conditions]) => {
-      const condArray = Array.isArray(conditions) ? conditions : [conditions];
-      return condArray
-        .filter((c) => c !== "normal")
-        .map((cond) => ({
-          tooth: toothNum,
-          condition: cond,
-        }));
-    });
+  // Removed auto-sync useEffect between toothChartState and treatmentPlans as per user request to manage treatments manually.
 
+  const handleAddTreatmentPlan = () => {
+    setConsultationData((prev) => ({
+      ...prev,
+      treatmentPlans: [
+        ...(prev.treatmentPlans || []),
+        {
+          id: `plan-${Date.now()}`,
+          tooth: "",
+          procedure: "",
+          sessions: 1,
+          cost: 0,
+          discount: 0,
+          isActive: true,
+          planDate: new Date().toISOString().split("T")[0],
+          status: "planned",
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveTreatmentPlan = (index: number) => {
     setConsultationData((prev) => {
-      const existingPlans = prev.treatmentPlans || [];
-      const filteredPlans = existingPlans.filter((plan: any) =>
-        pairs.some((pair) => pair.tooth === plan.tooth && pair.condition === plan.condition),
-      );
-
-      const newPairs = pairs.filter(
-        (pair) => !filteredPlans.some((p: any) => p.tooth === pair.tooth && p.condition === pair.condition),
-      );
-
-      const newPlans = newPairs.map((pair) => ({
-        id: `plan-${pair.tooth}-${pair.condition}-${Date.now()}`,
-        tooth: pair.tooth,
-        condition: pair.condition,
-        procedure: "",
-        sessions: 1,
-        duration: "15 mins",
-        cost: 0,
-        isActive: true,
-        planDate: new Date().toISOString().split("T")[0],
-        status: "planned",
-      }));
-
-      const updatedPlans = [...filteredPlans, ...newPlans].sort((a, b) => {
-        if (a.tooth === "FM") return -1;
-        if (b.tooth === "FM") return 1;
-        const toothDiff = parseInt(a.tooth) - parseInt(b.tooth);
-        if (toothDiff !== 0) return toothDiff;
-        return a.condition.localeCompare(b.condition);
-      });
-
-      if (JSON.stringify(updatedPlans) === JSON.stringify(existingPlans)) {
-        return prev;
-      }
-
+      const newPlans = [...(prev.treatmentPlans || [])];
+      newPlans.splice(index, 1);
       return {
         ...prev,
-        requiresTreatment: updatedPlans.length > 0,
-        treatmentPlans: updatedPlans,
+        treatmentPlans: newPlans,
       };
     });
-  }, [toothChartState]);
+  };
 
 
   const { doctors: apiDoctors } = useDoctorsListQuery();
@@ -570,6 +560,23 @@ export function PatientConsultation({
       let cleanedNotes = consultationData.consultationNotes || "";
       cleanedNotes = cleanedNotes.replace(/(?:^|\n)\s*(?:\d+\.|[•\-])\s*$/, "").trimEnd();
 
+      const mappedTreatmentPlans = (consultationData.treatmentPlans || []).map((plan: any) => {
+        let toothArray: string[] = [];
+        if (Array.isArray(plan.tooth)) {
+          toothArray = plan.tooth;
+        } else if (typeof plan.tooth === "string" && plan.tooth.trim()) {
+          toothArray = plan.tooth.split(",").map((s: string) => s.trim()).filter(Boolean);
+        }
+
+        const discountPct = Number(plan.discount) || 0;
+
+        return {
+          ...plan,
+          tooth: toothArray,
+          discount_value: discountPct,
+        };
+      });
+
       const res = await onCompleteConsultation({
         id: patient.id,
         patientId: patient.patientId || patient.id,
@@ -577,6 +584,7 @@ export function PatientConsultation({
         patientPhone: patient.phone || (patient as any).patientPhone || "",
         appointmentId: patient.appointmentId,
         ...consultationData,
+        treatmentPlans: mappedTreatmentPlans,
         consultationNotes: cleanedNotes,
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
@@ -612,7 +620,7 @@ export function PatientConsultation({
       title={
         viewMode === "history"
           ? `Previous Consultations: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
-          : `Consultation: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+          : `${(patient as any).isEditMode ? "Edit Consultation" : "Consultation"}: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
       }
       subtitle={
         viewMode === "history"
@@ -811,6 +819,7 @@ export function PatientConsultation({
             />
 
             <TreatmentPlanning
+              toothChartState={toothChartState}
               requiresTreatment={consultationData.requiresTreatment}
               treatmentPlans={consultationData.treatmentPlans}
               treatmentPlanText={consultationData.treatmentPlan}
@@ -821,6 +830,8 @@ export function PatientConsultation({
               }
               onRequiresTreatmentChange={handleChange}
               onUpdatePlan={updateTreatmentPlan}
+              onAddPlan={handleAddTreatmentPlan}
+              onRemovePlan={handleRemoveTreatmentPlan}
               onTreatmentPlanTextChange={handleChange}
               onTreatmentCostChange={handleChange}
               onTreatmentCostFocus={() => {

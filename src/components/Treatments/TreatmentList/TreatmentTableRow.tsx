@@ -5,7 +5,7 @@ import {
   Play, CheckCircle, Calendar, Download, Loader2, MessageCircle
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { toast } from "@/components/ui";
+import { toast, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui";
 import { downloadCompletedTreatmentPDF } from "../../../utils/pdfGenerator";
 import { useDownloadTreatmentMutation } from "../../../hooks/treatment/useDownloadTreatmentMutation";
 import { useSendWhatsappTreatmentMutation } from "../../../hooks/treatment/useSendWhatsappTreatmentMutation";
@@ -44,12 +44,13 @@ export function TreatmentTableRow({
     }
   };
 
-  const handleSendWhatsApp = async (id: string) => {
+  const handleSendWhatsApp = async (id: string, sessionIndex?: number | 'all') => {
     try {
       setSending(true);
-      toast.loading("Sending via WhatsApp...", { id: "whatsapp-send" });
+      const isAll = !sessionIndex || sessionIndex === 'all';
+      toast.loading(isAll ? "Sending via WhatsApp..." : `Sending Session ${sessionIndex} via WhatsApp...`, { id: "whatsapp-send" });
       await sendWhatsapp({ id });
-      toast.success("Treatment plan sent to WhatsApp successfully", { id: "whatsapp-send" });
+      toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
     } catch (err: any) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
     } finally {
@@ -203,19 +204,40 @@ export function TreatmentTableRow({
                 )}
               </Button>
 
-              <Button
-                variant="ghost"
-                onClick={() => handleSendWhatsApp(treatment.id)}
-                disabled={sending}
-                className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
-                title="Send WhatsApp"
-              >
-                {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
-                )}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    disabled={sending}
+                    className="p-2 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50"
+                    title="Send WhatsApp"
+                  >
+                    {sending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg z-50">
+                  {Array.from({ length: treatment.sessions?.length || treatment.total_sessions || treatment.totalSessions || 1 }).map((_, i) => (
+                    <DropdownMenuItem
+                      key={i}
+                      onClick={() => handleSendWhatsApp(treatment.id, i + 1)}
+                      className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer"
+                    >
+                      Session {i + 1}
+                    </DropdownMenuItem>
+                  ))}
+                  <div className="h-px bg-muted my-1" />
+                  <DropdownMenuItem
+                    onClick={() => handleSendWhatsApp(treatment.id, 'all')}
+                    className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer text-emerald-600"
+                  >
+                    Full WhatsApp
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
 

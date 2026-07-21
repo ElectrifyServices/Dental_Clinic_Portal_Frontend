@@ -5,7 +5,7 @@ import {
   AlertCircle, IndianRupee, Calendar, Image as ImageIcon, Camera, Edit, Save, Check, Loader2, CheckCircle,
   HeartPulse, FileSpreadsheet, Send
 } from "lucide-react";
-import apiClient from "../../../services/apiClient";
+import apiClient, { getFileUrl } from "../../../services/apiClient";
 import { parseApiResponse } from "../../../services/parseApiResponse";
 import { useDoctorsListQuery } from "../../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
@@ -284,6 +284,32 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
     const hasValidPrescriptions = (p?: any[]) =>
       p && p.some(x => getMedName(x).trim() !== "");
 
+    const formatTeeth = (toothInput: any) => {
+      if (toothInput === undefined || toothInput === null) return "General";
+      
+      let teethArray: any[] = [];
+      if (Array.isArray(toothInput)) {
+        teethArray = toothInput;
+      } else if (typeof toothInput === "string") {
+        teethArray = toothInput.split(",").map(s => s.trim()).filter(Boolean);
+      } else {
+        teethArray = [toothInput];
+      }
+      
+      const mapped = teethArray.map((t) => {
+        const key = String(t).trim();
+        if (key === "-1" || key.toUpperCase() === "FM" || key.includes("Full Mouth")) {
+          return "Full Mouth";
+        }
+        return `Tooth #${key}`;
+      });
+      
+      if (mapped.includes("Full Mouth") && mapped.length === 1) {
+        return "Full Mouth";
+      }
+      
+      return `${mapped.join(", ")}`;
+    };
 
     const getToothConditionBadgeStyle = (condition: string) => {
       const cond = condition.toUpperCase();
@@ -308,8 +334,30 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
         <Card className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
           <CardContent className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4 shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100">
-                {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
+              <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100 overflow-hidden">
+                {fullRecord.patient?.profile_picture_url || fullRecord.patient?.avatar ? (
+                  <img
+                    src={getFileUrl(fullRecord.patient.profile_picture_url || fullRecord.patient.avatar)}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const fallbackText = parent.querySelector('.fallback-text');
+                        if (fallbackText) (fallbackText as HTMLElement).style.display = 'block';
+                      }
+                    }}
+                  />
+                ) : null}
+                <span
+                  className="fallback-text"
+                  style={{
+                    display: (fullRecord.patient?.profile_picture_url || fullRecord.patient?.avatar) ? 'none' : 'block'
+                  }}
+                >
+                  {fullRecord.patient?.name ? fullRecord.patient.name.charAt(0).toUpperCase() : "P"}
+                </span>
               </div>
               <div>
                 <h3 className="text-xl font-black text-foreground tracking-tight leading-none mb-1.5">
@@ -621,7 +669,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                     {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: any, index: number) => (
                       <div key={tp.id || tp.tooth_number || index} className="bg-slate-50 border border-border/40 rounded-lg p-3 text-sm flex justify-between items-center font-bold">
                         <span className="text-foreground">
-                          {(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "FM" || String(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth) === "-1" ? "Full Mouth" : `Tooth #${tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth}`}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
+                          {formatTeeth(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth)}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
                         </span>
                         {(tp.cost > 0 || tp.est_cost > 0) && (
                           <span className="text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200">₹{(tp.cost || tp.est_cost).toLocaleString()}</span>

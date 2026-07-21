@@ -30,6 +30,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
   Loading,
   PageHeader,
   SearchableSelect,
@@ -113,7 +117,7 @@ interface ExpandedTreatmentRowProps {
   onManageSessions: (id: string) => void;
   onStartTreatment: (id: string) => void;
   onDownloadPDF: (id: string) => void;
-  onSendWhatsApp: (id: string) => void;
+  onSendWhatsApp: (id: string, sessionIndex?: number | 'all') => void;
   downloadingId: string | null;
   sendingWhatsappId: string | null;
 }
@@ -361,20 +365,43 @@ function ExpandedTreatmentRow({
                     Download PDF
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem
-                    onClick={() => onSendWhatsApp(plan.id)}
-                    disabled={sendingWhatsappId === plan.id}
-                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
-                  >
-                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                      {sendingWhatsappId === plan.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      )}
-                    </div>
-                    Send WhatsApp
-                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger
+                      disabled={sendingWhatsappId === plan.id}
+                      className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center justify-between gap-3 text-muted-foreground cursor-pointer disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                          {sendingWhatsappId === plan.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <MessageCircle className="w-4 h-4 text-emerald-600" />
+                          )}
+                        </div>
+                        Send WhatsApp
+                      </div>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg">
+                        {Array.from({ length: plan.sessions?.length || plan.total_sessions || plan.totalSessions || 1 }).map((_, i) => (
+                          <DropdownMenuItem
+                            key={i}
+                            onClick={() => onSendWhatsApp(plan.id, i + 1)}
+                            className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer"
+                          >
+                            Session {i + 1}
+                          </DropdownMenuItem>
+                        ))}
+                        <div className="h-px bg-muted my-1" />
+                        <DropdownMenuItem
+                          onClick={() => onSendWhatsApp(plan.id, 'all')}
+                          className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer text-emerald-600"
+                        >
+                          Full WhatsApp
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
                 </>
               )}
 
@@ -489,12 +516,13 @@ export function TreatmentList({
     }
   };
 
-  const handleSendWhatsApp = async (id: string) => {
+  const handleSendWhatsApp = async (id: string, sessionIndex?: number | 'all') => {
     try {
       setSendingWhatsappId(id);
-      toast.loading("Sending via WhatsApp...", { id: "whatsapp-send" });
+      const isAll = !sessionIndex || sessionIndex === 'all';
+      toast.loading(isAll ? "Sending via WhatsApp..." : `Sending Session ${sessionIndex} via WhatsApp...`, { id: "whatsapp-send" });
       await sendWhatsapp({ id });
-      toast.success("Treatment plan sent to WhatsApp successfully", { id: "whatsapp-send" });
+      toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
     } catch (err: any) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
     } finally {

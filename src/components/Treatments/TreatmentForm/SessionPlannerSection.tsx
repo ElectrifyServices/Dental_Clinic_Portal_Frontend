@@ -17,6 +17,7 @@ interface SessionPlannerSectionProps {
   onRemoveSession: (id: string) => void;
   onUpdateSession: (id: string, updates: any) => void;
   baseDate: string;
+  onCompleteSessionTrigger?: (session: any) => void;
 }
 
 export function SessionPlannerSection({
@@ -25,6 +26,7 @@ export function SessionPlannerSection({
   onRemoveSession,
   onUpdateSession,
   baseDate,
+  onCompleteSessionTrigger,
 }: SessionPlannerSectionProps) {
   return (
     <div className="space-y-6">
@@ -213,9 +215,17 @@ export function SessionPlannerSection({
                   </Label>
                   <Select
                     value={session.status || "scheduled"}
-                    onValueChange={(val) =>
-                      onUpdateSession(session.id, { status: val })
-                    }
+                    onValueChange={(val) => {
+                      if (val === "completed") {
+                        if (onCompleteSessionTrigger) {
+                          onCompleteSessionTrigger(session);
+                        } else {
+                          onUpdateSession(session.id, { status: val });
+                        }
+                      } else {
+                        onUpdateSession(session.id, { status: val });
+                      }
+                    }}
                   >
                     <SelectTrigger className="rounded-xl text-sm capitalize">
                       <SelectValue />
@@ -251,7 +261,9 @@ export function SessionPlannerSection({
                 />
               </div>
 
-              {/* Work Done (for completed sessions) */}
+              {/* Work Done and Session Findings dropdown inputs are commented out here 
+                  as they are now managed by the Complete Session Modal form popup. */}
+              {/*
               {(session.status === "completed" || session.status === "in-progress") && (
                 <div>
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
@@ -272,7 +284,6 @@ export function SessionPlannerSection({
                 </div>
               )}
 
-              {/* Session Findings (for completed sessions) */}
               {session.status === "completed" && (
                 <div>
                   <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
@@ -292,6 +303,7 @@ export function SessionPlannerSection({
                   />
                 </div>
               )}
+              */}
             </div>
 
             {/* Modified indicator */}

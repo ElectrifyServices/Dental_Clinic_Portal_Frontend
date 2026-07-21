@@ -2,7 +2,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui";
-import { InternalScheduleState } from "../../hooks/staff/useDoctorScheduleQuery";
+import { InternalScheduleState } from "@/hooks/staff/useDoctorScheduleQuery";
 
 interface CalendarGridProps {
   monthOffset: number;
@@ -41,7 +41,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   const isTodayDate = (date: Date) => new Date().toDateString() === date.toDateString();
 
-  const handleDateClick = (date: Date, isPast: boolean, isSelected: boolean) => {
+  const handleDateClick = (date: Date, _isPast: boolean, isSelected: boolean) => {
     if (isSelected) {
       onRefetchSlots?.();
     } else {

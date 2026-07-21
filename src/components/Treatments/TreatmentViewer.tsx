@@ -18,7 +18,7 @@ import {
   Paperclip,
 } from "lucide-react";
 import { useState } from "react";
-import { Modal, Button, ContentCard, Badge } from "@/components/ui";
+import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 
@@ -52,16 +52,13 @@ export function TreatmentViewer({
   if (isLoading) {
     return (
       <Modal
-        title="Loading Treatment..."
+        title="Loading..."
         onClose={onClose}
         size="5xl"
         icon={<Stethoscope className="w-5 h-5 animate-pulse" />}
       >
         <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading treatment details...</p>
-          </div>
+          <Loading type="spinner" text="Loading treatment details..." />
         </div>
       </Modal>
     );
@@ -255,6 +252,11 @@ export function TreatmentViewer({
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
+            {/* 
+              These buttons (Start Treatment, Complete Procedure, Edit Plan) are commented out 
+              because this view is strictly read-only to ensure a clean data presentation.
+            */}
+            {/*
             {treatment.status === "PLANNED" && (
               <Button
                 onClick={() => {
@@ -285,10 +287,18 @@ export function TreatmentViewer({
             >
               Edit Plan
             </Button>
+            */}
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="h-10 rounded-xl"
+            >
+              Close
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowConsultationFeedback(true)}
-              className="gap-2"
+              className="gap-2 h-10 rounded-xl"
             >
               <MessageSquareText className="w-4 h-4" /> Consultation Feedback
             </Button>
@@ -451,6 +461,10 @@ export function TreatmentViewer({
                               {session.clinical_objectives || "No objectives set"}
                             </p>
                           </div>
+                          {/* 
+                            Session edit button is commented out below because this view is strictly read-only.
+                          */}
+                          {/*
                           {onManageSessions && (
                             <Button
                               variant="ghost"
@@ -461,6 +475,7 @@ export function TreatmentViewer({
                               <Edit2 className="w-4 h-4 text-primary" />
                             </Button>
                           )}
+                          */}
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-11">

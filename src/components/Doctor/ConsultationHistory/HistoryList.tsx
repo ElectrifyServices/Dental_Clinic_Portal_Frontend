@@ -11,11 +11,9 @@ import {
   Stethoscope,
   Pill,
   FileText,
-  Trash2,
   Send,
-  Loader2,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 
 interface HistoryListProps {
   data: any[];
@@ -45,7 +43,7 @@ interface HistoryListProps {
 
 export function HistoryList({
   pageData,
-  patients,
+  patients: _patients,
   search,
   onSearchChange,
   showFilters,
@@ -57,14 +55,14 @@ export function HistoryList({
   filterSort,
   onFilterSort,
   activeFilters,
-  activeMenuId,
-  onSetActiveMenuId,
+  activeMenuId: _activeMenuId,
+  onSetActiveMenuId: _onSetActiveMenuId,
   onSelectRecord,
   onDownloadPDF,
   onSendPDF,
-  onDeleteClick,
-  safePage,
-  PAGE_SIZE,
+  onDeleteClick: _onDeleteClick,
+  safePage: _safePage,
+  PAGE_SIZE: _PAGE_SIZE,
   isLoading = false,
 }: HistoryListProps) {
   const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<number | null>(null);
@@ -215,7 +213,7 @@ export function HistoryList({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {pageData.map((item, idx) => (
+            {pageData.map((item) => (
               <Card key={item.id} className="flex flex-col hover:shadow-md transition-shadow">
                 <CardHeader className="p-4 pb-3 border-b">
                   <div className="flex justify-between items-start">

@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, Button } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { toTitleCase } from "@/utils/stringUtils";
+import { getFileUrl } from "@/services/apiClient";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -112,8 +113,28 @@ export function QueueCard({
         {/* Patient Header */}
         <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-4 flex-wrap">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100/50">
-              <User className="w-5.5 h-5.5" />
+            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
+              {patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar ? (
+                <img
+                  src={getFileUrl(patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar)}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const icon = parent.querySelector('.placeholder-icon');
+                      if (icon) (icon as HTMLElement).style.display = 'block';
+                    }
+                  }}
+                />
+              ) : null}
+              <User
+                className="w-5.5 h-5.5 placeholder-icon"
+                style={{
+                  display: (patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar) ? 'none' : 'block'
+                }}
+              />
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
               <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 truncate" title={toTitleCase(patient.patientName)}>

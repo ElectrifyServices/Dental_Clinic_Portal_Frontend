@@ -10,8 +10,10 @@ import { AppointmentStats } from "../components/Appointments/AppointmentList/App
 import { useDoctorsListQuery } from "../hooks/staff/useDoctorsListQuery";
 import { useCheckInAppointmentMutation } from "../hooks/appointments/useCheckInAppointmentMutation";
 import { useCheckInAfterRegistrationMutation } from "../hooks/appointments/useCheckInAfterRegistrationMutation";
-import { useDebounce } from "../hooks/useDebounce";
 import { toast, PageHeader } from "../components/ui";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/Dialog";
+import { Label } from "../components/ui/Label";
+import { useDebounce } from "../hooks/useDebounce";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -42,6 +44,18 @@ export const AppointmentsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState("calendar");
   const [specialistSearch, setSpecialistSearch] = useState("");
   const debouncedSpecialistSearch = useDebounce(specialistSearch, 500);
+
+  const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
+  const [noShowReason, setNoShowReason] = useState("");
+
+  const handleUpdateStatusWrapper = async (id: string, status: string, reason?: string) => {
+    if (status === 'no-show') {
+      setNoShowApptId(id);
+      setNoShowReason("");
+    } else {
+      await handleUpdateAppointmentStatus(id, status, reason);
+    }
+  };
 
   const { doctors: activeDoctors, refetch: refetchDoctors } = useDoctorsListQuery(debouncedSpecialistSearch);
 
@@ -250,7 +264,7 @@ export const AppointmentsPage: React.FC = () => {
               setActiveModal("appointmentForm");
             }}
             onDeleteAppointment={handleDeleteAppt}
-            onUpdateStatus={handleUpdateAppointmentStatus}
+            onUpdateStatus={handleUpdateStatusWrapper}
             onCheckInPatient={handleCheckInPatient}
             onDirectCheckIn={handleDirectCheckInPatient}
             selectedDate={selectedDate}
@@ -262,6 +276,55 @@ export const AppointmentsPage: React.FC = () => {
           />
         )}
       </div>
+
+      {noShowApptId && (
+        <Dialog open={!!noShowApptId} onOpenChange={(open) => !open && setNoShowApptId(null)}>
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border border-border bg-card shadow-2xl p-6">
+            <DialogHeader className="text-left">
+              <DialogTitle className="text-base font-bold text-foreground">Mark as No-Show</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
+                Please enter the reason for marking this appointment as No-Show.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="reason" className="text-xs font-bold text-muted-foreground">
+                  No-Show Reason <span className="text-destructive font-black">*</span>
+                </Label>
+                <textarea
+                  id="reason"
+                  placeholder="Enter reason (e.g. Patient didn't answer call, emergency, etc.)"
+                  value={noShowReason}
+                  onChange={(e) => setNoShowReason(e.target.value)}
+                  className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex flex-row justify-end gap-2 mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setNoShowApptId(null)}
+                className="h-10 rounded-xl px-4 text-xs font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={!noShowReason.trim()}
+                onClick={async () => {
+                  if (noShowReason.trim()) {
+                    await handleUpdateAppointmentStatus(noShowApptId, 'no-show', noShowReason.trim());
+                    setNoShowApptId(null);
+                  }
+                }}
+                className="h-10 rounded-xl px-4 text-xs font-semibold bg-destructive hover:bg-destructive/90 text-white"
+              >
+                Mark No-Show
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

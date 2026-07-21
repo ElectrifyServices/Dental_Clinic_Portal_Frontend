@@ -265,6 +265,12 @@ export function ToothChart({
   const [chartType, setChartType] = useState<"adult" | "pediatric" | "full_mouth">(defaultChartType as any);
 
   useEffect(() => {
+    if (initialState && Object.keys(initialState).length === 0) {
+      setToothState({});
+    }
+  }, [initialState]);
+
+  useEffect(() => {
     onChartChange?.(toothState);
   }, [toothState, onChartChange]);
 
@@ -308,8 +314,8 @@ export function ToothChart({
     });
   };
 
-  const upperTeeth = chartType === "adult" ? UPPER_TEETH : UPPER_PRIMARY;
-  const lowerTeeth = chartType === "adult" ? LOWER_TEETH : LOWER_PRIMARY;
+  const upperTeeth = chartType === "pediatric" ? UPPER_PRIMARY : UPPER_TEETH;
+  const lowerTeeth = chartType === "pediatric" ? LOWER_PRIMARY : LOWER_TEETH;
 
   const findings: [string, ConditionId[]][] = (
     Object.entries(toothState) as [string, ConditionId[]][]
@@ -451,6 +457,33 @@ export function ToothChart({
         </div>
       )}
 
+      {chartType === "full_mouth" && (
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", flexDirection: "column", alignItems: "center", padding: "1rem 0" }}>
+          <div style={{ marginBottom: "1rem", fontSize: 13, color: "#666", textAlign: "center" }}>
+            Select a condition above and apply it to the entire mouth. You can also select missing teeth below.
+          </div>
+          <Button
+            type="button"
+            onClick={() => {
+              setToothState((prev) => {
+                const next = { ...prev };
+                const modeToApply = activeMode === "other" && customCondition.trim() !== "" ? customCondition.trim() : activeMode;
+                if (!next["FM"]) {
+                  next["FM"] = [modeToApply];
+                } else if (!next["FM"].includes(modeToApply)) {
+                  next["FM"] = [...next["FM"], modeToApply];
+                }
+                return next;
+              });
+            }}
+            variant="outline"
+            className="px-8 py-4 border-primary/60 hover:bg-primary/10 text-primary font-bold text-lg rounded-2xl shadow-sm"
+          >
+            Apply "{CONDITIONS.find(c => c.id === activeMode)?.label || activeMode}" to Full Mouth
+          </Button>
+        </div>
+      )}
+
       {/* Chart */}
       <div
         className="scrollbar-thin"
@@ -462,19 +495,6 @@ export function ToothChart({
           overflowX: "auto",
         }}
       >
-        {chartType === "full_mouth" ? (
-          <div style={{ padding: "2rem 0", textAlign: "center" }}>
-            <div style={{ marginBottom: "1rem", color: "#666", fontSize: 13 }}>Apply selected condition to Full Mouth:</div>
-            <Button
-              type="button"
-              onClick={() => clickTooth("FM")}
-              variant="outline"
-              className="px-6 border-border/60 hover:bg-muted/50"
-            >
-              Apply to Full Mouth
-            </Button>
-          </div>
-        ) : (
           <>
             <div
               style={{
@@ -487,8 +507,8 @@ export function ToothChart({
                 marginBottom: 2,
               }}
             >
-              <span>{chartType === "adult" ? "Q1 — upper right" : "Q5 — upper right"}</span>
-              <span>{chartType === "adult" ? "Q2 — upper left" : "Q6 — upper left"}</span>
+              <span>{chartType !== "pediatric" ? "Q1 — upper right" : "Q5 — upper right"}</span>
+              <span>{chartType !== "pediatric" ? "Q2 — upper left" : "Q6 — upper left"}</span>
             </div>
             <div
               style={{
@@ -569,11 +589,10 @@ export function ToothChart({
                 marginTop: 2,
               }}
             >
-              <span>{chartType === "adult" ? "Q4 — lower right" : "Q8 — lower right"}</span>
-              <span>{chartType === "adult" ? "Q3 — lower left" : "Q7 — lower left"}</span>
+              <span>{chartType !== "pediatric" ? "Q4 — lower right" : "Q8 — lower right"}</span>
+              <span>{chartType !== "pediatric" ? "Q3 — lower left" : "Q7 — lower left"}</span>
             </div>
           </>
-        )}
       </div>
 
       {/* Legend */}
