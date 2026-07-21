@@ -26,12 +26,21 @@ export function ObservationsAndToothChart({
   return (
     <div className="px-6">
       <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <Activity className="w-6 h-6 text-primary" />
-          <div>
-            <h3 className="text-lg font-bold text-foreground">Clinical Observations & Tooth Chart</h3>
-            <p className="text-sm text-muted-foreground">Select affected teeth and record your findings</p>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Activity className="w-6 h-6 text-primary" />
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Clinical Observations & Tooth Chart</h3>
+              <p className="text-sm text-muted-foreground">Select affected teeth and record your findings</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => onChartChange({})}
+            className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+          >
+            Clear All
+          </button>
         </div>
 
         <div className="space-y-3">

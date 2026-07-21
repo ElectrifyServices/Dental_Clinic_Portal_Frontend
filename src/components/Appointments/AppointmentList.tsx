@@ -20,7 +20,7 @@ interface AppointmentListProps {
   appointments?: any[];
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
-  onUpdateStatus?: (id: string, status: string) => void;
+  onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
   onCheckInPatient?: (appointment: any) => void;
   onDirectCheckIn?: (appointment: any) => void;
   selectedDate?: string;
@@ -251,28 +251,30 @@ export function AppointmentList({
     {
       key: "actions",
       header: "Actions",
-      align: "center" as const,
+      align: "left" as const,
       render: (a: any) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
-          onClick={(e) => {
-            e.stopPropagation();
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            const menuHeight = 240;
-            const windowHeight = window.innerHeight;
-            let top = rect.bottom + 8;
-            if (rect.bottom + menuHeight > windowHeight) {
-              top = rect.top - menuHeight;
-              if (top < 0) top = 10;
-            }
-            setMenuPos({ top, left: rect.right - 200 });
-            setOpenMenuId(a.id === openMenuId ? null : a.id);
-          }}
-        >
-          <MoreVertical className="w-4 h-4" />
-        </Button>
+        <div className="flex justify-start">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              const menuHeight = 240;
+              const windowHeight = window.innerHeight;
+              let top = rect.bottom + 8;
+              if (rect.bottom + menuHeight > windowHeight) {
+                top = rect.top - menuHeight;
+                if (top < 0) top = 10;
+              }
+              setMenuPos({ top, left: rect.right - 200 });
+              setOpenMenuId(a.id === openMenuId ? null : a.id);
+            }}
+          >
+            <MoreVertical className="w-4 h-4" />
+          </Button>
+        </div>
       ),
     },
   ];

@@ -224,6 +224,8 @@ export interface CompleteSessionVariables {
   planId: string;
   sessionId: string;
   paid_amount?: number;
+  session_fee?: number;
+  discount_percentage?: number;
   work_done?: string;
   session_findings?: string;
   next_session_plan?: string;

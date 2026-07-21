@@ -247,15 +247,37 @@ export const ConsultationPage: React.FC = () => {
 
       // Map treatment plans to treatments array
       const treatments = (consultationData.treatmentPlans || [])
-        .filter((tp: any) => tp.tooth === "FM" || !isNaN(parseInt(tp.tooth)))
         .map((tp: any) => {
-          const isFM = tp.tooth === "FM";
+          let toothArray: number[] = [];
+          if (Array.isArray(tp.tooth)) {
+            toothArray = tp.tooth.map((t: any) => {
+              const str = String(t).trim();
+              if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
+              const parsed = parseInt(str);
+              return isNaN(parsed) ? null : parsed;
+            }).filter((n: any) => n !== null) as number[];
+          } else if (typeof tp.tooth === "string" && tp.tooth.trim()) {
+            toothArray = tp.tooth.split(",").map((s: string) => {
+              const str = s.trim();
+              if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
+              const parsed = parseInt(str);
+              return isNaN(parsed) ? null : parsed;
+            }).filter((n: any) => n !== null) as number[];
+          } else if (typeof tp.tooth === "number") {
+            toothArray = [tp.tooth];
+          }
+
+          if (toothArray.length === 0) {
+            toothArray = [-1]; // Fallback to -1 / FM
+          }
+
           return {
-            tooth_number: isFM ? -1 : parseInt(tp.tooth),
+            tooth_number: toothArray,
             procedure: tp.procedure,
             total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
             duration_min: tp.duration ? parseInt(tp.duration) : 15,
             est_cost: parseFloat(tp.cost) || 0,
+            discount_value: parseFloat(tp.discount_value) || 0,
             treatment_date: tp.planDate || new Date().toISOString().split('T')[0],
             is_active: tp.isActive ?? true
           };
