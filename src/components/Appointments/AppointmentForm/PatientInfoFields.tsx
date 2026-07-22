@@ -1,11 +1,15 @@
 import { Label } from "@/components/ui/Label";
 import React, { useState, useRef, useEffect } from "react";
-import { User, Search } from "lucide-react";
+import { User, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+import { Loading } from "@/components/ui/Loading";
 
 interface PatientInfoFieldsProps {
   patientName: string;
   patientPhone: string;
+  countryCode?: string;
+  onCountryCodeChange?: (val: string) => void;
   isFollowUp: boolean;
   isConsulted: boolean;
   suggestion: { name: string; phone: string } | null;
@@ -14,12 +18,15 @@ interface PatientInfoFieldsProps {
   onAcceptSuggestion: () => void;
   errors?: any;
   patients?: any[];
-  onSelectPatient?: (name: string, phone: string) => void;
+  isLoadingPatients?: boolean;
+  onSelectPatient?: (name: string, phone: string, countryCode?: string, patientObj?: any) => void;
 }
 
 export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   patientName,
   patientPhone,
+  countryCode = "+91",
+  onCountryCodeChange,
   isFollowUp,
   isConsulted,
   suggestion,
@@ -28,6 +35,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   onAcceptSuggestion,
   errors,
   patients = [],
+  isLoadingPatients = false,
   onSelectPatient,
 }) => {
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
@@ -43,73 +51,100 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [debouncedName, setDebouncedName] = useState(patientName);
-  const [debouncedPhone, setDebouncedPhone] = useState(patientPhone);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedName(patientName);
-    }, 400); // 400ms debounce
-    return () => clearTimeout(handler);
-  }, [patientName]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedPhone(patientPhone);
-    }, 400); // 400ms debounce
-    return () => clearTimeout(handler);
-  }, [patientPhone]);
-
-  const searchTerm = debouncedName.toLowerCase();
-  const searchPhone = debouncedPhone;
-
-  // Filter patients based on debounced name or phone if typing
-  let filteredPatients = patients.filter((p: any) => {
-    const pName = (p.name || "").toLowerCase();
-    const pPhone = p.phone || "";
-    if (focusedField === "name" && searchTerm && pName.includes(searchTerm)) return true;
-    if (focusedField === "phone" && searchPhone && pPhone.includes(searchPhone)) return true;
-    return false;
-  });
-
-  // Limit to top 5 results for performance and UI compactness
-  filteredPatients = filteredPatients.slice(0, 5);
-
   const handleSelect = (p: any) => {
     if (onSelectPatient) {
-      onSelectPatient(p.name, p.phone || "");
+      const pName = p.name || p.full_name || p.patient_name || "";
+      const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
+      
+      // Determine Country Code from API payload or phone string
+      let selectedCountryCode = p.country_code || p.countryCode || "";
+      let cleanPhone = rawPhone.replace(/\D/g, "");
+
+      if (!selectedCountryCode) {
+        if (rawPhone.startsWith("+1")) selectedCountryCode = "+1";
+        else if (rawPhone.startsWith("+91")) selectedCountryCode = "+91";
+        else if (rawPhone.startsWith("+44")) selectedCountryCode = "+44";
+        else if (rawPhone.startsWith("+971")) selectedCountryCode = "+971";
+        else selectedCountryCode = "+91";
+      }
+
+      // If cleanPhone contains country code digits prefix, slice it off to get 10-digit number
+      const codeDigits = selectedCountryCode.replace(/\D/g, "");
+      if (codeDigits && cleanPhone.length > 10 && cleanPhone.startsWith(codeDigits)) {
+        cleanPhone = cleanPhone.slice(codeDigits.length);
+      }
+      cleanPhone = cleanPhone.slice(-10);
+
+      onSelectPatient(pName, cleanPhone, selectedCountryCode, p);
     }
     setFocusedField(null);
   };
 
   const Dropdown = () => {
-    if (!focusedField || (!searchTerm && !searchPhone) || isFollowUp || isConsulted) return null;
+    if (!focusedField || isFollowUp || isConsulted) return null;
+
+    const searchTerm = focusedField === "name" 
+      ? (patientName || "").toLowerCase().trim() 
+      : (patientPhone || "").toLowerCase().trim();
+
+    const filteredPatients = patients.filter((p: any) => {
+      const pName = (p.name || p.full_name || p.patient_name || "").toLowerCase();
+      const pPhone = (p.phone || p.mobile || p.patient_phone || "").replace(/\D/g, "");
+      if (focusedField === "name") {
+        return !searchTerm || pName.includes(searchTerm);
+      }
+      if (focusedField === "phone") {
+        return !searchTerm || pPhone.includes(searchTerm);
+      }
+      return true;
+    }).slice(0, 10);
+
     return (
-      <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border rounded-xl shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-2 bg-muted/30 border-b border-border/40 text-[10px] font-semibold text-muted-foreground uppercase flex items-center gap-2">
-          <Search className="w-3 h-3" /> Select existing patient or keep typing to add new
+      <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
+        <div className="p-2 bg-muted/40 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Search className="w-3.5 h-3.5 text-primary" /> Select existing patient or keep typing to add new
+          </span>
+          {isLoadingPatients && (
+            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" /> Searching...
+            </span>
+          )}
         </div>
         
-        {filteredPatients.length > 0 ? (
-          <ul className="max-h-48 overflow-y-auto p-1">
-            {filteredPatients.map((p: any, idx: number) => (
-              <li
-                key={p.id || idx}
-                className="px-3 py-2 flex justify-between items-center hover:bg-muted rounded-lg cursor-pointer transition-colors"
-                onClick={() => handleSelect(p)}
-              >
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground truncate">{p.name}</span>
-                  <span className="text-xs text-muted-foreground">{p.phone}</span>
-                </div>
-                <div className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md uppercase shrink-0">
-                  Select
-                </div>
-              </li>
-            ))}
+        {isLoadingPatients && patients.length === 0 ? (
+          <div className="py-6">
+            <Loading type="spinner" text="Searching patients list..." className="py-2" />
+          </div>
+        ) : filteredPatients.length > 0 ? (
+          <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
+            {filteredPatients.map((p: any, idx: number) => {
+              const pCode = p.country_code || p.countryCode || "+91";
+              return (
+                <li
+                  key={p.id || p.patient_id || idx}
+                  className="px-3 py-2 flex justify-between items-center hover:bg-muted/70 rounded-lg cursor-pointer transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelect(p);
+                  }}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-sm font-bold text-foreground truncate">{p.name || p.full_name}</span>
+                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                      <span className="text-primary font-bold">{pCode}</span>
+                      <span>{p.phone}</span>
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md uppercase shrink-0">
+                    Select
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         ) : (
-          <div className="p-4 text-center text-sm text-muted-foreground">
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
             No matching patients found. A new patient will be created.
           </div>
         )}
@@ -162,20 +197,30 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
           <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Phone Number <span className="text-destructive">*</span>
           </Label>
-          <Input
-            name="patientPhone"
-            value={patientPhone}
-            onChange={(e) => {
-              onPhoneChange(e.target.value.replace(/[a-zA-Z]/g, ""));
-              setFocusedField("phone");
-            }}
-            onFocus={() => setFocusedField("phone")}
-            required
-            autoComplete="off"
-            disabled={isFollowUp || isConsulted}
-            placeholder="98765 43210"
-            className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
-          />
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <CountryCodeSelect
+              value={countryCode}
+              onChange={(val) => onCountryCodeChange?.(val)}
+              disabled={isFollowUp || isConsulted}
+              className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
+            />
+            <Input
+              name="patientPhone"
+              maxLength={10}
+              value={patientPhone}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                onPhoneChange(val);
+                setFocusedField("phone");
+              }}
+              onFocus={() => setFocusedField("phone")}
+              required
+              autoComplete="off"
+              disabled={isFollowUp || isConsulted}
+              placeholder="98765 43210"
+              className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card flex-1"
+            />
+          </div>
           {focusedField === "phone" && <Dropdown />}
           {errors?.patientPhone && (
             <p className="text-[10px] text-destructive font-bold mt-1 ml-1 uppercase tracking-wider">

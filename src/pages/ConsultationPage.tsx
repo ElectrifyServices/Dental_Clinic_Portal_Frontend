@@ -304,6 +304,7 @@ export const ConsultationPage: React.FC = () => {
         patient_name: isWalkIn
           ? (consultationData.patientName || consultationData.name || consultationData.directPatientName)
           : (consultationData.isDirect && !resolvedPatientId ? consultationData.directPatientName : undefined),
+        country_code: consultationData.directCountryCode || consultationData.country_code || "+91",
         patient_phone: isWalkIn
           ? (consultationData.patientPhone || consultationData.phone || consultationData.directPatientPhone)
           : (consultationData.isDirect && !resolvedPatientId ? consultationData.directPatientPhone : undefined),

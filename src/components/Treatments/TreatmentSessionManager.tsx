@@ -717,28 +717,63 @@ export function TreatmentSessionManager({
         return true;
       });
     try {
+      let nextSessionPayload: any = {};
+      if (scheduleNext && nextSessionDraft.date) {
+        const formatTimeTo24h = (timeStr: string) => {
+          if (!timeStr) return "10:00";
+          if (!timeStr.toUpperCase().includes("AM") && !timeStr.toUpperCase().includes("PM")) {
+            return timeStr.trim().substring(0, 5);
+          }
+          const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+          if (match) {
+            let hrs = parseInt(match[1], 10);
+            const mins = match[2];
+            const period = match[3].toUpperCase();
+            if (period === "PM" && hrs < 12) hrs += 12;
+            if (period === "AM" && hrs === 12) hrs = 0;
+            return `${String(hrs).padStart(2, "0")}:${mins}`;
+          }
+          return timeStr.trim().substring(0, 5);
+        };
+
+        const time24 = formatTimeTo24h(nextSessionDraft.time);
+        let formattedNextVisitDate = nextSessionDraft.date;
+        if (nextSessionDraft.date) {
+          try {
+            const dateTimeStr = nextSessionDraft.date.includes("T")
+              ? nextSessionDraft.date
+              : `${nextSessionDraft.date}T${time24}:00`;
+            const d = new Date(dateTimeStr);
+            if (!isNaN(d.getTime())) {
+              formattedNextVisitDate = d.toISOString();
+            }
+          } catch (e) {
+            formattedNextVisitDate = nextSessionDraft.date;
+          }
+        }
+
+        nextSessionPayload = {
+          schedule_next_session: true,
+          next_visit_date: formattedNextVisitDate,
+          next_start_time: time24,
+          next_duration_min: Number(nextSessionDraft.duration) || 60,
+          next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
+          next_session_fee: Number(nextSessionDraft.cost) || 0,
+        };
+      } else {
+        nextSessionPayload = {
+          schedule_next_session: false,
+        };
+      }
+
       await completeSession.mutateAsync({
         planId: treatmentId,
         sessionId,
         ...completeForm,
+        ...nextSessionPayload,
         prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
         attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
       });
-
-      if (scheduleNext && nextSessionDraft.date) {
-        try {
-          await addSession.mutateAsync({
-            planId: treatmentId,
-            visit_date: nextSessionDraft.date,
-            start_time: nextSessionDraft.time,
-            duration_min: nextSessionDraft.duration,
-            session_fee: nextSessionDraft.cost,
-            clinical_objectives: nextSessionDraft.clinical_objectives,
-          });
-        } catch (addErr) {
-          console.error("Failed to schedule next session:", addErr);
-        }
-      }
 
       showToast(completedCount + 1 >= totalSessions
         ? "All sessions completed! Treatment plan done!"
@@ -1225,30 +1260,56 @@ export function TreatmentSessionManager({
                         <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
                         <Input
                           type="date"
+                          min={(() => {
+                            const today = new Date();
+                            const year = today.getFullYear();
+                            const month = String(today.getMonth() + 1).padStart(2, "0");
+                            const day = String(today.getDate()).padStart(2, "0");
+                            return `${year}-${month}-${day}`;
+                          })()}
                           value={nextSessionDraft.date}
                           onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
-                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
+                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         />
                       </div>
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Time</Label>
-                        <Input
-                          type="text"
-                          placeholder="e.g. 10:00 AM"
-                          value={nextSessionDraft.time}
-                          onChange={(e) => setNextSessionDraft(p => ({ ...p, time: e.target.value }))}
-                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
-                        />
+                        <Select
+                          value={nextSessionDraft.time || "10:00 AM"}
+                          onValueChange={(val) => setNextSessionDraft(p => ({ ...p, time: val }))}
+                        >
+                          <SelectTrigger className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+                              "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+                              "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+                              "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
+                              "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM",
+                              "07:00 PM", "07:30 PM", "08:00 PM"
+                            ].map((t) => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Duration (Min)</Label>
-                        <Input
-                          type="number"
-                          min="15"
-                          value={nextSessionDraft.duration}
-                          onChange={(e) => setNextSessionDraft(p => ({ ...p, duration: parseInt(e.target.value) || 45 }))}
-                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
-                        />
+                        <Select
+                          value={String(nextSessionDraft.duration || 45)}
+                          onValueChange={(val) => setNextSessionDraft(p => ({ ...p, duration: parseInt(val) || 45 }))}
+                        >
+                          <SelectTrigger className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[15, 30, 45, 60, 90, 120].map((d) => (
+                              <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Session Fee (₹)</Label>
@@ -1354,7 +1415,7 @@ export function TreatmentSessionManager({
   return (
     <Modal
       title="Treatment Session"
-      subtitle={`${patientName} ${procedure}${toothNumber ? ` • Tooth #${toothNumber}` : ""}`}
+      subtitle={`${patientName} ${procedure}${toothNumber ? ` • ${String(toothNumber) === "-1" || String(toothNumber).toUpperCase() === "FM" ? "FM (Full Mouth)" : `Tooth #${toothNumber}`}` : ""}`}
       onClose={onClose}
       size="5xl"
       icon={<Calendar className="w-5 h-5" />}

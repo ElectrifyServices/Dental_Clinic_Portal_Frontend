@@ -98,6 +98,7 @@ export function mapFormDataToCreatePayload(
 
   // Basic Details
   if (formData.name) payload.append('name', formData.name);
+  payload.append('country_code', formData.country_code || '+91');
   if (formData.phone) payload.append('phone', formData.phone);
   if (formData.email) payload.append('email', formData.email);
   if (formData.dateOfBirth) payload.append('date_of_birth', formData.dateOfBirth);

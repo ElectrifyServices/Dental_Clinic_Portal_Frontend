@@ -250,7 +250,34 @@ function ExpandedTreatmentRow({
     {
       key: "tooth",
       header: "Tooth",
-      render: (plan: any) => <span className="text-sm font-semibold text-foreground">{plan.tooth || "-"}</span>,
+      render: (plan: any) => {
+        const rawTooth = plan.tooth ?? plan.tooth_number;
+        if (rawTooth === undefined || rawTooth === null || rawTooth === "" || rawTooth === "-" || rawTooth === "—") {
+          return <span className="text-sm font-semibold text-muted-foreground">-</span>;
+        }
+        const parts = String(rawTooth).split(",").map(p => p.trim());
+        let hasFm = false;
+        const formattedParts = parts.map(part => {
+          if (part === "-1" || part.toUpperCase() === "FM" || part.toUpperCase() === "FULL MOUTH") {
+            hasFm = true;
+            return "FM";
+          }
+          return part;
+        });
+        const displayStr = formattedParts.join(", ");
+        const hoverTitle = hasFm
+          ? formattedParts.map(p => (p === "FM" ? "Full Mouth" : `Tooth #${p}`)).join(", ")
+          : undefined;
+
+        return (
+          <span
+            title={hoverTitle}
+            className={hasFm ? "text-sm font-bold text-emerald-600 cursor-help" : "text-sm font-semibold text-foreground"}
+          >
+            {displayStr}
+          </span>
+        );
+      },
     },
     {
       key: "doctor",

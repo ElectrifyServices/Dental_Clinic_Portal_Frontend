@@ -64,6 +64,27 @@ export function FollowUpScheduler({
     return `${h12}:${m} ${ampm}`;
   };
 
+  const normalizeSlot = (s: string | null | undefined): string => {
+    if (!s) return "";
+    let clean = s.trim().toUpperCase();
+    if (clean.includes("AM") || clean.includes("PM")) {
+      const match = clean.match(/(\d+):(\d+)\s*(AM|PM)/);
+      if (match) {
+        let hrs = parseInt(match[1], 10);
+        const mins = match[2];
+        const period = match[3];
+        if (period === "PM" && hrs < 12) hrs += 12;
+        if (period === "AM" && hrs === 12) hrs = 0;
+        return `${String(hrs).padStart(2, "0")}:${mins}`;
+      }
+    }
+    const parts = clean.split(":");
+    if (parts.length >= 2) {
+      return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+    }
+    return clean;
+  };
+
   return (
     <div className="px-6">
       {followUpRequired && (
@@ -139,8 +160,24 @@ export function FollowUpScheduler({
                   <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-primary/20 rounded-xl bg-card/50 custom-scrollbar">
                     {availableSlots.map((slot) => {
                       const isApiDisabled = slot.disabled === true;
-                      const isSelected = selectedSlot === slot.time24;
-                      const isInitiallyBooked = initialSelectedSlot === slot.time24;
+                      const normSelected = normalizeSlot(selectedSlot);
+                      const normInitial = normalizeSlot(initialSelectedSlot);
+                      const normSlot24 = normalizeSlot(slot.time24);
+                      const normSlot12 = normalizeSlot(slot.time12);
+
+                      const isSelected = normSelected !== "" && (
+                        normSelected === normSlot24 ||
+                        normSelected === normSlot12 ||
+                        selectedSlot === slot.time24 ||
+                        selectedSlot === slot.time12
+                      );
+
+                      const isInitiallyBooked = normInitial !== "" && (
+                        normInitial === normSlot24 ||
+                        normInitial === normSlot12 ||
+                        initialSelectedSlot === slot.time24 ||
+                        initialSelectedSlot === slot.time12
+                      );
                       
                       return (
                         <Button

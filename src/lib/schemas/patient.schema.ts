@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const patientSchema = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Invalid email address').or(z.literal('')).optional(),
-  phone: z.string().min(1, 'Phone number is required'),
+  country_code: z.string().optional().default('+91'),
+  phone: z.string().min(1, 'Phone number is required').max(10, 'Phone number cannot exceed 10 digits'),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['male', 'female', 'other', '']).optional(),
   address: z.string().optional(),

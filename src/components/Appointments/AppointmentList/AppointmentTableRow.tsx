@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentTableRowProps {
   appointment: any;
@@ -45,7 +46,7 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
               {patientName}
             </div>
             <div className="text-[10px] text-muted-foreground font-medium">
-              {a.patientPhone || a.phone || "No Phone"}
+              {formatPhoneWithCountryCode(a.patientPhone || a.phone, a.country_code)}
             </div>
           </div>
         </div>

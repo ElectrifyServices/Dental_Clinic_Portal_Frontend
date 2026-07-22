@@ -87,7 +87,9 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
     diagnosis: apiConsultation.diagnosis_desc,
     treatmentPlan: apiConsultation.treatment_plan_desc,
     treatmentCost: apiConsultation.total_estimated_cost,
-    followUpRequired: apiConsultation.is_follow_up,
+    followUpRequired: Array.isArray(apiConsultation.follow_up_appointments)
+      ? (apiConsultation.follow_up_appointments.length > 0 || !!apiConsultation.follow_up_date)
+      : (apiConsultation.is_follow_up ?? false),
     consultationNotes: apiConsultation.additional_notes,
     toothFindings: apiConsultation.tooth_findings,
     treatments: apiConsultation.treatment_plans || apiConsultation.treatments,
@@ -104,10 +106,11 @@ export function toUiConsultation(apiConsultation: ApiConsultation): UiConsultati
   };
 }
 
-export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, patient_name?: string, patient_phone?: string, attachments?: File[] }): any {
+export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, patient_name?: string, country_code?: string, patient_phone?: string, attachments?: File[] }): any {
   return {
     patient_id: uiConsultation.patientId || undefined,
     patient_name: uiConsultation.patient_name,
+    country_code: uiConsultation.country_code || "+91",
     patient_phone: uiConsultation.patient_phone,
     doctor_id: uiConsultation.doctorId || undefined,
     appointment_id: uiConsultation.appointmentId || undefined,

@@ -2,15 +2,15 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React from "react";
-import { Camera, Plus, X } from "lucide-react";
+import { Camera, Plus, X, ExternalLink } from "lucide-react";
 
 interface ClinicalImagesProps {
   images: string[];
-  xrayFiles: string[];
+  xrayFiles?: string[];
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onXrayUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onXrayUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
-  onRemoveXray: (index: number) => void;
+  onRemoveXray?: (index: number) => void;
 }
 
 export function ClinicalImages({
@@ -18,6 +18,11 @@ export function ClinicalImages({
   onImageUpload,
   onRemoveImage,
 }: ClinicalImagesProps) {
+  const handleOpenImage = (imageSrc: string) => {
+    if (!imageSrc) return;
+    window.open(imageSrc, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="px-6">
       {/* Clinical Images */}
@@ -57,16 +62,28 @@ export function ClinicalImages({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {images.map((image, index) => (
-                <div key={index} className="relative group aspect-square rounded-xl overflow-hidden border border-border shadow-sm bg-card">
+                <div
+                  key={index}
+                  className="relative group aspect-square rounded-xl overflow-hidden border border-border shadow-sm bg-card cursor-pointer"
+                  onClick={() => handleOpenImage(image)}
+                  title="Click to view full image in a new tab"
+                >
                   <img
                     src={image}
                     alt={`Clinical ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <ExternalLink className="w-5 h-5 text-white shadow-sm" />
+                  </div>
                   <Button
                     type="button"
-                    onClick={() => onRemoveImage(index)}
-                    className="absolute top-1.5 right-1.5 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] hover:bg-destructive shadow-md opacity-0 group-hover:opacity-100 transition-opacity p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveImage(index);
+                    }}
+                    className="absolute top-1.5 right-1.5 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] hover:bg-destructive shadow-md opacity-0 group-hover:opacity-100 transition-opacity p-0 z-10"
+                    title="Remove image"
                   >
                     <X className="w-3 h-3" />
                   </Button>

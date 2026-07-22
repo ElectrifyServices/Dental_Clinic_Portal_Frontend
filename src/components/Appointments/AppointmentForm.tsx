@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,8 @@ import {
   type AppointmentFormData,
 } from "@/lib/schemas/appointment.schema";
 import { useAppointmentQuery } from "../../hooks/appointments/useAppointmentQuery";
+import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -69,6 +71,7 @@ export function AppointmentForm({
     resolver: zodResolver(appointmentSchema) as any,
     defaultValues: {
       patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
+      country_code: (appointment as any)?.country_code ?? "+91",
       patientPhone: appointment?.patientPhone ?? appointment?.patient_phone ?? "",
       treatment: appointment?.treatment ?? appointment?.specific_treatment ?? "",
       doctorId: initialDoctorId,
@@ -204,13 +207,56 @@ export function AppointmentForm({
     });
   };
 
+  const patientNameVal = form.watch("patientName");
+  const patientPhoneVal = form.watch("patientPhone");
+  const activeSearchTerm = (patientNameVal || patientPhoneVal || "").trim();
+  const debouncedSearch = useDebounce(activeSearchTerm, 400);
+
+  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
+    page: 1,
+    limit: 100,
+    search: debouncedSearch || undefined,
+    filters: { isDropdown: [true] as any },
+  });
+
+  const apiPatients = useMemo(() => {
+    let rawList: any[] = [];
+    const dataObj: any = rawPatientsData;
+    if (Array.isArray(dataObj)) {
+      rawList = dataObj;
+    } else if (dataObj && Array.isArray(dataObj.patients)) {
+      rawList = dataObj.patients;
+    } else if (dataObj && Array.isArray(dataObj.data?.patients)) {
+      rawList = dataObj.data.patients;
+    } else if (dataObj && Array.isArray(dataObj.data?.data)) {
+      rawList = dataObj.data.data;
+    } else if (dataObj && Array.isArray(dataObj.data)) {
+      rawList = dataObj.data;
+    } else if (dataObj?.responseObject) {
+      const resp = dataObj.responseObject;
+      if (Array.isArray(resp)) rawList = resp;
+      else if (Array.isArray(resp.patients)) rawList = resp.patients;
+      else if (Array.isArray(resp.data?.patients)) rawList = resp.data.patients;
+      else if (Array.isArray(resp.data)) rawList = resp.data;
+    } else if (Array.isArray(patients) && patients.length > 0) {
+      rawList = patients;
+    }
+
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
+  }, [rawPatientsData, patients]);
+
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value } = e.target;
     form.setValue(name as keyof AppointmentFormData, value, {
       shouldValidate: true,
     });
     if (name === "patientName" && value.trim().length > 2) {
-      const found = patients.find(
+      const found = apiPatients.find(
         (p: any) => p.name.toLowerCase() === value.toLowerCase().trim(),
       );
       setSuggestion(found ? { name: found.name, phone: found.phone } : null);
@@ -250,6 +296,8 @@ export function AppointmentForm({
           <PatientInfoFields
             patientName={formData.patientName}
             patientPhone={formData.patientPhone ?? ""}
+            countryCode={formData.country_code ?? "+91"}
+            onCountryCodeChange={(val) => form.setValue("country_code", val)}
             isFollowUp={isFollowUp}
             isConsulted={appointment?.status === "checked-in"}
             suggestion={suggestion}
@@ -262,10 +310,14 @@ export function AppointmentForm({
               setSuggestion(null);
             }}
             errors={errors}
-            patients={patients}
-            onSelectPatient={(name, phone) => {
+            patients={apiPatients}
+            isLoadingPatients={isPatientsLoading || isPatientsFetching}
+            onSelectPatient={(name, phone, countryCode) => {
               form.setValue("patientName", name, { shouldValidate: true });
               form.setValue("patientPhone", phone, { shouldValidate: true });
+              if (countryCode) {
+                form.setValue("country_code", countryCode, { shouldValidate: true });
+              }
               setSuggestion(null);
             }}
           />

@@ -13,14 +13,22 @@ import {
   Trash2,
   Zap,
   MoreVertical,
+  FileText,
+  ClipboardList,
+  Pill,
+  FileCheck,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui";
+import { Popover, PopoverTrigger, PopoverContent, toast } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
 import { GlobalSearch } from "./GlobalSearch";
 import { useNavigate } from "react-router-dom";
+import { downloadBlankPDF, BlankPDFType } from "../../utils/pdfGenerator";
+import { useState } from "react";
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -58,6 +66,19 @@ export function Header() {
   const { setActiveModal, showConfirm } = useModal();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
 
+  const [downloadingBlank, setDownloadingBlank] = useState<string | null>(null);
+
+  const handleDownloadBlank = async (type: BlankPDFType) => {
+    try {
+      setDownloadingBlank(type);
+      await downloadBlankPDF(type);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to download blank PDF. Please try again.");
+    } finally {
+      setDownloadingBlank(null);
+    }
+  };
+
   const rm = ROLE_BADGE[state.user?.role ?? ""] ?? {
     label: state.user?.role ?? "",
     cls: "bg-muted text-muted-foreground border-border",
@@ -75,7 +96,7 @@ export function Header() {
           <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block truncate max-w-[140px] sm:max-w-[200px]">{tenant.branding.clinicName}</span>
         </div>
 
-        {/* Today's Schedule shortcut (Desktop) */}
+        {/* Today's Schedule & Download Blank PDF shortcuts (Desktop) */}
         <div className="hidden lg:flex items-center gap-2">
           <Button
             variant="outline"
@@ -95,6 +116,75 @@ export function Header() {
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             Register Member
           </Button>
+
+          {/* Download Blank PDF Dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 text-foreground bg-white hover:bg-slate-50 border-slate-200"
+              >
+                {downloadingBlank ? (
+                  <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                ) : (
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                )}
+                <span>Download Blank PDF</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground ml-0.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-60 p-1.5 flex flex-col gap-1 rounded-xl shadow-modal z-50">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/40">
+                Select Blank PDF Template
+              </div>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("CLINICAL")}
+                className="w-full justify-start gap-2.5 text-xs font-semibold h-auto py-2 rounded-lg text-foreground hover:bg-muted"
+              >
+                <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                1. Clinical Observations
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("TREATMENT")}
+                className="w-full justify-start gap-2.5 text-xs font-semibold h-auto py-2 rounded-lg text-foreground hover:bg-muted"
+              >
+                <ClipboardList className="w-4 h-4 text-blue-600 shrink-0" />
+                2. Treatment Planning
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("PRESCRIPTION")}
+                className="w-full justify-start gap-2.5 text-xs font-semibold h-auto py-2 rounded-lg text-foreground hover:bg-muted"
+              >
+                <Pill className="w-4 h-4 text-purple-600 shrink-0" />
+                3. Prescription Only
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("FULL")}
+                className="w-full justify-start gap-2.5 text-xs font-semibold h-auto py-2 rounded-lg text-foreground hover:bg-muted"
+              >
+                <FileCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                4. Full Summary
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("COMPLETION")}
+                className="w-full justify-start gap-2.5 text-xs font-semibold h-auto py-2 rounded-lg text-foreground hover:bg-muted"
+              >
+                <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                5. Treatment Completion PDF
+              </Button>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Mobile Actions Menu */}
@@ -105,7 +195,7 @@ export function Header() {
                 <MoreVertical className="w-5 h-5 text-muted-foreground" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-48 p-1.5 flex flex-col gap-1 rounded-xl shadow-modal">
+            <PopoverContent align="start" className="w-56 p-1.5 flex flex-col gap-1 rounded-xl shadow-modal">
               <Button
                 variant="ghost"
                 onClick={() => setActiveModal("todaySchedule")}
@@ -125,6 +215,54 @@ export function Header() {
                   <Zap className="w-4 h-4 text-amber-500" />
                 </div>
                 Register Member
+              </Button>
+              <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-t border-border/40 mt-1">
+                Blank PDF Options
+              </div>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("CLINICAL")}
+                className="w-full justify-start gap-2 text-xs h-auto py-2 rounded-lg"
+              >
+                <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                Clinical Observations
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("TREATMENT")}
+                className="w-full justify-start gap-2 text-xs h-auto py-2 rounded-lg"
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-blue-600" />
+                Treatment Planning
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("PRESCRIPTION")}
+                className="w-full justify-start gap-2 text-xs h-auto py-2 rounded-lg"
+              >
+                <Pill className="w-3.5 h-3.5 text-purple-600" />
+                Prescription Only
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("FULL")}
+                className="w-full justify-start gap-2 text-xs h-auto py-2 rounded-lg"
+              >
+                <FileCheck className="w-3.5 h-3.5 text-amber-600" />
+                Full Summary
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!!downloadingBlank}
+                onClick={() => handleDownloadBlank("COMPLETION")}
+                className="w-full justify-start gap-2 text-xs h-auto py-2 rounded-lg"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                Treatment Completion PDF
               </Button>
             </PopoverContent>
           </Popover>

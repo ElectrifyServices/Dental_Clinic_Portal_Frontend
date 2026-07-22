@@ -23,6 +23,7 @@ import {
 import { Patient } from "@/types";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "../../../services/apiClient";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -85,7 +86,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
       header: "Contact",
       render: (patient: Patient) => (
         <>
-          <div className="text-sm font-medium text-foreground">{patient.phone}</div>
+          <div className="text-sm font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</div>
           <div className="text-[11px] text-muted-foreground">{patient.email}</div>
         </>
       ),

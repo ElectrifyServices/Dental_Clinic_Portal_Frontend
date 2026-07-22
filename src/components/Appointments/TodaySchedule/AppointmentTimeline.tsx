@@ -1,6 +1,7 @@
 import React from "react";
 import { Clock, Calendar, Stethoscope } from "lucide-react";
 import { DataTable, Badge } from "@/components/ui";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentTimelineProps {
   appointments: any[];
@@ -46,7 +47,7 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
         <div className="flex flex-col">
           <span className="font-semibold text-foreground text-xs">{apt.patientName}</span>
           {apt.patientPhone && (
-            <span className="text-[10px] text-muted-foreground font-mono">{apt.patientPhone}</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{formatPhoneWithCountryCode(apt.patientPhone, apt.country_code)}</span>
           )}
         </div>
       ),

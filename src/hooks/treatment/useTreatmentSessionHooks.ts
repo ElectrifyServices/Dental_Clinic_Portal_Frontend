@@ -231,6 +231,12 @@ export interface CompleteSessionVariables {
   next_session_plan?: string;
   prescriptions?: any[];
   attachments?: File[];
+  schedule_next_session?: boolean;
+  next_visit_date?: string;
+  next_start_time?: string;
+  next_duration_min?: number;
+  next_clinical_objectives?: string;
+  next_session_fee?: number;
 }
 
 export function useCompleteTreatmentSessionMutation() {

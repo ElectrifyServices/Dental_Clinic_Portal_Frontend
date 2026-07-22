@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
+import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentListProps {
   appointments?: any[];
@@ -159,7 +160,7 @@ export function AppointmentList({
                 {patientName}
               </div>
               <div className="text-[10px] text-muted-foreground font-medium">
-                {a.patientPhone || a.phone || "No Phone"}
+                {formatPhoneWithCountryCode(a.patientPhone || a.phone, a.country_code)}
               </div>
             </div>
           </div>

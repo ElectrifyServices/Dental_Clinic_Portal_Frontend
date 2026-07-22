@@ -106,9 +106,38 @@ export function TreatmentTableRow({
 
       {/* Tooth */}
       <td className="py-4 px-6">
-        <span className="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-bold border border-border">
-          {treatment.tooth && treatment.tooth !== "—" ? treatment.tooth : "—"}
-        </span>
+        {(() => {
+          const rawTooth = treatment.tooth ?? (treatment as any).tooth_number;
+          if (rawTooth === undefined || rawTooth === null || rawTooth === "" || rawTooth === "—" || rawTooth === "-") {
+            return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-bold border border-border">—</span>;
+          }
+          const parts = String(rawTooth).split(",").map(p => p.trim());
+          let hasFm = false;
+          const formattedParts = parts.map(part => {
+            if (part === "-1" || part.toUpperCase() === "FM" || part.toUpperCase() === "FULL MOUTH") {
+              hasFm = true;
+              return "FM";
+            }
+            return part;
+          });
+          const displayStr = formattedParts.join(", ");
+          const hoverTitle = hasFm
+            ? formattedParts.map(p => (p === "FM" ? "Full Mouth" : `Tooth #${p}`)).join(", ")
+            : undefined;
+
+          return (
+            <span
+              title={hoverTitle}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                hasFm
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-help"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {displayStr}
+            </span>
+          );
+        })()}
       </td>
 
       {/* Doctor */}
