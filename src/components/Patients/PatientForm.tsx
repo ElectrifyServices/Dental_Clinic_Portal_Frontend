@@ -103,9 +103,26 @@ export function PatientForm({
 
 
 
+  const requiredErrors: string[] = [];
+  if (!formData.name?.trim()) {
+    requiredErrors.push("Patient Name");
+  } else if (formData.name.trim().length < 2) {
+    requiredErrors.push("Patient Name (minimum 2 characters)");
+  }
+  if (!formData.phone?.trim()) {
+    requiredErrors.push("Phone Number");
+  } else if (formData.phone.trim().length > 10) {
+    requiredErrors.push("Phone Number (maximum 10 digits)");
+  }
+  if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+    requiredErrors.push("Valid Email Address");
+  }
+
+  const isFormInvalid = requiredErrors.length > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 4 || loading) return;
+    if (step !== 4 || loading || isFormInvalid) return;
     setLoading(true);
 
     try {
@@ -177,10 +194,10 @@ export function PatientForm({
             ) : (
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isFormInvalid}
                 variant="default"
                 onClick={handleSubmit}
-                className="px-10 shadow-lg"
+                className="px-10 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -280,12 +297,17 @@ export function PatientForm({
           )}
         </form>
 
-        {Object.keys(validationErrors).length > 0 && (
-          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-destructive font-medium">
-              Please fill all required fields before proceeding.
-            </p>
+        {isFormInvalid && (
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
+            <div className="flex items-center gap-3 text-amber-800 font-bold text-sm">
+              <AlertTriangle className="w-5 h-5 text-amber-600 animate-pulse" />
+              <span>Missing Required Fields:</span>
+            </div>
+            <ul className="list-disc pl-8 text-xs text-amber-700 font-semibold space-y-1">
+              {requiredErrors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
           </div>
         )}
 

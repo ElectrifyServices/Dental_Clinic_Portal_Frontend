@@ -41,6 +41,9 @@ import { useRemoveDependentMutation } from "../../../hooks/corporate/useRemoveDe
 import { useUpdateDependentMutation } from "../../../hooks/corporate/useUpdateDependentMutation";
 import { useDeleteEmployeeMutation } from "../../../hooks/corporate/useDeleteEmployeeMutation";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
+import { useDebounce } from "@/hooks/useDebounce";
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import confetti from "canvas-confetti";
 
 interface EmployeeFormModalProps {
@@ -76,6 +79,7 @@ interface PendingDependent {
   dateOfBirth: string;
   gender: "male" | "female" | "other";
   phone: string;
+  countryCode?: string;
 }
 
 const EMPTY_PENDING = (): PendingDependent => ({
@@ -85,6 +89,7 @@ const EMPTY_PENDING = (): PendingDependent => ({
   dateOfBirth: "",
   gender: "male",
   phone: "",
+  countryCode: "+91",
 });
 
 export function EmployeeFormModal({
@@ -110,6 +115,170 @@ export function EmployeeFormModal({
   >({});
   // Family members from API response — populated when editing
   const [apiDependents, setApiDependents] = useState<any[]>([]);
+
+  const [formCountryCode, setFormCountryCode] = useState("+91");
+  const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const activeSearchTerm = ((form.name || "") + (form.phone || "")).trim();
+  const debouncedSearch = useDebounce(activeSearchTerm, 400);
+
+  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
+    page: 1,
+    limit: 100,
+    search: debouncedSearch || undefined,
+    filters: { isDropdown: [true] as any },
+  }, {
+    enabled: !!debouncedSearch.trim()
+  });
+
+  const extractPatients = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    const target = data.responseObject !== undefined ? data.responseObject : data;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.patients)) return target.patients;
+      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    }
+    return [];
+  };
+
+  const apiPatients = React.useMemo(() => {
+    const rawList = extractPatients(rawPatientsData);
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
+  }, [rawPatientsData]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFocusedField(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectPatient = (p: any) => {
+    const pName = p.name || p.full_name || p.patient_name || "";
+    const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
+
+    let selectedCountryCode = p.country_code || p.countryCode || "";
+    let cleanPhone = rawPhone.replace(/\D/g, "");
+
+    if (!selectedCountryCode) {
+      if (rawPhone.startsWith("+1")) selectedCountryCode = "+1";
+      else if (rawPhone.startsWith("+91")) selectedCountryCode = "+91";
+      else if (rawPhone.startsWith("+44")) selectedCountryCode = "+44";
+      else if (rawPhone.startsWith("+971")) selectedCountryCode = "+971";
+      else selectedCountryCode = "+91";
+    }
+
+    const codeDigits = selectedCountryCode.replace(/\D/g, "");
+    if (codeDigits && cleanPhone.length > 10 && cleanPhone.startsWith(codeDigits)) {
+      cleanPhone = cleanPhone.slice(codeDigits.length);
+    }
+    cleanPhone = cleanPhone.slice(-10);
+
+    setForm(prev => ({
+      ...prev,
+      name: pName,
+      phone: cleanPhone,
+      patientId: p.id,
+    }));
+    setFormCountryCode(selectedCountryCode);
+
+    if (formErrors.name || formErrors.phone) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        delete next.name;
+        delete next.phone;
+        return next;
+      });
+    }
+
+    setFocusedField(null);
+  };
+
+  const renderPatientDropdown = () => {
+    if (!focusedField) return null;
+
+    const searchTerm = focusedField === "name"
+      ? (form.name || "").toLowerCase().trim()
+      : (form.phone || "").toLowerCase().trim();
+
+    const filteredPatients = apiPatients.filter((p: any) => {
+      const pName = (p.name || p.full_name || p.patient_name || "").toLowerCase();
+      const pPhone = (p.phone || p.mobile || p.patient_phone || "").replace(/\D/g, "");
+      if (focusedField === "name") {
+        return !searchTerm || pName.includes(searchTerm);
+      }
+      if (focusedField === "phone") {
+        return !searchTerm || pPhone.includes(searchTerm);
+      }
+      return true;
+    }).slice(0, 10);
+
+    return (
+      <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
+        <div className="p-2 bg-muted/45 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-primary">
+            Select existing patient or keep typing to add new
+          </span>
+          {isPatientsFetching && (
+            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              Searching...
+            </span>
+          )}
+        </div>
+
+        {isPatientsLoading && apiPatients.length === 0 ? (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            Loading...
+          </div>
+        ) : filteredPatients.length > 0 ? (
+          <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
+            {filteredPatients.map((p: any, idx: number) => {
+              const pCode = p.country_code || p.countryCode || "+91";
+              return (
+                <li
+                  key={p.id || p.patient_id || idx}
+                  className="px-3 py-2 flex justify-between items-center hover:bg-muted/70 rounded-lg cursor-pointer transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelectPatient(p);
+                  }}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-sm font-bold text-foreground truncate">{p.name || p.full_name}</span>
+                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                      <span className="text-primary font-bold">{pCode}</span>
+                      <span>{p.phone}</span>
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md uppercase shrink-0">
+                    Select
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            No matching patients found. A new patient will be created.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const todayStr = React.useMemo(() => {
     const d = new Date();
@@ -160,15 +329,30 @@ export function EmployeeFormModal({
     const apiIds = new Set(apiDependents.map((d: any) => d.id));
     const localOnly = localDeps.filter((d) => !apiIds.has(d.id));
     return [
-      ...apiDependents.map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        relationship: d.relationship_type || d.relationship || "",
-        dateOfBirth: d.date_of_birth ? d.date_of_birth.split("T")[0] : "",
-        gender: d.gender || "male",
-        phone: d.phone || "",
-        status: d.status,
-      })),
+      ...apiDependents.map((d: any) => {
+        let depPhone = d.phone || "";
+        let depCountryCode = "+91";
+        if (depPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (depPhone.startsWith(c)) {
+              depCountryCode = c;
+              depPhone = depPhone.slice(c.length);
+              break;
+            }
+          }
+        }
+        return {
+          id: d.id,
+          name: d.name,
+          relationship: d.relationship_type || d.relationship || "",
+          dateOfBirth: d.date_of_birth ? d.date_of_birth.split("T")[0] : "",
+          gender: d.gender || "male",
+          phone: depPhone.slice(-10),
+          countryCode: depCountryCode,
+          status: d.status,
+        };
+      }),
       ...localOnly,
     ];
   }, [apiDependents, existingDependents]);
@@ -213,11 +397,25 @@ export function EmployeeFormModal({
           const plan = activePlans.find((p) => p.id === planId);
           const expiryDate = activeEnrollment?.expiry_date || "";
 
+          let rawPhone = empData.phone || editEmp.phone || "";
+          let parsedCountryCode = empData.country_code || (editEmp as any)?.country_code || "+91";
+          if (!empData.country_code && !(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
+            const codes = ["+91", "+1", "+44", "+971"];
+            for (const c of codes) {
+              if (rawPhone.startsWith(c)) {
+                parsedCountryCode = c;
+                rawPhone = rawPhone.slice(c.length);
+                break;
+              }
+            }
+          }
+          setFormCountryCode(parsedCountryCode);
+
           setForm({
             id: empData.id || editEmp.id,
             employeeId: empData.emp_id || empData.id || editEmp.employeeId || "",
             name: empData.name || editEmp.name || "",
-            phone: empData.phone || editEmp.phone || "",
+            phone: rawPhone.slice(-10),
             email: empData.email || editEmp.email || "",
             gender: (empData.gender?.toLowerCase()) || editEmp.gender || "male",
             dateOfBirth: empData.date_of_birth
@@ -258,7 +456,20 @@ export function EmployeeFormModal({
           }
         } else {
           // Fallback: use the editEmp object directly while API loads
-          setForm({ ...editEmp });
+          let rawPhone = editEmp.phone || "";
+          let parsedCountryCode = (editEmp as any)?.country_code || "+91";
+          if (!(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
+            const codes = ["+91", "+1", "+44", "+971"];
+            for (const c of codes) {
+              if (rawPhone.startsWith(c)) {
+                parsedCountryCode = c;
+                rawPhone = rawPhone.slice(c.length);
+                break;
+              }
+            }
+          }
+          setFormCountryCode(parsedCountryCode);
+          setForm({ ...editEmp, phone: rawPhone.slice(-10) });
           // Seed from editEmp.dependents if available
           if (Array.isArray(editEmp.dependents) && editEmp.dependents.length > 0) {
             setApiDependents(editEmp.dependents);
@@ -266,6 +477,7 @@ export function EmployeeFormModal({
         }
       } else {
         setForm(EMPTY_EMP());
+        setFormCountryCode("+91");
         setPendingDependents([]);
         setApiDependents([]);
       }
@@ -416,6 +628,7 @@ export function EmployeeFormModal({
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
+          country_code: formCountryCode,
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
 
@@ -427,6 +640,7 @@ export function EmployeeFormModal({
             name: dep.name,
             relationship_type: dep.relationship.toUpperCase(),
             phone: dep.phone || undefined,
+            country_code: dep.phone ? (dep.countryCode || "+91") : undefined,
           }));
         }
 
@@ -439,6 +653,7 @@ export function EmployeeFormModal({
           employeeId: form.employeeId || apiResponse?.emp_id || "",
           name: form.name!,
           phone: form.phone!,
+          country_code: formCountryCode,
           email: form.email || "",
           gender: form.gender || "male",
           dateOfBirth: form.dateOfBirth || "",
@@ -450,9 +665,9 @@ export function EmployeeFormModal({
           enrolledAt: new Date().toISOString(),
           eligible_date: form.eligible_date || apiResponse?.eligible_date || "",
           isActive: form.isActive !== false,
-          patientId: undefined,
+          patientId: form.patientId || undefined,
           coverageType: form.coverageType || "self",
-        };
+        } as any;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -490,6 +705,7 @@ export function EmployeeFormModal({
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
+          country_code: formCountryCode,
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
 
@@ -501,6 +717,7 @@ export function EmployeeFormModal({
             name: dep.name,
             relationship_type: dep.relationship.toUpperCase(),
             phone: dep.phone || undefined,
+            country_code: dep.phone ? (dep.countryCode || "+91") : undefined,
           }));
         }
 
@@ -511,6 +728,7 @@ export function EmployeeFormModal({
           employeeId: form.employeeId || "",
           name: form.name!,
           phone: form.phone!,
+          country_code: formCountryCode,
           email: form.email || "",
           gender: form.gender || "male",
           dateOfBirth: form.dateOfBirth || "",
@@ -522,9 +740,9 @@ export function EmployeeFormModal({
           enrolledAt: editEmp?.enrolledAt || new Date().toISOString(),
           eligible_date: form.eligible_date || editEmp?.eligible_date || "",
           isActive: form.isActive !== false,
-          patientId: editEmp?.patientId || undefined,
+          patientId: form.patientId || editEmp?.patientId || undefined,
           coverageType: form.coverageType || "self",
-        };
+        } as any;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -615,17 +833,75 @@ export function EmployeeFormModal({
           </div>
         )}
         {/* Personal Details Card */}
-        {personalSection && (
-          <ContentCard title={personalSection.title} className="bg-card/50">
-            <SectionRenderer
-              section={personalSection}
-              values={form}
-              onChange={handleFormChange}
-              errors={formErrors}
-              cols={2}
-            />
-          </ContentCard>
-        )}
+        <ContentCard title="Personal Details" className="bg-card/50 overflow-visible" bodyClassName="overflow-visible">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative pb-2" ref={dropdownRef}>
+            {/* Full Name Input with Search Dropdown */}
+            <div className="space-y-1.5 relative text-left">
+              <Label className="text-xs font-bold text-primary">
+                Full Name <span className="text-destructive font-black">*</span>
+              </Label>
+              <Input
+                type="text"
+                name="name"
+                placeholder="Member's full name"
+                value={form.name || ""}
+                onFocus={() => setFocusedField("name")}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                  handleFormChange("name", val);
+                  setForm(prev => ({ ...prev, patientId: undefined })); // Clear patientId if name is modified
+                  setFocusedField("name");
+                  if (formErrors.name) {
+                    setFormErrors(prev => { const n = { ...prev }; delete n.name; return n; });
+                  }
+                }}
+                autoComplete="off"
+                className="rounded-xl text-sm"
+              />
+              {focusedField === "name" && renderPatientDropdown()}
+              {formErrors.name && (
+                <p className="text-xs text-red-500 mt-1 font-medium">{formErrors.name}</p>
+              )}
+            </div>
+
+            {/* Phone Number Input with Country Code Selector */}
+            <div className="space-y-1.5 relative text-left">
+              <Label className="text-xs font-bold text-primary">
+                Phone Number <span className="text-destructive font-black">*</span>
+              </Label>
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <CountryCodeSelect
+                  value={formCountryCode}
+                  onChange={(val) => setFormCountryCode(val)}
+                  className="rounded-xl text-sm h-10"
+                />
+                <Input
+                  type="text"
+                  name="phone"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  value={form.phone || ""}
+                  onFocus={() => setFocusedField("phone")}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    handleFormChange("phone", val);
+                    setForm(prev => ({ ...prev, patientId: undefined })); // Clear patientId if phone is modified
+                    setFocusedField("phone");
+                    if (formErrors.phone) {
+                      setFormErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
+                    }
+                  }}
+                  autoComplete="off"
+                  className="rounded-xl text-sm flex-1 h-10"
+                />
+              </div>
+              {focusedField === "phone" && renderPatientDropdown()}
+              {formErrors.phone && (
+                <p className="text-xs text-red-500 mt-1 font-medium">{formErrors.phone}</p>
+              )}
+            </div>
+          </div>
+        </ContentCard>
 
         {/* Membership & Coverage Details Side-by-Side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -661,8 +937,8 @@ export function EmployeeFormModal({
                           handleFormChange("corporatePlanId", opt.value)
                         }
                         className={`relative flex flex-col h-full p-3 rounded-xl border-2 text-left cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
-                            ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
-                            : "border-border bg-white hover:border-muted-foreground/30"
+                          ? "border-primary bg-primary/5 shadow-sm shadow-primary/5"
+                          : "border-border bg-white hover:border-muted-foreground/30"
                           }`}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -887,22 +1163,37 @@ export function EmployeeFormModal({
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-2 relative text-left">
                           <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                             Phone
                           </Label>
-                          <Input
-                            value={dep.phone}
-                            onChange={(e) => {
-                              setPendingDependents((prev) =>
-                                prev.map((d, i) =>
-                                  i === index ? { ...d, phone: e.target.value.replace(/[a-zA-Z]/g, "") } : d,
-                                ),
-                              );
-                            }}
-                            placeholder="Optional"
-                            className="rounded-xl text-sm"
-                          />
+                          <div className="flex items-center gap-2 sm:gap-2.5">
+                            <CountryCodeSelect
+                              value={dep.countryCode || "+91"}
+                              onChange={(val) => {
+                                setPendingDependents((prev) =>
+                                  prev.map((d, i) =>
+                                    i === index ? { ...d, countryCode: val } : d,
+                                  ),
+                                );
+                              }}
+                              className="rounded-xl text-sm h-10"
+                            />
+                            <Input
+                              value={dep.phone}
+                              maxLength={10}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                setPendingDependents((prev) =>
+                                  prev.map((d, i) =>
+                                    i === index ? { ...d, phone: val } : d,
+                                  ),
+                                );
+                              }}
+                              placeholder="Optional"
+                              className="rounded-xl text-sm flex-1 h-10"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -953,18 +1244,27 @@ export function EmployeeFormModal({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
+                    <div className="relative text-left">
                       <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                         Phone
                       </Label>
-                      <Input
-                        value={addDepForm.phone}
-                        onChange={(e) => {
-                          setAddDepForm((p) => ({ ...p, phone: e.target.value.replace(/[a-zA-Z]/g, "") }));
-                        }}
-                        placeholder="Optional"
-                        className="rounded-xl text-sm"
-                      />
+                      <div className="flex items-center gap-2 sm:gap-2.5">
+                        <CountryCodeSelect
+                          value={addDepForm.countryCode || "+91"}
+                          onChange={(val) => setAddDepForm(prev => ({ ...prev, countryCode: val }))}
+                          className="rounded-xl text-sm h-10"
+                        />
+                        <Input
+                          value={addDepForm.phone}
+                          maxLength={10}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setAddDepForm((p) => ({ ...p, phone: val }));
+                          }}
+                          placeholder="Optional"
+                          className="rounded-xl text-sm flex-1 h-10"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1">

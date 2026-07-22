@@ -225,8 +225,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
   const validate = () => {
     const e: Record<string, string> = {};
+    if (!form.planCategory) e.planCategory = 'Required';
     if (!form.name.trim()) e.name = 'Required';
-    if (form.planCategory !== 'individual' && !form.companyName.trim()) e.companyName = 'Required';
+    if (form.planCategory === 'corporate' && !form.companyName.trim()) e.companyName = 'Required';
     if (!form.code.trim()) e.code = 'Required';
     if (!form.validFrom) e.validFrom = 'Required';
     if (!form.validTo || form.validTo < form.validFrom) e.validTo = 'Must be after start date';
@@ -375,7 +376,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
           {/* Plan Name + Code */}
           <div className="grid grid-cols-2 gap-4">
-            <LabeledField label="Plan Name *" error={errors.name}>
+            <LabeledField label={<span>Plan Name <span className="text-destructive font-bold">*</span></span>} error={errors.name}>
               <Input
                 value={form.name}
                 onChange={e => handleFormChange('name', e.target.value)}
@@ -383,7 +384,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 className="rounded-xl"
               />
             </LabeledField>
-            <LabeledField label="Plan Code *" error={errors.code}>
+            <LabeledField label={<span>Plan Code <span className="text-destructive font-bold">*</span></span>} error={errors.code}>
               <Input
                 value={form.code}
                 onChange={e => handleFormChange('code', e.target.value)}
@@ -394,7 +395,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           </div>
 
           {/* Plan Category */}
-          <LabeledField label="Plan Type">
+          <LabeledField label={<span>Plan Type <span className="text-destructive font-bold">*</span></span>} error={errors.planCategory}>
             <div className="flex gap-3 pt-1">
               {(['corporate', 'individual'] as const).map(cat => (
                 <button
@@ -422,37 +423,39 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           </LabeledField>
 
           {/* Plan Tier */}
-          <LabeledField label={<span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Tier {form.planCategory === 'individual' ? '(sets family member limit)' : '(optional)'}</span>}>
-            <div className="flex gap-2 flex-wrap pt-1">
-              {(form.planCategory === 'individual' ? INDIVIDUAL_TIERS : CORPORATE_TIERS).map(tier => (
-                <button
-                  key={tier.value}
-                  type="button"
-                  onClick={() => {
-                    const updates: any = { planTier: tier.value };
-                    if (form.planCategory === 'individual') {
-                      updates.maxDependents = (tier as any).pax;
-                      setCoveragePreset(getCoveragePreset((tier as any).pax));
-                    }
-                    setForm(prev => ({ ...prev, ...updates }));
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
-                    }`}
-                >
-                  {tier.label}
-                  {form.planCategory === 'individual' && (
-                    <span className="text-[10px] opacity-60">
-                      {(tier as any).pax === 0 ? 'Self only' : `+${(tier as any).pax} pax`}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </LabeledField>
+          {form.planCategory && (
+            <LabeledField label={<span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Tier {form.planCategory === 'individual' ? '(sets family member limit)' : '(optional)'}</span>}>
+              <div className="flex gap-2 flex-wrap pt-1">
+                {(form.planCategory === 'individual' ? INDIVIDUAL_TIERS : CORPORATE_TIERS).map(tier => (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => {
+                      const updates: any = { planTier: tier.value };
+                      if (form.planCategory === 'individual') {
+                        updates.maxDependents = (tier as any).pax;
+                        setCoveragePreset(getCoveragePreset((tier as any).pax));
+                      }
+                      setForm(prev => ({ ...prev, ...updates }));
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${form.planTier === tier.value ? tier.activeClass : 'border-border text-muted-foreground hover:border-primary/40'
+                      }`}
+                  >
+                    {tier.label}
+                    {form.planCategory === 'individual' && (
+                      <span className="text-[10px] opacity-60">
+                        {(tier as any).pax === 0 ? 'Self only' : `+${(tier as any).pax} pax`}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </LabeledField>
+          )}
 
           {/* Company Name (corporate only) */}
           {form.planCategory === 'corporate' && (
-            <LabeledField label="Company Name" error={errors.companyName}>
+            <LabeledField label={<span>Company Name <span className="text-destructive font-bold">*</span></span>} error={errors.companyName}>
               <Input
                 value={form.companyName}
                 onChange={e => handleFormChange('companyName', e.target.value)}
@@ -464,7 +467,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
 
           {/* Dates + Max Members */}
           <div className="grid grid-cols-3 gap-4">
-            <LabeledField label="Start Date *" error={errors.validFrom}>
+            <LabeledField label={<span>Start Date <span className="text-destructive font-bold">*</span></span>} error={errors.validFrom}>
               <Input 
                 type="date" 
                 min={!editing ? localToday : undefined}
@@ -473,7 +476,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
               />
             </LabeledField>
-            <LabeledField label="End Date *" error={errors.validTo}>
+            <LabeledField label={<span>End Date <span className="text-destructive font-bold">*</span></span>} error={errors.validTo}>
               <Input 
                 type="date" 
                 min={!editing ? localToday : undefined}
@@ -671,7 +674,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                         <Input
                           type="number" min="0"
                           max={b.type.includes('discount') ? 100 : 999}
-                          value={b.value}
+                          value={b.value || ''}
                           onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                           className="rounded-xl font-bold"
                         />
@@ -681,7 +684,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     {b.type === 'custom' && (
                       <LabeledField label="Discount %">
                         <Input
-                          type="number" min="0" max={100} value={b.value}
+                          type="number" min="0" max={100} value={b.value || ''}
                           onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
                           className="rounded-xl font-bold"
                         />
@@ -691,7 +694,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     {b.type === 'capped_discount' && (
                       <LabeledField label="Maximum Amount (₹)">
                         <Input
-                          type="number" min="0" value={b.cap ?? ''}
+                          type="number" min="0" value={b.cap || ''}
                           onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
                           className="rounded-xl"
                         />
