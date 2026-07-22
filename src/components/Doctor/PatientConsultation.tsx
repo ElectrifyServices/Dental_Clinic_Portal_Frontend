@@ -24,6 +24,7 @@ import { usePatientConsultationsQuery } from "../../hooks/consultation/usePatien
 import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import toast from "react-hot-toast";
 
 interface PatientConsultationProps {
@@ -120,6 +121,169 @@ export function PatientConsultation({
   const [directDoctorId, setDirectDoctorId] = useState(
     (patient as any).isDirect ? (patient.doctorId || "") : "",
   );
+  const [directPatientId, setDirectPatientId] = useState<string | undefined>(
+    (patient as any).isDirect ? ((patient as any).patientId || undefined) : undefined
+  );
+  const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const activeSearchTerm = (directPatientName || directPatientPhone || "").trim();
+  const debouncedSearch = useDebounce(activeSearchTerm, 400);
+
+  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
+    page: 1,
+    limit: 100,
+    search: debouncedSearch || undefined,
+    filters: { isDropdown: [true] as any },
+  }, {
+    enabled: !!debouncedSearch.trim()
+  });
+
+  const extractPatients = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    const target = data.responseObject !== undefined ? data.responseObject : data;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.patients)) return target.patients;
+      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    }
+    return [];
+  };
+
+  const apiPatients = React.useMemo(() => {
+    const rawList = extractPatients(rawPatientsData);
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
+  }, [rawPatientsData]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFocusedField(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectPatient = (p: any) => {
+    const pName = p.name || p.full_name || p.patient_name || "";
+    const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
+    
+    let selectedCountryCode = p.country_code || p.countryCode || "";
+    let cleanPhone = rawPhone.replace(/\D/g, "");
+
+    if (!selectedCountryCode) {
+      if (rawPhone.startsWith("+1")) selectedCountryCode = "+1";
+      else if (rawPhone.startsWith("+91")) selectedCountryCode = "+91";
+      else if (rawPhone.startsWith("+44")) selectedCountryCode = "+44";
+      else if (rawPhone.startsWith("+971")) selectedCountryCode = "+971";
+      else selectedCountryCode = "+91";
+    }
+
+    const codeDigits = selectedCountryCode.replace(/\D/g, "");
+    if (codeDigits && cleanPhone.length > 10 && cleanPhone.startsWith(codeDigits)) {
+      cleanPhone = cleanPhone.slice(codeDigits.length);
+    }
+    cleanPhone = cleanPhone.slice(-10);
+
+    setDirectPatientName(pName);
+    setDirectPatientPhone(cleanPhone);
+    setDirectCountryCode(selectedCountryCode);
+    setDirectPatientId(p.id);
+
+    if (errors.directPatientName || errors.directPatientPhone) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.directPatientName;
+        delete next.directPatientPhone;
+        return next;
+      });
+    }
+
+    setFocusedField(null);
+  };
+
+  const renderPatientDropdown = () => {
+    if (!focusedField) return null;
+
+    const searchTerm = focusedField === "name" 
+      ? (directPatientName || "").toLowerCase().trim() 
+      : (directPatientPhone || "").toLowerCase().trim();
+
+    const filteredPatients = apiPatients.filter((p: any) => {
+      const pName = (p.name || p.full_name || p.patient_name || "").toLowerCase();
+      const pPhone = (p.phone || p.mobile || p.patient_phone || "").replace(/\D/g, "");
+      if (focusedField === "name") {
+        return !searchTerm || pName.includes(searchTerm);
+      }
+      if (focusedField === "phone") {
+        return !searchTerm || pPhone.includes(searchTerm);
+      }
+      return true;
+    }).slice(0, 10);
+
+    return (
+      <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
+        <div className="p-2 bg-muted/45 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-primary">
+             Select existing patient or keep typing to add new
+          </span>
+          {isPatientsFetching && (
+            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              Searching...
+            </span>
+          )}
+        </div>
+        
+        {isPatientsLoading && apiPatients.length === 0 ? (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            Loading...
+          </div>
+        ) : filteredPatients.length > 0 ? (
+          <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
+            {filteredPatients.map((p: any, idx: number) => {
+              const pCode = p.country_code || p.countryCode || "+91";
+              return (
+                <li
+                  key={p.id || p.patient_id || idx}
+                  className="px-3 py-2 flex justify-between items-center hover:bg-muted/70 rounded-lg cursor-pointer transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelectPatient(p);
+                  }}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-sm font-bold text-foreground truncate">{p.name || p.full_name}</span>
+                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                      <span className="text-primary font-bold">{pCode}</span>
+                      <span>{p.phone}</span>
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md uppercase shrink-0">
+                    Select
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            No matching patients found. A new patient will be created.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const [historySearch, setHistorySearch] = useState("");
   const [historyDateFrom, setHistoryDateFrom] = useState("");
   const [historyDateTo, setHistoryDateTo] = useState("");
@@ -582,7 +746,7 @@ export function PatientConsultation({
 
       const res = await onCompleteConsultation({
         id: patient.id,
-        patientId: patient.patientId || patient.id,
+        patientId: directPatientId || patient.patientId || patient.id,
         patientName: patient.patientName || (patient as any).name || "",
         patientPhone: patient.phone || (patient as any).patientPhone || "",
         appointmentId: patient.appointmentId,
@@ -708,27 +872,33 @@ export function PatientConsultation({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {(patient as any).isDirect ? (
-              <div className="mx-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
-                <div className="space-y-1 text-left">
+              <div className="mx-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10" ref={dropdownRef}>
+                <div className="space-y-1 text-left relative">
                   <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
                   <Input
                     type="text"
                     name="directPatientName"
                     placeholder="Enter Patient Name"
                     value={directPatientName}
+                    onFocus={() => setFocusedField("name")}
                     onChange={(e) => {
-                      setDirectPatientName(e.target.value);
+                      const val = e.target.value.replace(/[0-9]/g, "");
+                      setDirectPatientName(val);
+                      setDirectPatientId(undefined);
+                      setFocusedField("name");
                       if (errors.directPatientName) {
                         setErrors((prev) => { const n = { ...prev }; delete n.directPatientName; return n; });
                       }
                     }}
+                    autoComplete="off"
                     className="bg-background text-sm font-bold border-border/80"
                   />
+                  {focusedField === "name" && renderPatientDropdown()}
                   {errors.directPatientName && (
                     <p className="text-xs font-medium text-red-500 mt-1">{errors.directPatientName}</p>
                   )}
                 </div>
-                <div className="space-y-1 text-left">
+                <div className="space-y-1 text-left relative">
                   <Label className="text-xs font-bold text-primary">Phone Number <span className="text-red-500">*</span></Label>
                   <div className="flex items-center gap-2 sm:gap-2.5">
                     <CountryCodeSelect
@@ -742,20 +912,26 @@ export function PatientConsultation({
                       maxLength={10}
                       placeholder="Enter Phone Number"
                       value={directPatientPhone}
+                      onFocus={() => setFocusedField("phone")}
                       onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setDirectPatientPhone(val);
+                        setDirectPatientId(undefined);
+                        setFocusedField("phone");
                         if (errors.directPatientPhone) {
                           setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });
                         }
                       }}
+                      autoComplete="off"
                       className="bg-background text-sm font-bold border-border/80 flex-1 h-10"
                     />
                   </div>
+                  {focusedField === "phone" && renderPatientDropdown()}
                   {errors.directPatientPhone && (
                     <p className="text-xs font-medium text-red-500 mt-1">{errors.directPatientPhone}</p>
                   )}
                 </div>
+                {/* We have discussed this, it will be useful to us in the future */}
                 {/* <div className="space-y-1 text-left">
                   <Label className="text-xs font-bold text-primary">Doctor <span className="text-red-500">*</span></Label>
                   <SearchableSelect

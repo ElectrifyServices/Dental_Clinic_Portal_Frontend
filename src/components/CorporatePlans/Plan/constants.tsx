@@ -47,7 +47,7 @@ export const mkForm = () => {
     validTo: localNextYear,
     maxMembers: undefined as number | undefined,
     isActive: true, color: 'blue',
-    planCategory: 'corporate' as PlanCategory,
+    planCategory: '' as any,
     annualFee: undefined as number | undefined,
     maxDependents: 0,
     planTier: undefined as CorporatePlanTier | undefined,

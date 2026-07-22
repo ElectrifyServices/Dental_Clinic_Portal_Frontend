@@ -639,7 +639,7 @@ function ModalRegistryContent() {
               let resolvedPatientId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
 
               if (d.isDirect) {
-                resolvedPatientId = undefined;
+                resolvedPatientId = d.patientId || undefined;
               }
 
               // Map tooth chart state to tooth_findings array

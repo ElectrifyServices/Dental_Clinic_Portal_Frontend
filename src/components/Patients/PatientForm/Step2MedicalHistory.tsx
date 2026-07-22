@@ -224,52 +224,21 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         />
       </div>
 
-      {(matchedCorporateEmp || formData.category === 'corporate' || formData.category === 'membership') && (
-        <>
-          {matchedCorporateEmp ? (
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-primary" />
-                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Corporate Plan (Auto-assigned)</p>
-                </div>
-                <p className="text-xs text-primary/70 mb-2 font-medium">
-                  Plan is automatically assigned from the employee record.
-                </p>
-                <div className="bg-card rounded-lg px-3 py-2 border border-primary/10 text-sm text-primary font-bold">
-                  {formData.corporatePlanName || 'Plan assigned — see details above'}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-secondary bg-secondary/30">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-primary">Corporate Plan</p>
-                    <p className="text-xs text-primary/70">Manually assign a corporate plan to this patient.</p>
-                  </div>
-                </div>
-                <CorporatePlanSelector
-                  plans={corporatePlans}
-                  selectedPlanId={formData.corporatePlanId}
-                  memberId={formData.corporateMemberId}
-                  onChange={(planId, planName, memberId) =>
-                    setFormData((prev: any) => ({
-                      ...prev,
-                      corporatePlanId: planId,
-                      corporatePlanName: planName,
-                      corporateMemberId: memberId,
-                    }))
-                  }
-                />
-              </CardContent>
-            </Card>
-          )}
-        </>
+      {matchedCorporateEmp && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <p className="text-xs font-bold text-primary uppercase tracking-wide">Corporate Plan (Auto-assigned)</p>
+            </div>
+            <p className="text-xs text-primary/70 mb-2 font-medium">
+              Plan is automatically assigned from the employee record.
+            </p>
+            <div className="bg-card rounded-lg px-3 py-2 border border-primary/10 text-sm text-primary font-bold">
+              {formData.corporatePlanName || 'Plan assigned — see details above'}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">

@@ -121,8 +121,8 @@ export const PatientCard: React.FC<PatientCardProps> = ({
       <Card className={`bg-card shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit ${isIncompletePatient ? "border-2 border-orange-500/60 shadow-orange-500/10" : "border-border"}`}>
         <CardContent className="p-4 sm:p-5">
           {/* Header Section - More compact */}
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
-            <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4 min-w-0 w-full">
+            <div className="flex gap-3 min-w-0 w-full">
               <SimpleTooltip content="Patient Avatar">
                 <div className="relative shrink-0 cursor-help">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center overflow-hidden">
@@ -141,10 +141,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                   </div> */}
                 </div>
               </SimpleTooltip>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5 w-full min-w-0">
                   <SimpleTooltip content={`Name: ${toTitleCase(patient.name || "Unknown")}`}>
-                    <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate cursor-help">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate cursor-help max-w-full">
                       {toTitleCase(patient.name || "Unknown")}
                     </h3>
                   </SimpleTooltip>
@@ -157,7 +157,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                   )}
                 </div>
                 <SimpleTooltip content={`Patient ID: ${patient.patient_code || patient.id}`}>
-                  <p className="text-[10px] text-blue-600 font-bold mt-0.5 uppercase tracking-tight truncate cursor-help inline-block">
+                  <p className="text-[10px] text-blue-600 font-bold mt-0.5 uppercase tracking-tight truncate cursor-help inline-block max-w-full">
                     {patient.patient_code || patient.id}
                   </p>
                 </SimpleTooltip>
