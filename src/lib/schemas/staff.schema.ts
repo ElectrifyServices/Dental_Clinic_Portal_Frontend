@@ -4,6 +4,7 @@ export const staffSchema = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Invalid email address').or(z.literal('')).optional(),
   phone: z.string().min(10, 'Phone must be at least 10 digits'),
+  country_code: z.string().optional(),
   role: z.enum(['super_admin', 'admin', 'doctor', 'receptionist', 'nurse', 'assistant', 'staff'], {
     message: 'Please select a valid role',
   }),

@@ -177,22 +177,40 @@ export function QueueCard({
             </span>
           </div>
 
-          <div className="flex items-start justify-between py-0.5 gap-2">
-            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
-              <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
-            </span>
-            <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
-              {patient.treatmentType || "N/A"}
-            </span>
+          <div className="flex flex-col gap-1 py-0.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+                <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
+              </span>
+              {(!patient.treatmentType || patient.treatmentType.length <= 40) ? (
+                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
+                  {patient.treatmentType || "N/A"}
+                </span>
+              ) : null}
+            </div>
+            {patient.treatmentType && patient.treatmentType.length > 40 && (
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
+                {patient.treatmentType}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-start justify-between py-0.5 gap-2">
-            <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
-              <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
-            </span>
-            <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
-              {patient.specificTreatment || "N/A"}
-            </span>
+          <div className="flex flex-col gap-1 py-0.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
+                <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
+              </span>
+              {(!patient.specificTreatment || patient.specificTreatment.length <= 40) ? (
+                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
+                  {patient.specificTreatment || "N/A"}
+                </span>
+              ) : null}
+            </div>
+            {patient.specificTreatment && patient.specificTreatment.length > 40 && (
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
+                {patient.specificTreatment}
+              </div>
+            )}
           </div>
 
           <div className="flex items-start justify-between py-0.5 gap-2">
@@ -209,7 +227,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
                 {patient.patientConcern}
               </div>
             </div>
@@ -220,7 +238,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Notes
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
                 {patient.appointmentNotes}
               </div>
             </div>
@@ -297,16 +315,19 @@ export function QueueCard({
               </Button>
             )}
             {patient.status === "COMPLETED" && (
-              <div className="flex gap-2">
-                <div className="flex-1 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  Consultation Completed
+              <div className="flex gap-2 min-w-0">
+                <div 
+                  className="flex-1 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100/60 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1.5 h-10 px-2 min-w-0"
+                  title="Consultation Completed"
+                >
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">Completed</span>
                 </div>
                 {onEditConsultation && (
                   <Button
                     onClick={() => onEditConsultation(patient)}
                     variant="outline"
-                    className="h-10 px-4 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 rounded-xl font-bold shadow-sm"
+                    className="h-10 px-3 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 rounded-xl font-bold shadow-sm shrink-0"
                   >
                     Edit
                   </Button>

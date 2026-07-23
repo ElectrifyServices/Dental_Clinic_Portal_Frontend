@@ -2,8 +2,9 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React from "react";
-import { Info, AlertCircle, Calendar } from "lucide-react";
+import { Info, AlertCircle, Calendar, Tag, IndianRupee } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 
 interface BasicInfoSectionProps {
   formData: any;
@@ -11,13 +12,17 @@ interface BasicInfoSectionProps {
   doctorError?: string;
   allPatients: any[];
   doctors: any[];
-  procedures: string[];
+  procedures: any[];
   teeth: string[];
   pendingPlans: any[];
   onLoadPlan: (plan: any) => void;
   isEdit: boolean;
   onPatientSearch?: (query: string) => void;
   onDoctorSearch?: (query: string) => void;
+  onCreateProcedure?: (name: string) => Promise<string | void> | void;
+  isCreatingProcedure?: boolean;
+  onDeleteProcedure?: (name: string) => Promise<void> | void;
+  onEditProcedure?: (oldName: string, newName: string) => Promise<void> | void;
 }
 
 export function BasicInfoSection({
@@ -33,7 +38,22 @@ export function BasicInfoSection({
   isEdit,
   onPatientSearch,
   onDoctorSearch,
+  onCreateProcedure,
+  isCreatingProcedure,
+  onDeleteProcedure,
+  onEditProcedure,
 }: BasicInfoSectionProps) {
+  const normalizedProcedures = React.useMemo(() => {
+    return (procedures || []).map((proc: any) => {
+      if (typeof proc === "string") {
+        return { label: proc, value: proc };
+      }
+      return {
+        label: proc.label || proc.name || "",
+        value: proc.value || proc.name || "",
+      };
+    });
+  }, [procedures]);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="space-y-2">
@@ -135,8 +155,16 @@ export function BasicInfoSection({
         <SearchableSelect
           value={formData.procedure}
           onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as any)}
-          options={procedures.map((proc) => ({ label: proc, value: proc }))}
+          options={normalizedProcedures}
           placeholder="Select Procedure"
+          searchPlaceholder="Search procedure..."
+          onCreateOption={onCreateProcedure}
+          createLabel="Create Procedure"
+          isCreating={isCreatingProcedure}
+          onDeleteOption={onDeleteProcedure}
+          onEditOption={onEditProcedure}
+          disabled={isEdit}
+          capitalizeWords
         />
       </div>
 
@@ -145,10 +173,16 @@ export function BasicInfoSection({
           Tooth / Area
         </Label>
         <SearchableSelect
-          value={formData.tooth}
-          onChange={(val) => handleChange({ target: { name: "tooth", value: val } } as any)}
+          isMulti
+          value={formData.tooth ? formData.tooth.split(', ').filter(Boolean) : []}
+          onChange={(val: string[]) => {
+            const stringVal = Array.isArray(val) ? val.join(', ') : val;
+            handleChange({ target: { name: "tooth", value: stringVal } } as any);
+          }}
           options={teeth.map((tooth) => ({ label: tooth, value: tooth }))}
-          placeholder="Select Tooth"
+          placeholder="Select Tooth/Area"
+          searchPlaceholder="Search tooth..."
+          disabled={isEdit}
         />
       </div>
 
@@ -182,6 +216,45 @@ export function BasicInfoSection({
         />
       </div>
 
+      {/* ── Discount Section ──────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <Label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5 text-primary" />
+          Discount (%)
+        </Label>
+        <Input
+          type="number"
+          name="discount_value"
+          min={0}
+          max={100}
+          value={formData.discount_value === undefined ? "" : formData.discount_value}
+          onChange={handleChange}
+          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
+          placeholder="e.g. 10"
+        />
+      </div>
+
+      {/* Computed: Final Cost display */}
+      {(() => {
+        const estCost = Number(formData.cost) || 0;
+        const discVal = Number(formData.discount_value) || 0;
+        const discountAmount = Math.min((estCost * discVal) / 100, estCost);
+        const finalCost = estCost - discountAmount;
+        if (discountAmount === 0) return null;
+        return (
+          <div className="md:col-span-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <IndianRupee className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="font-semibold">Est. Cost: <span className="line-through text-muted-foreground/60">₹{estCost.toLocaleString()}</span></span>
+              <span className="font-semibold text-red-500">− ₹{discountAmount.toLocaleString()}</span>
+            </div>
+            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+              Final: ₹{finalCost.toLocaleString()}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="space-y-2">
         <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Status
@@ -212,6 +285,7 @@ export function BasicInfoSection({
             handleChange({ target: { name: "doctorId", value: val } } as any);
             handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as any);
           }}
+          disabled={isEdit}
           options={doctors.map((doc) => ({
             label: doc.name,
             value: doc.id,

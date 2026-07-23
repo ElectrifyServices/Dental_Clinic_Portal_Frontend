@@ -22,6 +22,16 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
 }
 
 export function apiPrescToUi(p: any) {
+  const mapUnit = (unit: string) => {
+    if (!unit) return "Days";
+    const u = unit.toUpperCase();
+    if (u === "DAYS" || u === "DAY") return "Days";
+    if (u === "WEEKS" || u === "WEEK") return "Weeks";
+    if (u === "MONTHS" || u === "MONTH") return "Months";
+    if (u === "YEARS" || u === "YEAR") return "Years";
+    return unit;
+  };
+
   return {
     id: p.id,
     medicine: p.medicine_id || p.medicine?.id || p.medicine_name || "",
@@ -30,22 +40,60 @@ export function apiPrescToUi(p: any) {
     timing: p.timing,
     frequency: p.frequency,
     duration: p.duration?.toString() || "",
-    durationUnit: p.duration_type || "Days",
+    durationUnit: mapUnit(p.duration_type || "Days"),
     qty: String(p.qty),
     instructions: p.instructions ?? "",
   };
 }
 
 export function apiSessionToUi(s: any) {
+  let formattedDate = "";
+  if (s.visit_date) {
+    formattedDate = s.visit_date.split("T")[0];
+  }
+
+  let startTime = s.start_time || "09:00";
+  if (startTime && (startTime.toUpperCase().includes("AM") || startTime.toUpperCase().includes("PM"))) {
+    const match = startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let hrs = parseInt(match[1], 10);
+      const mins = match[2];
+      const period = match[3].toUpperCase();
+      if (period === "PM" && hrs < 12) hrs += 12;
+      if (period === "AM" && hrs === 12) hrs = 0;
+      startTime = `${String(hrs).padStart(2, "0")}:${mins}`;
+    }
+  } else if (startTime) {
+    startTime = startTime.trim().substring(0, 5);
+  }
+
+  const normalizedStatus = s.status?.toLowerCase() ?? "scheduled";
+
   return {
     id: s.id,
     sessionNumber: s.visit_number,
-    date: s.visit_date ?? "",
-    status: s.status?.toLowerCase().replace("_", "-") ?? "scheduled",
+    name: s.name || `Session ${s.visit_number}`,
+    date: formattedDate,
+    scheduledDate: formattedDate,
+    suggestedDate: formattedDate,
+    startTime: startTime,
+    start_time: startTime,
+    status: normalizedStatus === "scheduled" ? "scheduled" : 
+            normalizedStatus === "in_progress" ? "in-progress" : 
+            normalizedStatus === "completed" ? "completed" : 
+            normalizedStatus === "cancelled" ? "cancelled" : normalizedStatus,
     notes: s.clinical_objectives ?? "",
+    clinical_objectives: s.clinical_objectives ?? "",
     appointmentId: s.appointment_id ?? "",
     duration: s.duration_min ?? 45,
+    duration_min: s.duration_min ?? 45,
     cost: Number(s.session_fee ?? 0),
+    session_fee: Number(s.session_fee ?? 0),
+    workDone: s.work_done ?? "",
+    work_done: s.work_done ?? "",
+    findings: s.session_findings ?? "",
+    session_findings: s.session_findings ?? "",
+    paid_amount: Number(s.paid_amount ?? 0),
   };
 }
 
@@ -120,14 +168,54 @@ function normalizeProcedure(plan: any) {
 }
 
 function normalizeCost(plan: any) {
-  return Number(firstDefined(
+  const raw = firstDefined(
     plan.est_cost,
     plan.cost,
     plan.amount,
     plan.final_amount,
     plan.total_amount,
     0,
-  ) ?? 0);
+  );
+  const val = Number(raw);
+  return isNaN(val) ? 0 : val;
+}
+
+function normalizePaidAmount(plan: any) {
+  const raw = firstDefined(
+    plan.total_paid_amount,
+    plan.totalPaidAmount,
+    plan.paid_amount,
+    plan.paidAmount,
+    0
+  );
+  const val = Number(raw);
+  return isNaN(val) ? 0 : val;
+}
+
+function normalizePendingAmount(plan: any) {
+  const raw = firstDefined(
+    plan.pending_amount,
+    plan.pendingAmount,
+    null
+  );
+  if (raw === null || raw === undefined || raw === "") return null;
+  const val = Number(raw);
+  return isNaN(val) ? 0 : val;
+}
+
+function normalizeFinalCost(plan: any) {
+  const raw = firstDefined(
+    plan.final_cost,
+    plan.finalCost,
+    null
+  );
+  if (raw === null || raw === undefined || raw === "") {
+    const est = normalizeCost(plan);
+    const disc = Number(plan.discount_amount) || 0;
+    return est - disc;
+  }
+  const val = Number(raw);
+  return isNaN(val) ? 0 : val;
 }
 
 function normalizeDate(plan: any) {
@@ -208,15 +296,24 @@ export function toUiTreatment(plan: TreatmentPlanResponse | any) {
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
     images: ((plan as any).attachments || (plan as any).images || []).map((a: any) => typeof a === "string" ? a : (a.file_url || a.url || a.path || "")).filter(Boolean),
     attachments: (plan as any).attachments || [],
+    discount_type: plan.discount_type ?? plan.discountType ?? null,
+    discount_value: plan.discount_value ?? plan.discountValue ?? null,
+    discount_amount: plan.discount_amount ?? plan.discountAmount ?? 0,
+    final_cost: normalizeFinalCost(plan),
+    paid_amount: normalizePaidAmount(plan),
+    pending_amount: normalizePendingAmount(plan),
   };
 }
 
 export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
-  const extractToothNumber = (toothStr: string) => {
-    if (!toothStr || toothStr === "—") return undefined;
-    if (toothStr === "FM") return -1;
-    const match = toothStr.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : undefined;
+  const extractToothNumbers = (toothStr: string): number[] | undefined => {
+    if (!toothStr || toothStr === "\u2014") return undefined;
+    if (toothStr === "FM") return [-1];
+    const parts = toothStr.split(",").map((s: string) => s.trim());
+    const nums = parts
+      .map((p: string) => { const m = p.match(/^(\d+)/); return m ? parseInt(m[1]) : null; })
+      .filter((n: number | null): n is number => n !== null);
+    return nums.length > 0 ? nums : undefined;
   };
 
   const prescriptions = (formData.prescriptions ?? [])
@@ -233,37 +330,51 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     }));
 
   const sessions = (formData.sessions ?? [])
-    .filter((s: any) => s.scheduledDate)
+    .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
-      visit_date: s.scheduledDate ? new Date(s.scheduledDate).toISOString().split("T")[0] : undefined,
+      visit_date: s.scheduledDate || s.suggestedDate,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       session_fee: Number(s.cost) || 0,
-      clinical_objectives: s.notes || "",
+      clinical_objectives: s.notes || s.description || "",
     }));
 
-  return {
+  const payload: CreateTreatmentPlanVariables = {
     patient_id: formData.patientId,
     doctor_id: formData.doctorId,
-    tooth_number: extractToothNumber(formData.tooth),
+    tooth_number: extractToothNumbers(formData.tooth) || [],
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
     status: uiStatusToApi(formData.status),
     clinical_notes: formData.notes ?? "",
-    prescriptions,
-    sessions: sessions.length > 0 ? sessions : undefined,
+    prescriptions: prescriptions,
+    sessions: sessions,
     rawFiles: formData.rawFiles ?? [],
     existingImages: formData.existingImages ?? [],
   };
+
+  // Only include discount fields if discount_value is set and > 0
+  if (formData.discount_value !== undefined && formData.discount_value !== null && Number(formData.discount_value) > 0) {
+    payload.discount_type = "PERCENTAGE";
+    payload.discount_value = Number(formData.discount_value);
+  } else {
+    payload.discount_type = null;
+    payload.discount_value = null;
+  }
+
+  return payload;
 }
 
 export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
-  const extractToothNumber = (toothStr: string) => {
-    if (!toothStr || toothStr === "—") return undefined;
-    if (toothStr === "FM") return -1;
-    const match = toothStr.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : undefined;
+  const extractToothNumbers = (toothStr: string): number[] | undefined => {
+    if (!toothStr || toothStr === "\u2014") return undefined;
+    if (toothStr === "FM") return [-1];
+    const parts = toothStr.split(",").map((s: string) => s.trim());
+    const nums = parts
+      .map((p: string) => { const m = p.match(/^(\d+)/); return m ? parseInt(m[1]) : null; })
+      .filter((n: number | null): n is number => n !== null);
+    return nums.length > 0 ? nums : undefined;
   };
 
   const prescriptions = (formData.prescriptions ?? [])
@@ -280,17 +391,52 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       instructions: p.instructions ?? "",
     }));
 
-  return {
+  const sessions = (formData.sessions ?? [])
+    .filter((s: any) => s.scheduledDate || s.suggestedDate)
+    .map((s: any) => ({
+      id: s.id?.startsWith("session-") ? undefined : s.id,
+      visit_date: s.scheduledDate || s.suggestedDate,
+      start_time: s.startTime || "09:00 AM",
+      duration_min: s.duration || 45,
+      session_fee: Number(s.cost) || 0,
+      clinical_objectives: s.notes || s.description || "",
+      status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
+        s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
+        s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
+        s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
+      work_done: s.workDone,
+      session_findings: s.findings,
+    }));
+
+  const updateData: UpdateTreatmentPlanVariables = {
     id: formData.id,
-    tooth_number: extractToothNumber(formData.tooth),
+    tooth_number: extractToothNumbers(formData.tooth) || [],
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
     status: uiStatusToApi(formData.status),
     clinical_notes: formData.notes ?? "",
     doctor_id: formData.doctorId,
-    prescriptions,
+    prescriptions: prescriptions,
+    sessions: sessions,
     rawFiles: formData.rawFiles ?? [],
     existingImages: formData.existingImages ?? [],
   };
+
+  // Only include discount fields if discount_value is set and > 0
+  if (formData.discount_value !== undefined && formData.discount_value !== null && Number(formData.discount_value) > 0) {
+    updateData.discount_type = "PERCENTAGE";
+    updateData.discount_value = Number(formData.discount_value);
+  } else {
+    // Explicitly clearing discount
+    updateData.discount_type = null;
+    updateData.discount_value = null;
+  }
+
+  // Removed attachment IDs if any were deleted by user
+  if (formData.removedAttachmentIds?.length > 0) {
+    updateData.removedAttachmentIds = formData.removedAttachmentIds;
+  }
+
+  return updateData;
 }

@@ -184,6 +184,12 @@ export function toUiTreatment(plan: any) {
     doctorId: plan.doctor_id,
     date: String(normalizeDate(plan)).split("T")[0] || "",
     cost: normalizeCost(plan),
+    /** Discount fields from API */
+    discount_type: plan.discount_type ?? null,
+    discount_value: plan.discount_value ?? null,
+    discount_amount: plan.discount_amount ?? 0,
+    final_cost: plan.final_cost ?? normalizeCost(plan),
+    paid_amount: plan.paid_amount ?? 0,
     status: rawStatus ? apiStatusToUi(rawStatus) : "planned",
     overall_status: rawStatus,
     overallStatus: rawStatus,
@@ -198,15 +204,20 @@ export function toUiTreatment(plan: any) {
     notes: plan.clinical_notes ?? plan.notes ?? "",
     prescriptions: (plan.prescriptions ?? []).map(apiPrescToUi),
     sessions: (plan.sessions ?? []).map(apiSessionToUi),
+    attachments: plan.attachments ?? [],
   };
 }
 
 export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
-  const extractToothNumber = (toothStr: string) => {
-    if (!toothStr || toothStr === "—") return undefined;
-    if (toothStr === "FM") return -1;
-    const match = toothStr.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : undefined;
+  const extractToothNumbers = (toothStr: string): number[] | undefined => {
+    if (!toothStr || toothStr === "\u2014") return undefined;
+    if (toothStr === "FM") return [-1];
+    // Support comma-separated multiple teeth: "11, 12"
+    const parts = toothStr.split(",").map((s: string) => s.trim());
+    const nums = parts
+      .map((p: string) => { const m = p.match(/^(\d+)/); return m ? parseInt(m[1]) : null; })
+      .filter((n: number | null): n is number => n !== null);
+    return nums.length > 0 ? nums : undefined;
   };
 
   const prescriptions = (formData.prescriptions ?? [])
@@ -228,14 +239,13 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
       visit_date: s.scheduledDate || s.suggestedDate,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
-      session_fee: s.cost || 0,
       clinical_objectives: s.notes || s.description || "",
     }));
 
-  return {
+  const payload: CreateTreatmentPlanVariables = {
     patient_id: formData.patientId,
     doctor_id: formData.doctorId,
-    tooth_number: extractToothNumber(formData.tooth),
+    tooth_number: extractToothNumbers(formData.tooth),
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
@@ -244,14 +254,28 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     prescriptions: prescriptions.length > 0 ? prescriptions : undefined,
     sessions: sessions.length > 0 ? sessions : undefined,
   };
+
+  // Only include discount fields if discount_value is set and > 0
+  if (formData.discount_value !== undefined && formData.discount_value !== null && Number(formData.discount_value) > 0) {
+    payload.discount_type = "PERCENTAGE";
+    payload.discount_value = Number(formData.discount_value);
+  } else {
+    payload.discount_type = null;
+    payload.discount_value = null;
+  }
+
+  return payload;
 }
 
 export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
-  const extractToothNumber = (toothStr: string) => {
-    if (!toothStr || toothStr === "—") return undefined;
-    if (toothStr === "FM") return -1;
-    const match = toothStr.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : undefined;
+  const extractToothNumbers = (toothStr: string): number[] | undefined => {
+    if (!toothStr || toothStr === "\u2014") return undefined;
+    if (toothStr === "FM") return [-1];
+    const parts = toothStr.split(",").map((s: string) => s.trim());
+    const nums = parts
+      .map((p: string) => { const m = p.match(/^(\d+)/); return m ? parseInt(m[1]) : null; })
+      .filter((n: number | null): n is number => n !== null);
+    return nums.length > 0 ? nums : undefined;
   };
 
   const prescriptions = (formData.prescriptions ?? [])
@@ -275,7 +299,6 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       visit_date: s.scheduledDate || s.suggestedDate,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
-      session_fee: s.cost || 0,
       clinical_objectives: s.notes || s.description || "",
       status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
         s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
@@ -283,12 +306,11 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
         s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
       work_done: s.workDone,
       session_findings: s.findings,
-      next_session_plan: s.nextPlan,
     }));
 
   const updateData: UpdateTreatmentPlanVariables = {
     id: formData.id,
-    tooth_number: extractToothNumber(formData.tooth),
+    tooth_number: extractToothNumbers(formData.tooth),
     procedure: formData.procedure,
     treatment_date: new Date(formData.date).toISOString(),
     est_cost: Number(formData.cost) || 0,
@@ -296,6 +318,21 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     clinical_notes: formData.notes ?? "",
     doctor_id: formData.doctorId,
   };
+
+  // Only include discount fields if discount_value is set and > 0
+  if (formData.discount_value !== undefined && formData.discount_value !== null && Number(formData.discount_value) > 0) {
+    updateData.discount_type = "PERCENTAGE";
+    updateData.discount_value = Number(formData.discount_value);
+  } else {
+    // Explicitly clearing discount
+    updateData.discount_type = null;
+    updateData.discount_value = null;
+  }
+
+  // Removed attachment IDs if any were deleted by user
+  if (formData.removedAttachmentIds?.length > 0) {
+    updateData.removedAttachmentIds = formData.removedAttachmentIds;
+  }
 
   if (prescriptions.length > 0) {
     updateData.prescriptions = prescriptions;

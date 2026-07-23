@@ -19,7 +19,8 @@ export interface TreatmentSessionResponse {
   visit_date?: string;
   start_time?: string;
   duration_min?: number;
-  session_fee: string;
+  /** API returns number (not string) */
+  session_fee?: number | null;
   paid_amount?: number | null;
   clinical_objectives?: string;
   work_done?: string;
@@ -224,19 +225,20 @@ export interface CompleteSessionVariables {
   planId: string;
   sessionId: string;
   paid_amount?: number;
-  session_fee?: number;
-  discount_percentage?: number;
+  /** Must be sent together with discount_value if billing */
+  discount_type?: "PERCENTAGE" | "FLAT";
+  /** PERCENTAGE capped at 100; FLAT capped at est_cost */
+  discount_value?: number;
   work_done?: string;
   session_findings?: string;
-  next_session_plan?: string;
   prescriptions?: any[];
   attachments?: File[];
+  /** If true, also books the next visit */
   schedule_next_session?: boolean;
   next_visit_date?: string;
   next_start_time?: string;
   next_duration_min?: number;
   next_clinical_objectives?: string;
-  next_session_fee?: number;
 }
 
 export function useCompleteTreatmentSessionMutation() {

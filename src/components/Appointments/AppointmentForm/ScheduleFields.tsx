@@ -77,6 +77,13 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
     onTimeChange(syntheticEvent);
   };
 
+  const handleTimeSelect = (val: string) => {
+    const syntheticEvent = {
+      target: { name: "time", value: val },
+    } as React.ChangeEvent<HTMLInputElement>;
+    onTimeChange(syntheticEvent);
+  };
+
   return (
     <section className="space-y-3">
       {/* Assigned Doctor — editable */}
@@ -138,19 +145,32 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
           </div>
         </div>
 
-        {/* Time — editable */}
+        {/* Time — Select dropdown */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Time
           </label>
-          <Input
-            type="time"
-            name="time"
+          <Select
             value={time}
-            onChange={onTimeChange}
-            required
-            className="h-11 rounded-xl border-border"
-          />
+            onValueChange={handleTimeSelect}
+            disabled={!doctorId || !date || isLoadingSlots || !hasSlots}
+          >
+            <SelectTrigger className="w-full h-11 px-3 text-sm border border-border rounded-xl bg-card focus:ring-2 focus:ring-primary/20 outline-none font-medium">
+              <SelectValue placeholder={!doctorId || !date ? "Select doctor & date" : isLoadingSlots ? "Loading slots..." : !hasSlots ? "No slots available" : "Select Time"} />
+            </SelectTrigger>
+            <SelectContent>
+              {slots.map((slot) => (
+                <SelectItem
+                  key={slot.time24}
+                  value={slot.time24}
+                  disabled={slot.isPast}
+                  className="font-medium"
+                >
+                  {slot.time12} {slot.isPast ? "(Passed)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Duration */}
@@ -240,7 +260,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
               <span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-600" />
               Selected
             </span>
-            <span className="ml-auto">Click slot to auto-fill time, or enter manually above.</span>
+            <span className="ml-auto">Click slot to select time, or choose from the dropdown above.</span>
           </p>
         </div>
       )}

@@ -77,7 +77,19 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",
-      phone: doctor?.phone ?? "",
+      phone: doctor?.phone ? doctor.phone.replace(/^\+\d+/, "").slice(-10) : "",
+      country_code: (doctor as any)?.country_code || (() => {
+        let rawPhone = doctor?.phone || "";
+        if (rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              return c;
+            }
+          }
+        }
+        return "+91";
+      })(),
       role: doctor?.role ?? "doctor",
       specialization: doctor?.specialization ?? "",
       password: "",
@@ -139,10 +151,24 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const exp = profile.experience_years !== undefined ? String(profile.experience_years) : '';
         const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
  
+        let rawPhone = s.phone || doctor.phone || "";
+        let parsedCountryCode = s.country_code || (doctor as any)?.country_code || "+91";
+        if (!s.country_code && !(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              parsedCountryCode = c;
+              rawPhone = rawPhone.slice(c.length);
+              break;
+            }
+          }
+        }
+
         form.reset({
           name: s.name || doctor.name || "",
           email: s.email || doctor.email || "",
-          phone: s.phone || doctor.phone || "",
+          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
+          country_code: parsedCountryCode,
           role: normalizedRole as any,
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
@@ -166,10 +192,24 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           avatar: s.profile_picture || doctor.avatar || doctor.image || '',
         });
       } else {
+        let rawPhone = doctor.phone || "";
+        let parsedCountryCode = (doctor as any)?.country_code || "+91";
+        if (!(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+          const codes = ["+91", "+1", "+44", "+971"];
+          for (const c of codes) {
+            if (rawPhone.startsWith(c)) {
+              parsedCountryCode = c;
+              rawPhone = rawPhone.slice(c.length);
+              break;
+            }
+          }
+        }
+
         form.reset({
           name: doctor.name ?? "",
           email: doctor.email ?? "",
-          phone: doctor.phone ?? "",
+          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
+          country_code: parsedCountryCode,
           role: doctor.role ?? "doctor",
           specialization: doctor.specialization ?? "",
           password: "",
@@ -359,6 +399,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       formDataObj.append("email", data.email);
       if (data.password) formDataObj.append("password", data.password);
       if (data.phone) formDataObj.append("phone", data.phone);
+      if (data.country_code) formDataObj.append("country_code", data.country_code);
 
       // Pass the mapped UUID instead of name
       formDataObj.append("role_id", roleId);

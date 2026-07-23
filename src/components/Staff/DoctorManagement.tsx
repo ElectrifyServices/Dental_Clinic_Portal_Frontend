@@ -295,7 +295,7 @@ export function DoctorManagement({
           </div>
           {staff.phone && (
             <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-              <Phone className="w-3 h-3" /> {staff.phone}
+              <Phone className="w-3 h-3" /> {staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}
             </div>
           )}
         </div>
@@ -554,7 +554,7 @@ export function DoctorManagement({
                           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-emerald-500/20">
                             <Phone className="w-3.5 h-3.5 text-emerald-500" />
                           </div>
-                          <span>{staff.phone}</span>
+                          <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}</span>
                         </div>
                       )}
                       {(staff as any).experience && (

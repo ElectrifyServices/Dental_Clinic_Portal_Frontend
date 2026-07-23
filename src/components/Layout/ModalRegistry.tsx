@@ -875,8 +875,8 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          onSave={(t: any) => {
-            handleSaveTreatment(t);
+          onSave={async (t: any) => {
+            await handleSaveTreatment(t);
             setActiveModal(null);
             setSelectedItemId("");
             showToast("Treatment saved!");

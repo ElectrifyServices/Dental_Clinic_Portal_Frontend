@@ -1,6 +1,12 @@
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { TreatmentPlanResponse } from "./useCreateTreatmentPlanMutation";
+import { AuthStorage } from "../../auth/authStorage";
+
+const getAuthHeaders = () => {
+  const user = AuthStorage.getUser();
+  return user?.id ? { "x-staff-id": user.id } : {};
+};
 
 export interface UpdateTreatmentPlanStatusVariables {
   id: string;
@@ -13,6 +19,7 @@ export function useUpdateTreatmentPlanStatusMutation() {
   return useApiMutation<TreatmentPlanResponse, UpdateTreatmentPlanStatusVariables>({
     getEndpoint: (variables) => `/treatment/${variables.id}/status`,
     method: "patch",
+    headers: getAuthHeaders,
     transformRequest: ({ id: _id, ...rest }) => rest,
     options: {
       onSuccess: (_data, variables) => {
