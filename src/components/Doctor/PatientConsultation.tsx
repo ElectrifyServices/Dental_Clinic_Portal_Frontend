@@ -504,12 +504,20 @@ export function PatientConsultation({
     });
   };
 
-  const handleDownloadPDF = async (type: PDFReportType = "FULL") => {
+  const handleDownloadPDF = async (
+    type: PDFReportType = "FULL",
+    consultationIdOverride?: string,
+  ) => {
     const toastId = toast.loading("Generating PDF report...");
     try {
       let finalConsultationData = { ...consultationData };
       try {
-        const consultationId = createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
+        const consultationId =
+          consultationIdOverride ||
+          createdConsultationId ||
+          initialData?.id ||
+          (patient as any).consultationId ||
+          patient.id;
         // Only fetch if it looks like a valid UUID (36 chars)
         if (consultationId && consultationId.length === 36) {
           const detailData = await fetchConsultationDetail(consultationId, type);
@@ -534,7 +542,12 @@ export function PatientConsultation({
 
       // Fire and forget the send API call so the user receives the document
       try {
-        const cId = createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
+        const cId =
+          consultationIdOverride ||
+          createdConsultationId ||
+          initialData?.id ||
+          (patient as any).consultationId ||
+          patient.id;
         if (cId && cId.length === 36 && !cId.startsWith("WALK-")) {
           await sendMutation.mutateAsync({ id: cId, type });
         }
@@ -761,10 +774,23 @@ export function PatientConsultation({
         directPatientPhone,
         isDirect: (patient as any).isDirect,
       });
+      const completedConsultationId =
+        res?.id || createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
       if (res && res.id) {
         setCreatedConsultationId(res.id);
       }
       setIsCompleted(true);
+      if (
+        (patient as any).isDirect &&
+        completedConsultationId &&
+        completedConsultationId.length === 36 &&
+        !completedConsultationId.startsWith("WALK-")
+      ) {
+        await sendMutation.mutateAsync({
+          id: completedConsultationId,
+          type: "PRESCRIPTION",
+        });
+      }
       const idToUse = patient.patientId || patient.id;
       if (idToUse && !idToUse.startsWith("WALK-")) {
         refetchConsultations();
