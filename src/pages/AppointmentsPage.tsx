@@ -72,8 +72,7 @@ export const AppointmentsPage: React.FC = () => {
 
   const isMatchingDate = (dateStr: string) => {
     if (!selectedDate) return true;
-    const aDate = new Date(dateStr);
-    const aDateString = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, '0')}-${String(aDate.getDate()).padStart(2, '0')}`;
+    const aDateString = typeof dateStr === 'string' && dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
     return aDateString === selectedDate;
   };
 

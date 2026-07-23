@@ -17,9 +17,13 @@ export function TodayAppointments({
 }: {
   appointments: Appointment[];
 }) {
-  const today = new Date().toDateString();
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const todayAppts = appointments
-    .filter((a) => new Date(a.date).toDateString() === today)
+    .filter((a) => {
+      const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+      return aDateStr === todayStr;
+    })
     .sort((a, b) => a.time.localeCompare(b.time))
     .slice(0, 8);
 

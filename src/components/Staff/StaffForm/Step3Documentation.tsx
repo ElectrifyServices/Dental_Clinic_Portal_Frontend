@@ -136,18 +136,20 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                 </div>
               )}
 
-              <div className="relative">
-                <div className={`w-full ${hasFiles ? 'h-10' : 'h-14'} border-2 border-dashed border-border rounded-xl flex items-center justify-center group-hover:border-primary/50 transition-all cursor-pointer bg-muted/20 hover:bg-primary/5`}>
-                  <Upload className="w-3.5 h-3.5 text-muted-foreground mr-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{hasFiles ? "Upload Another" : "Tap to upload PDF/JPG"}</span>
+              {!hasFiles && (
+                <div className="relative">
+                  <div className="w-full h-14 border-2 border-dashed border-border rounded-xl flex items-center justify-center group-hover:border-primary/50 transition-all cursor-pointer bg-muted/20 hover:bg-primary/5">
+                    <Upload className="w-3.5 h-3.5 text-muted-foreground mr-2 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Tap to upload PDF/JPG</span>
+                  </div>
+                  <Input
+                    type="file"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => handleFileChange(doc, e)}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
                 </div>
-                <Input
-                  type="file"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={(e) => handleFileChange(doc, e)}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
-              </div>
+              )}
 
               {hasFiles && (
                 <div className="absolute -right-2 -bottom-2 opacity-5 pointer-events-none">
