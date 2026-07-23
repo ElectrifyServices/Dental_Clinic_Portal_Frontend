@@ -564,9 +564,10 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   const handleDocumentUpload = (docType: string, file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      const current = form.getValues("documents");
+      const current = form.getValues("documents") || [];
+      const filtered = current.filter((d: any) => d.type !== docType);
       form.setValue("documents", [
-        ...current,
+        ...filtered,
         { type: docType, name: file.name, url: reader.result, size: file.size, file },
       ]);
     };
