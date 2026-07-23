@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Search, Check, X, Plus, ChevronDown, Trash2 } from "lucide-react";
+import { Search, Check, X, Plus, ChevronDown, Trash2, Edit } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
@@ -18,6 +18,7 @@ interface SearchableSelectProps {
   createLabel?: string;
   isCreating?: boolean;
   onDeleteOption?: (value: string) => Promise<void> | void;
+  onEditOption?: (value: string, newValue: string) => Promise<void> | void;
   isDeletingValue?: string | null;
   isMulti?: boolean;
   className?: string;
@@ -40,6 +41,7 @@ export function SearchableSelect({
   createLabel = "Create",
   isCreating = false,
   onDeleteOption,
+  onEditOption,
   isDeletingValue = null,
   isMulti = false,
   className,
@@ -51,14 +53,28 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [editingValue, setEditingValue] = React.useState<string | null>(null);
+  const [editInputValue, setEditInputValue] = React.useState("");
 
   // Clear query on close or open
   React.useEffect(() => {
     if (!isOpen) {
       setSearchQuery("");
       onSearchChange?.("");
+      setEditingValue(null);
     }
   }, [isOpen]);
+
+  const handleSaveEdit = async (optValue: string) => {
+    if (onEditOption && editInputValue.trim() && editInputValue.trim() !== optValue) {
+      try {
+        await onEditOption(optValue, editInputValue.trim());
+      } catch (err) {
+        // Handled
+      }
+    }
+    setEditingValue(null);
+  };
 
   const getOptionLabel = (opt: OptionType) => typeof opt === 'string' ? opt : (opt.label || "");
   const getOptionValue = (opt: OptionType) => typeof opt === 'string' ? opt : (opt.value || "");
@@ -192,35 +208,88 @@ export function SearchableSelect({
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(optValue)}
-                    className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none transition-colors duration-150"
-                  >
-                    {renderOption ? (
-                      renderOption(opt)
-                    ) : (
-                      <span className="truncate pr-2">{optLabel}</span>
-                    )}
-                    {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
-                  </button>
-                  {onDeleteOption && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onDeleteOption(optValue);
-                      }}
-                      disabled={isDeletingValue === optValue}
-                      className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
-                    >
-                      {isDeletingValue === optValue ? (
-                        <div className="w-3.5 h-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
+                  {editingValue === optValue ? (
+                    <div className="flex-1 flex items-center gap-1.5 px-3 py-1" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={editInputValue}
+                        onChange={(e) => setEditInputValue(e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border border-primary rounded-lg bg-card outline-none"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSaveEdit(optValue);
+                          } else if (e.key === "Escape") {
+                            setEditingValue(null);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSaveEdit(optValue)}
+                        className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        title="Save"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingValue(null)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Cancel"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(optValue)}
+                        className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none transition-colors duration-150"
+                      >
+                        {renderOption ? (
+                          renderOption(opt)
+                        ) : (
+                          <span className="truncate pr-2">{optLabel}</span>
+                        )}
+                        {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
+                      </button>
+                      {onEditOption && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setEditingValue(optValue);
+                            setEditInputValue(optLabel);
+                          }}
+                          className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
+                          title="Edit"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
                       )}
-                    </button>
+                      {onDeleteOption && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onDeleteOption(optValue);
+                          }}
+                          disabled={isDeletingValue === optValue}
+                          className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
+                          title="Delete"
+                        >
+                          {isDeletingValue === optValue ? (
+                            <div className="w-3.5 h-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               );

@@ -4,14 +4,19 @@ import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import React from "react";
 import { Save, Stethoscope, CheckCircle, Loader2, Paperclip, Upload, FileText, X } from "lucide-react";
-import { Modal, Button } from "@/components/ui";
-import { procedures, teeth } from "@/constants/treatment.constants";
+import { Modal, Button, toast } from "@/components/ui";
+import { teeth } from "@/constants/treatment.constants";
 import { useCompleteTreatmentSessionMutation, useAddTreatmentSessionMutation } from "@/hooks/treatment/useTreatmentSessionHooks";
 import type { TreatmentFormProps } from "@/types/treatment.types";
 import { useTreatmentForm } from "@/hooks/treatment/useTreatmentForm";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getFileUrl } from "@/services/apiClient";
+import { useProcedureQuery } from "@/hooks/procedures/useProcedureQuery";
+import { useCreateProcedureMutation } from "@/hooks/procedures/useCreateProcedureMutation";
+import { useUpdateProcedureMutation } from "@/hooks/procedures/useUpdateProcedureMutation";
+import { useDeleteProcedureMutation } from "@/hooks/procedures/useDeleteProcedureMutation";
+import { useModal } from "@/contexts/ModalContext";
 import { BasicInfoSection } from "./TreatmentForm/BasicInfoSection";
 import { SessionPlannerSection } from "./TreatmentForm/SessionPlannerSection";
 import { PrescriptionSection } from "./TreatmentForm/PrescriptionSection";
@@ -135,6 +140,78 @@ export function TreatmentForm({
     }
     return filtered;
   }, [apiStaffData, doctors, debouncedDoctorSearch]);
+
+  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({ all: true });
+  const { confirmDelete } = useModal();
+  const createProcedureMutation = useCreateProcedureMutation();
+  const updateProcedureMutation = useUpdateProcedureMutation();
+  const deleteProcedureMutation = useDeleteProcedureMutation();
+
+  const getRawProceduresList = (raw: any): any[] => {
+    if (!raw) return [];
+    const target = raw.responseObject !== undefined ? raw.responseObject : raw;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.procedures)) return target.procedures;
+    }
+    return [];
+  };
+
+  const handleCreateProcedure = async (newProcedureName: string) => {
+    try {
+      const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
+      return created?.name || newProcedureName;
+    } catch (error) {
+      // handled
+    }
+  };
+
+  const handleUpdateProcedure = async (oldName: string, newName: string) => {
+    try {
+      const rawList = getRawProceduresList(rawProceduresData);
+      const matched = rawList.find((p: any) => p.name === oldName);
+      if (matched?.id) {
+        await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
+      }
+    } catch (error) {
+      // handled
+    }
+  };
+
+  const handleDeleteProcedure = async (name: string) => {
+    confirmDelete(
+      "Delete Procedure",
+      `Are you sure you want to delete procedure "${name}"?`,
+      async () => {
+        try {
+          const rawList = getRawProceduresList(rawProceduresData);
+          const matched = rawList.find((p: any) => p.name === name);
+          if (matched?.id) {
+            await deleteProcedureMutation.mutateAsync({ id: matched.id });
+          }
+        } catch (error) {
+          // handled
+        }
+      }
+    );
+  };
+
+  const apiProcedures = React.useMemo(() => {
+    if (isProceduresLoading) {
+      return [{ label: "Loading procedures...", value: "", disabled: true }];
+    }
+    if (isProceduresError) {
+      return [{ label: "Error loading procedures", value: "", disabled: true }];
+    }
+
+    const rawList = getRawProceduresList(rawProceduresData);
+    return rawList.map((proc: any) => ({
+      label: proc.name,
+      value: proc.name,
+    }));
+  }, [rawProceduresData, isProceduresLoading, isProceduresError]);
   const {
     form,
     formData,
@@ -160,9 +237,8 @@ export function TreatmentForm({
   const [completeForm, setCompleteForm] = React.useState({
     work_done: "",
     session_findings: "",
-    next_session_plan: "",
-    session_fee: 0,
-    discount_percentage: 0,
+    discount_type: "" as "" | "PERCENTAGE" | "FLAT",
+    discount_value: 0,
     paid_amount: 0,
   });
   const [scheduleNext, setScheduleNext] = React.useState(false);
@@ -191,10 +267,9 @@ export function TreatmentForm({
     setCompleteForm({
       work_done: session.work_done || session.workDone || "",
       session_findings: session.session_findings || session.findings || "",
-      next_session_plan: "",
-      session_fee: currentFee,
-      discount_percentage: currentDiscount,
-      paid_amount: currentPaid,
+      discount_type: "",
+      discount_value: 0,
+      paid_amount: Number(session.paid_amount) || 0,
     });
     setSessionAttachments([]);
     setScheduleNext(false);
@@ -257,7 +332,7 @@ export function TreatmentForm({
           nextSessionPayload = {
             schedule_next_session: true,
             next_visit_date: formattedNextVisitDate,
-            next_start_time: time24,
+            next_start_time: nextSessionDraft.time || "10:00 AM",
             next_duration_min: Number(nextSessionDraft.duration) || 60,
             next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
             next_session_fee: Number(nextSessionDraft.cost) || 0,
@@ -271,7 +346,13 @@ export function TreatmentForm({
         await completeSessionMutation.mutateAsync({
           planId: treatment.id,
           sessionId: completingSession.id,
-          ...completeForm,
+          work_done: completeForm.work_done,
+          session_findings: completeForm.session_findings,
+          paid_amount: completeForm.paid_amount,
+          ...(completeForm.discount_type ? {
+            discount_type: completeForm.discount_type,
+            discount_value: completeForm.discount_value,
+          } : {}),
           ...nextSessionPayload,
           attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
         });
@@ -288,9 +369,6 @@ export function TreatmentForm({
       work_done: completeForm.work_done,
       findings: completeForm.session_findings,
       session_findings: completeForm.session_findings,
-      cost: completeForm.session_fee,
-      session_fee: completeForm.session_fee,
-      discount_percentage: completeForm.discount_percentage,
       paid_amount: completeForm.paid_amount,
     });
 
@@ -360,6 +438,46 @@ export function TreatmentForm({
     }
   };
 
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const handleSaveForm = async (formDataVal: any) => {
+    const submitData = {
+      ...formDataVal,
+      id: treatment?.id,
+      prescriptions: prescriptions
+        .filter((p) => p.medicine?.trim() !== "")
+        .map((p) => {
+          const { id, ...rest } = p;
+          if (id && id.length === 36 && id.includes("-")) {
+            return { id, ...rest };
+          }
+          return rest;
+        }),
+      sessions: treatmentSessions.map((s) => {
+        const { id, ...rest } = s;
+        if (id && id.length === 36 && id.includes("-")) {
+          return { id, ...rest };
+        }
+        return rest;
+      }),
+      cost: parseFloat(String(formDataVal.cost)),
+    };
+
+    setIsSaving(true);
+    try {
+      await onSave(submitData);
+    } catch (error: any) {
+      const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                  error?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                  error?.response?.data?.message ||
+                  error?.message ||
+                  "Failed to save treatment plan";
+      toast.error(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Modal
       title={treatment ? "Edit Treatment Plan" : "Create Treatment Plan"}
@@ -372,10 +490,16 @@ export function TreatmentForm({
             Cancel
           </Button>
           <Button
-            onClick={form.handleSubmit(handleSubmit(onSave))}
+            onClick={form.handleSubmit(handleSaveForm)}
+            disabled={isSaving}
             className="gap-2 shadow-lg shadow-primary/10"
           >
-            <Save className="w-4 h-4" /> Save Treatment Plan
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            Save Treatment Plan
           </Button>
         </div>
       }
@@ -388,13 +512,17 @@ export function TreatmentForm({
             doctorError={form.formState.errors.doctorId?.message}
             allPatients={apiPatients}
             doctors={apiDoctors}
-            procedures={procedures}
+            procedures={apiProcedures}
             teeth={teeth}
             pendingPlans={pendingPlans}
             onLoadPlan={handleLoadPlan}
             isEdit={!!treatment}
             onPatientSearch={setPatientSearch}
             onDoctorSearch={setDoctorSearch}
+            onCreateProcedure={handleCreateProcedure}
+            isCreatingProcedure={createProcedureMutation.isPending}
+            onDeleteProcedure={handleDeleteProcedure}
+            onEditProcedure={handleUpdateProcedure}
           />
         </div>
 
@@ -516,63 +644,44 @@ export function TreatmentForm({
                 className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
               <div>
-                <Label className="text-sm font-semibold block mb-2">Total Cost (₹)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="Total Cost"
-                  value={completeForm.session_fee || ""}
-                  onChange={(e) => {
-                    const cost = parseInt(e.target.value) || 0;
-                    setCompleteForm(p => {
-                      const discountAmt = (cost * p.discount_percentage) / 100;
-                      const net = Math.max(0, cost - discountAmt);
-                      return { ...p, session_fee: cost, paid_amount: net };
-                    });
-                  }}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white"
-                />
+                <Label className="text-sm font-semibold block mb-2">Discount Type</Label>
+                <select
+                  value={completeForm.discount_type || ""}
+                  onChange={(e) => setCompleteForm(p => ({ ...p, discount_type: e.target.value as any, discount_value: 0 }))}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white text-sm h-10"
+                >
+                  <option value="">No Discount</option>
+                  <option value="PERCENTAGE">Percentage (%)</option>
+                  <option value="FLAT">Flat Amount (₹)</option>
+                </select>
               </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Discount (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Discount %"
-                  value={completeForm.discount_percentage || ""}
-                  onChange={(e) => {
-                    const pct = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-                    setCompleteForm(p => {
-                      const discountAmt = (p.session_fee * pct) / 100;
-                      const net = Math.max(0, p.session_fee - discountAmt);
-                      return { ...p, discount_percentage: pct, paid_amount: net };
-                    });
-                  }}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white"
-                />
-              </div>
+              {completeForm.discount_type && (
+                <div>
+                  <Label className="text-sm font-semibold block mb-2">
+                    {completeForm.discount_type === "PERCENTAGE" ? "Discount (%)" : "Discount Amount (₹)"}
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max={completeForm.discount_type === "PERCENTAGE" ? 100 : undefined}
+                    placeholder={completeForm.discount_type === "PERCENTAGE" ? "e.g. 10" : "e.g. 500"}
+                    value={completeForm.discount_value || ""}
+                    onChange={(e) => setCompleteForm(p => ({ ...p, discount_value: parseFloat(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white"
+                  />
+                </div>
+              )}
               <div>
                 <Label className="text-sm font-semibold block mb-2">Paid Amount (₹)</Label>
                 <Input
                   type="number"
                   min="0"
-                  placeholder="Paid Amount"
+                  placeholder="Amount paid at this visit"
                   value={completeForm.paid_amount || ""}
                   onChange={(e) => setCompleteForm(p => ({ ...p, paid_amount: parseInt(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Pending Amount (₹)</Label>
-                <Input
-                  type="number"
-                  disabled
-                  placeholder="Pending Amount"
-                  value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * completeForm.discount_percentage) / 100 - completeForm.paid_amount)}
-                  className="w-full px-3 py-2 rounded-xl border bg-slate-50 font-bold text-red-600 outline-none cursor-not-allowed"
                 />
               </div>
             </div>

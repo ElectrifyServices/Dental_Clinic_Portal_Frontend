@@ -34,6 +34,7 @@ export const treatmentSchema = z.object({
   existingImages: z.array(z.string()).optional().default([]),
   doctorId: z.string().min(1, 'Assigned doctor is required'),
   doctorName: z.string().optional(),
+  discount_value: z.coerce.number().min(0).optional().default(0),
   prescriptions: z.array(prescriptionItemSchema).default([]),
   sessions: z.array(sessionSchema).default([]),
 });

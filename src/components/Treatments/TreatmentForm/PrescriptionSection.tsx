@@ -97,7 +97,6 @@ export function PrescriptionSection({
     try {
       const res = await createMedicine({
         name,
-        description: "Advanced fever and pain relief medication for dental pain",
       });
       // Extract UUID from all possible response shapes
       const id =

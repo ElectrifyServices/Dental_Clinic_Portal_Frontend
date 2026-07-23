@@ -7,24 +7,38 @@ import type { Prescription, TreatmentSession } from "@/types/treatment.types";
 import { dosageMappings, procedures, teeth } from "@/constants/treatment.constants";
 
 export function useTreatmentForm(treatment?: any, patients?: any[], allTreatments?: any[]) {
-  const normalizeToothForForm = (toothValue?: string) => {
-    if (!toothValue) return "";
-    const raw = String(toothValue).trim();
-    const exact = teeth.find((tooth) => tooth === raw);
+  const normalizeSingleTooth = (raw: string) => {
+    const trimmed = raw.trim();
+    const exact = teeth.find((tooth) => tooth === trimmed);
     if (exact) return exact;
 
-    const prefixed = teeth.find((tooth) => tooth.startsWith(`${raw} `) || tooth.startsWith(`${raw}(`));
+    const prefixed = teeth.find((tooth) => tooth.startsWith(`${trimmed} `) || tooth.startsWith(`${trimmed}(`));
     if (prefixed) return prefixed;
 
-    if (raw.toLowerCase() === "fm" || raw.toLowerCase() === "full mouth") {
-      return teeth.find((tooth) => tooth.toLowerCase() === "full mouth") || raw;
+    if (trimmed.toLowerCase() === "fm" || trimmed.toLowerCase() === "full mouth" || trimmed === "-1") {
+      return teeth.find((tooth) => tooth.toLowerCase() === "full mouth") || trimmed;
     }
 
-    if (raw.toLowerCase() === "multiple teeth") {
-      return teeth.find((tooth) => tooth.toLowerCase() === "multiple teeth") || raw;
+    if (trimmed.toLowerCase() === "multiple teeth") {
+      return teeth.find((tooth) => tooth.toLowerCase() === "multiple teeth") || trimmed;
     }
 
-    return raw;
+    return trimmed;
+  };
+
+  const normalizeToothForForm = (toothValue?: any) => {
+    if (!toothValue) return "";
+    
+    // If it's already an array or a comma-separated string, handle each item
+    const rawString = Array.isArray(toothValue) 
+      ? toothValue.map(String).join(", ") 
+      : String(toothValue).trim();
+      
+    const parts = rawString.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      return parts.map(part => normalizeSingleTooth(part)).filter(Boolean).join(", ");
+    }
+    return normalizeSingleTooth(rawString);
   };
 
   const normalizeProcedureForForm = (procedureValue?: string) => {
@@ -74,6 +88,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     existingImages: currentTreatment?.images ?? [],
     doctorId: currentTreatment?.doctorId ?? "",
     doctorName: currentTreatment?.doctorName ?? "",
+    discount_value: currentTreatment?.discount_value ?? 0,
     prescriptions: [],
     sessions: [],
   });

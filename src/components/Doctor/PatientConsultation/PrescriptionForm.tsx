@@ -85,7 +85,6 @@ export function PrescriptionForm({
     try {
       const res = await createMedicine({
         name,
-        description: "Advanced fever and pain relief medication for dental pain",
       });
       return res?.id || res?.data?.id || res?.responseObject?.id || res?.data?.data?.id || name;
     } catch (err) {

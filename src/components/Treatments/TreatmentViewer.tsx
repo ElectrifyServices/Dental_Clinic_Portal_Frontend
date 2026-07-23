@@ -181,15 +181,19 @@ export function TreatmentViewer({
             <div class="prescription-grid">
               ${(treatment.prescriptions || [])
         .map(
-          (p: any) => `
+          (p: any) => {
+            const printMedName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
+            return `
                 <div class="med-card">
-                  <p><strong>${p.medicine_name}</strong></p>
+                  <p><strong>${printMedName}</strong></p>
                   <p style="font-size: 13px; margin: 5px 0;">Dosage: ${p.dosage} | Timing: ${p.timing}</p>
                   <p style="font-size: 13px; margin: 5px 0;">Freq: ${p.frequency}/day | Dur: ${p.duration} ${p.duration_type}</p>
                   <p style="font-size: 13px; margin: 5px 0;">Quantity: ${p.qty} units</p>
+                  ${p.medicine?.description ? `<p style="font-size: 13px; margin: 5px 0; color: #64748b;"><em>${p.medicine.description}</em></p>` : ""}
                   ${p.instructions ? `<p style="font-size: 13px; margin: 5px 0;"><strong>Instructions:</strong> ${p.instructions}</p>` : ""}
                 </div>
-              `,
+              `;
+          }
         )
         .join("")}
             </div>
@@ -419,20 +423,73 @@ export function TreatmentViewer({
             </div>
           </ContentCard>
 
-          <ContentCard
-            title="Estimated Cost"
-            icon={<IndianRupee className="w-5 h-5" />}
-            className="bg-indigo-50/50 border-indigo-100"
-          >
-            <div className="mt-2">
-              <p className="text-3xl font-black text-indigo-900 tracking-tighter">
-                ₹{parseInt(treatment.est_cost).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-1">
-                Total Procedure Fee
-              </p>
-            </div>
-          </ContentCard>
+          {(() => {
+            const estCost = Number(treatment.est_cost) || 0;
+            const discountVal = Number(treatment.discount_value) || 0;
+            const discountAmt = Number(treatment.discount_amount) || 0;
+            const finalCost = Number(treatment.final_cost) || (estCost - discountAmt);
+            
+            const rawPaidAmt = treatment.total_paid_amount ?? treatment.totalPaidAmount ?? treatment.paid_amount ?? treatment.paidAmount ?? 0;
+            const paidAmt = isNaN(Number(rawPaidAmt)) ? 0 : Number(rawPaidAmt);
+
+            const rawPendingAmt = treatment.pending_amount ?? treatment.pendingAmount;
+            const pendingAmt = rawPendingAmt !== null && rawPendingAmt !== undefined && !isNaN(Number(rawPendingAmt))
+              ? Number(rawPendingAmt)
+              : Math.max(0, finalCost - paidAmt);
+
+            return (
+              <ContentCard
+                title="Financial Summary"
+                icon={<IndianRupee className="w-5 h-5" />}
+                className="bg-indigo-50/50 border-indigo-100"
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                    <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
+                      Estimated Cost
+                    </span>
+                    <span className="text-sm font-bold text-foreground">
+                      ₹{estCost.toLocaleString()}
+                    </span>
+                  </div>
+                  {discountVal > 0 && (
+                    <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                      <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
+                        Discount ({discountVal}%)
+                      </span>
+                      <span className="text-sm font-bold text-red-500">
+                        − ₹{discountAmt.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                    <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
+                      Final Cost
+                    </span>
+                    <span className="text-sm font-black text-indigo-900">
+                      ₹{finalCost.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                    <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
+                      Total Paid Amount
+                    </span>
+                    <span className="text-sm font-black text-emerald-600">
+                      ₹{paidAmt.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-red-500/80 uppercase tracking-widest">
+                      Pending Amount
+                    </span>
+                    <span className="text-sm font-black text-red-600">
+                      ₹{pendingAmt.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </ContentCard>
+            );
+          })()}
         </div>
 
         {/* Sessions Section */}
@@ -651,37 +708,46 @@ export function TreatmentViewer({
               <Pill className="w-4 h-4 text-emerald-500" /> Prescribed Medications
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {treatment.prescriptions.map((p: any) => (
-                <ContentCard
-                  key={p.id}
-                  title={p.medicine_name}
-                  subtitle={p.dosage}
-                  className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
-                >
-                  <div className="grid grid-cols-2 gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}{" "}
-                      {p.duration_type}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-3 h-3 text-emerald-400" /> {p.frequency}/day
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units
-                    </div>
-                  </div>
-                  {p.instructions && (
-                    <div className="mt-3 pt-3 border-t border-emerald-100/50">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-bold">Instructions:</span> {p.instructions}
+              {treatment.prescriptions.map((p: any) => {
+                const medName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
+                const dosageText = p.dosage ? `Dosage: ${p.dosage}` : undefined;
+                return (
+                  <ContentCard
+                    key={p.id}
+                    title={medName}
+                    subtitle={dosageText}
+                    className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
+                  >
+                    {p.medicine?.description && (
+                      <p className="text-xs text-muted-foreground -mt-1 mb-3 italic">
+                        {p.medicine.description}
                       </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3 h-3 text-emerald-400" /> {p.duration}{" "}
+                        {p.duration_type}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-3 h-3 text-emerald-400" /> {p.frequency}/day
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Pill className="w-3 h-3 text-emerald-400" /> {p.qty} Units
+                      </div>
                     </div>
-                  )}
-                </ContentCard>
-              ))}
+                    {p.instructions && (
+                      <div className="mt-3 pt-3 border-t border-emerald-100/50">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-bold">Instructions:</span> {p.instructions}
+                        </p>
+                      </div>
+                    )}
+                  </ContentCard>
+                );
+              })}
             </div>
           </div>
         )}

@@ -4,6 +4,7 @@ import {
   IndianRupee, Activity, X,
   TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
   Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
+  Percent, AlertCircle
 } from "lucide-react";
 import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
@@ -337,6 +338,40 @@ export function TreatmentSessionManager({
   const updateSession = useUpdateTreatmentSessionMutation();
   const completeSession = useCompleteTreatmentSessionMutation();
 
+  const [scheduleNext, setScheduleNext] = useState(false);
+  const [nextSessionDraft, setNextSessionDraft] = useState({
+    date: "",
+    time: "09:00 AM",
+    duration: 45,
+    cost: 0,
+    clinical_objectives: "",
+  });
+
+  const { data: nextSlotsResponse, isLoading: isNextSlotsLoading } = useAvailableSlotsQuery(
+    assignedDoctorId || null,
+    nextSessionDraft.date || null,
+  );
+
+  const nextSlots = useMemo(() => {
+    if (!nextSlotsResponse?.data?.slots || !nextSessionDraft.date) return [];
+
+    return nextSlotsResponse.data.slots.map((slot: any) => {
+      const time24 = convert12to24(slot.time);
+      const slotDateTime = new Date(`${nextSessionDraft.date}T${time24}:00`);
+      const isPast =
+        nextSessionDraft.date === getTodayInputValue() &&
+        !Number.isNaN(slotDateTime.getTime()) &&
+        slotDateTime.getTime() < Date.now();
+
+      return {
+        time12: slot.time,
+        time24,
+        appointmentCount: slot.appointment_count || 0,
+        isDisabled: slot.disabled === true || isPast,
+      };
+    });
+  }, [nextSessionDraft.date, nextSlotsResponse]);
+
   const [showNewSession, setShowNewSession] = useState(false);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
@@ -365,15 +400,6 @@ export function TreatmentSessionManager({
     session_fee: 0,
     discount_percentage: 0,
     paid_amount: 0,
-  });
-
-  const [scheduleNext, setScheduleNext] = useState(false);
-  const [nextSessionDraft, setNextSessionDraft] = useState({
-    date: "",
-    time: "09:00 AM",
-    duration: 45,
-    cost: 0,
-    clinical_objectives: "",
   });
 
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -462,10 +488,23 @@ export function TreatmentSessionManager({
     }));
   }, [rawSessions, prescriptionsBySession]);
 
-  const totalSessions: number   = responseData?.total ?? 0;
-  const completedCount: number  = responseData?.completed ?? 0;
+  const totalSessions: number = responseData?.total ?? 0;
+  const completedCount: number = responseData?.completed ?? 0;
   const totalFees: number = Number(responseData?.total_fees ?? responseData?.projected_revenue ?? 0);
   const sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
+
+  const estCost = Number(treatmentPlan?.est_cost) || 0;
+  const discountVal = Number(treatmentPlan?.discount_value) || 0;
+  const discountAmt = Number(treatmentPlan?.discount_amount) || 0;
+  const finalCost = Number(treatmentPlan?.final_cost) || (estCost - discountAmt);
+
+  const rawPaidAmt = treatmentPlan?.total_paid_amount ?? treatmentPlan?.totalPaidAmount ?? treatmentPlan?.paid_amount ?? treatmentPlan?.paidAmount ?? 0;
+  const paidAmt = isNaN(Number(rawPaidAmt)) ? 0 : Number(rawPaidAmt);
+
+  const rawPendingAmt = treatmentPlan?.pending_amount ?? treatmentPlan?.pendingAmount;
+  const pendingAmt = rawPendingAmt !== null && rawPendingAmt !== undefined && !isNaN(Number(rawPendingAmt))
+    ? Number(rawPendingAmt)
+    : Math.max(0, finalCost - paidAmt);
 
   const groupedSessions = useMemo(() => {
     const norm = (s?: string) => {
@@ -473,10 +512,10 @@ export function TreatmentSessionManager({
       return u === "PLANNED" ? "SCHEDULED" : u;
     };
     return {
-      upcoming:   sessions.filter(s => norm(s.status) === "SCHEDULED"),
+      upcoming: sessions.filter(s => norm(s.status) === "SCHEDULED"),
       inProgress: sessions.filter(s => norm(s.status) === "IN_PROGRESS"),
-      completed:  sessions.filter(s => norm(s.status) === "COMPLETED"),
-      cancelled:  sessions.filter(s => norm(s.status) === "CANCELLED"),
+      completed: sessions.filter(s => norm(s.status) === "COMPLETED"),
+      cancelled: sessions.filter(s => norm(s.status) === "CANCELLED"),
     };
   }, [sessions]);
 
@@ -610,10 +649,10 @@ export function TreatmentSessionManager({
       const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
       const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
-      const currentFee = Number(session.session_fee) || fallbackFee;
+      const currentFee = Number(session.session_fee || (session as any).cost) || fallbackFee || Number(treatmentPlan?.est_cost) || Number(treatmentPlan?.cost) || 0;
       // If the current session fee was 0, default discount and paid_amount to previous completed session's values
-      const currentDiscount = Number(session.session_fee) === 0 ? fallbackDiscount : 0;
-      const currentPaid = Number(session.session_fee) === 0 ? fallbackPaid : (currentFee - (currentFee * currentDiscount) / 100);
+      const currentDiscount = Number(session.session_fee || (session as any).cost) === 0 ? fallbackDiscount : 0;
+      const currentPaid = Number(session.session_fee || (session as any).cost) === 0 ? fallbackPaid : (currentFee - (currentFee * currentDiscount) / 100);
 
       setCompleteForm({
         work_done: "",
@@ -628,7 +667,7 @@ export function TreatmentSessionManager({
       setScheduleNext(false);
       setNextSessionDraft({
         date: getTodayInputValue(),
-        time: "09:00 AM",
+        time: "", // Clear time initially to force available slot selection
         duration: 45,
         cost: currentFee, // default next session fee to this session's fee
         clinical_objectives: "",
@@ -696,6 +735,16 @@ export function TreatmentSessionManager({
       showToast("Please add work done or findings", "error");
       return;
     }
+    if (scheduleNext) {
+      if (!nextSessionDraft.date) {
+        showToast("Please select a date for the next session", "error");
+        return;
+      }
+      if (!nextSessionDraft.time) {
+        showToast("Please select an available time slot for the next session", "error");
+        return;
+      }
+    }
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const formattedPrescriptions = prescriptions
       .filter((p: any) => p.medicine?.trim())
@@ -755,7 +804,7 @@ export function TreatmentSessionManager({
         nextSessionPayload = {
           schedule_next_session: true,
           next_visit_date: formattedNextVisitDate,
-          next_start_time: time24,
+          next_start_time: nextSessionDraft.time || "10:00 AM",
           next_duration_min: Number(nextSessionDraft.duration) || 60,
           next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
           next_session_fee: Number(nextSessionDraft.cost) || 0,
@@ -822,10 +871,10 @@ export function TreatmentSessionManager({
     const normalizedStatus = session.status?.toUpperCase().replace("-", "_") || "PLANNED";
     const cfg = STATUS_CONFIG[normalizedStatus] ?? STATUS_CONFIG.SCHEDULED;
     const StatusIcon = cfg.icon;
-    const isCompleting  = completingId === session.id;
-    const isExpanded    = expandedSessions.has(session.id);
-    const isEditing     = editingClinicalNotes === session.id;
-    const isScheduling  = schedulingSessionId === session.id;
+    const isCompleting = completingId === session.id;
+    const isExpanded = expandedSessions.has(session.id);
+    const isEditing = editingClinicalNotes === session.id;
+    const isScheduling = schedulingSessionId === session.id;
     const appointmentTime = formatTime(getSessionTime(session));
 
     // Prescriptions already merged in sessions useMemo
@@ -833,9 +882,8 @@ export function TreatmentSessionManager({
 
     return (
       <div className="relative" key={session.id}>
-        <Card className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${
-          normalizedStatus === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
-        }`}>
+        <Card className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${normalizedStatus === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
+          }`}>
           {/* ── Card Header ── */}
           <div className="p-5 cursor-pointer hover:bg-muted/5 transition-colors" onClick={() => toggleExpand(session.id)}>
             <div className="flex items-start justify-between gap-4">
@@ -854,11 +902,11 @@ export function TreatmentSessionManager({
                     <Clock className="w-4 h-4" />
                     <span className="font-medium">{appointmentTime} • {session.duration_min ?? 45} min</span>
                   </div>
-                  
+
                   {normalizedStatus === "COMPLETED" && (
-                 
+
                     <div className="flex items-center gap-2 text-muted-foreground">
-                  
+
                       Clinical Objectives :
                       <span className="truncate text-xs">{session.clinical_objectives || "No objectives set"}</span>
                     </div>
@@ -1255,7 +1303,7 @@ export function TreatmentSessionManager({
 
                 {scheduleNext && (
                   <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
                         <Input
@@ -1268,10 +1316,13 @@ export function TreatmentSessionManager({
                             return `${year}-${month}-${day}`;
                           })()}
                           value={nextSessionDraft.date}
-                          onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
+                          onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value, time: "" }))}
                           className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         />
                       </div>
+
+                      {/* Time and Session Fee commented out per requirements */}
+                      {/* 
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Time</Label>
                         <Select
@@ -1295,6 +1346,8 @@ export function TreatmentSessionManager({
                           </SelectContent>
                         </Select>
                       </div>
+                      */}
+
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Duration (Min)</Label>
                         <Select
@@ -1311,6 +1364,8 @@ export function TreatmentSessionManager({
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/*
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Session Fee (₹)</Label>
                         <Input
@@ -1321,7 +1376,66 @@ export function TreatmentSessionManager({
                           className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
                         />
                       </div>
+                      */}
                     </div>
+
+                    {/* Available Slots Selection for Next Session */}
+                    {assignedDoctorId && nextSessionDraft.date ? (
+                      <div className="space-y-3 border-t pt-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-emerald-700" />
+                          <p className="text-xs font-bold text-foreground">Available Slots</p>
+                          {isNextSlotsLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-700" />}
+                        </div>
+
+                        {isNextSlotsLoading ? (
+                          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            {Array.from({ length: 6 }).map((_, index) => (
+                              <div key={index} className="h-10 rounded-xl bg-emerald-100/50 animate-pulse" />
+                            ))}
+                          </div>
+                        ) : nextSlots.length > 0 ? (
+                          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                            {nextSlots.map((slot) => {
+                              const isSelected = nextSessionDraft.time === slot.time12;
+                              return (
+                                <button
+                                  key={slot.time24}
+                                  type="button"
+                                  disabled={slot.isDisabled}
+                                  onClick={() => !slot.isDisabled && setNextSessionDraft(p => ({ ...p, time: slot.time12 }))}
+                                  className={[
+                                    "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
+                                    isSelected
+                                      ? "bg-emerald-600 border-emerald-600 text-white"
+                                      : slot.isDisabled
+                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                                        : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
+                                  ].join(" ")}
+                                >
+                                  {slot.time12} ({slot.appointmentCount})
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            No slots available for the selected date.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground border-t pt-4">
+                        Select a date to load available slots.
+                      </p>
+                    )}
+
+                    {!assignedDoctorId && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        This treatment has no linked doctor, so slots cannot be loaded.
+                      </p>
+                    )}
+
                     <div>
                       <Label className="text-xs font-semibold block mb-2">Clinical Objectives / Next Session Plan</Label>
                       <Textarea
@@ -1329,7 +1443,7 @@ export function TreatmentSessionManager({
                         placeholder="Next session targets..."
                         value={nextSessionDraft.clinical_objectives}
                         onChange={(e) => setNextSessionDraft(p => ({ ...p, clinical_objectives: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white resize-none font-medium"
+                        className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white resize-none font-medium text-sm"
                       />
                     </div>
                   </div>
@@ -1424,36 +1538,60 @@ export function TreatmentSessionManager({
       <div className="flex flex-1 min-h-0 flex-col gap-8 overflow-hidden">
 
         {/* Stats */}
-        <div className="grid grid-cols-1 gap-4 shrink-0 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            label="Total Sessions"
-            value={totalSessions}
-            icon={<Calendar className="w-5 h-5 text-primary" />}
-            variant="primary"
-            interactive={false}
-          />
-          <MetricCard
-            label="Completed"
-            value={completedCount}
-            icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
-            variant="emerald"
-            interactive={false}
-          
-          />
-          <MetricCard
-            label="Estimated Cost"
-            value={`₹${totalFees.toLocaleString("en-IN")}`}
-            icon={<TrendingUp className="w-5 h-5 text-indigo-600" />}
-            variant="indigo"
-            interactive={false}
-          />
-          <MetricCard
-            label="In Progress"
-            value={groupedSessions.inProgress.length}
-            icon={<Activity className="w-5 h-5 text-rose-600" />}
-            variant="rose"
-            interactive={false}
-          />
+        <div className="space-y-3 shrink-0">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <MetricCard
+              label="Total Sessions"
+              value={totalSessions}
+              icon={<Calendar className="w-5 h-5 text-primary" />}
+              variant="primary"
+              interactive={false}
+            />
+            <MetricCard
+              label="Completed"
+              value={completedCount}
+              icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
+              variant="emerald"
+              interactive={false}
+            />
+            <MetricCard
+              label="In Progress"
+              value={groupedSessions.inProgress.length}
+              icon={<Activity className="w-5 h-5 text-rose-600" />}
+              variant="rose"
+              interactive={false}
+            />
+            <MetricCard
+              label="Estimated Cost"
+              value={`₹${totalFees.toLocaleString("en-IN")}`}
+              icon={<TrendingUp className="w-5 h-5 text-indigo-600" />}
+              variant="indigo"
+              interactive={false}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <MetricCard
+              label="Discount"
+              value={discountVal > 0 ? `${discountVal}%` : "0%"}
+              icon={<Percent className="w-5 h-5 text-amber-500" />}
+              variant="amber"
+              interactive={false}
+            />
+            <MetricCard
+              label="Total Paid"
+              value={`₹${paidAmt.toLocaleString("en-IN")}`}
+              icon={<BadgeCheck className="w-5 h-5 text-emerald-500" />}
+              variant="emerald"
+              interactive={false}
+            />
+            <MetricCard
+              label="Pending Amount"
+              value={`₹${pendingAmt.toLocaleString("en-IN")}`}
+              icon={<AlertCircle className="w-5 h-5 text-red-500" />}
+              variant="rose"
+              interactive={false}
+            />
+          </div>
         </div>
 
         {/* Timeline header */}
@@ -1480,9 +1618,11 @@ export function TreatmentSessionManager({
             >
               <MessageSquareText className="w-4 h-4" /> Consultation Feedback
             </Button>
+            {/* 
             <Button onClick={() => setShowNewSession(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Add Session
             </Button>
+            */}
           </div>
         </div>
 
@@ -1571,7 +1711,7 @@ export function TreatmentSessionManager({
                 <Select value={newSession.time} onValueChange={(val) => setNewSession({ ...newSession, time: val })}>
                   <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["09:00 AM","10:00 AM","11:00 AM","11:30 AM","02:00 PM","03:00 PM","04:00 PM","05:00 PM"].map(t => (
+                    {["09:00 AM", "10:00 AM", "11:00 AM", "11:30 AM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"].map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
@@ -1582,7 +1722,7 @@ export function TreatmentSessionManager({
                 <Select value={newSession.duration.toString()} onValueChange={(val) => setNewSession({ ...newSession, duration: parseInt(val) })}>
                   <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[15,30,45,60,90,120].map(d => <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>)}
+                    {[15, 30, 45, 60, 90, 120].map(d => <SelectItem key={d} value={d.toString()}>{d} minutes</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

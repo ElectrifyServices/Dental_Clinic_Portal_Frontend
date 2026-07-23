@@ -4,6 +4,11 @@ import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
 import { SearchableSelect, DataTable, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
+import { useProcedureQuery } from "@/hooks/procedures/useProcedureQuery";
+import { useCreateProcedureMutation } from "@/hooks/procedures/useCreateProcedureMutation";
+import { useUpdateProcedureMutation } from "@/hooks/procedures/useUpdateProcedureMutation";
+import { useDeleteProcedureMutation } from "@/hooks/procedures/useDeleteProcedureMutation";
+import { useModal } from "@/contexts/ModalContext";
 
 interface TreatmentPlan {
   id: string;
@@ -47,6 +52,40 @@ interface TreatmentPlanningProps {
   errors?: Record<string, string>;
 }
 
+const defaultProcedures = [
+  { label: "Dental Filling", value: "Dental Filling" },
+  { label: "Root Canal Treatment", value: "Root Canal Treatment" },
+  { label: "Crown Placement", value: "Crown Placement" },
+  { label: "Tooth Extraction", value: "Tooth Extraction" },
+  { label: "Teeth Cleaning", value: "Teeth Cleaning" },
+  { label: "Orthodontic Treatment", value: "Orthodontic Treatment" },
+  { label: "Dental Implant", value: "Dental Implant" },
+  { label: "Dental Bridge", value: "Dental Bridge" },
+  { label: "Removable Partial Denture (RPD)", value: "Removable Partial Denture (RPD)" },
+  { label: "Complete Denture", value: "Complete Denture" },
+  { label: "No Treatment Required", value: "No Treatment Required" }
+];
+
+const getRawProceduresList = (rawProceduresData: any): any[] => {
+  if (!rawProceduresData) return [];
+  const target = rawProceduresData.responseObject !== undefined ? rawProceduresData.responseObject : rawProceduresData;
+  if (Array.isArray(target)) {
+    return target;
+  }
+  if (target && typeof target === "object") {
+    if (Array.isArray(target.data?.data)) {
+      return target.data.data;
+    }
+    if (Array.isArray(target.data)) {
+      return target.data;
+    }
+    if (Array.isArray(target.procedures)) {
+      return target.procedures;
+    }
+  }
+  return [];
+};
+
 export function TreatmentPlanning({
   toothChartState,
   requiresTreatment,
@@ -65,6 +104,71 @@ export function TreatmentPlanning({
   onRemovePlan,
   errors = {},
 }: TreatmentPlanningProps) {
+  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({ all: true });
+  const { confirmDelete } = useModal();
+  const createProcedureMutation = useCreateProcedureMutation();
+  const updateProcedureMutation = useUpdateProcedureMutation();
+  const deleteProcedureMutation = useDeleteProcedureMutation();
+
+  const handleCreateProcedure = async (newProcedureName: string) => {
+    try {
+      const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
+      return created?.name || newProcedureName;
+    } catch (error) {
+      // handled in hook
+    }
+  };
+
+  const handleUpdateProcedure = async (oldName: string, newName: string) => {
+    try {
+      const rawList = getRawProceduresList(rawProceduresData);
+      const matched = rawList.find((p: any) => p.name === oldName);
+      if (matched?.id) {
+        await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
+      }
+    } catch (error) {
+      // handled in hook
+    }
+  };
+
+  const handleDeleteProcedure = async (name: string) => {
+    confirmDelete(
+      "Delete Procedure",
+      `Are you sure you want to delete procedure "${name}"?`,
+      async () => {
+        try {
+          const rawList = getRawProceduresList(rawProceduresData);
+          const matched = rawList.find((p: any) => p.name === name);
+          if (matched?.id) {
+            await deleteProcedureMutation.mutateAsync({ id: matched.id });
+          }
+        } catch (error) {
+          // handled in hook
+        }
+      }
+    );
+  };
+
+  const apiProcedures = React.useMemo(() => {
+    if (isProceduresLoading) {
+      return [{ label: "Loading procedures...", value: "", disabled: true }];
+    }
+    if (isProceduresError) {
+      return [{ label: "Error loading procedures", value: "", disabled: true }];
+    }
+
+    const rawList = getRawProceduresList(rawProceduresData);
+    const filtered = rawList.filter((p: any) => p.status === "ACTIVE" && !p.deleted_at);
+    if (filtered.length === 0) {
+      return [{ label: "No procedures found", value: "", disabled: true }];
+    }
+
+    return filtered.map((p: any) => ({
+      label: p.name,
+      value: p.name,
+    }));
+  }, [rawProceduresData, isProceduresLoading, isProceduresError]);
+
   const totalPlannedCost = treatmentPlans.reduce((sum, p) => {
     const cost = Number(p.cost) || 0;
     const discountPct = Number(p.discount) || 0;
@@ -123,22 +227,16 @@ export function TreatmentPlanning({
         <SearchableSelect
           value={plan.procedure}
           onChange={(val) => onUpdatePlan(index, "procedure", val)}
-          options={[
-            "Dental Filling",
-            "Root Canal Treatment",
-            "Crown Placement",
-            "Tooth Extraction",
-            "Teeth Cleaning",
-            "Orthodontic Treatment",
-            "Dental Implant",
-            "Dental Bridge",
-            "Removable Partial Denture (RPD)",
-            "Complete Denture",
-            "No Treatment Required"
-          ]}
+          options={apiProcedures.length > 0 ? apiProcedures : defaultProcedures}
           placeholder="Select Procedure"
           searchPlaceholder="Search procedure..."
           className="h-9 font-semibold text-xs rounded-lg border-purple-200"
+          onCreateOption={handleCreateProcedure}
+          createLabel="Create Procedure"
+          isCreating={createProcedureMutation.isPending}
+          onDeleteOption={handleDeleteProcedure}
+          onEditOption={handleUpdateProcedure}
+          capitalizeWords
         />
       ),
     },

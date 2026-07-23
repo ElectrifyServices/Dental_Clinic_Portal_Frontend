@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { User, Mail, Phone, Upload, Eye, EyeOff, Check } from 'lucide-react';
 import { LabeledField } from '@/components/ui';
 
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+
 interface Step1Props {
   formData: any;
   onChange: (e: any) => void;
@@ -101,7 +103,12 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         <LabeledField label="Full Name" required error={errors.name?.message}>
           <div className="relative">
             <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input type="text" name="name" value={formData.name} onChange={onChange} required
+            <Input type="text" name="name" value={formData.name}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/\d/g, "");
+                onChange(e);
+              }}
+              required
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.name ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="e.g. Dr. Sameer Khan" />
           </div>
@@ -116,19 +123,29 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           </div>
         </LabeledField>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 text-left">
           <LabeledField label="Phone Number" required error={errors.phone?.message}>
-            <div className="relative">
-              <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input type="tel" name="phone" value={formData.phone}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[a-zA-Z]/g, '');
-                  e.target.value = val;
-                  onChange(e);
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <CountryCodeSelect
+                value={formData.country_code || "+91"}
+                onChange={(val) => {
+                  onChange({ target: { name: "country_code", value: val } });
                 }}
-                required
-                 className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
-                placeholder="9876543210" />
+                className="h-11 rounded-xl"
+              />
+              <div className="relative flex-1">
+                <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input type="tel" name="phone" value={formData.phone}
+                  maxLength={10}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    e.target.value = val;
+                    onChange(e);
+                  }}
+                  required
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
+                  placeholder="9876543210" />
+              </div>
             </div>
           </LabeledField>
         </div>

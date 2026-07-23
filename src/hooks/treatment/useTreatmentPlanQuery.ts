@@ -12,6 +12,8 @@ export function useTreatmentPlanQuery(id?: string, options?: { enabled?: boolean
     options: {
       enabled,
       staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
     },
   });
 }
