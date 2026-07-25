@@ -150,8 +150,11 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
               if (Array.isArray(appts) && appts.length > 0) {
                 const followUpDateStr = (parsed.data as any).follow_up_date || record.follow_up_date;
                 if (followUpDateStr) {
-                  const targetDate = new Date(followUpDateStr).toDateString();
-                  const match = appts.find((a: any) => new Date(a.date).toDateString() === targetDate);
+                  const targetDate = followUpDateStr.includes("T") ? followUpDateStr.split("T")[0] : followUpDateStr;
+                  const match = appts.find((a: any) => {
+                    const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+                    return aDateStr === targetDate;
+                  });
                   if (match) {
                     setAppointment(match);
                   } else {

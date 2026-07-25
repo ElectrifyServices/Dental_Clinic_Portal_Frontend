@@ -239,17 +239,9 @@ export function PatientConsultation({
       ? (directPatientName || "").toLowerCase().trim() 
       : (directPatientPhone || "").toLowerCase().trim();
 
-    const filteredPatients = apiPatients.filter((p: any) => {
-      const pName = (p.name || p.full_name || p.patient_name || "").toLowerCase();
-      const pPhone = (p.phone || p.mobile || p.patient_phone || "").replace(/\D/g, "");
-      if (focusedField === "name") {
-        return !searchTerm || pName.includes(searchTerm);
-      }
-      if (focusedField === "phone") {
-        return !searchTerm || pPhone.includes(searchTerm);
-      }
-      return true;
-    }).slice(0, 10);
+    // The apiPatients list is already searched/filtered by the backend. Local filtering is disabled
+    // to prevent mismatch from typos, fuzzy matching, or loading/debounce state.
+    const filteredPatients = apiPatients.slice(0, 10);
 
     return (
       <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">

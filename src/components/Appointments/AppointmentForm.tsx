@@ -222,23 +222,22 @@ export function AppointmentForm({
   const apiPatients = useMemo(() => {
     let rawList: any[] = [];
     const dataObj: any = rawPatientsData;
-    if (Array.isArray(dataObj)) {
-      rawList = dataObj;
-    } else if (dataObj && Array.isArray(dataObj.patients)) {
-      rawList = dataObj.patients;
-    } else if (dataObj && Array.isArray(dataObj.data?.patients)) {
-      rawList = dataObj.data.patients;
-    } else if (dataObj && Array.isArray(dataObj.data?.data)) {
-      rawList = dataObj.data.data;
-    } else if (dataObj && Array.isArray(dataObj.data)) {
-      rawList = dataObj.data;
-    } else if (dataObj?.responseObject) {
-      const resp = dataObj.responseObject;
-      if (Array.isArray(resp)) rawList = resp;
-      else if (Array.isArray(resp.patients)) rawList = resp.patients;
-      else if (Array.isArray(resp.data?.patients)) rawList = resp.data.patients;
-      else if (Array.isArray(resp.data)) rawList = resp.data;
-    } else if (Array.isArray(patients) && patients.length > 0) {
+
+    const target = dataObj?.responseObject !== undefined ? dataObj.responseObject : dataObj;
+
+    if (Array.isArray(target)) {
+      rawList = target;
+    } else if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data)) rawList = target.data.data;
+      else if (Array.isArray(target.data)) rawList = target.data;
+      else if (Array.isArray(target.patients)) rawList = target.patients;
+      else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
+      else if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
+    }
+
+    // Only fall back to all patients list if we are not actively searching
+    const activeSearch = (debouncedSearch || "").trim();
+    if (rawList.length === 0 && !activeSearch && Array.isArray(patients) && patients.length > 0) {
       rawList = patients;
     }
 
@@ -248,7 +247,7 @@ export function AppointmentForm({
       name: p.name || p.full_name || p.patient_name || "",
       phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
     }));
-  }, [rawPatientsData, patients]);
+  }, [rawPatientsData, patients, debouncedSearch]);
 
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value } = e.target;

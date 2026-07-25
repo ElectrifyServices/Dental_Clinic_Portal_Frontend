@@ -650,9 +650,11 @@ export function TreatmentSessionManager({
       const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
       const currentFee = Number(session.session_fee || (session as any).cost) || fallbackFee || Number(treatmentPlan?.est_cost) || Number(treatmentPlan?.cost) || 0;
-      // If the current session fee was 0, default discount and paid_amount to previous completed session's values
-      const currentDiscount = Number(session.session_fee || (session as any).cost) === 0 ? fallbackDiscount : 0;
-      const currentPaid = Number(session.session_fee || (session as any).cost) === 0 ? fallbackPaid : (currentFee - (currentFee * currentDiscount) / 100);
+      const planDiscount = Number(treatmentPlan?.discount_value) || 0;
+      
+      // Default to treatment plan's discount percentage first, then fallback to last completed session's discount
+      const currentDiscount = planDiscount || fallbackDiscount || 0;
+      const currentPaid = Number(session.paid_amount || (session as any).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
 
       setCompleteForm({
         work_done: "",
@@ -1317,7 +1319,7 @@ export function TreatmentSessionManager({
                           })()}
                           value={nextSessionDraft.date}
                           onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value, time: "" }))}
-                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          className="w-full !inline-flex items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         />
                       </div>
 

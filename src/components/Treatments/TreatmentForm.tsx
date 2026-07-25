@@ -261,15 +261,16 @@ export function TreatmentForm({
     const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
     const currentFee = Number(session.session_fee || session.cost) || fallbackFee;
-    const currentDiscount = Number(session.session_fee || session.cost) === 0 ? fallbackDiscount : 0;
-    const currentPaid = Number(session.session_fee || session.cost) === 0 ? fallbackPaid : (currentFee - (currentFee * currentDiscount) / 100);
+    const planDiscount = Number(formData.discount_value) || 0;
+    const currentDiscount = planDiscount || fallbackDiscount || 0;
+    const currentPaid = Number(session.paid_amount || (session as any).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
 
     setCompleteForm({
       work_done: session.work_done || session.workDone || "",
       session_findings: session.session_findings || session.findings || "",
-      discount_type: "",
-      discount_value: 0,
-      paid_amount: Number(session.paid_amount) || 0,
+      discount_type: currentDiscount > 0 ? "PERCENTAGE" : "",
+      discount_value: currentDiscount,
+      paid_amount: currentPaid,
     });
     setSessionAttachments([]);
     setScheduleNext(false);
@@ -716,7 +717,7 @@ export function TreatmentForm({
                         })()}
                         value={nextSessionDraft.date}
                         onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
-                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        className="w-full !inline-flex items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                     </div>
                     <div>

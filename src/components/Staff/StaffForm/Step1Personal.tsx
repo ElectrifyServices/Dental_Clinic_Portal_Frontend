@@ -248,7 +248,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
               </Button>
             </div>
             
-            {showMismatchError && (
+            {showMismatchError && !errors.confirmPassword && (
               <p className="text-xs text-rose-500 font-medium mt-1 animate-in fade-in slide-in-from-top-1">
                 Passwords do not match
               </p>

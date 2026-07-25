@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DoctorSidebar } from "./AppointmentCalendar/DoctorSidebar";
 import { CalendarGrid } from "./AppointmentCalendar/CalendarGrid";
 import { DayAgenda } from "./AppointmentCalendar/DayAgenda";
@@ -56,7 +56,8 @@ export function AppointmentCalendar({
   const [localDate, setLocalDate] = useState(() => new Date());
   const selectedDateObj = useMemo(() => {
     if (propSelectedDate) {
-      return new Date(propSelectedDate);
+      const [y, m, d] = propSelectedDate.split("-").map(Number);
+      return new Date(y, m - 1, d);
     }
     return localDate;
   }, [propSelectedDate, localDate]);
@@ -96,6 +97,12 @@ export function AppointmentCalendar({
 
   const { data: scheduleData } = useDoctorScheduleQuery(currentDoctorId);
   const scheduleState = useMemo(() => mapApiResponseToScheduleState(scheduleData), [scheduleData]);
+
+  // Reset selected slot and trigger automatic refresh of available slots when appointments list changes
+  useEffect(() => {
+    refetchAvailableSlots();
+    setSelectedTime(null);
+  }, [appointments, refetchAvailableSlots]);
 
   const monthNames = [
     "January",
@@ -197,13 +204,14 @@ export function AppointmentCalendar({
         selectedDate={selectedDateObj}
         setSelectedDate={handleSetSelectedDateObj}
         appointmentsByDate={calendarDataResponse?.data?.appointments_by_date || {}}
-        getDayAppointmentsForDate={(date) =>
-          appointments.filter(
-            (a) =>
-              new Date(a.date).toDateString() === date.toDateString() &&
-              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId)),
-          )
-        }
+        getDayAppointmentsForDate={(date) => {
+          const targetStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          return appointments.filter((a) => {
+            const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+            return aDateStr === targetStr &&
+              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId));
+          });
+        }}
         monthNames={monthNames}
         currentDoctorId={currentDoctorId}
         scheduleState={scheduleState}
@@ -213,11 +221,11 @@ export function AppointmentCalendar({
       <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
         <DayAgenda
           selectedDate={selectedDateObj}
-          appointments={appointments.filter(
-            (a) =>
-              new Date(a.date).toDateString() === selectedDateObj.toDateString() &&
-              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId)),
-          )}
+          appointments={appointments.filter((a) => {
+            const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+            return aDateStr === formattedDate &&
+              (!currentDoctorId || String(a.doctorId) === String(currentDoctorId));
+          })}
           onEditAppointment={onEditAppointment}
           onDirectCheckIn={onDirectCheckIn}
           formatTime={formatTime}
