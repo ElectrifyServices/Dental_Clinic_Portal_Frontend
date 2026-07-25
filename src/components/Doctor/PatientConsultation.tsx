@@ -109,9 +109,28 @@ export function PatientConsultation({
   onClose,
   onCompleteConsultation,
 }: PatientConsultationProps) {
+  const findConsultationId = (payload: any, depth = 0): string | undefined => {
+    if (!payload || depth > 4) return undefined;
+    if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
+    if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
+      return payload.consultation_id;
+    }
+    if (typeof payload !== "object") return undefined;
+    for (const value of Object.values(payload)) {
+      if (value && typeof value === "object") {
+        const nestedId = findConsultationId(value, depth + 1);
+        if (nestedId) return nestedId;
+      }
+    }
+    return undefined;
+  };
+
   const { state } = useAuth();
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdConsultationId, setCreatedConsultationId] = useState<string | null>(null);
+  const [selectedExistingDirectPatientId, setSelectedExistingDirectPatientId] = useState<string | undefined>(
+    (patient as any).isDirect ? ((patient as any).patientId || undefined) : undefined,
+  );
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -199,6 +218,7 @@ export function PatientConsultation({
     setDirectPatientPhone(cleanPhone);
     setDirectCountryCode(selectedCountryCode);
     setDirectPatientId(p.id);
+    setSelectedExistingDirectPatientId(p.id);
 
     if (errors.directPatientName || errors.directPatientPhone) {
       setErrors((prev) => {
@@ -515,6 +535,7 @@ export function PatientConsultation({
   const handleDownloadPDF = async (
     type: PDFReportType = "FULL",
     consultationIdOverride?: string,
+    skipSendApi?: boolean,
   ) => {
     const toastId = toast.loading("Generating PDF report...");
     try {
@@ -556,7 +577,7 @@ export function PatientConsultation({
           initialData?.id ||
           (patient as any).consultationId ||
           patient.id;
-        if (cId && cId.length === 36 && !cId.startsWith("WALK-")) {
+        if (!skipSendApi && cId && cId.length === 36 && !cId.startsWith("WALK-")) {
           await sendMutation.mutateAsync({ id: cId, type });
         }
       } catch (sendErr) {
@@ -782,10 +803,15 @@ export function PatientConsultation({
         directPatientPhone,
         isDirect: (patient as any).isDirect,
       });
+      const returnedConsultationId = findConsultationId(res);
       const completedConsultationId =
-        res?.id || createdConsultationId || initialData?.id || (patient as any).consultationId || patient.id;
-      if (res && res.id) {
-        setCreatedConsultationId(res.id);
+        returnedConsultationId ||
+        createdConsultationId ||
+        initialData?.id ||
+        (patient as any).consultationId ||
+        patient.id;
+      if (completedConsultationId) {
+        setCreatedConsultationId(String(completedConsultationId));
       }
       setIsCompleted(true);
       if (
@@ -798,6 +824,7 @@ export function PatientConsultation({
           id: completedConsultationId,
           type: "PRESCRIPTION",
         });
+        await handleDownloadPDF("PRESCRIPTION", completedConsultationId, true);
       }
       const idToUse = patient.patientId || patient.id;
       if (idToUse && !idToUse.startsWith("WALK-")) {
@@ -911,6 +938,7 @@ export function PatientConsultation({
                       const val = e.target.value.replace(/[0-9]/g, "");
                       setDirectPatientName(val);
                       setDirectPatientId(undefined);
+                      setSelectedExistingDirectPatientId(undefined);
                       setFocusedField("name");
                       if (errors.directPatientName) {
                         setErrors((prev) => { const n = { ...prev }; delete n.directPatientName; return n; });
@@ -943,6 +971,7 @@ export function PatientConsultation({
                         const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                         setDirectPatientPhone(val);
                         setDirectPatientId(undefined);
+                        setSelectedExistingDirectPatientId(undefined);
                         setFocusedField("phone");
                         if (errors.directPatientPhone) {
                           setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });

@@ -13,6 +13,13 @@ import {
 } from '../utils/consultationUtils';
 
 export function useConsultationData() {
+  const unwrapConsultationResponse = (payload: any) =>
+    payload?.data?.data ||
+    payload?.responseObject?.data?.data ||
+    payload?.data ||
+    payload?.responseObject?.data ||
+    payload;
+
   // State for filters that will be sent in the POST body
   const [filters, setFilters] = useState<ConsultationsFilters>({
     page: 1,
@@ -208,11 +215,14 @@ export function useConsultationData() {
 
     if (isEdit) {
       const updated = await updateConsultation.mutateAsync(toApiUpdateConsultation(consultation));
-      const updatedUi = toUiConsultation(updated);
-      setLocalConsultations((prev) => [
-        ...prev.filter((item) => item && item.id !== updatedUi.id),
-        updatedUi,
-      ]);
+      const updatedRaw = unwrapConsultationResponse(updated);
+      const updatedUi = toUiConsultation(updatedRaw);
+      if (updatedUi?.id) {
+        setLocalConsultations((prev) => [
+          ...prev.filter((item) => item && item.id !== updatedUi.id),
+          updatedUi,
+        ]);
+      }
       await refetch(); // Refetch to sync with server
 
       // Refresh single consultation if it's the one being edited
@@ -220,16 +230,19 @@ export function useConsultationData() {
         await refreshSingleConsultation();
       }
 
-      return updatedUi;
+      return updated;
     }
     const created = await createConsultation.mutateAsync(toApiCreateConsultation(consultation));
-    const createdUi = toUiConsultation(created);
-    setLocalConsultations((prev) => [
-      ...prev.filter((item) => item && item.id !== createdUi.id),
-      createdUi,
-    ]);
+    const createdRaw = unwrapConsultationResponse(created);
+    const createdUi = toUiConsultation(createdRaw);
+    if (createdUi?.id) {
+      setLocalConsultations((prev) => [
+        ...prev.filter((item) => item && item.id !== createdUi.id),
+        createdUi,
+      ]);
+    }
     await refetch(); // Refetch to sync with server
-    return createdUi;
+    return created;
   };
 
   // Mark consultation as completed
