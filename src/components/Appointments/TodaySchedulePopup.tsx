@@ -11,6 +11,7 @@ import {
   useScheduleTeamAvailabilityQuery,
   useScheduleLiveTimelineQuery,
 } from "@/hooks/appointments/useScheduleQueries";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 interface TodaySchedulePopupProps {
   onClose: () => void;
@@ -38,7 +39,7 @@ export function TodaySchedulePopup({
   doctorAvailability = {},
   onToggleDoctorAvailability = () => { },
 }: TodaySchedulePopupProps) {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getLocalDateString();
   const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
   const { data: bookedData, refetch: refetchBooked, isFetching: isBookedFetching } = useScheduleBookedQuery();

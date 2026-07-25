@@ -153,7 +153,7 @@ export function TreatmentViewer({
                   <span class="session-status status-${session.status?.toLowerCase()}">${session.status}</span>
                 </div>
                 <p><strong>Date:</strong> ${new Date(session.visit_date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> ${session.start_time} (${session.duration_min} mins)</p>
+                <p><strong>Duration:</strong> ${session.duration_min} mins</p>
                 <p><strong>Fee:</strong> ₹${parseInt(session.session_fee).toLocaleString()}</p>
                 ${session.work_done
                 ? `<p><strong>Work Done:</strong> ${session.work_done}</p>`
@@ -281,42 +281,6 @@ export function TreatmentViewer({
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            {/* 
-              These buttons (Start Treatment, Complete Procedure, Edit Plan) are commented out 
-              because this view is strictly read-only to ensure a clean data presentation.
-            */}
-            {/*
-            {treatment.status === "PLANNED" && (
-              <Button
-                onClick={() => {
-                  onStartTreatment(treatment.id);
-                  onClose();
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 shadow-lg"
-              >
-                Start Treatment
-              </Button>
-            )}
-            {treatment.status === "IN_PROGRESS" && (
-              <Button
-                onClick={() => {
-                  onMarkCompleted(treatment.id);
-                  onClose();
-                }}
-                className="shadow-lg"
-              >
-                Complete Procedure
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={() => {
-                onEditTreatment(treatment.id);
-              }}
-            >
-              Edit Plan
-            </Button>
-            */}
             <Button
               variant="outline"
               onClick={onClose}
@@ -543,21 +507,6 @@ export function TreatmentViewer({
                               {session.clinical_objectives || "No objectives set"}
                             </p>
                           </div>
-                          {/* 
-                            Session edit button is commented out below because this view is strictly read-only.
-                          */}
-                          {/*
-                          {onManageSessions && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onManageSessions(treatmentId)}
-                              className="h-8 w-8 p-0 ml-auto flex-shrink-0"
-                            >
-                              <Edit2 className="w-4 h-4 text-primary" />
-                            </Button>
-                          )}
-                          */}
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-11">
@@ -580,17 +529,18 @@ export function TreatmentViewer({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                            <div>
-                              <p className="text-[9px] font-black uppercase text-muted-foreground">
-                                Time
-                              </p>
-                              <p className="text-xs font-semibold">
-                                {session.start_time} ({session.duration_min} min)
-                              </p>
-                            </div>
-                          </div>
+                           <div className="flex items-center gap-2">
+                             <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                             <div>
+                               <p className="text-[9px] font-black uppercase text-muted-foreground">
+                                 Duration
+                               </p>
+                               <p className="text-xs font-semibold">
+                                 {/* {session.start_time} */}
+                                 {session.duration_min} min
+                               </p>
+                             </div>
+                           </div>
 
                         
 

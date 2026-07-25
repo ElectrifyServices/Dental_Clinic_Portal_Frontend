@@ -6,6 +6,7 @@ import { useTreatmentData } from "./useTreatmentData";
 import { useStaffData } from "./useStaffData";
 import { useInventoryData } from "./useInventoryData";
 import { useCorporateData } from "./useCorporateData";
+import { getLocalDateString } from "../utils/dateUtils";
 
 export const useAppData = (params?: {
   search?: string;
@@ -144,7 +145,7 @@ export const useAppData = (params?: {
         tooth: plan.tooth,
         date:
           consultation.consultationDate ||
-          new Date().toISOString().split("T")[0],
+          getLocalDateString(),
         notes: `Planned during consultation. ${consultation.treatmentPlan || ""}`,
         cost: plan.cost || 0,
         status: plan.isActive ? "in-progress" : "planned",

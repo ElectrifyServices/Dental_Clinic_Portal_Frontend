@@ -14,6 +14,7 @@ import { toast, PageHeader } from "../components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/Dialog";
 import { Label } from "../components/ui/Label";
 import { useDebounce } from "../hooks/useDebounce";
+import { getLocalDateString } from "../utils/dateUtils";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -242,7 +243,7 @@ export const AppointmentsPage: React.FC = () => {
               setSelectedAppointment({
                 doctorId,
                 doctorName: doctor?.name,
-                date: date.toISOString().split("T")[0],
+                date: getLocalDateString(date),
                 time,
               });
               setActiveModal("appointmentForm");
