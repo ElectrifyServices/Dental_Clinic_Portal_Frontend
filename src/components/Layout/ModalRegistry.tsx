@@ -47,6 +47,7 @@ import { useConsumeInventoryItemMutation } from "../../hooks/inventory/useConsum
 import { useAdjustInventoryItemMutation } from "../../hooks/inventory/useAdjustInventoryItemMutation";
 import { useConsultationQuery } from "../../hooks/consultation/useConsultationQuery";
 import { useCreateConsultationMutation } from "../../hooks/consultation/useCreateConsultationMutation";
+import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
 import { useUpdateConsultationMutation } from "../../hooks/consultation/useUpdateConsultationMutation";
 import { toApiCreateConsultation, toApiUpdateConsultation } from "../../utils/consultationUtils";
 import { useCreateEMRMutation } from "../../hooks/emr/useCreateEMRMutation";
@@ -56,6 +57,28 @@ import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQue
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 
 function ModalRegistryContent() {
+  const normalizeConsultationResult = (payload: any) =>
+    payload?.data?.data ||
+    payload?.data ||
+    payload?.responseObject?.data?.data ||
+    payload?.responseObject?.data ||
+    payload;
+  const findConsultationId = (payload: any, depth = 0): string | undefined => {
+    if (!payload || depth > 4) return undefined;
+    if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
+    if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
+      return payload.consultation_id;
+    }
+    if (typeof payload !== "object") return undefined;
+    for (const value of Object.values(payload)) {
+      if (value && typeof value === "object") {
+        const nestedId = findConsultationId(value, depth + 1);
+        if (nestedId) return nestedId;
+      }
+    }
+    return undefined;
+  };
+
   const queryClient = useQueryClient();
   const {
     activeModal,
@@ -350,6 +373,7 @@ function ModalRegistryContent() {
   const { mutateAsync: consumeInventoryMutation } = useConsumeInventoryItemMutation();
   const { mutateAsync: adjustInventoryMutation } = useAdjustInventoryItemMutation();
   const { mutateAsync: createConsultationMutation } = useCreateConsultationMutation();
+  const { mutateAsync: sendConsultationMutation } = useSendConsultationMutation();
   const { mutateAsync: updateConsultationMutation } = useUpdateConsultationMutation();
 
   const isInventoryAction = ["inventoryForm", "restockForm", "consumeForm", "adjustForm"].includes(activeModal || "");
@@ -742,16 +766,26 @@ function ModalRegistryContent() {
                   : (activeDoctors.length > 0 ? activeDoctors[0].id : undefined);
 
               const isWalkIn = resolvedPatientId && String(resolvedPatientId).startsWith("WALK-");
+              const directResolvedPatientName =
+                d.directPatientName ||
+                d.patientName ||
+                selectedPatientForDiagnose.patientName ||
+                selectedPatientForDiagnose.name;
+              const directResolvedPatientPhone =
+                d.directPatientPhone ||
+                d.patientPhone ||
+                selectedPatientForDiagnose.phone ||
+                selectedPatientForDiagnose.patientPhone;
               const apiPayload: any = {
                 id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
                 patientId: isWalkIn ? undefined : resolvedPatientId,
                 patient_name: isWalkIn
                   ? (selectedPatientForDiagnose.patientName || selectedPatientForDiagnose.name || d.patientName || d.directPatientName)
-                  : (d.isDirect && !resolvedPatientId ? d.directPatientName : undefined),
+                  : (d.isDirect ? directResolvedPatientName : undefined),
                 country_code: d.directCountryCode || d.country_code || "+91",
                 patient_phone: isWalkIn
                   ? (selectedPatientForDiagnose.phone || selectedPatientForDiagnose.patientPhone || d.patientPhone || d.directPatientPhone)
-                  : (d.isDirect && !resolvedPatientId ? d.directPatientPhone : undefined),
+                  : (d.isDirect ? directResolvedPatientPhone : undefined),
                 appointmentId: selectedPatientForDiagnose.appointmentId,
                 doctorId: validDoctorId,
                 observations: d.observations,
@@ -779,16 +813,34 @@ function ModalRegistryContent() {
 
               const consultationId = selectedPatientForDiagnose.id;
               const isExistingBackendConsultation = consultationId && !String(consultationId).startsWith("WALK-");
+              let consultationResult: any;
 
               if (isExistingBackendConsultation) {
                 // Update existing consultation via PATCH
-                await updateConsultationMutation(toApiUpdateConsultation({
+                consultationResult = await updateConsultationMutation(toApiUpdateConsultation({
                   ...apiPayload,
                   id: consultationId
                 }));
               } else {
                 // Make the actual POST /consultations API call
-                await createConsultationMutation(toApiCreateConsultation(apiPayload));
+                consultationResult = await createConsultationMutation(toApiCreateConsultation(apiPayload));
+              }
+
+              const normalizedConsultation = normalizeConsultationResult(consultationResult);
+              const consultationSendId =
+                findConsultationId(normalizedConsultation) ||
+                findConsultationId(consultationResult);
+
+              if (
+                d.isDirect &&
+                consultationSendId &&
+                String(consultationSendId).length === 36 &&
+                !String(consultationSendId).startsWith("WALK-")
+              ) {
+                await sendConsultationMutation({
+                  id: String(consultationSendId),
+                  type: "PRESCRIPTION",
+                });
               }
 
               // Cleanup local queue and draft
@@ -802,6 +854,7 @@ function ModalRegistryContent() {
                 return n;
               });
               showToast("Consultation completed successfully", "success");
+              return normalizedConsultation;
             } catch (err: any) {
               const message = err?.response?.data?.message || err?.message || "Failed to complete consultation";
               showToast(message, "error");

@@ -8,10 +8,33 @@ import { useStaffData } from "../hooks/useStaffData";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { PatientQueue } from "../components/Doctor/PatientQueue";
 import { useDebounce } from "../hooks/useDebounce";
+import { useSendConsultationMutation } from "../hooks/consultation/useSendConsultationMutation";
 import { Loader2 } from "lucide-react";
 import { Loading } from "@/components/ui";
 
 export const ConsultationPage: React.FC = () => {
+  const normalizeConsultationResult = (payload: any) =>
+    payload?.data?.data ||
+    payload?.data ||
+    payload?.responseObject?.data?.data ||
+    payload?.responseObject?.data ||
+    payload;
+  const findConsultationId = (payload: any, depth = 0): string | undefined => {
+    if (!payload || depth > 4) return undefined;
+    if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
+    if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
+      return payload.consultation_id;
+    }
+    if (typeof payload !== "object") return undefined;
+    for (const value of Object.values(payload)) {
+      if (value && typeof value === "object") {
+        const nestedId = findConsultationId(value, depth + 1);
+        if (nestedId) return nestedId;
+      }
+    }
+    return undefined;
+  };
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const debouncedSearch = useDebounce(searchTerm, 500);
@@ -19,6 +42,7 @@ export const ConsultationPage: React.FC = () => {
   const { patients } = usePatientData();
   const { staffMembers } = useStaffData();
   const { appointments } = useAppointmentData();
+  const { mutateAsync: sendConsultation } = useSendConsultationMutation();
 
   const {
     consultations,
@@ -163,6 +187,7 @@ export const ConsultationPage: React.FC = () => {
         doctorId: dId || state.user?.id || "1",
         doctorName: dName || state.user?.name || "Doctor",
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isDirect: true,
         patientHistory: {
           medicalHistory: ex.medicalHistory || [],
           allergies: ex.allergies || [],
@@ -332,10 +357,24 @@ export const ConsultationPage: React.FC = () => {
       }
 
       // Create the consultation using POST by passing the payload without an ID
-      await handleSaveConsultation(apiPayload);
+      const consultationResult = await handleSaveConsultation(apiPayload);
+      const normalizedConsultation = normalizeConsultationResult(consultationResult);
+      const consultationSendId = findConsultationId(normalizedConsultation) || findConsultationId(consultationResult);
+
+      if (
+        consultationData.isDirect &&
+        consultationSendId &&
+        String(consultationSendId).length === 36 &&
+        !String(consultationSendId).startsWith("WALK-")
+      ) {
+        await sendConsultation({
+          id: String(consultationSendId),
+          type: "PRESCRIPTION",
+        });
+      }
 
       showToast("Consultation completed successfully", "success");
-      setActiveModal(null);
+      return normalizedConsultation;
     } catch (err: any) {
       let errorMessage = "Failed to save consultation";
       if (err?.response?.data?.message) {
