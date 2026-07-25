@@ -381,6 +381,12 @@
   }
 }
 
+input[type="date"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   margin-left: auto;
   cursor: pointer;
