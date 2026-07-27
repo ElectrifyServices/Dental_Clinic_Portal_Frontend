@@ -303,7 +303,7 @@ function ExpandedTreatmentRow({
         const sessions: any[] = plan.sessions ?? [];
         const completedSessions = sessions.filter((session: any) => {
           const status = normalizeStatus(session.status);
-          return status === "completed";
+          return status === "completed" || status === "cancelled";
         }).length;
         const totalSessions = Math.max(
           Number(plan.total_sessions ?? plan.totalSessions ?? 0),
@@ -325,17 +325,29 @@ function ExpandedTreatmentRow({
                 <span className="text-sm font-semibold text-muted-foreground/45">-</span>
               )}
             </div>
-
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1">
-                {Array.from({ length: dotsToRender }, (_, index) => (
-                  <span
-                    key={index}
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      index < completedSessions ? "bg-emerald-500" : "bg-slate-200"
-                    }`}
-                  />
-                ))}
+                {Array.from({ length: dotsToRender }, (_, index) => {
+                  const session = sessions.find((s: any) => (s.sessionNumber ?? s.visit_number ?? s.visitNumber) === index + 1);
+                  const status = session ? normalizeStatus(session.status) : "planned";
+                  
+                  let dotColor = "bg-slate-200";
+                  if (status === "completed") {
+                    dotColor = "bg-emerald-500";
+                  } else if (status === "cancelled") {
+                    dotColor = "bg-red-500";
+                  } else if (status === "in-progress") {
+                    dotColor = "bg-primary";
+                  }
+
+                  return (
+                    <span
+                      key={index}
+                      className={`h-1.5 w-1.5 rounded-full ${dotColor}`}
+                      title={session ? `Session ${index + 1}: ${session.status}` : undefined}
+                    />
+                  );
+                })}
               </div>
               <span className="text-[10px] font-black text-slate-300">
                 {completedSessions}/{totalSessions}
@@ -548,7 +560,7 @@ export function TreatmentList({
       setSendingWhatsappId(id);
       const isAll = !sessionIndex || sessionIndex === 'all';
       toast.loading(isAll ? "Sending via WhatsApp..." : `Sending Session ${sessionIndex} via WhatsApp...`, { id: "whatsapp-send" });
-      
+
       if (isAll) {
         await sendWhatsapp({ id });
       } else if (sessionId) {
@@ -556,7 +568,7 @@ export function TreatmentList({
       } else {
         throw new Error("Session ID is missing");
       }
-      
+
       toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
     } catch (err: any) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
@@ -711,7 +723,7 @@ export function TreatmentList({
         </div>
       ),
     },
-   
+
   ];
 
   return (
@@ -750,11 +762,10 @@ export function TreatmentList({
                   key={status}
                   variant="ghost"
                   onClick={() => handleStatusFilter(status)}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 whitespace-nowrap ${
-                    (status === "all" && statusFilter.length === 0) || (status !== "all" && statusFilter.includes(status))
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shrink-0 whitespace-nowrap ${(status === "all" && statusFilter.length === 0) || (status !== "all" && statusFilter.includes(status))
                       ? "bg-card text-primary shadow-sm border border-border"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   {status === "all" ? "All Plans" : STATUS_META[status]?.label ?? status}
                 </Button>

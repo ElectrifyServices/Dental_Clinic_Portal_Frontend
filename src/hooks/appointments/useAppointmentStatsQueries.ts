@@ -6,34 +6,86 @@ export interface AppointmentStatsResponse {
   [key: string]: any;
 }
 
-export function useAppointmentTotalVolumeQuery() {
+export function useAppointmentTotalVolumeQuery(startDate?: string, endDate?: string) {
+  const queryKey: any[] = ["appointments", "stats", "total-volume"];
+  const params: Record<string, string> = {};
+
+  if (startDate) {
+    queryKey.push(startDate);
+    params.startDate = startDate;
+  }
+  if (endDate) {
+    queryKey.push(endDate);
+    params.endDate = endDate;
+  }
+
   return useApiQuery<AppointmentStatsResponse>({
-    queryKey: ["appointments", "stats", "total-volume"],
+    queryKey,
     endpoint: "/appointment/stats/total-volume",
     method: "get",
+    params,
   });
 }
 
-export function useAppointmentUpcomingQuery() {
+export function useAppointmentUpcomingQuery(startDate?: string, endDate?: string) {
+  const queryKey: any[] = ["appointments", "stats", "upcoming"];
+  const params: Record<string, string> = {};
+
+  if (startDate) {
+    queryKey.push(startDate);
+    params.startDate = startDate;
+  }
+  if (endDate) {
+    queryKey.push(endDate);
+    params.endDate = endDate;
+  }
+
   return useApiQuery<AppointmentStatsResponse>({
-    queryKey: ["appointments", "stats", "upcoming"],
+    queryKey,
     endpoint: "/appointment/stats/upcoming",
     method: "get",
+    params,
   });
 }
 
-export function useAppointmentCompletedQuery() {
+export function useAppointmentCompletedQuery(startDate?: string, endDate?: string) {
+  const queryKey: any[] = ["appointments", "stats", "completed"];
+  const params: Record<string, string> = {};
+
+  if (startDate) {
+    queryKey.push(startDate);
+    params.startDate = startDate;
+  }
+  if (endDate) {
+    queryKey.push(endDate);
+    params.endDate = endDate;
+  }
+
   return useApiQuery<AppointmentStatsResponse>({
-    queryKey: ["appointments", "stats", "completed"],
+    queryKey,
     endpoint: "/appointment/stats/completed",
     method: "get",
+    params,
   });
 }
 
-export function useAppointmentCancelledQuery() {
+export function useAppointmentCancelledQuery(startDate?: string, endDate?: string) {
+  const queryKey: any[] = ["appointments", "stats", "cancelled"];
+  const params: Record<string, string> = {};
+
+  if (startDate) {
+    queryKey.push(startDate);
+    params.startDate = startDate;
+  }
+  if (endDate) {
+    queryKey.push(endDate);
+    params.endDate = endDate;
+  }
+
   return useApiQuery<AppointmentStatsResponse>({
-    queryKey: ["appointments", "stats", "cancelled"],
+    queryKey,
     endpoint: "/appointment/stats/cancelled",
     method: "get",
+    params,
   });
 }

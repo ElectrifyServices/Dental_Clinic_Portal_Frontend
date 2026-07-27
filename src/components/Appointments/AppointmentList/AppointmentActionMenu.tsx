@@ -11,6 +11,7 @@ interface AppointmentActionMenuProps {
   onDirectCheckIn?: (appointment: any) => void;
   onClose: () => void;
   pos: { top: number; left: number };
+  checkingInApptId?: string | null;
 }
 
 export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
@@ -21,7 +22,8 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   onCheckIn,
   onDirectCheckIn,
   onClose,
-  pos
+  pos,
+  checkingInApptId
 }) => {
   const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(appointment.status);
 
@@ -46,18 +48,26 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             </Button>
           )}
 
-          {/* {canCheckIn && onDirectCheckIn && (
-            <Button 
-              variant="ghost"
-              onClick={() => { onDirectCheckIn?.(appointment); onClose(); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-600 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
-            >
-              <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
-                <UserCheck className="w-4 h-4 text-emerald-600" /> 
-              </div>
-              Direct check-in
-            </Button>
-          )} */}
+          {/* {canCheckIn && onDirectCheckIn && (() => {
+            const isCheckingIn = checkingInApptId === appointment.id;
+            return (
+              <Button 
+                variant="ghost"
+                onClick={() => { onDirectCheckIn?.(appointment); onClose(); }}
+                disabled={isCheckingIn}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-600 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
+                  {isCheckingIn ? (
+                    <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <UserCheck className="w-4 h-4 text-emerald-600" />
+                  )}
+                </div>
+                {isCheckingIn ? "Checking in..." : "Direct check-in"}
+              </Button>
+            );
+          })()} */}
 
           <Button 
             variant="ghost"

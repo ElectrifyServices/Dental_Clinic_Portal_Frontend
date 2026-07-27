@@ -25,7 +25,6 @@ export function uiStatusToApi(status: string): "PLANNED" | "IN_PROGRESS" | "COMP
 export function convertSessionToApi(session: any) {
   return {
     visit_date: session.scheduledDate || session.suggestedDate,
-    start_time: session.startTime || "09:00 AM",
     duration_min: session.duration || 45,
     session_fee: session.cost || 0,
     clinical_objectives: session.notes || session.description || "",
@@ -40,7 +39,7 @@ export function apiSessionToUi(s: any): TreatmentSession {
     description: s.clinical_objectives || "",
     suggestedDate: s.visit_date ?? "",
     scheduledDate: s.visit_date ?? "",
-    startTime: s.start_time || "09:00 AM",
+    startTime: s.start_time || undefined,
     duration: s.duration_min ?? 45,
     status: s.status?.toLowerCase() ?? "scheduled",
     isRequired: true,
@@ -302,8 +301,8 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       clinical_objectives: s.notes || s.description || "",
       status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
         s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
-        s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
-        s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
+          s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
+            s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
       work_done: s.workDone,
       session_findings: s.findings,
     }));

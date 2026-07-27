@@ -9,6 +9,7 @@ interface DayAgendaProps {
   onEditAppointment?: (appointment: any) => void;
   onDirectCheckIn?: (appointment: any) => void;
   formatTime: (time: string) => string;
+  checkingInApptId?: string | null;
 }
 
 export const DayAgenda: React.FC<DayAgendaProps> = ({
@@ -17,6 +18,7 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
   onEditAppointment,
   onDirectCheckIn,
   formatTime,
+  checkingInApptId,
 }) => {
   return (
     <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
@@ -71,21 +73,29 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                 </div>
               </div>
 
-              {onDirectCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(apt.status) && (
-                <div className="mt-3 pt-3 border-t border-border/50 flex justify-end">
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDirectCheckIn(apt);
-                    }}
-                    className="h-7 px-3 text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg gap-1.5"
-                  >
-                    <UserCheck className="w-3 h-3" />
-                    Direct check-in
-                  </Button>
-                </div>
-              )}
+              {onDirectCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(apt.status) && (() => {
+                const isCheckingIn = checkingInApptId === apt.id;
+                return (
+                  <div className="mt-3 pt-3 border-t border-border/50 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDirectCheckIn(apt);
+                      }}
+                      disabled={isCheckingIn}
+                      className="h-7 px-3 text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg gap-1.5"
+                    >
+                      {isCheckingIn ? (
+                        <span className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <UserCheck className="w-3 h-3" />
+                      )}
+                      {isCheckingIn ? "Checking in..." : "Direct check-in"}
+                    </Button>
+                  </div>
+                );
+              })()}
             </div>
           ))
         ) : (

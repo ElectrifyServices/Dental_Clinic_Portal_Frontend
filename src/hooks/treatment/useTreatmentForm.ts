@@ -5,6 +5,7 @@ import { treatmentSchema, type TreatmentFormData } from "@/lib/schemas/treatment
 import { treatmentTemplates } from "@/constants/treatment-template.constants";
 import type { Prescription, TreatmentSession } from "@/types/treatment.types";
 import { dosageMappings, procedures, teeth } from "@/constants/treatment.constants";
+import { getLocalDateString, addDaysToLocalDateString } from "../../utils/dateUtils";
 
 export function useTreatmentForm(treatment?: any, patients?: any[], allTreatments?: any[]) {
   const normalizeSingleTooth = (raw: string) => {
@@ -76,9 +77,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     patientId: currentTreatment?.patientId ?? "",
     procedure: normalizeProcedureForForm(currentTreatment?.procedure),
     tooth: normalizeToothForForm(currentTreatment?.tooth),
-    date: (currentTreatment?.treatment_date || currentTreatment?.date)
-      ? new Date(currentTreatment.treatment_date || currentTreatment.date).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
+    date: getLocalDateString(currentTreatment?.treatment_date || currentTreatment?.date || new Date()),
     notes: currentTreatment?.notes ?? "",
     cost: currentTreatment?.cost ?? 0,
     status: currentTreatment?.status ?? "planned",
@@ -167,16 +166,14 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   const updateAllSessionDates = (baseDate: string) => {
     const template = treatmentTemplates[watchedProcedure as keyof typeof treatmentTemplates];
     if (template) {
-      const baseDateObj = new Date(baseDate);
       const updatedSessions = treatmentSessions.map((session, index) => {
         const templateSession = template.sessions[index];
         if (templateSession && templateSession.gap !== undefined) {
-          const sessionDate = new Date(baseDateObj);
-          sessionDate.setDate(baseDateObj.getDate() + (templateSession.gap || 0));
+          const scheduledDate = addDaysToLocalDateString(baseDate, templateSession.gap || 0);
           return {
             ...session,
-            suggestedDate: sessionDate.toISOString().split("T")[0],
-            scheduledDate: sessionDate.toISOString().split("T")[0],
+            suggestedDate: scheduledDate,
+            scheduledDate: scheduledDate,
           };
         }
         return session;
@@ -197,10 +194,8 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     const template = treatmentTemplates[procedure as keyof typeof treatmentTemplates];
     if (!template) return null;
 
-    const baseDateObj = new Date(baseDate);
     return template.sessions.map((session, index) => {
-      const sessionDate = new Date(baseDateObj);
-      sessionDate.setDate(baseDateObj.getDate() + (session.gap || 0));
+      const scheduledDate = addDaysToLocalDateString(baseDate, session.gap || 0);
 
       const sessionCost = Math.round(totalCost / template.sessions.length);
 
@@ -209,8 +204,8 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         sessionNumber: index + 1,
         name: session.name,
         description: session.description,
-        suggestedDate: sessionDate.toISOString().split("T")[0],
-        scheduledDate: sessionDate.toISOString().split("T")[0],
+        suggestedDate: scheduledDate,
+        scheduledDate: scheduledDate,
         startTime: "09:00 AM",
         duration: session.duration,
         status: "scheduled",

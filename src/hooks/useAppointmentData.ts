@@ -17,6 +17,12 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
   const [apptFilter, setApptFilter] = useState('all');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
 
+  const [startDate, setStartDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [endDate, setEndDate] = useState<string>("");
+
   const debouncedSearch = useDebounce(apptSearch, 500);
 
   const apptFilters = useMemo(() => {
@@ -31,8 +37,14 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
     if (selectedDoctorId) {
       f.doctor_id = [selectedDoctorId];
     }
+    if (startDate) {
+      f.startDate = [startDate];
+    }
+    if (endDate) {
+      f.endDate = [endDate];
+    }
     return f;
-  }, [selectedDate, apptFilter, selectedDoctorId]);
+  }, [selectedDate, apptFilter, selectedDoctorId, startDate, endDate]);
 
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;
@@ -154,6 +166,10 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
     handleDeleteAppointment,
     handleUpdateAppointmentStatus,
     refetchAppointments,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   };
 }
 

@@ -30,6 +30,11 @@ interface AppointmentListProps {
   onSearchChange?: (val: string) => void;
   apptFilter?: string;
   onFilterChange?: (filter: string) => void;
+  startDate?: string;
+  setStartDate?: (date: string) => void;
+  endDate?: string;
+  setEndDate?: (date: string) => void;
+  checkingInApptId?: string | null;
 }
 
 const STATUS_VARIANTS: Record<string, any> = {
@@ -76,6 +81,11 @@ export function AppointmentList({
   onSearchChange,
   apptFilter,
   onFilterChange,
+  startDate: propStartDate,
+  setStartDate: propSetStartDate,
+  endDate: propEndDate,
+  setEndDate: propSetEndDate,
+  checkingInApptId,
 }: AppointmentListProps) {
   const [localSearch, setLocalSearch] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : localSearch;
@@ -94,16 +104,22 @@ export function AppointmentList({
   const nextWeekStr = `${nextWeek.getFullYear()}-${String(nextWeek.getMonth() + 1).padStart(2, "0")}-${String(nextWeek.getDate()).padStart(2, "0")}`;
 
   const initialFilter = apptFilter !== undefined ? apptFilter : "all";
-  const [startDate, setStartDate] = useState<string>(() => {
+  const [localStartDate, setLocalStartDate] = useState<string>(() => {
     if (selectedDate) return selectedDate;
     if (initialFilter === "today" || initialFilter === "week") return todayStr;
     return "";
   });
-  const [endDate, setEndDate] = useState<string>(() => {
+  const [localEndDate, setLocalEndDate] = useState<string>(() => {
     if (initialFilter === "today") return todayStr;
     if (initialFilter === "week") return nextWeekStr;
     return "";
   });
+
+  const startDate = propStartDate !== undefined ? propStartDate : localStartDate;
+  const setStartDate = propSetStartDate ?? setLocalStartDate;
+
+  const endDate = propEndDate !== undefined ? propEndDate : localEndDate;
+  const setEndDate = propSetEndDate ?? setLocalEndDate;
 
   const { doctors } = useDoctorsListQuery();
 
@@ -424,6 +440,7 @@ export function AppointmentList({
             onDirectCheckIn={onDirectCheckIn}
             onClose={() => setOpenMenuId(null)}
             pos={menuPos}
+            checkingInApptId={checkingInApptId}
           />,
           document.body
         )}

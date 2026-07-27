@@ -14,13 +14,15 @@ interface Appointment {
 
 interface AppointmentStatsProps {
   appointments?: Appointment[];
+  startDate?: string;
+  endDate?: string;
 }
 
-export const AppointmentStats: React.FC<AppointmentStatsProps> = () => {
-  const { data: totalVolumeData, isPending: isTotalLoading } = useAppointmentTotalVolumeQuery();
-  const { data: upcomingData, isPending: isUpcomingLoading } = useAppointmentUpcomingQuery();
-  const { data: completedData, isPending: isCompletedLoading } = useAppointmentCompletedQuery();
-  const { data: cancelledData, isPending: isCancelledLoading } = useAppointmentCancelledQuery();
+export const AppointmentStats: React.FC<AppointmentStatsProps> = ({ startDate, endDate }) => {
+  const { data: totalVolumeData, isPending: isTotalLoading } = useAppointmentTotalVolumeQuery(startDate, endDate);
+  const { data: upcomingData, isPending: isUpcomingLoading } = useAppointmentUpcomingQuery(startDate, endDate);
+  const { data: completedData, isPending: isCompletedLoading } = useAppointmentCompletedQuery(startDate, endDate);
+  const { data: cancelledData, isPending: isCancelledLoading } = useAppointmentCancelledQuery(startDate, endDate);
 
   const parseData = (d: any) => {
     if (!d) return undefined;

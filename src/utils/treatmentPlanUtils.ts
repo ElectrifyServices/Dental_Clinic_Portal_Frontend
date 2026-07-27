@@ -52,7 +52,7 @@ export function apiSessionToUi(s: any) {
     formattedDate = s.visit_date.split("T")[0];
   }
 
-  let startTime = s.start_time || "09:00";
+  let startTime = s.start_time || undefined;
   if (startTime && (startTime.toUpperCase().includes("AM") || startTime.toUpperCase().includes("PM"))) {
     const match = startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
     if (match) {
@@ -78,10 +78,10 @@ export function apiSessionToUi(s: any) {
     suggestedDate: formattedDate,
     startTime: startTime,
     start_time: startTime,
-    status: normalizedStatus === "scheduled" ? "scheduled" : 
-            normalizedStatus === "in_progress" ? "in-progress" : 
-            normalizedStatus === "completed" ? "completed" : 
-            normalizedStatus === "cancelled" ? "cancelled" : normalizedStatus,
+    status: normalizedStatus === "scheduled" ? "scheduled" :
+      normalizedStatus === "in_progress" ? "in-progress" :
+        normalizedStatus === "completed" ? "completed" :
+          normalizedStatus === "cancelled" ? "cancelled" : normalizedStatus,
     notes: s.clinical_objectives ?? "",
     clinical_objectives: s.clinical_objectives ?? "",
     appointmentId: s.appointment_id ?? "",
@@ -333,7 +333,6 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
       visit_date: s.scheduledDate || s.suggestedDate,
-      start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       session_fee: Number(s.cost) || 0,
       clinical_objectives: s.notes || s.description || "",
@@ -396,14 +395,13 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     .map((s: any) => ({
       id: s.id?.startsWith("session-") ? undefined : s.id,
       visit_date: s.scheduledDate || s.suggestedDate,
-      start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       session_fee: Number(s.cost) || 0,
       clinical_objectives: s.notes || s.description || "",
       status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
         s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
-        s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
-        s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
+          s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
+            s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
       work_done: s.workDone,
       session_findings: s.findings,
     }));

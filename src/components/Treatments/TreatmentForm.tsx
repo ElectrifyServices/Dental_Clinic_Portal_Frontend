@@ -21,6 +21,7 @@ import { BasicInfoSection } from "./TreatmentForm/BasicInfoSection";
 import { SessionPlannerSection } from "./TreatmentForm/SessionPlannerSection";
 import { PrescriptionSection } from "./TreatmentForm/PrescriptionSection";
 import { ImageUploadSection } from "./TreatmentForm/ImageUploadSection";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 export function TreatmentForm({
   onClose,
@@ -275,7 +276,7 @@ export function TreatmentForm({
     setSessionAttachments([]);
     setScheduleNext(false);
     setNextSessionDraft({
-      date: new Date().toISOString().split("T")[0],
+      date: getLocalDateString(),
       time: "09:00 AM",
       duration: 45,
       cost: currentFee,
@@ -293,56 +294,17 @@ export function TreatmentForm({
       // preventing unhandled promise rejections/app crashes while providing
       // user-facing toast error notifications without using console logs.
       try {
-        let nextSessionPayload: any = {};
-        if (scheduleNext && nextSessionDraft.date) {
-          const formatTimeTo24h = (timeStr: string) => {
-            if (!timeStr) return "10:00";
-            if (!timeStr.toUpperCase().includes("AM") && !timeStr.toUpperCase().includes("PM")) {
-              return timeStr.trim().substring(0, 5);
+        const nextSessionPayload = (scheduleNext && nextSessionDraft.date)
+          ? {
+              schedule_next_session: true,
+              next_visit_date: nextSessionDraft.date,
+              next_start_time: nextSessionDraft.time || "10:00 AM",
+              next_duration_min: Number(nextSessionDraft.duration) || 60,
+              next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
             }
-            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-            if (match) {
-              let hrs = parseInt(match[1], 10);
-              const mins = match[2];
-              const period = match[3].toUpperCase();
-              if (period === "PM" && hrs < 12) hrs += 12;
-              if (period === "AM" && hrs === 12) hrs = 0;
-              return `${String(hrs).padStart(2, "0")}:${mins}`;
-            }
-            return timeStr.trim().substring(0, 5);
-          };
-
-          const time24 = formatTimeTo24h(nextSessionDraft.time);
-          let formattedNextVisitDate = nextSessionDraft.date;
-          if (nextSessionDraft.date) {
-            // Safely parse date to ISO string; fallback to raw date string on parsing error
-            try {
-              const dateTimeStr = nextSessionDraft.date.includes("T")
-                ? nextSessionDraft.date
-                : `${nextSessionDraft.date}T${time24}:00`;
-              const d = new Date(dateTimeStr);
-              if (!isNaN(d.getTime())) {
-                formattedNextVisitDate = d.toISOString();
-              }
-            } catch (e) {
-              // Fallback to unparsed date string if Date constructor throws
-              formattedNextVisitDate = nextSessionDraft.date;
-            }
-          }
-
-          nextSessionPayload = {
-            schedule_next_session: true,
-            next_visit_date: formattedNextVisitDate,
-            next_start_time: nextSessionDraft.time || "10:00 AM",
-            next_duration_min: Number(nextSessionDraft.duration) || 60,
-            next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
-            next_session_fee: Number(nextSessionDraft.cost) || 0,
-          };
-        } else {
-          nextSessionPayload = {
-            schedule_next_session: false,
-          };
-        }
+          : {
+              schedule_next_session: false,
+            };
 
         await completeSessionMutation.mutateAsync({
           planId: treatment.id,
@@ -350,10 +312,8 @@ export function TreatmentForm({
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
           paid_amount: completeForm.paid_amount,
-          ...(completeForm.discount_type ? {
-            discount_type: completeForm.discount_type,
-            discount_value: completeForm.discount_value,
-          } : {}),
+          discount_type: completeForm.discount_type || null,
+          discount_value: completeForm.discount_value || 0,
           ...nextSessionPayload,
           attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
         });
@@ -383,7 +343,6 @@ export function TreatmentForm({
         description: nextSessionDraft.clinical_objectives || "Next session",
         suggestedDate: nextSessionDraft.date,
         scheduledDate: nextSessionDraft.date,
-        startTime: nextSessionDraft.time,
         duration: nextSessionDraft.duration,
         status: "scheduled",
         isFlexible: true,

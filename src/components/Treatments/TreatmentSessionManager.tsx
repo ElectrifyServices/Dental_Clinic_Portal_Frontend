@@ -398,8 +398,9 @@ export function TreatmentSessionManager({
     session_findings: "",
     next_session_plan: "",
     session_fee: 0,
-    discount_percentage: 0,
+    discount_value: 0,
     paid_amount: 0,
+    paid_now: 0,
   });
 
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -556,7 +557,7 @@ export function TreatmentSessionManager({
     (session as any).suggestedDate;
 
   const formatTime = (t?: string) => {
-    if (!t) return "Time Pending";
+    if (!t) return "N/A";
     if (t.includes("AM") || t.includes("PM")) return t;
     if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(t)) {
       return format24HourTime(t);
@@ -578,9 +579,6 @@ export function TreatmentSessionManager({
       (session as any).time;
 
     if (explicitTime) return explicitTime;
-
-    const sessionDate = getSessionDate(session);
-    if (sessionDate?.includes("T")) return sessionDate;
 
     return undefined;
   };
@@ -620,7 +618,6 @@ export function TreatmentSessionManager({
       await addSession.mutateAsync({
         planId: treatmentId,
         visit_date: newSession.date,
-        start_time: newSession.time,
         duration_min: newSession.duration,
         session_fee: newSession.cost,
         clinical_objectives: newSession.clinical_objectives,
@@ -649,20 +646,18 @@ export function TreatmentSessionManager({
       const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
       const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
-      const currentFee = Number(session.session_fee || (session as any).cost) || fallbackFee || Number(treatmentPlan?.est_cost) || Number(treatmentPlan?.cost) || 0;
-      const planDiscount = Number(treatmentPlan?.discount_value) || 0;
-      
-      // Default to treatment plan's discount percentage first, then fallback to last completed session's discount
-      const currentDiscount = planDiscount || fallbackDiscount || 0;
-      const currentPaid = Number(session.paid_amount || (session as any).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
+      const currentFee = estCost || Number(session.session_fee || (session as any).cost) || fallbackFee || 0;
+      const currentDiscount = discountVal || fallbackDiscount || 0;
+      const currentPaid = paidAmt || Number(session.paid_amount || (session as any).paidAmount) || 0;
 
       setCompleteForm({
         work_done: "",
         session_findings: "",
         next_session_plan: "",
         session_fee: currentFee,
-        discount_percentage: currentDiscount,
+        discount_value: currentDiscount,
         paid_amount: currentPaid,
+        paid_now: 0,
       });
       setPrescriptions([]);
       setSessionAttachments([]);
@@ -709,7 +704,6 @@ export function TreatmentSessionManager({
         sessionId: session.id,
         status: "SCHEDULED",
         visit_date: scheduleDraft.date,
-        start_time: scheduleDraft.time,
         duration_min: scheduleDraft.duration,
       });
       showToast("Session scheduled successfully!");
@@ -735,6 +729,10 @@ export function TreatmentSessionManager({
   const handleCompleteSession = async (sessionId: string) => {
     if (!completeForm.work_done && !completeForm.session_findings) {
       showToast("Please add work done or findings", "error");
+      return;
+    }
+    if (completeForm.paid_amount < paidAmt) {
+      showToast(`Paid amount cannot be less than the previously paid amount (₹${paidAmt.toLocaleString()})`, "error");
       return;
     }
     if (scheduleNext) {
@@ -770,46 +768,12 @@ export function TreatmentSessionManager({
     try {
       let nextSessionPayload: any = {};
       if (scheduleNext && nextSessionDraft.date) {
-        const formatTimeTo24h = (timeStr: string) => {
-          if (!timeStr) return "10:00";
-          if (!timeStr.toUpperCase().includes("AM") && !timeStr.toUpperCase().includes("PM")) {
-            return timeStr.trim().substring(0, 5);
-          }
-          const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-          if (match) {
-            let hrs = parseInt(match[1], 10);
-            const mins = match[2];
-            const period = match[3].toUpperCase();
-            if (period === "PM" && hrs < 12) hrs += 12;
-            if (period === "AM" && hrs === 12) hrs = 0;
-            return `${String(hrs).padStart(2, "0")}:${mins}`;
-          }
-          return timeStr.trim().substring(0, 5);
-        };
-
-        const time24 = formatTimeTo24h(nextSessionDraft.time);
-        let formattedNextVisitDate = nextSessionDraft.date;
-        if (nextSessionDraft.date) {
-          try {
-            const dateTimeStr = nextSessionDraft.date.includes("T")
-              ? nextSessionDraft.date
-              : `${nextSessionDraft.date}T${time24}:00`;
-            const d = new Date(dateTimeStr);
-            if (!isNaN(d.getTime())) {
-              formattedNextVisitDate = d.toISOString();
-            }
-          } catch (e) {
-            formattedNextVisitDate = nextSessionDraft.date;
-          }
-        }
-
         nextSessionPayload = {
           schedule_next_session: true,
-          next_visit_date: formattedNextVisitDate,
+          next_visit_date: nextSessionDraft.date,
           next_start_time: nextSessionDraft.time || "10:00 AM",
           next_duration_min: Number(nextSessionDraft.duration) || 60,
           next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
-          next_session_fee: Number(nextSessionDraft.cost) || 0,
         };
       } else {
         nextSessionPayload = {
@@ -817,10 +781,19 @@ export function TreatmentSessionManager({
         };
       }
 
+      const effectiveDiscountVal = completeForm.discount_value || discountVal || 0;
+      const effectiveDiscountType = effectiveDiscountVal > 0 
+        ? (completeForm.discount_value > 0 ? "PERCENTAGE" : (treatmentPlan?.discount_type || "PERCENTAGE"))
+        : null;
+
       await completeSession.mutateAsync({
         planId: treatmentId,
         sessionId,
-        ...completeForm,
+        work_done: completeForm.work_done,
+        session_findings: completeForm.session_findings,
+        paid_amount: completeForm.paid_now,
+        discount_type: effectiveDiscountType,
+        discount_value: effectiveDiscountVal,
         ...nextSessionPayload,
         prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
         attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
@@ -835,8 +808,9 @@ export function TreatmentSessionManager({
         session_findings: "",
         next_session_plan: "",
         session_fee: 0,
-        discount_percentage: 0,
+        discount_value: 0,
         paid_amount: 0,
+        paid_now: 0,
       });
       setPrescriptions([]);
       setSessionAttachments([]);
@@ -902,7 +876,10 @@ export function TreatmentSessionManager({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
-                    <span className="font-medium">{appointmentTime} • {session.duration_min ?? 45} min</span>
+                    <span className="font-medium">
+                      {/* {appointmentTime} • */}
+                      {session.duration_min ?? 45} min
+                    </span>
                   </div>
 
                   {normalizedStatus === "COMPLETED" && (
@@ -1238,11 +1215,7 @@ export function TreatmentSessionManager({
                     value={completeForm.session_fee || ""}
                     onChange={(e) => {
                       const cost = parseInt(e.target.value) || 0;
-                      setCompleteForm(p => {
-                        const discountAmt = (cost * p.discount_percentage) / 100;
-                        const net = Math.max(0, cost - discountAmt);
-                        return { ...p, session_fee: cost, paid_amount: net };
-                      });
+                      setCompleteForm(p => ({ ...p, session_fee: cost }));
                     }}
                     className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold"
                   />
@@ -1254,36 +1227,39 @@ export function TreatmentSessionManager({
                     min="0"
                     max="100"
                     placeholder="Discount %"
-                    value={completeForm.discount_percentage || ""}
+                    value={completeForm.discount_value || ""}
                     onChange={(e) => {
                       const pct = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-                      setCompleteForm(p => {
-                        const discountAmt = (p.session_fee * pct) / 100;
-                        const net = Math.max(0, p.session_fee - discountAmt);
-                        return { ...p, discount_percentage: pct, paid_amount: net };
-                      });
+                      setCompleteForm(p => ({ ...p, discount_value: pct }));
                     }}
                     className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold"
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold block mb-2">Paid Amount (₹)</Label>
+                  <Label className="text-sm font-semibold block mb-2">Paid Today (₹)</Label>
                   <Input
                     type="number"
                     min="0"
-                    placeholder="Paid Amount"
-                    value={completeForm.paid_amount || ""}
-                    onChange={(e) => setCompleteForm(p => ({ ...p, paid_amount: parseInt(e.target.value) || 0 }))}
+                    placeholder="Paid today"
+                    value={completeForm.paid_now || ""}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setCompleteForm(p => ({
+                        ...p,
+                        paid_now: val,
+                        paid_amount: paidAmt + val
+                      }));
+                    }}
                     className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold block mb-2">Pending Amount (₹)</Label>
+                  <Label className="text-sm font-semibold block mb-2">Pending (₹)</Label>
                   <Input
                     type="number"
                     disabled
                     placeholder="Pending Amount"
-                    value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * completeForm.discount_percentage) / 100 - completeForm.paid_amount)}
+                    value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * (Number(completeForm.discount_value) || discountVal || 0)) / 100 - (paidAmt + (completeForm.paid_now || 0)))}
                     className="w-full px-3 py-2 rounded-xl border bg-slate-50 font-bold text-red-600 outline-none cursor-not-allowed"
                   />
                 </div>
@@ -1535,9 +1511,8 @@ export function TreatmentSessionManager({
       onClose={onClose}
       size="5xl"
       icon={<Calendar className="w-5 h-5" />}
-      bodyClassName="flex min-h-0 flex-col overflow-hidden"
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-8 overflow-hidden">
+      <div className="flex flex-col gap-8">
 
         {/* Stats */}
         <div className="space-y-3 shrink-0">
@@ -1629,14 +1604,13 @@ export function TreatmentSessionManager({
         </div>
 
         {/* Sessions list */}
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div>
           {isLoading ? (
             <div className="flex h-full items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : sessions.length > 0 ? (
-            <div className="h-full max-h-[calc(100vh-23rem)] overflow-y-auto pr-1 custom-scrollbar">
-              <div className="space-y-6">
+            <div className="space-y-6">
                 {groupedSessions.inProgress.length > 0 && (
                   <div>
                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -1670,7 +1644,6 @@ export function TreatmentSessionManager({
                   </div>
                 )}
               </div>
-            </div>
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center py-16 bg-muted/20 rounded-2xl border-2 border-dashed w-full">

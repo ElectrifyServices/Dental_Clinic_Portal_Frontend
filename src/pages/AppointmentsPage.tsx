@@ -14,6 +14,7 @@ import { toast, PageHeader } from "../components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/Dialog";
 import { Label } from "../components/ui/Label";
 import { useDebounce } from "../hooks/useDebounce";
+import { getLocalDateString } from "../utils/dateUtils";
 
 export const AppointmentsPage: React.FC = () => {
   const {
@@ -30,6 +31,10 @@ export const AppointmentsPage: React.FC = () => {
     selectedDoctorId,
     setSelectedDoctorId,
     refetchAppointments,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   } = useAppointmentData();
 
   const { patients, setQueuedPatients } = usePatientData();
@@ -42,6 +47,7 @@ export const AppointmentsPage: React.FC = () => {
   } = useModal();
 
   const [viewMode, setViewMode] = useState("calendar");
+  const [checkingInApptId, setCheckingInApptId] = useState<string | null>(null);
   const [specialistSearch, setSpecialistSearch] = useState("");
   const debouncedSpecialistSearch = useDebounce(specialistSearch, 500);
 
@@ -67,6 +73,14 @@ export const AppointmentsPage: React.FC = () => {
       refetchDoctors();
     }
   }, [refetchAppointments, refetchDoctors]);
+
+  // Sync selectedDate from Calendar view to startDate
+  useEffect(() => {
+    if (viewMode === "calendar" && selectedDate) {
+      setStartDate(selectedDate);
+      setEndDate("");
+    }
+  }, [selectedDate, viewMode]);
 
 
 
@@ -127,6 +141,7 @@ export const AppointmentsPage: React.FC = () => {
   const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
 
   const handleDirectCheckInPatient = async (appt: any) => {
+    setCheckingInApptId(appt.id);
     try {
       // First update the appointment status
       await checkInAppointment({ id: appt.id });
@@ -182,6 +197,8 @@ export const AppointmentsPage: React.FC = () => {
       }
     } catch (err) {
       toast.error("Failed to check in patient directly");
+    } finally {
+      setCheckingInApptId(null);
     }
   };
 
@@ -219,7 +236,7 @@ export const AppointmentsPage: React.FC = () => {
         </div>
       </PageHeader>
 
-      <AppointmentStats appointments={appointments} />
+      <AppointmentStats appointments={appointments} startDate={startDate} endDate={endDate} />
 
       <div className="animate-in fade-in slide-in-from-top-4 duration-500">
         {viewMode === "calendar" && (
@@ -242,7 +259,7 @@ export const AppointmentsPage: React.FC = () => {
               setSelectedAppointment({
                 doctorId,
                 doctorName: doctor?.name,
-                date: date.toISOString().split("T")[0],
+                date: getLocalDateString(date),
                 time,
               });
               setActiveModal("appointmentForm");
@@ -252,6 +269,7 @@ export const AppointmentsPage: React.FC = () => {
               setActiveModal("appointmentForm");
             }}
             onDirectCheckIn={handleDirectCheckInPatient}
+            checkingInApptId={checkingInApptId}
           />
         )}
         {(viewMode === "list" || viewMode === "no-show") && (
@@ -272,6 +290,11 @@ export const AppointmentsPage: React.FC = () => {
             onSearchChange={setApptSearch}
             apptFilter={apptFilter}
             onFilterChange={setApptFilter}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            checkingInApptId={checkingInApptId}
           />
         )}
       </div>

@@ -30,6 +30,7 @@ interface CalendarProps {
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
   onDirectCheckIn?: (appointment: any) => void;
+  checkingInApptId?: string | null;
 }
 
 export function AppointmentCalendar({
@@ -44,6 +45,7 @@ export function AppointmentCalendar({
   selectedDate: propSelectedDate,
   setSelectedDate: propSetSelectedDate,
   onDirectCheckIn,
+  checkingInApptId,
 }: CalendarProps) {
   const [localSearch, setLocalSearch] = useState("");
   const currentSearch = searchTerm !== undefined ? searchTerm : localSearch;
@@ -229,6 +231,7 @@ export function AppointmentCalendar({
           onEditAppointment={onEditAppointment}
           onDirectCheckIn={onDirectCheckIn}
           formatTime={formatTime}
+          checkingInApptId={checkingInApptId}
         />
         <BookingSlots
           selectedDoctorId={currentDoctorId}

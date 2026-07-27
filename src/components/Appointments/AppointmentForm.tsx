@@ -19,6 +19,7 @@ import {
 import { useAppointmentQuery } from "../../hooks/appointments/useAppointmentQuery";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import { useDebounce } from "../../hooks/useDebounce";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -53,8 +54,6 @@ export function AppointmentForm({
     appointment?.id ? "edit" : "create",
   );
 
-  const formatDateLocal = (date: Date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const safeDate = selectedDate ? new Date(selectedDate) : new Date();
 
   const [suggestion, setSuggestion] = useState<{
@@ -77,8 +76,8 @@ export function AppointmentForm({
       doctorId: initialDoctorId,
       doctorName: defaultDoctorName,
       date: appointment?.date
-        ? formatDateLocal(new Date(appointment.date))
-        : formatDateLocal(safeDate),
+        ? getLocalDateString(appointment.date)
+        : getLocalDateString(safeDate),
       time: (() => {
         const rawTime = appointment?.start_time_ist || appointment?.time || appointment?.start_time;
         if (!rawTime) return "09:00";
@@ -126,7 +125,7 @@ export function AppointmentForm({
         doctorId: fetchedAppointment?.doctorId ?? fetchedAppointment?.doctor_id ?? form.getValues().doctorId,
         doctorName: fetchedAppointment?.doctorName ?? fetchedAppointment?.doctor_name ?? form.getValues().doctorName,
         date: fetchedAppointment?.date
-          ? formatDateLocal(new Date(fetchedAppointment.date))
+          ? getLocalDateString(fetchedAppointment.date)
           : form.getValues().date,
         time: (() => {
           const rawTime = fetchedAppointment?.start_time_ist || fetchedAppointment?.time || fetchedAppointment?.start_time;
