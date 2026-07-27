@@ -319,8 +319,8 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     isTableFetching: isFetching,
     isStatsLoading,
     totals,
-    totalItems: plansRaw?.pagination?.total || plansRaw?.data?.pagination?.total || 0,
-    totalPages: plansRaw?.pagination?.totalPages || plansRaw?.data?.pagination?.totalPages || 1,
+    totalItems: (plansRaw as any)?.pagination?.total || (plansRaw as any)?.pagination?.total_items || (plansRaw as any)?.data?.pagination?.total || (plansRaw as any)?.data?.pagination?.total_items || (plansRaw as any)?.total || (plansRaw as any)?.total_elements || (plansRaw as any)?.totalElements || (plansRaw as any)?.count || treatments.length || 0,
+    totalPages: (plansRaw as any)?.pagination?.totalPages || (plansRaw as any)?.pagination?.total_pages || (plansRaw as any)?.data?.pagination?.totalPages || (plansRaw as any)?.data?.pagination?.total_pages || (plansRaw as any)?.totalPages || (plansRaw as any)?.total_pages || Math.max(1, Math.ceil(treatments.length / (filters.limit || 10))),
     currentPage: filters.page || 1,
     
     

@@ -38,6 +38,7 @@ import {
   PageHeader,
   SearchableSelect,
   toast,
+  Pagination,
 } from "@/components/ui";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
 import { downloadCompletedTreatmentPDF } from "../../utils/pdfGenerator";
@@ -101,6 +102,9 @@ interface TreatmentListProps {
   onEditTreatment: (id: string) => void;
   onManageSessions: (id: string) => void;
   onStartTreatment: (id: string) => void;
+  limit?: number;
+  onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
 }
 
 interface AdvancedFilters {
@@ -526,6 +530,9 @@ export function TreatmentList({
   onEditTreatment,
   onManageSessions,
   onStartTreatment,
+  limit = 10,
+  onPageChange,
+  onLimitChange,
 }: TreatmentListProps) {
   const [search, setSearch] = useState("");
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
@@ -876,45 +883,16 @@ export function TreatmentList({
         bodyClassName="flex-1 min-h-0 p-0 overflow-hidden"
         className="min-w-0 flex-1 min-h-0 rounded-3xl"
         footer={
-          totalPages > 1 ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between w-full">
-              <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                Showing {(currentPage - 1) * PER_PAGE + 1}-{Math.min(currentPage * PER_PAGE, totalItems)} of {totalItems}
-              </p>
-              <div className="flex items-center gap-1 self-start sm:self-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1 || isLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .slice(Math.max(0, currentPage - 3), currentPage + 2)
-                  .map((page) => (
-                    <Button
-                      key={page}
-                      variant={page === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                      disabled={isLoading}
-                      className="h-8 w-8 p-0 text-[10px] font-bold"
-                    >
-                      {page}
-                    </Button>
-                  ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages || isLoading}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+          totalItems > 0 && onPageChange ? (
+            <div className="w-full flex justify-end">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                perPage={limit}
+                onPageChange={onPageChange}
+                onPerPageChange={onLimitChange}
+              />
             </div>
           ) : null
         }

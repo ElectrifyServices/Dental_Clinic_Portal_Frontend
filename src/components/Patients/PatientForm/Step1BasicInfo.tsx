@@ -334,7 +334,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             name="name"
             value={formData.name || ""}
             onChange={(e) => {
-              e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+              let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+              val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+              e.target.value = val;
               handleChange(e);
             }}
             className={

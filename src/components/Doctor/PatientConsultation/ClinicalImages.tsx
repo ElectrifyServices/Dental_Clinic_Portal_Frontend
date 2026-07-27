@@ -36,7 +36,7 @@ export function ClinicalImages({
           <Input
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,.bmp"
             onChange={onImageUpload}
             className="hidden"
             id="image-upload"
@@ -49,7 +49,7 @@ export function ClinicalImages({
                 Upload clinical photos or other relevant images
               </p>
               <p className="text-[10px] text-muted-foreground/60 mb-3">
-                Supported formats: All image types (JPG, PNG, GIF, WEBP, etc.)
+                Supported formats: All image types (JPG, PNG, GIF, WEBP, BMP, etc.)
               </p>
               <Label
                 htmlFor="image-upload"

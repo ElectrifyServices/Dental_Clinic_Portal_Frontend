@@ -513,6 +513,7 @@ export function EmployeeFormModal({
   const handleFormChange = (name: string, value: any) => {
     if (name === "name") {
       value = typeof value === 'string' ? value.replace(/[^a-zA-Z\s]/g, "") : value;
+      value = typeof value === 'string' ? value.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase()) : value;
     }
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -1118,7 +1119,8 @@ export function EmployeeFormModal({
                           <Input
                             value={dep.name}
                             onChange={(e) => {
-                              const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                              let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                              val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
                               setPendingDependents((prev) =>
                                 prev.map((d, i) =>
                                   i === index ? { ...d, name: val } : d,
@@ -1207,7 +1209,8 @@ export function EmployeeFormModal({
                       <Input
                         value={addDepForm.name}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                          let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                          val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
                           setAddDepForm((p) => ({ ...p, name: val }));
                         }}
                         placeholder="Full name"

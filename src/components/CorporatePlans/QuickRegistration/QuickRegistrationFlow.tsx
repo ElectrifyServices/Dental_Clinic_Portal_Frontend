@@ -317,7 +317,16 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                 <LabeledField label="Full Name *" error={errors.name}>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input value={memberName} onChange={e => setMemberName(e.target.value)} placeholder="e.g. Rajesh Kumar" className="pl-10 rounded-xl" />
+                    <Input
+                      value={memberName}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                        val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+                        setMemberName(val);
+                      }}
+                      placeholder="e.g. Rajesh Kumar"
+                      className="pl-10 rounded-xl"
+                    />
                   </div>
                 </LabeledField>
               </div>
@@ -455,7 +464,20 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-2">
                         <LabeledField label="Name *">
-                          <Input value={fm.name} onChange={e => setFamilyMembers(p => p.map((m, i) => i === idx ? { ...m, name: e.target.value } : m))} placeholder="Full name" className="rounded-xl" />
+                          <Input
+                            value={fm.name}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                              val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+                              setFamilyMembers((p) =>
+                                p.map((m, i) =>
+                                  i === idx ? { ...m, name: val } : m,
+                                ),
+                              );
+                            }}
+                            placeholder="Full name"
+                            className="rounded-xl"
+                          />
                         </LabeledField>
                       </div>
                       <LabeledField label="Relationship">

@@ -658,7 +658,11 @@ export function PatientConsultation({
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(file => file.type.startsWith("image/"));
+    const files = Array.from(e.target.files || []).filter(file => {
+      const isImageType = file.type.startsWith("image/");
+      const isBmpExtension = file.name.toLowerCase().endsWith(".bmp");
+      return isImageType || isBmpExtension;
+    });
     const imageUrls = files.map((file) => URL.createObjectURL(file));
     setConsultationData((prev) => ({
       ...prev,
@@ -920,14 +924,15 @@ export function PatientConsultation({
               <div className="mx-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10" ref={dropdownRef}>
                 <div className="space-y-1 text-left relative">
                   <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
-                  <Input
+                   <Input
                     type="text"
                     name="directPatientName"
                     placeholder="Enter Patient Name"
                     value={directPatientName}
                     onFocus={() => setFocusedField("name")}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[0-9]/g, "");
+                      let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                      val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
                       setDirectPatientName(val);
                       setDirectPatientId(undefined);
                       setSelectedExistingDirectPatientId(undefined);
