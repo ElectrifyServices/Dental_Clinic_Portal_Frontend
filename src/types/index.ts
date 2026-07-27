@@ -199,6 +199,22 @@ export interface InvoiceItem {
   amount: number;
 }
 
+export type LabWorkStatus = 'ordered' | 'received' | 'paid';
+
+export interface LabWork {
+  id: string;
+  patientId: string;
+  patientName: string;
+  labName: string;
+  workType: string;
+  unitsCount: number;
+  hasWarranty: boolean;
+  createdDate: string;
+  dueDate: string;
+  price: number;
+  status: LabWorkStatus;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;

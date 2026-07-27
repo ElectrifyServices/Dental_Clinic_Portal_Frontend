@@ -91,6 +91,11 @@
         "lowStockAlertThreshold": 5
       }
     },
+    "lab-work": {
+      "enabled": true,
+      "label": "Lab Work",
+      "features": {}
+    },
     "reports": {
       "enabled": true,
       "label": "Reports",
@@ -136,7 +141,7 @@
       {
         "id": "admin",
         "label": "Administration",
-        "items": ["billing", "reports", "staff"]
+        "items": ["billing", "reports", "staff", "lab-work"]
       }
     ]
   },

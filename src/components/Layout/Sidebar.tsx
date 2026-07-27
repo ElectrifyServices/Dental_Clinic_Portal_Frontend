@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  FlaskConical,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -35,6 +36,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   consent: Shield,
   billing: CreditCard,
   inventory: Package,
+  "lab-work": FlaskConical,
   reports: BarChart3,
   staff: UserCheck,
   "profit-sharing": DollarSign,

@@ -22,3 +22,4 @@ export {
 export { invoiceSchema, type InvoiceFormData, type InvoiceItemData } from './billing.schema';
 export { treatmentSchema, type TreatmentFormData } from './treatment.schema';
 export { emrSchema, type EmrFormData } from './emr.schema';
+export { labWorkSchema, type LabWorkFormData } from './labWork.schema';

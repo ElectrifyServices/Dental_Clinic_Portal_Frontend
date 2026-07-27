@@ -91,6 +91,11 @@
         "lowStockAlertThreshold": 15
       }
     },
+    "lab-work": {
+      "enabled": true,
+      "label": "Lab Work",
+      "features": {}
+    },
     "reports": {
       "enabled": true,
       "label": "Analytics",
@@ -136,7 +141,7 @@
       {
         "id": "admin",
         "label": "Administration",
-        "items": ["billing", "inventory", "reports", "staff", "profit-sharing"]
+        "items": ["billing", "inventory", "lab-work", "reports", "staff", "profit-sharing"]
       },
       {
         "id": "superadmin",
