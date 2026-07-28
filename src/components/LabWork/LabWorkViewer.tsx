@@ -65,8 +65,13 @@ export function LabWorkViewer({ labWork, onClose }: LabWorkViewerProps) {
             )
           }
         />
+        {labWork.hasWarranty && (
+          <>
+            <Row label="Warranty Years" value={labWork.warrantyYears ?? "—"} />
+            <Row label="Warranty Valid Till" value={formatDate(labWork.warrantyEndDate)} />
+          </>
+        )}
         <Row label="Created Date" value={formatDate(labWork.createdDate)} />
-        <Row label="Due Date" value={formatDate(labWork.dueDate)} />
         <Row label="Price" value={`₹${Number(labWork.price || 0).toLocaleString()}`} />
         <Row
           label="Status"

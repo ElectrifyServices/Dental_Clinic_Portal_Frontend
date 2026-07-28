@@ -70,8 +70,9 @@ export const LabWorkPage: React.FC = () => {
           work_type: data.workType,
           units_count: data.unitsCount,
           has_warranty: data.hasWarranty,
+          warranty_years: data.warrantyYears,
+          warranty_end_date: data.warrantyEndDate,
           created_date: data.createdDate,
-          due_date: data.dueDate,
           price: data.price,
         });
         toast.success("Lab work updated successfully");
@@ -83,8 +84,9 @@ export const LabWorkPage: React.FC = () => {
           work_type: data.workType,
           units_count: data.unitsCount,
           has_warranty: data.hasWarranty,
+          warranty_years: data.warrantyYears,
+          warranty_end_date: data.warrantyEndDate,
           created_date: data.createdDate,
-          due_date: data.dueDate,
           price: data.price,
         });
         toast.success("Lab work added successfully");

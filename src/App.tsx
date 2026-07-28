@@ -20,6 +20,7 @@ import { MedicalRecordsPage } from "./pages/MedicalRecordsPage";
 import { ConsentPage } from "./pages/ConsentPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { LabWorkPage } from "./pages/LabWorkPage";
 import { CorporatePlansPage } from "./pages/CorporatePlansPage";
 import ConsultationPage from "./pages/ConsultationPage";
 import { CalendarIntegrationPage } from "./pages/CalendarIntegrationPage";
@@ -108,6 +109,7 @@ function ProtectedRoutes() {
         <Route path="/consent" element={<GuardedRoute path="/consent" element={<ConsentPage />} />} />
         <Route path="/reports" element={<GuardedRoute path="/reports" element={<ReportsPage />} />} />
         <Route path="/inventory" element={<GuardedRoute path="/inventory" element={<InventoryPage />} />} />
+        <Route path="/lab-work" element={<GuardedRoute path="/lab-work" element={<LabWorkPage />} />} />
         <Route path="/membership" element={<GuardedRoute path="/membership" element={<CorporatePlansPage />} />} />
         <Route path="/calendar-integration" element={<CalendarIntegrationPage />} />
         <Route path="/calendar-integration/callback" element={<CalendarIntegrationCallbackPage />} />

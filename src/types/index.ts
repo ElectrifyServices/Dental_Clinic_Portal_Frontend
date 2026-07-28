@@ -209,8 +209,9 @@ export interface LabWork {
   workType: string;
   unitsCount: number;
   hasWarranty: boolean;
+  warrantyYears?: number;
+  warrantyEndDate?: string;
   createdDate: string;
-  dueDate: string;
   price: number;
   status: LabWorkStatus;
 }

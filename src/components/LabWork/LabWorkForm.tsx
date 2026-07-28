@@ -47,8 +47,9 @@ export function LabWorkForm({
       workType: labWork?.workType ?? "",
       unitsCount: labWork?.unitsCount ?? 1,
       hasWarranty: labWork?.hasWarranty ?? false,
+      warrantyYears: labWork?.warrantyYears ?? undefined,
+      warrantyEndDate: labWork?.warrantyEndDate ?? "",
       createdDate: labWork?.createdDate ?? new Date().toISOString().split("T")[0],
-      dueDate: labWork?.dueDate ?? "",
       price: labWork?.price ?? 0,
     },
   });
@@ -86,6 +87,18 @@ export function LabWorkForm({
     const names = Array.from(new Set([...DEFAULT_LAB_SUGGESTIONS, ...existingLabNames.filter(Boolean)]));
     return names.map((name) => ({ label: name, value: name }));
   }, [existingLabNames]);
+
+  // Auto-suggest the warranty end date from created date + warranty years,
+  // without overriding a value the user has already picked manually.
+  useEffect(() => {
+    if (!formData.hasWarranty || !formData.warrantyYears || !formData.createdDate) return;
+    if (formData.warrantyEndDate) return;
+    const base = new Date(formData.createdDate);
+    if (isNaN(base.getTime())) return;
+    base.setFullYear(base.getFullYear() + Number(formData.warrantyYears));
+    form.setValue("warrantyEndDate", base.toISOString().split("T")[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.hasWarranty, formData.warrantyYears, formData.createdDate]);
 
   const handleSubmit = (data: LabWorkFormData) => {
     onSave(data);
@@ -177,13 +190,39 @@ export function LabWorkForm({
           <LabeledField label="Warranty">
             <select
               value={formData.hasWarranty ? "yes" : "no"}
-              onChange={(e) => form.setValue("hasWarranty", e.target.value === "yes")}
+              onChange={(e) => {
+                const hasWarranty = e.target.value === "yes";
+                form.setValue("hasWarranty", hasWarranty);
+                if (!hasWarranty) {
+                  form.setValue("warrantyYears", undefined);
+                  form.setValue("warrantyEndDate", "");
+                }
+              }}
               className="form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all"
             >
               <option value="yes">Warranty</option>
               <option value="no">No Warranty</option>
             </select>
           </LabeledField>
+
+          {formData.hasWarranty && (
+            <>
+              <FormInput
+                control={form.control}
+                name="warrantyYears"
+                label="Warranty (Years)"
+                type="number"
+                min={1}
+                required
+              />
+              <FormDateInput
+                control={form.control}
+                name="warrantyEndDate"
+                label="Warranty Valid Till"
+                required
+              />
+            </>
+          )}
 
           <FormInput
             control={form.control}
@@ -198,13 +237,6 @@ export function LabWorkForm({
             control={form.control}
             name="createdDate"
             label="Created Date"
-            required
-          />
-
-          <FormDateInput
-            control={form.control}
-            name="dueDate"
-            label="Due Date"
             required
           />
         </div>

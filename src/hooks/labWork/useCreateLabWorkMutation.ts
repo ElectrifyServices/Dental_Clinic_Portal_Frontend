@@ -8,8 +8,9 @@ export interface CreateLabWorkVariables {
   work_type: string;
   units_count: number;
   has_warranty: boolean;
+  warranty_years?: number;
+  warranty_end_date?: string;
   created_date: string;
-  due_date: string;
   price: number;
 }
 

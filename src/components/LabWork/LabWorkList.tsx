@@ -118,9 +118,15 @@ export function LabWorkList({
         header: "Warranty",
         render: (lw: LabWork) =>
           lw.hasWarranty ? (
-            <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" /> Warranty
-            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {lw.warrantyYears ? `${lw.warrantyYears} yr${lw.warrantyYears > 1 ? "s" : ""}` : "Warranty"}
+              </span>
+              {lw.warrantyEndDate && (
+                <span className="text-[10px] text-muted-foreground">Till {formatDate(lw.warrantyEndDate)}</span>
+              )}
+            </div>
           ) : (
             <span className="inline-flex items-center gap-1 text-muted-foreground text-xs font-semibold">
               <ShieldOff className="w-3.5 h-3.5" /> No Warranty
@@ -131,11 +137,6 @@ export function LabWorkList({
         key: "createdDate",
         header: "Created",
         render: (lw: LabWork) => <span className="text-muted-foreground">{formatDate(lw.createdDate)}</span>,
-      },
-      {
-        key: "dueDate",
-        header: "Due Date",
-        render: (lw: LabWork) => <span className="text-muted-foreground">{formatDate(lw.dueDate)}</span>,
       },
       {
         key: "price",
