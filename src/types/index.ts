@@ -201,10 +201,20 @@ export interface InvoiceItem {
 
 export type LabWorkStatus = 'ordered' | 'received' | 'paid';
 
+export interface LabWorkAttachment {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_size?: number;
+  file_type?: string;
+}
+
 export interface LabWork {
   id: string;
   patientId: string;
   patientName: string;
+  treatmentId: string;
+  treatmentName?: string;
   labName: string;
   workType: string;
   unitsCount: number;
@@ -213,6 +223,8 @@ export interface LabWork {
   warrantyEndDate?: string;
   createdDate: string;
   price: number;
+  notes?: string;
+  attachments?: LabWorkAttachment[];
   status: LabWorkStatus;
 }
 

@@ -9,6 +9,8 @@ export function normalizeLabWork(payload: any): LabWork | null {
     id: lw.id,
     patientId: lw.patient_id ?? lw.patientId ?? (lw.patient?.id) ?? "",
     patientName: lw.patient_name ?? lw.patientName ?? (lw.patient?.name) ?? "",
+    treatmentId: lw.treatment_id ?? lw.treatmentId ?? (lw.treatment?.id) ?? "",
+    treatmentName: lw.treatment_name ?? lw.treatmentName ?? (lw.treatment?.procedure) ?? undefined,
     labName: lw.lab_name ?? lw.labName ?? "",
     workType: lw.work_type ?? lw.workType ?? lw.tooth_no ?? lw.toothNo ?? "",
     unitsCount: Number(lw.units_count ?? lw.unitsCount ?? 1),
@@ -17,6 +19,8 @@ export function normalizeLabWork(payload: any): LabWork | null {
     warrantyEndDate: lw.warranty_end_date ?? lw.warrantyEndDate ?? undefined,
     createdDate: lw.created_date ?? lw.createdDate ?? (lw.created_at ? lw.created_at.split("T")[0] : ""),
     price: Number(lw.price ?? 0),
+    notes: lw.notes ?? undefined,
+    attachments: lw.attachments ?? undefined,
     status: (lw.status ?? "ordered").toLowerCase(),
   };
 }

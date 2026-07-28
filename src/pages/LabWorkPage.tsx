@@ -5,7 +5,7 @@ import { LabWorkList } from "../components/LabWork/LabWorkList";
 import { LabWorkForm } from "../components/LabWork/LabWorkForm";
 import { LabWorkViewer } from "../components/LabWork/LabWorkViewer";
 import { toast } from "@/components/ui";
-import type { LabWorkFormData } from "@/lib/schemas/labWork.schema";
+import type { LabWorkFormSaveData } from "../components/LabWork/LabWorkForm";
 import type { LabWorkStatus } from "../types";
 
 export const LabWorkPage: React.FC = () => {
@@ -59,13 +59,15 @@ export const LabWorkPage: React.FC = () => {
     setActiveLabWorkId(null);
   };
 
-  const handleSave = async (data: LabWorkFormData) => {
+  const handleSave = async (data: LabWorkFormSaveData) => {
     try {
       if (formMode === "edit" && activeLabWorkId) {
         await handleUpdateLabWork({
           id: activeLabWorkId,
           patient_id: data.patientId,
           patient_name: data.patientName,
+          treatment_id: data.treatmentId,
+          treatment_name: data.treatmentName,
           lab_name: data.labName,
           work_type: data.workType,
           units_count: data.unitsCount,
@@ -74,12 +76,17 @@ export const LabWorkPage: React.FC = () => {
           warranty_end_date: data.warrantyEndDate,
           created_date: data.createdDate,
           price: data.price,
+          notes: data.notes,
+          rawFiles: data.rawFiles as File[],
+          existing_attachment_ids: data.existingAttachmentIds,
         });
         toast.success("Lab work updated successfully");
       } else {
         await handleCreateLabWork({
           patient_id: data.patientId,
           patient_name: data.patientName,
+          treatment_id: data.treatmentId,
+          treatment_name: data.treatmentName,
           lab_name: data.labName,
           work_type: data.workType,
           units_count: data.unitsCount,
@@ -88,6 +95,8 @@ export const LabWorkPage: React.FC = () => {
           warranty_end_date: data.warrantyEndDate,
           created_date: data.createdDate,
           price: data.price,
+          notes: data.notes,
+          rawFiles: data.rawFiles as File[],
         });
         toast.success("Lab work added successfully");
       }

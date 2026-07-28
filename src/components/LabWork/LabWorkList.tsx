@@ -9,6 +9,11 @@ import {
   IndianRupee,
   ShieldCheck,
   ShieldOff,
+  Paperclip,
+  StickyNote,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Button,
@@ -73,6 +78,7 @@ export function LabWorkList({
   setStatus,
 }: LabWorkListProps) {
   const [groupBy, setGroupBy] = useState<"patient" | "lab">("patient");
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   const groups = useMemo(() => {
     const map = new Map<string, LabWork[]>();
@@ -87,9 +93,24 @@ export function LabWorkList({
         items: [...items].sort(
           (a, b) => new Date(b.createdDate || 0).getTime() - new Date(a.createdDate || 0).getTime(),
         ),
+        totalValue: items.reduce((sum, lw) => sum + Number(lw.price || 0), 0),
       }))
       .sort((a, b) => a.key.localeCompare(b.key));
   }, [labWorks, groupBy]);
+
+  const toggleGroup = (key: string) => {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const allExpanded = groups.length > 0 && groups.every((g) => expandedKeys.has(g.key));
+  const toggleAll = () => {
+    setExpandedKeys(allExpanded ? new Set() : new Set(groups.map((g) => g.key)));
+  };
 
   const columns = useMemo(
     () => [
@@ -103,9 +124,37 @@ export function LabWorkList({
         ),
       },
       {
+        key: "treatment",
+        header: "Treatment",
+        render: (lw: LabWork) => (
+          <span className="text-foreground">{lw.treatmentName || "—"}</span>
+        ),
+      },
+      {
         key: "workType",
         header: "Work / Tooth No.",
-        render: (lw: LabWork) => <span className="text-foreground">{lw.workType}</span>,
+        render: (lw: LabWork) => (
+          <div className="flex flex-col gap-0.5">
+            <span className="text-foreground">{lw.workType}</span>
+            {((lw.attachments && lw.attachments.length > 0) || lw.notes) && (
+              <div className="flex items-center gap-2">
+                {lw.attachments && lw.attachments.length > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"
+                    title={`${lw.attachments.length} attachment(s)`}
+                  >
+                    <Paperclip className="w-3 h-3" /> {lw.attachments.length}
+                  </span>
+                )}
+                {lw.notes && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground" title={lw.notes}>
+                    <StickyNote className="w-3 h-3" />
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        ),
       },
       {
         key: "units",
@@ -276,6 +325,23 @@ export function LabWorkList({
               <SelectItem value="lab" className="text-xs font-medium">Group by Lab</SelectItem>
             </SelectContent>
           </Select>
+          {groups.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={toggleAll}
+              className="h-9 text-xs font-semibold rounded-xl gap-1.5"
+            >
+              {allExpanded ? (
+                <>
+                  <ChevronsDownUp className="w-3.5 h-3.5" /> Collapse All
+                </>
+              ) : (
+                <>
+                  <ChevronsUpDown className="w-3.5 h-3.5" /> Expand All
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -288,31 +354,56 @@ export function LabWorkList({
           <p className="text-muted-foreground text-xs mt-1">Add your first lab work entry to get started.</p>
         </div>
       ) : (
-        <div className="space-y-5">
-          {groups.map((group) => (
-            <div key={group.key} className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  {groupBy === "patient" ? (
-                    <span>{group.key}</span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <FlaskConical className="w-3.5 h-3.5 text-primary" /> {group.key}
+        <div className="space-y-3">
+          {groups.map((group) => {
+            const isExpanded = expandedKeys.has(group.key);
+            return (
+              <div
+                key={group.key}
+                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.key)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/40 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <ChevronRight
+                      className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
+                        isExpanded ? "rotate-90" : ""
+                      }`}
+                    />
+                    {groupBy === "patient" ? (
+                      <span className="text-sm font-bold text-foreground truncate">{group.key}</span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-sm font-bold text-foreground truncate">
+                        <FlaskConical className="w-3.5 h-3.5 text-primary shrink-0" /> {group.key}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs font-bold text-foreground">
+                      ₹{group.totalValue.toLocaleString()}
                     </span>
-                  )}
-                </h3>
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {group.items.length} {group.items.length === 1 ? "entry" : "entries"}
-                </span>
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      {group.items.length} {group.items.length === 1 ? "entry" : "entries"}
+                    </span>
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div className="border-t border-border">
+                    <DataTable
+                      columns={columns}
+                      data={group.items}
+                      rowKey={(lw) => lw.id}
+                      onRowClick={(lw) => onView(lw.id)}
+                      className="rounded-none border-none shadow-none"
+                    />
+                  </div>
+                )}
               </div>
-              <DataTable
-                columns={columns}
-                data={group.items}
-                rowKey={(lw) => lw.id}
-                onRowClick={(lw) => onView(lw.id)}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

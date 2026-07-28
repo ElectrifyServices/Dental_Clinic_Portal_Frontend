@@ -15,6 +15,8 @@ const MOCK_LAB_WORKS: LabWork[] = [
     id: 'mock-1',
     patientId: 'mock-patient-1',
     patientName: 'Rohan Mehta',
+    treatmentId: 'mock-treatment-1',
+    treatmentName: 'Root Canal Treatment - #14',
     labName: 'Smile Dental Lab',
     workType: 'Crown - #14',
     unitsCount: 1,
@@ -29,6 +31,8 @@ const MOCK_LAB_WORKS: LabWork[] = [
     id: 'mock-2',
     patientId: 'mock-patient-2',
     patientName: 'Priya Shah',
+    treatmentId: 'mock-treatment-2',
+    treatmentName: 'Bridge Placement - #24-26',
     labName: 'PrecisionCraft Dental Lab',
     workType: 'Bridge - #24-26',
     unitsCount: 3,
@@ -41,6 +45,8 @@ const MOCK_LAB_WORKS: LabWork[] = [
     id: 'mock-3',
     patientId: 'mock-patient-1',
     patientName: 'Rohan Mehta',
+    treatmentId: 'mock-treatment-1',
+    treatmentName: 'Root Canal Treatment - #14',
     labName: 'Crown & Bridge Works',
     workType: 'Denture - Full Upper',
     unitsCount: 1,
@@ -85,11 +91,24 @@ export function useLabWorkData(params?: { search?: string; status?: string }, op
   // table is usable end-to-end without a live API.
   const [localLabWorks, setLocalLabWorks] = useState<LabWork[]>(MOCK_LAB_WORKS);
 
+  // Stages newly-picked files as local attachments (blob: preview URLs) so they're
+  // viewable immediately, without needing the backend upload endpoint yet.
+  const buildLocalAttachments = (files?: File[]) =>
+    (files || []).map((file, idx) => ({
+      id: `local-file-${Date.now()}-${idx}`,
+      file_name: file.name,
+      file_url: URL.createObjectURL(file),
+      file_size: file.size,
+      file_type: file.type,
+    }));
+
   const handleCreateLabWork = async (data: CreateLabWorkVariables) => {
     const newEntry: LabWork = {
       id: `local-${Date.now()}`,
       patientId: data.patient_id,
       patientName: data.patient_name || data.patient_id,
+      treatmentId: data.treatment_id,
+      treatmentName: data.treatment_name,
       labName: data.lab_name,
       workType: data.work_type,
       unitsCount: data.units_count,
@@ -98,6 +117,8 @@ export function useLabWorkData(params?: { search?: string; status?: string }, op
       warrantyEndDate: data.warranty_end_date,
       createdDate: data.created_date,
       price: data.price,
+      notes: data.notes,
+      attachments: buildLocalAttachments(data.rawFiles),
       status: 'ordered',
     };
     setLocalLabWorks((prev) => [newEntry, ...prev]);
@@ -117,6 +138,8 @@ export function useLabWorkData(params?: { search?: string; status?: string }, op
               ...lw,
               patientId: data.patient_id,
               patientName: data.patient_name || lw.patientName,
+              treatmentId: data.treatment_id,
+              treatmentName: data.treatment_name || lw.treatmentName,
               labName: data.lab_name,
               workType: data.work_type,
               unitsCount: data.units_count,
@@ -125,6 +148,13 @@ export function useLabWorkData(params?: { search?: string; status?: string }, op
               warrantyEndDate: data.warranty_end_date,
               createdDate: data.created_date,
               price: data.price,
+              notes: data.notes,
+              attachments: [
+                ...(lw.attachments || []).filter((a) =>
+                  data.existing_attachment_ids ? data.existing_attachment_ids.includes(a.id) : true,
+                ),
+                ...buildLocalAttachments(data.rawFiles),
+              ],
             }
           : lw,
       ),

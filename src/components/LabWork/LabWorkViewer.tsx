@@ -1,5 +1,6 @@
-import { FlaskConical, ShieldCheck, ShieldOff } from "lucide-react";
+import { FlaskConical, ShieldCheck, ShieldOff, FileText } from "lucide-react";
 import { Modal, Button, StatusBadge } from "@/components/ui";
+import { getFileUrl } from "../../services/apiClient";
 import { LabWork, LabWorkStatus } from "../../types";
 
 interface LabWorkViewerProps {
@@ -48,6 +49,7 @@ export function LabWorkViewer({ labWork, onClose }: LabWorkViewerProps) {
     >
       <div className="space-y-1">
         <Row label="Patient" value={labWork.patientName} />
+        <Row label="Treatment" value={labWork.treatmentName || "—"} />
         <Row label="Lab Name" value={labWork.labName} />
         <Row label="Work / Tooth No." value={labWork.workType} />
         <Row label="No. of Units" value={labWork.unitsCount} />
@@ -81,6 +83,35 @@ export function LabWorkViewer({ labWork, onClose }: LabWorkViewerProps) {
             </StatusBadge>
           }
         />
+        {labWork.notes && (
+          <div className="py-2.5 border-b border-border/50">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">
+              Notes
+            </span>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{labWork.notes}</p>
+          </div>
+        )}
+        {labWork.attachments && labWork.attachments.length > 0 && (
+          <div className="py-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">
+              Documents
+            </span>
+            <div className="space-y-1.5">
+              {labWork.attachments.map((att) => (
+                <a
+                  key={att.id}
+                  href={getFileUrl(att.file_url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-primary hover:underline text-sm font-semibold"
+                >
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{att.file_name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );
