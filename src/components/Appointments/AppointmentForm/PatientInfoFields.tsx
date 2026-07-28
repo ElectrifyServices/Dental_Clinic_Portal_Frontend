@@ -166,7 +166,9 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
               name="patientName"
               value={patientName}
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+                e.target.value = val;
                 onChange(e);
                 setFocusedField("name");
               }}

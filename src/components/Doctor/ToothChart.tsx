@@ -444,7 +444,11 @@ export function ToothChart({
             type="text"
             placeholder="Enter custom condition..."
             value={customCondition}
-            onChange={(e) => setCustomCondition(e.target.value)}
+            onChange={(e) => {
+              let val = e.target.value;
+              val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+              setCustomCondition(val);
+            }}
             style={{
               padding: "6px 12px",
               fontSize: 12,

@@ -30,6 +30,9 @@ export const TreatmentsPage: React.FC = () => {
     selectedTreatment,
     fetchSingleTreatment,
     clearSelectedTreatment,
+    filters,
+    handlePageChange,
+    handleLimitChange,
   } = useTreatmentData();
 
   const previousModalRef = React.useRef<string | null>(null);
@@ -116,6 +119,9 @@ export const TreatmentsPage: React.FC = () => {
           setActiveModal("sessionManager");
         }}
         onStartTreatment={wrappedHandleStartTreatment}
+        limit={filters.limit || 10}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
       />
     </div>
   );

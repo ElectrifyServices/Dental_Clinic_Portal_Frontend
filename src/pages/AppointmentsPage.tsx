@@ -115,26 +115,23 @@ export const AppointmentsPage: React.FC = () => {
   const { mutateAsync: checkInAppointment } = useCheckInAppointmentMutation();
 
   const handleCheckInPatient = async (appt: any) => {
-    const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
-    const sName = String(rawName).toLowerCase().trim();
-    const sPhone = (appt.patientPhone || appt.phone || "").trim();
-    const existing = patients.find(
-      (p: any) =>
-        (p.phone || "").trim() === sPhone &&
-        (p.name || "").toLowerCase().trim() === sName,
-    );
     try {
-      await checkInAppointment({ id: appt.id });
+      const response = await checkInAppointment({ id: appt.id });
+      setPendingCheckInAppt(appt);
+      
+      const responseData = response?.data ?? response;
+      const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
+      const patientId = responseData?.patient_id ?? responseData?.patientId;
+
+      if (!requiresRegistration && patientId) {
+        setSelectedPatientId(patientId);
+        setActiveModal("patientForm");
+        toast.success("Please verify patient details before check-in");
+      } else {
+        setActiveModal("patientNotFound");
+      }
     } catch (err) {
       toast.error("Failed to update appointment check-in status");
-    }
-    setPendingCheckInAppt(appt);
-    if (existing) {
-      setSelectedPatientId(existing.id);
-      setActiveModal("patientForm");
-      toast.success("Please verify patient details before check-in");
-    } else {
-      setActiveModal("patientNotFound");
     }
   };
 
@@ -144,16 +141,17 @@ export const AppointmentsPage: React.FC = () => {
     setCheckingInApptId(appt.id);
     try {
       // First update the appointment status
-      await checkInAppointment({ id: appt.id });
+      const response = await checkInAppointment({ id: appt.id });
       
       const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
       const sName = String(rawName).toLowerCase().trim();
       const sPhone = (appt.patientPhone || appt.phone || "").trim();
       
-      let patientId = appt.patientId || appt.patient_id;
-      
-      // If no explicit patientId, try to find the patient
-      if (!patientId) {
+      const responseData = response?.data ?? response;
+      let patientId = responseData?.patient_id ?? responseData?.patientId ?? appt.patientId ?? appt.patient_id;
+      const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? false;
+
+      if (!patientId && !requiresRegistration) {
         const existing = patients.find(
           (p: any) =>
             (p.phone || "").trim() === sPhone &&
@@ -164,7 +162,7 @@ export const AppointmentsPage: React.FC = () => {
         }
       }
 
-      if (patientId) {
+      if (patientId && !requiresRegistration) {
         // Add to local queue
         setQueuedPatients((prev: any[]) => [
           ...prev,
