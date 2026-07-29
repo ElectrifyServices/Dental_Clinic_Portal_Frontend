@@ -9,15 +9,15 @@ const Label = React.forwardRef<
   // Replace muted/blurred classes to make the label highlighted
   const highlightedClassName = className
     ? className
-        .replace(/\btext-muted-foreground\b/g, "text-slate-800 dark:text-slate-400 font-semibold")
-        .replace(/\btext-gray-\d+\b/g, "text-slate-800 dark:text-slate-400 font-semibold")
+        .replace(/\btext-muted-foreground\b/g, "text-foreground font-semibold")
+        .replace(/\btext-gray-\d+\b/g, "text-foreground font-semibold")
     : className;
 
   return (
     <LabelPrimitive.Root
       ref={ref}
       className={cn(
-        "text-sm font-semibold text-slate-800 dark:text-slate-400 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "text-sm font-semibold text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         highlightedClassName
       )}
       {...props}

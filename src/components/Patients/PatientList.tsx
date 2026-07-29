@@ -229,7 +229,7 @@ export function PatientList({
       )}
 
       {(displayTotalItems > 0) && onPageChange && (
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6">
           <Pagination
             page={currentPage}
             totalPages={displayTotalPages}

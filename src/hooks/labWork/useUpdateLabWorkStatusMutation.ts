@@ -10,9 +10,9 @@ export function useUpdateLabWorkStatusMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, UpdateLabWorkStatusVariables>({
-    getEndpoint: (variables) => `/lab-work/${variables.id}/status`,
+    getEndpoint: (variables) => `/labWork/status/${variables.id}`,
     method: "patch",
-    transformRequest: (variables) => ({ status: variables.status }),
+    transformRequest: (variables) => ({ status: variables.status.toUpperCase() }),
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["labWorks"] });

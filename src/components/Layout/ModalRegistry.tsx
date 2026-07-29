@@ -96,6 +96,7 @@ function ModalRegistryContent() {
     selectedStaffForSalary,
     setSelectedStaffForSalary,
     selectedPatientForDiagnose,
+    setSelectedPatientForDiagnose,
     selectedItemForRestock,
     setSelectedItemForRestock,
     preFilledPatientData,

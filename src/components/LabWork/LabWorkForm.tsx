@@ -11,6 +11,12 @@ import {
   FormDateInput,
   FormTextarea,
   toast,
+  Loading,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -36,6 +42,7 @@ function formatFileSize(bytes?: number) {
 }
 
 export interface LabWorkFormSaveData extends LabWorkFormData {
+  labNameId?: string;
   existingAttachmentIds: string[];
 }
 
@@ -45,6 +52,7 @@ interface LabWorkFormProps {
   labWork?: LabWork;
   existingLabNames: string[];
   isSaving?: boolean;
+  isLoading?: boolean;
 }
 
 export function LabWorkForm({
@@ -53,7 +61,23 @@ export function LabWorkForm({
   labWork,
   existingLabNames,
   isSaving,
+  isLoading,
 }: LabWorkFormProps) {
+  if (isLoading) {
+    return (
+      <Modal
+        title={labWork ? "Edit Lab Work" : "Add Lab Work"}
+        onClose={onClose}
+        size="5xl"
+        icon={<FlaskConical className="w-4 h-4" />}
+      >
+        <div className="flex h-60 items-center justify-center">
+          <Loading type="spinner" text="Loading data..." />
+        </div>
+      </Modal>
+    );
+  }
+
   const form = useForm<LabWorkFormData>({
     resolver: zodResolver(labWorkSchema) as any,
     defaultValues: {
@@ -96,18 +120,29 @@ export function LabWorkForm({
     if (!rawPatientsData) return [];
     if (Array.isArray(rawPatientsData)) return rawPatientsData;
     const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
-    if (Array.isArray(target)) return target;
-    if (target && typeof target === "object") {
-      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
-      if (Array.isArray(target.data?.data)) return target.data.data;
-      if (Array.isArray(target.data)) return target.data;
-      if (Array.isArray(target.patients)) return target.patients;
-      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    let list: any[] = [];
+    if (Array.isArray(target)) {
+      list = target;
+    } else if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) list = target.data.data.data;
+      else if (Array.isArray(target.data?.data)) list = target.data.data;
+      else if (Array.isArray(target.data)) list = target.data;
+      else if (Array.isArray(target.patients)) list = target.patients;
+      else if (Array.isArray(target.data?.patients)) list = target.data.patients;
     }
-    return [];
+    return list.map((p: any) => ({
+      ...p,
+      id: p.id,
+      name: p.name || p.full_name || "",
+      phone: p.phone || p.mobile || "",
+      avatar: getFileUrl(p.profile_picture_url) || getFileUrl(p.profile_picture) || getFileUrl(p.avatar) || "",
+    }));
   }, [rawPatientsData]);
 
-  const { data: rawLabNamesData, isLoading: isLabNamesLoading } = useLabNamesQuery();
+  const [labSearch, setLabSearch] = useState("");
+  const { data: rawLabNamesData, isLoading: isLabNamesLoading } = useLabNamesQuery({
+    search: labSearch || undefined,
+  });
   const createLabNameMutation = useCreateLabNameMutation();
   const updateLabNameMutation = useUpdateLabNameMutation();
   const deleteLabNameMutation = useDeleteLabNameMutation();
@@ -192,27 +227,29 @@ export function LabWorkForm({
     );
   };
 
-  // Ongoing treatments for the selected patient — a lab work entry must be raised
-  // against one of these, matching how the clinic tracks in-progress work.
+  // Procedures CRUD list
+  // Load treatments for the patient, filtered by status ["PLANNED", "IN_PROGRESS"]
   const { data: treatmentPagesData, isLoading: isTreatmentsLoading } = usePatientTreatmentPlansQuery(
     formData.patientId || undefined,
-    { enabled: !!formData.patientId, limit: 50 },
+    {
+      enabled: !!formData.patientId,
+      limit: 100,
+      filters: { status: ["PLANNED", "IN_PROGRESS"] },
+    },
   );
 
   const inProgressTreatments = useMemo(() => {
     const pages = (treatmentPagesData as any)?.pages || [];
     const all = pages.flatMap((p: any) => p?.data?.data ?? p?.data ?? []);
-    const filtered = all.filter((t: any) => t.status === "IN_PROGRESS");
-    // Keep the currently-assigned treatment selectable even if it's no longer
-    // in-progress (e.g. it was completed after this lab work was raised).
+    // Keep currently assigned treatment plan selectable
     if (
       labWork?.treatmentId &&
       formData.patientId === labWork.patientId &&
-      !filtered.some((t: any) => t.id === labWork.treatmentId)
+      !all.some((t: any) => t.id === labWork.treatmentId)
     ) {
-      filtered.push({ id: labWork.treatmentId, procedure: labWork.treatmentName || labWork.treatmentId });
+      all.push({ id: labWork.treatmentId, procedure: labWork.treatmentName || labWork.treatmentId });
     }
-    return filtered;
+    return all;
   }, [treatmentPagesData, labWork, formData.patientId]);
 
   // Auto-suggest the warranty end date from created date + warranty years,
@@ -248,7 +285,13 @@ export function LabWorkForm({
   };
 
   const handleSubmit = (data: LabWorkFormData) => {
-    onSave({ ...data, existingAttachmentIds: existingAttachments.map((a) => a.id) });
+    const selectedLab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === data.labName);
+    const labNameId = selectedLab && typeof selectedLab === "object" ? selectedLab.id : "";
+    onSave({
+      ...data,
+      labNameId,
+      existingAttachmentIds: existingAttachments.map((a) => a.id),
+    });
   };
 
   const rawFiles = (formData.rawFiles || []) as File[];
@@ -281,18 +324,61 @@ export function LabWorkForm({
                 const p = apiPatients.find((p: any) => p.id === val);
                 form.setValue("patientId", val, { shouldValidate: true });
                 form.setValue("patientName", p?.name || "", { shouldValidate: true });
-                form.setValue("treatmentId", "", { shouldValidate: true });
-                form.setValue("treatmentName", "");
               }}
               onSearchChange={setPatientSearchInput}
               options={[
-                { label: "Select Patient", value: "none" },
+                { label: "Select Patient", value: "none", avatar: "", phone: "" },
                 ...apiPatients.map((p: any) => ({
-                  label: `${p.name}${p.phone ? ` (${p.phone})` : ""}`,
+                  label: p.name,
                   searchLabel: `${p.name} ${p.phone || ""}`,
                   value: p.id,
+                  avatar: p.avatar,
+                  phone: p.phone,
                 })),
               ]}
+              renderOption={(opt: any) => {
+                if (opt.value === "none") return <span className="text-muted-foreground">{opt.label}</span>;
+                return (
+                  <div className="flex items-center gap-2 py-0.5">
+                    {opt.avatar ? (
+                      <img
+                        src={opt.avatar}
+                        alt={opt.label}
+                        className="w-6 h-6 rounded-full object-cover shrink-0 border border-border"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 border border-primary/20">
+                        {opt.label.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate font-semibold text-foreground text-xs">{opt.label}</span>
+                      {opt.phone && (
+                        <span className="text-[10px] text-muted-foreground">{opt.phone}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
+              renderValue={(opt: any) => {
+                if (opt.value === "none") return <span>{opt.label}</span>;
+                return (
+                  <div className="flex items-center gap-2">
+                    {opt.avatar ? (
+                      <img
+                        src={opt.avatar}
+                        alt={opt.label}
+                        className="w-5 h-5 rounded-full object-cover shrink-0 border border-border"
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0 border border-primary/20">
+                        {opt.label.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span>{opt.label}</span>
+                  </div>
+                );
+              }}
               placeholder="Select Patient"
               searchPlaceholder="Search Patient..."
               className="w-full bg-white"
@@ -321,11 +407,6 @@ export function LabWorkForm({
               searchPlaceholder="Search treatment..."
               className="w-full bg-white"
             />
-            {formData.patientId && !isTreatmentsLoading && inProgressTreatments.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1.5">
-                No ongoing treatment for this patient. Start a treatment first before raising lab work.
-              </p>
-            )}
           </LabeledField>
 
           <LabeledField label="Lab Name" required error={form.formState.errors.labName?.message}>
@@ -341,6 +422,7 @@ export function LabWorkForm({
               isCreating={createLabNameMutation.isPending}
               isDeletingValue={deletingLabName}
               isLoading={isLabNamesLoading}
+              onSearchChange={setLabSearch}
               createLabel="Create lab"
               capitalizeWords
               options={[
@@ -371,21 +453,25 @@ export function LabWorkForm({
           />
 
           <LabeledField label="Warranty">
-            <select
+            <Select
               value={formData.hasWarranty ? "yes" : "no"}
-              onChange={(e) => {
-                const hasWarranty = e.target.value === "yes";
+              onValueChange={(val) => {
+                const hasWarranty = val === "yes";
                 form.setValue("hasWarranty", hasWarranty);
                 if (!hasWarranty) {
                   form.setValue("warrantyYears", undefined);
                   form.setValue("warrantyEndDate", "");
                 }
               }}
-              className="form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all"
             >
-              <option value="yes">Warranty</option>
-              <option value="no">No Warranty</option>
-            </select>
+              <SelectTrigger className="w-full h-11 px-4 text-sm font-semibold rounded-xl border border-input bg-card shadow-sm text-foreground">
+                <SelectValue placeholder="Select Warranty Option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes" className="text-xs font-semibold">Warranty</SelectItem>
+                <SelectItem value="no" className="text-xs font-semibold">No Warranty</SelectItem>
+              </SelectContent>
+            </Select>
           </LabeledField>
 
           {formData.hasWarranty && (
@@ -411,9 +497,13 @@ export function LabWorkForm({
             control={form.control}
             name="price"
             label="Price"
-            type="number"
-            min={0}
+            type="text"
             required
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              const numVal = val === "" ? 0 : parseInt(val, 10);
+              form.setValue("price", numVal, { shouldValidate: true });
+            }}
           />
 
           <FormDateInput
@@ -421,6 +511,7 @@ export function LabWorkForm({
             name="createdDate"
             label="Created Date"
             required
+            className="sm:col-start-2"
           />
         </div>
 

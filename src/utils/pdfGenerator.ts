@@ -102,10 +102,12 @@ async function waitForAssets(node: HTMLElement) {
  */
 function computeContentPageBreaks(
   container: HTMLElement,
+  contentStart: number,
   contentHeight: number,
-  pageHeightPx: number,
+  contentPageHeight: number,
+  signatureHeight: number,
 ): number[] {
-  if (contentHeight <= pageHeightPx) return [contentHeight];
+  if (contentHeight + signatureHeight <= contentPageHeight) return [contentStart + contentHeight];
 
   const containerTop = container.getBoundingClientRect().top;
 
@@ -117,16 +119,23 @@ function computeContentPageBreaks(
       return { top: r.top - containerTop, bottom: r.bottom - containerTop };
     })
     // Only blocks that actually live in the content region matter here.
-    .filter((b) => b.bottom <= contentHeight + 0.5)
+    .filter((b) => b.bottom <= contentStart + contentHeight + 0.5)
     .sort((a, b) => a.top - b.top);
 
   const breaks: number[] = [];
-  let pageStart = 0;
+  let pageStart = contentStart;
+  const contentEnd = contentStart + contentHeight;
 
-  while (pageStart < contentHeight - 0.5) {
-    let end = Math.min(pageStart + pageHeightPx, contentHeight);
+  while (pageStart < contentEnd - 0.5) {
+    let end = Math.min(pageStart + contentPageHeight, contentEnd);
 
-    if (end < contentHeight) {
+    if (end === contentEnd) {
+      if (contentEnd - pageStart > contentPageHeight - signatureHeight) {
+        end = pageStart + (contentPageHeight - signatureHeight);
+      }
+    }
+
+    if (end < contentEnd) {
       // If this boundary would slice through a protected block, pull it
       // back to the top of that block instead — the block (and everything
       // after it) spills onto the next page in full.
@@ -140,7 +149,10 @@ function computeContentPageBreaks(
     // block taller than a full page) — fall back to a hard cut rather than
     // looping forever.
     if (end <= pageStart) {
-      end = Math.min(pageStart + pageHeightPx, contentHeight);
+      const maxPageSpace = (pageStart + contentPageHeight >= contentEnd) 
+        ? contentPageHeight - signatureHeight 
+        : contentPageHeight;
+      end = Math.min(pageStart + maxPageSpace, contentEnd);
     }
 
     breaks.push(end);
@@ -157,14 +169,8 @@ function computeContentPageBreaks(
  *  - Content height is measured from the real DOM, never assumed.
  *  - Page breaks avoid slicing through anything marked `data-avoid-break`
  *    (table rows, cards, section blocks).
- *  - The footer (marked `data-footer`) is always placed on the final page.
- *    Only the final page's height is padded (via the flex column's
- *    `margin-top:auto` on the footer) so the footer sits flush against the
- *    true bottom of that last page — no trailing blank space, and the
- *    footer is never split or stranded mid-page.
- *  - Earlier pages are never padded/stretched — they end as soon as their
- *    content does (or as soon as break-avoidance requires), which is
- *    standard, expected pagination behavior.
+ *  - Header & Brand Footer are layered onto every page.
+ *  - Signature block is drawn only at the bottom of the last page, above the brand footer.
  */
 async function renderContainerToPDF(
   pdfContainer: HTMLElement,
@@ -173,68 +179,47 @@ async function renderContainerToPDF(
   document.body.appendChild(pdfContainer);
   await waitForAssets(pdfContainer);
 
-  // The flex column (the element that actually carries min-height:1123px
-  // and has the footer with margin-top:auto) is the single root node built
-  // into pdfContainer's innerHTML. We resize *that* element, not the plain
-  // absolutely-positioned wrapper around it.
-  const pageEl =
-    (pdfContainer.firstElementChild as HTMLElement) || pdfContainer;
-
   try {
     const containerTop = pdfContainer.getBoundingClientRect().top;
-    const footerEl = pdfContainer.querySelector<HTMLElement>("[data-footer]");
 
-    const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
-    // Content height = everything above the footer. Measured *before* any
-    // resizing, while the container is still auto-sized to its natural
-    // content — so the footer's top edge is exactly where content ends.
-    const contentHeight = footerEl
-      ? footerEl.getBoundingClientRect().top - containerTop
-      : pdfContainer.scrollHeight;
+    const headerEl = pdfContainer.querySelector<HTMLElement>("[data-header]");
+    const brandFooterEl = pdfContainer.querySelector<HTMLElement>("[data-brand-footer]");
+    const signatureEl = pdfContainer.querySelector<HTMLElement>("[data-signature]");
 
-    const contentBreaks = computeContentPageBreaks(
+    const headerHeight = headerEl ? headerEl.getBoundingClientRect().bottom - containerTop : 140;
+    const brandFooterHeight = brandFooterEl ? brandFooterEl.getBoundingClientRect().height : 100;
+    const signatureHeight = signatureEl ? signatureEl.getBoundingClientRect().height : 0;
+    const signatureGap = signatureEl ? 25 : 0;
+
+    // The signature element starts at signatureTop.
+    // If there is no signature element, contentTop is brandFooterEl's top.
+    const contentEndTop = signatureEl 
+      ? signatureEl.getBoundingClientRect().top - containerTop 
+      : (brandFooterEl ? brandFooterEl.getBoundingClientRect().top - containerTop : pdfContainer.scrollHeight);
+
+    const brandFooterTop = brandFooterEl ? brandFooterEl.getBoundingClientRect().top - containerTop : pdfContainer.scrollHeight - brandFooterHeight;
+
+    const contentHeight = contentEndTop - headerHeight;
+    const contentPageHeight = PAGE_HEIGHT_PX - headerHeight - brandFooterHeight;
+
+    const pageBreaks = computeContentPageBreaks(
       pdfContainer,
+      headerHeight,
       contentHeight,
-      PAGE_HEIGHT_PX,
+      contentPageHeight,
+      signatureHeight + signatureGap,
     );
 
-    const lastPageStart =
-      contentBreaks.length > 1 ? contentBreaks[contentBreaks.length - 2] : 0;
-    const lastPageUsed = contentHeight - lastPageStart;
-    const footerFitsOnLastContentPage =
-      PAGE_HEIGHT_PX - lastPageUsed >= footerHeight;
-
-    let pageBreaks: number[];
-    let finalContainerHeight: number;
-
-    if (footerFitsOnLastContentPage) {
-      // Footer shares the last content page — pad just that page out to a
-      // full page height so the footer lands flush at the very bottom.
-      finalContainerHeight = lastPageStart + PAGE_HEIGHT_PX;
-      pageBreaks = [...contentBreaks.slice(0, -1), finalContainerHeight];
-    } else {
-      // No room left on the last content page — give the footer its own
-      // dedicated final page.
-      finalContainerHeight = contentHeight + PAGE_HEIGHT_PX;
-      pageBreaks = [...contentBreaks, finalContainerHeight];
-    }
-
-    // Only the overall (last-page-inclusive) height is touched. Earlier
-    // pages are untouched — their length is whatever content/break-avoidance
-    // naturally produced.
-    pageEl.style.height = `${finalContainerHeight}px`;
-    // Let layout settle (footer's margin-top:auto re-flows to the new
-    // bottom) before we rasterize.
-    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-
+    // Capture the entire pdfContainer as a canvas at its natural scroll height
+    const naturalHeight = pdfContainer.scrollHeight;
     const canvas = await html2canvas(pdfContainer, {
       scale: 1.5,
       useCORS: true,
       backgroundColor: "#ffffff",
       width: PAGE_WIDTH_PX,
       windowWidth: PAGE_WIDTH_PX,
-      height: finalContainerHeight,
-      windowHeight: finalContainerHeight,
+      height: naturalHeight,
+      windowHeight: naturalHeight,
     });
 
     const pdf = new jsPDF({
@@ -244,42 +229,100 @@ async function renderContainerToPDF(
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     const scaleFactor = canvas.width / PAGE_WIDTH_PX;
 
-    let prevBreakPx = 0;
+    const headerCanvasHeight = Math.round(headerHeight * scaleFactor);
+    const footerCanvasHeight = Math.round(brandFooterHeight * scaleFactor);
+    const signatureCanvasHeight = Math.round(signatureHeight * scaleFactor);
+    const signatureSourceY = signatureEl ? Math.round((signatureEl.getBoundingClientRect().top - containerTop) * scaleFactor) : 0;
+
     for (let page = 0; page < pageBreaks.length; page++) {
       if (page > 0) pdf.addPage();
 
-      const sliceStartPx = prevBreakPx;
+      const sliceStartPx = page === 0 ? headerHeight : pageBreaks[page - 1];
       const sliceEndPx = pageBreaks[page];
-      prevBreakPx = sliceEndPx;
 
-      const sourceY = Math.round(sliceStartPx * scaleFactor);
-      const sourceHeight = Math.round(
+      const sourceContentY = Math.round(sliceStartPx * scaleFactor);
+      const sourceContentHeight = Math.round(
         (sliceEndPx - sliceStartPx) * scaleFactor,
       );
-      if (sourceHeight <= 0) continue;
 
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
-      pageCanvas.height = sourceHeight;
+      pageCanvas.height = Math.round(PAGE_HEIGHT_PX * scaleFactor);
       const ctx = pageCanvas.getContext("2d")!;
-      ctx.drawImage(
-        canvas,
-        0,
-        sourceY, // source Y
-        canvas.width,
-        sourceHeight, // source dimensions
-        0,
-        0,
-        canvas.width,
-        sourceHeight, // dest dimensions
-      );
 
-      const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.75);
-      const imgHeightOnPage = (sourceHeight * pdfWidth) / canvas.width;
+      // Background color
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
 
-      pdf.addImage(pageImgData, "JPEG", 0, 0, pdfWidth, imgHeightOnPage);
+      // 1. Draw Header
+      if (headerEl && headerCanvasHeight > 0) {
+        ctx.drawImage(
+          canvas,
+          0,
+          0,
+          canvas.width,
+          headerCanvasHeight,
+          0,
+          0,
+          pageCanvas.width,
+          headerCanvasHeight,
+        );
+      }
+
+      // 2. Draw Content Slice
+      if (sourceContentHeight > 0) {
+        ctx.drawImage(
+          canvas,
+          0,
+          sourceContentY,
+          canvas.width,
+          sourceContentHeight,
+          0,
+          headerCanvasHeight,
+          pageCanvas.width,
+          sourceContentHeight,
+        );
+      }
+
+      // 3. Draw Signature (ONLY on the last page)
+      const isLastPage = page === pageBreaks.length - 1;
+      if (isLastPage && signatureEl && signatureCanvasHeight > 0) {
+        const signatureGapCanvas = Math.round(signatureGap * scaleFactor);
+        const destSignatureY = pageCanvas.height - footerCanvasHeight - signatureCanvasHeight - signatureGapCanvas;
+        ctx.drawImage(
+          canvas,
+          0,
+          signatureSourceY,
+          canvas.width,
+          signatureCanvasHeight,
+          0,
+          destSignatureY,
+          pageCanvas.width,
+          signatureCanvasHeight,
+        );
+      }
+
+      // 4. Draw Brand Footer
+      if (brandFooterEl && footerCanvasHeight > 0) {
+        const destFooterY = pageCanvas.height - footerCanvasHeight;
+        ctx.drawImage(
+          canvas,
+          0,
+          Math.round(brandFooterTop * scaleFactor),
+          canvas.width,
+          footerCanvasHeight,
+          0,
+          destFooterY,
+          pageCanvas.width,
+          footerCanvasHeight,
+        );
+      }
+
+      const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.85);
+      pdf.addImage(pageImgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
     }
 
     pdf.save(fileName);
@@ -387,13 +430,13 @@ style="display:block;width:14px;height:14px;"
 
   return `
 <div style="margin-top:auto;" data-footer="true">
-<div style="padding: 14px 40px 0;">
+<div data-signature="true" style="padding: 14px 40px 15px; background: #ffffff;">
 <div style="display:flex; justify-content:flex-end;">
           ${signatureBlock}
 </div>
 </div>
 <div style="height:12px;"></div>
-<div style="background:${BRAND}; padding:14px 40px; min-height:90px; color:#ffffff; display:flex; flex-direction:row; align-items:center; justify-content:space-between; box-sizing:border-box;">
+<div data-brand-footer="true" style="background:${BRAND}; padding:14px 40px; min-height:90px; color:#ffffff; display:flex; flex-direction:row; align-items:center; justify-content:space-between; box-sizing:border-box;">
   
   <!-- Left column: Contact info -->
   <div
@@ -863,7 +906,7 @@ export const downloadConsultationPDF = async ({
       ? `
 <div style="margin-bottom:16px;" data-avoid-break="true">
           ${sectionLabel("Chief Complaint")}
-<div style="font-size:12px; line-height:1.5; color:${INK}; font-weight:400; min-height:${isBlankMode ? "40px" : "auto"};">${isBlankMode ? "" : patientConcern}</div>
+<div style="font-size:12px; line-height:1.5; color:${INK}; font-weight:400; min-height:${isBlankMode ? "40px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : patientConcern}</div>
 </div>
       `
       : ""
@@ -871,7 +914,7 @@ export const downloadConsultationPDF = async ({
 <div style="display:flex; flex-direction:row; justify-content:space-between; width:100%; gap:24px;" data-avoid-break="true">
 <div style="flex:1;">
           ${sectionLabel("Clinical Observations")}
-<div style="font-size:12px; line-height:1.6; color:${INK}; min-height:${isBlankMode ? "110px" : "auto"};">
+<div style="font-size:12px; line-height:1.6; color:${INK}; min-height:${isBlankMode ? "110px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
             ${isBlankMode ? "" : (observations || `<span style="color:#93999e; font-style:italic;">No observations recorded.</span>`)}
 </div>
           ${!isBlankMode && Object.keys(finalToothChart).length > 0
@@ -893,7 +936,7 @@ export const downloadConsultationPDF = async ({
 </div>
 <div style="flex:1;">
           ${sectionLabel("Diagnosis")}
-<div style="font-size:12px; line-height:1.6; color:${INK}; min-height:${isBlankMode ? "110px" : "auto"};">
+<div style="font-size:12px; line-height:1.6; color:${INK}; min-height:${isBlankMode ? "110px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
             ${isBlankMode ? "" : (diagnosis || `<span style="color:#93999e; font-style:italic;">No diagnosis provided.</span>`)}
 </div>
 </div>
@@ -928,7 +971,7 @@ export const downloadConsultationPDF = async ({
   const getTreatmentSection = () => {
     let treatmentsHtml = "";
     if (isBlankMode || (treatmentsArray && treatmentsArray.length > 0)) {
-      const rows = isBlankMode ? [1, 2, 3, 4, 5] : treatmentsArray;
+      const rows = isBlankMode ? [1, 2, 3] : treatmentsArray;
       treatmentsHtml = `
 <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${LINE}; margin-top:10px;">
 <thead>
@@ -980,7 +1023,7 @@ export const downloadConsultationPDF = async ({
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Treatment Plan Description</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "60px" : "auto"}; white-space:pre-wrap;">${isBlankMode ? "" : treatmentPlanDesc}</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : treatmentPlanDesc}</div>
 </div>
         `
         : ""
@@ -989,7 +1032,7 @@ export const downloadConsultationPDF = async ({
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "60px" : "auto"}; white-space:pre-wrap;">${isBlankMode ? "" : recommendations}</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : recommendations}</div>
 </div>
         `
         : ""
@@ -999,9 +1042,9 @@ export const downloadConsultationPDF = async ({
   };
 
   const getPrescriptionSection = () => {
-    const rows = isBlankMode ? [1, 2, 3, 4, 5] : filledPrescriptions;
+    const rows = isBlankMode ? [1, 2, 3] : filledPrescriptions;
     return `
-<div style="padding: 8px 40px 10px;">
+<div style="padding: 8px 40px 10px;" data-avoid-break="true">
 <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
 <div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
 <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
@@ -1047,7 +1090,7 @@ export const downloadConsultationPDF = async ({
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
 <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Additional Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "60px" : "auto"}; white-space:pre-wrap;">${isBlankMode ? "" : additionalNotes}</div>
+<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : additionalNotes}</div>
 </div>
         `
         : ""
@@ -1077,7 +1120,7 @@ export const downloadConsultationPDF = async ({
       false,
     );
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}</div>`;
 
   let reportTitle = "Consultation Report";
   let fileNameSuffix = "full_report";
@@ -1177,7 +1220,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const sessions = treatmentObj.sessions || [];
   let sessionsHtml = "";
   if (isBlankMode || sessions.length > 0) {
-    const rows = isBlankMode ? [1, 2, 3, 4, 5] : sessions;
+    const rows = isBlankMode ? [1, 2, 3] : sessions;
     sessionsHtml = `
 <div style="padding: 16px 40px 10px;" data-avoid-break="true">
   ${sectionLabel("Treatment Session")}
@@ -1220,7 +1263,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const prescriptions = treatmentObj.prescriptions || [];
   let prescriptionsHtml = "";
   if (isBlankMode || prescriptions.length > 0) {
-    const rows = isBlankMode ? [1, 2, 3, 4, 5] : prescriptions;
+    const rows = isBlankMode ? [1, 2, 3] : prescriptions;
     prescriptionsHtml = `
 <div style="padding: 8px 40px 10px;" data-avoid-break="true">
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
@@ -1272,7 +1315,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
     clinicalNotesHtml = `
 <div style="padding: 16px 40px 10px;" data-avoid-break="true">
   ${sectionLabel("Clinical Notes")}
-  <div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "60px" : "auto"};">
+  <div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
     ${isBlankMode ? "" : treatmentObj.clinical_notes}
   </div>
 </div>
@@ -1292,7 +1335,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
       false,
     );
 
-  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box;"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}`;
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${BRAND}; width:100%;"></div>${getHeader()}</div>`;
   htmlContent +=
     getPatientInfo() +
     clinicalNotesHtml +
@@ -1556,15 +1599,14 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   `;
 
   const htmlContent = `
-    <div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box; font-family: 'Inter', sans-serif;">
-
-      <div style="height:20px; background:${BRAND}; width:100%;"></div>
-
-      <div style="text-align:center; font-size:15px; font-weight:400; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px; font-family: 'Cinzel', serif;">
-        Invoice
+    <div style="width:794px; background:#fff; margin:0; padding:0; color:${INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box; font-family: 'Inter', sans-serif;">
+      <div data-header="true">
+        <div style="height:20px; background:${BRAND}; width:100%;"></div>
+        <div style="text-align:center; font-size:15px; font-weight:400; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; padding: 12px 0 6px; font-family: 'Cinzel', serif;">
+          Invoice
+        </div>
+        ${getHeader()}
       </div>
-
-      ${getHeader()}
 
       <div style="padding: 0 40px; display:flex; flex-direction:column; gap:12px; margin-top:8px;">
 

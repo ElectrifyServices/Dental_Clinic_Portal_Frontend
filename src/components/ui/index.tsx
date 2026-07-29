@@ -482,7 +482,7 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
                 <SelectValue placeholder={String(perPage)} />
               </SelectTrigger>
               <SelectContent>
-                {[10, 20, 50, 100].map((size) => (
+                {[5, 10, 20, 50, 100].map((size) => (
                   <SelectItem key={size} value={String(size)} className="text-xs">
                     {size}
                   </SelectItem>
@@ -592,7 +592,7 @@ interface LabeledFieldProps {
 export function LabeledField({ label, required, error, children }: LabeledFieldProps) {
   return (
     <div>
-      <Label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+      <Label className="block text-xs font-semibold text-foreground mb-1.5">
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
       </Label>

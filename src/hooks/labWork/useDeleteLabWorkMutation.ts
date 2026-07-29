@@ -9,7 +9,7 @@ export function useDeleteLabWorkMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, DeleteLabWorkVariables>({
-    getEndpoint: (variables) => `/lab-work/${variables.id}`,
+    getEndpoint: (variables) => `/labWork/${variables.id}`,
     method: "delete",
     options: {
       onSuccess: () => {

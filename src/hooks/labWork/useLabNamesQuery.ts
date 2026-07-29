@@ -26,8 +26,8 @@ export function useLabNamesQuery(params: LabNameListParams = {}, options?: any) 
   return useApiQuery<any>({
     queryKey: ["labNames", queryParams],
     endpoint: "/labName/list",
-    method: "get",
-    params: queryParams,
+    method: "post",
+    data: queryParams,
     options,
   });
 }
