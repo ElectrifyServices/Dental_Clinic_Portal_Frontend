@@ -10,23 +10,23 @@ import {
   FormInput,
   FormDateInput,
   FormTextarea,
+  toast,
 } from "@/components/ui";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import { usePatientTreatmentPlansQuery } from "../../hooks/treatment/usePatientTreatmentPlansQuery";
+import { useLabNamesQuery } from "../../hooks/labWork/useLabNamesQuery";
+import { useCreateLabNameMutation } from "../../hooks/labWork/useCreateLabNameMutation";
+import { useUpdateLabNameMutation } from "../../hooks/labWork/useUpdateLabNameMutation";
+import { useDeleteLabNameMutation } from "../../hooks/labWork/useDeleteLabNameMutation";
+import { useModal } from "@/contexts/ModalContext";
 import { getFileUrl } from "../../services/apiClient";
 import { LabWork, LabWorkAttachment } from "../../types";
 import { labWorkSchema, type LabWorkFormData } from "@/lib/schemas/labWork.schema";
 
-// Seed suggestions shown until real lab entries exist / a labs API is wired up.
-const DEFAULT_LAB_SUGGESTIONS = [
-  "Smile Dental Lab",
-  "PrecisionCraft Dental Lab",
-  "Crown & Bridge Works",
-  "OrthoTech Lab",
-];
+
 
 function formatFileSize(bytes?: number) {
   if (!bytes) return "";
@@ -107,10 +107,90 @@ export function LabWorkForm({
     return [];
   }, [rawPatientsData]);
 
+  const { data: rawLabNamesData, isLoading: isLabNamesLoading } = useLabNamesQuery();
+  const createLabNameMutation = useCreateLabNameMutation();
+  const updateLabNameMutation = useUpdateLabNameMutation();
+  const deleteLabNameMutation = useDeleteLabNameMutation();
+  const { confirmDelete } = useModal();
+  const [deletingLabName, setDeletingLabName] = useState<string | null>(null);
+
+  const apiLabNames = useMemo(() => {
+    if (!rawLabNamesData) return [];
+    if (Array.isArray(rawLabNamesData)) return rawLabNamesData;
+    const target = (rawLabNamesData as any).responseObject !== undefined ? (rawLabNamesData as any).responseObject : rawLabNamesData;
+    if (Array.isArray(target)) return target;
+    if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
+      if (Array.isArray(target.data?.data)) return target.data.data;
+      if (Array.isArray(target.data)) return target.data;
+      if (Array.isArray(target.labNames)) return target.labNames;
+      if (Array.isArray(target.data?.labNames)) return target.data.labNames;
+      if (Array.isArray(target.list)) return target.list;
+      if (Array.isArray(target.rows)) return target.rows;
+      if (Array.isArray(target.results)) return target.results;
+    }
+    return [];
+  }, [rawLabNamesData]);
+
   const labOptions = useMemo(() => {
-    const names = Array.from(new Set([...DEFAULT_LAB_SUGGESTIONS, ...existingLabNames.filter(Boolean)]));
+    const apiNames = apiLabNames.map((lab: any) => typeof lab === "string" ? lab : (lab.name || "")).filter(Boolean);
+    const currentName = labWork?.labName ? [labWork.labName] : [];
+    const names = Array.from(new Set([...apiNames, ...currentName]));
     return names.map((name) => ({ label: name, value: name }));
-  }, [existingLabNames]);
+  }, [apiLabNames, labWork]);
+
+  const handleCreateLabName = async (name: string) => {
+    try {
+      await createLabNameMutation.mutateAsync({ name });
+      toast.success("Lab added successfully");
+      form.setValue("labName", name, { shouldValidate: true });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create lab");
+    }
+  };
+
+  const handleUpdateLabName = async (oldName: string, newName: string) => {
+    try {
+      const lab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === oldName);
+      if (!lab || typeof lab === "string" || !lab.id) {
+        form.setValue("labName", newName, { shouldValidate: true });
+        return;
+      }
+      await updateLabNameMutation.mutateAsync({ id: lab.id, name: newName });
+      toast.success("Lab updated successfully");
+      if (formData.labName === oldName) {
+        form.setValue("labName", newName, { shouldValidate: true });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update lab");
+    }
+  };
+
+  const handleDeleteLabName = async (nameToDelete: string) => {
+    const lab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === nameToDelete);
+    if (!lab || typeof lab === "string" || !lab.id) {
+      toast.error("Lab not found");
+      return;
+    }
+
+    confirmDelete(
+      "Delete Lab",
+      `Are you sure you want to delete the lab "${nameToDelete}"?`,
+      async () => {
+        try {
+          setDeletingLabName(nameToDelete);
+          await deleteLabNameMutation.mutateAsync({ id: lab.id });
+          if (formData.labName === nameToDelete) {
+            form.setValue("labName", "");
+          }
+        } catch (err) {
+          throw err;
+        } finally {
+          setDeletingLabName(null);
+        }
+      }
+    );
+  };
 
   // Ongoing treatments for the selected patient — a lab work entry must be raised
   // against one of these, matching how the clinic tracks in-progress work.
@@ -255,11 +335,14 @@ export function LabWorkForm({
                 if (val === "none") return;
                 form.setValue("labName", val, { shouldValidate: true });
               }}
-              onCreateOption={async (value) => {
-                form.setValue("labName", value, { shouldValidate: true });
-                return value;
-              }}
-              createLabel="Use lab"
+              onCreateOption={handleCreateLabName}
+              onEditOption={handleUpdateLabName}
+              onDeleteOption={handleDeleteLabName}
+              isCreating={createLabNameMutation.isPending}
+              isDeletingValue={deletingLabName}
+              isLoading={isLabNamesLoading}
+              createLabel="Create lab"
+              capitalizeWords
               options={[
                 { label: "Select Lab", value: "none" },
                 ...labOptions,

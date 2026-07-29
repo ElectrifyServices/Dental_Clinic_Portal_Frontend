@@ -213,7 +213,13 @@ export function SearchableSelect({
                       <input
                         type="text"
                         value={editInputValue}
-                        onChange={(e) => setEditInputValue(e.target.value)}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                          if (capitalizeWords) {
+                            val = val.replace(/\b\w/g, (c) => c.toUpperCase());
+                          }
+                          setEditInputValue(val);
+                        }}
                         className="flex-1 px-2 py-1 text-xs border border-primary rounded-lg bg-card outline-none"
                         autoFocus
                         onKeyDown={(e) => {
@@ -255,7 +261,7 @@ export function SearchableSelect({
                         )}
                         {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
                       </button>
-                      {onEditOption && (
+                      {onEditOption && optValue !== "none" && optValue !== "" && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -270,7 +276,7 @@ export function SearchableSelect({
                           <Edit className="h-3.5 w-3.5" />
                         </button>
                       )}
-                      {onDeleteOption && (
+                      {onDeleteOption && optValue !== "none" && optValue !== "" && (
                         <button
                           type="button"
                           onClick={(e) => {
