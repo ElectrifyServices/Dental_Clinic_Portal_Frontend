@@ -1,28 +1,48 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLabWorkData } from "../hooks/useLabWorkData";
 import { useModal } from "../contexts/ModalContext";
 import { LabWorkList } from "../components/LabWork/LabWorkList";
 import { LabWorkForm } from "../components/LabWork/LabWorkForm";
 import { LabWorkViewer } from "../components/LabWork/LabWorkViewer";
-import { toast } from "@/components/ui";
+import { toast, Pagination } from "@/components/ui";
+import { useLabWorkQuery, normalizeLabWork } from "../hooks/labWork/useLabWorkQuery";
 import type { LabWorkFormSaveData } from "../components/LabWork/LabWorkForm";
 import type { LabWorkStatus } from "../types";
 
 export const LabWorkPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [activeLabWorkId, setActiveLabWorkId] = useState<string | null>(null);
   const [viewingLabWorkId, setViewingLabWorkId] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<"patient" | "lab">("patient");
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
 
   useEffect(() => {
-    const handler = setTimeout(() => setSearch(searchInput), 500);
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1); // Reset page on new search
+    }, 500);
     return () => clearTimeout(handler);
   }, [searchInput]);
 
+  useEffect(() => {
+    setPage(1); // Reset page on status filter change
+  }, [status]);
+
+  useEffect(() => {
+    setPage(1); // Reset page on grouping filter change
+  }, [groupBy]);
+
   const {
     labWorks,
+    pagination,
     isLabWorksLoading,
     isCreating,
     isUpdating,
@@ -31,23 +51,39 @@ export const LabWorkPage: React.FC = () => {
     handleUpdateLabWork,
     handleDeleteLabWork,
     handleUpdateLabWorkStatus,
-  } = useLabWorkData({ search, status });
+  } = useLabWorkData({ search, status, page, limit, groupBy });
 
-  const { confirmDelete } = useModal();
+  const { confirmDelete, showConfirm } = useModal();
 
   useEffect(() => {
     refetchLabWorks();
   }, [refetchLabWorks]);
 
-  const activeLabWork = useMemo(
-    () => labWorks.find((lw) => lw.id === activeLabWorkId) || undefined,
-    [labWorks, activeLabWorkId],
-  );
+  // Live single-entry query for edit form
+  const { data: rawActiveLabWork, isLoading: isActiveLoading } = useLabWorkQuery(activeLabWorkId || "", {
+    enabled: !!activeLabWorkId && formMode === "edit",
+  });
 
-  const viewingLabWork = useMemo(
-    () => labWorks.find((lw) => lw.id === viewingLabWorkId) || undefined,
-    [labWorks, viewingLabWorkId],
-  );
+  // Live single-entry query for viewer modal
+  const { data: rawViewingLabWork, isLoading: isViewingLoading } = useLabWorkQuery(viewingLabWorkId || "", {
+    enabled: !!viewingLabWorkId,
+  });
+
+  const activeLabWork = useMemo(() => {
+    if (!activeLabWorkId) return undefined;
+    if (!rawActiveLabWork) {
+      return labWorks.find((lw) => lw.id === activeLabWorkId) || undefined;
+    }
+    return normalizeLabWork(rawActiveLabWork) || undefined;
+  }, [rawActiveLabWork, labWorks, activeLabWorkId]);
+
+  const viewingLabWork = useMemo(() => {
+    if (!viewingLabWorkId) return undefined;
+    if (!rawViewingLabWork) {
+      return labWorks.find((lw) => lw.id === viewingLabWorkId) || undefined;
+    }
+    return normalizeLabWork(rawViewingLabWork) || undefined;
+  }, [rawViewingLabWork, labWorks, viewingLabWorkId]);
 
   const existingLabNames = useMemo(
     () => labWorks.map((lw) => lw.labName).filter(Boolean),
@@ -62,38 +98,44 @@ export const LabWorkPage: React.FC = () => {
   const handleSave = async (data: LabWorkFormSaveData) => {
     try {
       if (formMode === "edit" && activeLabWorkId) {
+        const removedFileIds = (activeLabWork?.attachments || [])
+          .map((a) => a.id)
+          .filter((id) => !data.existingAttachmentIds.includes(id));
+
         await handleUpdateLabWork({
           id: activeLabWorkId,
-          patient_id: data.patientId,
-          patient_name: data.patientName,
-          treatment_id: data.treatmentId,
-          treatment_name: data.treatmentName,
-          lab_name: data.labName,
-          work_type: data.workType,
-          units_count: data.unitsCount,
-          has_warranty: data.hasWarranty,
-          warranty_years: data.warrantyYears,
-          warranty_end_date: data.warrantyEndDate,
-          created_date: data.createdDate,
+          patientId: data.patientId,
+          patientName: data.patientName,
+          treatmentId: data.treatmentId,
+          treatmentName: data.treatmentName,
+          labName: data.labName,
+          labNameId: data.labNameId,
+          workType: data.workType,
+          unitsCount: data.unitsCount,
+          hasWarranty: data.hasWarranty,
+          warrantyYears: data.warrantyYears,
+          warrantyEndDate: data.warrantyEndDate,
+          createdDate: data.createdDate,
           price: data.price,
           notes: data.notes,
           rawFiles: data.rawFiles as File[],
-          existing_attachment_ids: data.existingAttachmentIds,
+          removedFileIds,
         });
         toast.success("Lab work updated successfully");
       } else {
         await handleCreateLabWork({
-          patient_id: data.patientId,
-          patient_name: data.patientName,
-          treatment_id: data.treatmentId,
-          treatment_name: data.treatmentName,
-          lab_name: data.labName,
-          work_type: data.workType,
-          units_count: data.unitsCount,
-          has_warranty: data.hasWarranty,
-          warranty_years: data.warrantyYears,
-          warranty_end_date: data.warrantyEndDate,
-          created_date: data.createdDate,
+          patientId: data.patientId,
+          patientName: data.patientName,
+          treatmentId: data.treatmentId,
+          treatmentName: data.treatmentName,
+          labName: data.labName,
+          labNameId: data.labNameId,
+          workType: data.workType,
+          unitsCount: data.unitsCount,
+          hasWarranty: data.hasWarranty,
+          warrantyYears: data.warrantyYears,
+          warrantyEndDate: data.warrantyEndDate,
+          createdDate: data.createdDate,
           price: data.price,
           notes: data.notes,
           rawFiles: data.rawFiles as File[],
@@ -106,23 +148,42 @@ export const LabWorkPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: LabWorkStatus) => {
-    try {
-      await handleUpdateLabWorkStatus(id, newStatus);
-      toast.success(`Marked as ${newStatus}`);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update status");
-    }
+  const handleStatusChange = (id: string, newStatus: LabWorkStatus) => {
+    const statusLabels: Record<LabWorkStatus, string> = {
+      ordered: "Ordered",
+      received: "Received",
+      paid: "Paid",
+    };
+    showConfirm(
+      "Change Status",
+      `Are you sure you want to change the status of this lab work to "${statusLabels[newStatus]}"?`,
+      async () => {
+        try {
+          await handleUpdateLabWorkStatus(id, newStatus);
+          toast.success(`Marked as ${statusLabels[newStatus]} successfully`);
+        } catch (err: any) {
+          toast.error(err?.message || "Failed to update status");
+        }
+      },
+      "Update Status",
+      "primary"
+    );
   };
 
   return (
     <div className="space-y-6">
       <LabWorkList
         labWorks={labWorks}
+        groupBy={groupBy}
+        setGroupBy={setGroupBy}
         isLoading={isLabWorksLoading}
         onAdd={() => setFormMode("add")}
-        onView={(id) => setViewingLabWorkId(id)}
+        onView={(id) => {
+          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
+          setViewingLabWorkId(id);
+        }}
         onEdit={(id) => {
+          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
           setActiveLabWorkId(id);
           setFormMode("edit");
         }}
@@ -136,6 +197,19 @@ export const LabWorkPage: React.FC = () => {
         setStatus={setStatus}
       />
 
+      {pagination && pagination.total > 0 && (
+        <div className="mt-4">
+          <Pagination
+            page={page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            perPage={limit}
+            onPageChange={setPage}
+            onPerPageChange={setLimit}
+          />
+        </div>
+      )}
+
       {formMode && (
         <LabWorkForm
           onClose={closeForm}
@@ -143,11 +217,16 @@ export const LabWorkPage: React.FC = () => {
           labWork={formMode === "edit" ? activeLabWork : undefined}
           existingLabNames={existingLabNames}
           isSaving={isCreating || isUpdating}
+          isLoading={formMode === "edit" && isActiveLoading}
         />
       )}
 
-      {viewingLabWork && (
-        <LabWorkViewer labWork={viewingLabWork} onClose={() => setViewingLabWorkId(null)} />
+      {viewingLabWorkId && (
+        <LabWorkViewer
+          labWork={viewingLabWork}
+          isLoading={isViewingLoading}
+          onClose={() => setViewingLabWorkId(null)}
+        />
       )}
     </div>
   );

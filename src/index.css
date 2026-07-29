@@ -382,12 +382,11 @@
 }
 
 input[type="date"] {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: space-between;
+  position: relative;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  margin-left: auto;
+  position: absolute;
+  right: 12px;
   cursor: pointer;
 }

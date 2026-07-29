@@ -1,11 +1,12 @@
 import { FlaskConical, ShieldCheck, ShieldOff, FileText } from "lucide-react";
-import { Modal, Button, StatusBadge } from "@/components/ui";
+import { Modal, Button, StatusBadge, Loading } from "@/components/ui";
 import { getFileUrl } from "../../services/apiClient";
 import { LabWork, LabWorkStatus } from "../../types";
 
 interface LabWorkViewerProps {
-  labWork: LabWork;
+  labWork?: LabWork;
   onClose: () => void;
+  isLoading?: boolean;
 }
 
 const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" }> = {
@@ -30,7 +31,31 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function LabWorkViewer({ labWork, onClose }: LabWorkViewerProps) {
+export function LabWorkViewer({ labWork, onClose, isLoading }: LabWorkViewerProps) {
+  if (isLoading) {
+    return (
+      <Modal
+        title="Lab Work Details"
+        onClose={onClose}
+        size="md"
+        icon={<FlaskConical className="w-4 h-4" />}
+        footer={
+          <div className="flex justify-end w-full">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex h-40 items-center justify-center">
+          <Loading type="spinner" text="Loading details..." />
+        </div>
+      </Modal>
+    );
+  }
+
+  if (!labWork) return null;
+
   const meta = STATUS_META[labWork.status] || STATUS_META.ordered;
 
   return (

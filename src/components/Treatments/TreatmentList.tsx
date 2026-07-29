@@ -884,7 +884,7 @@ export function TreatmentList({
         className="min-w-0 flex-1 min-h-0 rounded-3xl"
         footer={
           totalItems > 0 && onPageChange ? (
-            <div className="w-full flex justify-end">
+            <div className="w-full">
               <Pagination
                 page={currentPage}
                 totalPages={totalPages}

@@ -26,7 +26,7 @@ export function useLabWorksQuery(params: LabWorkListParams = {}, options?: any) 
 
   return useApiQuery<any>({
     queryKey: ["labWorks", body],
-    endpoint: "/lab-work/list",
+    endpoint: "/labWork/list",
     method: "post",
     data: body,
     options,

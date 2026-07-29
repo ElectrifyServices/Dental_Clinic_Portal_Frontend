@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
+  MoreVertical,
 } from "lucide-react";
 import {
   Button,
@@ -27,6 +28,10 @@ import {
   SelectContent,
   SelectItem,
   Loading,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@/components/ui";
 import { LabWork, LabWorkStatus } from "../../types";
 
@@ -42,6 +47,8 @@ interface LabWorkListProps {
   setSearch: (val: string) => void;
   status: string;
   setStatus: (val: string) => void;
+  groupBy: "patient" | "lab";
+  setGroupBy: (val: "patient" | "lab") => void;
 }
 
 const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" }> = {
@@ -76,8 +83,9 @@ export function LabWorkList({
   setSearch,
   status,
   setStatus,
+  groupBy,
+  setGroupBy,
 }: LabWorkListProps) {
-  const [groupBy, setGroupBy] = useState<"patient" | "lab">("patient");
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   const groups = useMemo(() => {
@@ -212,71 +220,54 @@ export function LabWorkList({
         header: "Actions",
         align: "center" as const,
         render: (lw: LabWork) => (
-          <div className="flex items-center justify-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onView(lw.id);
-              }}
-              title="View"
-              className="w-7 h-7 text-primary hover:bg-primary/10 rounded-lg"
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(lw.id);
-              }}
-              title="Edit"
-              className="w-7 h-7 text-slate-600 hover:bg-slate-100 rounded-lg"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </Button>
-            {lw.status === "ordered" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateStatus(lw.id, "received");
-                }}
-                title="Mark as Received"
-                className="w-7 h-7 text-amber-600 hover:bg-amber-50 rounded-lg"
-              >
-                <PackageCheck className="w-3.5 h-3.5" />
-              </Button>
-            )}
-            {lw.status === "received" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateStatus(lw.id, "paid");
-                }}
-                title="Mark as Paid"
-                className="w-7 h-7 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-              >
-                <IndianRupee className="w-3.5 h-3.5" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(lw.id, lw.workType);
-              }}
-              title="Delete"
-              className="w-7 h-7 text-destructive hover:bg-destructive/10 rounded-lg"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+          <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-muted text-muted-foreground">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl bg-card border border-border shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => onView(lw.id)}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+                >
+                  <Eye className="w-4 h-4 text-primary" /> View Details
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onEdit(lw.id)}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+                >
+                  <Pencil className="w-4 h-4 text-slate-500" /> Edit Lab Work
+                </DropdownMenuItem>
+
+                {lw.status === "ordered" && (
+                  <DropdownMenuItem
+                    onClick={() => onUpdateStatus(lw.id, "received")}
+                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-amber-600 cursor-pointer"
+                  >
+                    <PackageCheck className="w-4 h-4" /> Mark as Received
+                  </DropdownMenuItem>
+                )}
+
+                {lw.status === "received" && (
+                  <DropdownMenuItem
+                    onClick={() => onUpdateStatus(lw.id, "paid")}
+                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-emerald-600 cursor-pointer"
+                  >
+                    <IndianRupee className="w-4 h-4" /> Mark as Paid
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem
+                  onClick={() => onDelete(lw.id, lw.workType)}
+                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-destructive/10 rounded-xl flex items-center gap-3 text-destructive cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Entry
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
       },

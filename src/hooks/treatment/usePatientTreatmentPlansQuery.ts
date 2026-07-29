@@ -24,13 +24,13 @@ function getPagination(page: PatientTreatmentPlansResponse | null | undefined) {
 
 export function usePatientTreatmentPlansQuery(
   patientId?: string,
-  options?: { enabled?: boolean; limit?: number },
+  options?: { enabled?: boolean; limit?: number; filters?: any },
 ) {
   const enabled = (options?.enabled ?? true) && !!patientId;
   const limit = options?.limit ?? 10;
 
   return useInfiniteQuery({
-    queryKey: ["patientTreatmentPlans", patientId, limit],
+    queryKey: ["patientTreatmentPlans", patientId, limit, JSON.stringify(options?.filters)],
     enabled,
     initialPageParam: 1,
     staleTime: 60_000,
@@ -41,6 +41,7 @@ export function usePatientTreatmentPlansQuery(
         data: {
           page: pageParam,
           limit,
+          filters: options?.filters,
         },
       });
 
