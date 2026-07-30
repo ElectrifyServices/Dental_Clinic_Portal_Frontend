@@ -125,7 +125,7 @@ export const PatientTable: React.FC<PatientTableProps> = ({
           className={`text-sm font-black ${patient.outstandingBalance ? "text-amber-600" : "text-emerald-600"
             }`}
         >
-          ₹{(patient.outstandingBalance || 0).toLocaleString()}
+          ₹{(patient.outstandingBalance ?? (patient as any).total_pending_balance ?? (patient as any).totalPendingBalance ?? 0).toLocaleString()}
         </div>
       ),
     },

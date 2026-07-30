@@ -243,7 +243,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
           <div className="bg-purple-50/30 border border-purple-50 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-purple-600 leading-none mb-0.5">
-              ₹{(patient.outstandingBalance || 0).toLocaleString()}
+              ₹{(patient.outstandingBalance ?? (patient as any).total_pending_balance ?? (patient as any).totalPendingBalance ?? 0).toLocaleString()}
             </p>
             <p className="text-[8px] font-black text-purple-800 uppercase tracking-wider">
               Balance

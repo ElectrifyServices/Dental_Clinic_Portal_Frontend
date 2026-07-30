@@ -52,6 +52,13 @@ export function normalizePatient(payload: any) {
     category: p.patient_category ? p.patient_category.toLowerCase() : 'regular',
     isFOC: p.freeOfCost || p.is_foc || p.isFOC || false,
     defaultDiscount: p.discount_percentage !== undefined ? p.discount_percentage : (p.defaultDiscount || 0),
+    outstandingBalance: p.total_pending_balance !== undefined 
+      ? p.total_pending_balance 
+      : (p.totalPendingBalance !== undefined 
+        ? p.totalPendingBalance 
+        : (p.outstanding_balance !== undefined 
+          ? p.outstanding_balance 
+          : (p.outstandingBalance || 0))),
     
     // Medical History
     medicalHistory: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
