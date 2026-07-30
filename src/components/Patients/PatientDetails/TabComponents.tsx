@@ -15,7 +15,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Button, Badge, Loading } from "@/components/ui";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
 
 // --- Reusable Empty State Component ---
@@ -756,9 +756,7 @@ export const DocumentsTab = ({
       </h3>
       
       {isLoading ? (
-        <div className="flex justify-center p-8">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <Loading type="spinner" text="Loading documents & images..." />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -789,7 +787,14 @@ export const DocumentsTab = ({
                     </Badge>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    {doc.date || doc.created_at ? new Date(doc.date || doc.created_at).toLocaleDateString() : "Unknown date"}
+                    {(() => {
+                      const dateVal = doc.uploaded_at || doc.date || doc.created_at;
+                      if (!dateVal) return "Unknown date";
+                      const d = new Date(dateVal);
+                      return !isNaN(d.getTime()) 
+                        ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) 
+                        : "Unknown date";
+                    })()}
                   </p>
                 </Card>
               );
