@@ -75,11 +75,10 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       */}
 
       <div className="col-span-4 md:col-span-3">
-        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Rate (₹)</Label>
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Paid (₹)</Label>
         <Input
           type="number"
           value={item.rate}
-          readOnly={isLinked}
           onChange={e => {
             let valStr = e.target.value;
             if (/^0+[1-9]/.test(valStr)) {
@@ -91,9 +90,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
             const val = parseFloat(valStr);
             onUpdate(item.id, 'rate', isNaN(val) ? 0 : Math.max(0, val));
           }}
-          className={`w-full px-3 h-10 border rounded-lg text-sm font-bold text-right outline-none ${
-            isLinked ? 'bg-indigo-100 border-indigo-200 text-indigo-900 cursor-not-allowed' : 'bg-card border-border focus:ring-2 focus:ring-primary/20'
-          }`}
+          className="w-full px-3 h-10 border rounded-lg text-sm font-bold text-right outline-none bg-card border-border focus:ring-2 focus:ring-primary/20"
         />
       </div>
 

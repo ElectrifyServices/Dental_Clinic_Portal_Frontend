@@ -98,6 +98,9 @@ export function usePatientDetailQuery(id: string, enabled = true) {
     method: "get",
     options: {
       enabled: !!id && enabled,
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
     },
   });
 

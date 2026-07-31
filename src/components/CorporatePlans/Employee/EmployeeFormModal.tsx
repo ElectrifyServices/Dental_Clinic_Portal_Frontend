@@ -625,6 +625,10 @@ export function EmployeeFormModal({
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
 
+        if (form.patientId) {
+          transformedBody.patient_id = form.patientId;
+        }
+
         const validDependents = pendingDependents.filter(
           (dep) => dep.name && dep.relationship,
         );
@@ -701,6 +705,10 @@ export function EmployeeFormModal({
           country_code: formCountryCode,
           status: form.isActive !== false ? "ACTIVE" : "INACTIVE",
         };
+
+        if (form.patientId) {
+          transformedBody.patient_id = form.patientId;
+        }
 
         const validDependents = pendingDependents.filter(
           (dep) => dep.name && dep.relationship,

@@ -352,6 +352,15 @@ export const usePatientForm = (patient: any) => {
   const handleConsentFormUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+      const isInvalid = !allowedExtensions.includes(fileExt) || file.type === 'image/svg+xml' || fileExt === 'svg';
+
+      if (isInvalid) {
+        toast.error("Unsupported file type. Only JPG, JPEG, PNG, WEBP, and PDF files are allowed.");
+        e.target.value = "";
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Consent form size cannot exceed 5MB.");
         e.target.value = "";
@@ -371,7 +380,13 @@ export const usePatientForm = (patient: any) => {
     const validFiles: File[] = [];
 
     for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) {
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+      const isInvalid = !allowedExtensions.includes(fileExt) || file.type === 'image/svg+xml' || fileExt === 'svg';
+
+      if (isInvalid) {
+        toast.error(`Unsupported file type for "${file.name}". Only JPG, JPEG, PNG, WEBP, and PDF files are allowed.`);
+      } else if (file.size > 5 * 1024 * 1024) {
         toast.error(`File "${file.name}" exceeds the 5MB limit and was not uploaded.`);
       } else {
         validFiles.push(file);

@@ -27,6 +27,7 @@ interface SearchableSelectProps {
   renderOption?: (option: any) => React.ReactNode;
   renderValue?: (option: any) => React.ReactNode;
   capitalizeWords?: boolean;
+  popoverClassName?: string;
 }
 
 export function SearchableSelect({
@@ -50,6 +51,7 @@ export function SearchableSelect({
   renderOption,
   renderValue,
   capitalizeWords = false,
+  popoverClassName,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -155,7 +157,7 @@ export function SearchableSelect({
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-1.5 min-w-[240px]">
+      <PopoverContent align="start" className={cn("w-[var(--radix-popover-trigger-width)] p-1.5 min-w-[240px]", popoverClassName)}>
         <div className="relative flex items-center border-b border-border pb-1.5 mb-1.5">
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <input

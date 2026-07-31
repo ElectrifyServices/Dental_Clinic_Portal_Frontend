@@ -169,11 +169,11 @@ function ModalRegistryContent() {
       const toothStrArray = toothNums.map((tn) => {
         const key = String(tn);
         const displayTooth = key === "-1" || key === "FM" ? "Full Mouth" : key;
-        
+
         const conds = availableConditionsByTooth[key] || [];
         const cond = conds.length > 0 ? conds.shift() : '';
         const displayCond = cond ? (condLabels[cond] || cond) : '';
-        
+
         if (displayCond) {
           return `${displayTooth} (${displayCond})`;
         }
@@ -225,11 +225,11 @@ function ModalRegistryContent() {
       if (fu.start_time) {
         const dateObj = new Date(fu.start_time);
         if (!isNaN(dateObj.getTime()) && fu.start_time.includes("T")) {
-            const hr = String(dateObj.getHours()).padStart(2, '0');
-            const min = String(dateObj.getMinutes()).padStart(2, '0');
-            parsedSelectedSlot = `${hr}:${min}`;
+          const hr = String(dateObj.getHours()).padStart(2, '0');
+          const min = String(dateObj.getMinutes()).padStart(2, '0');
+          parsedSelectedSlot = `${hr}:${min}`;
         } else {
-            parsedSelectedSlot = fu.start_time.substring(0, 5);
+          parsedSelectedSlot = fu.start_time.substring(0, 5);
         }
       }
       if (fu.personal_profile?.staff?.id) {
@@ -672,40 +672,40 @@ function ModalRegistryContent() {
               const tooth_findings = Object.entries(d.toothChartState || {})
                 .filter(([toothNum]) => toothNum === "FM" || !isNaN(parseInt(toothNum)))
                 .flatMap(([toothNum, conditions]) => {
-                if (!Array.isArray(conditions)) return [];
-                return conditions.map((cond: string) => {
-                  const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
-                  let mappedCondition = condStr.toUpperCase();
-                  let otherCondition = null;
+                  if (!Array.isArray(conditions)) return [];
+                  return conditions.map((cond: string) => {
+                    const condStr = typeof cond === 'string' ? cond.toLowerCase() : '';
+                    let mappedCondition = condStr.toUpperCase();
+                    let otherCondition = null;
 
-                  if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
-                  else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
-                  else if (condStr === 'normal') mappedCondition = 'HEALTHY';
-                  else if (!standardConditions.includes(condStr)) {
-                     mappedCondition = 'OTHER';
-                     otherCondition = cond;
-                  } else if (condStr === 'other') {
-                     mappedCondition = 'OTHER';
-                     otherCondition = null;
-                  }
+                    if (condStr === 'endo') mappedCondition = 'ENDO_RCT';
+                    else if (condStr === 'extract') mappedCondition = 'FOR_EXTRACTION';
+                    else if (condStr === 'normal') mappedCondition = 'HEALTHY';
+                    else if (!standardConditions.includes(condStr)) {
+                      mappedCondition = 'OTHER';
+                      otherCondition = cond;
+                    } else if (condStr === 'other') {
+                      mappedCondition = 'OTHER';
+                      otherCondition = null;
+                    }
 
-                  const isFM = toothNum === "FM";
-                  const n = parseInt(toothNum);
-                  let cType = "ADULT";
-                  if (isFM) {
-                    cType = "ADULT"; // Backend strictly requires ADULT or PEDIATRIC
-                  } else if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
-                    cType = "PEDIATRIC";
-                  }
+                    const isFM = toothNum === "FM";
+                    const n = parseInt(toothNum);
+                    let cType = "ADULT";
+                    if (isFM) {
+                      cType = "ADULT"; // Backend strictly requires ADULT or PEDIATRIC
+                    } else if ((n >= 51 && n <= 55) || (n >= 61 && n <= 65) || (n >= 71 && n <= 75) || (n >= 81 && n <= 85)) {
+                      cType = "PEDIATRIC";
+                    }
 
-                  return {
-                    tooth_number: isFM ? -1 : n,
-                    condition: mappedCondition,
-                    other_condition: otherCondition,
-                    chart_type: cType
-                  };
+                    return {
+                      tooth_number: isFM ? -1 : n,
+                      condition: mappedCondition,
+                      other_condition: otherCondition,
+                      chart_type: cType
+                    };
+                  });
                 });
-              });
 
               // Map treatment plans to treatments array
               const treatments = (d.treatmentPlans || [])
@@ -888,7 +888,7 @@ function ModalRegistryContent() {
                   return {
                     item_type: type,
                     consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
-                    treatment_session_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
+                    treatment_plan_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
                     membership_id: type === "MEMBERSHIP" ? item.linkedId : undefined,
                     description: item.description,
                     total_amount: item.amount,

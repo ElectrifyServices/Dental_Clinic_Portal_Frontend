@@ -213,26 +213,9 @@ export function InvoiceList({
 
   const filtered = invoices || [];
 
-  const groupedData = useMemo(() => {
-    const groups: Record<string, Invoice[]> = {};
-    filtered.forEach((inv) => {
-      const key = inv.patientId || inv.patientName;
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(inv);
-    });
-
-    return Object.values(groups).map((groupInvoices) => {
-      const sorted = [...groupInvoices].sort((a, b) => {
-        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
-      });
-      const latest = sorted[0];
-      return {
-        ...latest,
-        latestInvoice: latest,
-        allInvoices: sorted,
-      };
+  const flatSortedInvoices = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
     });
   }, [filtered]);
 
@@ -545,11 +528,11 @@ export function InvoiceList({
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
+  const totalPages = Math.ceil(flatSortedInvoices.length / itemsPerPage);
   
   const paginatedData = useMemo(() => {
-    return groupedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  }, [groupedData, currentPage, itemsPerPage]);
+    return flatSortedInvoices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [flatSortedInvoices, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -651,7 +634,7 @@ export function InvoiceList({
                 <Pagination
                   page={currentPage}
                   totalPages={totalPages}
-                  totalItems={groupedData.length}
+                  totalItems={flatSortedInvoices.length}
                   perPage={itemsPerPage}
                   onPageChange={setCurrentPage}
                 />
@@ -711,7 +694,7 @@ export function InvoiceList({
                   <Pagination
                     page={currentPage}
                     totalPages={totalPages}
-                    totalItems={groupedData.length}
+                    totalItems={flatSortedInvoices.length}
                     perPage={itemsPerPage}
                     onPageChange={setCurrentPage}
                   />
