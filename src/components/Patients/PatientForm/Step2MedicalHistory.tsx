@@ -115,6 +115,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedMedicalHistory}
+              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedMedicalHistory(values);
                 setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
@@ -166,6 +167,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedAllergies}
+              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedAllergies(values);
                 setFormData((prev: any) => ({ ...prev, allergies: values.join('\n') }));
@@ -275,8 +277,9 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               type="text"
               name="previousClinicName"
               value={formData.previousClinicName}
+              maxLength={20}
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "").slice(0, 20);
                 handleChange(e);
               }}
               className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
@@ -292,14 +295,17 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Doctor Phone</Label>
             <Input
-              type="tel"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={10}
               name="previousDoctorPhone"
               value={formData.previousDoctorPhone}
               onChange={(e) => {
-                const digits = e.target.value.replace(/[a-zA-Z]/g, '');
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
                 setFormData((prev: any) => ({ ...prev, previousDoctorPhone: digits }));
               }}
-              placeholder="Phone number"
+              placeholder="10-digit phone number"
             />
           </div>
           <div>

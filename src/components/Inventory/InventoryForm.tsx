@@ -240,9 +240,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           createLabel="Add new category"
                           onDeleteOption={(val) => {
                             const cat = categoryOptions.find((c: any) => c.value === val);
-                            if (cat?.id) {
-                              setDeleteId(cat.id);
-                              setDeleteName(val);
+                            if (cat) {
+                              setDeleteId(cat.value);
+                              setDeleteName(cat.label);
                             }
                           }}
                           isDeletingValue={isDeletingCategory}

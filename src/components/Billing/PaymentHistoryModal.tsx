@@ -23,7 +23,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
     return (
       <Modal title="Payment History" onClose={onClose} size="lg" icon={<History className="w-4 h-4" />}>
         <div className="flex flex-col justify-center items-center h-96 space-y-4">
-          <Loading type="equalizer" text="Loading payment history..." />
+          <Loading type="spinner" text="Loading payment history..." />
         </div>
       </Modal>
     );
@@ -144,14 +144,6 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {/* <div className="flex gap-2">
-            <Button variant="outline" onClick={handlePrint} className="gap-2">
-              <Printer className="w-4 h-4" /> Print Invoice
-            </Button>
-            <Button variant="outline" onClick={handleDownload} className="gap-2" disabled={isDownloading}>
-              <Download className="w-4 h-4" /> {isDownloading ? "Preparing..." : "Download PDF"}
-            </Button>
-          </div> */}
         </div>
       }
     >
@@ -182,7 +174,16 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
               </p>
             </CardContent>
           </Card>
-
+          <Card className="border-border/50 shadow-sm bg-rose-50/50">
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+              <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-1">
+                Pending Amount
+              </p>
+              <p className="text-xl font-black text-rose-700">
+                ₹{dueAmount.toLocaleString()}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         <div>

@@ -90,6 +90,9 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
     params: queryParams,
     options: {
       enabled: !!id,
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
       ...options,
     },
   });

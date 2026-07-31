@@ -11,7 +11,9 @@ export function useInventoryListQuery(params?: InventoryQueryParams, options?: a
   const apiParams: Record<string, any> = {};
   if (params?.search) apiParams.search = params.search;
   if (params?.category && params.category !== "all") {
-    apiParams.category = params.category.toUpperCase();
+    apiParams.filters = {
+      category: [params.category]
+    };
   }
   if (params?.low_stock) apiParams.low_stock = "true";
 

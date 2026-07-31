@@ -391,9 +391,9 @@ export function LabWorkForm({
               disabled={!formData.patientId}
               isLoading={isTreatmentsLoading}
               onChange={(val) => {
-                if (val === "none") return;
-                const t = inProgressTreatments.find((t: any) => t.id === val);
-                form.setValue("treatmentId", val, { shouldValidate: true });
+                const targetVal = val === "none" ? "" : val;
+                const t = inProgressTreatments.find((t: any) => t.id === targetVal);
+                form.setValue("treatmentId", targetVal, { shouldValidate: true });
                 form.setValue("treatmentName", t?.procedure || "");
               }}
               options={[
@@ -413,8 +413,8 @@ export function LabWorkForm({
             <SearchableSelect
               value={formData.labName || "none"}
               onChange={(val) => {
-                if (val === "none") return;
-                form.setValue("labName", val, { shouldValidate: true });
+                const targetVal = val === "none" ? "" : val;
+                form.setValue("labName", targetVal, { shouldValidate: true });
               }}
               onCreateOption={handleCreateLabName}
               onEditOption={handleUpdateLabName}
@@ -439,7 +439,6 @@ export function LabWorkForm({
             control={form.control}
             name="workType"
             label="Work / Tooth No."
-            required
             placeholder="e.g. Crown - #14"
           />
 
@@ -449,7 +448,6 @@ export function LabWorkForm({
             label="No. of Units"
             type="number"
             min={1}
-            required
           />
 
           <LabeledField label="Warranty">
@@ -482,13 +480,11 @@ export function LabWorkForm({
                 label="Warranty (Years)"
                 type="number"
                 min={1}
-                required
               />
               <FormDateInput
                 control={form.control}
                 name="warrantyEndDate"
                 label="Warranty Valid Till"
-                required
               />
             </>
           )}
@@ -498,7 +494,6 @@ export function LabWorkForm({
             name="price"
             label="Price"
             type="text"
-            required
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, "");
               const numVal = val === "" ? 0 : parseInt(val, 10);
@@ -510,7 +505,6 @@ export function LabWorkForm({
             control={form.control}
             name="createdDate"
             label="Created Date"
-            required
             className="sm:col-start-2"
           />
         </div>

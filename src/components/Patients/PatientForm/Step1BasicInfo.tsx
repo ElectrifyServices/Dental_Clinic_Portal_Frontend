@@ -781,10 +781,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </Label>
           <Input
             type="text"
+            maxLength={50}
             name="emergencyName"
             value={formData.emergencyName || ""}
             onChange={(e) => {
-              const cleaned = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+              const cleaned = e.target.value.replace(/[^A-Za-z\s-]/g, "").slice(0, 50);
               setFormData((prev: any) => ({ ...prev, emergencyName: cleaned }));
             }}
             placeholder="Emergency contact person name"
@@ -891,14 +892,17 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             Emergency Contact Number
           </Label>
           <Input
-            type="tel"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={10}
             name="emergencyContact"
             value={formData.emergencyContact || ""}
             onChange={(e) => {
-              const digits = e.target.value.replace(/[a-zA-Z]/g, '');
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
               setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
             }}
-            placeholder="Emergency contact phone number"
+            placeholder="10-digit phone number"
           />
         </div>
       </div>

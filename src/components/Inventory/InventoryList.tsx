@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
   Clock,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
@@ -22,6 +23,8 @@ import {
   MetricCard,
   Pagination,
 } from "@/components/ui";
+import { Popover, PopoverTrigger, PopoverContent } from "../ui/Popover";
+import { cn } from "@/lib/utils";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
 import { useInventorySummaryQuery } from "../../hooks/inventory/useInventorySummaryQuery";
 import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryCategoriesQuery";
@@ -79,6 +82,7 @@ export function InventoryList({
   const [lowStockFilter, setLowStockFilter] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -106,7 +110,10 @@ export function InventoryList({
 
   const filterTabs = [
     { key: "all", label: "All Items" },
-    ...dynamicCategories.map((c: any) => ({ key: c.name, label: c.name }))
+    ...dynamicCategories.map((c: any) => ({
+      key: c?.id || c?._id || c?.categoryId || c?.category_id || c?.name,
+      label: c.name || "Unknown"
+    }))
   ];
 
   let rawList: any[] = [];
@@ -271,7 +278,7 @@ export function InventoryList({
                           onRestock(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" /> Restock
                       </Button>
@@ -281,7 +288,7 @@ export function InventoryList({
                           onConsume(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
                       >
                         <MinusCircle className="w-4 h-4" /> Consume
                       </Button>
@@ -291,7 +298,7 @@ export function InventoryList({
                           onAdjust(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
                       >
                         <SlidersHorizontal className="w-4 h-4" /> Adjust
                       </Button>
@@ -301,7 +308,7 @@ export function InventoryList({
                           onViewHistory(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
                       >
                         <Clock className="w-4 h-4" /> History
                       </Button>
@@ -312,7 +319,7 @@ export function InventoryList({
                           onEditItem(item.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <Edit className="w-4 h-4" /> Edit Item
                       </Button>
@@ -322,7 +329,7 @@ export function InventoryList({
                           onDeleteItem(item.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
+                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
                       >
                         <Trash2 className="w-4 h-4" /> Delete
                       </Button>
@@ -393,7 +400,64 @@ export function InventoryList({
           placeholder="Search by item name or supplier…"
           className="flex-1"
         />
-        <FilterTabs tabs={filterTabs} active={cat} onChange={setCat} />
+        {(() => {
+          const visibleTabs = filterTabs.slice(0, 4);
+          const dropdownTabs = filterTabs.slice(4);
+          const isDropdownActive = dropdownTabs.some((t) => t.key === cat);
+          const activeDropdownTab = dropdownTabs.find((t) => t.key === cat);
+          const dropdownLabel = isDropdownActive ? activeDropdownTab?.label : "More Categories";
+
+          return (
+            <div className="filter-tabs">
+              {visibleTabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setCat(t.key)}
+                  className={cat === t.key ? "filter-tab-active" : "filter-tab"}
+                >
+                  {t.label}
+                </button>
+              ))}
+              {dropdownTabs.length > 0 && (
+                <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        "flex items-center gap-1.5 outline-none",
+                        isDropdownActive ? "filter-tab-active" : "filter-tab"
+                      )}
+                    >
+                      <span>{dropdownLabel}</span>
+                      <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-48 p-1.5">
+                    <div className="flex flex-col gap-0.5 max-h-60 overflow-y-auto custom-scrollbar">
+                      {dropdownTabs.map((t) => {
+                        const isSelected = cat === t.key;
+                        return (
+                          <button
+                            key={t.key}
+                            onClick={() => {
+                              setCat(t.key);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "w-full text-left px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted/70 transition-all duration-150 active:scale-[0.99]",
+                              isSelected ? "text-primary bg-primary/5" : "text-foreground"
+                            )}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       <DataTable
