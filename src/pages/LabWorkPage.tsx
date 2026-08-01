@@ -153,6 +153,7 @@ export const LabWorkPage: React.FC = () => {
       ordered: "Ordered",
       received: "Received",
       paid: "Paid",
+      cancelled: "Cancelled",
     };
     showConfirm(
       "Change Status",

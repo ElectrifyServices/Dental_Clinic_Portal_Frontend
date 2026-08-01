@@ -145,8 +145,29 @@ function ModalRegistryContent() {
       else if (mappedCond === 'for_extraction') mappedCond = 'extract';
       else if (mappedCond === 'healthy') mappedCond = 'normal';
 
-      toothChartState[tf.tooth_number].push(mappedCond);
-      availableConditionsByTooth[tf.tooth_number].push(mappedCond);
+      if (mappedCond === 'normal') {
+        const hasNonNormal = toothChartState[tf.tooth_number].some((c: string) => c !== 'normal');
+        if (!hasNonNormal && !toothChartState[tf.tooth_number].includes('normal')) {
+          toothChartState[tf.tooth_number].push('normal');
+        }
+      } else {
+        toothChartState[tf.tooth_number] = toothChartState[tf.tooth_number].filter((c: string) => c !== 'normal');
+        if (!toothChartState[tf.tooth_number].includes(mappedCond)) {
+          toothChartState[tf.tooth_number].push(mappedCond);
+        }
+      }
+
+      if (mappedCond === 'normal') {
+        const hasNonNormal = availableConditionsByTooth[tf.tooth_number].some((c: string) => c !== 'normal');
+        if (!hasNonNormal && !availableConditionsByTooth[tf.tooth_number].includes('normal')) {
+          availableConditionsByTooth[tf.tooth_number].push('normal');
+        }
+      } else {
+        availableConditionsByTooth[tf.tooth_number] = availableConditionsByTooth[tf.tooth_number].filter((c: string) => c !== 'normal');
+        if (!availableConditionsByTooth[tf.tooth_number].includes(mappedCond)) {
+          availableConditionsByTooth[tf.tooth_number].push(mappedCond);
+        }
+      }
     });
 
     const condLabels: Record<string, string> = {

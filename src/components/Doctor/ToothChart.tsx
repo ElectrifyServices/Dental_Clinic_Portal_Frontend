@@ -320,7 +320,8 @@ export function ToothChart({
   const findings: [string, ConditionId[]][] = (
     Object.entries(toothState) as [string, ConditionId[]][]
   )
-    .filter(([, v]) => v && v.length > 0 && !v.includes("normal"))
+    .map(([num, v]) => [num, v.filter((id) => id !== "normal")] as [string, ConditionId[]])
+    .filter(([, v]) => v && v.length > 0)
     .sort((a, b) => {
       if (a[0] === "FM") return -1;
       if (b[0] === "FM") return 1;
@@ -413,7 +414,7 @@ export function ToothChart({
           marginBottom: "1rem",
         }}
       >
-        {CONDITIONS.map((c) => {
+        {CONDITIONS.filter((c) => c.id !== "normal").map((c) => {
           const isActive = activeMode === c.id;
           return (
             <Button

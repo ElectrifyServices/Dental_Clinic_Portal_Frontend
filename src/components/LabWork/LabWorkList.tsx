@@ -15,6 +15,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   MoreVertical,
+  XCircle,
 } from "lucide-react";
 import {
   Button,
@@ -51,10 +52,11 @@ interface LabWorkListProps {
   setGroupBy: (val: "patient" | "lab") => void;
 }
 
-const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" }> = {
+const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" | "red" }> = {
   ordered: { label: "Ordered", variant: "blue" },
   received: { label: "Received", variant: "amber" },
   paid: { label: "Paid", variant: "green" },
+  cancelled: { label: "Cancelled", variant: "red" },
 };
 
 const STATUS_FILTERS = [
@@ -62,6 +64,7 @@ const STATUS_FILTERS = [
   { key: "ordered", label: "Ordered" },
   { key: "received", label: "Received" },
   { key: "paid", label: "Paid" },
+  { key: "cancelled", label: "Cancelled" },
 ];
 
 function formatDate(dateStr?: string) {
@@ -243,12 +246,20 @@ export function LabWorkList({
                 </DropdownMenuItem>
 
                 {lw.status === "ordered" && (
-                  <DropdownMenuItem
-                    onClick={() => onUpdateStatus(lw.id, "received")}
-                    className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-amber-600 cursor-pointer"
-                  >
-                    <PackageCheck className="w-4 h-4" /> Mark as Received
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => onUpdateStatus(lw.id, "received")}
+                      className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-amber-600 cursor-pointer"
+                    >
+                      <PackageCheck className="w-4 h-4" /> Mark as Received
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onUpdateStatus(lw.id, "cancelled")}
+                      className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-destructive cursor-pointer"
+                    >
+                      <XCircle className="w-4 h-4" /> Cancel Lab Work
+                    </DropdownMenuItem>
+                  </>
                 )}
 
                 {lw.status === "received" && (

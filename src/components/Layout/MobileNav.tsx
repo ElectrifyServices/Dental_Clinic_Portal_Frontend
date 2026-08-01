@@ -17,6 +17,7 @@ import {
   Building2,
   Menu,
   X,
+  FlaskConical,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getParsedPermissions } from "../../utils/permission";
@@ -78,6 +79,12 @@ const MENU_ITEMS = [
     icon: Package,
     roles: ["admin", "superadmin"],
   },
+  {
+    id: "lab-work",
+    label: "Lab Work",
+    icon: FlaskConical,
+    roles: ["doctor", "admin", "superadmin"],
+  },
   // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
   // {
   //   id: "reports",
@@ -115,6 +122,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
   membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
+  "lab-work": ["LAB_WORK"],
 };
 
 export function MobileNav() {
@@ -134,9 +142,17 @@ export function MobileNav() {
       if (rawModulePerms.length > 0) {
         const allowedModulesForScreen = PERMISSION_MAP[item.id];
         if (allowedModulesForScreen) {
-          return allowedModulesForScreen.some((p) =>
+          let hasAccess = allowedModulesForScreen.some((p) =>
             rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase())
           );
+          // Fallback for lab-work module visibility for admin, doctor, and staff roles
+          if (!hasAccess && item.id === "lab-work") {
+            const userRole = (state.user?.role?.name || state.user?.role || "").toLowerCase();
+            if (["admin", "superadmin", "super_admin", "doctor", "staff"].some(r => userRole.includes(r))) {
+              hasAccess = true;
+            }
+          }
+          return hasAccess;
         }
         return true;
       }

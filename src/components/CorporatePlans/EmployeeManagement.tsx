@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Edit2, Upload, Building2, User,
   Users, Phone, Search,
   MoreHorizontal, ArrowRightLeft,
-  UserPlus, Zap, Send, MessageCircle,
+  UserPlus, Zap, Send, MessageCircle, Activity,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
@@ -25,6 +25,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 import { MemberCard } from './Employee/MemberCard';
 import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
+import { BenefitUsageModal } from './Employee/BenefitUsageModal';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -35,8 +36,6 @@ interface EmployeeManagementProps {
   onChangePlan: (empId: string, newPlanId: string, newPlanName: string) => void;
   onGoToRegister?: () => void;
 }
-
-const PER_PAGE = 15;
 
 export function EmployeeManagement({
   employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
@@ -54,6 +53,12 @@ export function EmployeeManagement({
   const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const handlePerPageChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [editEmp, setEditEmp] = useState<CorporateEmployee | null>(null);
@@ -65,6 +70,7 @@ export function EmployeeManagement({
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
   const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
   const [whatsappHistoryEmp, setWhatsappHistoryEmp] = useState<CorporateEmployee | null>(null);
+  const [benefitUsageEmp, setBenefitUsageEmp] = useState<CorporateEmployee | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -90,7 +96,7 @@ export function EmployeeManagement({
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
     page,
-    limit: PER_PAGE,
+    limit,
     filters: queryFilters,
   });
 
@@ -143,9 +149,10 @@ export function EmployeeManagement({
 
   const selectedEmp = useMemo(() => apiMembers.find(e => e.id === viewDependentsEmpId), [apiMembers, viewDependentsEmpId]);
 
-  const pagination = employeesData?.pagination || employeesData?.data?.pagination || { page: 1, limit: PER_PAGE, total: 0, totalPages: 1 };
-  const totalPages = pagination.totalPages || 1;
-  const totalItems = pagination.total || 0;
+  const pagination = employeesData?.pagination || employeesData?.data?.pagination;
+  const totalItems = pagination?.total ?? apiMembers.length;
+  const totalPages = pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / limit));
+  const displayMembers = pagination ? apiMembers : apiMembers.slice((page - 1) * limit, page * limit);
 
   const planTypeTabs = [
     { key: 'all', label: 'All Members' },
@@ -297,6 +304,18 @@ export function EmployeeManagement({
         align: 'right' as const,
         render: (dep: any) => (
           <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:text-blue-600 hover:border-blue-300"
+              title="Uses benefits"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setBenefitUsageEmp({ ...dep, parentPhone: emp.phone });
+              }}
+            >
+              <Activity className="w-3.5 h-3.5" />
+            </Button>
             <Button
               variant="outline"
               size="icon"
@@ -463,6 +482,9 @@ export function EmployeeManagement({
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setWhatsappHistoryEmp(e); }}>
                 <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setBenefitUsageEmp(e); }}>
+                <Activity className="w-4 h-4 mr-2 text-blue-600" /> Uses benefits
+              </DropdownMenuItem>
               {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
                 <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
               </DropdownMenuItem> */}
@@ -571,7 +593,7 @@ export function EmployeeManagement({
               <div className="hidden lg:block">
                 <DataTable
                   columns={columns}
-                  data={apiMembers}
+                  data={displayMembers}
                   rowKey={e => e.id}
                   emptyIcon={<Users className="w-10 h-10 text-muted-foreground/40" />}
                   emptyTitle="No members found"
@@ -580,13 +602,16 @@ export function EmployeeManagement({
                   expandedRowIds={expandedRowIds}
                   renderExpandedRow={renderExpandedRow}
                   footer={
-                    <Pagination
-                      page={page}
-                      totalPages={totalPages}
-                      totalItems={totalItems}
-                      perPage={PER_PAGE}
-                      onPageChange={setPage}
-                    />
+                    totalItems > 0 ? (
+                      <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        perPage={limit}
+                        onPageChange={setPage}
+                        onPerPageChange={handlePerPageChange}
+                      />
+                    ) : undefined
                   }
                 />
               </div>
@@ -602,46 +627,48 @@ export function EmployeeManagement({
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {apiMembers.map((e) => (
+                      {displayMembers.map((e) => (
                         <MemberCard
-                          key={e.id}
-                          employee={e}
-                          plans={plans}
-                          isExpanded={viewDependentsEmpId === e.id}
-                          onToggleExpand={() => setViewDependentsEmpId(e.id)}
-                          onEdit={() => { setEditEmp(e); setShowForm(true); }}
-                          onChangePlan={() => setChangePlanEmp(e)}
-                          onDelete={() => setDeleteEmp(e)}
-                          onResendInvoice={() => handleResendInvoice(e)}
-                          onWhatsAppHistory={() => setWhatsappHistoryEmp(e)}
-                          onToggleStatus={async () => {
-                            if (e.status === 'EXPIRED') return;
-                            try {
-                              await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
-                              refetch();
-                            } catch {}
-                          }}
-                          isStatusPending={updateStatusMutation.isPending}
-                          onEditDependent={(dep) => {
-                            setEditDep(dep);
-                            setAddDependentEmp(e);
-                          }}
-                          onDeleteDependent={(dep) => {
-                            setDeleteDep(dep);
-                          }}
+                           key={e.id}
+                           employee={e}
+                           plans={plans}
+                           isExpanded={viewDependentsEmpId === e.id}
+                           onToggleExpand={() => setViewDependentsEmpId(e.id)}
+                           onEdit={() => { setEditEmp(e); setShowForm(true); }}
+                           onChangePlan={() => setChangePlanEmp(e)}
+                           onDelete={() => setDeleteEmp(e)}
+                           onResendInvoice={() => handleResendInvoice(e)}
+                           onWhatsAppHistory={() => setWhatsappHistoryEmp(e)}
+                           onToggleStatus={async () => {
+                             if (e.status === 'EXPIRED') return;
+                             try {
+                               await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
+                               refetch();
+                             } catch {}
+                           }}
+                           isStatusPending={updateStatusMutation.isPending}
+                           onEditDependent={(dep) => {
+                             setEditDep(dep);
+                             setAddDependentEmp(e);
+                           }}
+                           onDeleteDependent={(dep) => {
+                             setDeleteDep(dep);
+                           }}
+                           onBenefitUsage={() => setBenefitUsageEmp(e)}
                         />
                       ))}
                     </div>
 
                     {/* Mobile/Tablet Pagination */}
-                    {totalPages > 1 && (
+                    {(totalPages > 1 || limit) && (
                       <div className="py-4 px-4 border border-border/50 bg-card rounded-2xl shadow-sm mt-4">
                         <Pagination
                           page={page}
                           totalPages={totalPages}
                           totalItems={totalItems}
-                          perPage={PER_PAGE}
+                          perPage={limit}
                           onPageChange={setPage}
+                          onPerPageChange={handlePerPageChange}
                         />
                       </div>
                     )}
@@ -762,6 +789,17 @@ export function EmployeeManagement({
                         <Button
                           variant="outline"
                           size="icon"
+                          className="h-8 w-8 rounded-lg hover:text-blue-600 hover:border-blue-300"
+                          title="Uses benefits"
+                          onClick={() => {
+                            setBenefitUsageEmp({ ...dep, parentPhone: selectedEmp.phone });
+                          }}
+                        >
+                          <Activity className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
                           className="h-8 w-8 rounded-lg hover:text-primary"
                           onClick={() => {
                             setEditDep(dep);
@@ -807,6 +845,14 @@ export function EmployeeManagement({
         onClose={() => setWhatsappHistoryEmp(null)}
         employee={whatsappHistoryEmp}
       />
+
+      {benefitUsageEmp && (
+        <BenefitUsageModal
+          isOpen={!!benefitUsageEmp}
+          onClose={() => setBenefitUsageEmp(null)}
+          employee={benefitUsageEmp}
+        />
+      )}
     </div>
   );
 }

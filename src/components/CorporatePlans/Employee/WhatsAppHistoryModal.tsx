@@ -33,8 +33,25 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
     { enabled: isOpen && !!employee?.phone }
   );
 
-  const responseData = response?.data?.items || response?.items || response?.data || response || [];
-  const messages = Array.isArray(responseData) ? responseData : [];
+  // Extract messages array by checking all possible shapes in response
+  let messages: any[] = [];
+  if (response) {
+    if (Array.isArray(response)) {
+      messages = response;
+    } else if (response.data && Array.isArray(response.data.data)) {
+      messages = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      messages = response.data;
+    } else if (Array.isArray(response.items)) {
+      messages = response.items;
+    } else if (response.data && Array.isArray(response.data.items)) {
+      messages = response.data.items;
+    } else if (Array.isArray(response.rows)) {
+      messages = response.rows;
+    } else if (response.data && Array.isArray(response.data.rows)) {
+      messages = response.data.rows;
+    }
+  }
 
   const error = queryError ? "Failed to load message history. Please try again." : null;
 

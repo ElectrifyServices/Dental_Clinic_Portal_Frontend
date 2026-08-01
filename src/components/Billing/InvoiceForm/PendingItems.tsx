@@ -76,19 +76,89 @@ export const PendingItems: React.FC<PendingItemsProps> = ({
                         {pItem.date ? new Date(pItem.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''}
                       </span>
                     </div>
-                    <p className={`text-xs font-bold leading-tight mb-2 ${isSelected ? textSelected : textDefault}`}>
+                    <p className={`text-xs font-bold leading-tight mb-1.5 ${isSelected ? textSelected : textDefault}`}>
                       {pItem.description}
                     </p>
                     {pItem.doctor_name && (
-                      <p className={`text-[10px] mb-2 ${isSelected ? docSelected : docDefault}`}>
+                      <p className={`text-[10px] mb-1.5 ${isSelected ? docSelected : docDefault}`}>
                         Doctor: {pItem.doctor_name}
                       </p>
                     )}
+
+                    {/* Benefit Details Breakdown */}
+                    {pItem.rawItem && (
+                      <div className={`mt-2 pt-2 border-t text-[10px] space-y-1 ${
+                        isSelected ? 'border-white/10 text-indigo-100' : 'border-border/50 text-muted-foreground'
+                      }`}>
+                        {/* Original amount */}
+                        {pItem.rawItem.original_amount !== undefined && pItem.rawItem.original_amount !== pItem.rate && (
+                          <div className="flex justify-between items-center">
+                            <span>Original Cost:</span>
+                            <span className={`font-semibold line-through font-mono ${isSelected ? 'text-white' : 'text-foreground/70'}`}>
+                              ₹{pItem.rawItem.original_amount.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Discount */}
+                        {pItem.rawItem.plan_discount_amount > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>Discount ({pItem.rawItem.plan_discount_value}{pItem.rawItem.plan_discount_type === 'PERCENTAGE' ? '%' : '₹'}):</span>
+                            <span className={`font-mono font-semibold ${isSelected ? 'text-white' : 'text-rose-600'}`}>
+                              -₹{pItem.rawItem.plan_discount_amount.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Already Paid amount */}
+                        {pItem.rawItem.already_paid > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>Already Paid:</span>
+                            <span className={`font-mono font-semibold ${isSelected ? 'text-white' : 'text-blue-600'}`}>
+                              -₹{pItem.rawItem.already_paid.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Pending amount */}
+                        {pItem.rawItem.pending_amount > 0 && pItem.rawItem.pending_amount !== pItem.rate && (
+                          <div className="flex justify-between items-center">
+                            <span>Pending Amount:</span>
+                            <span className={`font-mono font-semibold ${isSelected ? 'text-white' : 'text-foreground/85'}`}>
+                              ₹{pItem.rawItem.pending_amount.toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Membership Benefit applied */}
+                        {pItem.rawItem.benefit_applied && (
+                          <div className={`p-1.5 rounded flex flex-col gap-0.5 mt-1 ${
+                            isSelected 
+                              ? 'bg-white/10 text-white border border-white/5' 
+                              : 'bg-amber-50/80 text-amber-900 border border-amber-100/60'
+                          }`}>
+                            <div className="flex justify-between items-center text-[9px] font-bold">
+                              <span className="truncate max-w-[150px]" title={pItem.rawItem.benefit_name || pItem.rawItem.benefit_applied}>
+                                🌟 {pItem.rawItem.benefit_name || pItem.rawItem.benefit_applied}
+                              </span>
+                              {pItem.rawItem.membership_discount_amount > 0 && (
+                                <span className="font-mono text-amber-700 dark:text-amber-200">-₹{pItem.rawItem.membership_discount_amount.toLocaleString()}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className={`text-xs font-bold ${isSelected ? rateSelected : rateDefault}`}>
-                      ₹{pItem.rate.toLocaleString()}
-                    </span>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-dashed border-indigo-200/20">
+                    <div className="flex flex-col">
+                      <span className={`text-[8px] uppercase tracking-wider font-bold ${isSelected ? 'text-emerald-100/70' : 'text-muted-foreground/70'}`}>
+                        Net Payable
+                      </span>
+                      <span className={`text-sm font-extrabold ${isSelected ? rateSelected : rateDefault}`}>
+                        ₹{(pItem.rate ?? 0).toLocaleString()}
+                      </span>
+                    </div>
                     <Button
                       type="button"
                       onClick={() => isSelected ? onRemove(pItem.id) : onAdd(pItem)}

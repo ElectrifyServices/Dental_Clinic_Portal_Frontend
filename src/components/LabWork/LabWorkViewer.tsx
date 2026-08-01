@@ -9,10 +9,11 @@ interface LabWorkViewerProps {
   isLoading?: boolean;
 }
 
-const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" }> = {
+const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" | "red" }> = {
   ordered: { label: "Ordered", variant: "blue" },
   received: { label: "Received", variant: "amber" },
   paid: { label: "Paid", variant: "green" },
+  cancelled: { label: "Cancelled", variant: "red" },
 };
 
 function formatDate(dateStr?: string) {
