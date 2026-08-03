@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export interface UpdateLabWorkStatusVariables {
   id: string;
-  status: "ordered" | "received" | "paid";
+  status: "ordered" | "received" | "paid" | "cancelled";
 }
 
 export function useUpdateLabWorkStatusMutation() {

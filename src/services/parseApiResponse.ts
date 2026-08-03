@@ -19,6 +19,12 @@ export function parseApiResponse<T>(response: ApiResponse<T>) {
     throw new Error("Invalid response");
   }
   const status = response.responseStatusList?.statusList?.[0] ?? null;
-  const data = response.responseObject ?? null;
+  
+  const hasStatusList = "responseStatusList" in response;
+  const hasObject = "responseObject" in response;
+  const data = (hasStatusList || hasObject)
+    ? (response.responseObject ?? null)
+    : (response as unknown as T);
+
   return { status, data };
 }

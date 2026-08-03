@@ -70,9 +70,14 @@ export function CorporatePlanManagement({
   });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePerPageChange = (newLimit: number) => {
+    setItemsPerPage(newLimit);
+    setCurrentPage(1);
+  };
 
   const handleDelete = (id: string) => {
     confirmDelete('Delete Plan', 'This plan will be permanently removed. Members on this plan will be affected.', async () => {
@@ -246,7 +251,7 @@ export function CorporatePlanManagement({
         </div>
       )}
 
-      {totalPages > 1 && !isLoading && filtered.length > 0 && (
+      {!isLoading && filtered.length > 0 && (
         <div className="py-4 px-6 border border-border/50 bg-card rounded-2xl shadow-sm mt-6">
           <Pagination
             page={currentPage}
@@ -254,6 +259,7 @@ export function CorporatePlanManagement({
             totalItems={filtered.length}
             perPage={itemsPerPage}
             onPageChange={setCurrentPage}
+            onPerPageChange={handlePerPageChange}
           />
         </div>
       )}

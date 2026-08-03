@@ -68,6 +68,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       if (norm === 'analytics' || norm === 'reports') return 'reports';
       if (norm === 'corporate_plans' || norm === 'membership') return 'membership';
       if (norm === 'appointment' || norm === 'appointments' || norm === 'apppointment') return 'appointments';
+      if (norm === 'lab_work' || norm === 'labwork') return 'lab_work';
       return norm;
     });
   };
@@ -102,6 +103,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "treatments",
         "medical_records",
         "consent_forms",
+        "lab_work",
       ]),
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
       documents: doctor?.documents ?? [],
@@ -618,6 +620,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     "staff",
                     "profit_sharing",
                     "membership",
+                    "lab_work",
                   ],
                   { shouldValidate: true }
                 );
@@ -636,6 +639,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     "inventory",
                     "reports",
                     "staff",
+                    "lab_work",
                   ],
                   { shouldValidate: true }
                 );
@@ -650,6 +654,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
                     "treatments",
                     "medical_records",
                     "consent_forms",
+                    "lab_work",
                   ],
                   { shouldValidate: true }
                 );

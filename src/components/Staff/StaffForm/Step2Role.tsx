@@ -11,6 +11,7 @@ import {
   Users,
   Package,
   BarChart3,
+  FlaskConical,
 } from "lucide-react";
 
 import { Badge, Loading } from "@/components/ui";
@@ -136,6 +137,12 @@ const PERMISSIONS = [
     label: "Memberships",
     description: "Manage corporate plans & memberships",
     icon: Shield,
+  },
+  {
+    id: "lab_work",
+    label: "Lab Work",
+    description: "Manage lab work entries & statuses",
+    icon: FlaskConical,
   },
 ];
 

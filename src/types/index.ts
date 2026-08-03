@@ -199,7 +199,7 @@ export interface InvoiceItem {
   amount: number;
 }
 
-export type LabWorkStatus = 'ordered' | 'received' | 'paid';
+export type LabWorkStatus = 'ordered' | 'received' | 'paid' | 'cancelled';
 
 export interface LabWorkAttachment {
   id: string;

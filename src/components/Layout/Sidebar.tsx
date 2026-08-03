@@ -57,6 +57,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
   membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
+  "lab-work": ["LAB_WORK"],
 };
 
 export function Sidebar() {
@@ -88,9 +89,17 @@ export function Sidebar() {
     if (Array.isArray(rawModulePerms) && rawModulePerms.length > 0) {
       const allowed = PERMISSION_MAP[item.id];
       if (allowed) {
-        return allowed.some((p) =>
+        let hasAccess = allowed.some((p) =>
           rawModulePerms.some((up) => up.toUpperCase() === p.toUpperCase()),
         );
+        // Fallback for lab-work module visibility for admin, doctor, and staff roles
+        if (!hasAccess && item.id === "lab-work") {
+          const userRole = (state.user?.role?.name || state.user?.role || "").toLowerCase();
+          if (["admin", "superadmin", "super_admin", "doctor", "staff"].some(r => userRole.includes(r))) {
+            hasAccess = true;
+          }
+        }
+        return hasAccess;
       }
       return true;
     }

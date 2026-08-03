@@ -40,6 +40,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
   staff: ["STAFF", "STAFF_MANAGEMENT"],
   "profit-sharing": ["PROFIT_SHARING"],
   membership: ["CORPORATE_PLANS", "MEMBERSHIP"],
+  "lab-work": ["LAB_WORK"],
 };
 
 function getDefaultRedirect(userPermissions: string[]): string {
@@ -75,9 +76,16 @@ function GuardedRoute({ path, element }: { path: string; element: React.ReactEle
     const key = path.replace(/^\//, "");
     const allowed = PERMISSION_MAP[key];
     if (allowed) {
-      const hasAccess = allowed.some((p) =>
+      let hasAccess = allowed.some((p) =>
         userPermissions.some((up) => up.toUpperCase() === p.toUpperCase())
       );
+      // Fallback for lab-work to allow access for admin, doctor, and staff roles
+      if (!hasAccess && key === "lab-work") {
+        const userRole = (state.user?.role?.name || state.user?.role || "").toLowerCase();
+        if (["admin", "superadmin", "super_admin", "doctor", "staff"].some(r => userRole.includes(r))) {
+          hasAccess = true;
+        }
+      }
       if (!hasAccess) {
         return <Navigate to={getDefaultRedirect(userPermissions)} replace />;
       }

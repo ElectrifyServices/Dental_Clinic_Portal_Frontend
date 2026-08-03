@@ -462,6 +462,7 @@ interface PaginationProps {
   onPerPageChange?: (size: number) => void;
 }
 export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange }: PaginationProps) {
+  if (totalItems === 0) return null;
   if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);

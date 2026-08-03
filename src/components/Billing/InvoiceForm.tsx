@@ -298,6 +298,7 @@ export function InvoiceForm({
           date: c.date,
           doctor_name: c.doctor_name || c.doctorName,
           status: c.status,
+          rawItem: c,
         });
       });
 
@@ -310,6 +311,7 @@ export function InvoiceForm({
           date: t.date,
           doctor_name: t.doctor_name || t.doctorName,
           status: t.status,
+          rawItem: t,
         });
       });
 
@@ -322,6 +324,7 @@ export function InvoiceForm({
           rate: m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0,
           date: m.date,
           status: m.status,
+          rawItem: m,
         });
       });
     }

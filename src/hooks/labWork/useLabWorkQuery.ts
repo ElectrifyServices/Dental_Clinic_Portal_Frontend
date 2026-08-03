@@ -69,6 +69,7 @@ export function normalizeLabWork(payload: any): LabWork | null {
       const s = (lw.status ?? "").toUpperCase();
       if (s === "RECEIVED") return "received";
       if (s === "PAID" || s === "COMPLETED") return "paid";
+      if (s === "CANCELLED" || s === "CANCEL") return "cancelled";
       return "ordered";
     })(),
   };
