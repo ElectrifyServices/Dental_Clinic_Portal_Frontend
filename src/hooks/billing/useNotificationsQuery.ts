@@ -1,11 +1,34 @@
 import { useApiQuery } from "../useApiQuery";
 
-export function useNotificationsQuery(options?: any) {
+export interface NotificationListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  filters?: {
+    status?: string;
+    template_name?: string;
+  };
+}
+
+export function useNotificationsQuery(params: NotificationListParams = {}, options?: any) {
+  const body: Record<string, any> = {
+    page: params.page ?? 1,
+    limit: params.limit ?? 100,
+  };
+
+  if (params.search !== undefined && params.search !== "") {
+    body.search = params.search;
+  }
+
+  if (params.filters && Object.keys(params.filters).length > 0) {
+    body.filters = params.filters;
+  }
+
   return useApiQuery<any>({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", body],
     endpoint: "/notifications/list",
     method: "post",
-    data: { page: 1, limit: 100 },
+    data: body,
     options: {
       staleTime: 0,
       gcTime: 0,

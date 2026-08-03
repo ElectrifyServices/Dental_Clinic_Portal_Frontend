@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
+import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
@@ -44,6 +44,8 @@ export const AppointmentsPage: React.FC = () => {
     confirmDelete,
     setPendingCheckInAppt,
     setSelectedPatientId,
+    setWhatsappPhone,
+    setWhatsappPatientName,
   } = useModal();
 
   const [viewMode, setViewMode] = useState("calendar");
@@ -206,31 +208,44 @@ export const AppointmentsPage: React.FC = () => {
         title="Appointments"
         subtitle="Schedule and manage patient visits"
       >
-        <div className="flex items-center justify-between w-full md:w-auto gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Button
-            variant="ghost"
-            onClick={() => setViewMode("calendar")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+            variant="outline"
+            onClick={() => {
+              setWhatsappPhone("");
+              setWhatsappPatientName("");
+              setActiveModal("whatsappHistory");
+            }}
+            className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span className="truncate">Calendar</span>
+            <MessageCircle className="w-4 h-4" /> WhatsApp Log
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setViewMode("list")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
-          >
-            <ListFilter className="w-3.5 h-3.5" />
-            <span className="truncate">List View ({listCount})</span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setViewMode("no-show")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
-          >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span className="truncate">No Show ({noShowCount})</span>
-          </Button>
+          <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
+            <Button
+              variant="ghost"
+              onClick={() => setViewMode("calendar")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="truncate">Calendar</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setViewMode("list")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+            >
+              <ListFilter className="w-3.5 h-3.5" />
+              <span className="truncate">List View ({listCount})</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setViewMode("no-show")}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span className="truncate">No Show ({noShowCount})</span>
+            </Button>
+          </div>
         </div>
       </PageHeader>
 

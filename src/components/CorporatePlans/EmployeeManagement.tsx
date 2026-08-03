@@ -149,10 +149,31 @@ export function EmployeeManagement({
 
   const selectedEmp = useMemo(() => apiMembers.find(e => e.id === viewDependentsEmpId), [apiMembers, viewDependentsEmpId]);
 
-  const pagination = employeesData?.pagination || employeesData?.data?.pagination;
-  const totalItems = pagination?.total ?? apiMembers.length;
-  const totalPages = pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / limit));
-  const displayMembers = pagination ? apiMembers : apiMembers.slice((page - 1) * limit, page * limit);
+  const totalItems = useMemo(() => {
+    if (!employeesData) return 0;
+    const explicitTotal = 
+      employeesData.totalItems ??
+      employeesData.total ??
+      employeesData.responseObject?.total ??
+      employeesData.data?.total ??
+      employeesData.meta?.total ??
+      employeesData.pagination?.total ??
+      employeesData.data?.pagination?.total;
+
+    if (explicitTotal !== undefined && explicitTotal !== null) {
+      return explicitTotal;
+    }
+
+    if (apiMembers.length === limit) {
+      return page * limit + 1; // Assume next page exists
+    }
+
+    return (page - 1) * limit + apiMembers.length;
+  }, [employeesData, apiMembers.length, limit, page]);
+
+  const explicitTotalPages = employeesData?.pagination?.totalPages ?? employeesData?.data?.pagination?.totalPages;
+  const totalPages = explicitTotalPages ?? Math.max(1, Math.ceil(totalItems / limit));
+  const displayMembers = apiMembers.length > limit ? apiMembers.slice((page - 1) * limit, page * limit) : apiMembers;
 
   const planTypeTabs = [
     { key: 'all', label: 'All Members' },

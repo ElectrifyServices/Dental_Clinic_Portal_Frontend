@@ -16,6 +16,7 @@ import { DataTable } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
+import { useModal } from "../../contexts/ModalContext";
 
 interface AppointmentListProps {
   appointments?: any[];
@@ -87,6 +88,7 @@ export function AppointmentList({
   setEndDate: propSetEndDate,
   checkingInApptId,
 }: AppointmentListProps) {
+  const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const [localSearch, setLocalSearch] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : localSearch;
   const setSearchTerm = onSearchChange ?? setLocalSearch;
@@ -441,6 +443,11 @@ export function AppointmentList({
             onClose={() => setOpenMenuId(null)}
             pos={menuPos}
             checkingInApptId={checkingInApptId}
+            onWhatsappHistory={(phone, name) => {
+              setWhatsappPhone(phone);
+              setWhatsappPatientName(name);
+              setActiveModal("whatsappHistory");
+            }}
           />,
           document.body
         )}

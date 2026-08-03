@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, UserX, CheckCircle, Trash2, UserCheck } from 'lucide-react';
+import { Edit, UserX, CheckCircle, Trash2, UserCheck, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 interface AppointmentActionMenuProps {
@@ -12,6 +12,7 @@ interface AppointmentActionMenuProps {
   onClose: () => void;
   pos: { top: number; left: number };
   checkingInApptId?: string | null;
+  onWhatsappHistory?: (phone: string, name: string) => void;
 }
 
 export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
@@ -23,7 +24,8 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   onDirectCheckIn,
   onClose,
   pos,
-  checkingInApptId
+  checkingInApptId,
+  onWhatsappHistory
 }) => {
   const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(appointment.status);
 
@@ -79,6 +81,22 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             </div>
             Edit Appointment
           </Button>
+
+          {onWhatsappHistory && (
+            <Button 
+              variant="ghost"
+              onClick={() => { 
+                onWhatsappHistory(appointment.patientPhone || appointment.phone || "", appointment.patientName || ""); 
+                onClose(); 
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-600 flex items-center gap-3 text-emerald-700 rounded-xl transition-colors font-medium h-auto"
+            >
+              <div className="w-8 h-8 rounded-lg bg-emerald-100/50 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-emerald-600" /> 
+              </div>
+              WhatsApp History
+            </Button>
+          )}
 
           {appointment.status !== 'no-show' && appointment.status !== 'checked-in' && appointment.status?.toLowerCase() !== 'completed' ? (
             <Button 
