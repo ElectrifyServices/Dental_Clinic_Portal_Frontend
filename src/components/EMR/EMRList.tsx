@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText } from 'lucide-react';
-import { PageHeader, SearchInput, FilterTabs, DataTable, StatusBadge, Button, Pagination } from '@/components/ui';
+import { PageHeader, SearchInput, DataTable, StatusBadge, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 interface EMRRecord {
   id: string;
@@ -155,13 +155,22 @@ export function EMRList({
           value={search}
           onChange={onSearchChange}
           placeholder="Search by patient, title or content…"
-          className="flex-1"
+          className="w-full md:flex-1"
         />
-        <FilterTabs
-          tabs={TYPE_FILTERS}
-          active={typeFilter}
-          onChange={onTypeFilterChange}
-        />
+        <div className="w-full md:w-[240px] shrink-0">
+          <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+            <SelectTrigger className="w-full h-11 bg-card border-border rounded-xl font-medium">
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {TYPE_FILTERS.map((f) => (
+                <SelectItem key={f.key} value={f.key} className="font-medium">
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <DataTable

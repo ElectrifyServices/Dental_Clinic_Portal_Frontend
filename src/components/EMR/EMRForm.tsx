@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Save, FileText, Camera, Upload } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Save, FileText, Camera, Upload, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -49,8 +49,21 @@ export function EMRForm({
     record?.attachments ?? [],
   );
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [patientSearchQuery, setPatientSearchQuery] = useState("");
+  const [debouncedPatientSearch, setDebouncedPatientSearch] = useState("");
 
-  const { data: rawPatientsData } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedPatientSearch(patientSearchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [patientSearchQuery]);
+
+  const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({ 
+    search: debouncedPatientSearch,
+    filters: { isDropdown: [true] as any } 
+  });
   
   const extractPatients = (data: any): any[] => {
     if (!data) return [];
@@ -94,16 +107,21 @@ export function EMRForm({
     setAttachments((prev) => [...prev, ...urls]);
   };
 
-  const onSubmit = (data: EmrFormData) => {
-    onSave({
-      ...data,
-      attachments,
-      files: selectedFiles,
-      id: record?.id || Date.now().toString(),
-      patientId: record?.patientId || "",
-      doctorId: "1",
-      doctorName: "Dr. Sharma",
-    });
+  const onSubmit = async (data: EmrFormData) => {
+    setIsSaving(true);
+    try {
+      await onSave({
+        ...data,
+        attachments,
+        files: selectedFiles,
+        id: record?.id || Date.now().toString(),
+        patientId: record?.patientId || "",
+        doctorId: "1",
+        doctorName: "Dr. Sharma",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -117,8 +135,8 @@ export function EMRForm({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={form.handleSubmit(onSubmit)} className="gap-2">
-            <Save className="w-4 h-4" />
+          <Button onClick={form.handleSubmit(onSubmit)} className="gap-2" disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {submitLabel}
           </Button>
         </div>
@@ -141,9 +159,9 @@ export function EMRForm({
                       value={field.value}
                       onChange={(val) => {
                         field.onChange(val);
-                        // Optional: if patientId needs to be set, we can look it up, 
-                        // but it seems EMRForm relies on patientName and looks up ID on submit.
                       }}
+                      onSearchChange={setPatientSearchQuery}
+                      isLoading={isPatientsLoading}
                       options={[
                         { label: "Select Patient", value: "none" },
                         ...apiPatients.map((p: any) => ({
@@ -309,7 +327,7 @@ export function EMRForm({
                 multiple
                 accept="image/*,.pdf,.doc,.docx"
                 onChange={handleFileUpload}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
               />
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">

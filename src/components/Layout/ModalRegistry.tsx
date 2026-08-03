@@ -32,6 +32,7 @@ import { InventoryHistoryViewer } from "../Inventory/InventoryHistoryViewer";
 import { QuickRegistrationModal } from "../CorporatePlans/QuickRegistration/QuickRegistrationModal";
 import { EmployeeFormModal } from "../CorporatePlans/Employee/EmployeeFormModal";
 import { ConfirmModal, Modal, Button, toast, Loading } from "../ui";
+import { WhatsappHistoryModal } from "../Billing/WhatsappHistoryModal";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
 import { useUpdateAppointmentMutation } from "../../hooks/appointments/useUpdateAppointmentMutation";
@@ -119,6 +120,10 @@ function ModalRegistryContent() {
     showToast,
     confirmConfig,
     setConfirmConfig,
+    whatsappPhone,
+    setWhatsappPhone,
+    whatsappPatientName,
+    setWhatsappPatientName,
   } = useModal();
 
   const { data: editConsultationRaw, isLoading: isEditLoading } = useConsultationQuery(
@@ -1540,6 +1545,18 @@ function ModalRegistryContent() {
             setActiveModal(null);
           }}
           refetch={() => { }}
+        />
+      )}
+
+      {activeModal === "whatsappHistory" && whatsappPhone !== null && (
+        <WhatsappHistoryModal
+          initialPhone={whatsappPhone}
+          initialPatientName={whatsappPatientName || ""}
+          onClose={() => {
+            setWhatsappPhone(null);
+            setWhatsappPatientName(null);
+            setActiveModal(null);
+          }}
         />
       )}
 

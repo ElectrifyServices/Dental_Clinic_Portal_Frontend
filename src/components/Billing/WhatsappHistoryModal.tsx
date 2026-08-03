@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Modal, 
   Button, 
@@ -11,6 +11,7 @@ import {
   SelectValue, 
   SelectContent, 
   SelectItem,
+  Pagination,
   toast
 } from "@/components/ui";
 import { 
@@ -39,17 +40,54 @@ export function WhatsappHistoryModal({
   onClose 
 }: WhatsappHistoryModalProps) {
   const [searchQuery, setSearchQuery] = useState(initialPhone || initialPatientName || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, statusFilter, templateFilter, itemsPerPage]);
+
+  const queryParams: any = {
+    page: currentPage,
+    limit: itemsPerPage,
+    filters: {}
+  };
+
+  if (debouncedSearch) {
+    queryParams.search = debouncedSearch;
+  }
+  if (statusFilter !== "all") {
+    queryParams.filters.status = statusFilter;
+  }
+  if (templateFilter !== "all") {
+    queryParams.filters.template_name = templateFilter;
+  }
 
   // Hook query and mutations
-  const { data: rawData, isLoading, refetch } = useNotificationsQuery();
+  const { data: rawData, isLoading, refetch } = useNotificationsQuery(queryParams);
   const retryMutation = useRetryNotificationMutation();
 
   const notifications = useMemo(() => {
     if (!rawData) return [];
-    return Array.isArray(rawData) ? rawData : (rawData as any).data || [];
+    if (Array.isArray(rawData)) return rawData;
+    if (rawData.data && Array.isArray(rawData.data.data)) return rawData.data.data;
+    if (Array.isArray(rawData.data)) return rawData.data;
+    if (Array.isArray(rawData.items)) return rawData.items;
+    if (rawData.data && Array.isArray(rawData.data.items)) return rawData.data.items;
+    if (Array.isArray(rawData.rows)) return rawData.rows;
+    if (rawData.data && Array.isArray(rawData.data.rows)) return rawData.data.rows;
+    return [];
   }, [rawData]);
 
   const formatDate = (dateString: string) => {
@@ -172,12 +210,37 @@ export function WhatsappHistoryModal({
     });
   }, [notifications, searchQuery, statusFilter, templateFilter]);
 
-  // Dynamic statistics: Sent vs Failed count
+  const totalItems = useMemo(() => {
+    if (!rawData) return 0;
+    
+    // Attempt to extract total from various possible backend response formats
+    const explicitTotal = 
+      (rawData as any).totalItems ??
+      (rawData as any).total ??
+      (rawData as any).responseObject?.total ??
+      (rawData as any).data?.total ??
+      (rawData as any).meta?.total ??
+      (rawData as any).pagination?.total;
+
+    if (explicitTotal !== undefined && explicitTotal !== null) {
+      return explicitTotal;
+    }
+
+    // Fallback: If we got a full page of results but no explicit total, assume there might be a next page
+    if (filteredNotifications.length === itemsPerPage) {
+      return currentPage * itemsPerPage + 1;
+    }
+
+    return (currentPage - 1) * itemsPerPage + filteredNotifications.length;
+  }, [rawData, filteredNotifications.length, itemsPerPage, currentPage]);
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Apply filters on the list (we still keep frontend filtering as fallback if backend is simple)
   const stats = useMemo(() => {
     let sentCount = 0;
     let failedCount = 0;
     
-    // We compute stats over the filtered list to reflect changes in query/search
     filteredNotifications.forEach((n: any) => {
       const s = n.status?.toLowerCase();
       if (s === "failed") {
@@ -190,9 +253,9 @@ export function WhatsappHistoryModal({
     return {
       sent: sentCount,
       failed: failedCount,
-      total: filteredNotifications.length
+      total: totalItems
     };
-  }, [filteredNotifications]);
+  }, [filteredNotifications, totalItems]);
 
   return (
     <Modal
@@ -390,6 +453,18 @@ export function WhatsappHistoryModal({
               ]}
               data={filteredNotifications}
               rowKey={(item) => item.id}
+              footer={
+                <div className="py-4 px-6 border-t border-border bg-muted/30">
+                  <Pagination
+                    page={currentPage}
+                    totalPages={totalPages || 1}
+                    totalItems={totalItems}
+                    perPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                    onPerPageChange={setItemsPerPage}
+                  />
+                </div>
+              }
             />
           </div>
         ) : (

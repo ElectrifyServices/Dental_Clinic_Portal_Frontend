@@ -10,11 +10,13 @@ import {
   History,
   UserPlus,
   Users,
+  MessageCircle,
 } from "lucide-react";
+import { useModal } from "@/contexts/ModalContext";
 import ConsultationHistoryModal from "./ConsultationHistoryModal";
 import { DirectConsultationPopup } from "./DirectConsultationPopup";
 import { QueueCard } from "./PatientQueue/QueueCard";
-import { Pagination, PageHeader } from "@/components/ui";
+import { Pagination, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 
 interface QueuedPatient {
   id: string;
@@ -89,6 +91,7 @@ export function PatientQueue({
   onPerPageChange,
   onPageChange,
 }: PatientQueueProps) {
+  const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localFilterStatus, setLocalFilterStatus] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
@@ -150,18 +153,31 @@ export function PatientQueue({
       <PageHeader
         title="Consultation Queue"
         action={
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-              <span className="text-sm font-bold text-amber-600">
-                {waitingCount} Waiting
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
-              <span className="text-sm font-bold text-primary">
-                {inConsultationCount} Consulting
-              </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setWhatsappPhone("");
+                setWhatsappPatientName("");
+                setActiveModal("whatsappHistory");
+              }}
+              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp Log
+            </Button>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                <span className="text-sm font-bold text-amber-600">
+                  {waitingCount} Waiting
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
+                <span className="text-sm font-bold text-primary">
+                  {inConsultationCount} Consulting
+                </span>
+              </div>
             </div>
           </div>
         }
@@ -180,44 +196,39 @@ export function PatientQueue({
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
-          <div className="flex items-center bg-muted/80 p-1 rounded-xl border border-border/60 overflow-x-auto scrollbar-none w-full sm:w-auto shrink-0">
-            {[
-              {
-                id: "ALL",
-                label: "All",
-                icon: <Users className="w-3.5 h-3.5" />,
-              },
-              {
-                id: "PENDING",
-                label: "Pending",
-                icon: <Clock className="w-3.5 h-3.5" />,
-              },
-              {
-                id: "IN_PROGRESS",
-                label: "In Progress",
-                icon: <Stethoscope className="w-3.5 h-3.5" />,
-              },
-              {
-                id: "COMPLETED",
-                label: "Completed",
-                icon: <CheckCircle className="w-3.5 h-3.5" />,
-              },
-            ].map((s) => (
-              <Button
-                key={s.id}
-                variant={filterStatus === s.id ? "default" : "ghost"}
-                onClick={() => handleFilterStatusChange(s.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all shrink-0 ${
-                  filterStatus === s.id
-                    ? "bg-card text-primary shadow-sm border border-border hover:bg-card/90"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                {s.icon}
-                <span>{s.label}</span>
-              </Button>
-            ))}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3 w-full xl:w-auto">
+          <div className="w-full sm:w-[180px] shrink-0">
+            <Select value={filterStatus} onValueChange={handleFilterStatusChange}>
+              <SelectTrigger className="w-full h-10 rounded-xl bg-card border-border/60 text-sm font-semibold">
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span>All Status</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="PENDING">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <span>Pending</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="IN_PROGRESS">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="w-4 h-4 text-primary" />
+                    <span>In Progress</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="COMPLETED">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Completed</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">

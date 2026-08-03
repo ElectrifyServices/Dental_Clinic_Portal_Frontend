@@ -55,6 +55,11 @@ interface ModalContextType {
   doctorAvailability: Record<string, boolean>;
   setDoctorAvailability: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 
+  whatsappPhone: string | null;
+  setWhatsappPhone: (phone: string | null) => void;
+  whatsappPatientName: string | null;
+  setWhatsappPatientName: (name: string | null) => void;
+
   toast: any;
   showToast: (message: string, type?: 'success' | 'error') => void;
 
@@ -86,6 +91,9 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [doctorAvailability, setDoctorAvailability] = useState<Record<string, boolean>>(
     doctorsWithSchedules.reduce((acc, d) => ({ ...acc, [d.id]: d.isAvailableToday }), {})
   );
+  const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
+  const [whatsappPatientName, setWhatsappPatientName] = useState<string | null>(null);
+
   const [confirmConfig, setConfirmConfig] = useState<any>({
     show: false, title: '', message: '', onConfirm: () => {}, confirmLabel: 'Confirm', variant: 'primary', toastMessage: '', isLoading: false
   });
@@ -166,6 +174,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         bookedFollowUp, setBookedFollowUp,
         draftConsultations, setDraftConsultations, handleDraftUpdate,
         doctorAvailability, setDoctorAvailability,
+        whatsappPhone, setWhatsappPhone,
+        whatsappPatientName, setWhatsappPatientName,
         toast: null, showToast,
         confirmConfig, setConfirmConfig, showConfirm, confirmDelete,
       }}

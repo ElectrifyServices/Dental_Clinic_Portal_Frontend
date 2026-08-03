@@ -9,11 +9,13 @@ import {
   FileText,
   CheckCircle,
   IndianRupee,
+  MessageCircle,
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "@/services/apiClient";
+import { useModal } from "@/contexts/ModalContext";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -76,6 +78,7 @@ export function QueueCard({
   onEditConsultation,
 }: QueueCardProps) {
   const waitingTime = useWaitingTime(patient.checkInTime);
+  const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
   const gender = fullPatient?.gender || "";
   
@@ -137,9 +140,25 @@ export function QueueCard({
               />
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
-              <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 truncate" title={toTitleCase(patient.patientName)}>
-                {toTitleCase(patient.patientName)}
-              </h3>
+              <div className="flex items-center gap-1.5 mb-1">
+                <h3 className="font-bold text-gray-900 text-base leading-tight truncate" title={toTitleCase(patient.patientName)}>
+                  {toTitleCase(patient.patientName)}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setWhatsappPhone(patient.patientPhone || "");
+                    setWhatsappPatientName(patient.patientName || "");
+                    setActiveModal("whatsappHistory");
+                  }}
+                  title="WhatsApp History"
+                  className="w-6 h-6 text-emerald-600 hover:bg-emerald-50 rounded-lg shrink-0 flex items-center justify-center"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                </Button>
+              </div>
               {gender && (
                 <span className="text-xs text-gray-500 font-semibold block mb-2">
                   Gender: <span className="capitalize">{gender}</span>

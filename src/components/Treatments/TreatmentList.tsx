@@ -50,6 +50,7 @@ import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 import { procedures as procedureCatalog } from "../../constants/treatment.constants";
+import { useModal } from "../../contexts/ModalContext";
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
   completed: {
@@ -535,6 +536,7 @@ export function TreatmentList({
   onLimitChange,
 }: TreatmentListProps) {
   const [search, setSearch] = useState("");
+  const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [sendingWhatsappId, setSendingWhatsappId] = useState<string | null>(null);
@@ -730,6 +732,27 @@ export function TreatmentList({
         </div>
       ),
     },
+    {
+      key: "whatsapp",
+      header: "",
+      className: "w-10",
+      render: (treatment: any) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            setWhatsappPhone(treatment.phone || "");
+            setWhatsappPatientName(treatment.patientName || treatment.name || "");
+            setActiveModal("whatsappHistory");
+          }}
+          title="WhatsApp History"
+          className="w-8 h-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+        >
+          <MessageCircle className="w-4 h-4" />
+        </Button>
+      ),
+    },
 
   ];
 
@@ -739,9 +762,22 @@ export function TreatmentList({
         className="shrink-0"
         title="Treatment Plans"
         action={
-          <Button onClick={onAddTreatment} size="lg" className="h-10 w-full justify-center shadow-sm gap-2 sm:w-auto">
-            <Plus className="w-4 h-4" /> New Treatment Plan
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setWhatsappPhone("");
+                setWhatsappPatientName("");
+                setActiveModal("whatsappHistory");
+              }}
+              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp Log
+            </Button>
+            <Button onClick={onAddTreatment} size="lg" className="h-10 w-full justify-center shadow-sm gap-2 sm:w-auto">
+              <Plus className="w-4 h-4" /> New Treatment Plan
+            </Button>
+          </div>
         }
       />
 

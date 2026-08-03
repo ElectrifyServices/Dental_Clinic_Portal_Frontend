@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Edit,
@@ -367,11 +367,15 @@ export function DoctorManagement({
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const paginationUI = totalPages > 1 ? (
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, roleFilter, statusFilter, itemsPerPage]);
+
+  const paginationUI = filtered.length > 0 ? (
     <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
       <Pagination
         page={currentPage}
@@ -379,6 +383,7 @@ export function DoctorManagement({
         totalItems={filtered.length}
         perPage={itemsPerPage}
         onPageChange={setCurrentPage}
+        onPerPageChange={setItemsPerPage}
       />
     </div>
   ) : null;
