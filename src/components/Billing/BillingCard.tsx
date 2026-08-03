@@ -9,6 +9,7 @@ import {
   IndianRupee,
   Send,
   Trash2,
+  MessageCircle,
 } from "lucide-react";
 import {
   Button,
@@ -43,6 +44,7 @@ interface BillingCardProps {
   onPay: (invoice: Invoice) => void;
   onSend: (id: string) => void;
   onDelete: (id: string, invoiceNumber?: string) => void;
+  onWhatsapp?: (phone: string, name: string) => void;
 }
 
 const AVATAR_COLORS = [
@@ -90,6 +92,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   onPay,
   onSend,
   onDelete,
+  onWhatsapp,
 }) => {
   const [showPrevious, setShowPrevious] = useState(false);
 
@@ -130,6 +133,20 @@ export const BillingCard: React.FC<BillingCardProps> = ({
         >
           <History className="w-4 h-4" />
         </Button>
+        {onWhatsapp && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onWhatsapp(inv.phone || "", inv.patientName || "");
+            }}
+            title="WhatsApp History"
+            className="w-8 h-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </Button>
+        )}
         {statusLower !== "paid" && (
           <Button
             variant="ghost"

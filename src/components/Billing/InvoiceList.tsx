@@ -11,9 +11,11 @@ import {
   ChevronDown,
   ChevronRight,
   History,
+  MessageCircle,
 } from "lucide-react";
 import { PaymentHistoryModal } from "./PaymentHistoryModal";
 import { InvoicePaymentModal } from "./InvoicePaymentModal";
+import { WhatsappHistoryModal } from "./WhatsappHistoryModal";
 import {
   useTotalBilledQuery,
   usePendingInvoicesQuery,
@@ -197,6 +199,8 @@ export function InvoiceList({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [payInvoice, setPayInvoice] = useState<Invoice | null>(null);
   const [historyInvoice, setHistoryInvoice] = useState<Invoice | null>(null);
+  const [whatsappHistoryPhone, setWhatsappHistoryPhone] = useState<string | null>(null);
+  const [whatsappHistoryPatientName, setWhatsappHistoryPatientName] = useState<string | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
   const toggleRowExpanded = (id: string) => {
@@ -335,6 +339,19 @@ export function InvoiceList({
             className="w-7 h-7 text-amber-600 hover:bg-amber-50 rounded-lg"
           >
             <History className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setWhatsappHistoryPhone(inv.phone || "");
+              setWhatsappHistoryPatientName(inv.patientName || "");
+            }}
+            title="WhatsApp History"
+            className="w-7 h-7 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
           </Button>
           {inv.status !== "paid" && onUpdateStatus && (
             <Button
@@ -483,6 +500,17 @@ export function InvoiceList({
                       >
                         <FileText className="w-4 h-4 text-amber-600" /> Payment History
                       </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setWhatsappHistoryPhone(inv.phone || "");
+                          setWhatsappHistoryPatientName(inv.patientName || "");
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4 text-emerald-600" /> WhatsApp History
+                      </Button>
                       {inv.status !== "paid" && onUpdateStatus && (
                         <Button
                           variant="ghost"
@@ -544,9 +572,21 @@ export function InvoiceList({
         title="Billing & Invoices"
         subtitle={`${invoices.length} total invoices recorded`}
         action={
-          <Button onClick={onCreateInvoice} className="gap-2">
-            <Plus className="w-4 h-4" /> Create Invoice
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setWhatsappHistoryPhone("");
+                setWhatsappHistoryPatientName("");
+              }}
+              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp Log
+            </Button>
+            <Button onClick={onCreateInvoice} className="gap-2">
+              <Plus className="w-4 h-4" /> Create Invoice
+            </Button>
+          </div>
         }
       />
 
@@ -664,6 +704,10 @@ export function InvoiceList({
                   onPay={setPayInvoice}
                   onSend={(id) => onUpdateStatus?.(id, "sent")}
                   onDelete={(id, num) => onDeleteInvoice?.(id, num)}
+                  onWhatsapp={(phone, name) => {
+                    setWhatsappHistoryPhone(phone);
+                    setWhatsappHistoryPatientName(name);
+                  }}
                 />
               ))}
             </div>
@@ -746,6 +790,17 @@ export function InvoiceList({
         <PaymentHistoryModal
           invoice={historyInvoice}
           onClose={() => setHistoryInvoice(null)}
+        />
+      )}
+
+      {whatsappHistoryPhone !== null && (
+        <WhatsappHistoryModal
+          initialPhone={whatsappHistoryPhone}
+          initialPatientName={whatsappHistoryPatientName || ""}
+          onClose={() => {
+            setWhatsappHistoryPhone(null);
+            setWhatsappHistoryPatientName(null);
+          }}
         />
       )}
     </div>

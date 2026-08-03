@@ -114,9 +114,16 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
 
   const getPatientName = (patientId: string) => {
     const found = records.find(
-      (r: any) => r.patient?.id === patientId || r.member?.id === patientId
+      (r: any) => r.member?.id === patientId || r.patient?.id === patientId
     );
-    return found?.member?.name || found?.patient?.name || "Family Member";
+    if (!found) return "Family Member";
+    if (found.member?.id === patientId) {
+      return found.member?.name || "Family Member";
+    }
+    if (found.patient?.id === patientId) {
+      return found.patient?.name || "Family Member";
+    }
+    return found.member?.name || found.patient?.name || "Family Member";
   };
 
   const familyMembers = records.map((r: any) => r.member).filter(Boolean);

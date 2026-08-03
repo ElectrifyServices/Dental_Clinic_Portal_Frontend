@@ -133,12 +133,10 @@ function ModalRegistryContent() {
     // Map to toothChartState format
     const toothChartState: any = {};
     const toothFindingsRaw = data.tooth_findings || data.toothFindings || [];
-    const availableConditionsByTooth: any = {};
 
     toothFindingsRaw.forEach((tf: any) => {
       if (!toothChartState[tf.tooth_number]) {
         toothChartState[tf.tooth_number] = [];
-        availableConditionsByTooth[tf.tooth_number] = [];
       }
       let mappedCond = tf.condition.toLowerCase();
       if (mappedCond === 'endo_rct') mappedCond = 'endo';
@@ -156,18 +154,11 @@ function ModalRegistryContent() {
           toothChartState[tf.tooth_number].push(mappedCond);
         }
       }
+    });
 
-      if (mappedCond === 'normal') {
-        const hasNonNormal = availableConditionsByTooth[tf.tooth_number].some((c: string) => c !== 'normal');
-        if (!hasNonNormal && !availableConditionsByTooth[tf.tooth_number].includes('normal')) {
-          availableConditionsByTooth[tf.tooth_number].push('normal');
-        }
-      } else {
-        availableConditionsByTooth[tf.tooth_number] = availableConditionsByTooth[tf.tooth_number].filter((c: string) => c !== 'normal');
-        if (!availableConditionsByTooth[tf.tooth_number].includes(mappedCond)) {
-          availableConditionsByTooth[tf.tooth_number].push(mappedCond);
-        }
-      }
+    const availableConditionsByTooth: any = {};
+    Object.keys(toothChartState).forEach((key) => {
+      availableConditionsByTooth[key] = [...toothChartState[key]];
     });
 
     const condLabels: Record<string, string> = {
