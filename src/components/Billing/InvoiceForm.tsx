@@ -333,8 +333,6 @@ export function InvoiceForm({
   }, [formData.patientId, rawUnbilledData]);
 
   const invoiceCfg = useFormConfig("invoice");
-  const commonServices: Array<{ name: string; rate: number }> =
-    (invoiceCfg as any).commonServices ?? [];
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
@@ -892,7 +890,6 @@ export function InvoiceForm({
               <InvoiceItemRow
                 key={item.id}
                 item={item}
-                commonServices={commonServices}
                 onUpdate={updateItem}
                 onRemove={(id) => {
                   const currentItems = (form.getValues("items") ??

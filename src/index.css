@@ -77,6 +77,50 @@
     --fs-xl:   1.25rem;
   }
 
+  .dark {
+    /* ── Brand reference (backwards compat) ───────────────────────── */
+    --brand-50:  30 41 59;
+    --brand-100: 51 65 85;
+    --brand-200: 71 85 105;
+    --brand-500: 148 163 184;
+    --brand-600: 203 213 225;
+    --brand-700: 226 232 240;
+    --brand-800: 241 245 249;
+
+    /* ── Surface & Layout ─────────────────────────────────────────── */
+    --background:  15 23 42;       /* #0F172A — page bg */
+    --card:        30 41 59;       /* #1E293B — card bg */
+    --card-bg:     30 41 59;
+    --surface:     15 23 42;
+    --popover:     30 41 59;
+
+    /* ── Text ─────────────────────────────────────────────────────── */
+    --foreground:        248 250 252;   /* #F8FAFC — primary text */
+    --card-foreground:   241 245 249;
+    --popover-foreground:241 245 249;
+    --accent-foreground: 248 250 252;
+
+    /* ── Muted ────────────────────────────────────────────────────── */
+    --muted:            30 41 59;
+    --muted-foreground: 148 163 184;   /* #94A3B8 */
+
+    /* ── Primary ──────────────────────────────────────────────────── */
+    --primary:           143 164 158;   /* Light brand color for dark mode */
+    --primary-foreground:15 23 42;
+
+    /* ── Secondary / tonal hover ──────────────────────────────────── */
+    --secondary:         51 65 85;      /* #334155 */
+    --secondary-foreground:241 245 249;
+
+    /* ── Accent ───────────────────────────────────────────────────── */
+    --accent:            51 65 85;
+
+    /* ── Borders & Dividers ───────────────────────────────────────── */
+    --border:   51 65 85;               /* #334155 */
+    --input:    51 65 85;
+    --divider:  51 65 85;
+  }
+
   * {
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;

@@ -11,17 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
+import { ServiceDescriptionSelect } from './ServiceDescriptionSelect';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;
-  commonServices: any[];
   onUpdate: (id: string, field: keyof InvoiceItem, value: any) => void;
   onRemove: (id: string) => void;
 }
 
 export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({ 
   item, 
-  commonServices, 
   onUpdate, 
   onRemove 
 }) => {
@@ -40,23 +39,15 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            <Select
+            <ServiceDescriptionSelect
               value={item.description || ''}
-              onValueChange={(value) => {
-                const s = commonServices.find(s => s.label === value);
-                onUpdate(item.id, 'description', value);
-                if (s) onUpdate(item.id, 'rate', s.rate);
+              onChange={(name, rate) => {
+                onUpdate(item.id, 'description', name);
+                if (rate !== undefined && rate > 0) {
+                  onUpdate(item.id, 'rate', rate);
+                }
               }}
-            >
-              <SelectTrigger className="w-full h-10 rounded-lg text-sm bg-card">
-                <SelectValue placeholder="Select Service" />
-              </SelectTrigger>
-              <SelectContent>
-                {commonServices.map(s => (
-                  <SelectItem key={s.label} value={s.label}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         )}
       </div>
