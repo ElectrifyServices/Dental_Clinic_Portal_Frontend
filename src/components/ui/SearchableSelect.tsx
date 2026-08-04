@@ -67,6 +67,25 @@ export function SearchableSelect({
     }
   }, [isOpen]);
 
+  // Close on scroll to prevent detached popover from overlapping headers
+  React.useEffect(() => {
+    const handleScroll = (e: Event) => {
+      // Don't close if scrolling inside the popover itself
+      const target = e.target as HTMLElement;
+      if (target && target.closest('[data-radix-popper-content-wrapper]')) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    if (isOpen) {
+      window.addEventListener('scroll', handleScroll, true);
+    }
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isOpen]);
+
   const handleSaveEdit = async (optValue: string) => {
     if (onEditOption && editInputValue.trim() && editInputValue.trim() !== optValue) {
       try {
@@ -191,7 +210,7 @@ export function SearchableSelect({
         </div>
 
         <div 
-          className="max-h-[420px] overflow-y-auto space-y-0.5 custom-scrollbar"
+          className="max-h-[250px] overflow-y-auto space-y-0.5 custom-scrollbar"
           onWheelCapture={(e) => e.stopPropagation()}
           onTouchMoveCapture={(e) => e.stopPropagation()}
         >

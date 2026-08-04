@@ -104,6 +104,9 @@ export function WhatsappHistoryModal({
   };
 
   const getPatientNameFromNotification = (item: any) => {
+    if (item.content?.patient_name) {
+      return item.content.patient_name;
+    }
     const bodyComp = item.content?.template?.components?.find(
       (c: any) => c.type === "body"
     );
@@ -217,10 +220,11 @@ export function WhatsappHistoryModal({
     const explicitTotal = 
       (rawData as any).totalItems ??
       (rawData as any).total ??
-      (rawData as any).responseObject?.total ??
-      (rawData as any).data?.total ??
-      (rawData as any).meta?.total ??
-      (rawData as any).pagination?.total;
+      (rawData as any).responseObject?.data?.pagination?.total_items ??
+      (rawData as any).data?.pagination?.total_items ??
+      (rawData as any).pagination?.total_items ??
+      (rawData as any).pagination?.total ??
+      (rawData as any).meta?.total;
 
     if (explicitTotal !== undefined && explicitTotal !== null) {
       return explicitTotal;
