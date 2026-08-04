@@ -37,3 +37,43 @@ export function useNotificationsQuery(params: NotificationListParams = {}, optio
     },
   });
 }
+
+export function useTotalSuccessNotificationsQuery(phone?: string, options?: any) {
+  const params: Record<string, any> = {};
+  if (phone) {
+    const cleaned = phone.replace(/\D/g, "");
+    params.phone_no = cleaned.length === 10 ? "91" + cleaned : cleaned;
+  }
+  return useApiQuery<any>({
+    queryKey: ["notifications", "total-success", params.phone_no],
+    endpoint: "/notifications/total-success",
+    method: "get",
+    params,
+    options: {
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
+      ...options,
+    },
+  });
+}
+
+export function useTotalFailedNotificationsQuery(phone?: string, options?: any) {
+  const params: Record<string, any> = {};
+  if (phone) {
+    const cleaned = phone.replace(/\D/g, "");
+    params.phone_no = cleaned.length === 10 ? "91" + cleaned : cleaned;
+  }
+  return useApiQuery<any>({
+    queryKey: ["notifications", "total-fail", params.phone_no],
+    endpoint: "/notifications/total-fail",
+    method: "get",
+    params,
+    options: {
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
+      ...options,
+    },
+  });
+}

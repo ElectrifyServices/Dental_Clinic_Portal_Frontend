@@ -347,12 +347,12 @@ export function PatientDetails({
       footer={
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               onClick={() => onExport?.(patient.id)}
               className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/10"
             >
               <Download className="w-4 h-4 mr-2" /> Export All Data
-            </Button>
+            </Button> */}
             {/* <Button
               onClick={handlePrintBarcode}
               className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/10"

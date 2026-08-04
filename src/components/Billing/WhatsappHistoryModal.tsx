@@ -25,7 +25,11 @@ import {
   CheckCircle2,
   XCircle
 } from "lucide-react";
-import { useNotificationsQuery } from "../../hooks/billing/useNotificationsQuery";
+import { 
+  useNotificationsQuery, 
+  useTotalSuccessNotificationsQuery, 
+  useTotalFailedNotificationsQuery 
+} from "../../hooks/billing/useNotificationsQuery";
 import { useRetryNotificationMutation } from "../../hooks/billing/useRetryNotificationMutation";
 
 interface WhatsappHistoryModalProps {
@@ -75,8 +79,28 @@ export function WhatsappHistoryModal({
   }
 
   // Hook query and mutations
-  const { data: rawData, isLoading, refetch } = useNotificationsQuery(queryParams);
+  const { data: rawData, isLoading, refetch: refetchList } = useNotificationsQuery(queryParams);
+  const { data: successData, refetch: refetchSuccess } = useTotalSuccessNotificationsQuery(initialPhone);
+  const { data: failedData, refetch: refetchFailed } = useTotalFailedNotificationsQuery(initialPhone);
   const retryMutation = useRetryNotificationMutation();
+
+  const refetch = React.useCallback(() => {
+    refetchList();
+    refetchSuccess();
+    refetchFailed();
+  }, [refetchList, refetchSuccess, refetchFailed]);
+
+  const getCountValue = (data: any) => {
+    if (data === undefined || data === null) return 0;
+    if (typeof data === "number") return data;
+    if (typeof data === "string") return parseInt(data, 10) || 0;
+    
+    const val = data.count ?? data.total ?? data.total_items ?? data.data?.count ?? data.data?.total;
+    if (typeof val === "number") return val;
+    if (typeof val === "string") return parseInt(val, 10) || 0;
+    
+    return 0;
+  };
 
   const notifications = useMemo(() => {
     if (!rawData) return [];
@@ -151,14 +175,14 @@ export function WhatsappHistoryModal({
       const isRead = s === "READ";
       const isDelivered = s === "DELIVERED" || isRead;
       return (
-        <StatusBadge variant="green" className="text-[9px] uppercase font-bold flex items-center gap-1">
+        <StatusBadge variant="green" className="text-[9px] uppercase font-bold flex items-center gap-1 !bg-emerald-50 !text-emerald-700 !border-emerald-200">
           {isRead ? "Read" : isDelivered ? "Delivered" : "Sent"}
-          {isRead ? <CheckCheck className="w-3 h-3 text-sky-500" /> : <CheckCheck className="w-3 h-3 text-muted-foreground/60" />}
+          {isRead ? <CheckCheck className="w-3 h-3 text-sky-500" /> : <CheckCheck className="w-3 h-3 text-slate-400" />}
         </StatusBadge>
       );
     }
     return (
-      <StatusBadge variant="red" className="text-[9px] uppercase font-bold" title={errorMsg}>
+      <StatusBadge variant="red" className="text-[9px] uppercase font-bold !bg-red-50 !text-red-700 !border-red-200" title={errorMsg}>
         Failed
       </StatusBadge>
     );
@@ -240,26 +264,12 @@ export function WhatsappHistoryModal({
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Apply filters on the list (we still keep frontend filtering as fallback if backend is simple)
+  // Apply filters on the list
   const stats = useMemo(() => {
-    let sentCount = 0;
-    let failedCount = 0;
-    
-    filteredNotifications.forEach((n: any) => {
-      const s = n.status?.toLowerCase();
-      if (s === "failed") {
-        failedCount++;
-      } else {
-        sentCount++;
-      }
-    });
-
     return {
-      sent: sentCount,
-      failed: failedCount,
       total: totalItems
     };
-  }, [filteredNotifications, totalItems]);
+  }, [totalItems]);
 
   return (
     <Modal
@@ -267,6 +277,7 @@ export function WhatsappHistoryModal({
       onClose={onClose}
       size="5xl" // Large width (5xl matches 64rem/1024px width) for beautiful display
       icon={<MessageCircle className="w-5 h-5 text-emerald-600" />}
+      bodyClassName="!p-0 !overflow-hidden flex flex-col flex-1 min-h-0"
       footer={
         <div className="flex justify-between items-center w-full bg-muted/10">
           <Button variant="ghost" onClick={() => refetch()} className="gap-1.5 text-xs text-muted-foreground">
@@ -278,15 +289,15 @@ export function WhatsappHistoryModal({
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="flex flex-col flex-1 min-h-0 h-full p-6 space-y-5">
         {/* Dynamic Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-shrink-0">
           <div className="bg-card border border-border/85 rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Total Filtered Logs</span>
               <span className="text-2xl font-black text-foreground">{stats.total}</span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
               <MessageCircle className="w-5 h-5" />
             </div>
           </div>
@@ -294,9 +305,9 @@ export function WhatsappHistoryModal({
           <div className="bg-card border border-border/85 rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider block">Sent / Delivered Messages</span>
-              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.sent}</span>
+              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{getCountValue(successData)}</span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
@@ -304,16 +315,16 @@ export function WhatsappHistoryModal({
           <div className="bg-card border border-border/85 rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-rose-600 dark:text-rose-500 uppercase tracking-wider block">Failed Deliveries</span>
-              <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{stats.failed}</span>
+              <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{getCountValue(failedData)}</span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-600">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
               <XCircle className="w-5 h-5" />
             </div>
           </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 bg-muted/40 p-4 rounded-2xl border border-border/80">
+        <div className="flex flex-col sm:flex-row gap-3 bg-muted/40 p-4 rounded-2xl border border-border/80 flex-shrink-0">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -350,12 +361,14 @@ export function WhatsappHistoryModal({
 
         {/* List Data Table */}
         {isLoading ? (
-          <div className="flex flex-col justify-center items-center h-80 space-y-4">
+          <div className="flex flex-col justify-center items-center space-y-4 flex-1 min-h-[300px]">
             <Loading type="spinner" text="Fetching WhatsApp logs..." />
           </div>
         ) : filteredNotifications.length > 0 ? (
-          <div className="border border-border rounded-2xl overflow-hidden max-h-[500px] overflow-y-auto pr-1">
+          <div className="border border-border rounded-2xl overflow-hidden flex-1 min-h-0 flex flex-col">
             <DataTable
+              className="flex-1 min-h-0 flex flex-col"
+              scrollClassName="overflow-y-auto custom-scrollbar flex-1 min-h-0"
               columns={[
                 {
                   key: "patient",
@@ -382,14 +395,14 @@ export function WhatsappHistoryModal({
                     const docFilename = headerComp?.parameters?.[0]?.document?.filename;
                     return (
                       <div className="space-y-1.5 max-w-[280px]">
-                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/50 dark:border-indigo-900/30 px-1.5 py-0.5 rounded uppercase tracking-wider block w-max">
+                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 border border-indigo-100/50 px-1.5 py-0.5 rounded uppercase tracking-wider block w-max">
                           {getFriendlyTemplateName(item.template_name)}
                         </span>
                         <div className="text-xs text-foreground/80 truncate font-medium" title={getMessageSummary(item)}>
                           {getMessageSummary(item)}
                         </div>
                         {docFilename && (
-                          <div className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1.5 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100/40 dark:border-blue-900/30 rounded px-1.5 py-0.5 mt-1 w-max max-w-xs truncate" title={docFilename}>
+                          <div className="text-[9px] text-blue-600 font-semibold flex items-center gap-1.5 bg-blue-50/60 border border-blue-100/40 rounded px-1.5 py-0.5 mt-1 w-max max-w-xs truncate" title={docFilename}>
                             <FileText className="w-3.5 h-3.5" />
                             {docFilename}
                           </div>
@@ -407,11 +420,11 @@ export function WhatsappHistoryModal({
                         {formatDate(item.sent_at || item.failed_at || item.created_at)}
                       </span>
                       {item.retry_count !== undefined && item.retry_count > 0 ? (
-                        <span className="text-[9px] text-amber-700 dark:text-amber-400 font-extrabold bg-amber-50 dark:bg-amber-950/40 border border-amber-100/50 dark:border-amber-900/30 rounded px-1.5 py-0.5 flex items-center gap-1 w-max">
+                        <span className="text-[9px] text-amber-700 font-extrabold bg-amber-50 border border-amber-100/50 rounded px-1.5 py-0.5 flex items-center gap-1 w-max">
                           🔄 Retried {item.retry_count} {item.retry_count === 1 ? 'time' : 'times'}
                         </span>
                       ) : (
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium bg-muted/60 border border-border/50 rounded px-1.5 py-0.5 flex items-center gap-1 w-max">
+                        <span className="text-[9px] text-slate-500 font-medium bg-slate-100 border border-slate-200/60 rounded px-1.5 py-0.5 flex items-center gap-1 w-max">
                           First attempt
                         </span>
                       )}
@@ -442,7 +455,7 @@ export function WhatsappHistoryModal({
                           onClick={() => handleRetry(item.id)}
                           disabled={isProcessing}
                           title="Resend WhatsApp Message"
-                          className="w-8 h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/30"
+                          className="w-8 h-8 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/30"
                         >
                           {isProcessing && processingId === item.id ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -458,7 +471,7 @@ export function WhatsappHistoryModal({
               data={filteredNotifications}
               rowKey={(item) => item.id}
               footer={
-                <div className="py-4 px-6 border-t border-border bg-muted/30">
+                <div className="py-4 px-6 border-t border-border bg-muted/30 flex-shrink-0">
                   <Pagination
                     page={currentPage}
                     totalPages={totalPages || 1}
@@ -472,8 +485,8 @@ export function WhatsappHistoryModal({
             />
           </div>
         ) : (
-          <div className="text-center p-12 border border-dashed border-border rounded-2xl bg-muted/10">
-            <MessageCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <div className="text-center p-12 border border-dashed border-border rounded-2xl bg-muted/10 flex-1 flex flex-col justify-center items-center">
+            <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-3 flex-shrink-0" />
             <p className="font-bold text-foreground text-sm">No notification logs found</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {searchQuery ? "No logs match your current search queries." : "No WhatsApp template logs have been recorded yet."}

@@ -23,8 +23,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const PRIMARY_ITEMS = [
-  // Temporarily hidden dashboard as per request
-  // { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
+  { id: "dashboard", label: "Home", icon: Home, roles: ["all"] },
   { id: "patients", label: "Patients", icon: Users, roles: ["all"] },
   { id: "appointments", label: "Calendar", icon: Calendar, roles: ["all"] },
   {
@@ -85,13 +84,12 @@ const MENU_ITEMS = [
     icon: FlaskConical,
     roles: ["doctor", "admin", "superadmin"],
   },
-  // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
-  // {
-  //   id: "reports",
-  //   label: "Reports",
-  //   icon: BarChart3,
-  //   roles: ["admin", "superadmin"],
-  // },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: BarChart3,
+    roles: ["admin", "superadmin"],
+  },
   // Temporarily hidden — matches Sidebar hidden list (emr, consent, reports, profit-sharing)
   // {
   //   id: "profit-sharing",
@@ -161,8 +159,8 @@ export function MobileNav() {
     });
   };
 
-  const visiblePrimary = filterVisible(PRIMARY_ITEMS);
-  const visibleMenu = filterVisible(MENU_ITEMS);
+  const visiblePrimary = filterVisible(PRIMARY_ITEMS).filter((item) => item.id !== "dashboard");
+  const visibleMenu = filterVisible(MENU_ITEMS).filter((item) => item.id !== "reports");
 
   return (
     <>

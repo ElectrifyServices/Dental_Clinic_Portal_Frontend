@@ -114,7 +114,7 @@ export function Sidebar() {
   };
   const visible = allItems
     .filter(canAccess)
-    .filter((item) => !["dashboard", "profit-sharing", "reports"].includes(item.id));
+    .filter((item) => !["profit-sharing", "dashboard", "reports"].includes(item.id));
   const visibleGroups = tenant.sidebar.groups.filter((g) =>
     visible.some((i) => i.group === g.id),
   );

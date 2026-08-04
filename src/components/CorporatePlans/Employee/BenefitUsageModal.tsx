@@ -223,8 +223,8 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                               <div
                                 key={m.id || mIdx}
                                 className={`text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1 font-medium transition-all ${isSelf
-                                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
-                                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+                                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
                                   }`}
                               >
                                 <span>{m.name}</span>
@@ -295,9 +295,9 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                     <span className="text-slate-500">
                                       Used: <strong className="text-rose-600">{used}</strong> / {allocation} sessions
                                     </span>
-                                    <span className="text-slate-600">
+                                    {/* <span className="text-slate-600">
                                       Remaining: <strong className="text-emerald-600">{remaining}</strong>
-                                    </span>
+                                    </span> */}
                                   </div>
                                 </div>
                               )}

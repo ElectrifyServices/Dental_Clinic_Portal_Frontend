@@ -41,8 +41,11 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
           <div className="space-y-2">
             <ServiceDescriptionSelect
               value={item.description || ''}
-              onChange={(name, rate) => {
+              onChange={(name, rate, billingDescriptionId) => {
                 onUpdate(item.id, 'description', name);
+                if (billingDescriptionId) {
+                  onUpdate(item.id, 'billing_description_id' as any, billingDescriptionId);
+                }
                 if (rate !== undefined && rate > 0) {
                   onUpdate(item.id, 'rate', rate);
                 }

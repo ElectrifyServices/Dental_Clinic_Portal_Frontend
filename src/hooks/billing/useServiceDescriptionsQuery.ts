@@ -22,8 +22,8 @@ export function useServiceDescriptionsQuery(params: ServiceDescriptionListParams
   }
 
   return useApiQuery<any>({
-    queryKey: ["serviceDescriptions", body],
-    endpoint: "/serviceDescription/list",
+    queryKey: ["billingDescriptions", body],
+    endpoint: "/billingDescription/list",
     method: "post",
     data: body,
     options: {

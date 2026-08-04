@@ -763,17 +763,6 @@ export function TreatmentList({
         title="Treatment Plans"
         action={
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setWhatsappPhone("");
-                setWhatsappPatientName("");
-                setActiveModal("whatsappHistory");
-              }}
-              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp Log
-            </Button>
             <Button onClick={onAddTreatment} size="lg" className="h-10 w-full justify-center shadow-sm gap-2 sm:w-auto">
               <Plus className="w-4 h-4" /> New Treatment Plan
             </Button>

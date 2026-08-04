@@ -22,6 +22,7 @@ import {
 import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
 import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
+import { downloadConsultationPDF } from "../../utils/pdfGenerator";
 
 interface TreatmentSessionManagerProps {
   treatmentId: string;
@@ -458,6 +459,50 @@ export function TreatmentSessionManager({
         return updated;
       })
     );
+  };
+
+  const handleDownloadPrescription = async () => {
+    if (prescriptions.length === 0) {
+      showToast("Please add at least one medicine to download prescription.", "error");
+      return;
+    }
+
+    const invalid = prescriptions.some(
+      (p) =>
+        !p.medicine ||
+        !p.dosage ||
+        !p.timing ||
+        !p.duration ||
+        !p.qty
+    );
+
+    if (invalid) {
+      showToast("Please fill all fields (medicine name, dosage, timing, duration, quantity) for all prescription items before downloading.", "error");
+      return;
+    }
+
+    await downloadConsultationPDF({
+      type: "PRESCRIPTION",
+      patient: {
+        id: treatmentPlan?.patient_id || treatmentPlan?.patient?.id || "—",
+        patientName: treatmentPlan?.patient?.name || patientName,
+        phone: treatmentPlan?.patient?.phone || "",
+        doctorName: treatmentPlan?.doctor?.staff?.name || doctorName || "DR. RAJAL SHAH",
+      },
+      consultationData: {
+        prescriptions: prescriptions.map((p) => ({
+          medicine: p.medicineName || p.medicine,
+          medicineName: p.medicineName || p.medicine,
+          dosage: p.dosage,
+          timing: p.timing,
+          frequency: p.frequency,
+          duration: p.duration,
+          durationUnit: p.durationUnit,
+          qty: p.qty,
+        })),
+        additional_notes: "",
+      },
+    });
   };
 
   // ─── Derived data ──────────────────────────────────────────────────────────
@@ -1493,6 +1538,7 @@ export function TreatmentSessionManager({
                   onAddPrescription={addPrescription}
                   onRemovePrescription={removePrescription}
                   onUpdatePrescription={updatePrescription}
+                  onDownload={handleDownloadPrescription}
                 />
               </div>
             </div>

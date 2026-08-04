@@ -8,7 +8,7 @@ import { useDeleteServiceDescriptionMutation } from '../../../hooks/billing/useD
 
 interface ServiceDescriptionSelectProps {
   value: string;
-  onChange: (value: string, rate: number) => void;
+  onChange: (value: string, rate: number, id?: string) => void;
 }
 
 export function ServiceDescriptionSelect({ value, onChange }: ServiceDescriptionSelectProps) {
@@ -65,7 +65,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
 
   const handleSelect = (s: any) => {
     const name = s.name || s.description || s.label || '';
-    onChange(name, undefined as any);
+    onChange(name, undefined as any, s.id);
     setOpen(false);
   };
 

@@ -573,16 +573,6 @@ export function InvoiceList({
         subtitle={`${invoices.length} total invoices recorded`}
         action={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setWhatsappHistoryPhone("");
-                setWhatsappHistoryPatientName("");
-              }}
-              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp Log
-            </Button>
             <Button onClick={onCreateInvoice} className="gap-2">
               <Plus className="w-4 h-4" /> Create Invoice
             </Button>

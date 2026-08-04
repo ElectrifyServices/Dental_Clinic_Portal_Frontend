@@ -154,17 +154,6 @@ export function PatientQueue({
         title="Consultation Queue"
         action={
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setWhatsappPhone("");
-                setWhatsappPatientName("");
-                setActiveModal("whatsappHistory");
-              }}
-              className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp Log
-            </Button>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 bg-card/80 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border shadow-sm w-auto">
               <div className="flex items-center gap-1.5 shrink-0">
                 <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />

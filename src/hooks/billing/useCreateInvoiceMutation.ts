@@ -6,7 +6,8 @@ export interface CreateInvoiceItemVariables {
   consultation_id?: string;
   treatment_plan_id?: string;
   membership_id?: string;
-  description: string;
+  description?: string;
+  billing_description_id?: string;
   total_amount: number;
   billed_amount: number;
 }
