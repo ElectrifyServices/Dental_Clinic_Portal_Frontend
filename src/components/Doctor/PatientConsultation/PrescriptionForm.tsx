@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { ConfirmModal } from "@/components/ui";
-import { Pill, Plus, Trash2 } from "lucide-react";
+import { Pill, Plus, Trash2, Download, Loader2 } from "lucide-react";
 import {
   useMedicinesQuery,
   useCreateMedicineMutation,
@@ -29,6 +29,7 @@ interface PrescriptionFormProps {
   onAddPrescription: () => void;
   onRemovePrescription: (id: string) => void;
   onUpdatePrescription: (id: string, field: string, value: string) => void;
+  onDownload?: () => void;
 }
 
 export function PrescriptionForm({
@@ -36,9 +37,11 @@ export function PrescriptionForm({
   onAddPrescription,
   onRemovePrescription,
   onUpdatePrescription,
+  onDownload,
 }: PrescriptionFormProps) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -93,20 +96,22 @@ export function PrescriptionForm({
     }
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteName, setConfirmDeleteName] = useState<string | null>(null);
 
-  const handleDeleteClick = (name: string) => {
-    setConfirmDeleteName(name);
+  const handleDeleteClick = (id: string) => {
+    setConfirmDeleteId(id);
+    const found = selectOptions.find((o) => o.value === id);
+    setConfirmDeleteName(found?.label || id);
   };
 
   const handleDeleteMedicine = async () => {
-    if (!confirmDeleteName) return;
-    const name = confirmDeleteName;
-    const found = medicinesList.find((m: any) => m.name === name);
-    const id = found?.id || found?._id || name;
-    setDeletingId(name);
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
+    setDeletingId(id);
     try {
       await deleteMedicine(id);
+      setConfirmDeleteId(null);
       setConfirmDeleteName(null);
     } catch (err) {
       console.error(err);
@@ -122,14 +127,40 @@ export function PrescriptionForm({
           <Pill className="w-5 h-5 mr-2 text-green-600" />
           Prescriptions
         </h3>
-        <Button
-          type="button"
-          onClick={onAddPrescription}
-          className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center text-sm font-medium transition-all duration-200 shadow-md"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Medicine
-        </Button>
+        <div className="flex items-center gap-2">
+          {onDownload && (
+            <Button
+              type="button"
+              disabled={downloading}
+              onClick={async () => {
+                setDownloading(true);
+                try {
+                  await onDownload();
+                } catch (err) {
+                  console.error(err);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              className="border border-green-200 bg-green-50 text-green-700 hover:bg-green-100/80 px-4 py-2 rounded-xl flex items-center text-sm font-medium transition-all duration-200 shadow-sm gap-1.5"
+            >
+              {downloading ? (
+                <Loader2 className="w-4 h-4 text-green-700 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 text-green-700" />
+              )}
+              {downloading ? "Downloading..." : "Download"}
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={onAddPrescription}
+            className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 flex items-center text-sm font-medium transition-all duration-200 shadow-md"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Medicine
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -284,7 +315,10 @@ export function PrescriptionForm({
           variant="danger"
           isLoading={!!deletingId}
           onConfirm={handleDeleteMedicine}
-          onCancel={() => setConfirmDeleteName(null)}
+          onCancel={() => {
+            setConfirmDeleteId(null);
+            setConfirmDeleteName(null);
+          }}
         />
       )}
     </div>

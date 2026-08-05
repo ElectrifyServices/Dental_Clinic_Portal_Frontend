@@ -209,17 +209,6 @@ export const AppointmentsPage: React.FC = () => {
         subtitle="Schedule and manage patient visits"
       >
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setWhatsappPhone("");
-              setWhatsappPatientName("");
-              setActiveModal("whatsappHistory");
-            }}
-            className="gap-2 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 h-10 rounded-xl"
-          >
-            <MessageCircle className="w-4 h-4" /> WhatsApp Log
-          </Button>
           <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
             <Button
               variant="ghost"

@@ -19,6 +19,7 @@ import {
   FileCheck,
   CheckCircle2,
   Loader2,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -63,7 +64,7 @@ export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
   const navigate = useNavigate();
-  const { setActiveModal, showConfirm } = useModal();
+  const { setActiveModal, showConfirm, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
 
   const [downloadingBlank, setDownloadingBlank] = useState<string | null>(null);
@@ -185,6 +186,20 @@ export function Header() {
               </Button>
             </PopoverContent>
           </Popover>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setWhatsappPhone("");
+              setWhatsappPatientName("");
+              setActiveModal("whatsappHistory");
+            }}
+            className="gap-2 text-foreground bg-white hover:bg-slate-50 border-slate-200"
+          >
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+            <span>WhatsApp Log</span>
+          </Button>
         </div>
 
         {/* Mobile Actions Menu */}
@@ -215,6 +230,20 @@ export function Header() {
                   <Zap className="w-4 h-4 text-amber-500" />
                 </div>
                 Register Member
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setWhatsappPhone("");
+                  setWhatsappPatientName("");
+                  setActiveModal("whatsappHistory");
+                }}
+                className="w-full justify-start gap-2.5 text-sm h-auto py-2.5 rounded-lg"
+              >
+                <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                WhatsApp Log
               </Button>
               <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-t border-border/40 mt-1">
                 Blank PDF Options

@@ -9,11 +9,11 @@ export function useDeleteServiceDescriptionMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, DeleteServiceDescriptionVariables>({
-    getEndpoint: (variables) => `/serviceDescription/${variables.id}`,
+    getEndpoint: (variables) => `/billingDescription/${variables.id}`,
     method: "delete",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["serviceDescriptions"] });
+        queryClient.invalidateQueries({ queryKey: ["billingDescriptions"] });
       },
     },
   });

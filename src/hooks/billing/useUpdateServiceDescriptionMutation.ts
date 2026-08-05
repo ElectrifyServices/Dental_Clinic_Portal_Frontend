@@ -12,11 +12,11 @@ export function useUpdateServiceDescriptionMutation() {
   const queryClient = useQueryClient();
 
   return useApiMutation<any, UpdateServiceDescriptionVariables>({
-    getEndpoint: (variables) => `/serviceDescription/${variables.id}`,
+    getEndpoint: (variables) => `/billingDescription/${variables.id}`,
     method: "patch",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["serviceDescriptions"] });
+        queryClient.invalidateQueries({ queryKey: ["billingDescriptions"] });
       },
     },
   });

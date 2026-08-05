@@ -902,11 +902,15 @@ function ModalRegistryContent() {
                     else if (item.linkedType.toLowerCase().includes("membership")) type = "MEMBERSHIP";
                   }
 
+                  const descId = item.billing_description_id;
+
                   return {
                     item_type: type,
                     consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
                     treatment_plan_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
                     membership_id: type === "MEMBERSHIP" ? item.linkedId : undefined,
+                    billing_description_id: descId,
+                    
                     description: item.description,
                     total_amount: item.amount,
                     billed_amount: item.amount,

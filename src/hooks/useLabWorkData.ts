@@ -238,7 +238,11 @@ export function useLabWorkData(
 
   const pagination = useMemo(() => {
     if (apiLabWorks) {
-      const target = apiLabWorks?.responseObject?.pagination || apiLabWorks?.pagination;
+      const target =
+        apiLabWorks?.responseObject?.data?.pagination ||
+        apiLabWorks?.data?.pagination ||
+        apiLabWorks?.responseObject?.pagination ||
+        apiLabWorks?.pagination;
       if (target) {
         const total = Number(target.total_items ?? target.totalItems ?? target.total ?? apiDerivedLabWorks.length);
         const totalPages = Number(target.total_pages ?? target.totalPages ?? Math.ceil(total / (params?.limit ?? 5)));
