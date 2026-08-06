@@ -1,6 +1,6 @@
 import { useInvoicesQuery } from './billing/useInvoicesQuery';
 import { normalizeInvoice } from './billing/useInvoiceQuery';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDeleteInvoiceMutation } from './billing/useDeleteInvoiceMutation';
 
@@ -9,18 +9,26 @@ export function useInvoiceData(params?: { search?: string; status?: string }, op
 
   const isEnabled = options?.enabled !== false;
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setPage(1);
+  }, [params?.search, params?.status]);
+
   const queryParams = useMemo(() => {
     const filters: any = {};
     if (params?.status && params.status !== "all") {
       filters.status = [params.status.toUpperCase()];
     }
     return {
-      page: 1,
-      limit: 1000,
+      page: page,
+      limit: limit,
       search: params?.search || undefined,
       filters: Object.keys(filters).length > 0 ? filters : undefined,
     };
-  }, [params?.search, params?.status]);
+  }, [params?.search, params?.status, page, limit]);
 
   const { data: apiInvoices, isLoading: isInvoicesLoading } = useInvoicesQuery(
     queryParams,
@@ -67,6 +75,37 @@ export function useInvoiceData(params?: { search?: string; status?: string }, op
     return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
   }, [apiInvoices]);
 
+  const totalItems = useMemo(() => {
+    return (
+      (apiInvoices as any)?.pagination?.total ||
+      (apiInvoices as any)?.pagination?.total_items ||
+      (apiInvoices as any)?.data?.pagination?.total ||
+      (apiInvoices as any)?.data?.pagination?.total_items ||
+      (apiInvoices as any)?.responseObject?.data?.pagination?.total ||
+      (apiInvoices as any)?.responseObject?.data?.pagination?.total_items ||
+      (apiInvoices as any)?.total ||
+      (apiInvoices as any)?.total_elements ||
+      (apiInvoices as any)?.totalElements ||
+      (apiInvoices as any)?.count ||
+      invoices.length ||
+      0
+    );
+  }, [apiInvoices, invoices]);
+
+  const totalPages = useMemo(() => {
+    return (
+      (apiInvoices as any)?.pagination?.totalPages ||
+      (apiInvoices as any)?.pagination?.total_pages ||
+      (apiInvoices as any)?.data?.pagination?.totalPages ||
+      (apiInvoices as any)?.data?.pagination?.total_pages ||
+      (apiInvoices as any)?.responseObject?.data?.pagination?.totalPages ||
+      (apiInvoices as any)?.responseObject?.data?.pagination?.total_pages ||
+      (apiInvoices as any)?.totalPages ||
+      (apiInvoices as any)?.total_pages ||
+      Math.max(1, Math.ceil(totalItems / limit))
+    );
+  }, [apiInvoices, totalItems, limit]);
+
   // Keep setInvoices as no-op stub for backward compatibility
   const setInvoices = (_updater: any) => {};
 
@@ -77,6 +116,12 @@ export function useInvoiceData(params?: { search?: string; status?: string }, op
     refetchInvoices,
     handleDeleteInvoice,
     handleUpdateInvoiceStatus,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalItems,
+    totalPages,
   };
 }
 

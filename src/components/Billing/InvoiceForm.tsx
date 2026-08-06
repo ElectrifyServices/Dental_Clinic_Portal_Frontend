@@ -956,6 +956,7 @@ export function InvoiceForm({
                     type="number"
                     value={formData.isComplimentary ? 100 : formData.discount}
                     disabled={formData.isComplimentary}
+                    onFocus={e => e.target.select()}
                     onChange={(e) => {
                       let valStr = e.target.value;
                       if (/^0+[1-9]/.test(valStr)) {

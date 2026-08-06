@@ -73,6 +73,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
         <Input
           type="number"
           value={item.rate}
+          onFocus={e => e.target.select()}
           onChange={e => {
             let valStr = e.target.value;
             if (/^0+[1-9]/.test(valStr)) {

@@ -126,7 +126,7 @@ export function InvoicePaymentModal({
                   type="button"
                   onClick={() => setMethod(pm.id)}
                   className={cn(
-                    "w-full flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-200 text-left outline-none cursor-pointer",
+                    "w-full flex items-center gap-4 p-3.5 rounded-2xl border transition-all duration-200 text-left outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent",
                     isSelected
                       ? pm.activeClass
                       : "border-border bg-card hover:bg-muted/30 hover:border-border-hover"

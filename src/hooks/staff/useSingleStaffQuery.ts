@@ -10,6 +10,7 @@ export function useSingleStaffQuery(id?: string, options?: { enabled?: boolean }
     options: {
       enabled,
       staleTime: 0,
+      gcTime: 0,
     },
   });
 }
