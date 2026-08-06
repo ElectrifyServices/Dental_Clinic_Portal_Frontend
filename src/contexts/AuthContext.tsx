@@ -10,6 +10,7 @@ import { useLoginMutation } from "../hooks/auth/useLoginMutation";
 import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
 import { AuthStorage } from "../auth/authStorage";
 import { toast } from "../components/ui";
+import { useTheme } from "./ThemeContext";
 
 interface AuthState {
   user: User | null;
@@ -75,6 +76,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState, initAuth);
+  const { applyTheme, clearTheme } = useTheme();
 
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
@@ -141,6 +143,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always remembering for now, you can wire this to a checkbox later
       AuthStorage.save(authData, true);
 
+      // ── Apply theme & branding from API response ───────────────────────
+      const tenant = apiData?.tenant || (response as any)?.tenant || (response as any)?.data?.tenant || (apiData as any)?.data?.tenant;
+      let apiTheme = null;
+      let apiBranding = null;
+
+      if (tenant) {
+        let config = tenant.config;
+        if (typeof config === "string") {
+          try {
+            config = JSON.parse(config);
+          } catch (e) {
+            config = null;
+          }
+        }
+        apiTheme = tenant.theme ?? config?.theme ?? null;
+        apiBranding = tenant.branding ?? config?.branding ?? null;
+      }
+
+      if (apiTheme || apiBranding) {
+        const themePayload = {
+          theme: apiTheme ?? {},
+          branding: apiBranding ?? {},
+        };
+        console.log("Successfully extracted themePayload from login:", themePayload);
+        applyTheme(themePayload);
+        toast.success(`Theme loaded: ${themePayload.branding.clinic_name || 'Vikas Clinic'}`);
+      } else {
+        toast.error("Failed to load theme: config is missing in login response.");
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
       dispatch({ type: "LOGIN_SUCCESS", payload: normalizedUserInfo });
       toast.success("Welcome back! Logged in successfully.");
     } catch (error: any) {
@@ -165,6 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
     } finally {
       AuthStorage.clear();
+      clearTheme();
       sessionStorage.removeItem('demo_mode');
       dispatch({ type: "LOGOUT" });
       toast.success("Logged out successfully.");

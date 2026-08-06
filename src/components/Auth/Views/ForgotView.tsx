@@ -4,6 +4,7 @@ import { Button, Loading, toast } from "@/components/ui";
 import { Mail, ArrowRight, Lock, Key, ArrowLeft, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
 const logoImg = "/Portal_logo.png";
 import { useState } from "react";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { useVerifyEmailMutation } from "@/hooks/auth/useVerifyEmailMutation";
 import { useForgotPasswordMutation } from "@/hooks/auth/useForgotPasswordMutation";
 import { useChangePasswordMutation } from "@/hooks/auth/useChangePasswordMutation";
@@ -15,6 +16,7 @@ interface ForgotViewProps {
 }
 
 export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewProps) {
+  const { themeData } = useTheme();
   const [isVerified, setIsVerified] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
@@ -139,7 +141,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
         <>
           <div className="flex flex-col items-center text-center mb-8">
             <div className="w-20 h-20 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
-              <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
+              <img src={themeData?.theme?.logo_url || logoImg} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Change Password
@@ -297,7 +299,7 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
           {/* Header with Logo */}
           <div className="flex flex-col items-center text-center mb-8">
             <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
-              <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
+              <img src={themeData?.theme?.logo_url || logoImg} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Forgot Password

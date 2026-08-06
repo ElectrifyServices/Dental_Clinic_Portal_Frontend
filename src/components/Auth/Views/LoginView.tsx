@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/Form";
 const logoImg = "/Portal_logo.png";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 interface LoginViewProps {
   setView: (view: 'login' | 'forgot' | 'forgot-sent') => void;
@@ -23,6 +24,7 @@ interface LoginViewProps {
 export function LoginView({ setView }: LoginViewProps) {
   const [showPw, setShowPw] = useState(false);
   const { state, login } = useAuth();
+  const { themeData } = useTheme();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -38,7 +40,7 @@ export function LoginView({ setView }: LoginViewProps) {
       {/* Header with Logo */}
       <div className="flex flex-col items-center text-center mb-8">
         <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
-          <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
+          <img src={themeData?.theme?.logo_url || logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Welcome back
@@ -46,7 +48,7 @@ export function LoginView({ setView }: LoginViewProps) {
         <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
           Sign in to access your{" "}
           <span className="font-bold text-indigo-600">
-            Electrify Services LLP.
+            {themeData?.branding?.clinic_name || "Electrify Services LLP."}
           </span>{" "}
           Portal
         </p>

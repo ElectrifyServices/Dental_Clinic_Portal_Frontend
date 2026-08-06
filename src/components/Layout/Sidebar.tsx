@@ -24,6 +24,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useSidebar } from "../../contexts/SidebarContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { getParsedPermissions } from "../../utils/permission";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -63,6 +64,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
 export function Sidebar() {
   const { state } = useAuth();
   const { tenant } = useTenant();
+  const { themeData } = useTheme();
   const location = useLocation();
   const { collapsed, setCollapsed } = useSidebar();
   const role = state.user?.role;
@@ -154,7 +156,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-200 transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
             <img
-              src={logo}
+              src={themeData?.theme?.logo_url || logo}
               alt="Logo"
               className="w-full h-full object-contain rounded-lg"
             />
@@ -162,10 +164,10 @@ export function Sidebar() {
           {!collapsed && (
             <div className="min-w-0">
               <span className="font-black text-slate-800 text-[14px] block leading-tight tracking-tight truncate">
-                {tenant.branding.clinicName}
+                {themeData?.branding?.clinic_name || tenant.branding.clinicName}
               </span>
-              <span className="text-[11px] font-semibold text-primary block mt-0.5">
-                Dental Management
+              <span className="text-[11px] font-semibold text-primary block mt-0.5 truncate max-w-[150px]">
+                {themeData?.theme?.tagline || "Dental Management"}
               </span>
             </div>
           )}
