@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui';
 import { ServiceDescriptionSelect } from './ServiceDescriptionSelect';
+import { sanitizeNumericString } from '@/utils/inputUtils';
 
 interface InvoiceItemRowProps {
   item: InvoiceItem;
@@ -73,13 +74,9 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
         <Input
           type="number"
           value={item.rate}
+          onFocus={e => e.target.select()}
           onChange={e => {
-            let valStr = e.target.value;
-            if (/^0+[1-9]/.test(valStr)) {
-              valStr = valStr.replace(/^0+/, '');
-            } else if (/^0{2,}/.test(valStr)) {
-              valStr = '0';
-            }
+            const valStr = sanitizeNumericString(e.target.value);
             e.target.value = valStr;
             const val = parseFloat(valStr);
             onUpdate(item.id, 'rate', isNaN(val) ? 0 : Math.max(0, val));

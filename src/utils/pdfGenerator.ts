@@ -638,8 +638,11 @@ function statusBadge(status: string) {
   return `<span style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; background:${palette.bg}; color:${palette.fg};">${status}</span>`;
 }
 
-const sectionLabel = (text: string) =>
-  `<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">${text}</div>`;
+const sectionLabel = (text: string, showBorder: boolean = true) => {
+  const labelText = text.endsWith(":") ? text : `${text}:`;
+  const borderStyle = showBorder ? `border-bottom:1.5px solid ${LINE}; padding-bottom:5px;` : "";
+  return `<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; ${borderStyle}">${labelText}</div>`;
+};
 
 const makeCellContent = (
   content: string,
@@ -670,10 +673,10 @@ function detailsGrid(rows: Array<[string, string, string, string]>) {
       .map(
         (row) => `
 <tr>
-<td style="width:16%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[0], "left", labelStyle)}</td>
-<td style="width:34%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[1], "left", valueStyle)}</td>
-<td style="width:16%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[2], "left", labelStyle)}</td>
-<td style="width:34%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[3], "left", valueStyle)}</td>
+<td style="width:20%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[0], "left", labelStyle)}</td>
+<td style="width:30%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[1], "left", valueStyle)}</td>
+<td style="width:20%; padding:0; background:${PANEL}; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[2], "left", labelStyle)}</td>
+<td style="width:30%; padding:0; border:1px solid ${LINE}; vertical-align:middle;">${makeCellContent(row[3], "left", valueStyle)}</td>
 </tr>
         `,
       )
@@ -879,7 +882,7 @@ export const downloadConsultationPDF = async ({
 <div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
 <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">${title}</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
-<span>Date: ${isBlankMode ? "" : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+<span>Date: ${isBlankMode ? "___________________" : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
 </div>
 <div style="padding: 0 40px;">
@@ -970,8 +973,9 @@ export const downloadConsultationPDF = async ({
 
   const getTreatmentSection = () => {
     let treatmentsHtml = "";
-    if (isBlankMode || (treatmentsArray && treatmentsArray.length > 0)) {
-      const rows = isBlankMode ? [1, 2, 3] : treatmentsArray;
+    if (isBlankMode) {
+      treatmentsHtml = `<div style="height: 120px;"></div>`;
+    } else if (treatmentsArray && treatmentsArray.length > 0) {
       treatmentsHtml = `
 <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${LINE}; margin-top:10px;">
 <thead>
@@ -983,16 +987,9 @@ export const downloadConsultationPDF = async ({
 </tr>
 </thead>
 <tbody>
-            ${rows
+            ${treatmentsArray
           .map(
-            (t: any, i: number) => isBlankMode ? `
-<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "center")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "right")}</td>
-</tr>
-            ` : `
+            (t: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${(t.tooth_number || t.tooth) === "FM" ? "Full Mouth" : `#${t.tooth_number || t.tooth || "General"}`}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${t.procedure || t.treatment_type || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
@@ -1017,13 +1014,16 @@ export const downloadConsultationPDF = async ({
 
     return `
 <div style="padding: 8px 40px 10px;">
-        ${sectionLabel("Treatment Planning & Procedures")}
+        ${sectionLabel("Treatment Planning & Procedures", !isBlankMode)}
         ${treatmentsHtml}
         ${isBlankMode || (treatmentPlanDesc && treatmentPlanDesc !== "-" && (treatmentsArray && treatmentsArray.length > 0))
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
-<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Treatment Plan Description</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : treatmentPlanDesc}</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Treatment Plan Description:</div>
+${isBlankMode
+  ? `<div style="height: 80px;"></div>`
+  : `<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${treatmentPlanDesc}</div>`
+}
 </div>
         `
         : ""
@@ -1031,8 +1031,11 @@ export const downloadConsultationPDF = async ({
         ${isBlankMode || (recommendations && recommendations !== "-")
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
-<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : recommendations}</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommendations & Notes:</div>
+${isBlankMode
+  ? `<div style="height: 80px;"></div>`
+  : `<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${recommendations}</div>`
+}
 </div>
         `
         : ""
@@ -1042,13 +1045,15 @@ export const downloadConsultationPDF = async ({
   };
 
   const getPrescriptionSection = () => {
-    const rows = isBlankMode ? [1, 2, 3] : filledPrescriptions;
     return `
 <div style="padding: 8px 40px 10px;" data-avoid-break="true">
 <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
-<div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
-<div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED};">Rx</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications:</div>
 </div>
+${isBlankMode
+  ? `<div style="height: 200px;"></div>`
+  : `
 <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${LINE};">
 <thead>
 <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
@@ -1061,18 +1066,9 @@ export const downloadConsultationPDF = async ({
 </tr>
 </thead>
 <tbody>
-          ${rows
+          ${filledPrescriptions
         .map(
-          (p: any, i: number) => isBlankMode ? `
-<tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-<td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-</tr>
-          ` : `
+          (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
@@ -1086,11 +1082,15 @@ export const downloadConsultationPDF = async ({
         .join("")}
 </tbody>
 </table>
+`}
         ${isBlankMode || additionalNotes
         ? `
 <div style="margin-top:16px;" data-avoid-break="true">
-<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Additional Notes</div>
-<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : additionalNotes}</div>
+<div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Additional Notes:</div>
+${isBlankMode
+  ? `<div style="height: 80px;"></div>`
+  : `<div style="font-size:12px; line-height:1.6; color:${INK}; padding:12px 16px; background:${PANEL}; border:1px solid ${LINE}; border-radius:8px; white-space:pre-wrap; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${additionalNotes}</div>`
+}
 </div>
         `
         : ""
@@ -1204,7 +1204,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 <div style="padding: 10px 40px 20px 40px; background:${PANEL}; border-bottom: 1px solid ${LINE}; display:flex; justify-content:space-between; align-items:center;">
 <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:1px; font-family:'Cinzel', serif;">TREATMENT & PROCEDURE COMPLETED</div>
 <div style="text-align:right; font-size:12px; color:${INK_MUTED}; font-weight:400;">
-<span>Date: ${isBlankMode ? "" : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+<span>Date: ${isBlankMode ? "___________________" : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
 </div>
 </div>
 <div style="padding: 0 40px;">
@@ -1220,10 +1220,12 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const sessions = treatmentObj.sessions || [];
   let sessionsHtml = "";
   if (isBlankMode || sessions.length > 0) {
-    const rows = isBlankMode ? [1, 2, 3] : sessions;
     sessionsHtml = `
 <div style="padding: 16px 40px 10px;" data-avoid-break="true">
   ${sectionLabel("Treatment Session")}
+  ${isBlankMode
+    ? `<div style="height: 150px;"></div>`
+    : `
   <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE}; margin-top:10px;">
     <thead>
       <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
@@ -1234,16 +1236,9 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
       </tr>
     </thead>
     <tbody>
-      ${rows
+      ${sessions
         .map(
-          (s: any, idx: number) => isBlankMode ? `
-        <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-          <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent(`Visit #${idx + 1}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
-          <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-          <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-          <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-        </tr>
-      ` : `
+          (s: any, idx: number) => `
         <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`Visit #${s.visit_number || idx + 1}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${INK_MUTED};`)}</td>
@@ -1255,6 +1250,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
         .join("")}
     </tbody>
   </table>
+  `}
 </div>
     `;
   }
@@ -1263,13 +1259,15 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   const prescriptions = treatmentObj.prescriptions || [];
   let prescriptionsHtml = "";
   if (isBlankMode || prescriptions.length > 0) {
-    const rows = isBlankMode ? [1, 2, 3] : prescriptions;
     prescriptionsHtml = `
 <div style="padding: 8px 40px 10px;" data-avoid-break="true">
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${LINE}; padding-bottom:5px;">
-    <div style="font-size:12px; font-weight:400; color:${INK};">Rx</div>
-    <div style="font-size:12px; font-weight:400; color:${INK}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications</div>
+    <div style="font-size:12px; font-weight:400; color:${INK_MUTED};">Rx</div>
+    <div style="font-size:12px; font-weight:400; color:${INK_MUTED}; text-transform:uppercase; letter-spacing:0.5px;">Prescribed Medications:</div>
   </div>
+  ${isBlankMode
+    ? `<div style="height: 100px;"></div>`
+    : `
   <table style="width:100%; border-collapse:collapse; border:1px solid ${LINE};">
     <thead>
       <tr style="background:${PANEL}; border-bottom:2px solid ${LINE};">
@@ -1282,17 +1280,8 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
       </tr>
     </thead>
     <tbody>
-      ${rows
-        .map((p: any, idx: number) => isBlankMode ? `
-          <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-            <td style="padding:0; vertical-align:middle; height:32px;">${makeCellContent("", "left")}</td>
-          </tr>
-        ` : `
+      ${prescriptions
+        .map((p: any, idx: number) => `
           <tr style="border-bottom:1px solid ${LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "-"}`, "left", `font-size:12px; font-weight:400; color:${INK};`)}</td>
@@ -1305,6 +1294,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
         .join("")}
     </tbody>
   </table>
+  `}
 </div>
     `;
   }

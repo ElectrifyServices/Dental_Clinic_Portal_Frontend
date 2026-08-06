@@ -1,4 +1,5 @@
 import { Label } from "@/components/ui/Label";
+import logo from "../../logo.png";
 import {
   Printer,
   Shield,
@@ -128,7 +129,7 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
                 {/* Clinic Header */}
                 <div className="flex justify-between items-start mb-8 relative z-10">
                   <div className="flex items-center gap-4">
-                    <img src="../logo.png" alt="Clinic Logo" className="h-16 object-contain" />
+                    <img src={logo} alt="Clinic Logo" className="h-16 object-contain" />
                   </div>
                   <div className="text-right flex flex-col items-end">
                     <div className="bg-[#1e3a8a] text-white px-5 py-2.5 rounded-xl font-bold text-lg flex items-center gap-2">

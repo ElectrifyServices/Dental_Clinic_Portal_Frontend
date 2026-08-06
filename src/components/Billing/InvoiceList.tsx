@@ -64,6 +64,12 @@ interface InvoiceListProps {
   status: string;
   setStatus: (val: string) => void;
   isLoading?: boolean;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalPages?: number;
+  totalItems?: number;
 }
 
 const STATUS_META: Record<
@@ -117,6 +123,12 @@ export function InvoiceList({
   status,
   setStatus,
   isLoading,
+  page = 1,
+  onPageChange,
+  limit = 10,
+  onLimitChange,
+  totalPages = 1,
+  totalItems = 0,
 }: InvoiceListProps) {
   // Stats APIs
   const { data: totalBilledData } = useTotalBilledQuery();
@@ -315,84 +327,99 @@ export function InvoiceList({
       header: "Actions",
       align: "center" as const,
       render: (inv: Invoice) => (
-        <div className="flex items-center justify-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewInvoice?.(inv.id);
-            }}
-            title="View Invoice"
-            className="w-7 h-7 text-primary hover:bg-primary/10 rounded-lg"
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setHistoryInvoice(inv);
-            }}
-            title="Payment History"
-            className="w-7 h-7 text-amber-600 hover:bg-amber-50 rounded-lg"
-          >
-            <History className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setWhatsappHistoryPhone(inv.phone || "");
-              setWhatsappHistoryPatientName(inv.patientName || "");
-            }}
-            title="WhatsApp History"
-            className="w-7 h-7 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-          </Button>
-          {inv.status !== "paid" && onUpdateStatus && (
+        <div className="flex items-center justify-center gap-1">
+          <div className="relative">
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPayInvoice(inv);
-              }}
-              title="Mark as Paid"
-              className="w-7 h-7 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+              className="h-8 w-8 text-muted-foreground"
+              onClick={(e) => openMenu(e, inv.id)}
             >
-              <IndianRupee className="w-3.5 h-3.5" />
+              <MoreVertical className="w-4 h-4" />
             </Button>
-          )}
-          {inv.status === "draft" && onUpdateStatus && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUpdateStatus(inv.id, "sent");
-              }}
-              title="Send to Patient"
-              className="w-7 h-7 text-blue-600 hover:bg-blue-50 rounded-lg"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteInvoice?.(inv.id, (inv as any).invoice_number || inv.id);
-            }}
-            title="Delete"
-            className="w-7 h-7 text-destructive hover:bg-destructive/10 rounded-lg"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+            {openMenuId === inv.id &&
+              createPortal(
+                <>
+                  <div
+                    className="fixed inset-0 z-[9998]"
+                    onClick={() => setOpenMenuId(null)}
+                  />
+                  <div
+                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    style={{ top: menuPos.top, left: menuPos.left }}
+                  >
+                    <div className="p-1.5 space-y-0.5">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          onViewInvoice?.(inv.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <Eye className="w-4 h-4 text-primary" /> View Invoice
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setHistoryInvoice(inv);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <History className="w-4 h-4 text-amber-600" /> Payment History
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setWhatsappHistoryPhone(inv.phone || "");
+                          setWhatsappHistoryPatientName(inv.patientName || "");
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4 text-emerald-600" /> WhatsApp History
+                      </Button>
+                      {inv.status !== "paid" && onUpdateStatus && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setPayInvoice(inv);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full justify-start text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                        >
+                          <IndianRupee className="w-4 h-4" /> Mark as Paid
+                        </Button>
+                      )}
+                      {inv.status === "draft" && onUpdateStatus && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            handleSendInvoice(inv.id);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                        >
+                          <Send className="w-4 h-4" /> Send
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          onDeleteInvoice?.(inv.id, (inv as any).invoice_number || inv.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full justify-start text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </Button>
+                    </div>
+                  </div>
+                </>,
+                document.body,
+              )}
+          </div>
         </div>
       ),
     },
@@ -554,17 +581,7 @@ export function InvoiceList({
     },
   ];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const totalPages = Math.ceil(flatSortedInvoices.length / itemsPerPage);
-  
-  const paginatedData = useMemo(() => {
-    return flatSortedInvoices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  }, [flatSortedInvoices, currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, status]);
+  const paginatedData = flatSortedInvoices;
 
   return (
     <div className="space-y-3">
@@ -644,10 +661,9 @@ export function InvoiceList({
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
                   <Select
-                    value={String(itemsPerPage)}
+                    value={String(limit)}
                     onValueChange={(val) => {
-                      setItemsPerPage(Number(val));
-                      setCurrentPage(1);
+                      onLimitChange?.(Number(val));
                     }}
                   >
                     <SelectTrigger className="w-20 h-8 text-xs">
@@ -662,11 +678,11 @@ export function InvoiceList({
                   </Select>
                 </div>
                 <Pagination
-                  page={currentPage}
+                  page={page}
                   totalPages={totalPages}
-                  totalItems={flatSortedInvoices.length}
-                  perPage={itemsPerPage}
-                  onPageChange={setCurrentPage}
+                  totalItems={totalItems}
+                  perPage={limit}
+                  onPageChange={onPageChange}
                 />
               </div>
             ) : undefined
@@ -708,10 +724,9 @@ export function InvoiceList({
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
                     <Select
-                      value={String(itemsPerPage)}
+                      value={String(limit)}
                       onValueChange={(val) => {
-                        setItemsPerPage(Number(val));
-                        setCurrentPage(1);
+                        onLimitChange?.(Number(val));
                       }}
                     >
                       <SelectTrigger className="w-20 h-8 text-xs">
@@ -726,11 +741,11 @@ export function InvoiceList({
                     </Select>
                   </div>
                   <Pagination
-                    page={currentPage}
+                    page={page}
                     totalPages={totalPages}
-                    totalItems={flatSortedInvoices.length}
-                    perPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
+                    totalItems={totalItems}
+                    perPage={limit}
+                    onPageChange={onPageChange}
                   />
                 </div>
               </div>

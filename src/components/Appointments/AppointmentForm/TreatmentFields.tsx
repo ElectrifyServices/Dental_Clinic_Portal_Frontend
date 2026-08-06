@@ -5,6 +5,7 @@ import { Stethoscope, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { Button } from "@/components/ui/Button";
+import { sanitizeNumericString } from "@/utils/inputUtils";
 
 const TREATMENT_OPTIONS = [
   "Consultation / Check-up",
@@ -63,13 +64,11 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
   }, [treatmentType, customOptions]);
 
   const handleFeeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) {
-      e.target.value = val.replace(/^0+/, '');
-    }
+    let val = sanitizeNumericString(e.target.value);
     if (val === '') {
-      e.target.value = '0';
+      val = '0';
     }
+    e.target.value = val;
     onChange(e);
   };
 

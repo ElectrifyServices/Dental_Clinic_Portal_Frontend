@@ -159,8 +159,8 @@ export function MobileNav() {
     });
   };
 
-  const visiblePrimary = filterVisible(PRIMARY_ITEMS).filter((item) => item.id !== "dashboard");
-  const visibleMenu = filterVisible(MENU_ITEMS).filter((item) => item.id !== "reports");
+  const visiblePrimary = filterVisible(PRIMARY_ITEMS);
+  const visibleMenu = filterVisible(MENU_ITEMS);
 
   return (
     <>

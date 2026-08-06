@@ -15,7 +15,19 @@ export const BillingPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  const { invoices, handleDeleteInvoice, handleUpdateInvoiceStatus, refetchInvoices, isInvoicesLoading } = useInvoiceData({
+  const {
+    invoices,
+    handleDeleteInvoice,
+    handleUpdateInvoiceStatus,
+    refetchInvoices,
+    isInvoicesLoading,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    totalItems,
+  } = useInvoiceData({
     search: search,
     status: status,
   });
@@ -43,6 +55,12 @@ export const BillingPage: React.FC = () => {
         setSearch={setSearchInput}
         status={status}
         setStatus={setStatus}
+        page={page}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        totalPages={totalPages}
+        totalItems={totalItems}
       />
     </div>
   );

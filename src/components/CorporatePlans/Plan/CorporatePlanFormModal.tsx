@@ -11,6 +11,7 @@ import { useUpdateCorporatePlanMutation } from '../../../hooks/corporate/useUpda
 import { useModal } from '../../../contexts/ModalContext';
 import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
 import { mapProcedureLabelToKey } from '@/constants/consent.constants';
+import { sanitizeNumericString } from '@/utils/inputUtils';
 
 // ── Tier config ───────────────────────────────────────────────────────────────
 const CORPORATE_TIERS: { value: CorporatePlanTier; label: string; activeClass: string }[] = [
@@ -231,6 +232,11 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     if (!form.code.trim()) e.code = 'Required';
     if (!form.validFrom) e.validFrom = 'Required';
     if (!form.validTo || form.validTo < form.validFrom) e.validTo = 'Must be after start date';
+    if (form.maxMembers === undefined || form.maxMembers === null || isNaN(form.maxMembers)) {
+      e.maxMembers = 'Required';
+    } else if (form.maxMembers <= 0) {
+      e.maxMembers = 'Must be greater than 0';
+    }
     if (!form.benefits.length) e.benefits = 'Add at least one benefit';
     form.benefits.forEach((b, i) => { if (!b.description.trim()) e[`b_${i}`] = 'Required'; });
     setErrors(e);
@@ -485,12 +491,17 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
               />
             </LabeledField>
-            <LabeledField label="Max Members">
+            <LabeledField label={<span>Max Members <span className="text-destructive font-bold">*</span></span>} error={errors.maxMembers}>
               <Input
-                type="number" min="0"
+                type="number" min="1"
                 value={form.maxMembers ?? ''}
-                onChange={e => handleFormChange('maxMembers', e.target.value)}
-                placeholder="No limit"
+                onFocus={e => e.target.select()}
+                onChange={e => {
+                  const valStr = sanitizeNumericString(e.target.value);
+                  e.target.value = valStr;
+                  handleFormChange('maxMembers', valStr);
+                }}
+                placeholder="e.g. 100"
                 className="rounded-xl"
               />
             </LabeledField>
@@ -503,7 +514,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
               <Input
                 type="number" min="0"
                 value={form.annualFee ?? ''}
-                onChange={e => setForm(prev => ({ ...prev, annualFee: parseFloat(e.target.value) || 0 }))}
+                onFocus={e => e.target.select()}
+                onChange={e => {
+                  const valStr = sanitizeNumericString(e.target.value);
+                  e.target.value = valStr;
+                  setForm(prev => ({ ...prev, annualFee: parseFloat(valStr) || 0 }));
+                }}
                 placeholder="e.g. 2000"
                 className="pl-10 rounded-xl"
               />
@@ -675,7 +691,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                           type="number" min="0"
                           max={b.type.includes('discount') ? 100 : 999}
                           value={b.value || ''}
-                          onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'value', parseFloat(valStr) || 0);
+                          }}
                           className="rounded-xl font-bold"
                         />
                       </LabeledField>
@@ -685,7 +706,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                       <LabeledField label="Discount %">
                         <Input
                           type="number" min="0" max={100} value={b.value || ''}
-                          onChange={e => updateBenefit(idx, 'value', parseFloat(e.target.value) || 0)}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'value', parseFloat(valStr) || 0);
+                          }}
                           className="rounded-xl font-bold"
                         />
                       </LabeledField>
@@ -695,7 +721,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                       <LabeledField label="Maximum Amount (₹)">
                         <Input
                           type="number" min="0" value={b.cap || ''}
-                          onChange={e => updateBenefit(idx, 'cap', parseFloat(e.target.value) || 0)}
+                          onFocus={e => e.target.select()}
+                          onChange={e => {
+                            const valStr = sanitizeNumericString(e.target.value);
+                            e.target.value = valStr;
+                            updateBenefit(idx, 'cap', parseFloat(valStr) || 0);
+                          }}
                           className="rounded-xl"
                         />
                       </LabeledField>
