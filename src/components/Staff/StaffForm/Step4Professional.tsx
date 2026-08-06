@@ -7,6 +7,7 @@ import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializati
 import { useCreateSpecializationMutation } from "@/hooks/specializations/useCreateSpecializationMutation";
 import { useDeleteSpecializationMutation } from "@/hooks/specializations/useDeleteSpecializationMutation";
 import { useModal } from "@/contexts/ModalContext";
+import { preventScientificNotation, handleNumericChange } from "@/utils/inputUtils";
 
 interface Step4Props {
   formData: any;
@@ -163,19 +164,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
                   name="consultationFee"
                   value={formData.consultationFee}
                   onFocus={e => e.target.select()}
-                  onKeyDown={e => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                  }}
-                  onChange={e => {
-                    let valStr = e.target.value.replace(/\D/g, '');
-                    if (/^0+[1-9]/.test(valStr)) {
-                      valStr = valStr.replace(/^0+/, '');
-                    } else if (/^0{2,}/.test(valStr)) {
-                      valStr = '0';
-                    }
-                    e.target.value = valStr;
-                    onChange({ target: { name: 'consultationFee', value: valStr } });
-                  }}
+                  onKeyDown={preventScientificNotation}
+                  onChange={e => handleNumericChange(e, onChange)}
                   min="0"
                   className={`w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.consultationFee ? 'border-destructive ring-destructive/20' : ''}`}
                 />
@@ -204,19 +194,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
                   name="experience"
                   value={formData.experience}
                   onFocus={e => e.target.select()}
-                  onKeyDown={e => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                  }}
-                  onChange={e => {
-                    let valStr = e.target.value.replace(/\D/g, '');
-                    if (/^0+[1-9]/.test(valStr)) {
-                      valStr = valStr.replace(/^0+/, '');
-                    } else if (/^0{2,}/.test(valStr)) {
-                      valStr = '0';
-                    }
-                    e.target.value = valStr;
-                    onChange({ target: { name: 'experience', value: valStr } });
-                  }}
+                  onKeyDown={preventScientificNotation}
+                  onChange={e => handleNumericChange(e, onChange)}
                   min="0"
                   className="w-full pl-9 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                 />
@@ -256,19 +235,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
                 name="experience"
                 value={formData.experience}
                 onFocus={e => e.target.select()}
-                onKeyDown={e => {
-                  if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                }}
-                onChange={e => {
-                  let valStr = e.target.value.replace(/\D/g, '');
-                  if (/^0+[1-9]/.test(valStr)) {
-                    valStr = valStr.replace(/^0+/, '');
-                  } else if (/^0{2,}/.test(valStr)) {
-                    valStr = '0';
-                  }
-                  e.target.value = valStr;
-                  onChange({ target: { name: 'experience', value: valStr } });
-                }}
+                onKeyDown={preventScientificNotation}
+                onChange={e => handleNumericChange(e, onChange)}
                 className="w-full px-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20"
               />
             </LabeledField>
@@ -336,19 +304,8 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
               name="monthlySalary"
               value={formData.monthlySalary}
               onFocus={e => e.target.select()}
-              onKeyDown={e => {
-                if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-              }}
-              onChange={e => {
-                let valStr = e.target.value.replace(/\D/g, '');
-                if (/^0+[1-9]/.test(valStr)) {
-                  valStr = valStr.replace(/^0+/, '');
-                } else if (/^0{2,}/.test(valStr)) {
-                  valStr = '0';
-                }
-                e.target.value = valStr;
-                onChange({ target: { name: 'monthlySalary', value: valStr } });
-              }}
+              onKeyDown={preventScientificNotation}
+              onChange={e => handleNumericChange(e, onChange)}
               required
               min="0"
               className={`w-full pl-10 pr-4 py-3 border border-emerald-100 bg-emerald-50/20 rounded-2xl text-lg font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm ${errors.monthlySalary ? 'border-destructive ring-destructive/20 bg-destructive/5 text-destructive' : ''}`}
