@@ -11,6 +11,7 @@ import { useUpdateCorporatePlanMutation } from '../../../hooks/corporate/useUpda
 import { useModal } from '../../../contexts/ModalContext';
 import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
 import { mapProcedureLabelToKey } from '@/constants/consent.constants';
+import { sanitizeNumericString } from '@/utils/inputUtils';
 
 // ── Tier config ───────────────────────────────────────────────────────────────
 const CORPORATE_TIERS: { value: CorporatePlanTier; label: string; activeClass: string }[] = [
@@ -496,12 +497,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 value={form.maxMembers ?? ''}
                 onFocus={e => e.target.select()}
                 onChange={e => {
-                  let valStr = e.target.value;
-                  if (/^0+[1-9]/.test(valStr)) {
-                    valStr = valStr.replace(/^0+/, '');
-                  } else if (/^0{2,}/.test(valStr)) {
-                    valStr = '0';
-                  }
+                  const valStr = sanitizeNumericString(e.target.value);
                   e.target.value = valStr;
                   handleFormChange('maxMembers', valStr);
                 }}
@@ -520,12 +516,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 value={form.annualFee ?? ''}
                 onFocus={e => e.target.select()}
                 onChange={e => {
-                  let valStr = e.target.value;
-                  if (/^0+[1-9]/.test(valStr)) {
-                    valStr = valStr.replace(/^0+/, '');
-                  } else if (/^0{2,}/.test(valStr)) {
-                    valStr = '0';
-                  }
+                  const valStr = sanitizeNumericString(e.target.value);
                   e.target.value = valStr;
                   setForm(prev => ({ ...prev, annualFee: parseFloat(valStr) || 0 }));
                 }}
@@ -702,12 +693,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                           value={b.value || ''}
                           onFocus={e => e.target.select()}
                           onChange={e => {
-                            let valStr = e.target.value;
-                            if (/^0+[1-9]/.test(valStr)) {
-                              valStr = valStr.replace(/^0+/, '');
-                            } else if (/^0{2,}/.test(valStr)) {
-                              valStr = '0';
-                            }
+                            const valStr = sanitizeNumericString(e.target.value);
                             e.target.value = valStr;
                             updateBenefit(idx, 'value', parseFloat(valStr) || 0);
                           }}
@@ -722,12 +708,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                           type="number" min="0" max={100} value={b.value || ''}
                           onFocus={e => e.target.select()}
                           onChange={e => {
-                            let valStr = e.target.value;
-                            if (/^0+[1-9]/.test(valStr)) {
-                              valStr = valStr.replace(/^0+/, '');
-                            } else if (/^0{2,}/.test(valStr)) {
-                              valStr = '0';
-                            }
+                            const valStr = sanitizeNumericString(e.target.value);
                             e.target.value = valStr;
                             updateBenefit(idx, 'value', parseFloat(valStr) || 0);
                           }}
@@ -742,12 +723,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                           type="number" min="0" value={b.cap || ''}
                           onFocus={e => e.target.select()}
                           onChange={e => {
-                            let valStr = e.target.value;
-                            if (/^0+[1-9]/.test(valStr)) {
-                              valStr = valStr.replace(/^0+/, '');
-                            } else if (/^0{2,}/.test(valStr)) {
-                              valStr = '0';
-                            }
+                            const valStr = sanitizeNumericString(e.target.value);
                             e.target.value = valStr;
                             updateBenefit(idx, 'cap', parseFloat(valStr) || 0);
                           }}
