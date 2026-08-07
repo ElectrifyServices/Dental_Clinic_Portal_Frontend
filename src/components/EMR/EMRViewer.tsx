@@ -22,6 +22,7 @@ import {
   Badge,
   Button,
   FilterTabs,
+  Input,
 } from "@/components/ui";
 import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -611,12 +612,12 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
-              <input
+              <Input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search in clinical notes, procedures..."
-                className="w-full pl-10 pr-4 h-10 text-sm bg-muted/30 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 font-medium placeholder:text-muted-foreground/50 transition-all"
+                className="pl-10 h-10"
               />
             </div>
             <div className="overflow-x-auto pb-1 -mx-2 px-2">
