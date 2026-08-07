@@ -24,6 +24,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { Popover, PopoverTrigger, PopoverContent, toast } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
 import { GlobalSearch } from "./GlobalSearch";
@@ -63,6 +64,7 @@ const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
 export function Header() {
   const { state, logout } = useAuth();
   const { tenant } = useTenant();
+  const { themeData } = useTheme();
   const navigate = useNavigate();
   const { setActiveModal, showConfirm, setWhatsappPhone, setWhatsappPatientName } = useModal();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
@@ -92,9 +94,11 @@ export function Header() {
         {/* Mobile logo */}
         <div className="flex lg:hidden items-center gap-2 group/logo cursor-pointer">
           <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5 flex-shrink-0">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+            <img src={themeData?.theme?.logo_url || logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block truncate max-w-[140px] sm:max-w-[200px]">{tenant.branding.clinicName}</span>
+          <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block truncate max-w-[140px] sm:max-w-[200px]">
+            {themeData?.branding?.clinic_name || tenant.branding.clinicName}
+          </span>
         </div>
 
         {/* Today's Schedule & Download Blank PDF shortcuts (Desktop) */}

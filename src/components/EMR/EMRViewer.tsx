@@ -22,9 +22,11 @@ import {
   Badge,
   Button,
   FilterTabs,
+  Input,
 } from "@/components/ui";
 import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useTheme } from "../../contexts/ThemeContext";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import logoImg from "../../logo.png";
@@ -146,7 +148,8 @@ const TIMELINE_FILTERS = [
 export async function generateEMRPDF(
   patientName: string,
   timeline: any[],
-  recordType?: string
+  recordType?: string,
+  logoUrl?: string | null
 ) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-IN", {
@@ -193,7 +196,7 @@ export async function generateEMRPDF(
     <!-- HEADER: Logo + Patient Info -->
     <div style="padding: 25px 40px 15px; display: flex; justify-content: space-between; align-items: center;">
       <div style="display: flex; align-items: center;">
-        <img src="${logoImg}" style="height: 80px; width: auto; object-fit: contain;" crossorigin="anonymous" />
+        <img src="${logoUrl || logoImg}" style="height: 80px; width: auto; object-fit: contain;" crossorigin="anonymous" />
       </div>
       <div style="text-align: right;">
         <div style="font-size: 16px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
@@ -405,6 +408,7 @@ function AttachmentPreview({
 // Main EMR Viewer Component
 // ─────────────────────────────────────────────────────────────────────────────
 export function EMRViewer({ record, onClose }: EMRViewerProps) {
+  const { themeData } = useTheme();
   if (!record) return null;
 
   const [search, setSearch] = React.useState("");
@@ -484,7 +488,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await generateEMRPDF(detailedRecord.patientName, filteredTimeline, detailedRecord.type);
+      await generateEMRPDF(detailedRecord.patientName, filteredTimeline, detailedRecord.type, themeData?.theme?.logo_url);
     } finally {
       setIsDownloading(false);
     }
@@ -606,14 +610,14 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
           <div className="space-y-3">
             <div className="relative">
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
-              <input
+              <Input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search in clinical notes, procedures..."
-                className="w-full pl-10 pr-4 h-10 text-sm bg-muted/30 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 font-medium placeholder:text-muted-foreground/50 transition-all"
+                className="pl-10 h-10"
               />
             </div>
             <div className="overflow-x-auto pb-1 -mx-2 px-2">
@@ -643,10 +647,10 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                 const meta = getCategoryMeta(item.category);
                 const formattedDate = item.date
                   ? new Date(item.date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
                   : "N/A";
 
                 return (

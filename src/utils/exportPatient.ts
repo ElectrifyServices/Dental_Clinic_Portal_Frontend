@@ -8,6 +8,17 @@ export const exportPatientReport = async (
 ) => {
   let patient: any = null;
 
+  let dynamicBranding: any = null;
+  let dynamicTheme: any = null;
+  try {
+    const raw = localStorage.getItem("dental_theme");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      dynamicBranding = parsed.branding || {};
+      dynamicTheme = parsed.theme || {};
+    }
+  } catch {}
+
   try {
     const res = await apiClient.request({ url: `/patient/${patientId}`, method: 'get' });
     const parsed = parseApiResponse(res.data);
@@ -45,7 +56,7 @@ export const exportPatientReport = async (
       patientId: a.patient_id,
       duration: a.slot_duration_mins || a.duration || 15,
     }));
-  } catch (err) {}
+  } catch (err) { }
 
   // 2. Fetch treatments
   let patientTreatments: any[] = [];
@@ -67,7 +78,7 @@ export const exportPatientReport = async (
       status: (t.status || "planned").toLowerCase(),
       patientId: t.patient_id,
     }));
-  } catch (err) {}
+  } catch (err) { }
 
   // 3. Fetch invoices
   let patientInvoices: any[] = [];
@@ -88,7 +99,7 @@ export const exportPatientReport = async (
       status: (inv.status || "").toLowerCase(),
       patientId: inv.patient_id,
     }));
-  } catch (err) {}
+  } catch (err) { }
   const prescriptions = patient.prescriptionHistory || [];
 
   const allergiesList = patient.allergyNames?.length ? patient.allergyNames : patient.allergies;
@@ -247,10 +258,10 @@ export const exportPatientReport = async (
         <div class="fixed-footer">
           <div class="footer-row">
             <div class="footer-clinic">
-              <strong>Opal Smiles Dental Studio</strong><br/>
-              104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015<br/>
-              Phone: +91 99981 93256 | Email: hello@opalsmiles.in<br/>
-              Mon–Sat: 10:00 AM – 8:00 PM | Emergency: 24/7
+              <strong>${dynamicBranding?.clinic_name || 'Opal Smiles Dental Studio'}</strong><br/>
+              ${dynamicBranding?.address || '104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015'}<br/>
+              Phone: ${dynamicBranding?.phone || '+91 99981 93256'} | Email: ${dynamicBranding?.email || 'hello@opalsmiles.in'}<br/>
+              ${dynamicBranding?.hours || 'Mon–Sat: 10:00 AM – 8:00 PM'}
             </div>
             <div class="footer-note">
               Computer-generated report<br/>
@@ -265,7 +276,7 @@ export const exportPatientReport = async (
             <tr><td>
               <div class="report-header">
                 <div class="logo">
-                  <img src="${logoImg}" crossorigin="anonymous" />
+                  <img src="${dynamicTheme?.logo_url || logoImg}" crossorigin="anonymous" />
                 </div>
                 <div class="patient-info">
                   <div class="patient-name">${patient.name}</div>
@@ -312,9 +323,8 @@ export const exportPatientReport = async (
               </div>
 
               <!-- Medical Alerts -->
-              ${
-                (medicalHistoryList?.length > 0 || allergiesList?.length > 0)
-                  ? `
+              ${(medicalHistoryList?.length > 0 || allergiesList?.length > 0)
+      ? `
               <div class="section">
                 <div class="section-title">Medical Alerts</div>
                 <div class="alert-box">
@@ -329,12 +339,11 @@ export const exportPatientReport = async (
                 </div>
               </div>
               ` : ''
-              }
+    }
 
               <!-- Appointment History -->
-              ${
-                patientAppointments.length > 0
-                  ? `
+              ${patientAppointments.length > 0
+      ? `
               <div class="section">
                 <div class="section-title">Appointment History</div>
                 <table class="data-table">
@@ -348,8 +357,8 @@ export const exportPatientReport = async (
                   </thead>
                   <tbody>
                     ${patientAppointments
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .map((a) => `
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map((a) => `
                     <tr>
                       <td>${new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                       <td>${a.time}</td>
@@ -361,12 +370,11 @@ export const exportPatientReport = async (
                 </table>
               </div>
               ` : ''
-              }
+    }
 
               <!-- Treatment History -->
-              ${
-                patientTreatments.length > 0
-                  ? `
+              ${patientTreatments.length > 0
+      ? `
               <div class="section">
                 <div class="section-title">Treatment History</div>
                 <table class="data-table">
@@ -380,8 +388,8 @@ export const exportPatientReport = async (
                   </thead>
                   <tbody>
                     ${patientTreatments
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .map((t) => `
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map((t) => `
                     <tr>
                       <td>${new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                       <td>${t.name || t.treatmentName || 'N/A'}</td>
@@ -393,12 +401,11 @@ export const exportPatientReport = async (
                 </table>
               </div>
               ` : ''
-              }
+    }
 
               <!-- Prescription History -->
-              ${
-                prescriptions.length > 0
-                  ? `
+              ${prescriptions.length > 0
+      ? `
               <div class="section">
                 <div class="section-title">Prescription History</div>
                 ${prescriptions.map((p: any) => `
@@ -429,12 +436,11 @@ export const exportPatientReport = async (
                 `).join('')}
               </div>
               ` : ''
-              }
+    }
 
               <!-- Billing Summary -->
-              ${
-                patientInvoices.length > 0
-                  ? `
+              ${patientInvoices.length > 0
+      ? `
               <div class="section">
                 <div class="section-title">Billing Summary</div>
                 <table class="data-table">
@@ -459,7 +465,7 @@ export const exportPatientReport = async (
                 </table>
               </div>
               ` : ''
-              }
+    }
 
               <!-- Authorized Signature -->
               <div class="signature-block">

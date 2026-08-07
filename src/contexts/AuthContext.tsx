@@ -10,6 +10,7 @@ import { useLoginMutation } from "../hooks/auth/useLoginMutation";
 import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
 import { AuthStorage } from "../auth/authStorage";
 import { toast } from "../components/ui";
+import { useTheme } from "./ThemeContext";
 
 interface AuthState {
   user: User | null;
@@ -75,6 +76,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState, initAuth);
+  const { applyTheme, clearTheme } = useTheme();
 
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
@@ -141,6 +143,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always remembering for now, you can wire this to a checkbox later
       AuthStorage.save(authData, true);
 
+      // ── Apply theme & branding from API response ───────────────────────
+      let apiTheme = null;
+      let apiBranding = null;
+
+      // 1. Try to extract from the new top-level apiData.theme structure
+      const topTheme = apiData?.theme;
+      if (topTheme) {
+        apiTheme = {
+          primary_color: topTheme.primary_color?.trim() || null,
+          secondary_color: topTheme.secondary_color?.trim() || null,
+          font_family: topTheme.font_family || null,
+          favicon_url: topTheme.favicon_url || null,
+          logo_url: topTheme.logo_url || null,
+          tagline: topTheme.tagline || null,
+          config: topTheme.config ? {
+            isDarkMode: topTheme.config.isDarkMode,
+            borderRadius: topTheme.config.borderRadius,
+          } : null,
+        };
+
+        // Under the new apiData.theme, the branding properties are inside topTheme.config
+        if (topTheme.config) {
+          apiBranding = {
+            clinic_name: topTheme.config.clinic_name || apiData?.tenant?.name || null,
+            doctor_name: topTheme.config.doctor_name || null,
+            doctor_title: topTheme.config.doctor_title || null,
+            brand_color: topTheme.config.brand_color || topTheme.primary_color?.trim() || null,
+            ink_color: topTheme.config.ink_color || null,
+            ink_muted_color: topTheme.config.ink_muted_color || null,
+            line_color: topTheme.config.line_color || null,
+            panel_color: topTheme.config.panel_color || null,
+            phone: topTheme.config.phone || apiData?.tenant?.phone || null,
+            email: topTheme.config.email || apiData?.tenant?.email || null,
+            address: topTheme.config.address || null,
+            hours: topTheme.config.hours || null,
+            instagram: topTheme.config.instagram || null,
+          };
+        } else if (apiData?.tenant) {
+          apiBranding = {
+            clinic_name: apiData.tenant.name || null,
+            email: apiData.tenant.email || null,
+            phone: apiData.tenant.phone || null,
+          };
+        }
+      }
+
+      // 2. Fallback to old tenant-nested structure if not populated
+      if (!apiTheme || !apiBranding) {
+        const tenant = apiData?.tenant || (response as any)?.tenant || (response as any)?.data?.tenant || (apiData as any)?.data?.tenant;
+        if (tenant) {
+          let config = tenant.config;
+          if (typeof config === "string") {
+            try {
+              config = JSON.parse(config);
+            } catch (e) {
+              config = null;
+            }
+          }
+          if (!apiTheme) {
+            apiTheme = tenant.theme ?? config?.theme ?? null;
+          }
+          if (!apiBranding) {
+            apiBranding = tenant.branding ?? config?.branding ?? null;
+          }
+        }
+      }
+
+      if (apiTheme || apiBranding) {
+        const themePayload = {
+          theme: apiTheme ?? {},
+          branding: apiBranding ?? {},
+        };
+        applyTheme(themePayload);
+      } else {
+        clearTheme();
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
       dispatch({ type: "LOGIN_SUCCESS", payload: normalizedUserInfo });
       toast.success("Welcome back! Logged in successfully.");
     } catch (error: any) {
@@ -165,6 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
     } finally {
       AuthStorage.clear();
+      clearTheme();
       sessionStorage.removeItem('demo_mode');
       dispatch({ type: "LOGOUT" });
       toast.success("Logged out successfully.");

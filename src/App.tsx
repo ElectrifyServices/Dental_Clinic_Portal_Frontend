@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AppProvider } from "./contexts/AppContext";
 import { TenantProvider } from "./contexts/TenantContext";
@@ -139,25 +140,27 @@ import { OfflineDetector } from "./components/ui/OfflineDetector";
 
 export default function App() {
   return (
-    <TenantProvider>
-      <AuthProvider>
-        <AppProvider>
-          <ModalProvider>
-            <SidebarProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/login" element={<AuthRouter />} />
-                  <Route path="/reset-password" element={<AuthRouter />} />
-                  <Route path="/auth/reset-password" element={<AuthRouter />} />
-                  <Route path="/*" element={<ProtectedRoutes />} />
-                </Routes>
-              </BrowserRouter>
-            </SidebarProvider>
-            <Toaster />
-            <OfflineDetector />
-          </ModalProvider>
-        </AppProvider>
-      </AuthProvider>
-    </TenantProvider>
+    <ThemeProvider>
+      <TenantProvider>
+        <AuthProvider>
+          <AppProvider>
+            <ModalProvider>
+              <SidebarProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/login" element={<AuthRouter />} />
+                    <Route path="/reset-password" element={<AuthRouter />} />
+                    <Route path="/auth/reset-password" element={<AuthRouter />} />
+                    <Route path="/*" element={<ProtectedRoutes />} />
+                  </Routes>
+                </BrowserRouter>
+              </SidebarProvider>
+              <Toaster />
+              <OfflineDetector />
+            </ModalProvider>
+          </AppProvider>
+        </AuthProvider>
+      </TenantProvider>
+    </ThemeProvider>
   );
 }

@@ -1,5 +1,8 @@
 import type { User } from "../types";
+import type { ThemeData } from "../contexts/ThemeContext";
 import Cookies from "js-cookie";
+
+const THEME_STORAGE_KEY = "dental_theme";
 
 interface Tokens {
   accessToken: string;
@@ -88,6 +91,34 @@ export const AuthStorage = {
     sessionStorage.removeItem("refreshToken");
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("current_user");
+  },
+
+  // ── Theme persistence (login API → localStorage) ────────────────────────
+
+  saveTheme: (data: ThemeData): void => {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      /* private browsing */
+    }
+  },
+
+  getTheme: (): ThemeData | null => {
+    try {
+      const raw = localStorage.getItem(THEME_STORAGE_KEY);
+      if (raw) return JSON.parse(raw) as ThemeData;
+    } catch {
+      /* corrupt data */
+    }
+    return null;
+  },
+
+  clearTheme: (): void => {
+    try {
+      localStorage.removeItem(THEME_STORAGE_KEY);
+    } catch {
+      /* private browsing */
+    }
   },
 
   getAccessToken: (): string | undefined => {
