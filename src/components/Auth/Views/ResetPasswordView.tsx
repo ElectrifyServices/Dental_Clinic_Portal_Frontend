@@ -4,12 +4,10 @@ import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
 import { Lock, Eye, EyeOff, Check, X } from "lucide-react";
 const logoImg = "/Portal_logo.png";
-import { useTheme } from "../../../contexts/ThemeContext";
 import { useResetPasswordMutation } from "@/hooks/auth/useResetPasswordMutation";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 export function ResetPasswordView() {
-  const { themeData } = useTheme();
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -76,7 +74,7 @@ export function ResetPasswordView() {
     return (
       <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
         <div className="w-20 h-20 mx-auto flex items-center justify-center mb-4">
-          <img src={themeData?.theme?.logo_url || logoImg} alt="Logo" className="w-full h-full object-contain grayscale opacity-50" />
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain grayscale opacity-50" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
           Token Missing
@@ -140,7 +138,7 @@ export function ResetPasswordView() {
 
       <div className="flex flex-col items-center text-center mb-8">
         <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
-          <img src={themeData?.theme?.logo_url || logoImg} alt="Logo" className="w-full h-full object-contain" />
+          <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Set New Password

@@ -76,7 +76,6 @@ function hexToRgbTriplet(hex: string): string | null {
 // ---------------------------------------------------------------------------
 
 function applyThemeToDom(data: ThemeData): void {
-  console.log("Applying dynamic theme to DOM:", data);
   const root = document.documentElement;
   const { theme, branding } = data;
 

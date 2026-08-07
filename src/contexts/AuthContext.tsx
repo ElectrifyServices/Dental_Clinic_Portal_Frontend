@@ -166,11 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           theme: apiTheme ?? {},
           branding: apiBranding ?? {},
         };
-        console.log("Successfully extracted themePayload from login:", themePayload);
         applyTheme(themePayload);
         toast.success(`Theme loaded: ${themePayload.branding.clinic_name || 'Vikas Clinic'}`);
       } else {
-        toast.error("Failed to load theme: config is missing in login response.");
+        clearTheme();
       }
       // ─────────────────────────────────────────────────────────────────────
 
