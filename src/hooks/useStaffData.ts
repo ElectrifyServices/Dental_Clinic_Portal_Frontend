@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
@@ -6,7 +6,7 @@ import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutati
 import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean }) {
+export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean; page?: number; limit?: number }) {
   const queryClient = useQueryClient();
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;
@@ -15,7 +15,24 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     return !isExcluded;
   }, [params?.enabled]);
 
-  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(params, { enabled: isEnabled });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setPage(1);
+  }, [params?.search, params?.role]);
+
+  const queryParams = useMemo(() => {
+    return {
+      search: params?.search,
+      role: params?.role,
+      page: params?.page ?? page,
+      limit: params?.limit ?? limit,
+    };
+  }, [params?.search, params?.role, params?.page, params?.limit, page, limit]);
+
+  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(queryParams, { enabled: isEnabled });
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
   const { mutateAsync: updateStatusMutation } = useUpdateStaffStatusMutation();
 
@@ -200,6 +217,37 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     setConsentForms(prev => prev.filter(f => f.id !== id));
   };
 
+  const totalItems = useMemo(() => {
+    return (
+      (apiStaff as any)?.pagination?.total ||
+      (apiStaff as any)?.pagination?.total_items ||
+      (apiStaff as any)?.data?.pagination?.total ||
+      (apiStaff as any)?.data?.pagination?.total_items ||
+      (apiStaff as any)?.responseObject?.data?.pagination?.total ||
+      (apiStaff as any)?.responseObject?.data?.pagination?.total_items ||
+      (apiStaff as any)?.total ||
+      (apiStaff as any)?.total_elements ||
+      (apiStaff as any)?.totalElements ||
+      (apiStaff as any)?.count ||
+      staffMembers.length ||
+      0
+    );
+  }, [apiStaff, staffMembers]);
+
+  const totalPages = useMemo(() => {
+    return (
+      (apiStaff as any)?.pagination?.totalPages ||
+      (apiStaff as any)?.pagination?.total_pages ||
+      (apiStaff as any)?.data?.pagination?.totalPages ||
+      (apiStaff as any)?.data?.pagination?.total_pages ||
+      (apiStaff as any)?.responseObject?.data?.pagination?.totalPages ||
+      (apiStaff as any)?.responseObject?.data?.pagination?.total_pages ||
+      (apiStaff as any)?.totalPages ||
+      (apiStaff as any)?.total_pages ||
+      Math.max(1, Math.ceil(totalItems / limit))
+    );
+  }, [apiStaff, totalItems, limit]);
+
   return {
     staffMembers,
     emrRecords, setEmrRecords,
@@ -209,5 +257,11 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     handleSaveConsentForm, handleDeleteConsentForm,
     refetchStaff,
     isLoading: isStaffLoading,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalItems,
+    totalPages,
   };
 }

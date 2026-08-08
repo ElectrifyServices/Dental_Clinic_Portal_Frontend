@@ -26,6 +26,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",
   DOCTOR_TITLE: "MDS Prosthodontist & Implantologist",
+  LOGO_URL: logoImg,
 } as const;
 
 /**
@@ -40,14 +41,22 @@ function getBrandingTokens() {
       const parsed = JSON.parse(raw);
       const b = parsed?.branding ?? {};
       const t = parsed?.theme ?? {};
+
+      const rawBrand = b.brand_color || t.primary_color;
+      const brandColor = (rawBrand && rawBrand.trim()) ? rawBrand.trim() : BRANDING_DEFAULTS.BRAND;
+
+      const rawInk = b.ink_color;
+      const inkColor = (rawInk && rawInk.trim()) ? rawInk.trim() : BRANDING_DEFAULTS.INK;
+
+      const inkMutedColor = brandColor;
+
       return {
-        BRAND: b.brand_color ?? t.primary_color ?? BRANDING_DEFAULTS.BRAND,
-        INK: b.ink_color ?? BRANDING_DEFAULTS.INK,
-        INK_MUTED: b.ink_muted_color ?? BRANDING_DEFAULTS.INK_MUTED,
+        BRAND: brandColor,
+        INK: inkColor,
+        INK_MUTED: inkMutedColor,
         LINE: b.line_color ?? BRANDING_DEFAULTS.LINE,
         PANEL: b.panel_color ?? BRANDING_DEFAULTS.PANEL,
         CLINIC_NAME: b.clinic_name ?? BRANDING_DEFAULTS.CLINIC_NAME,
-        // tagline comes from theme object in the API
         CLINIC_TAGLINE: t.tagline ?? BRANDING_DEFAULTS.CLINIC_TAGLINE,
         CLINIC_ADDRESS: b.address ?? BRANDING_DEFAULTS.CLINIC_ADDRESS,
         CLINIC_PHONE: b.phone ?? BRANDING_DEFAULTS.CLINIC_PHONE,
@@ -56,6 +65,7 @@ function getBrandingTokens() {
         CLINIC_INSTAGRAM: b.instagram ?? BRANDING_DEFAULTS.CLINIC_INSTAGRAM,
         DOCTOR_NAME: b.doctor_name ?? BRANDING_DEFAULTS.DOCTOR_NAME,
         DOCTOR_TITLE: b.doctor_title ?? BRANDING_DEFAULTS.DOCTOR_TITLE,
+        LOGO_URL: (t.logo_url && t.logo_url.trim()) ? t.logo_url : BRANDING_DEFAULTS.LOGO_URL,
       };
     }
   } catch {
@@ -401,9 +411,9 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
 <div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${T.LINE}; position:relative; overflow:hidden; background:#ffffff; min-height:120px;">
     <!-- Left: Doctor Name & Title -->
   <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1;">
-    <div style="font-size: 20px; font-weight: 700; color: ${T.BRAND}; letter-spacing: 0.5px; text-transform: uppercase; line-height:1.3;">${T.CLINIC_NAME}</div>
+    <div style="font-size: 20px; font-weight: 700; color: ${T.BRAND}; letter-spacing: 0.5px; text-transform: uppercase; line-height:1.3;">${T.DOCTOR_NAME}</div>
     <div style="font-size: 12px; font-weight: 500; color: ${T.INK_MUTED}; margin-top: 4px; letter-spacing: 0.2px; line-height:1.3; text-transform: uppercase;">
-      ${T.CLINIC_TAGLINE}
+      ${T.DOCTOR_TITLE}
     </div>
   </div>
   
@@ -412,7 +422,7 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
 
   <!-- Right: Logo -->
   <div style="display:flex; align-items:center; gap:0; position:relative; z-index:1;">
-    <img src="${logoImg}" style="height:200px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
+    <img src="${T.LOGO_URL}" style="height:90px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
   </div>
 </div>
   `;
@@ -955,7 +965,7 @@ export const downloadConsultationPDF = async ({
       ${(patientConcern || isBlankMode)
       ? `
 <div style="margin-bottom:16px;" data-avoid-break="true">
-          ${sectionLabel("Chief Complaint")}
+          ${sectionLabel("Chief Complaint", !isBlankMode)}
 <div style="font-size:12px; line-height:1.5; color:${T.INK}; font-weight:400; min-height:${isBlankMode ? "40px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${isBlankMode ? "" : patientConcern}</div>
 </div>
       `
@@ -963,7 +973,7 @@ export const downloadConsultationPDF = async ({
     }
 <div style="display:flex; flex-direction:row; justify-content:space-between; width:100%; gap:24px;" data-avoid-break="true">
 <div style="flex:1;">
-          ${sectionLabel("Clinical Observations")}
+          ${sectionLabel("Clinical Observations", !isBlankMode)}
 <div style="font-size:12px; line-height:1.6; color:${T.INK}; min-height:${isBlankMode ? "110px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
             ${isBlankMode ? "" : (observations || `<span style="color:#93999e; font-style:italic;">No observations recorded.</span>`)}
 </div>
@@ -985,7 +995,7 @@ export const downloadConsultationPDF = async ({
     }
 </div>
 <div style="flex:1;">
-          ${sectionLabel("Diagnosis")}
+          ${sectionLabel("Diagnosis", !isBlankMode)}
 <div style="font-size:12px; line-height:1.6; color:${T.INK}; min-height:${isBlankMode ? "110px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
             ${isBlankMode ? "" : (diagnosis || `<span style="color:#93999e; font-style:italic;">No diagnosis provided.</span>`)}
 </div>
@@ -1001,7 +1011,7 @@ export const downloadConsultationPDF = async ({
     if (!xrayFiles || xrayFiles.length === 0) return "";
     return `
 <div style="padding: 8px 40px 10px;">
-        ${sectionLabel("Diagnostic Imaging (X-Ray)")}
+        ${sectionLabel("Diagnostic Imaging (X-Ray)", !isBlankMode)}
 <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:15px; width:100%;">
           ${xrayFiles
         .map(
@@ -1119,10 +1129,10 @@ ${isBlankMode
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
 </tr>
           `,
           )
@@ -1335,10 +1345,10 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
           <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
           </tr>
         `)
           .join("")}
@@ -1354,10 +1364,14 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
   if (isBlankMode || treatmentObj.clinical_notes) {
     clinicalNotesHtml = `
 <div style="padding: 16px 40px 10px;" data-avoid-break="true">
-  ${sectionLabel("Clinical Notes")}
-  <div style="font-size:12px; line-height:1.6; color:${T.INK}; padding:12px 16px; background:${T.PANEL}; border:1px solid ${T.LINE}; border-radius:8px; min-height:${isBlankMode ? "45px" : "auto"}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
-    ${isBlankMode ? "" : treatmentObj.clinical_notes}
+  ${sectionLabel("Clinical Notes", !isBlankMode)}
+  ${isBlankMode
+    ? ""
+    : `
+  <div style="font-size:12px; line-height:1.6; color:${T.INK}; padding:12px 16px; background:${T.PANEL}; border:1px solid ${T.LINE}; border-radius:8px; min-height:auto; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
+    ${treatmentObj.clinical_notes}
   </div>
+  `}
 </div>
     `;
   }

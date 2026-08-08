@@ -15,7 +15,19 @@ export const StaffPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { staffMembers, handleDeleteStaff, handleUpdateStaffStatus, refetchStaff, isLoading } = useStaffData({
+  const {
+    staffMembers,
+    handleDeleteStaff,
+    handleUpdateStaffStatus,
+    refetchStaff,
+    isLoading,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    totalPages,
+    totalItems,
+  } = useStaffData({
     search: debouncedSearch,
     role: roleFilter,
   });
@@ -60,6 +72,12 @@ export const StaffPage: React.FC = () => {
           setSelectedStaffForSalary({ id, name });
           setActiveModal("salaryHistory");
         }}
+        page={page}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        totalPages={totalPages}
+        totalItems={totalItems}
       />
     </div>
   );

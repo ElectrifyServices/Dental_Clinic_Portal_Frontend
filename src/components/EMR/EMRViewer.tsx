@@ -23,6 +23,7 @@ import {
   Button,
   FilterTabs,
   Input,
+  Loading,
 } from "@/components/ui";
 import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -503,13 +504,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
         size="5xl"
         icon={<FileText className="w-5 h-5" />}
       >
-        <div className="py-20 flex flex-col items-center justify-center gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
-            <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-sm text-muted-foreground font-semibold">Fetching medical records...</p>
-        </div>
+        <Loading type="spinner" text="Fetching medical records..." className="py-20" />
       </Modal>
     );
   }

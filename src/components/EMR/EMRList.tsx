@@ -29,6 +29,12 @@ interface EMRListProps {
   onAddRecord: () => void;
   onViewRecord: (record: EMRRecord) => void;
   onExportRecord: (record: EMRRecord) => void;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalPages?: number;
+  totalItems?: number;
 }
 
 const TYPE_META: Record<string, { label: string; icon: React.ReactNode; variant: 'blue' | 'green' | 'violet' | 'amber' | 'indigo' | 'gray' }> = {
@@ -75,6 +81,12 @@ export function EMRList({
   onAddRecord,
   onViewRecord,
   onExportRecord,
+  page,
+  onPageChange,
+  limit,
+  onLimitChange,
+  totalPages,
+  totalItems,
 }: EMRListProps) {
   const columns = [
     {
@@ -133,10 +145,18 @@ export function EMRList({
 
   const totalRecordsCount = records.reduce((sum, r) => sum + (r.totalRecords || 1), 0);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(records.length / itemsPerPage);
-  const paginatedRecords = records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const itemsPerPage = limit ?? 10;
+  
+  const currentPage = page !== undefined ? page : localCurrentPage;
+  const setCurrentPage = onPageChange || setLocalCurrentPage;
+
+  const displayTotalPages = totalPages !== undefined ? totalPages : Math.ceil(records.length / itemsPerPage);
+  const displayTotalItems = totalItems !== undefined ? totalItems : records.length;
+
+  const paginatedRecords = (page !== undefined && limit !== undefined)
+    ? records
+    : records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-3">
@@ -181,14 +201,15 @@ export function EMRList({
         emptyTitle="No records found"
         emptySubtitle="Add a new EMR record to get started."
         footer={
-          totalPages > 1 ? (
+          (displayTotalPages > 1 || onLimitChange !== undefined) ? (
             <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
               <Pagination
                 page={currentPage}
-                totalPages={totalPages}
-                totalItems={records.length}
+                totalPages={displayTotalPages}
+                totalItems={displayTotalItems}
                 perPage={itemsPerPage}
                 onPageChange={setCurrentPage}
+                onPerPageChange={onLimitChange}
               />
             </div>
           ) : undefined

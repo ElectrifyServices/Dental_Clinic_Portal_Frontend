@@ -185,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             clinic_name: apiData.tenant.name || null,
             email: apiData.tenant.email || null,
             phone: apiData.tenant.phone || null,
+            brand_color: topTheme.primary_color?.trim() || null,
+            ink_muted_color: topTheme.primary_color?.trim() || null,
           };
         }
       }
@@ -208,6 +210,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             apiBranding = tenant.branding ?? config?.branding ?? null;
           }
         }
+      }
+
+      // If we have theme but no branding, ensure branding is at least initialized with the theme's colors
+      if (apiTheme && !apiBranding) {
+        apiBranding = {
+          brand_color: apiTheme.primary_color,
+          ink_muted_color: apiTheme.primary_color,
+        };
       }
 
       if (apiTheme || apiBranding) {
