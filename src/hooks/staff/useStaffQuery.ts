@@ -17,10 +17,23 @@ export interface StaffMember {
 export interface StaffListParams {
   search?: string;
   role?: string;
+  page?: number;
+  limit?: number;
 }
 
 export function useStaffQuery(params: StaffListParams = {}, options?: any) {
-  const body: Record<string, any> = { all: true };
+  const body: Record<string, any> = {};
+  
+  if (params.page !== undefined) {
+    body.page = params.page;
+  }
+  if (params.limit !== undefined) {
+    body.limit = params.limit;
+  }
+  if (params.page === undefined && params.limit === undefined) {
+    body.all = true;
+  }
+
   if (params.search) {
     body.search = params.search;
   }

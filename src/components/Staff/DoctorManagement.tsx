@@ -47,6 +47,12 @@ interface DoctorManagementProps {
   roleFilter?: string;
   onRoleFilterChange?: (val: string) => void;
   isLoading?: boolean;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  totalPages?: number;
+  totalItems?: number;
 }
 
 const ROLE_META: Record<
@@ -100,6 +106,12 @@ export function DoctorManagement({
   roleFilter: propRoleFilter,
   onRoleFilterChange: propOnRoleFilterChange,
   isLoading,
+  page,
+  onPageChange,
+  limit,
+  onLimitChange,
+  totalPages,
+  totalItems,
 }: DoctorManagementProps) {
   const { collapsed } = useSidebar();
   const [localSearch, setLocalSearch] = useState("");
@@ -366,21 +378,31 @@ export function DoctorManagement({
     },
   ];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
+
+  const currentPage = page !== undefined ? page : localCurrentPage;
+  const setCurrentPage = onPageChange || setLocalCurrentPage;
+  const itemsPerPage = limit !== undefined ? limit : localItemsPerPage;
+  const setItemsPerPage = onLimitChange || setLocalItemsPerPage;
+
+  const displayTotalPages = totalPages !== undefined ? totalPages : Math.ceil(filtered.length / itemsPerPage);
+  const displayTotalItems = totalItems !== undefined ? totalItems : filtered.length;
+
+  const paginatedData = (page !== undefined && limit !== undefined)
+    ? filtered
+    : filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, roleFilter, statusFilter, itemsPerPage]);
+  }, [search, roleFilter, statusFilter, itemsPerPage, setCurrentPage]);
 
-  const paginationUI = filtered.length > 0 ? (
+  const paginationUI = displayTotalItems > 0 ? (
     <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
       <Pagination
         page={currentPage}
-        totalPages={totalPages}
-        totalItems={filtered.length}
+        totalPages={displayTotalPages}
+        totalItems={displayTotalItems}
         perPage={itemsPerPage}
         onPageChange={setCurrentPage}
         onPerPageChange={setItemsPerPage}

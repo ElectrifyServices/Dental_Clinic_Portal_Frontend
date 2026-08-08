@@ -3,7 +3,7 @@ import { useModal } from "../contexts/ModalContext";
 import { EMRList } from "../components/EMR/EMRList";
 import { generateEMRPDF } from "../components/EMR/EMRViewer";
 import { useEMRListQuery } from "../hooks/emr/useEMRListQuery";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 
 export function MedicalRecordsPage() {
@@ -12,10 +12,17 @@ export function MedicalRecordsPage() {
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const debouncedSearch = useDebounce(search, 500);
 
-  const queryParams: any = { page: 1, limit: 1000 };
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, typeFilter]);
+
+  const queryParams: any = { page, limit };
   if (debouncedSearch) {
     queryParams.search = debouncedSearch;
   }
@@ -136,6 +143,37 @@ export function MedicalRecordsPage() {
     });
   }, [rawEmrData, staffMembers]);
 
+  const totalItems = useMemo(() => {
+    return (
+      (rawEmrData as any)?.pagination?.total ||
+      (rawEmrData as any)?.pagination?.total_items ||
+      (rawEmrData as any)?.data?.pagination?.total ||
+      (rawEmrData as any)?.data?.pagination?.total_items ||
+      (rawEmrData as any)?.responseObject?.data?.pagination?.total ||
+      (rawEmrData as any)?.responseObject?.data?.pagination?.total_items ||
+      (rawEmrData as any)?.total ||
+      (rawEmrData as any)?.total_elements ||
+      (rawEmrData as any)?.totalElements ||
+      (rawEmrData as any)?.count ||
+      emrRecords.length ||
+      0
+    );
+  }, [rawEmrData, emrRecords]);
+
+  const totalPages = useMemo(() => {
+    return (
+      (rawEmrData as any)?.pagination?.totalPages ||
+      (rawEmrData as any)?.pagination?.total_pages ||
+      (rawEmrData as any)?.data?.pagination?.totalPages ||
+      (rawEmrData as any)?.data?.pagination?.total_pages ||
+      (rawEmrData as any)?.responseObject?.data?.pagination?.totalPages ||
+      (rawEmrData as any)?.responseObject?.data?.pagination?.total_pages ||
+      (rawEmrData as any)?.totalPages ||
+      (rawEmrData as any)?.total_pages ||
+      Math.max(1, Math.ceil(totalItems / limit))
+    );
+  }, [rawEmrData, totalItems, limit]);
+
   const onAddRecord = () => setActiveModal("emrForm");
   const onViewRecord = (r: any) => {
     setSelectedEMRRecord(r);
@@ -157,6 +195,12 @@ export function MedicalRecordsPage() {
         onAddRecord={onAddRecord}
         onViewRecord={onViewRecord}
         onExportRecord={onExportRecord}
+        page={page}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        totalPages={totalPages}
+        totalItems={totalItems}
       />
     </div>
   );
