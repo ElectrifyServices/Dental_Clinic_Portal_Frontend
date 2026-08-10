@@ -215,14 +215,16 @@ export function DonutChart({ slices, size = 120, label }: DonutProps) {
 
 /** Horizontal bar — for treatment revenue / age groups etc */
 export function HorizontalBar({
-  label, value, max, color = '#3b82f6', suffix = '',
-}: { label: string; value: number; max: number; color?: string; suffix?: string }) {
+  label, value, max, color = '#3b82f6', suffix = '', valueLabel,
+}: { label: string; value: number; max: number; color?: string; suffix?: string; valueLabel?: React.ReactNode }) {
   const pct = Math.min((value / (max || 1)) * 100, 100);
   return (
     <div className="space-y-1">
-      <div className="flex justify-between items-center">
-        <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">{label}</span>
-        <span className="text-xs font-bold" style={{ color }}>{suffix}{value.toLocaleString()}</span>
+      <div className="flex justify-between items-center text-xs">
+        <span className="font-semibold text-foreground truncate max-w-[160px]">{label}</span>
+        <span className="font-bold" style={{ color }}>
+          {valueLabel ?? `${suffix}${value.toLocaleString()}`}
+        </span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div
@@ -235,14 +237,53 @@ export function HorizontalBar({
 }
 
 /** Peak hours heatmap cell */
-export function HeatmapCell({ count }: { count: number }) {
-  const intensity = Math.min(count / 9, 1);
-  const alpha = 0.08 + intensity * 0.85;
+export function HeatmapCell({ count, day, hour }: { count: number; day?: string; hour?: string }) {
+  let cellClass = "bg-slate-100/60 border border-slate-200/50 text-slate-400";
+  let badgeContent: React.ReactNode = <span className="w-1.5 h-1.5 rounded-full bg-slate-300/80" />;
+
+  if (count >= 10) {
+    cellClass = "bg-gradient-to-br from-violet-600 via-indigo-600 to-indigo-700 text-white font-extrabold shadow-sm shadow-indigo-300/50 ring-2 ring-violet-400/40";
+    badgeContent = count;
+  } else if (count >= 7) {
+    cellClass = "bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold shadow-2xs";
+    badgeContent = count;
+  } else if (count >= 4) {
+    cellClass = "bg-blue-100/90 border border-blue-200 text-blue-800 font-bold hover:bg-blue-200/90";
+    badgeContent = count;
+  } else if (count >= 1) {
+    cellClass = "bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-100/80";
+    badgeContent = count;
+  }
+
+  const isTopRow = day === 'Mon';
+
   return (
-    <div
-      className="w-full aspect-square rounded-sm transition-all"
-      style={{ backgroundColor: `rgba(59,130,246,${alpha})` }}
-      title={`${count} appts`}
-    />
+    <div className="relative group flex-1">
+      <div
+        className={`w-full h-10 sm:h-11 rounded-xl flex items-center justify-center text-xs transition-all duration-200 cursor-pointer hover:scale-105 hover:-translate-y-0.5 hover:z-30 hover:shadow-md ${cellClass}`}
+      >
+        {badgeContent}
+      </div>
+      {/* Smart Positioning Tooltip */}
+      <div
+        className={`absolute left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 ${
+          isTopRow ? 'top-full mt-2' : 'bottom-full mb-2'
+        }`}
+      >
+        {isTopRow && (
+          <div className="w-2 h-2 bg-slate-900/95 rotate-45 -mb-1 border-l border-t border-slate-700/80 z-10" />
+        )}
+        <div className="bg-slate-900/95 backdrop-blur-md text-white text-[11px] font-semibold py-1.5 px-3 rounded-lg shadow-xl border border-slate-700/80 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span>
+            {day && hour ? `${day} @ ${hour}: ` : ''}
+            <strong className="text-white font-extrabold">{count}</strong> {count === 1 ? 'appointment' : 'appointments'}
+          </span>
+        </div>
+        {!isTopRow && (
+          <div className="w-2 h-2 bg-slate-900/95 rotate-45 -mt-1 border-r border-b border-slate-700/80" />
+        )}
+      </div>
+    </div>
   );
 }

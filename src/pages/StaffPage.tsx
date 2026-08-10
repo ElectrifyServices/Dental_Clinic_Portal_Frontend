@@ -52,7 +52,7 @@ export const StaffPage: React.FC = () => {
         onRoleFilterChange={setRoleFilter}
         isLoading={isLoading}
         onAddDoctor={() => setActiveModal("doctorForm")}
-        onEditDoctor={(id: string) => { setSelectedItemId(id); setActiveModal("doctorForm"); }}
+        onEditDoctor={(id: string) => { setSelectedItemId(id); setTimeout(() => setActiveModal("doctorForm"), 0); }}
         onDeleteDoctor={(id: string) => {
           const s = staffMembers.find((x: any) => x.id === id);
           confirmDelete("Delete Staff", `Delete ${s?.name}?`, () => handleDeleteStaff(id));

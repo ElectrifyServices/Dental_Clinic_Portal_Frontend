@@ -38,6 +38,15 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
   onDurationChange,
   onDoctorChange,
 }) => {
+  const [doctorSearch, setDoctorSearch] = React.useState("");
+  const filteredDoctors = useMemo(() => {
+    return (doctors || []).filter(
+      (d) =>
+        (d.name || "").toLowerCase().includes(doctorSearch.toLowerCase()) ||
+        (d.specialization && d.specialization.toLowerCase().includes(doctorSearch.toLowerCase()))
+    );
+  }, [doctors, doctorSearch]);
+
   const { data: slotsResponse, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
     doctorId || null,
     date || null
@@ -105,11 +114,24 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
               <SelectValue placeholder="-- Select Specialist --" />
             </SelectTrigger>
             <SelectContent>
-              {doctors.map((d) => (
-                <SelectItem key={d.id} value={d.id} className="font-medium">
-                  {d.name} {d.specialization ? <span className="text-muted-foreground text-xs ml-1">({d.specialization})</span> : null}
-                </SelectItem>
-              ))}
+              <div className="p-2 border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur-sm z-10" onKeyDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                <Input
+                  placeholder="Search specialist..."
+                  value={doctorSearch}
+                  onChange={(e) => setDoctorSearch(e.target.value)}
+                  className="h-8 text-xs bg-card"
+                />
+              </div>
+              <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                {filteredDoctors.map((d) => (
+                  <SelectItem key={d.id} value={d.id} className="font-medium">
+                    {d.name} {d.specialization ? <span className="text-muted-foreground text-xs ml-1">({d.specialization})</span> : null}
+                  </SelectItem>
+                ))}
+                {filteredDoctors.length === 0 && (
+                  <p className="text-[10px] text-muted-foreground text-center py-2 italic">No specialists found</p>
+                )}
+              </div>
             </SelectContent>
           </Select>
         </div>
