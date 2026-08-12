@@ -84,16 +84,18 @@ export function SmartAlerts({ period = 'today' }: { period?: string }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground leading-tight">{alert.message}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{alert.value}</p>
-                    <button className={`mt-1.5 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${cfg.badge}`}>
+                    <Button variant="outline" size="xs" className={`mt-1.5 font-black uppercase tracking-wider ${cfg.badge}`}>
                       {alert.action}
-                    </button>
+                    </Button>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => setDismissed(prev => new Set([...prev, alert.id]))}
-                    className="text-muted-foreground/40 hover:text-muted-foreground p-0.5 rounded flex-shrink-0 mt-0.5"
+                    className="text-muted-foreground/40 hover:text-muted-foreground mt-0.5"
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </motion.div>
               );
             })}

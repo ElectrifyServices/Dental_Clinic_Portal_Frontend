@@ -3,7 +3,7 @@ import { UserPlus, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
-import { Button, FilterTabs } from '@/components/ui';
+import { Button, FilterTabs, Input } from '@/components/ui';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
 import { TodayAppointments } from '../components/Dashboard/TodayAppointments';
 import { RecentPatients } from '../components/Dashboard/RecentPatients';
@@ -57,18 +57,18 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-4 flex-wrap">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="date"
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
-                className="text-xs border border-border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary bg-white/50"
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
-              <span className="text-muted-foreground text-xs">to</span>
-              <input
+              <span className="text-muted-foreground text-xs font-medium">to</span>
+              <Input
                 type="date"
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
-                className="text-xs border border-border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary bg-white/50"
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
             </div>
           )}
