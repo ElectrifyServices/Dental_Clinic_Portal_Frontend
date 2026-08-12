@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";
@@ -34,6 +34,8 @@ import { EmployeeFormModal } from "../CorporatePlans/Employee/EmployeeFormModal"
 import { ConfirmModal, Modal, Button, toast, Loading } from "../ui";
 import { WhatsappHistoryModal } from "../Billing/WhatsappHistoryModal";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
+import { useAllStaffListQuery } from "../../hooks/staff/useAllStaffListQuery";
 import { useCreateAppointmentMutation } from "../../hooks/appointments/useCreateAppointmentMutation";
 import { useUpdateAppointmentMutation } from "../../hooks/appointments/useUpdateAppointmentMutation";
 import { useCheckInAfterRegistrationMutation } from "../../hooks/appointments/useCheckInAfterRegistrationMutation";
@@ -361,13 +363,33 @@ function ModalRegistryContent() {
     ) || null;
   }, [invoices, selectedItemId]);
 
+  const { doctors: apiDoctors, refetch: refetchDoctors } = useDoctorsListQuery(undefined, {
+    enabled: ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+  });
+
   const activeDoctors = useMemo(
-    () =>
-      staffMembers.filter(
-        (s: any) => s.role === "doctor" || s.role === "admin",
-      ),
-    [staffMembers],
+    () => apiDoctors || [],
+    [apiDoctors],
   );
+
+  // Fetch ALL staff (all roles) for Staff Directory edit form lookups
+  const { staffList: allStaffList, refetch: refetchAllStaff } = useAllStaffListQuery({
+    enabled: ["doctorForm", "scheduleManager"].includes(activeModal || ""),
+  });
+
+  useEffect(() => {
+    const modalsNeedingDoctors = ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"];
+    if (activeModal && modalsNeedingDoctors.includes(activeModal) && refetchDoctors) {
+      refetchDoctors();
+    }
+  }, [activeModal, refetchDoctors]);
+
+  useEffect(() => {
+    const modalsNeedingAllStaff = ["doctorForm", "scheduleManager"];
+    if (activeModal && modalsNeedingAllStaff.includes(activeModal) && refetchAllStaff) {
+      refetchAllStaff();
+    }
+  }, [activeModal, refetchAllStaff]);
 
   const { data: apiPatientDetail } = usePatientDetailQuery(
     selectedPatientId,
@@ -1185,7 +1207,10 @@ function ModalRegistryContent() {
           }}
           doctor={
             selectedItemId
-              ? staffMembers.find((s: any) => s.id === selectedItemId)
+              ? (allStaffList.find((s: any) => s.id === selectedItemId) ||
+                 activeDoctors.find((s: any) => s.id === selectedItemId) ||
+                 staffMembers.find((s: any) => s.id === selectedItemId) ||
+                 { id: selectedItemId })
               : null
           }
         />
@@ -1195,7 +1220,9 @@ function ModalRegistryContent() {
         <DoctorScheduleManager
           doctorId={selectedItemId}
           doctorName={
-            staffMembers.find((s: any) => s.id === selectedItemId)?.name || ""
+            (allStaffList.find((s: any) => s.id === selectedItemId) ||
+             activeDoctors.find((s: any) => s.id === selectedItemId) ||
+             staffMembers.find((s: any) => s.id === selectedItemId))?.name || ""
           }
           onClose={() => {
             setActiveModal(null);

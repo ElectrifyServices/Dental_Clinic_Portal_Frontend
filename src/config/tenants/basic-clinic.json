@@ -114,14 +114,14 @@
       }
     },
     "profit-sharing": {
-      "enabled": false,
+      "enabled": true,
       "label": "Profit Sharing",
       "features": {
-        "defaultSharePercent": 0
+        "defaultSharePercent": 30
       }
     },
     "membership": {
-      "enabled": false,
+      "enabled": true,
       "label": "Memberships",
       "features": {}
     }
@@ -136,12 +136,17 @@
       {
         "id": "clinical",
         "label": "Clinical",
-        "items": ["patient-queue", "treatments", "consent"]
+        "items": ["patient-queue", "treatments", "emr", "consent"]
       },
       {
         "id": "admin",
         "label": "Administration",
-        "items": ["billing", "reports", "staff", "lab-work"]
+        "items": ["billing", "inventory", "lab-work", "reports", "staff", "profit-sharing"]
+      },
+      {
+        "id": "superadmin",
+        "label": "Super Admin",
+        "items": ["membership"]
       }
     ]
   },

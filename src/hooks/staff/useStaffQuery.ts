@@ -32,6 +32,7 @@ export function useStaffQuery(params: StaffListParams = {}, options?: any) {
   }
   if (params.page === undefined && params.limit === undefined) {
     body.all = true;
+    body.limit = 1000;
   }
 
   if (params.search) {

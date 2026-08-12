@@ -6,7 +6,7 @@ import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutati
 import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean; page?: number; limit?: number }) {
+export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean; page?: number; limit?: number; all?: boolean }) {
   const queryClient = useQueryClient();
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;
@@ -23,14 +23,23 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     setPage(1);
   }, [params?.search, params?.role]);
 
+  const isStaffPage = typeof window !== 'undefined' && window.location.pathname.includes('/staff');
+  const shouldPaginate = !params?.all && (params?.page !== undefined || params?.limit !== undefined || isStaffPage);
+
   const queryParams = useMemo(() => {
+    if (!shouldPaginate) {
+      return {
+        search: params?.search,
+        role: params?.role,
+      };
+    }
     return {
       search: params?.search,
       role: params?.role,
       page: params?.page ?? page,
       limit: params?.limit ?? limit,
     };
-  }, [params?.search, params?.role, params?.page, params?.limit, page, limit]);
+  }, [params?.search, params?.role, params?.page, params?.limit, page, limit, shouldPaginate]);
 
   const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(queryParams, { enabled: isEnabled });
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
