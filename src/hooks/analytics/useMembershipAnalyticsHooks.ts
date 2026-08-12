@@ -1,5 +1,5 @@
 import { useApiQuery } from "../useApiQuery";
-
+import apiClient from "../../services/apiClient";
 export interface MembershipAnalyticsFilter {
   timeRange?: string;
   startDate?: string;
@@ -70,3 +70,7 @@ export function usePlanWisePerformanceAnalyticsQuery(filter: MembershipAnalytics
     data: filter,
   });
 }
+
+export const exportMembershipAnalytics = async (filter: any) => {
+  return apiClient.post("/membershipAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
+};

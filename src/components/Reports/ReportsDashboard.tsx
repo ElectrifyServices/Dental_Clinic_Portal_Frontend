@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3, TrendingUp, Users, Calendar, Download, IndianRupee,
   Target, UserPlus, CheckCircle, Clock, Package, Building2,
-  ArrowUpRight, ArrowDownRight, Zap, Activity, AlertTriangle,
+  ArrowUpRight, ArrowDownRight, Zap, Activity, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MetricCard, ContentCard, Card, CardContent, Badge, Button, FilterTabs, DataTable,
+  MetricCard, ContentCard, Card, CardContent, Badge, Button, FilterTabs, DataTable, Pagination, toast
 } from '@/components/ui';
 import {
   RevenueAreaChart, MonthlyBarChart, DonutChart, HorizontalBar, HeatmapCell,
@@ -24,6 +24,7 @@ const PERIODS = [
   { key: 'month',     label: 'This Month'  },
   { key: 'lastmonth', label: 'Last Month'  },
   { key: 'year',      label: 'This Year'   },
+  // { key: 'custom',    label: 'Custom'      },
 ];
 
 // ─── Section wrapper ───────────────────────────────────────────────────────────
@@ -107,10 +108,42 @@ import {
   useAvgUtilizationAnalyticsQuery,
   useRenewalRateAnalyticsQuery,
   usePlanWisePerformanceAnalyticsQuery,
+  useTotalProceduresQuery,
+  useCompletionRateQuery,
+  useAvgProcedureCostQuery,
+  useHighestRevenueQuery,
+  useTopTreatmentsByRevenueQuery,
+  useAllTreatmentRevenueQuery,
+  useProceduresByVolumeQuery,
+  useTotalBookingsAnalyticsQuery,
+  useCompletedBookingsAnalyticsQuery,
+  useNoShowRateAnalyticsQuery,
+  useApptCompletionRateAnalyticsQuery,
+  usePeakHoursHeatmapAnalyticsQuery,
+  useNext7DayForecastAnalyticsQuery,
+  exportAppointmentAnalytics,
+  exportPatientAnalytics,
+  exportTreatmentAnalytics,
+  exportMembershipAnalytics,
+  useTotalSkusAnalyticsQuery,
+  useCriticalItemsAnalyticsQuery,
+  useExpiringSoonAnalyticsQuery,
+  useMonthlySpendAnalyticsQuery,
+  useCriticalStockAnalyticsQuery,
+  exportInventoryAnalytics,
 } from '@/hooks/analytics';
+import { downloadExcelFromBlob } from '@/utils/export/exportHandler';
 
 // Helper function to build filter payload based on period string
-function getFilterPayload(period: string) {
+function getFilterPayload(period: string, startDate?: string, endDate?: string) {
+  if (period === 'custom') {
+    return {
+      timeRange: 'custom',
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+    };
+  }
+
   let timeRange = 'this_month';
 
   if (period === 'today') {
@@ -129,25 +162,34 @@ function getFilterPayload(period: string) {
 }
 
 // ─── Patient Analytics ────────────────────────────────────────────────────────
-function PatientsSection({ period }: { period: string }) {
-  const filter = getFilterPayload(period);
+function PatientsSection({ period, startDate, endDate }: { period: string; startDate?: string; endDate?: string }) {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const baseFilter = getFilterPayload(period, startDate, endDate);
+  const tableFilter = { ...baseFilter, page, limit };
 
   // 1. Total Patients API
-  const { data: totalPatientsRes, isLoading: loadingTotal } = useTotalPatientsAnalyticsQuery(filter);
+  const { data: totalPatientsRes, isLoading: loadingTotal } = useTotalPatientsAnalyticsQuery(baseFilter);
   // 2. New Patients API
-  const { data: newPatientsRes, isLoading: loadingNew } = useNewPatientsAnalyticsQuery(filter);
+  const { data: newPatientsRes, isLoading: loadingNew } = useNewPatientsAnalyticsQuery(baseFilter);
   // 3. Retention Rate API
-  const { data: retentionRes, isLoading: loadingRetention } = useRetentionRateAnalyticsQuery(filter);
+  const { data: retentionRes, isLoading: loadingRetention } = useRetentionRateAnalyticsQuery(baseFilter);
   // 4. Churn Risk Count API
-  const { data: churnCountRes, isLoading: loadingChurnCount } = useChurnRiskCountAnalyticsQuery(filter);
+  const { data: churnCountRes, isLoading: loadingChurnCount } = useChurnRiskCountAnalyticsQuery(baseFilter);
   // 5. Age Distribution API
-  const { data: ageRes, isLoading: loadingAge } = useAgeDistributionAnalyticsQuery(filter);
+  const { data: ageRes, isLoading: loadingAge } = useAgeDistributionAnalyticsQuery(baseFilter);
   // 6. Gender Distribution API
-  const { data: genderRes, isLoading: loadingGender } = useGenderDistributionAnalyticsQuery(filter);
+  const { data: genderRes, isLoading: loadingGender } = useGenderDistributionAnalyticsQuery(baseFilter);
   // 7. Monthly Patient Growth API
-  const { data: growthRes, isLoading: loadingGrowth } = useMonthlyGrowthAnalyticsQuery(filter);
+  const { data: growthRes, isLoading: loadingGrowth } = useMonthlyGrowthAnalyticsQuery(baseFilter);
   // 8. Churn Risk Patient List API
-  const { data: churnListRes, isLoading: loadingChurnList } = useChurnRiskAnalyticsQuery(filter);
+  const { data: churnListRes, isLoading: loadingChurnList } = useChurnRiskAnalyticsQuery(tableFilter);
+
+  // Reset page to 1 if filter period changes
+  useEffect(() => {
+    setPage(1);
+  }, [period]);
 
   // --- Total Patients ---
   const totalData = totalPatientsRes?.data ?? totalPatientsRes;
@@ -231,6 +273,23 @@ function PatientsSection({ period }: { period: string }) {
     days: Number(r.days ?? r.daysAgo ?? r.days_since_last_visit ?? 0),
     visits: Number(r.visits ?? r.totalVisits ?? r.total_visits ?? 0),
   }));
+
+  const paginationInfo = churnListRes?.pagination || {};
+  const totalItems = paginationInfo.total_items ?? churnListRes?.totalItems ?? churnListRes?.total ?? churnRawArray.length;
+  const totalPages = paginationInfo.total_pages ?? churnListRes?.totalPages ?? (Math.ceil(totalItems / limit) || 1);
+
+  const paginationUI = totalItems > 0 ? (
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        perPage={limit}
+        onPageChange={setPage}
+        onPerPageChange={setLimit}
+      />
+    </div>
+  ) : null;
 
   return (
     <Section>
@@ -399,6 +458,7 @@ function PatientsSection({ period }: { period: string }) {
               { key: 'days',      header: 'Days Ago',    align: 'center', render: (r: any) => <Badge variant={r.days > 50 ? 'red' : 'amber'}>{r.days}d</Badge> },
               { key: 'visits',    header: 'Total Visits',align: 'right',  render: (r: any) => <span className="font-bold">{r.visits}</span> },
             ]}
+            footer={paginationUI || undefined}
           />
         )}
       </ContentCard>
@@ -410,207 +470,424 @@ function PatientsSection({ period }: { period: string }) {
 const HOURS_LABELS = ['9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM','6PM','7PM','8PM'];
 const DAYS_LABELS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-function AppointmentsSection() {
+function AppointmentsSection({ period, startDate, endDate }: { period: string; startDate?: string; endDate?: string }) {
+  const filter = getFilterPayload(period, startDate, endDate);
+
+  const { data: totalRes, isLoading: loadingTotal } = useTotalBookingsAnalyticsQuery(filter);
+  const { data: completedRes, isLoading: loadingCompleted } = useCompletedBookingsAnalyticsQuery(filter);
+  const { data: noShowRes, isLoading: loadingNoShow } = useNoShowRateAnalyticsQuery(filter);
+  const { data: completionRes, isLoading: loadingCompletion } = useApptCompletionRateAnalyticsQuery(filter);
+  const { data: heatmapRes, isLoading: loadingHeatmap } = usePeakHoursHeatmapAnalyticsQuery(filter);
+  const { data: forecastRes, isLoading: loadingForecast } = useNext7DayForecastAnalyticsQuery(filter);
+
+  // 1. Total Bookings
+  const totalData = totalRes?.data ?? totalRes;
+  const totalVal = totalData?.totalBookings ?? totalData?.total ?? totalData?.count ?? 0;
+  const totalPct = totalData?.growthPercentage ?? totalData?.percentageChange;
+  const totalTrend = totalPct !== undefined ? { value: `${Math.abs(totalPct)}%`, isUp: totalPct >= 0 } : undefined;
+
+  // 2. Completed
+  const completedData = completedRes?.data ?? completedRes;
+  const completedVal = completedData?.completedBookings ?? completedData?.completed ?? completedData?.count ?? 0;
+  const completedPct = completedData?.growthPercentage ?? completedData?.percentageChange;
+  const completedTrend = completedPct !== undefined ? { value: `${Math.abs(completedPct)}%`, isUp: completedPct >= 0 } : undefined;
+
+  // 3. No-Show Rate
+  const noShowData = noShowRes?.data ?? noShowRes;
+  const noShowVal = noShowData?.noShowRate ?? noShowData?.rate ?? noShowData?.percentage ?? 0;
+  const noShowPct = noShowData?.growthPercentage ?? noShowData?.percentageChange;
+  const noShowTrend = noShowPct !== undefined ? { value: `${Math.abs(noShowPct)}%`, isUp: noShowPct >= 0 } : undefined;
+
+  // 4. Completion Rate
+  const completionData = completionRes?.data ?? completionRes;
+  const completionVal = completionData?.completionRate ?? completionData?.rate ?? completionData?.percentage ?? 0;
+  const completionPct = completionData?.growthPercentage ?? completionData?.percentageChange;
+  const completionTrend = completionPct !== undefined ? { value: `${Math.abs(completionPct)}%`, isUp: completionPct >= 0 } : undefined;
+
+  // 5. Peak Hours Heatmap
+  const heatmapDataObj = heatmapRes?.data ?? heatmapRes;
+  let heatmapProcessed: any[] = [];
+  let dynamicHourLabels = HOURS_LABELS;
+  
+  const extractHeatmap = (obj: any): any => {
+    if (!obj) return null;
+    if (obj.columns && obj.rows) return obj;
+    if (obj.data) return extractHeatmap(obj.data);
+    return null;
+  };
+  
+  const validHeatmapObj = extractHeatmap(heatmapDataObj);
+  
+  if (validHeatmapObj) {
+    dynamicHourLabels = validHeatmapObj.columns.map((c: any) => c.time);
+    heatmapProcessed = validHeatmapObj.rows.map((row: any) => ({
+      day: row.day,
+      slots: row.counts.map((count: number, index: number) => ({
+        hour: validHeatmapObj.columns[index]?.time || `${index}h`,
+        count: count
+      }))
+    }));
+  } else {
+    const rawArr = Array.isArray(heatmapDataObj?.data) ? heatmapDataObj.data : Array.isArray(heatmapDataObj) ? heatmapDataObj : [];
+    heatmapProcessed = Array.isArray(rawArr) && rawArr.length > 0 && rawArr[0].slots ? rawArr : [];
+  }
+  
+  // 6. Next 7-Day Forecast
+  const forecastDataObj = forecastRes?.data ?? forecastRes;
+  const forecastRawArray = Array.isArray(forecastDataObj?.data) ? forecastDataObj.data : Array.isArray(forecastDataObj) ? forecastDataObj : [];
+
   return (
     <Section>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total Bookings"    value="1,248" icon={<Calendar className="w-5 h-5" />} variant="primary" trend={{ value: '11%', isUp: true }} />
-        <MetricCard label="Completed"         value="1,098" icon={<CheckCircle className="w-5 h-5" />} variant="emerald" trend={{ value: '8%', isUp: true }} />
-        <MetricCard label="No-Show Rate"      value="6.8%"  icon={<Clock className="w-5 h-5" />}     variant="amber"   trend={{ value: '1.2%', isUp: false }} />
-        <MetricCard label="Completion Rate"   value="88%"   icon={<Target className="w-5 h-5" />}     variant="indigo"  trend={{ value: '3%', isUp: true }} />
+        <MetricCard label="Total Bookings"    value={loadingTotal ? "..." : String(totalVal)} icon={<Calendar className="w-5 h-5" />} variant="primary" trend={totalTrend} />
+        <MetricCard label="Completed"         value={loadingCompleted ? "..." : String(completedVal)} icon={<CheckCircle className="w-5 h-5" />} variant="emerald" trend={completedTrend} />
+        <MetricCard label="No-Show Rate"      value={loadingNoShow ? "..." : `${noShowVal}${String(noShowVal).endsWith('%') ? '' : '%'}`}  icon={<Clock className="w-5 h-5" />}     variant="amber"   trend={noShowTrend} />
+        <MetricCard label="Completion Rate"   value={loadingCompletion ? "..." : `${completionVal}${String(completionVal).endsWith('%') ? '' : '%'}`}   icon={<Target className="w-5 h-5" />}     variant="indigo"  trend={completionTrend} />
       </div>
 
       {/* Peak hours heatmap */}
       <ContentCard title="Peak Hours Heatmap" subtitle="Day × Hour appointment density" icon={<Activity className="w-4 h-4" />}>
-        <div className="overflow-x-auto pt-2 pb-2">
-          <div className="min-w-[640px]">
-            {/* Header row */}
-            <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `64px repeat(${HOURS_LABELS.length}, 1fr)` }}>
-              <div />
-              {HOURS_LABELS.map(h => (
-                <div key={h} className="text-center text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                  {h}
-                </div>
-              ))}
-            </div>
-
-            {/* Heatmap rows */}
-            {MOCK_PEAK_HOURS.map(row => (
-              <div key={row.day} className="grid gap-2 mb-2" style={{ gridTemplateColumns: `64px repeat(${HOURS_LABELS.length}, 1fr)` }}>
-                <div className="text-xs font-extrabold text-slate-700 flex items-center">{row.day}</div>
-                {row.slots.map(slot => (
-                  <HeatmapCell key={slot.hour} count={slot.count} day={row.day} hour={slot.hour} />
+        {loadingHeatmap ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">Loading heatmap data...</div>
+        ) : heatmapProcessed.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">No data available</div>
+        ) : (
+          <div className="overflow-x-auto pt-2 pb-2">
+            <div className="min-w-[640px]">
+              {/* Header row */}
+              <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `64px repeat(${dynamicHourLabels.length}, 1fr)` }}>
+                <div />
+                {dynamicHourLabels.map(h => (
+                  <div key={h} className="text-center text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    {h}
+                  </div>
                 ))}
               </div>
-            ))}
 
-            {/* Modern Interactive Legend */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-border/50">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-primary" /> Appointment Density
-              </span>
-              <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] text-slate-400">0</span>
-                  <span>No appts</span>
+              {/* Heatmap rows */}
+              {heatmapProcessed.map((row: any) => (
+                <div key={row.day} className="grid gap-2 mb-2" style={{ gridTemplateColumns: `64px repeat(${dynamicHourLabels.length}, 1fr)` }}>
+                  <div className="text-xs font-extrabold text-slate-700 flex items-center">{row.day}</div>
+                  {(row.slots || []).map((slot: any, idx: number) => (
+                    <HeatmapCell key={`${slot.hour}-${idx}`} count={slot.count} day={row.day} hour={slot.hour} />
+                  ))}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-semibold text-emerald-700 flex items-center justify-center">1</span>
-                  <span>Light (1-3)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-md bg-blue-100 border border-blue-200 text-[10px] font-bold text-blue-800 flex items-center justify-center">4</span>
-                  <span>Moderate (4-6)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-md bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center">7</span>
-                  <span>Busy (7-9)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-md bg-gradient-to-r from-violet-600 to-indigo-700 text-white text-[10px] font-extrabold flex items-center justify-center">10</span>
-                  <span>Peak (10+)</span>
+              ))}
+
+              {/* Modern Interactive Legend */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-border/50">
+                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-primary" /> Appointment Density
+                </span>
+                <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] text-slate-400">0</span>
+                    <span>No appts</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-semibold text-emerald-700 flex items-center justify-center">1</span>
+                    <span>Light (1-3)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-md bg-blue-100 border border-blue-200 text-[10px] font-bold text-blue-800 flex items-center justify-center">4</span>
+                    <span>Moderate (4-6)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-md bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center">7</span>
+                    <span>Busy (7-9)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-md bg-gradient-to-r from-violet-600 to-indigo-700 text-white text-[10px] font-extrabold flex items-center justify-center">10</span>
+                    <span>Peak (10+)</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </ContentCard>
 
       {/* 7-day forecast */}
       <ContentCard title="Next 7-Day Appointment Forecast" subtitle="Projected booking density for upcoming week" icon={<Calendar className="w-4 h-4" />}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(); d.setDate(d.getDate() + i);
-            const isToday = i === 0;
-            const forecastCounts = [13, 4, 11, 10, 10, 6, 4];
-            const count = forecastCounts[i % forecastCounts.length];
-            const isHigh = count >= 10;
-            return (
-              <div
-                key={i}
-                className={`p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between items-center text-center relative overflow-hidden ${
-                  isToday
-                    ? 'border-primary/40 bg-gradient-to-b from-primary/10 via-primary/5 to-white shadow-sm ring-2 ring-primary/20'
-                    : 'border-border/80 bg-white hover:border-primary/30'
-                }`}
-              >
-                {isToday && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                  </span>
-                )}
+        {loadingForecast ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">Loading forecast...</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            {Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(); d.setDate(d.getDate() + i);
+              const isToday = i === 0;
+              const apiItem = forecastRawArray[i];
+              const count = apiItem ? Number(apiItem.count ?? apiItem.bookings ?? apiItem.total ?? 0) : 0;
+              const isHigh = count >= 10;
+              
+              const dayLabel = apiItem?.day || d.toLocaleDateString('en-US', { weekday: 'short' });
+              const dateNumber = apiItem?.date ? new Date(apiItem.date).getDate() : d.getDate();
+              const monthLabel = apiItem?.date ? new Date(apiItem.date).toLocaleDateString('en-US', { month: 'short' }) : d.toLocaleDateString('en-US', { month: 'short' });
 
-                <div className="space-y-0.5">
-                  <p className={`text-xs font-extrabold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {d.toLocaleDateString('en-US', { weekday: 'short' })}
-                  </p>
-                  <p className="text-2xl font-black text-slate-800 tracking-tight">
-                    {d.getDate()} <span className="text-[11px] font-semibold text-muted-foreground">{d.toLocaleDateString('en-US', { month: 'short' })}</span>
-                  </p>
-                </div>
-
-                <div className="mt-3 w-full">
-                  <div className={`py-1.5 px-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs ${
+              return (
+                <div
+                  key={i}
+                  className={`p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between items-center text-center relative overflow-hidden ${
                     isToday
-                      ? 'bg-primary text-white shadow-primary/20'
-                      : isHigh
-                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/70'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200/60'
-                  }`}>
-                    <Calendar className="w-3.5 h-3.5 opacity-80" />
-                    <span>{count} Bookings</span>
+                      ? 'border-primary/40 bg-gradient-to-b from-primary/10 via-primary/5 to-white shadow-sm ring-2 ring-primary/20'
+                      : 'border-border/80 bg-white hover:border-primary/30'
+                  }`}
+                >
+                  {isToday && (
+                    <span className="absolute top-2 right-2 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                    </span>
+                  )}
+
+                  <div className="space-y-0.5">
+                    <p className={`text-xs font-extrabold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {dayLabel}
+                    </p>
+                    <p className="text-2xl font-black text-slate-800 tracking-tight">
+                      {dateNumber} <span className="text-[11px] font-semibold text-muted-foreground">{monthLabel}</span>
+                    </p>
+                  </div>
+
+                  <div className="mt-3 w-full">
+                    <div className={`py-1.5 px-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs ${
+                      isToday
+                        ? 'bg-primary text-white shadow-primary/20'
+                        : isHigh
+                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/70'
+                          : 'bg-slate-100 text-slate-700 border border-slate-200/60'
+                    }`}>
+                      <Calendar className="w-3.5 h-3.5 opacity-80" />
+                      <span>{count} Bookings</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </ContentCard>
     </Section>
   );
 }
 
 // ─── Treatment Analytics ──────────────────────────────────────────────────────
-function TreatmentsSection() {
-  const maxRev = Math.max(...MOCK_TOP_TREATMENTS.map(t => t.revenue));
+function TreatmentsSection({ period }: { period: string }) {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const baseFilter = getFilterPayload(period);
+  const tableFilter = { ...baseFilter, page, limit };
+
+  // Fetch API Queries
+  const { data: totalProceduresRes, isLoading: loadingTotal } = useTotalProceduresQuery(baseFilter);
+  const { data: completionRateRes, isLoading: loadingCompletion } = useCompletionRateQuery(baseFilter);
+  const { data: avgCostRes, isLoading: loadingAvgCost } = useAvgProcedureCostQuery(baseFilter);
+  const { data: highestRevenueRes, isLoading: loadingHighest } = useHighestRevenueQuery(baseFilter);
+  const { data: topTreatmentsRes, isLoading: loadingTop } = useTopTreatmentsByRevenueQuery(baseFilter);
+  const { data: proceduresVolumeRes, isLoading: loadingVolume } = useProceduresByVolumeQuery(baseFilter);
+  const { data: allRevenueRes, isLoading: loadingAllRevenue } = useAllTreatmentRevenueQuery(tableFilter);
+
+  // Parsing values
+  // 1. Total Procedures
+  const totalData = totalProceduresRes?.data ?? totalProceduresRes;
+  const totalVal = totalData?.totalProcedures ?? totalData?.total ?? totalData?.count ?? 0;
+  const totalPct = totalData?.growthPercentage ?? totalData?.percentageChange;
+  const totalTrend = totalPct !== undefined ? { value: `${Math.abs(totalPct)}%`, isUp: totalPct >= 0 } : undefined;
+
+  // 2. Completion Rate
+  const completionData = completionRateRes?.data ?? completionRateRes;
+  const completionVal = completionData?.completionRate ?? completionData?.rate ?? completionData?.percentage ?? 0;
+
+  // 3. Avg Cost
+  const avgCostData = avgCostRes?.data ?? avgCostRes;
+  const avgCostVal = avgCostData?.avgProcedureCost ?? avgCostData?.avgCost ?? avgCostData?.averageCost ?? avgCostData?.amount ?? 0;
+
+  // 4. Highest Revenue
+  const highestData = highestRevenueRes?.data ?? highestRevenueRes;
+  const highestVal = highestData?.treatment ?? highestData?.highestRevenueProcedure ?? highestData?.procedureName ?? highestData?.name ?? highestData?.procedure ?? "N/A";
+
+  // 5. Top Treatments by Revenue (Horizontal Bar Chart)
+  const topDataObj = topTreatmentsRes?.data ?? topTreatmentsRes;
+  const topRawArray = Array.isArray(topDataObj?.data) ? topDataObj.data : Array.isArray(topDataObj) ? topDataObj : [];
+  const topTreatments = topRawArray.map((t: any) => ({
+    procedure: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
+    revenue: Number(t.revenue ?? t.totalRevenue ?? t.amount ?? 0),
+  }));
+  const maxRev = topTreatments.length > 0 ? Math.max(...topTreatments.map(t => t.revenue), 1) : 1;
+
+  // 6. Procedures by Volume (Donut Chart)
+  const volumeDataObj = proceduresVolumeRes?.data ?? proceduresVolumeRes;
+  const volumeRawArray = Array.isArray(volumeDataObj?.data?.data) ? volumeDataObj.data.data : Array.isArray(volumeDataObj?.data) ? volumeDataObj.data : Array.isArray(volumeDataObj) ? volumeDataObj : [];
+  const totalVolumeCount = volumeDataObj?.data?.totalCount ?? volumeDataObj?.totalVolume ?? volumeDataObj?.total ?? volumeRawArray.reduce((acc: number, curr: any) => acc + Number(curr.count ?? curr.value ?? 0), 0);
+  const volumeSlices = volumeRawArray.map((t: any, i: number) => ({
+    label: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
+    value: Number(t.count ?? t.value ?? 0),
+    color: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e'][i % 5],
+  }));
+
+  // 7. All Treatment Revenue (DataTable)
+  const allRevenueDataObj = allRevenueRes?.data ?? allRevenueRes;
+  const allRevenueRawArray = Array.isArray(allRevenueDataObj?.data) 
+    ? allRevenueDataObj.data 
+    : Array.isArray(allRevenueDataObj?.rows)
+      ? allRevenueDataObj.rows
+      : Array.isArray(allRevenueDataObj) 
+        ? allRevenueDataObj 
+        : [];
+
+  const allRevenueList = allRevenueRawArray.map((t: any) => ({
+    procedure: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
+    count: Number(t.count ?? t.cases ?? t.totalCases ?? t.value ?? 0),
+    revenue: Number(t.revenue ?? t.totalRevenue ?? t.amount ?? 0),
+    avg: Number(t.avg ?? t.avgCost ?? t.averageCost ?? t.avgProcedureCost ?? 0),
+  }));
+
+  const paginationInfo = allRevenueRes?.pagination || {};
+  const totalItems = paginationInfo.total_items ?? allRevenueRes?.totalItems ?? allRevenueRes?.total ?? allRevenueRes?.count ?? allRevenueList.length;
+  const totalPages = paginationInfo.total_pages ?? allRevenueRes?.totalPages ?? (Math.ceil(totalItems / limit) || 1);
+
+  // Reset page to 1 if filter period changes
+  useEffect(() => {
+    setPage(1);
+  }, [period]);
+
+  const paginationUI = totalItems > 0 ? (
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        perPage={limit}
+        onPageChange={setPage}
+        onPerPageChange={setLimit}
+      />
+    </div>
+  ) : null;
+
   return (
     <Section>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total Procedures"   value="1,305"  icon={<BarChart3 className="w-5 h-5" />} variant="gray"    trend={{ value: '9%', isUp: true }} />
-        <MetricCard label="Completion Rate"    value="91%"    icon={<CheckCircle className="w-5 h-5" />} variant="emerald" />
-        <MetricCard label="Avg Procedure Cost" value="₹4,820" icon={<IndianRupee className="w-5 h-5" />} variant="primary" />
-        <MetricCard label="Highest Revenue"    value="Implant" icon={<Zap className="w-5 h-5" />} variant="indigo" />
+        <MetricCard
+          label="Total Procedures"
+          value={loadingTotal ? "..." : String(totalVal)}
+          icon={<BarChart3 className="w-5 h-5" />}
+          variant="gray"
+          trend={totalTrend}
+        />
+        <MetricCard
+          label="Completion Rate"
+          value={loadingCompletion ? "..." : `${completionVal}${String(completionVal).endsWith('%') ? '' : '%'}`}
+          icon={<CheckCircle className="w-5 h-5" />}
+          variant="emerald"
+        />
+        <MetricCard
+          label="Avg Procedure Cost"
+          value={loadingAvgCost ? "..." : `₹${Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(avgCostVal))}`}
+          icon={<IndianRupee className="w-5 h-5" />}
+          variant="primary"
+        />
+        <MetricCard
+          label="Highest Revenue"
+          value={loadingHighest ? "..." : String(highestVal)}
+          icon={<Zap className="w-5 h-5" />}
+          variant="indigo"
+          trend={highestData?.revenue ? `₹${Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(highestData.revenue))}` : undefined}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue by treatment */}
         <ContentCard title="Top Treatments by Revenue" icon={<TrendingUp className="w-4 h-4" />}>
-          <div className="space-y-4">
-            {MOCK_TOP_TREATMENTS.slice(0, 6).map(t => (
-              <HorizontalBar
-                key={t.procedure}
-                label={t.procedure}
-                value={t.revenue}
-                max={maxRev}
-                color="#3b82f6"
-                suffix="₹"
-              />
-            ))}
-          </div>
+          {loadingTop ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">Loading top treatments...</div>
+          ) : topTreatments.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">No data available</div>
+          ) : (
+            <div className="space-y-4">
+              {topTreatments.map((t, idx) => (
+                <HorizontalBar
+                  key={t.procedure + idx}
+                  label={t.procedure}
+                  value={t.revenue}
+                  max={maxRev}
+                  color="#3b82f6"
+                  suffix="₹"
+                />
+              ))}
+            </div>
+          )}
         </ContentCard>
 
         {/* Volume vs Revenue donut */}
         <ContentCard title="Procedures by Volume" icon={<BarChart3 className="w-4 h-4" />}>
-          <DonutChart
-            slices={MOCK_TOP_TREATMENTS.slice(0, 5).map((t, i) => ({
-              label: t.procedure,
-              value: t.count,
-              color: ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#f43f5e'][i],
-            }))}
-            size={160}
-            label="1,305"
-          />
-          <div className="space-y-2 mt-3">
-            {MOCK_TOP_TREATMENTS.slice(0, 5).map((t, i) => (
-              <div key={t.procedure} className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#f43f5e'][i] }} />
-                  {t.procedure}
-                </span>
-                <span className="text-xs font-black text-foreground">{t.count}</span>
+          {loadingVolume ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">Loading procedures volume...</div>
+          ) : volumeSlices.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">No data available</div>
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <DonutChart
+                slices={volumeSlices}
+                size={160}
+                label={String(totalVolumeCount)}
+              />
+              <div className="space-y-2 mt-3 w-full">
+                {volumeSlices.map((t, i) => (
+                  <div key={t.label + i} className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} />
+                      {t.label}
+                    </span>
+                    <span className="text-xs font-black text-slate-800">{t.value}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </ContentCard>
       </div>
 
       {/* Full table */}
       <ContentCard title="All Treatment Revenue" icon={<BarChart3 className="w-4 h-4" />}>
-        <DataTable
-          data={MOCK_TOP_TREATMENTS}
-          rowKey={(t: any) => t.procedure}
-          columns={[
-            { key: 'procedure', header: 'Treatment',    render: (t: any) => <span className="font-bold">{t.procedure}</span> },
-            { key: 'count',     header: 'Cases',        align: 'center', render: (t: any) => <Badge variant="gray">{t.count}</Badge> },
-            { key: 'revenue',   header: 'Total Revenue', align: 'right', render: (t: any) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
-            { key: 'avg',       header: 'Avg Cost',     align: 'right', render: (t: any) => <span className="font-bold text-primary">₹{t.avg.toLocaleString()}</span> },
-          ]}
-        />
+        {loadingAllRevenue ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">Loading treatment revenue table...</div>
+        ) : (
+          <DataTable
+            data={allRevenueList}
+            rowKey={(t: any, idx: number) => t.procedure + idx}
+            columns={[
+              { key: 'procedure', header: 'Treatment',    render: (t: any) => <span className="font-bold">{t.procedure}</span> },
+              { key: 'count',     header: 'Cases',        align: 'center', render: (t: any) => <Badge variant="gray">{t.count}</Badge> },
+              { key: 'revenue',   header: 'Total Revenue', align: 'right', render: (t: any) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
+              { key: 'avg',       header: 'Avg Cost',     align: 'right', render: (t: any) => <span className="font-bold text-primary">₹{t.avg.toLocaleString()}</span> },
+            ]}
+            footer={paginationUI || undefined}
+          />
+        )}
       </ContentCard>
     </Section>
   );
 }
 
 // ─── Membership Analytics ─────────────────────────────────────────────────────
-function MembershipSection({ period }: { period: string }) {
-  const filter = getFilterPayload(period);
+function MembershipSection({ period, startDate, endDate }: { period: string; startDate?: string; endDate?: string }) {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
-  const { data: totalMembersRes, isLoading: loadingTotal } = useTotalMembersAnalyticsQuery(filter);
-  const { data: revRes, isLoading: loadingRev } = useMembershipRevenueAnalyticsQuery(filter);
-  const { data: utilRes, isLoading: loadingUtil } = useAvgUtilizationAnalyticsQuery(filter);
-  const { data: renewalRes, isLoading: loadingRenewal } = useRenewalRateAnalyticsQuery(filter);
-  const { data: planRes, isLoading: loadingPlans } = usePlanWisePerformanceAnalyticsQuery(filter);
+  const baseFilter = getFilterPayload(period, startDate, endDate);
+  const tableFilter = { ...baseFilter, page, limit };
+
+  const { data: totalMembersRes, isLoading: loadingTotal } = useTotalMembersAnalyticsQuery(baseFilter);
+  const { data: revRes, isLoading: loadingRev } = useMembershipRevenueAnalyticsQuery(baseFilter);
+  const { data: utilRes, isLoading: loadingUtil } = useAvgUtilizationAnalyticsQuery(baseFilter);
+  const { data: renewalRes, isLoading: loadingRenewal } = useRenewalRateAnalyticsQuery(baseFilter);
+  const { data: planRes, isLoading: loadingPlans } = usePlanWisePerformanceAnalyticsQuery(tableFilter);
+
+  // Reset page to 1 if filter period changes
+  useEffect(() => {
+    setPage(1);
+  }, [period]);
 
   // 1. Total Members
   const totalData = totalMembersRes?.data ?? totalMembersRes;
@@ -659,6 +936,23 @@ function MembershipSection({ period }: { period: string }) {
     if (val >= 1000) return `₹${(val / 1000).toFixed(1)}k`;
     return `₹${val.toLocaleString()}`;
   };
+
+  const paginationInfo = planRes?.pagination || {};
+  const totalItems = paginationInfo.total_items ?? planRes?.totalItems ?? planRes?.total ?? planPerformanceList.length;
+  const totalPages = paginationInfo.total_pages ?? planRes?.totalPages ?? (Math.ceil(totalItems / limit) || 1);
+
+  const paginationUI = totalItems > 0 ? (
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        perPage={limit}
+        onPageChange={setPage}
+        onPerPageChange={setLimit}
+      />
+    </div>
+  ) : null;
 
   return (
     <Section>
@@ -718,6 +1012,7 @@ function MembershipSection({ period }: { period: string }) {
                 </span>
               )},
             ]}
+            footer={paginationUI || undefined}
           />
         )}
       </ContentCard>
@@ -726,33 +1021,117 @@ function MembershipSection({ period }: { period: string }) {
 }
 
 // ─── Inventory Analytics ──────────────────────────────────────────────────────
-function InventorySection() {
+function InventorySection({ period, startDate, endDate }: { period: string; startDate?: string; endDate?: string }) {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const baseFilter = getFilterPayload(period, startDate, endDate);
+  const tableFilter = { ...baseFilter, page, limit };
+
+  const { data: totalSkusRes, isLoading: loadingTotalSkus } = useTotalSkusAnalyticsQuery(baseFilter);
+  const { data: criticalItemsRes, isLoading: loadingCriticalItems } = useCriticalItemsAnalyticsQuery(baseFilter);
+  const { data: expiringSoonRes, isLoading: loadingExpiringSoon } = useExpiringSoonAnalyticsQuery(baseFilter);
+  const { data: monthlySpendRes, isLoading: loadingMonthlySpend } = useMonthlySpendAnalyticsQuery(baseFilter);
+  const { data: criticalStockRes, isLoading: loadingCriticalStock } = useCriticalStockAnalyticsQuery(tableFilter);
+
+  useEffect(() => {
+    setPage(1);
+  }, [period]);
+
+  const getNestedData = (res: any) => res?.responseObject?.data ?? res?.data?.responseObject?.data ?? res?.data ?? res;
+
+  const totalSkusData = getNestedData(totalSkusRes);
+  const totalSkusVal = typeof totalSkusData === 'number' ? totalSkusData : (totalSkusData?.totalSkus ?? totalSkusData?.total ?? totalSkusData?.count ?? 0);
+  const totalSkusPct = totalSkusData?.growthPercentage;
+  const totalSkusTrend = totalSkusPct !== undefined ? { value: `${Math.abs(totalSkusPct)}%`, isUp: totalSkusPct >= 0 } : undefined;
+
+  const criticalItemsData = getNestedData(criticalItemsRes);
+  const criticalItemsVal = typeof criticalItemsData === 'number' ? criticalItemsData : (criticalItemsData?.criticalItems ?? criticalItemsData?.total ?? criticalItemsData?.count ?? 0);
+
+  const expiringSoonData = getNestedData(expiringSoonRes);
+  const expiringSoonVal = typeof expiringSoonData === 'number' ? expiringSoonData : (expiringSoonData?.expiringSoon ?? expiringSoonData?.total ?? expiringSoonData?.count ?? 0);
+
+  const monthlySpendData = getNestedData(monthlySpendRes);
+  const monthlySpendVal = typeof monthlySpendData === 'number' ? monthlySpendData : (monthlySpendData?.monthlySpend ?? monthlySpendData?.amount ?? monthlySpendData?.total ?? 0);
+  const monthlySpendPct = monthlySpendData?.growthPercentage;
+  const monthlySpendTrend = monthlySpendPct !== undefined ? { value: `${Math.abs(monthlySpendPct)}%`, isUp: monthlySpendPct >= 0 } : undefined;
+
+  const formatCurrency = (val: number) => {
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1)}k`;
+    return `₹${val.toLocaleString()}`;
+  };
+
+  const criticalStockData = getNestedData(criticalStockRes);
+  const criticalStockRawArray = Array.isArray(criticalStockData)
+    ? criticalStockData
+    : Array.isArray(criticalStockData?.items) 
+      ? criticalStockData.items 
+      : Array.isArray(criticalStockData?.data)
+        ? criticalStockData.data
+        : [];
+  
+  const criticalStockList = criticalStockRawArray.map((r: any) => ({
+    item: r.name ?? r.item ?? r.itemName ?? 'N/A',
+    category: r.category ?? 'N/A',
+    stock: Number(r.currentStock ?? r.stock ?? r.stockLeft ?? 0),
+    min: Number(r.minStock ?? r.min ?? r.minRequired ?? r.minimumStock ?? 0),
+    unit: r.unit ?? '',
+    supplier: r.supplier ?? 'N/A',
+    daysLeft: r.daysLeft ? Number(r.daysLeft).toFixed(1) : 0,
+  }));
+
+  const paginationInfo = criticalStockRes?.pagination || {};
+  const totalItems = paginationInfo.total_items ?? criticalStockRes?.totalItems ?? criticalStockRes?.total ?? criticalStockList.length;
+  const totalPages = paginationInfo.total_pages ?? criticalStockRes?.totalPages ?? (Math.ceil(totalItems / limit) || 1);
+
+  const paginationUI = totalItems > 0 ? (
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        perPage={limit}
+        onPageChange={setPage}
+        onPerPageChange={setLimit}
+      />
+    </div>
+  ) : null;
+
   return (
     <Section>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total SKUs"      value="84"   icon={<Package className="w-5 h-5" />} variant="gray" />
-        <MetricCard label="Critical Items"  value="3"    icon={<AlertTriangle className="w-5 h-5" />} variant="rose" />
-        <MetricCard label="Expiring (30d)"  value="7"    icon={<Clock className="w-5 h-5" />} variant="amber" />
-        <MetricCard label="Monthly Spend"   value="₹48k" icon={<IndianRupee className="w-5 h-5" />} variant="primary" />
+        <MetricCard label="Total SKUs"      value={loadingTotalSkus ? "..." : String(totalSkusVal)}   icon={<Package className="w-5 h-5" />} variant="gray" trend={totalSkusTrend} />
+        <MetricCard label="Critical Items"  value={loadingCriticalItems ? "..." : String(criticalItemsVal)}    icon={<AlertTriangle className="w-5 h-5" />} variant="rose" />
+        <MetricCard label="Expiring (30d)"  value={loadingExpiringSoon ? "..." : String(expiringSoonVal)}    icon={<Clock className="w-5 h-5" />} variant="amber" />
+        <MetricCard label="Monthly Spend"   value={loadingMonthlySpend ? "..." : (typeof monthlySpendVal === 'number' ? formatCurrency(monthlySpendVal) : String(monthlySpendVal))} icon={<IndianRupee className="w-5 h-5" />} variant="primary" trend={monthlySpendTrend} />
       </div>
 
       <ContentCard title="Critical Stock — Will Run Out Soon" icon={<Package className="w-4 h-4" />}
-        action={<Badge variant="red">3 Critical</Badge>}>
-        <DataTable
-          data={MOCK_INVENTORY_RISK}
-          rowKey={(r: any) => r.item}
-          columns={[
-            { key: 'item',     header: 'Item',          render: (r: any) => <span className="font-bold text-foreground">{r.item}</span> },
-            { key: 'category', header: 'Category',      render: (r: any) => <Badge variant="gray">{r.category}</Badge> },
-            { key: 'stock',    header: 'Stock Left',    align: 'center', render: (r: any) => (
-              <span className={`font-black text-sm ${r.stock <= r.min / 4 ? 'text-rose-600' : 'text-amber-600'}`}>{r.stock}</span>
-            )},
-            { key: 'min',      header: 'Min Required',  align: 'center', render: (r: any) => <span className="text-muted-foreground">{r.min}</span> },
-            { key: 'daysLeft', header: 'Days Left',     align: 'right',  render: (r: any) => (
-              <Badge variant={r.daysLeft <= 2 ? 'red' : 'amber'}>{r.daysLeft}d</Badge>
-            )},
-          ]}
-        />
+        action={<Badge variant="red">{loadingCriticalStock ? "..." : `${totalItems} Critical`}</Badge>}>
+        {loadingCriticalStock ? (
+           <div className="py-8 text-center text-xs text-muted-foreground">Loading critical stock...</div>
+        ) : criticalStockList.length === 0 ? (
+           <div className="py-8 text-center text-xs text-muted-foreground">No data available</div>
+        ) : (
+          <DataTable
+            data={criticalStockList}
+            rowKey={(r: any, idx: number) => r.item + idx}
+            columns={[
+              { key: 'item',     header: 'Item',          render: (r: any) => <span className="font-bold text-foreground">{r.item}</span> },
+              { key: 'category', header: 'Category',      render: (r: any) => <Badge variant="gray">{r.category}</Badge> },
+              { key: 'stock',    header: 'Stock Left',    align: 'center', render: (r: any) => (
+                <span className={`font-black text-sm ${r.stock <= r.min / 4 ? 'text-rose-600' : 'text-amber-600'}`}>{r.stock} {r.unit && <span className="text-xs font-medium text-slate-500">{r.unit}</span>}</span>
+              )},
+              { key: 'min',      header: 'Min Required',  align: 'center', render: (r: any) => <span className="text-muted-foreground">{r.min}</span> },
+              { key: 'supplier', header: 'Supplier',      render: (r: any) => <span className="text-muted-foreground text-xs">{r.supplier}</span> },
+              { key: 'daysLeft', header: 'Days Left',     align: 'right',  render: (r: any) => (
+                <Badge variant={Number(r.daysLeft) <= 2 ? 'red' : 'amber'}>{r.daysLeft}d</Badge>
+              )},
+            ]}
+            footer={paginationUI || undefined}
+          />
+        )}
       </ContentCard>
     </Section>
   );
@@ -771,6 +1150,49 @@ const REPORT_TABS = [
 export function ReportsDashboard({ patients, appointments, treatments, invoices }: any) {
   const [period, setPeriod]   = useState('month');
   const [activeTab, setTab]   = useState('revenue');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    const exportFnMap: Record<string, (filter: any) => Promise<any>> = {
+      appointments: exportAppointmentAnalytics,
+      patients: exportPatientAnalytics,
+      treatments: exportTreatmentAnalytics,
+      membership: exportMembershipAnalytics,
+      inventory: exportInventoryAnalytics,
+    };
+
+    const exportFn = exportFnMap[activeTab];
+    if (!exportFn) {
+      toast.error("Export is not available for this section yet.");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+      const filter = getFilterPayload(period);
+      
+      const response = await exportFn(filter);
+
+      if (response.data instanceof Blob && response.data.type === 'application/json') {
+        const text = await response.data.text();
+        const json = JSON.parse(text);
+        if (json?.responseStatusList?.statusList?.[0]?.statusDesc) {
+          throw new Error(json.responseStatusList.statusList[0].statusDesc);
+        } else {
+          throw new Error("Export failed on server");
+        }
+      }
+
+      await downloadExcelFromBlob(response.data, `${activeTab}-analytics-export.xlsx`);
+      toast.success("Export successful");
+    } catch (error: any) {
+      console.error("Export failed:", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to export data. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -795,8 +1217,14 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
               active={period}
               onChange={setPeriod}
             />
-            <Button variant="outline" className="gap-2 flex-shrink-0">
-              <Download className="w-4 h-4" /> Export
+            <Button 
+              variant="outline" 
+              className="gap-2 flex-shrink-0"
+              onClick={handleExport}
+              disabled={isExporting || !['appointments', 'patients', 'treatments', 'membership', 'inventory'].includes(activeTab)}
+            >
+              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {isExporting ? 'Exporting...' : 'Export'}
             </Button>
           </div>
         </div>
@@ -834,10 +1262,10 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
         <div key={activeTab}>
           {activeTab === 'revenue'      && <RevenueSection period={period} />}
           {activeTab === 'patients'     && <PatientsSection period={period} />}
-          {activeTab === 'appointments' && <AppointmentsSection />}
-          {activeTab === 'treatments'   && <TreatmentsSection />}
+          {activeTab === 'appointments' && <AppointmentsSection period={period} />}
+          {activeTab === 'treatments'   && <TreatmentsSection period={period} />}
           {activeTab === 'membership'   && <MembershipSection period={period} />}
-          {activeTab === 'inventory'    && <InventorySection />}
+          {activeTab === 'inventory'    && <InventorySection period={period} />}
         </div>
       </AnimatePresence>
     </div>

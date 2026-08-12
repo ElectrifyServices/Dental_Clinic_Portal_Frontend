@@ -3,7 +3,7 @@ import { Phone, Calendar, TrendingUp, User } from "lucide-react";
 
 import { StatusBadge, ContentCard } from "@/components/ui";
 
-export function RecentPatients() {
+export function RecentPatients({ period = 'today' }: { period?: string }) {
   const [patients, setPatients] = React.useState<any[]>([]);
 
   React.useEffect(() => {
@@ -25,10 +25,12 @@ export function RecentPatients() {
     inactive: "gray",
   };
 
+  const periodLabel = period === 'today' ? "Today" : period === 'week' ? "This Week" : period === 'month' ? "This Month" : "This Year";
+
   return (
     <ContentCard
       title="Recent Patients"
-      subtitle="Recently registered"
+      subtitle={`Recently registered · ${periodLabel}`}
       icon={<TrendingUp className="w-4 h-4" />}
       bodyClassName="p-0"
     >

@@ -201,7 +201,9 @@ export function DonutChart({ slices, size = 120, label }: DonutProps) {
       <circle cx={cx} cy={cy} r={r + 2} fill="transparent" />
       {paths.map((p, i) => (
         <path key={i} d={p.d} fill={p.color} opacity={0.88}
-          stroke="white" strokeWidth="1.5" />
+          stroke="white" strokeWidth="1.5">
+          <title>{p.label}: {p.value}</title>
+        </path>
       ))}
       {/* Center hole */}
       <circle cx={cx} cy={cy} r={26} fill="white" />
