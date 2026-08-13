@@ -283,8 +283,12 @@ export const usePatientForm = (patient: any) => {
     const errors: { [key: string]: string } = {};
     if (stepNumber === 1) {
       if (!form.getValues("name")?.trim()) errors.name = "Name is required";
-      if (!form.getValues("phone")?.trim())
+      const phoneVal = form.getValues("phone")?.trim();
+      if (!phoneVal) {
         errors.phone = "Phone number is required";
+      } else if (phoneVal.length < 10) {
+        errors.phone = "Phone number must be exactly 10 digits";
+      }
       const email = form.getValues("email");
       if (email && !/\S+@\S+\.\S+/.test(email))
         errors.email = "Please enter a valid email address";
@@ -311,6 +315,10 @@ export const usePatientForm = (patient: any) => {
     setValidationErrors(errors);
     if (Object.keys(errors).length === 0) {
       setStep(step + 1);
+      setTimeout(scrollToTop, 50);
+    } else {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
       setTimeout(scrollToTop, 50);
     }
   };

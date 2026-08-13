@@ -23,9 +23,69 @@ export const DashboardPage: React.FC = () => {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   
-  const { appointments } = useAppointmentData();
+  const { 
+    appointments, 
+    setStartDate, 
+    setEndDate, 
+    setApptFilter, 
+    setSelectedDate,
+    pagination,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    apptSearch,
+    setApptSearch
+  } = useAppointmentData({ limit: 10 });
+  
   const { state } = useAuth();
   const { setActiveModal, setSelectedPatientId, setPreFilledPatientData, setPatientFormType } = useModal();
+
+  React.useEffect(() => {
+    const now = new Date();
+    let startD: Date;
+    let endD: Date;
+    
+    switch (period) {
+      case 'today':
+        startD = new Date();
+        endD = new Date();
+        break;
+      case 'week':
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
+        startD = new Date(now.setDate(diff));
+        endD = new Date(startD);
+        endD.setDate(startD.getDate() + 6);
+        break;
+      case 'month':
+        startD = new Date(now.getFullYear(), now.getMonth(), 1);
+        endD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'year':
+        startD = new Date(now.getFullYear(), 0, 1);
+        endD = new Date(now.getFullYear(), 11, 31);
+        break;
+      case 'custom':
+        startD = customStart ? new Date(customStart) : new Date();
+        endD = customEnd ? new Date(customEnd) : new Date();
+        break;
+      default:
+        startD = new Date();
+        endD = new Date();
+    }
+    
+    const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    
+    const startStr = formatDate(startD);
+    const endStr = formatDate(endD);
+
+    // Uniformly use startDate and endDate for all periods to ensure the query always triggers
+    setApptFilter('custom');
+    setSelectedDate('');
+    setStartDate(startStr);
+    setEndDate(endStr);
+  }, [period, customStart, customEnd, setStartDate, setEndDate, setApptFilter, setSelectedDate]);
 
   const handleAddPatient = () => {
     setSelectedPatientId('');
@@ -88,26 +148,38 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* ── KPI Grid + Revenue Chart + Goal ────────────────────────────── */}
-      <EnhancedDashboardStats period={period} />
+      <EnhancedDashboardStats period={period} customStart={customStart} customEnd={customEnd} />
 
       {/* ── Bottom Section ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Appointments List */}
         <div className="lg:col-span-2">
-          <TodayAppointments appointments={appointments} period={period} />
+          <TodayAppointments 
+            appointments={appointments} 
+            period={period} 
+            customStart={customStart} 
+            customEnd={customEnd}
+            pagination={pagination}
+            page={page}
+            setPage={setPage}
+            limit={limit}
+            setLimit={setLimit}
+            apptSearch={apptSearch}
+            setApptSearch={setApptSearch}
+          />
         </div>
 
         {/* Right sidebar */}
         <div className="flex flex-col gap-4">
-          <SmartAlerts period={period} />
-          <AppointmentStatusWidget period={period} />
+          <SmartAlerts period={period} customStart={customStart} customEnd={customEnd} />
+          <AppointmentStatusWidget period={period} customStart={customStart} customEnd={customEnd} />
         </div>
       </div>
 
       {/* ── Doctor Performance + Recent Patients ───────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DoctorPerformanceWidget period={period} />
-        <RecentPatients period={period} />
+        <DoctorPerformanceWidget period={period} customStart={customStart} customEnd={customEnd} />
+        <RecentPatients period={period} customStart={customStart} customEnd={customEnd} />
       </div>
     </div>
   );

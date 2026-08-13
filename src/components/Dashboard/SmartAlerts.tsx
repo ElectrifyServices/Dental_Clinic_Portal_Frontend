@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AlertTriangle, CreditCard, Package, Users, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui';
-import { MOCK_SMART_ALERTS } from '../../data/mockAnalytics';
+import {
+  useInvoicesOverdue,
+  useCriticallyLowStock,
+  useFollowUpsDue,
+  useMembershipsExpiring
+} from '../../hooks/dashboard/useDashboardAnalytics';
 
 const ALERT_CONFIG = {
   warning: {
@@ -33,19 +38,83 @@ const ALERT_CONFIG = {
 
 const ALERT_ICONS: Record<string, React.ReactNode> = {
   invoice: <CreditCard className="w-4 h-4" />,
-  stock:   <Package className="w-4 h-4" />,
-  followup:<Users className="w-4 h-4" />,
+  stock: <Package className="w-4 h-4" />,
+  followup: <Users className="w-4 h-4" />,
   membership: <CheckCircle className="w-4 h-4" />,
 };
 
-export function SmartAlerts({ period = 'today' }: { period?: string }) {
+export function SmartAlerts({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
   const [dismissed, setDismissed] = React.useState<Set<string>>(new Set());
-  
-  // In a real app, you might filter alerts based on period.
-  // For mock UI, we'll just show them all.
-  const alerts = MOCK_SMART_ALERTS.filter(a => !dismissed.has(a.id));
-  
-  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : "This Year's";
+
+  const { data: invoicesOverdue } = useInvoicesOverdue();
+  const { data: criticallyLowStock } = useCriticallyLowStock();
+  const { data: followUpsDue } = useFollowUpsDue();
+  const { data: membershipsExpiring } = useMembershipsExpiring();
+
+  const generatedAlerts = useMemo(() => {
+    const alerts: any[] = [];
+
+    if (invoicesOverdue?.count > 0) {
+      alerts.push({
+        id: 'invoices',
+        type: 'danger',
+        icon: 'invoice',
+        message: `${invoicesOverdue.count} Invoices Overdue`,
+        // value: '> 7 days',
+        action: 'Review Invoices'
+      });
+    }
+
+    if (criticallyLowStock?.items?.length > 0) {
+      criticallyLowStock.items.forEach((item: any) => {
+        alerts.push({
+          id: `stock-${item.id || item.name}`,
+          type: 'warning',
+          icon: 'stock',
+          message: `${item.name} is Low in Stock`,
+          value: `Current: ${item.current_stock} / Min: ${item.min_stock}`,
+          action: 'Order Stock'
+        });
+      });
+    } else if (criticallyLowStock?.count > 0) {
+      alerts.push({
+        id: 'stock',
+        type: 'warning',
+        icon: 'stock',
+        message: `${criticallyLowStock.count} Items Low Stock`,
+        value: 'Critically low',
+        action: 'Order Stock'
+      });
+    }
+
+    if (followUpsDue?.count > 0) {
+      alerts.push({
+        id: 'followup',
+        type: 'info',
+        icon: 'followup',
+        message: `${followUpsDue.count} Follow-ups Due`,
+        value: 'This week',
+        action: 'View Patients'
+      });
+    }
+
+    if (membershipsExpiring?.count > 0) {
+      alerts.push({
+        id: 'membership',
+        type: 'warning',
+        icon: 'membership',
+        message: `${membershipsExpiring.count} Memberships Expiring`,
+        value: 'Next 15 days',
+        action: 'Renew'
+      });
+    }
+
+    return alerts;
+  }, [invoicesOverdue, criticallyLowStock, followUpsDue, membershipsExpiring]);
+
+  const alerts = generatedAlerts.filter(a => !dismissed.has(a.id));
+
+  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full">
@@ -58,7 +127,7 @@ export function SmartAlerts({ period = 'today' }: { period?: string }) {
           </span>
         )}
       </p>
-      
+
       {alerts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 gap-2">
           <CheckCircle className="w-8 h-8 text-emerald-400" />
@@ -84,9 +153,6 @@ export function SmartAlerts({ period = 'today' }: { period?: string }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground leading-tight">{alert.message}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{alert.value}</p>
-                    <Button variant="outline" size="xs" className={`mt-1.5 font-black uppercase tracking-wider ${cfg.badge}`}>
-                      {alert.action}
-                    </Button>
                   </div>
                   <Button
                     variant="ghost"

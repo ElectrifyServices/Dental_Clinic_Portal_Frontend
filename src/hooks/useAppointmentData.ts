@@ -53,12 +53,35 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
     return !isExcluded;
   }, [params?.enabled]);
 
+  const [page, setPage] = useState(params?.page || 1);
+  const [limit, setLimit] = useState(params?.limit || 1000);
+
   const { data: apiResponse } = useAppointmentsListQuery({
-    page: 1,
-    limit: 1000,
+    page,
+    limit,
     search: debouncedSearch || undefined,
     filters: apptFilters,
   }, { enabled: isEnabled });
+
+  const pagination = useMemo(() => {
+    if (apiResponse && (apiResponse as any).pagination) {
+      return (apiResponse as any).pagination;
+    }
+    if (apiResponse && (apiResponse as any).data?.pagination) {
+      return (apiResponse as any).data.pagination;
+    }
+    if (apiResponse && (apiResponse as any).responseObject?.data?.pagination) {
+      return (apiResponse as any).responseObject.data.pagination;
+    }
+    
+    // Fallback if not found
+    return {
+      current_page: page,
+      page_limit: limit,
+      total_items: 0,
+      total_pages: 0
+    };
+  }, [apiResponse, page, limit]);
 
   const { data: noShowApiResponse } = useAppointmentsListQuery({
     page: 1,
@@ -152,6 +175,11 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
 
   return {
     appointments,
+    pagination,
+    page,
+    setPage,
+    limit,
+    setLimit,
     noShowAppointments,
     apptSearch,
     setApptSearch,

@@ -258,7 +258,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               name="previousDoctorName"
               value={formData.previousDoctorName}
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                e.target.value = e.target.value.replace(/[^a-zA-Z\s.?<]/g, "");
                 handleChange(e);
               }}
               className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
