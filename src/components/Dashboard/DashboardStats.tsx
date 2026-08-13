@@ -48,13 +48,17 @@ function GoalProgressBar({ current, target }: { current: number; target: number 
   );
 }
 
-export function EnhancedDashboardStats() {
+export function EnhancedDashboardStats({ period = 'today' }: { period?: string }) {
   const kpi = MOCK_KPI;
   const sparkData = MOCK_REVENUE_30DAYS.map(d => d.revenue);
 
+  // Helper to format the period string for display
+  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : "This Year's";
+  const periodSuffix = period === 'today' ? "(Today)" : period === 'week' ? "(Week)" : period === 'month' ? "(Month)" : "(Year)";
+
   const cards = [
     {
-      label: "Today's Appointments",
+      label: `${periodLabel} Appointments`,
       value: kpi.todayAppointments.value,
       icon: <Calendar className="w-5 h-5" />,
       variant: 'gray' as const,
@@ -62,7 +66,7 @@ export function EnhancedDashboardStats() {
       sub: `${kpi.todayAppointments.completed} completed · ${kpi.todayAppointments.remaining} remaining`,
     },
     {
-      label: "Today's Revenue",
+      label: `${periodLabel} Revenue`,
       value: `₹${(kpi.todayRevenue.value / 1000).toFixed(0)}k`,
       icon: <TrendingUp className="w-5 h-5" />,
       variant: 'emerald' as const,
@@ -70,12 +74,12 @@ export function EnhancedDashboardStats() {
       sub: `₹${(kpi.todayRevenue.collected / 1000).toFixed(0)}k collected · ₹${(kpi.todayRevenue.pending / 1000).toFixed(0)}k pending`,
     },
     {
-      label: 'New Patients (Week)',
+      label: `New Patients ${periodSuffix}`,
       value: kpi.newPatientsWeek.value,
       icon: <Users className="w-5 h-5" />,
       variant: 'primary' as const,
       trend: kpi.newPatientsWeek.trend,
-      sub: 'vs last week',
+      sub: 'vs last period',
     },
     {
       label: 'Pending Invoices',
@@ -139,7 +143,7 @@ export function EnhancedDashboardStats() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-foreground">Revenue Trend</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Last 30 days · invoiced vs collected</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{periodLabel} Performance · Invoiced vs Collected</p>
             </div>
             <div className="flex items-center gap-4 text-[10px] font-semibold text-muted-foreground">
               <span className="flex items-center gap-1.5">

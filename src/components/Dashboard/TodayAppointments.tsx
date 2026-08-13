@@ -14,27 +14,35 @@ const STATUS_META: Record<string, { label: string; variant: any }> = {
 
 export function TodayAppointments({
   appointments = [],
+  period = 'today',
 }: {
   appointments: Appointment[];
+  period?: string;
 }) {
   const d = new Date();
   const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const todayAppts = appointments
-    .filter((a) => {
-      const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
-      return aDateStr === todayStr;
-    })
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .slice(0, 8);
+  
+  // A real app would filter based on 'period'. For mock UI purposes, we'll assume the parent passes the correct appointments,
+  // or we just show them all if it's not 'today'. 
+  const filteredAppts = period === 'today' 
+    ? appointments.filter((a) => {
+        const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+        return aDateStr === todayStr;
+      })
+    : appointments;
+
+  const displayAppts = filteredAppts.sort((a, b) => a.time.localeCompare(b.time)).slice(0, 8);
+
+  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : "This Year's";
 
   return (
     <ContentCard
-      title="Today's Appointments"
-      subtitle={`${todayAppts.length} scheduled for ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}`}
+      title={`${periodLabel} Appointments`}
+      subtitle={`${displayAppts.length} scheduled for ${period === 'today' ? new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : 'this period'}`}
       icon={<Calendar className="w-5 h-5" />}
       bodyClassName="p-0"
     >
-      {todayAppts.length === 0 ? (
+      {displayAppts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-8 ring-primary/5">
             <Calendar className="w-8 h-8 text-primary" />
@@ -43,12 +51,12 @@ export function TodayAppointments({
             Schedule is clear
           </h3>
           <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-widest leading-relaxed">
-            No appointments found for today
+            No appointments found for {period}
           </p>
         </div>
       ) : (
         <div className="divide-y divide-border/50">
-          {todayAppts.map((appt, i) => {
+          {displayAppts.map((appt, i) => {
             const sm = STATUS_META[appt.status] ?? STATUS_META.scheduled;
             return (
               <div

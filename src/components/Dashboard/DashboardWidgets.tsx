@@ -20,14 +20,14 @@ function CircleProgress({ value, color = '#3b82f6', size = 48 }: { value: number
   );
 }
 
-export function AppointmentStatusWidget() {
+export function AppointmentStatusWidget({ period = 'today' }: { period?: string }) {
   const total = MOCK_APPT_STATUS.reduce((s, x) => s + x.count, 0);
   const slices = MOCK_APPT_STATUS.map(s => ({ label: s.label, value: s.count, color: s.color }));
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full">
       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">
-        Today's Status
+        {period === 'today' ? "Today's Status" : period === 'week' ? "This Week's Status" : period === 'month' ? "This Month's Status" : "This Year's Status"}
       </p>
       <div className="flex items-center gap-4">
         <DonutChart slices={slices} size={100} label={`${total}`} />
@@ -47,11 +47,11 @@ export function AppointmentStatusWidget() {
   );
 }
 
-export function DoctorPerformanceWidget() {
+export function DoctorPerformanceWidget({ period = 'today' }: { period?: string }) {
   return (
     <div className="bg-card border border-border rounded-xl p-5 shadow-card">
       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-        <TrendingUp className="w-4 h-4 text-primary" /> Doctor Performance · Today
+        <TrendingUp className="w-4 h-4 text-primary" /> Doctor Performance · {period === 'today' ? 'Today' : period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'This Year'}
       </p>
       <div className="space-y-4">
         {MOCK_DOCTORS.map((doc) => (

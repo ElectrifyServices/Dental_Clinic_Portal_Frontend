@@ -1,16 +1,28 @@
-import React from 'react';
-import { UserPlus } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserPlus, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
-import { Button } from '@/components/ui';
+import { Button, FilterTabs, Input } from '@/components/ui';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
 import { TodayAppointments } from '../components/Dashboard/TodayAppointments';
 import { RecentPatients } from '../components/Dashboard/RecentPatients';
 import { SmartAlerts } from '../components/Dashboard/SmartAlerts';
 import { AppointmentStatusWidget, DoctorPerformanceWidget } from '../components/Dashboard/DashboardWidgets';
 
+const PERIODS = [
+  { key: 'today',     label: 'Today'       },
+  { key: 'week',      label: 'This Week'   },
+  { key: 'month',     label: 'This Month'  },
+  { key: 'year',      label: 'This Year'   },
+  { key: 'custom',    label: 'Custom'      },
+];
+
 export const DashboardPage: React.FC = () => {
+  const [period, setPeriod] = useState('today');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  
   const { appointments } = useAppointmentData();
   const { state } = useAuth();
   const { setActiveModal, setSelectedPatientId, setPreFilledPatientData, setPatientFormType } = useModal();
@@ -41,32 +53,61 @@ export const DashboardPage: React.FC = () => {
             {day} · Here's your clinic overview
           </p>
         </div>
-        <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0">
-          <UserPlus className="w-4 h-4" /> Add New Patient
-        </Button>
+        
+        <div className="flex items-center gap-4 flex-wrap">
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
+              />
+              <span className="text-muted-foreground text-xs font-medium">to</span>
+              <Input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
+              />
+            </div>
+          )}
+          
+          <div className="bg-white/50 rounded-lg p-1 border border-border/50">
+            <FilterTabs
+              tabs={PERIODS}
+              active={period}
+              onChange={setPeriod}
+            />
+          </div>
+          
+          <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm">
+            <UserPlus className="w-4 h-4" /> Add New Patient
+          </Button>
+        </div>
       </div>
 
       {/* ── KPI Grid + Revenue Chart + Goal ────────────────────────────── */}
-      <EnhancedDashboardStats />
+      <EnhancedDashboardStats period={period} />
 
       {/* ── Bottom Section ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Today Appointments */}
+        {/* Appointments List */}
         <div className="lg:col-span-2">
-          <TodayAppointments appointments={appointments} />
+          <TodayAppointments appointments={appointments} period={period} />
         </div>
 
         {/* Right sidebar */}
         <div className="flex flex-col gap-4">
-          <SmartAlerts />
-          <AppointmentStatusWidget />
+          <SmartAlerts period={period} />
+          <AppointmentStatusWidget period={period} />
         </div>
       </div>
 
       {/* ── Doctor Performance + Recent Patients ───────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DoctorPerformanceWidget />
-        <RecentPatients />
+        <DoctorPerformanceWidget period={period} />
+        <RecentPatients period={period} />
       </div>
     </div>
   );

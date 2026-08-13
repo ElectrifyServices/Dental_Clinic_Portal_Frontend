@@ -1,4 +1,5 @@
 import { useApiQuery } from "../useApiQuery";
+import apiClient from "../../services/apiClient";
 
 export interface PatientAnalyticsFilter {
   timeRange?: string;
@@ -109,3 +110,7 @@ export function useChurnRiskAnalyticsQuery(filter: PatientAnalyticsFilter = {}) 
     data: filter,
   });
 }
+
+export const exportPatientAnalytics = async (filter: any) => {
+  return apiClient.post("/patientAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
+};
