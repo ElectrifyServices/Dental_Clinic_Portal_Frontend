@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Phone, Calendar, TrendingUp, User, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { StatusBadge, ContentCard, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, SearchInput } from "@/components/ui";
+import { StatusBadge, ContentCard, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, SearchInput, Pagination } from "@/components/ui";
 
 import { useRecentPatients } from "../../hooks/dashboard/useDashboardAnalytics";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -117,65 +117,18 @@ export function RecentPatients({ period = 'today' }: { period?: string }) {
             ))}
           </div>
           {(totalPages > 1 || patients.length > 0) && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-border/50 mt-auto bg-muted/10">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Items per page:
-                </span>
-                <Select
-                  value={String(limit)}
-                  onValueChange={(val) => {
-                    setLimit(Number(val));
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-6 text-[10px] px-2 w-[60px] font-bold">
-                    <SelectValue placeholder={String(limit)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[5, 10, 20, 50].map((size) => (
-                      <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  onClick={() => setPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="h-7 w-7"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-
-                {displayPages.map((p, idx) => (
-                  <Button
-                    key={idx}
-                    variant={p === currentPage ? "default" : "outline"}
-                    size="icon-xs"
-                    onClick={() => p !== '...' && setPage(p as number)}
-                    disabled={p === '...'}
-                    className={`h-7 min-w-[28px] px-1 text-xs font-bold ${p === '...' ? 'border-none shadow-none cursor-default bg-transparent text-muted-foreground hover:bg-transparent' : ''}`}
-                  >
-                    {p}
-                  </Button>
-                ))}
-
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="h-7 w-7"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="mt-auto border-t border-border/50 bg-muted/10">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={pagination?.total_items || (totalPages * limit)}
+                perPage={limit}
+                onPageChange={setPage}
+                onPerPageChange={(val) => {
+                  setLimit(val);
+                  setPage(1);
+                }}
+              />
             </div>
           )}
         </>

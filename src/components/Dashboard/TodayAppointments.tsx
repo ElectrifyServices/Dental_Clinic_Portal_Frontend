@@ -1,6 +1,6 @@
 import React from "react";
 import { Phone, Calendar, ChevronRight, ChevronLeft } from "lucide-react";
-import { ContentCard, Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput } from "@/components/ui";
+import { ContentCard, Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput, Pagination } from "@/components/ui";
 import { Appointment } from "@/types";
 
 const STATUS_META: Record<string, { label: string; variant: any }> = {
@@ -138,65 +138,18 @@ export function TodayAppointments({
             })}
           </div>
           {(totalPages > 1 || (appointments.length > 0 && limit)) && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-border/50 mt-auto bg-muted/10">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Items per page:
-                </span>
-                <Select
-                  value={String(limit || 10)}
-                  onValueChange={(val) => {
-                    if (setLimit) setLimit(Number(val));
-                    if (setPage) setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-6 text-[10px] px-2 w-[60px] font-bold">
-                    <SelectValue placeholder={String(limit || 10)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[5, 10, 20, 50].map((size) => (
-                      <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  onClick={() => setPage && setPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="h-7 w-7"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                {displayPages.map((p, idx) => (
-                  <Button
-                    key={idx}
-                    variant={p === currentPage ? "default" : "outline"}
-                    size="icon-xs"
-                    onClick={() => p !== '...' && setPage && setPage(p as number)}
-                    disabled={p === '...'}
-                    className={`h-7 min-w-[28px] px-1 text-xs font-bold ${p === '...' ? 'border-none shadow-none cursor-default bg-transparent text-muted-foreground hover:bg-transparent' : ''}`}
-                  >
-                    {p}
-                  </Button>
-                ))}
-
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  onClick={() => setPage && setPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="h-7 w-7"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="mt-auto border-t border-border/50 bg-muted/10">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={pagination?.total_items || appointments.length}
+                perPage={itemsPerPage}
+                onPageChange={(p) => setPage && setPage(p)}
+                onPerPageChange={(val) => {
+                  if (setLimit) setLimit(val);
+                  if (setPage) setPage(1);
+                }}
+              />
             </div>
           )}
         </>

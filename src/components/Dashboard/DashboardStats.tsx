@@ -4,7 +4,7 @@ import {
   ArrowUpRight, ArrowDownRight, AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { MetricCard } from '@/components/ui';
+import { MetricCard, Card } from '@/components/ui';
 import { RevenueAreaChart } from './Charts';
 import {
   useAppointmentsCount,
@@ -142,7 +142,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
       {/* Revenue chart + goal strip */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Area chart */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5 shadow-card">
+        <Card className="lg:col-span-2 p-5 shadow-card">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-foreground">Revenue Trend</h3>
@@ -174,12 +174,12 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
           ) : (
             <div className="h-[160px] flex items-center justify-center text-muted-foreground text-sm font-medium">No trend data available</div>
           )}
-        </div>
+        </Card>
 
         {/* Right column */}
         <div className="flex flex-col gap-4">
           {/* Quick stat strip */}
-          <div className="bg-card border border-border rounded-xl p-4 shadow-card flex flex-col gap-3 h-full justify-center">
+          <Card className="p-4 shadow-card flex flex-col gap-3 h-full justify-center">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Quick Insights</p>
             {[
               { label: 'Avg. Daily Revenue', val: `₹${extractValue(avgDailyRevenue)}`, up: true },
@@ -194,7 +194,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
                 </span>
               </div>
             ))}
-          </div>
+          </Card>
         </div>
       </div>
     </div>

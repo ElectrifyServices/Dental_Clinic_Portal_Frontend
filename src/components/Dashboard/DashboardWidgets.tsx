@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, TrendingUp, Clock, UserRound } from 'lucide-react';
 import { DonutChart } from './Charts';
-import { StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput } from '@/components/ui';
+import { StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput, Card, Pagination } from '@/components/ui';
 import { useAppointmentStatusBreakdown, useDoctorPerformance } from '../../hooks/dashboard/useDashboardAnalytics';
 
 function CircleProgress({ value, color = '#3b82f6', size = 48 }: { value: number; color?: string; size?: number }) {
@@ -50,7 +50,7 @@ export function AppointmentStatusWidget({ period = 'today', customStart, customE
   const periodLabel = period === 'today' ? "Today's Status" : period === 'week' ? "This Week's Status" : period === 'month' ? "This Month's Status" : period === 'year' ? "This Year's Status" : "Custom Period Status";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full">
+    <Card className="p-5 shadow-card h-full">
       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">
         {periodLabel}
       </p>
@@ -68,7 +68,7 @@ export function AppointmentStatusWidget({ period = 'today', customStart, customE
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -106,7 +106,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
   const displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
 
   return (
-    <div className="bg-card border border-border rounded-xl flex flex-col shadow-card h-full">
+    <Card className="flex flex-col shadow-card h-full overflow-hidden">
       <div className="p-5 border-b border-border/50">
         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" /> Doctor Performance · {periodLabel}
@@ -167,61 +167,20 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
         )}
       </div>
       {(totalPages > 1 || doctors.length > 0) && (
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border/50 mt-auto bg-muted/10 rounded-b-xl">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Items per page:
-            </span>
-            <Select
-              value={String(limit)}
-              onValueChange={(val) => {
-                setLimit(Number(val));
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-6 text-[10px] px-2 w-[60px] font-bold">
-                <SelectValue placeholder={String(limit)} />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 20, 50].map((size) => (
-                  <SelectItem key={size} value={String(size)} className="text-[10px] font-bold">
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="h-7 w-7 flex items-center justify-center rounded border border-border bg-card text-muted-foreground hover:bg-muted disabled:opacity-50"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            
-            {displayPages.map((p, idx) => (
-              <button
-                key={idx}
-                onClick={() => p !== '...' && setPage(p as number)}
-                disabled={p === '...'}
-                className={`h-7 min-w-[28px] px-1 text-xs font-bold rounded border ${p === currentPage ? 'bg-primary border-primary text-primary-foreground' : p === '...' ? 'border-none bg-transparent text-muted-foreground cursor-default' : 'bg-card border-border text-foreground hover:bg-muted'}`}
-              >
-                {p}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="h-7 w-7 flex items-center justify-center rounded border border-border bg-card text-muted-foreground hover:bg-muted disabled:opacity-50"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
+        <div className="mt-auto border-t border-border/50 bg-muted/10">
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={pagination?.total_items || (totalPages * limit)}
+            perPage={limit}
+            onPageChange={setPage}
+            onPerPageChange={(val) => {
+              setLimit(val);
+              setPage(1);
+            }}
+          />
         </div>
       )}
-    </div>
+    </Card>
   );
 }
