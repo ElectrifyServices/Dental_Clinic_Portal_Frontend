@@ -133,28 +133,32 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
   return (
     <div className="space-y-3">
       <div className="flex bg-muted p-1 rounded-xl w-fit">
-        <Button
-          type="button"
-          onClick={() => setMode('draw')}
-          variant={mode === 'draw' ? 'default' : 'ghost'}
-          size="sm"
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
-            }`}
-        >
-          <MousePointer2 className="w-3.5 h-3.5" />
-          Draw
-        </Button>
-        <Button
-          type="button"
-          onClick={() => setMode('upload')}
-          variant={mode === 'upload' ? 'default' : 'ghost'}
-          size="sm"
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
-            }`}
-        >
-          <Upload className="w-3.5 h-3.5" />
-          Upload
-        </Button>
+        {(!hasSigned || mode === 'draw') && (
+          <Button
+            type="button"
+            onClick={() => setMode('draw')}
+            variant={mode === 'draw' ? 'default' : 'ghost'}
+            size="sm"
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'draw' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+              }`}
+          >
+            <MousePointer2 className="w-3.5 h-3.5" />
+            Draw
+          </Button>
+        )}
+        {(!hasSigned || mode === 'upload') && (
+          <Button
+            type="button"
+            onClick={() => setMode('upload')}
+            variant={mode === 'upload' ? 'default' : 'ghost'}
+            size="sm"
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${mode === 'upload' ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground hover:text-muted-foreground'
+              }`}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Upload
+          </Button>
+        )}
       </div>
 
       <div className="relative w-full">

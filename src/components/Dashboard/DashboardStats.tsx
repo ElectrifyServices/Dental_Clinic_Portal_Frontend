@@ -1,123 +1,126 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Calendar, TrendingUp, Users, AlertTriangle, CreditCard, Building2,
-  Clock, Target, ArrowUpRight, ArrowDownRight, Activity,
+  ArrowUpRight, ArrowDownRight, AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { MetricCard } from '@/components/ui';
-import { MOCK_KPI, MOCK_REVENUE_30DAYS } from '../../data/mockAnalytics';
-import { RevenueAreaChart, MiniSparkline } from './Charts';
+import { MetricCard, Card } from '@/components/ui';
+import { RevenueAreaChart } from './Charts';
+import {
+  useAppointmentsCount,
+  useRevenue,
+  usePatientsCount,
+  usePendingInvoices,
+  useLowStockItems,
+  useCorporateMembers,
+  useRevenueTrend,
+  useAvgDailyRevenue,
+  useApptCompletionRate,
+  usePatientRetention
+} from '../../hooks/dashboard/useDashboardAnalytics';
 
-function Greeting() {
-  const hour = new Date().getHours();
-  const name = 'Doctor';
-  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-  const day = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-foreground tracking-tight">
-        {greeting}, <span className="text-primary">{name}</span>
-      </h1>
-      <p className="text-xs text-muted-foreground font-medium mt-0.5">{day}</p>
-    </div>
-  );
-}
+const extractValue = (data: any): string | number => {
+  if (data === null || data === undefined) return 0;
+  if (typeof data === 'number' || typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    if ('count' in data) return data.count;
+    if ('value' in data) return data.value;
+    if ('total' in data) return data.total;
+    if ('appointmentsCount' in data) return data.appointmentsCount;
+    if ('patientsCount' in data) return data.patientsCount;
+    const values = Object.values(data);
+    if (values.length > 0 && (typeof values[0] === 'number' || typeof values[0] === 'string')) {
+      return values[0] as string | number;
+    }
+  }
+  return 0;
+};
 
-function GoalProgressBar({ current, target }: { current: number; target: number }) {
-  const pct = Math.min((current / target) * 100, 100);
-  return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
-        <span>Monthly Revenue Goal</span>
-        <span className="text-foreground">
-          ₹{(current / 1000).toFixed(0)}k / ₹{(target / 1000).toFixed(0)}k
-        </span>
-      </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-primary to-indigo-500"
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-        />
-      </div>
-      <p className="text-[10px] text-muted-foreground font-medium">
-        {pct.toFixed(1)}% of target achieved · ₹{((target - current) / 1000).toFixed(0)}k remaining
-      </p>
-    </div>
-  );
-}
+export function EnhancedDashboardStats({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
+  // Helpers
+  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
+  const periodSuffix = period === 'today' ? "(Today)" : period === 'week' ? "(Week)" : period === 'month' ? "(Month)" : period === 'year' ? "(Year)" : "(Custom)";
 
-export function EnhancedDashboardStats({ period = 'today' }: { period?: string }) {
-  const kpi = MOCK_KPI;
-  const sparkData = MOCK_REVENUE_30DAYS.map(d => d.revenue);
+  // API Hooks
+  const { data: appointmentsCount = 0 } = useAppointmentsCount(period, customStart, customEnd);
+  const { data: revenueData = {} } = useRevenue(period, customStart, customEnd);
+  const { data: patientsCount = 0 } = usePatientsCount(period, customStart, customEnd);
+  const { data: pendingInvoices = 0 } = usePendingInvoices();
+  const { data: lowStockItems = 0 } = useLowStockItems();
+  const { data: corporateMembers = 0 } = useCorporateMembers();
+  const { data: revenueTrend = [] } = useRevenueTrend();
 
-  // Helper to format the period string for display
-  const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : "This Year's";
-  const periodSuffix = period === 'today' ? "(Today)" : period === 'week' ? "(Week)" : period === 'month' ? "(Month)" : "(Year)";
+  const mappedRevenueTrend = React.useMemo(() => {
+    let arr = revenueTrend as any;
+    if (arr && typeof arr === 'object' && !Array.isArray(arr)) {
+      if (Array.isArray(arr.data)) arr = arr.data;
+      else if (Array.isArray(arr.items)) arr = arr.items;
+      else if (Array.isArray(arr.trend)) arr = arr.trend;
+      else arr = Object.values(arr).find(Array.isArray) || [];
+    }
+
+    if (!Array.isArray(arr)) return [];
+
+    return arr.map((d: any) => ({
+      date: d.month || d.date || d.name || '',
+      revenue: typeof d.invoiced === 'number' ? d.invoiced : (Number(d.revenue) || Number(d.invoiced) || 0),
+      collected: typeof d.collected === 'number' ? d.collected : (Number(d.collected) || 0)
+    }));
+  }, [revenueTrend]);
+
+  const { data: avgDailyRevenue = 0 } = useAvgDailyRevenue();
+  const { data: apptCompletionRate = 0 } = useApptCompletionRate();
+  const { data: patientRetention = 0 } = usePatientRetention();
 
   const cards = [
     {
       label: `${periodLabel} Appointments`,
-      value: kpi.todayAppointments.value,
+      value: extractValue(appointmentsCount),
       icon: <Calendar className="w-5 h-5" />,
       variant: 'gray' as const,
-      trend: kpi.todayAppointments.trend,
-      sub: `${kpi.todayAppointments.completed} completed · ${kpi.todayAppointments.remaining} remaining`,
+      sub: `Total scheduled`,
     },
     {
       label: `${periodLabel} Revenue`,
-      value: `₹${(kpi.todayRevenue.value / 1000).toFixed(0)}k`,
+      value: `₹${((extractValue(revenueData?.totalCollected) || extractValue(revenueData?.revenue) || extractValue(revenueData) || 0) as number / 1000).toFixed(0)}k`,
       icon: <TrendingUp className="w-5 h-5" />,
       variant: 'emerald' as const,
-      trend: kpi.todayRevenue.trend,
-      sub: `₹${(kpi.todayRevenue.collected / 1000).toFixed(0)}k collected · ₹${(kpi.todayRevenue.pending / 1000).toFixed(0)}k pending`,
+      sub: `Total collected`,
     },
     {
       label: `New Patients ${periodSuffix}`,
-      value: kpi.newPatientsWeek.value,
+      value: extractValue(patientsCount),
       icon: <Users className="w-5 h-5" />,
       variant: 'primary' as const,
-      trend: kpi.newPatientsWeek.trend,
-      sub: 'vs last period',
+      sub: 'Total new patients',
     },
     {
       label: 'Pending Invoices',
-      value: kpi.pendingInvoices.value,
+      value: extractValue(pendingInvoices),
       icon: <CreditCard className="w-5 h-5" />,
-      variant: kpi.pendingInvoices.value > 0 ? 'amber' as const : 'gray' as const,
-      trend: kpi.pendingInvoices.trend,
-      sub: `₹${(kpi.pendingInvoices.amount / 1000).toFixed(0)}k outstanding`,
+      variant: Number(extractValue(pendingInvoices)) > 0 ? 'amber' as const : 'gray' as const,
+      sub: `Outstanding count`,
     },
     {
       label: 'Low Stock Items',
-      value: kpi.lowStock.value,
+      value: extractValue(lowStockItems),
       icon: <AlertTriangle className="w-5 h-5" />,
-      variant: kpi.lowStock.value > 0 ? 'rose' as const : 'gray' as const,
-      trend: kpi.lowStock.trend,
+      variant: Number(extractValue(lowStockItems)) > 0 ? 'rose' as const : 'gray' as const,
       sub: 'Items at critical level',
     },
     {
       label: 'Active Members',
-      value: kpi.activeMembers.value,
+      value: extractValue(corporateMembers),
       icon: <Building2 className="w-5 h-5" />,
       variant: 'indigo' as const,
-      trend: kpi.activeMembers.trend,
       sub: 'Corporate + Individual',
-    },
-    {
-      label: 'Queue Right Now',
-      value: kpi.consultationQueue.value,
-      icon: <Clock className="w-5 h-5" />,
-      variant: 'gray' as const,
-      sub: 'Patients waiting',
     },
   ];
 
   return (
     <div className="space-y-4">
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {cards.map((c, i) => (
           <motion.div
             key={c.label}
@@ -130,7 +133,7 @@ export function EnhancedDashboardStats({ period = 'today' }: { period?: string }
               value={c.value}
               icon={c.icon}
               variant={c.variant}
-              trend={c.trend}
+              sub={c.sub}
             />
           </motion.div>
         ))}
@@ -139,48 +142,59 @@ export function EnhancedDashboardStats({ period = 'today' }: { period?: string }
       {/* Revenue chart + goal strip */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Area chart */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5 shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        <Card className="lg:col-span-2 p-5 shadow-card">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-foreground">Revenue Trend</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{periodLabel} Performance · Invoiced vs Collected</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                This graph shows monthly data (ignores top date filter)
+              </p>
             </div>
-            <div className="flex items-center gap-4 text-[10px] font-semibold text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-blue-500 inline-block rounded" /> Invoiced
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-emerald-500 border-dashed border-t-2 border-emerald-500 inline-block" /> Collected
-              </span>
+
+            {/* Display totals from API instead of legend */}
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-4 text-[11px] font-bold">
+                <span className="flex items-center gap-1.5 text-blue-600">
+                  Total Invoiced: ₹{Number(revenueTrend?.totalInvoiced || 0).toLocaleString('en-IN')}
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-600">
+                  Total Revenue: ₹{Number(revenueTrend?.totalRevenue || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+              {/* {(revenueTrend?.totalInvoicesCount || 0) > 0 && (
+                 <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-widest">
+                   {revenueTrend?.totalInvoicesCount} Invoices
+                 </span>
+              )} */}
             </div>
           </div>
-          <RevenueAreaChart data={MOCK_REVENUE_30DAYS} height={160} />
-        </div>
+          {mappedRevenueTrend.length > 0 ? (
+            <RevenueAreaChart data={mappedRevenueTrend} height={160} />
+          ) : (
+            <div className="h-[160px] flex items-center justify-center text-muted-foreground text-sm font-medium">No trend data available</div>
+          )}
+        </Card>
 
         {/* Right column */}
         <div className="flex flex-col gap-4">
-          {/* Goal Progress */}
-          <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <GoalProgressBar current={kpi.monthlyGoal.current} target={kpi.monthlyGoal.target} />
-          </div>
-
           {/* Quick stat strip */}
-          <div className="bg-card border border-border rounded-xl p-4 shadow-card flex flex-col gap-3">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Quick Insights</p>
+          <Card className="p-4 shadow-card flex flex-col gap-3 h-full justify-center">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Quick Insights</p>
             {[
-              { label: 'Avg. Daily Revenue', val: '₹8,900', up: true },
-              { label: 'Appt Completion Rate', val: '88%', up: true },
-              { label: 'Patient Retention', val: '74%', up: false },
+              { label: 'Avg. Daily Revenue', val: `₹${extractValue(avgDailyRevenue)}`, up: true },
+              { label: 'Appt Completion Rate', val: `${extractValue(apptCompletionRate)}%`, up: true },
+              { label: 'Patient Retention', val: `${extractValue(patientRetention)}%`, up: true },
             ].map(item => (
-              <div key={item.label} className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
-                <span className={`text-xs font-black flex items-center gap-1 ${item.up ? 'text-emerald-600' : 'text-rose-500'}`}>
-                  {item.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              <div key={item.label} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0 last:pb-0">
+                <span className="text-xs text-muted-foreground font-semibold">{item.label}</span>
+                <span className={`text-sm font-black flex items-center gap-1 ${item.up ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {item.up ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                   {item.val}
                 </span>
               </div>
             ))}
-          </div>
+          </Card>
         </div>
       </div>
     </div>

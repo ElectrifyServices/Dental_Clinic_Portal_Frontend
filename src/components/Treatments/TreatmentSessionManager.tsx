@@ -24,6 +24,13 @@ import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
 
+const extractApiError = (err: any, fallback: string) => {
+  return err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc
+    || err?.response?.data?.message
+    || err?.message
+    || fallback;
+};
+
 interface TreatmentSessionManagerProps {
   treatmentId: string;
   patientName: string;
@@ -402,6 +409,7 @@ export function TreatmentSessionManager({
     discount_value: 0,
     paid_amount: 0,
     paid_now: 0,
+    create_invoice: false,
   });
 
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -672,7 +680,7 @@ export function TreatmentSessionManager({
       setNewSession({ date: "", time: "09:00 AM", duration: 45, cost: 0, clinical_objectives: "" });
       refetch();
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to schedule session", "error");
+      showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
 
@@ -703,6 +711,7 @@ export function TreatmentSessionManager({
         discount_value: currentDiscount,
         paid_amount: currentPaid,
         paid_now: 0,
+        create_invoice: false,
       });
       setPrescriptions([]);
       setSessionAttachments([]);
@@ -729,7 +738,7 @@ export function TreatmentSessionManager({
       showToast(`Session updated to ${STATUS_CONFIG[newStatus]?.label}`);
       refetch();
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to update", "error");
+      showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
 
@@ -755,7 +764,7 @@ export function TreatmentSessionManager({
       cancelSchedulingSession();
       refetch();
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to schedule session", "error");
+      showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
 
@@ -837,6 +846,7 @@ export function TreatmentSessionManager({
         work_done: completeForm.work_done,
         session_findings: completeForm.session_findings,
         paid_amount: completeForm.paid_now,
+        create_invoice: completeForm.create_invoice,
         discount_type: effectiveDiscountType,
         discount_value: effectiveDiscountVal,
         ...nextSessionPayload,
@@ -856,13 +866,14 @@ export function TreatmentSessionManager({
         discount_value: 0,
         paid_amount: 0,
         paid_now: 0,
+        create_invoice: false,
       });
       setPrescriptions([]);
       setSessionAttachments([]);
       setScheduleNext(false);
       refetch();
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to complete", "error");
+      showToast(extractApiError(err, "Failed to complete"), "error");
     }
   };
 
@@ -882,7 +893,7 @@ export function TreatmentSessionManager({
       setEditingClinicalNotes(null);
       refetch();
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? "Failed to update", "error");
+      showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
 
@@ -1310,7 +1321,20 @@ export function TreatmentSessionManager({
                 </div>
               </div>
 
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="create-invoice"
+                    checked={completeForm.create_invoice || false}
+                    onChange={(e) => setCompleteForm(p => ({ ...p, create_invoice: e.target.checked }))}
+                    className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
+                  />
+                  <Label htmlFor="create-invoice" className="text-sm font-bold text-foreground cursor-pointer">
+                    Create Invoice for this Session
+                  </Label>
+                </div>
+
                 <div className="flex items-center gap-2 mb-3">
                   <input
                     type="checkbox"

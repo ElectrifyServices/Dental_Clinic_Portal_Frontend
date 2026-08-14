@@ -241,6 +241,7 @@ export function TreatmentForm({
     discount_type: "" as "" | "PERCENTAGE" | "FLAT",
     discount_value: 0,
     paid_amount: 0,
+    create_invoice: false,
   });
   const [scheduleNext, setScheduleNext] = React.useState(false);
   const [nextSessionDraft, setNextSessionDraft] = React.useState({
@@ -312,6 +313,7 @@ export function TreatmentForm({
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
           paid_amount: completeForm.paid_amount,
+          create_invoice: completeForm.create_invoice,
           discount_type: completeForm.discount_type || null,
           discount_value: completeForm.discount_value || 0,
           ...nextSessionPayload,
@@ -319,7 +321,11 @@ export function TreatmentForm({
         });
       } catch (err: any) {
         // Catch backend API errors & display user-friendly UI error toast without console logs
-        toast.error(err?.message || "Failed to complete session on backend");
+        const msg = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+                    err?.response?.data?.message ||
+                    err?.message || 
+                    "Failed to complete session on backend";
+        toast.error(msg);
       }
     }
 
@@ -646,16 +652,29 @@ export function TreatmentForm({
               </div>
             </div>
 
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 space-y-4">
               <div className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
-                  id="form-schedule-next-session"
+                  id="create-invoice"
+                  checked={completeForm.create_invoice || false}
+                  onChange={(e) => setCompleteForm(p => ({ ...p, create_invoice: e.target.checked }))}
+                  className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
+                />
+                <Label htmlFor="create-invoice" className="text-sm font-bold text-foreground cursor-pointer">
+                  Create Invoice for this Session
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="schedule-next-session"
                   checked={scheduleNext}
                   onChange={(e) => setScheduleNext(e.target.checked)}
                   className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
                 />
-                <Label htmlFor="form-schedule-next-session" className="text-sm font-bold text-muted-foreground cursor-pointer">
+                <Label htmlFor="schedule-next-session" className="text-sm font-bold text-muted-foreground cursor-pointer">
                   Schedule Next Session (Optional)
                 </Label>
               </div>

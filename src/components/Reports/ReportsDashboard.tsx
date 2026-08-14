@@ -24,6 +24,7 @@ import {
   exportMembershipAnalytics,
   exportInventoryAnalytics,
 } from '@/hooks/analytics';
+import { exportRevenueAnalytics } from '@/hooks/analytics/useRevenueAnalyticsHooks';
 
 // ─── Date Range Picker ─────────────────────────────────────────────────────────
 const PERIODS = [
@@ -36,21 +37,22 @@ const PERIODS = [
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 const REPORT_TABS = [
-  { id: 'revenue',     label: 'Revenue',     icon: TrendingUp,   color: 'from-emerald-500 to-teal-600'     },
   { id: 'patients',    label: 'Patients',    icon: Users,        color: 'from-blue-500 to-indigo-600'      },
   { id: 'appointments',label: 'Appointments',icon: Calendar,     color: 'from-violet-500 to-purple-600'    },
   { id: 'treatments',  label: 'Treatments',  icon: BarChart3,    color: 'from-amber-500 to-orange-600'     },
   { id: 'membership',  label: 'Membership',  icon: Building2,    color: 'from-indigo-500 to-violet-600'    },
   { id: 'inventory',   label: 'Inventory',   icon: Package,      color: 'from-rose-500 to-red-600'         },
+  { id: 'revenue',     label: 'Revenue',     icon: TrendingUp,   color: 'from-emerald-500 to-teal-600'     },
 ];
 
 export function ReportsDashboard({ patients, appointments, treatments, invoices }: any) {
   const [period, setPeriod]   = useState('month');
-  const [activeTab, setTab]   = useState('revenue');
+  const [activeTab, setTab]   = useState('patients');
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     const exportFnMap: Record<string, (filter: any) => Promise<any>> = {
+      revenue: exportRevenueAnalytics,
       appointments: exportAppointmentAnalytics,
       patients: exportPatientAnalytics,
       treatments: exportTreatmentAnalytics,
@@ -114,15 +116,17 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
               active={period}
               onChange={setPeriod}
             />
-            <Button 
-              variant="outline" 
-              className="gap-2 flex-shrink-0"
-              onClick={handleExport}
-              disabled={isExporting || !['appointments', 'patients', 'treatments', 'membership', 'inventory'].includes(activeTab)}
-            >
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {isExporting ? 'Exporting...' : 'Export'}
-            </Button>
+            {!['revenue', 'appointments'].includes(activeTab) && (
+              <Button 
+                variant="outline" 
+                className="gap-2 flex-shrink-0"
+                onClick={handleExport}
+                disabled={isExporting}
+              >
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            )}
           </div>
         </div>
 

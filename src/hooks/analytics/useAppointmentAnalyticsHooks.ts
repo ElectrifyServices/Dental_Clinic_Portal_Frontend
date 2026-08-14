@@ -85,5 +85,7 @@ export function useNext7DayForecastAnalyticsQuery(filter: AppointmentAnalyticsFi
 }
 
 export const exportAppointmentAnalytics = async (filter: any) => {
-  return apiClient.post("/appointmentAnalytics/export", { ...filter, format: "xlsx" }, { responseType: "blob" });
+  return apiClient.post("/appointmentAnalytics/export", { ...filter, format: "xlsx" }, {
+    
+   });
 };
