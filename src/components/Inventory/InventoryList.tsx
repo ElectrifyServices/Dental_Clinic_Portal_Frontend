@@ -83,6 +83,8 @@ export function InventoryList({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -95,8 +97,17 @@ export function InventoryList({
   const { data: listData, isLoading } = useInventoryListQuery({
     search: debouncedSearch,
     category: cat,
-    low_stock: lowStockFilter
+    low_stock: lowStockFilter,
+    // The inventory endpoint currently returns the first batch even when a
+    // page number is supplied. Fetch the filtered API collection once and use
+    // the shared paginator below for stable page navigation.
+    page: 1,
+    limit: 1000,
   }, { refetchOnMount: "always" });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, cat, lowStockFilter]);
 
   const { data: categoriesData } = useInventoryCategoriesQuery();
 
@@ -122,6 +133,9 @@ export function InventoryList({
   else if (Array.isArray(listData?.data)) rawList = listData.data;
   else if (Array.isArray(listData?.data?.items)) rawList = listData.data.items;
   else if (Array.isArray(listData?.responseObject)) rawList = listData.responseObject;
+  else if (Array.isArray(listData?.responseObject?.data)) rawList = listData.responseObject.data;
+  else if (Array.isArray(listData?.responseObject?.items)) rawList = listData.responseObject.items;
+  else if (Array.isArray(listData?.responseObject?.data?.items)) rawList = listData.responseObject.data.items;
 
   const filtered = rawList.map((item: any) => ({
     id: item.id,
@@ -140,6 +154,12 @@ export function InventoryList({
 
   const summaryData = (summary as any)?.data || summary;
   const lowCount = summaryData?.low_stock_count || 0;
+  const listWrapper: any = listData || {};
+  const pagination = listWrapper?.pagination || listWrapper?.data?.pagination || listWrapper?.responseObject?.pagination || listWrapper?.responseObject?.data?.pagination || {};
+  const totalItems = Number(
+    pagination.total_items ?? pagination.totalItems ?? listWrapper?.total ?? listWrapper?.data?.total ?? listWrapper?.responseObject?.total ?? listWrapper?.responseObject?.data?.total ?? rawList.length,
+  );
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -184,10 +204,19 @@ export function InventoryList({
       key: "category",
       header: "Category",
       render: (item: InventoryItem) => {
-        const meta = CAT_META[item.category?.toLowerCase()] || {
-          label: item.category,
-          variant: "gray",
-        };
+        const category = String(item.category || "").trim();
+        const categoryKey = category.toLowerCase().replace(/[_-]+/g, " ");
+        const meta = categoryKey.includes("consum")
+          ? { label: category || "Consumables", variant: "amber" as const }
+          : categoryKey.includes("medic")
+            ? { label: category || "Medicines", variant: "violet" as const }
+            : categoryKey.includes("instrument")
+              ? { label: category || "Instruments", variant: "blue" as const }
+              : categoryKey.includes("material")
+                ? { label: category || "Materials", variant: "green" as const }
+                : categoryKey.includes("hygiene") || categoryKey.includes("ppe")
+                  ? { label: category, variant: "blue" as const }
+                  : CAT_META[categoryKey] || { label: category || "Uncategorized", variant: "gray" as const };
         return (
           <StatusBadge
             variant={meta.variant}
@@ -343,16 +372,22 @@ export function InventoryList({
       ),
     },
   ];
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div className="space-y-3">
       <PageHeader
         title="Inventory Management"
-        subtitle={`${filtered.length} total items in stock`}
+        subtitle={`${totalItems} total items in stock`}
         action={
           <Button onClick={onAddItem} className="gap-2">
             <Plus className="w-4 h-4" /> Add Item
@@ -468,12 +503,12 @@ export function InventoryList({
         emptyTitle="No inventory items found"
         emptySubtitle="Add your first medical supply to track stock levels."
         footer={
-          totalPages > 1 ? (
+          totalItems > 0 ? (
             <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
               <Pagination
                 page={currentPage}
                 totalPages={totalPages}
-                totalItems={filtered.length}
+                totalItems={totalItems}
                 perPage={itemsPerPage}
                 onPageChange={setCurrentPage}
               />

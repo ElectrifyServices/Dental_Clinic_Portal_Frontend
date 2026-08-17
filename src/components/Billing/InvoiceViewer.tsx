@@ -71,7 +71,7 @@ export function InvoiceViewer({
 
   const isLoading = isInvoiceLoading || isPatientLoading;
 
-  if (isLoading || error || !invoice) {
+  if (isLoading) {
     return (
       <Modal
         title="Invoice Details"
@@ -80,7 +80,43 @@ export function InvoiceViewer({
         icon={<FileText className="w-4 h-4" />}
       >
         <div className="flex flex-col justify-center items-center h-96 space-y-4">
-          <Loading type="equalizer" text="Loading invoice details..." />
+          <Loading type="spinner" text="Loading invoice details..." />
+        </div>
+      </Modal>
+    );
+  }
+
+  if (!invoice && !error) {
+    return (
+      <Modal
+        title="Invoice Details"
+        onClose={onClose}
+        size="2xl"
+        icon={<FileText className="w-4 h-4" />}
+      >
+        <div className="flex flex-col items-center justify-center h-96 text-center px-6">
+          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+            <FileText className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground">No invoice details found</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            This patient does not have any invoice records yet.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (error) {
+    return (
+      <Modal
+        title="Invoice Details"
+        onClose={onClose}
+        size="2xl"
+        icon={<FileText className="w-4 h-4" />}
+      >
+        <div className="flex items-center justify-center h-96 text-sm text-muted-foreground">
+          Unable to load invoice details.
         </div>
       </Modal>
     );

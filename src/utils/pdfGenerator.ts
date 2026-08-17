@@ -1514,15 +1514,14 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const isStatement =
     (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
 
-  const patientName = invoice.patientName || patient?.name || "—";
-  const patientId = invoice.patientId || patient?.id || "—";
+  const patientName = invoice.patientName || invoice.patient_name || invoice.patient?.name || patient?.name || "N/A";
+  const patientIdValue = invoice.patient_id || invoice.patientId || invoice.patient?.id || patient?.id;
   const patientCode =
     invoice.patient_code ||
     invoice.patientCode ||
     patient?.patient_code ||
     patient?.patientCode;
-  const displayPatientId =
-    patientCode || (patientId === "—" ? "—" : patientId.split("-")[0]);
+  const displayPatientId = String(patientCode || patientIdValue || "").trim() || "N/A";
 
   const invoiceNumber = invoice.invoice_number || invoice.id || "—";
   const invoiceDate = invoice.date
@@ -1633,11 +1632,24 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const firstItemDate = isStatement ? statementDateFormatted : invoiceDate;
 
   // Member ID (from invoice or member object)
-  const memberId = invoice?.member?.member_id || "—";
+  const memberId = String(
+    invoice?.member?.member_id ||
+    invoice?.member?.memberId ||
+    invoice?.member?.id ||
+    invoice?.member_id ||
+    invoice?.memberId ||
+    invoice?.member_code ||
+    invoice?.memberCode ||
+    patient?.member_id ||
+    patient?.memberId ||
+    patient?.member_code ||
+    patient?.memberCode ||
+    "",
+  ).trim() || "N/A";
 
   const rows: Array<[string, string, string, string]> = [
     ["Name", patientName, "Date", firstItemDate],
-    ["Patient ID", "—", "Invoice No.", firstInvoiceNumber],
+    ["Patient ID", displayPatientId, "Invoice No.", firstInvoiceNumber],
     ["Member ID", memberId, "Phone", phone],
   ];
 
@@ -1702,11 +1714,11 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient ID</span>
-              <span style="font-size:12px; font-weight:400; text-align:right;">—</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${displayPatientId}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Member ID</span>
-              <span style="font-size:12px; font-weight:400; text-align:right;">${memberId !== "—" ? memberId : "—"}</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${memberId}</span>
             </div>
           </div>
 
