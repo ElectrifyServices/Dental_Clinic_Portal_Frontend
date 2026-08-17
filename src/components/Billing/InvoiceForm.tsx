@@ -431,6 +431,7 @@ export function InvoiceForm({
       planDiscountApplied: planDiscountResult.totalDiscount,
       planBenefitsUsed: planDiscountResult.applied.map((a: any) => a.label),
       memberId: memberId,
+      payment_method: formData.paymentMethod,
     } as any);
   };
 
@@ -734,6 +735,25 @@ export function InvoiceForm({
               required
               className="block w-full px-4 py-2 border rounded-xl text-sm"
             />
+          </LabeledField>
+
+          <LabeledField label="Payment Method">
+            <Select
+              value={formData.paymentMethod || ""}
+              onValueChange={(val) =>
+                setFormData({ ...formData, paymentMethod: val })
+              }
+            >
+              <SelectTrigger className="w-full bg-white border-border">
+                <SelectValue placeholder="Select Payment Method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="UPI">UPI</SelectItem>
+                <SelectItem value="Card">Card</SelectItem>
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </LabeledField>
         </div>
 

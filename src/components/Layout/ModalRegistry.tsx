@@ -912,7 +912,7 @@ function ModalRegistryContent() {
             try {
               const payload: CreateInvoiceVariables = {
                 due_date: inv.dueDate,
-                payment_method: "CASH",
+                payment_method: inv.payment_method || undefined,
                 complimentary_reason: inv.complimentaryNote || undefined,
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
