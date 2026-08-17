@@ -265,7 +265,7 @@ export function PatientQueue({
             })}
           </div>
 
-          {totalPages > 1 && onPageChange && (
+          { onPageChange && (
             <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
               <Pagination
                 page={currentPage}

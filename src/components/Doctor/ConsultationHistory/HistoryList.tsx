@@ -14,6 +14,7 @@ import {
   Send,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
+import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface HistoryListProps {
   data: any[];
@@ -214,6 +215,9 @@ export function HistoryList({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {pageData.map((item) => (
+              (() => {
+              const reportAvailability = getConsultationReportAvailability(item);
+              return (
               <Card key={item.id} className="flex flex-col hover:shadow-md transition-shadow">
                 <CardHeader className="p-4 pb-3 border-b">
                   <div className="flex justify-between items-start">
@@ -276,7 +280,7 @@ export function HistoryList({
 
                     {activeDownloadMenuId === item.id && (
                       <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
-                        <Button
+                        {reportAvailability.clinical && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -286,8 +290,8 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto"
                         >
                           <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
-                        </Button>
-                        <Button
+                        </Button>}
+                        {reportAvailability.treatment && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -297,8 +301,8 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto"
                         >
                           <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                        </Button>
-                        <Button
+                        </Button>}
+                        {reportAvailability.prescription && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -308,7 +312,7 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto"
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                        </Button>
+                        </Button>}
                         <div className="h-px bg-muted my-1" />
                         <Button
                           variant="ghost"
@@ -339,7 +343,7 @@ export function HistoryList({
 
                     {activeSendMenuId === item.id && (
                       <div className="absolute right-0 bottom-full mb-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200 text-left">
-                        <Button
+                        {reportAvailability.clinical && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -349,8 +353,8 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto"
                         >
                           <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
-                        </Button>
-                        <Button
+                        </Button>}
+                        {reportAvailability.treatment && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -360,8 +364,8 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto"
                         >
                           <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                        </Button>
-                        <Button
+                        </Button>}
+                        {reportAvailability.prescription && <Button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -371,7 +375,7 @@ export function HistoryList({
                           className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto"
                         >
                           <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                        </Button>
+                        </Button>}
                         <div className="h-px bg-muted my-1" />
                         <Button
                           variant="ghost"
@@ -393,6 +397,8 @@ export function HistoryList({
                   </div>
                 </CardFooter>
               </Card>
+              );
+              })()
             ))}
           </div>
             )}

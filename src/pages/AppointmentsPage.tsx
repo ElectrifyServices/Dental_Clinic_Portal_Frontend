@@ -35,7 +35,7 @@ export const AppointmentsPage: React.FC = () => {
     setStartDate,
     endDate,
     setEndDate,
-  } = useAppointmentData();
+  } = useAppointmentData({ loadAll: true });
 
   const { patients, setQueuedPatients } = usePatientData();
   const {
@@ -238,7 +238,7 @@ export const AppointmentsPage: React.FC = () => {
         </div>
       </PageHeader>
 
-      <AppointmentStats appointments={appointments} startDate={startDate} endDate={endDate} />
+      <AppointmentStats appointments={appointments} startDate={startDate} endDate={endDate} doctorId={selectedDoctorId} />
 
       <div className="animate-in fade-in slide-in-from-top-4 duration-500">
         {viewMode === "calendar" && (

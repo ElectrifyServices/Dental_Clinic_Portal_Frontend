@@ -11,6 +11,7 @@ import { useDoctorsListQuery } from "../../../hooks/staff/useDoctorsListQuery";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 import { useUpdateAppointmentMutation } from "../../../hooks/appointments/useUpdateAppointmentMutation";
 import { SearchableSelect, Button, Label, Loading, Card, CardContent } from "@/components/ui";
+import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface HistoryDetailProps {
   record: any;
@@ -26,6 +27,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
   const [isLoadingFull, setIsLoadingFull] = useState(false);
   const [appointment, setAppointment] = useState<any>(null);
   const [isLoadingAppt, setIsLoadingAppt] = useState(false);
+  const reportAvailability = getConsultationReportAvailability(fullRecord);
 
   useEffect(() => {
     const handleGlobalClick = () => {
@@ -402,17 +404,17 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 </Button>
                 {showPrintMenu && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDownloadPDF(fullRecord, "CLINICAL");
-                        setShowPrintMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
-                    >
-                      <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
-                    </Button>
-                    <Button
+                     {reportAvailability.clinical && <Button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         onDownloadPDF(fullRecord, "CLINICAL");
+                         setShowPrintMenu(false);
+                       }}
+                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                     >
+                       <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
+                     </Button>}
+                    {reportAvailability.treatment && <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "TREATMENT");
@@ -421,8 +423,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
-                    </Button>
-                    <Button
+                    </Button>}
+                    {reportAvailability.prescription && <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "PRESCRIPTION");
@@ -431,9 +433,9 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
-                    </Button>
+                    </Button>}
                     <div className="h-px bg-muted my-1.5" />
-                    <Button
+                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "FULL");
@@ -442,7 +444,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-foreground hover:bg-slate-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" /> Full Summary
-                    </Button>
+                     </Button>
                   </div>
                 )}
               </div>
@@ -463,7 +465,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 </Button>
                 {showSendMenu && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
-                    <Button
+                    {reportAvailability.clinical && <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSendPDF(fullRecord, "CLINICAL");
@@ -472,8 +474,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
-                    </Button>
-                    <Button
+                    </Button>}
+                    {reportAvailability.treatment && <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSendPDF(fullRecord, "TREATMENT");
@@ -482,8 +484,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
-                    </Button>
-                    <Button
+                    </Button>}
+                    {reportAvailability.prescription && <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSendPDF(fullRecord, "PRESCRIPTION");
@@ -492,7 +494,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
-                    </Button>
+                    </Button>}
                     <div className="h-px bg-muted my-1.5" />
                     <Button
                       onClick={(e) => {
