@@ -757,22 +757,30 @@ export function PatientConsultation({
       let cleanedNotes = consultationData.consultationNotes || "";
       cleanedNotes = cleanedNotes.replace(/(?:^|\n)\s*(?:\d+\.|[•\-])\s*$/, "").trimEnd();
 
-      const mappedTreatmentPlans = (consultationData.treatmentPlans || []).map((plan: any) => {
-        let toothArray: string[] = [];
-        if (Array.isArray(plan.tooth)) {
-          toothArray = plan.tooth;
-        } else if (typeof plan.tooth === "string" && plan.tooth.trim()) {
-          toothArray = plan.tooth.split(",").map((s: string) => s.trim()).filter(Boolean);
-        }
+      const validPrescriptions = (consultationData.prescriptions || []).filter(
+        (p: any) => p.medicine && p.medicine.trim() !== ""
+      );
 
-        const discountPct = Number(plan.discount) || 0;
+      const mappedTreatmentPlans = consultationData.requiresTreatment
+        ? (consultationData.treatmentPlans || [])
+            .filter((plan: any) => plan.procedure && plan.procedure.trim() !== "")
+            .map((plan: any) => {
+              let toothArray: string[] = [];
+              if (Array.isArray(plan.tooth)) {
+                toothArray = plan.tooth;
+              } else if (typeof plan.tooth === "string" && plan.tooth.trim()) {
+                toothArray = plan.tooth.split(",").map((s: string) => s.trim()).filter(Boolean);
+              }
 
-        return {
-          ...plan,
-          tooth: toothArray,
-          discount_value: discountPct,
-        };
-      });
+              const discountPct = Number(plan.discount) || 0;
+
+              return {
+                ...plan,
+                tooth: toothArray,
+                discount_value: discountPct,
+              };
+            })
+        : [];
 
       const res = await onCompleteConsultation({
         id: patient.id,
@@ -781,6 +789,7 @@ export function PatientConsultation({
         patientPhone: patient.phone || (patient as any).patientPhone || "",
         appointmentId: patient.appointmentId,
         ...consultationData,
+        prescriptions: validPrescriptions,
         treatmentPlans: mappedTreatmentPlans,
         consultationNotes: cleanedNotes,
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],

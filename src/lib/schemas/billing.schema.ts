@@ -21,6 +21,7 @@ export const invoiceSchema = z.object({
   complimentaryNote: z.string().optional(),
   linkedItemIds: z.array(z.string()).default([]),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required'),
+  paymentMethod: z.string().optional(),
 });
 
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;

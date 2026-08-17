@@ -23,6 +23,7 @@ import {
 } from "../../hooks/billing/useInvoiceStatsQuery";
 import { usePayInvoiceMutation } from "../../hooks/billing/usePayInvoiceMutation";
 import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
+import { useExportInvoicesMutation } from "../../hooks/billing/useExportInvoicesMutation";
 import {
   Button,
   PageHeader,
@@ -136,6 +137,7 @@ export function InvoiceList({
   const { data: paidInvoicesData } = usePaidInvoicesQuery();
   const { mutateAsync: payInvoiceMutation, isPending: isPaying } = usePayInvoiceMutation();
   const { mutateAsync: sendInvoiceMutation } = useSendInvoiceMutation();
+  const { mutateAsync: exportInvoices, isPending: isExporting } = useExportInvoicesMutation();
 
   const handleSendInvoice = async (id: string) => {
     try {
@@ -308,6 +310,23 @@ export function InvoiceList({
       },
     },
     {
+      key: "paymentMethod",
+      header: "Payment Method",
+      render: (inv: any) => {
+        let pm = "N/A";
+        if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
+          pm = inv.payment_methods.join(", ");
+        } else if (inv.payment_method || inv.paymentMethod) {
+          pm = inv.payment_method || inv.paymentMethod;
+        }
+        return (
+          <span className="text-muted-foreground font-medium text-sm">
+            {pm}
+          </span>
+        );
+      },
+    },
+    {
       key: "status",
       header: "Status",
       render: (inv: Invoice) => {
@@ -466,6 +485,23 @@ export function InvoiceList({
       },
     },
     {
+      key: "paymentMethod",
+      header: "Payment Method",
+      render: (inv: any) => {
+        let pm = "N/A";
+        if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
+          pm = inv.payment_methods.join(", ");
+        } else if (inv.payment_method || inv.paymentMethod) {
+          pm = inv.payment_method || inv.paymentMethod;
+        }
+        return (
+          <span className="text-muted-foreground font-medium text-xs">
+            {pm}
+          </span>
+        );
+      },
+    },
+    {
       key: "status",
       header: "Status",
       render: (inv: any) => {
@@ -590,6 +626,15 @@ export function InvoiceList({
         subtitle={`${invoices.length} total invoices recorded`}
         action={
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => exportInvoices()}
+              disabled={isExporting}
+              className="gap-2"
+            >
+              <FileText className="w-4 h-4" /> 
+              {isExporting ? "Exporting..." : "Export"}
+            </Button>
             <Button onClick={onCreateInvoice} className="gap-2">
               <Plus className="w-4 h-4" /> Create Invoice
             </Button>
