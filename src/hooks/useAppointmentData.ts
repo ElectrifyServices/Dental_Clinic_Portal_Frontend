@@ -7,7 +7,7 @@ import { useRestoreAppointmentStatusMutation } from './appointments/useRestoreAp
 import { useDebounce } from './useDebounce';
 import { toast } from '../components/ui';
 
-export function useAppointmentData(params?: { enabled?: boolean }) {
+export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boolean }) {
   const queryClient = useQueryClient();
   const [apptSearch, setApptSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -37,14 +37,14 @@ export function useAppointmentData(params?: { enabled?: boolean }) {
     if (selectedDoctorId) {
       f.doctor_id = [selectedDoctorId];
     }
-    if (startDate) {
+    if (startDate && !params?.loadAll) {
       f.startDate = [startDate];
     }
-    if (endDate) {
+    if (endDate && !params?.loadAll) {
       f.endDate = [endDate];
     }
     return f;
-  }, [selectedDate, apptFilter, selectedDoctorId, startDate, endDate]);
+  }, [selectedDate, apptFilter, selectedDoctorId, startDate, endDate, params?.loadAll]);
 
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;

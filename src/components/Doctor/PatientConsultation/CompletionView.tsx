@@ -9,16 +9,20 @@ import {
   File,
 } from "lucide-react";
 import { PDFReportType } from "../../../utils/pdfGenerator";
+import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface CompletionViewProps {
   onDownloadPDF: (type: PDFReportType) => void;
   onClose: () => void;
+  record?: any;
 }
 
 export function CompletionView({
   onDownloadPDF,
   onClose,
+  record,
 }: CompletionViewProps) {
+  const reportAvailability = getConsultationReportAvailability(record || {});
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
       <Card className="text-center shadow-lg border-primary/10">
@@ -35,7 +39,7 @@ export function CompletionView({
         <CardContent className="pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             
-            <Card 
+            {reportAvailability.clinical && <Card 
               className="cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors group"
               onClick={() => onDownloadPDF("CLINICAL")}
             >
@@ -49,9 +53,9 @@ export function CompletionView({
                 </div>
                 <File className="w-5 h-5 text-muted-foreground group-hover:text-blue-500" />
               </CardContent>
-            </Card>
+            </Card>}
 
-            <Card 
+            {reportAvailability.treatment && <Card 
               className="cursor-pointer hover:border-purple-300 hover:bg-purple-50/30 transition-colors group"
               onClick={() => onDownloadPDF("TREATMENT")}
             >
@@ -65,9 +69,9 @@ export function CompletionView({
                 </div>
                 <File className="w-5 h-5 text-muted-foreground group-hover:text-purple-500" />
               </CardContent>
-            </Card>
+            </Card>}
 
-            <Card 
+            {reportAvailability.prescription && <Card 
               className="cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors group"
               onClick={() => onDownloadPDF("PRESCRIPTION")}
             >
@@ -81,7 +85,7 @@ export function CompletionView({
                 </div>
                 <File className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500" />
               </CardContent>
-            </Card>
+            </Card>}
 
             <Card 
               className="cursor-pointer hover:border-orange-300 hover:bg-orange-50/30 transition-colors group"

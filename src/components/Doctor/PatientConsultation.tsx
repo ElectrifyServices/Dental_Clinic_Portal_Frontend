@@ -908,7 +908,7 @@ export function PatientConsultation({
     >
       <div id="consultation-form">
         {isCompleted ? (
-          <CompletionView onDownloadPDF={handleDownloadPDF} onClose={onClose} />
+          <CompletionView onDownloadPDF={handleDownloadPDF} onClose={onClose} record={consultationData} />
         ) : viewMode === "history" ? (
           <PreviousConsultationsView
             consultations={consultations}

@@ -20,6 +20,7 @@ export function useAppointmentCalendarQuery(month: number, year: number, doctorI
       month: month,
       year: year,
       doctor_id: doctorId,
+      doctorId: doctorId,
     },
     options: {
       enabled: Boolean(month && year),

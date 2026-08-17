@@ -127,7 +127,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             const dayAppointments = getDayAppointmentsForDate(date);
             const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
             const apiCount = Object.entries(appointmentsByDate).find(([key]) => key.startsWith(dateStr))?.[1] || 0;
-            const countToDisplay = Math.max(apiCount as number, dayAppointments.length);
+            // The calendar endpoint may return the combined clinic count. Once a
+            // doctor is selected, the appointments loaded for this page are the
+            // source of truth for the doctor-specific day count.
+            const countToDisplay = currentDoctorId
+              ? dayAppointments.length
+              : Math.max(apiCount as number, dayAppointments.length);
             const isSelected = selectedDate.toDateString() === date.toDateString();
             const isToday = isTodayDate(date);
             const isPast = isPastActualDate(date);

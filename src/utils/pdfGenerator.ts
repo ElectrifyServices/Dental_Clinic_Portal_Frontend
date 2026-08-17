@@ -924,8 +924,29 @@ export const downloadConsultationPDF = async ({
     [];
   const filledPrescriptions = rawPrescriptions.filter(
     (p: any) =>
-      p.medicine_id || p.id || p.medicine || p.medicine_name || p.medicineName,
+      p.medicine_id ||
+      p.medicine_name ||
+      p.medicineName ||
+      (typeof p.medicine === "string" && p.medicine.trim()),
   );
+  const hasClinicalData = Boolean(
+    observations ||
+    diagnosis ||
+    patientConcern ||
+    additionalNotes ||
+    Object.keys(finalToothChart).length > 0,
+  );
+  const hasTreatmentData = Boolean(
+    consultationData.requiresTreatment || consultationData.requires_treatment,
+  ) || treatmentsArray.some((t: any) =>
+      t && (
+        t.procedure ||
+        t.treatment_type ||
+        t.tooth_number ||
+        t.tooth ||
+        Number(t.est_cost || t.cost || 0) > 0
+      ),
+    );
 
   const getHeader = () =>
     getLetterhead(`
@@ -960,7 +981,9 @@ export const downloadConsultationPDF = async ({
 </div>
   `;
 
-  const getClinicalSection = () => `
+  const getClinicalSection = () => {
+    if (!isBlankMode && !hasClinicalData) return "";
+    return `
 <div style="padding: 16px 40px 10px;">
       ${(patientConcern || isBlankMode)
       ? `
@@ -1003,6 +1026,7 @@ export const downloadConsultationPDF = async ({
 </div>
 </div>
   `;
+  };
 
   const getXraySection = () => {
     if (isBlankMode) return "";
@@ -1029,6 +1053,7 @@ export const downloadConsultationPDF = async ({
   };
 
   const getTreatmentSection = () => {
+    if (!isBlankMode && !hasTreatmentData) return "";
     let treatmentsHtml = "";
     if (isBlankMode) {
       treatmentsHtml = `<div style="height: 120px;"></div>`;
@@ -1102,6 +1127,7 @@ ${isBlankMode
   };
 
   const getPrescriptionSection = () => {
+    if (!isBlankMode && filledPrescriptions.length === 0) return "";
     return `
 <div style="padding: 8px 40px 10px;" data-avoid-break="true">
 <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1.5px solid ${T.LINE}; padding-bottom:5px;">
