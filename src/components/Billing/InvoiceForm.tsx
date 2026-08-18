@@ -228,17 +228,27 @@ export function InvoiceForm({
   });
   const apiPatients = useMemo(() => {
     if (!rawPatientsData) return [];
-    if (Array.isArray(rawPatientsData)) return rawPatientsData;
-    const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
-    if (Array.isArray(target)) return target;
-    if (target && typeof target === "object") {
-      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
-      if (Array.isArray(target.data?.data)) return target.data.data;
-      if (Array.isArray(target.data)) return target.data;
-      if (Array.isArray(target.patients)) return target.patients;
-      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    let rawList: any[] = [];
+    if (Array.isArray(rawPatientsData)) {
+      rawList = rawPatientsData;
+    } else {
+      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+      if (Array.isArray(target)) {
+        rawList = target;
+      } else if (target && typeof target === "object") {
+        if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
+        else if (Array.isArray(target.data?.data)) rawList = target.data.data;
+        else if (Array.isArray(target.data)) rawList = target.data;
+        else if (Array.isArray(target.patients)) rawList = target.patients;
+        else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
+      }
     }
-    return [];
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
   }, [rawPatientsData]);
 
   const selectedPatient = useMemo(() => {

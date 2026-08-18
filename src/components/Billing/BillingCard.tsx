@@ -108,85 +108,45 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   const ActionMenu = ({ inv }: { inv: Invoice }) => {
     const statusLower = inv.status?.toLowerCase() || "draft";
     return (
-      <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            onView(inv.id);
-          }}
-          title="View"
-          className="w-8 h-8 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            onHistory(inv);
-          }}
-          title="Payment History"
-          className="w-8 h-8 text-amber-600 hover:bg-amber-50 rounded-lg"
-        >
-          <History className="w-4 h-4" />
-        </Button>
-        {onWhatsapp && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onWhatsapp(inv.phone || "", inv.patientName || "");
-            }}
-            title="WhatsApp History"
-            className="w-8 h-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-          >
-            <MessageCircle className="w-4 h-4" />
-          </Button>
-        )}
-        {statusLower !== "paid" && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPay(inv);
-            }}
-            title="Mark as Paid"
-            className="w-8 h-8 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-          >
-            <IndianRupee className="w-4 h-4" />
-          </Button>
-        )}
-        {statusLower === "draft" && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSend(inv.id);
-            }}
-            title="Send to Patient"
-            className="w-8 h-8 text-blue-600 hover:bg-blue-50 rounded-lg"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(inv.id, inv.invoice_number || inv.id);
-          }}
-          title="Delete"
-          className="w-8 h-8 text-destructive hover:bg-destructive/10 rounded-lg"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Actions"
+              className="w-8 h-8 text-muted-foreground hover:bg-muted rounded-lg"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onSelect={() => onView(inv.id)}>
+              <Eye className="w-4 h-4 mr-2 text-indigo-600" /> View Invoice
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onHistory(inv)}>
+              <History className="w-4 h-4 mr-2 text-amber-600" /> Payment History
+            </DropdownMenuItem>
+            {onWhatsapp && (
+              <DropdownMenuItem onSelect={() => onWhatsapp(inv.phone || "", inv.patientName || "")}>
+                <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
+              </DropdownMenuItem>
+            )}
+            {statusLower !== "paid" && (
+              <DropdownMenuItem onSelect={() => onPay(inv)}>
+                <IndianRupee className="w-4 h-4 mr-2 text-emerald-600" /> Mark as Paid
+              </DropdownMenuItem>
+            )}
+            {statusLower === "draft" && (
+              <DropdownMenuItem onSelect={() => onSend(inv.id)}>
+                <Send className="w-4 h-4 mr-2 text-blue-600" /> Send to Patient
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onSelect={() => onDelete(inv.id, inv.invoice_number || inv.id)}>
+              <Trash2 className="w-4 h-4 mr-2 text-destructive" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     );
   };
@@ -194,8 +154,8 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   return (
     <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
       {/* Patient Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1 min-w-[140px]">
+      <div className="flex flex-nowrap items-start gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(
               invoice.patientName
@@ -208,30 +168,27 @@ export const BillingCard: React.FC<BillingCardProps> = ({
               {invoice.patientName}
             </h3>
             {invoice.phone && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 whitespace-nowrap">
                 <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
-                <span className="truncate">{invoice.phone}</span>
+                <span>{invoice.phone}</span>
               </p>
             )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           <StatusBadge
             variant={mainMeta.variant}
-            className="text-[9px] uppercase font-bold px-2 py-0.5 tracking-wider"
+            className="mt-1 inline-flex text-[9px] uppercase font-bold px-2 py-0.5 tracking-wider"
           >
             {invoice.status}
           </StatusBadge>
+          </div>
+        </div>
+
+        <div className="flex items-start justify-end shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
           <ActionMenu inv={invoice} />
         </div>
       </div>
 
       {/* Invoice Key Details Grid */}
-      <div 
-        className="grid grid-cols-2 gap-x-4 gap-y-3 pt-1 text-xs border-t border-slate-50 cursor-pointer hover:opacity-90 active:opacity-85 transition-opacity"
-        onClick={() => onView(invoice.id)}
-      >
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-1 text-xs border-t border-slate-50">
         <div className="flex flex-col gap-1">
           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
             Invoice No.
