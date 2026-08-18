@@ -1507,6 +1507,8 @@ function numberToWords(n: number): string {
 }
 
 export const generateInvoicePDF = async (invoice: any, patient: any) => {
+  // The history API returns one invoice inside responseObject.data.invoices.
+  invoice = invoice?.responseObject?.data?.invoices?.[0] || invoice;
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
@@ -1524,8 +1526,9 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const displayPatientId = String(patientCode || patientIdValue || "").trim() || "N/A";
 
   const invoiceNumber = invoice.invoice_number || invoice.id || "—";
-  const invoiceDate = invoice.date
-    ? new Date(invoice.date).toLocaleDateString("en-IN", {
+  const invoiceDateValue = invoice.date || invoice.invoice_date;
+  const invoiceDate = invoiceDateValue
+    ? new Date(invoiceDateValue).toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -1625,27 +1628,12 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const items: any[] = invoice.items || [];
 
-  // Extract values for the right column from the first item/invoice
-  // items[0].invoice_number carries the real invoice number even on a consolidated statement
-  const firstInvoiceNumber =
-    items[0]?.invoice_number || invoice.invoice_number || invoice.id || "—";
+  // Extract values for the right column from the single invoice response.
+  const firstInvoiceNumber = invoice.invoice_number || "—";
   const firstItemDate = isStatement ? statementDateFormatted : invoiceDate;
 
-  // Member ID (from invoice or member object)
-  const memberId = String(
-    invoice?.member?.member_id ||
-    invoice?.member?.memberId ||
-    invoice?.member?.id ||
-    invoice?.member_id ||
-    invoice?.memberId ||
-    invoice?.member_code ||
-    invoice?.memberCode ||
-    patient?.member_id ||
-    patient?.memberId ||
-    patient?.member_code ||
-    patient?.memberCode ||
-    "",
-  ).trim() || "N/A";
+  // Member ID from the invoice response.
+  const memberId = String(invoice.member_id || "").trim() || "N/A";
 
   const rows: Array<[string, string, string, string]> = [
     ["Name", patientName, "Date", firstItemDate],
