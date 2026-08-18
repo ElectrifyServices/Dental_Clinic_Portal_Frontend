@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/Label";
 import { useState } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle2, ChevronRight } from "lucide-react";
-import { Modal, Button, Loading } from "@/components/ui";
+import { Modal, Button, Loading, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface InvoicePaymentModalProps {
@@ -22,16 +22,7 @@ const PAYMENT_METHODS = [
     activeClass: "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-sm shadow-emerald-500/10",
     iconBgActive: "bg-emerald-600 text-white shadow-emerald-500/20",
   },
-  {
-    id: "card",
-    label: "Card / POS Terminal",
-    description: "Swipe/Tap credit or debit cards on POS machine",
-    icon: <CreditCard className="w-5 h-5" />,
-    color: "blue",
-    bgClass: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30",
-    activeClass: "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-500/10",
-    iconBgActive: "bg-blue-600 text-white shadow-blue-500/20",
-  },
+
   {
     id: "upi",
     label: "UPI / Online Transfer",
@@ -41,6 +32,16 @@ const PAYMENT_METHODS = [
     bgClass: "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-900/30",
     activeClass: "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-sm shadow-indigo-500/10",
     iconBgActive: "bg-indigo-600 text-white shadow-indigo-500/20",
+  },
+    {
+    id: "card",
+    label: "Card / POS Terminal",
+    description: "Swipe/Tap credit or debit cards on POS machine",
+    icon: <CreditCard className="w-5 h-5" />,
+    color: "blue",
+    bgClass: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30",
+    activeClass: "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 shadow-sm shadow-blue-500/10",
+    iconBgActive: "bg-blue-600 text-white shadow-blue-500/20",
   },
 ];
 
@@ -91,7 +92,7 @@ export function InvoicePaymentModal({
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-base">
               ₹
             </span>
-            <input
+            <Input
               type="number"
               value={payAmount}
               onFocus={() => {

@@ -358,8 +358,8 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     payload.discount_type = "PERCENTAGE";
     payload.discount_value = Number(formData.discount_value);
   } else {
-    payload.discount_type = null;
-    payload.discount_value = null;
+    payload.discount_type = "PERCENTAGE";
+    payload.discount_value = 0;
   }
 
   return payload;
@@ -427,8 +427,8 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     updateData.discount_value = Number(formData.discount_value);
   } else {
     // Explicitly clearing discount
-    updateData.discount_type = null;
-    updateData.discount_value = null;
+    updateData.discount_type = "PERCENTAGE";
+    updateData.discount_value = 0;
   }
 
   // Removed attachment IDs if any were deleted by user

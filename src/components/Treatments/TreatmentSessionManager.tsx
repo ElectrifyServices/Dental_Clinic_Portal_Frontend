@@ -550,7 +550,12 @@ export function TreatmentSessionManager({
   const estCost = Number(treatmentPlan?.est_cost) || 0;
   const discountVal = Number(treatmentPlan?.discount_value) || 0;
   const discountAmt = Number(treatmentPlan?.discount_amount) || 0;
-  const finalCost = Number(treatmentPlan?.final_cost) || (estCost - discountAmt);
+  const membershipBenefits = treatmentPlan?.membership_benefits;
+  const membershipDiscount = Number(membershipBenefits?.benefit_discount) || 0;
+
+  const finalCost = Number(membershipBenefits?.final_cost) 
+      || Number(treatmentPlan?.final_cost) 
+      || (estCost - discountAmt);
 
   const rawPaidAmt = treatmentPlan?.total_paid_amount ?? treatmentPlan?.totalPaidAmount ?? treatmentPlan?.paid_amount ?? treatmentPlan?.paidAmount ?? 0;
   const paidAmt = isNaN(Number(rawPaidAmt)) ? 0 : Number(rawPaidAmt);
@@ -1315,7 +1320,7 @@ export function TreatmentSessionManager({
                     type="number"
                     disabled
                     placeholder="Pending Amount"
-                    value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * (Number(completeForm.discount_value) || discountVal || 0)) / 100 - (paidAmt + (completeForm.paid_now || 0)))}
+                    value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * (Number(completeForm.discount_value) || discountVal || 0)) / 100 - membershipDiscount - (paidAmt + (completeForm.paid_now || 0)))}
                     className="w-full px-3 py-2 rounded-xl border bg-slate-50 font-bold text-red-600 outline-none cursor-not-allowed"
                   />
                 </div>
@@ -1616,7 +1621,7 @@ export function TreatmentSessionManager({
               interactive={false}
             />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className={`grid grid-cols-1 gap-3 sm:grid-cols-${membershipDiscount > 0 ? '4' : '3'}`}>
             <MetricCard
               label="Discount"
               value={discountVal > 0 ? `${discountVal}%` : "0%"}
@@ -1624,6 +1629,15 @@ export function TreatmentSessionManager({
               variant="amber"
               interactive={false}
             />
+            {membershipDiscount > 0 && (
+              <MetricCard
+                label="Member Savings"
+                value={`₹${membershipDiscount.toLocaleString("en-IN")}`}
+                icon={<Sparkle className="w-5 h-5 text-indigo-500" />}
+                variant="indigo"
+                interactive={false}
+              />
+            )}
             <MetricCard
               label="Total Paid"
               value={`₹${paidAmt.toLocaleString("en-IN")}`}

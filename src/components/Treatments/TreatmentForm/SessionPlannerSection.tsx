@@ -167,12 +167,12 @@ export function SessionPlannerSection({
                         }
                         times.sort();
                         return times.map((t) => {
-                          const [h, m] = t.split(":").map(Number);
+                          const [h, m] = t.split(":").map((str) => parseInt(str, 10));
                           const ampm = h < 12 ? "AM" : "PM";
                           const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
                           return (
                             <SelectItem key={t} value={t}>
-                              {String(h12).padStart(2, "0")}:{String(m).padStart(2, "0")} {ampm}
+                              {String(h12).padStart(2, "0")}:{String(m || 0).padStart(2, "0")} {ampm}
                             </SelectItem>
                           );
                         });

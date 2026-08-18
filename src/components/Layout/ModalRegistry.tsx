@@ -912,7 +912,7 @@ function ModalRegistryContent() {
             try {
               const payload: CreateInvoiceVariables = {
                 due_date: inv.dueDate,
-                payment_method: inv.payment_method || undefined,
+                payment_method: inv.payment_method ? inv.payment_method.toUpperCase() : undefined,
                 complimentary_reason: inv.complimentaryNote || undefined,
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
@@ -930,7 +930,7 @@ function ModalRegistryContent() {
                     item_type: type,
                     consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
                     treatment_plan_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
-                    membership_id: type === "MEMBERSHIP" ? item.linkedId : undefined,
+                    membership_id: type === "MEMBERSHIP" && !item.isNewPlanPurchase ? item.linkedId : undefined,
                     billing_description_id: descId,
                     
                     description: item.description,
@@ -939,6 +939,13 @@ function ModalRegistryContent() {
                   };
                 }),
               };
+
+              const newPlanPurchaseItem = inv.items.find(
+                (item: any) => item.isNewPlanPurchase || (item.linkedType === "MEMBERSHIP" && String(item.id).startsWith("new-membership-"))
+              );
+              if (newPlanPurchaseItem) {
+                payload.plan_id = newPlanPurchaseItem.linkedId;
+              }
 
               if (inv.memberId) {
                 payload.member_id = inv.memberId;

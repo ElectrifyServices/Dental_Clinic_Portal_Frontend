@@ -137,14 +137,16 @@ export const PendingItems: React.FC<PendingItemsProps> = ({
                               ? 'bg-white/10 text-white border border-white/5' 
                               : 'bg-amber-50/80 text-amber-900 border border-amber-100/60'
                           }`}>
-                            <div className="flex justify-between items-center text-[9px]">
-                              <strong>
-                                <span className="truncate max-w-[150px]" title={pItem.rawItem.benefit_name || pItem.rawItem.benefit_applied}>
+                            <div className="flex justify-between items-center text-[9px] gap-2 w-full">
+                              <strong className="min-w-0 flex-1">
+                                <span className="block truncate" title={pItem.rawItem.benefit_name || pItem.rawItem.benefit_applied}>
                                   🌟 {pItem.rawItem.benefit_name || pItem.rawItem.benefit_applied}
                                 </span>
                               </strong>
                               {pItem.rawItem.membership_discount_amount > 0 && (
-                                <code className="text-amber-700 dark:text-amber-200">-₹{pItem.rawItem.membership_discount_amount.toLocaleString()}</code>
+                                <code className="text-amber-700 dark:text-amber-200 shrink-0 whitespace-nowrap">
+                                  -₹{pItem.rawItem.membership_discount_amount.toLocaleString()}
+                                </code>
                               )}
                             </div>
                           </div>

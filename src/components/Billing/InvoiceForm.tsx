@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Eye,
   IndianRupee,
+  ShieldCheck,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,7 @@ import {
   SelectContent,
   SelectItem,
   Loading,
+  Badge,
 } from "@/components/ui";
 import { sanitizeNumericString } from "@/utils/inputUtils";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
@@ -39,6 +41,8 @@ import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
 import { useUnbilledItemsQuery } from "../../hooks/billing/useUnbilledItemsQuery";
 import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
 import { InvoiceViewer } from "./InvoiceViewer";
+import { usePatientMembershipQuery } from "../../hooks/billing/usePatientMembershipQuery";
+import { useCorporatePlansQuery } from "../../hooks/corporate/useCorporatePlansQuery";
 import {
   invoiceSchema,
   type InvoiceFormData,
@@ -93,6 +97,80 @@ export function InvoiceForm({
   const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
   const [showAllInvoicesModal, setShowAllInvoicesModal] =
     useState<boolean>(false);
+  const [selectedNewPlanId, setSelectedNewPlanId] = useState<string | null>(null);
+  const [showMembershipSuggestions, setShowMembershipSuggestions] = useState<boolean>(false);
+
+  // GET active membership for this patient
+  const { data: membershipCheckData, isLoading: isMembershipCheckLoading } = usePatientMembershipQuery(
+    formData.patientId
+  );
+
+  const activeMembership = useMemo(() => {
+    if (!membershipCheckData) return null;
+    const target = membershipCheckData.responseObject?.data ?? membershipCheckData.data ?? membershipCheckData;
+    if (target && typeof target === "object" && !Array.isArray(target)) {
+      if (target.has_membership && Array.isArray(target.memberships) && target.memberships.length > 0) {
+        const active = target.memberships.find(
+          (m: any) => m.status?.toUpperCase() === "ACTIVE" || m.is_currently_valid === true
+        );
+        return active ? active.plan : null;
+      }
+      if (target.id || target.plan_name || target.planName || target.membershipPlanId) {
+        return target;
+      }
+    }
+    if (Array.isArray(target) && target.length > 0) {
+      return target[0];
+    }
+    return null;
+  }, [membershipCheckData]);
+
+  // GET list of all individual plans
+  const { data: rawPlansList } = useCorporatePlansQuery({
+    enabled: !!formData.patientId && !activeMembership && !isMembershipCheckLoading,
+    planType: "INDIVIDUAL",
+  });
+
+  const availableMembershipPlans = useMemo(() => {
+    if (!rawPlansList) return [];
+    const target = (rawPlansList as any)?.data ?? rawPlansList;
+    let list: any[] = [];
+    if (Array.isArray(target)) {
+      list = target;
+    } else if (target && typeof target === "object") {
+      if (Array.isArray(target.data?.data?.data)) list = target.data.data.data;
+      else if (Array.isArray(target.data?.data)) list = target.data.data;
+      else if (Array.isArray(target.data)) list = target.data;
+      else if (Array.isArray(target.plans)) list = target.plans;
+      else if (Array.isArray(target.data?.plans)) list = target.data.plans;
+    }
+    return list.filter((p: any) => p.status === "ACTIVE" || p.isActive !== false);
+  }, [rawPlansList]);
+
+  const handleSelectMembershipPlan = (plan: any) => {
+    const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+    const filtered = currentItems.filter(
+      (i: any) => !(i as any).isNewPlanPurchase && i.linkedType !== "MEMBERSHIP"
+    );
+
+    const newItem = {
+      id: `new-membership-${plan.id}`,
+      description: `Membership Fee - ${plan.plan_name || plan.name}`,
+      quantity: 1,
+      rate: Number(plan.annual_fee || plan.annualFee || plan.fee || 0),
+      amount: Number(plan.annual_fee || plan.annualFee || plan.fee || 0),
+      linkedId: plan.id,
+      linkedType: "MEMBERSHIP",
+      isNewPlanPurchase: true,
+    } as any;
+
+    setItems(
+      filtered.length === 1 && !filtered[0].description && filtered[0].rate === 0
+        ? [newItem]
+        : [...filtered, newItem]
+    );
+    setSelectedNewPlanId(plan.id);
+  };
 
   const { data: patientInvoicesData } = useInvoicesQuery(
     {
@@ -467,6 +545,8 @@ export function InvoiceForm({
                     )
                     : null;
                 setSelectedPrevInvoiceId("");
+                setSelectedNewPlanId(null);
+                setShowMembershipSuggestions(false);
                 setFormData({
                   ...formData,
                   patientPhone: p?.phone || "",
@@ -602,6 +682,8 @@ export function InvoiceForm({
                     )
                     : null;
                 setSelectedPrevInvoiceId("");
+                setSelectedNewPlanId(null);
+                setShowMembershipSuggestions(false);
                 setFormData({
                   ...formData,
                   patientName: p?.name || "",
@@ -879,6 +961,128 @@ export function InvoiceForm({
           />
         )}
 
+        {isMembershipCheckLoading && formData.patientId ? (
+          <div className="flex justify-center py-4 border border-purple-100 rounded-2xl bg-purple-50/20">
+            <Loading type="spinner" text="Checking membership status..." />
+          </div>
+        ) : activeMembership ? (
+          <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 flex-shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">
+                Active Membership Plan
+              </p>
+              <p className="text-xs font-bold text-purple-900 mt-0.5">
+                This patient is enrolled in <span className="font-extrabold">{activeMembership.plan_name || activeMembership.planName || activeMembership.membershipPlan?.plan_name || "Membership Plan"}</span>. Exclusive benefits will be applied to this bill.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {formData.patientId && !isMembershipCheckLoading && !activeMembership && (
+              <div className="flex items-center gap-2 px-1 py-1.5 bg-purple-50/30 border border-purple-100/50 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="toggle-membership-suggestions"
+                  checked={showMembershipSuggestions}
+                  onChange={(e) => setShowMembershipSuggestions(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-border rounded focus:ring-purple-500 cursor-pointer ml-2"
+                />
+                <label htmlFor="toggle-membership-suggestions" className="text-xs font-bold text-purple-700/80 cursor-pointer hover:text-purple-700 transition-colors flex items-center gap-1.5 py-1">
+                  🌟 Show Membership Plan Suggestions
+                </label>
+              </div>
+            )}
+
+            {showMembershipSuggestions && formData.patientId && !activeMembership && (
+              <Card className="bg-gradient-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ShieldCheck className="w-5 h-5 text-purple-600" />
+                    <h4 className="text-sm font-black text-purple-950 uppercase tracking-wider">
+                      Membership Suggestion
+                    </h4>
+                  </div>
+                  <p className="text-xs text-purple-900/80 mb-4 leading-relaxed font-medium">
+                    This patient is not enrolled in any membership. Suggest one of our active individual membership plans to add to this invoice and unlock exclusive discounts.
+                  </p>
+                  
+                  {availableMembershipPlans.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic font-semibold">
+                      No membership plans available at the moment.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {availableMembershipPlans.map((plan: any) => {
+                        const planId = plan.id;
+                        const isSelected = selectedNewPlanId === planId;
+                        const fee = Number(plan.annual_fee || plan.annualFee || plan.fee || 0);
+                        const planTypeLabel = plan.plan_type || plan.planType || "INDIVIDUAL";
+                        
+                        return (
+                          <div
+                            key={planId}
+                            className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                              isSelected
+                                ? "bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-100"
+                                : "bg-white border-purple-100 hover:border-purple-300 hover:shadow-sm"
+                            }`}
+                            onClick={() => {
+                              if (isSelected) {
+                                const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
+                                setItems(currentItems.filter((i: any) => i.id !== `new-membership-${planId}`));
+                                setSelectedNewPlanId(null);
+                              } else {
+                                handleSelectMembershipPlan(plan);
+                              }
+                            }}
+                          >
+                            <div className="mb-2">
+                              <div className="flex justify-between items-start gap-2 mb-1">
+                                <h5 className={`text-xs font-black truncate max-w-[150px] ${isSelected ? "text-white" : "text-purple-950"}`}>
+                                  {plan.plan_name || plan.name}
+                                </h5>
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase ${
+                                  isSelected ? "bg-white/20 text-white" : "bg-purple-50 text-purple-700"
+                                }`}>
+                                  {planTypeLabel}
+                                </span>
+                              </div>
+                              <p className={`text-[10px] line-clamp-2 ${isSelected ? "text-purple-100" : "text-muted-foreground"}`}>
+                                {plan.description || "Unlock special member benefits and savings on treatments."}
+                              </p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-dashed border-purple-200/40">
+                              <div className="flex flex-col">
+                                <span className={`text-[8px] uppercase tracking-wider font-bold ${isSelected ? "text-purple-200" : "text-muted-foreground/60"}`}>
+                                  Annual Fee
+                                </span>
+                                <strong className="text-sm font-black">
+                                  ₹{fee.toLocaleString()}
+                                </strong>
+                              </div>
+                              <div className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors ${
+                                isSelected
+                                  ? "bg-white text-purple-700 font-extrabold"
+                                  : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              }`}>
+                                {isSelected ? "Selected" : "Add to Bill"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -915,15 +1119,19 @@ export function InvoiceForm({
                 onRemove={(id) => {
                   const currentItems = (form.getValues("items") ??
                     []) as InvoiceItem[];
-                  const lid = (currentItems.find((i) => i.id === id) as any)
-                    ?.linkedId;
-                  if (lid)
+                  const itemToRemove = currentItems.find((i) => i.id === id);
+                  const lid = (itemToRemove as any)?.linkedId;
+                  if (lid) {
                     setFormData((prev) => ({
                       ...prev,
                       linkedItemIds: prev.linkedItemIds.filter(
                         (i) => i !== lid,
                       ),
                     }));
+                  }
+                  if ((itemToRemove as any)?.isNewPlanPurchase) {
+                    setSelectedNewPlanId(null);
+                  }
                   setItems(currentItems.filter((i) => i.id !== id));
                 }}
               />

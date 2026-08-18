@@ -4,7 +4,9 @@ import apiClient from "../../services/apiClient";
 export function useExportInvoicesMutation() {
   return useMutation({
     mutationFn: async () => {
-      const response = await apiClient.get('/invoice/export', {
+      const response = await apiClient.post('/invoice/export', {
+        format: 'xlsx'
+      }, {
         responseType: 'blob', // Important for downloading files
       });
       
