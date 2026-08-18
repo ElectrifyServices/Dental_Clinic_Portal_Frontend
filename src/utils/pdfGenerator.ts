@@ -1516,8 +1516,8 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const isStatement =
     (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
 
-  const patientName = invoice.patientName || invoice.patient_name || invoice.patient?.name || patient?.name || "N/A";
-  const patientIdValue = invoice.patient_id || invoice.patientId || invoice.patient?.id || patient?.id;
+  const patientName = invoice.patient?.name || "N/A";
+  const patientIdValue = invoice.patient_id;
   const patientCode =
     invoice.patient_code ||
     invoice.patientCode ||

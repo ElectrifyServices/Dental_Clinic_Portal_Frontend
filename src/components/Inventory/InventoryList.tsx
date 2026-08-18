@@ -133,10 +133,7 @@ export function InventoryList({
   else if (Array.isArray(listData?.data)) rawList = listData.data;
   else if (Array.isArray(listData?.data?.items)) rawList = listData.data.items;
   else if (Array.isArray(listData?.responseObject)) rawList = listData.responseObject;
-  else if (Array.isArray(listData?.responseObject?.data)) rawList = listData.responseObject.data;
-  else if (Array.isArray(listData?.responseObject?.items)) rawList = listData.responseObject.items;
-  else if (Array.isArray(listData?.responseObject?.data?.items)) rawList = listData.responseObject.data.items;
-
+  
   const filtered = rawList.map((item: any) => ({
     id: item.id,
     name: item.name,
