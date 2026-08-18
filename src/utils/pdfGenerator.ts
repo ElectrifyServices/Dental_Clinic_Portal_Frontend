@@ -1507,6 +1507,8 @@ function numberToWords(n: number): string {
 }
 
 export const generateInvoicePDF = async (invoice: any, patient: any) => {
+  // The history API returns one invoice inside responseObject.data.invoices.
+  invoice = invoice?.responseObject?.data?.invoices?.[0] || invoice;
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
@@ -1514,19 +1516,19 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const isStatement =
     (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
 
-  const patientName = invoice.patientName || patient?.name || "—";
-  const patientId = invoice.patientId || patient?.id || "—";
+  const patientName = invoice.patient?.name || "N/A";
+  const patientIdValue = invoice.patient_id;
   const patientCode =
     invoice.patient_code ||
     invoice.patientCode ||
     patient?.patient_code ||
     patient?.patientCode;
-  const displayPatientId =
-    patientCode || (patientId === "—" ? "—" : patientId.split("-")[0]);
+  const displayPatientId = String(patientCode || patientIdValue || "").trim() || "N/A";
 
   const invoiceNumber = invoice.invoice_number || invoice.id || "—";
-  const invoiceDate = invoice.date
-    ? new Date(invoice.date).toLocaleDateString("en-IN", {
+  const invoiceDateValue = invoice.date || invoice.invoice_date;
+  const invoiceDate = invoiceDateValue
+    ? new Date(invoiceDateValue).toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -1626,18 +1628,16 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const items: any[] = invoice.items || [];
 
-  // Extract values for the right column from the first item/invoice
-  // items[0].invoice_number carries the real invoice number even on a consolidated statement
-  const firstInvoiceNumber =
-    items[0]?.invoice_number || invoice.invoice_number || invoice.id || "—";
+  // Extract values for the right column from the single invoice response.
+  const firstInvoiceNumber = invoice.invoice_number || "—";
   const firstItemDate = isStatement ? statementDateFormatted : invoiceDate;
 
-  // Member ID (from invoice or member object)
-  const memberId = invoice?.member?.member_id || "—";
+  // Member ID from the invoice response.
+  const memberId = String(invoice.member_id || "").trim() || "N/A";
 
   const rows: Array<[string, string, string, string]> = [
     ["Name", patientName, "Date", firstItemDate],
-    ["Patient ID", "—", "Invoice No.", firstInvoiceNumber],
+    ["Patient ID", displayPatientId, "Invoice No.", firstInvoiceNumber],
     ["Member ID", memberId, "Phone", phone],
   ];
 
@@ -1702,11 +1702,11 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Patient ID</span>
-              <span style="font-size:12px; font-weight:400; text-align:right;">—</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${displayPatientId}</span>
             </div>
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Member ID</span>
-              <span style="font-size:12px; font-weight:400; text-align:right;">${memberId !== "—" ? memberId : "—"}</span>
+              <span style="font-size:12px; font-weight:400; text-align:right;">${memberId}</span>
             </div>
           </div>
 
