@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertTriangle,
   Calendar,
@@ -64,6 +66,134 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeSearchTerm = ((formData.name || "") + (formData.phone || "")).trim();
+  const debouncedSearch = useDebounce(activeSearchTerm, 400);
+
+  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
+    page: 1,
+    limit: 100,
+    search: debouncedSearch || undefined,
+    filters: { isDropdown: [true] as any },
+  }, {
+    enabled: !!debouncedSearch.trim()
+  });
+
+  const apiPatients = React.useMemo(() => {
+    if (!rawPatientsData) return [];
+    let rawList: any[] = [];
+    if (Array.isArray(rawPatientsData)) rawList = rawPatientsData;
+    else {
+      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+      if (Array.isArray(target)) rawList = target;
+      else if (target && typeof target === "object") {
+        if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
+        else if (Array.isArray(target.data?.data)) rawList = target.data.data;
+        else if (Array.isArray(target.data)) rawList = target.data;
+        else if (Array.isArray(target.patients)) rawList = target.patients;
+        else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
+      }
+    }
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
+  }, [rawPatientsData]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFocusedField(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectPatient = (p: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      id: p.id,
+      name: p.name || "",
+      phone: p.phone || "",
+      email: p.email || "",
+      gender: p.gender || "",
+      dateOfBirth: p.dateOfBirth || p.date_of_birth || "",
+      bloodGroup: p.bloodGroup || p.blood_group || "",
+      address: p.address || "",
+      occupation: p.occupation || "",
+      maritalStatus: p.maritalStatus || p.marital_status || "",
+      category: p.category || "",
+      defaultDiscount: p.defaultDiscount || p.default_discount || 0,
+      emergencyName: p.emergencyName || p.emergency_name || "",
+      emergencyRelation: p.emergencyRelation || p.emergency_relation || "",
+      emergencyPhone: p.emergencyPhone || p.emergency_phone || "",
+    }));
+    setFocusedField(null);
+  };
+
+  const renderPatientDropdown = () => {
+    if (!focusedField) return null;
+
+    const filteredPatients = apiPatients.slice(0, 10);
+
+    return (
+      <div className="absolute top-full mt-1 left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
+        <div className="p-2 bg-muted/45 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-primary">
+            Select existing patient or keep typing to add new
+          </span>
+          {isPatientsFetching && (
+            <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              Searching...
+            </span>
+          )}
+        </div>
+
+        {isPatientsLoading && apiPatients.length === 0 ? (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            Loading...
+          </div>
+        ) : filteredPatients.length > 0 ? (
+          <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
+            {filteredPatients.map((p: any, idx: number) => {
+              const pCode = p.country_code || p.countryCode || "+91";
+              return (
+                <li
+                  key={p.id || p.patient_id || idx}
+                  className="px-3 py-2 flex justify-between items-center hover:bg-muted/70 rounded-lg cursor-pointer transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelectPatient(p);
+                  }}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-sm font-bold text-foreground truncate">{p.name || p.full_name}</span>
+                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                      <span className="text-primary font-bold">{pCode}</span>
+                      <span>{p.phone}</span>
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-md uppercase shrink-0">
+                    Select
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="p-4 text-center text-xs text-muted-foreground font-semibold">
+            No matching patients found. A new patient will be created.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const startCamera = async () => {
     try {
@@ -323,8 +453,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative" ref={dropdownRef}>
+        <div className="space-y-1 relative">
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
             Full Name <span className="text-destructive">*</span>
@@ -333,17 +463,22 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             type="text"
             name="name"
             value={formData.name || ""}
+            onFocus={() => setFocusedField("name")}
             onChange={(e) => {
               let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
               val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
               e.target.value = val;
+              setFormData((prev: any) => ({ ...prev, id: undefined }));
+              setFocusedField("name");
               handleChange(e);
             }}
+            autoComplete="off"
             className={
               validationErrors.name ? "border-destructive bg-destructive/5" : ""
             }
             placeholder="Enter patient's full name"
           />
+          {focusedField === "name" && renderPatientDropdown()}
           {validationErrors.name && (
             <p className="text-destructive text-xs mt-1 flex items-center">
               <AlertTriangle className="w-3 h-3 mr-1" />
@@ -352,7 +487,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           )}
         </div>
 
-        <div className="relative">
+        <div className="space-y-1 relative">
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number <span className="text-destructive">*</span>
@@ -368,10 +503,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               name="phone"
               maxLength={10}
               value={formData.phone || ""}
+              onFocus={() => setFocusedField("phone")}
               onChange={(e) => {
                 e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                setFormData((prev: any) => ({ ...prev, id: undefined }));
+                setFocusedField("phone");
                 handleChange(e);
               }}
+              autoComplete="off"
               className={`flex-1 h-10 sm:h-11 rounded-xl ${
                 validationErrors.phone
                   ? "border-destructive bg-destructive/5"
@@ -380,6 +519,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               placeholder="e.g. 98765 43210"
             />
           </div>
+          {focusedField === "phone" && renderPatientDropdown()}
           {validationErrors.phone && (
             <p className="text-destructive text-xs mt-1 flex items-center">
               <AlertTriangle className="w-3 h-3 mr-1" />

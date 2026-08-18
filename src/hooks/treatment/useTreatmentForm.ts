@@ -163,6 +163,31 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     }
   }, [watchedDate]);
 
+  const watchedCost = form.watch("cost");
+
+  useEffect(() => {
+    if (treatmentSessions.length > 0) {
+      const totalCost = Number(watchedCost) || 0;
+      if (treatmentSessions.length === 1) {
+        if (treatmentSessions[0].cost !== totalCost) {
+          setTreatmentSessions(prev => [{ ...prev[0], cost: totalCost }]);
+        }
+      } else {
+        const avgCost = Math.round(totalCost / treatmentSessions.length);
+        const updated = treatmentSessions.map((s, idx) => {
+          const isLast = idx === treatmentSessions.length - 1;
+          const cost = isLast ? (totalCost - (avgCost * (treatmentSessions.length - 1))) : avgCost;
+          return { ...s, cost };
+        });
+        
+        const hasChanges = updated.some((s, idx) => s.cost !== treatmentSessions[idx].cost);
+        if (hasChanges) {
+          setTreatmentSessions(updated);
+        }
+      }
+    }
+  }, [watchedCost, treatmentSessions.length]);
+
   const updateAllSessionDates = (baseDate: string) => {
     const template = treatmentTemplates[watchedProcedure as keyof typeof treatmentTemplates];
     if (template) {
@@ -206,7 +231,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         description: session.description,
         suggestedDate: scheduledDate,
         scheduledDate: scheduledDate,
-        startTime: "09:00 AM",
+        startTime: "09:00",
         duration: session.duration,
         status: "scheduled",
         isFlexible: !session.isRequired,
@@ -248,7 +273,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       description: "Single session treatment",
       suggestedDate: baseDate,
       scheduledDate: baseDate,
-      startTime: "09:00 AM",
+      startTime: "09:00",
       duration: 45,
       status: "scheduled",
       isFlexible: true,
@@ -290,7 +315,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
       description: "Additional treatment session",
       suggestedDate: form.getValues("date"),
       scheduledDate: form.getValues("date"),
-      startTime: "09:00 AM",
+      startTime: "09:00",
       duration: 45,
       status: "scheduled",
       isFlexible: true,

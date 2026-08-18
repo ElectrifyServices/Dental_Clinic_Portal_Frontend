@@ -21,6 +21,7 @@ export interface CreateInvoiceVariables {
   discount: number;
   tax_percentage: number;
   items: CreateInvoiceItemVariables[];
+  plan_id?: string;
 }
 
 export function useCreateInvoiceMutation() {

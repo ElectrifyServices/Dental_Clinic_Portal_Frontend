@@ -629,10 +629,10 @@ export function InvoiceList({
             <Button
               variant="outline"
               onClick={() => exportInvoices()}
-              disabled={isExporting}
+              loading={isExporting}
               className="gap-2"
             >
-              <FileText className="w-4 h-4" /> 
+              {!isExporting && <FileText className="w-4 h-4" />}
               {isExporting ? "Exporting..." : "Export"}
             </Button>
             <Button onClick={onCreateInvoice} className="gap-2">

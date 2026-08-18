@@ -385,7 +385,14 @@ export function TreatmentForm({
     >,
   ) => {
     const { name, value } = e.target;
-    form.setValue(name as keyof typeof formData, value as any, {
+    let val: any = value;
+    if (name === "cost" || name === "discount_value") {
+      val = value === "" ? "" : Number(value);
+      if (typeof val === "number" && isNaN(val)) {
+        val = 0;
+      }
+    }
+    form.setValue(name as keyof typeof formData, val as any, {
       shouldValidate: true,
     });
 

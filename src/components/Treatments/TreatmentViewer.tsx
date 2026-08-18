@@ -16,6 +16,8 @@ import {
   Edit2,
   ExternalLink,
   Paperclip,
+  ShieldCheck,
+  Percent,
 } from "lucide-react";
 import { useState } from "react";
 import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
@@ -46,7 +48,7 @@ export function TreatmentViewer({
     enabled: !!treatmentId
   });
 
-  const treatment = treatmentData?.data; // Adjust based on your API response structure
+  const treatment = treatmentData?.data ?? treatmentData; // Adjust based on your API response structure
 
   // Loading state
   if (isLoading) {
@@ -391,8 +393,14 @@ export function TreatmentViewer({
             const estCost = Number(treatment.est_cost) || 0;
             const discountVal = Number(treatment.discount_value) || 0;
             const discountAmt = Number(treatment.discount_amount) || 0;
-            const finalCost = Number(treatment.final_cost) || (estCost - discountAmt);
             
+            const membershipBenefits = treatment.membership_benefits;
+            const membershipDiscount = Number(membershipBenefits?.benefit_discount) || 0;
+            
+            const finalCost = Number(membershipBenefits?.final_cost) 
+              || Number(treatment.final_cost) 
+              || (estCost - discountAmt);
+
             const rawPaidAmt = treatment.total_paid_amount ?? treatment.totalPaidAmount ?? treatment.paid_amount ?? treatment.paidAmount ?? 0;
             const paidAmt = isNaN(Number(rawPaidAmt)) ? 0 : Number(rawPaidAmt);
 
@@ -426,6 +434,28 @@ export function TreatmentViewer({
                       </span>
                     </div>
                   )}
+                  {membershipBenefits && (
+                    <>
+                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                        <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
+                          Membership
+                        </span>
+                        <Badge variant="indigo" className="text-[9px] font-black uppercase tracking-widest px-1.5 h-5 truncate max-w-[120px]">
+                          {membershipBenefits.plan_name}
+                        </Badge>
+                      </div>
+                      {membershipDiscount > 0 && (
+                        <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                          <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
+                            Member Savings
+                          </span>
+                          <span className="text-sm font-bold text-purple-600">
+                            − ₹{membershipDiscount.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
                     <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                       Final Cost
@@ -455,6 +485,59 @@ export function TreatmentViewer({
             );
           })()}
         </div>
+
+        {treatment.membership_benefits && (
+          <ContentCard
+            title="Membership Plan Benefits Applied"
+            icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
+            className="bg-indigo-50/20 border-indigo-100"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Plan Details</p>
+                <div className="bg-card p-3 rounded-xl border border-indigo-100/50 flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-bold text-indigo-900">{treatment.membership_benefits.plan_name}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">Enrolled Member: {treatment.membership_benefits.member_name}</p>
+                  </div>
+                  <Badge variant="indigo" className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest">
+                    Active
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Benefit Summary</p>
+                <div className="space-y-2">
+                  {(treatment.membership_benefits.benefits || []).map((benefit: any, idx: number) => {
+                    const isFlatDiscount = benefit.type === "FLAT_DISCOUNT";
+                    return (
+                      <div key={idx} className="flex items-start justify-between p-2.5 bg-card rounded-xl border border-indigo-50/80 text-xs">
+                        <div className="flex-1 pr-4">
+                          <span className="font-bold text-foreground">{benefit.benifit_label}</span>
+                          {!isFlatDiscount && benefit.allocationCount != null && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
+                              Used: {benefit.used} / Total: {benefit.allocationCount} (Remaining: {benefit.remaining})
+                            </p>
+                          )}
+                        </div>
+                        {isFlatDiscount && benefit.benefit_discount > 0 && (
+                          <span className="font-bold text-emerald-600 shrink-0">
+                            Saved ₹{Number(benefit.benefit_discount).toLocaleString()}
+                          </span>
+                        )}
+                        {!isFlatDiscount && benefit.used > 0 && (
+                          <span className="font-bold text-indigo-600 shrink-0 uppercase text-[9px] bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                            Availed
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </ContentCard>
+        )}
 
         {/* Sessions Section */}
         {treatment.sessions?.length > 0 && (
