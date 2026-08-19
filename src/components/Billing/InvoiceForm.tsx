@@ -86,7 +86,8 @@ export function InvoiceForm({
         quantity: i.quantity ?? 1,
         rate: i.rate ?? 0,
         amount: i.amount ?? 0,
-      })) ?? [{ id: "1", description: "", quantity: 1, rate: 0, amount: 0 }],
+        item_discount: (i as any).item_discount ?? 0,
+      })) ?? [{ id: "1", description: "", quantity: 1, rate: 0, amount: 0, item_discount: 0 }],
     },
   });
 
@@ -162,6 +163,7 @@ export function InvoiceForm({
       linkedId: plan.id,
       linkedType: "MEMBERSHIP",
       isNewPlanPurchase: true,
+      item_discount: 0,
     } as any;
 
     setItems(
@@ -428,8 +430,11 @@ export function InvoiceForm({
     const updatedItems = currentItems.map((item) => {
       if (item.id !== id) return item;
       const updated = { ...item, [field]: value };
-      if (field === "quantity" || field === "rate")
-        updated.amount = (updated.quantity || 1) * (updated.rate || 0);
+      if (field === "quantity" || field === "rate" || field === "item_discount") {
+        const sub = (updated.quantity || 1) * (updated.rate || 0);
+        const discPct = Number((updated as any).item_discount) || 0;
+        updated.amount = Math.max(0, sub - (sub * discPct) / 100);
+      }
       return updated;
     });
     setItems(updatedItems);
@@ -446,6 +451,7 @@ export function InvoiceForm({
       amount: pItem.rate,
       linkedId: pItem.id,
       linkedType: pItem.type,
+      item_discount: 0,
     } as any;
     setItems(
       currentItems.length === 1 &&
@@ -469,7 +475,12 @@ export function InvoiceForm({
     setItems(currentItems.filter((i) => (i as any).linkedId !== linkedId));
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const itemSubtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.rate || 0), 0);
+  const totalItemDiscount = items.reduce(
+    (sum, item) => sum + ((item.quantity || 1) * (item.rate || 0) * (Number((item as any).item_discount) || 0)) / 100,
+    0
+  );
+  const subtotal = Math.max(0, itemSubtotal - totalItemDiscount);
   const manualDiscount = formData.isComplimentary
     ? subtotal
     : (subtotal * formData.discount) / 100;
@@ -1112,6 +1123,7 @@ export function InvoiceForm({
                     quantity: 1,
                     rate: 0,
                     amount: 0,
+                    item_discount: 0,
                   },
                 ]);
               }}
@@ -1224,9 +1236,17 @@ export function InvoiceForm({
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
                   <span className="font-bold">
-                    ₹{subtotal.toLocaleString()}
+                    ₹{itemSubtotal.toLocaleString()}
                   </span>
                 </div>
+                {totalItemDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-destructive">
+                    <span>Item Discount</span>
+                    <span className="font-bold">
+                      -₹{totalItemDiscount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-destructive">
                   <span>
                     Discount (

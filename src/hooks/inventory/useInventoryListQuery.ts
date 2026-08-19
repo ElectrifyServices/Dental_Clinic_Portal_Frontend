@@ -26,10 +26,6 @@ export function useInventoryListQuery(params?: InventoryQueryParams, options?: a
     endpoint: "/inventory/list",
     method: "post",
     data: apiParams,
-    params: {
-      page: apiParams.page,
-      limit: apiParams.limit,
-    },
     options,
   });
 }

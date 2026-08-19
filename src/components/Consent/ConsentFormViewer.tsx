@@ -19,6 +19,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
+import { printConsentForm } from "@/utils/consentPrintUtils";
 
 interface ConsentFormViewerProps {
   form: any;
@@ -31,7 +32,9 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
   const isOfflineUpload = Boolean(form?.consentFormUrl && form.consentFormUrl !== "null" && form.consentFormUrl !== "");
 
   const handlePrint = () => {
-    window.print();
+    if (form) {
+      printConsentForm(form, themeData?.theme?.logo_url || null);
+    }
   };
 
   return (
@@ -54,7 +57,7 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
         </div>
       }
     >
-      <div className="p-0 sm:p-6 bg-muted/30 print:p-0 print:bg-transparent overflow-visible">
+      <div className="p-0 sm:p-6 bg-muted/30 print:p-0 print:bg-transparent overflow-x-hidden">
         {isLoading ? (
           <div className="bg-card mx-auto shadow-sm border border-border p-6 sm:p-12 min-h-[800px] relative animate-pulse space-y-10">
             {/* Header Skeleton */}
@@ -118,7 +121,7 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
             </div>
           </div>
         ) : (
-          <div className="bg-white mx-auto min-h-[1000px] relative print:border-none print:shadow-none print:p-0 flex flex-col font-sans">
+          <div className="bg-white mx-auto w-full max-w-4xl min-h-[1000px] relative print:border-none print:shadow-none print:p-0 flex flex-col font-sans overflow-hidden rounded-3xl border border-border shadow-sm consent-print-document">
             <div className="p-6 sm:p-8 flex-1">
               <div className="border-[3px] border-[#1e3a8a] rounded-3xl p-6 sm:p-8 h-full bg-white relative">
 
@@ -339,7 +342,9 @@ export function ConsentFormViewer({ form, onClose, isLoading }: ConsentFormViewe
                         </div>
                         <div className="flex items-center gap-2 justify-center border-t border-dashed border-[#94a3b8] pt-3">
                           <PenLine className="w-4 h-4 text-[#64748b]" />
-                          <span className="text-[#334155] font-bold text-sm">Witness Signature</span>
+                          <span className="text-[#334155] font-bold text-sm">
+                            {form.witnessName ? "Witness Signature" : "Doctor Signature"}
+                          </span>
                         </div>
                         <div className="text-[#1e3a8a] font-black text-lg italic mt-1">{form.witnessName || form.doctorName}</div>
                       </div>

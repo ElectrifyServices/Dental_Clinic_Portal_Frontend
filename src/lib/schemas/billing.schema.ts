@@ -6,6 +6,7 @@ const invoiceItemSchema = z.object({
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
   rate: z.coerce.number().min(0),
   amount: z.coerce.number().min(0),
+  item_discount: z.coerce.number().min(0).default(0).optional(),
 });
 
 export const invoiceSchema = z.object({

@@ -12,6 +12,13 @@ interface ConsentFormListProps {
   filters: { status: string; procedure: string; doctor: string; date: string };
   onFilterChange: (key: string, value: string) => void;
   doctorsList: { id: string; name: string }[];
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPerPageChange: (limit: number) => void;
+  isLoading?: boolean;
 }
 
 import {
@@ -27,6 +34,7 @@ import {
   SelectValue,
   DataTable,
   Pagination,
+  Loading,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -46,11 +54,14 @@ export function ConsentFormList({
   filters,
   onFilterChange,
   doctorsList,
+  page,
+  limit,
+  totalItems,
+  totalPages,
+  onPageChange,
+  onPerPageChange,
+  isLoading = false,
 }: ConsentFormListProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(forms.length / itemsPerPage);
-  const paginatedForms = forms.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const columns = [
     {
@@ -282,7 +293,11 @@ export function ConsentFormList({
         </div>
       </div>
 
-      {forms.length === 0 ? (
+      {isLoading && forms.length === 0 ? (
+        <div className="py-20 bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center text-center">
+          <Loading type="spinner" text="Fetching consent documents..." />
+        </div>
+      ) : forms.length === 0 ? (
         <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
           <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
           <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
@@ -293,29 +308,37 @@ export function ConsentFormList({
           </p>
         </div>
       ) : (
-        <ContentCard
-          bodyClassName="p-0 overflow-hidden"
-          className="rounded-3xl border-border/50"
-        >
-          <DataTable
-            columns={columns}
-            data={paginatedForms}
-            rowKey={(row) => row.id}
-            footer={
-              totalPages > 1 ? (
-                <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-                  <Pagination
-                    page={currentPage}
-                    totalPages={totalPages}
-                    totalItems={forms.length}
-                    perPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
-              ) : undefined
-            }
-          />
-        </ContentCard>
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-3xl">
+              <Loading type="spinner" text="Updating list..." />
+            </div>
+          )}
+          <ContentCard
+            bodyClassName="p-0 overflow-hidden"
+            className="rounded-3xl border-border/50"
+          >
+            <DataTable
+              columns={columns}
+              data={forms}
+              rowKey={(row) => row.id}
+              footer={
+                totalItems > 0 ? (
+                  <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      totalItems={totalItems}
+                      perPage={limit}
+                      onPageChange={onPageChange}
+                      onPerPageChange={onPerPageChange}
+                    />
+                  </div>
+                ) : undefined
+              }
+            />
+          </ContentCard>
+        </div>
       )}
     </div>
   );

@@ -7,7 +7,7 @@ export interface BenefitUsageVariables {
   filters?: Record<string, any>;
 }
 
-export function useBenefitUsageQuery(variables: BenefitUsageVariables, options?: { enabled?: boolean }) {
+export function useBenefitUsageQuery(variables: BenefitUsageVariables, options?: any) {
   const enabled = options?.enabled ?? true;
 
   return useApiQuery<any>({
@@ -22,8 +22,12 @@ export function useBenefitUsageQuery(variables: BenefitUsageVariables, options?:
     },
     options: {
       enabled,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 0,
+      gcTime: 0,
+      cacheTime: 0,
+      refetchOnMount: "always",
       refetchOnWindowFocus: false,
+      ...options,
     },
   });
 }

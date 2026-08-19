@@ -10,6 +10,7 @@ export interface CreateInvoiceItemVariables {
   billing_description_id?: string;
   total_amount: number;
   billed_amount: number;
+  discount_value?: number;
 }
 
 export interface CreateInvoiceVariables {

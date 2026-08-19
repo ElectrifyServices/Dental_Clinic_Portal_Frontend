@@ -407,11 +407,14 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       formDataObj.append("role_id", roleId);
       formDataObj.append("status", data.isActive ? "ACTIVE" : "INACTIVE");
 
+      const isDoc = data.role === "doctor" || data.role === "admin_doctor";
+      const isSupportStaff = data.role === "assistant" || data.role === "receptionist" || data.role === "nurse" || data.role === "staff";
+      const finalQualification = isDoc ? (data.qualification || "") : (isSupportStaff ? (data.education || "") : (data.qualification || data.education || ""));
+
       const personalProfile = {
         specialization_id: specId,
         experience_years: parseInt(data.experience || "0", 10),
-        qualification: data.qualification || data.education || "",
-        education: data.education || data.qualification || "",
+        qualification: finalQualification,
         license_number: data.licenseNumber,
         consultation_fee: parseInt(data.consultationFee || "0", 10),
         profit_sharing: data.profitSharing,

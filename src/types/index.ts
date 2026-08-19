@@ -197,6 +197,7 @@ export interface InvoiceItem {
   quantity: number;
   rate: number;
   amount: number;
+  item_discount?: number;
 }
 
 export type LabWorkStatus = 'ordered' | 'received' | 'paid' | 'cancelled';
