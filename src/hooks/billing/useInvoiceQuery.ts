@@ -24,24 +24,39 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
   const items = rawItems.map((item: any) => {
     const rate = Number(item.rate ?? item.unit_price ?? item.total_amount ?? item.billed_amount ?? 0);
     const quantity = Number(item.quantity ?? 1);
+    const discountPct = Number(item.discount_value ?? item.item_discount ?? 0);
+    
+    const preDiscountTotal = quantity * rate;
+    const discountVal = (preDiscountTotal * discountPct) / 100;
+    const finalAmount = Math.max(0, preDiscountTotal - discountVal);
+
     return {
       id: item.id,
       item_type: item.item_type || "Service",
       description: item.description || '',
       quantity,
       rate,
-      amount: Number(item.amount ?? (quantity * rate) ?? 0),
-      total_amount: Number(item.total_amount ?? item.amount ?? (quantity * rate) ?? 0),
-      billed_amount: Number(item.billed_amount ?? item.amount ?? (quantity * rate) ?? 0),
+      discount_value: discountPct,
+      item_discount: discountPct,
+      amount: finalAmount,
+      total_amount: preDiscountTotal,
+      billed_amount: finalAmount,
     };
   });
 
   const discountVal = Number(inv.discount_percentage ?? inv.discount ?? 0);
   const taxVal = Number(inv.tax_percentage ?? inv.tax ?? 18);
-  const subtotal = Number(inv.subtotal ?? items.reduce((sum: number, item: any) => sum + item.amount, 0));
+  
+  const subtotal = items.length > 0
+    ? items.reduce((sum: number, item: any) => sum + item.amount, 0)
+    : Number(inv.subtotal ?? 0);
+    
   const discountAmount = Number(inv.discount_amount ?? (inv.is_complimentary ? subtotal : (subtotal * discountVal) / 100));
   const taxAmount = Number(inv.tax_amount ?? (inv.is_complimentary ? 0 : ((subtotal - discountAmount) * taxVal) / 100));
-  const total = Number(inv.total_amount ?? inv.total ?? (inv.is_complimentary ? 0 : (subtotal - discountAmount + taxAmount)));
+  
+  const total = items.length > 0
+    ? (inv.is_complimentary ? 0 : (subtotal - discountAmount + taxAmount))
+    : Number(inv.total_amount ?? inv.total ?? 0);
 
   const paidAmount = Number(inv.paid_amount ?? inv.paidAmount ?? 0);
   const pendingAmount = Number(inv.pending_amount ?? inv.pendingAmount ?? 0);

@@ -27,7 +27,13 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
       search: searchStr,
       filters: {},
     },
-    { enabled: isOpen && !!searchStr }
+    {
+      enabled: isOpen && !!searchStr,
+      staleTime: 0,
+      gcTime: 0,
+      cacheTime: 0,
+      refetchOnMount: "always",
+    }
   );
 
   // Extract records array from various possible shapes

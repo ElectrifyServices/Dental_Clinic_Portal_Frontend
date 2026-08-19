@@ -17,7 +17,7 @@ export interface PatientTreatmentPlansResponse {
   };
   pagination?: PaginationMeta;
 }
-
+  
 function getPagination(page: PatientTreatmentPlansResponse | null | undefined) {
   return page?.data?.pagination || page?.pagination;
 }
@@ -33,7 +33,9 @@ export function usePatientTreatmentPlansQuery(
     queryKey: ["patientTreatmentPlans", patientId, limit, JSON.stringify(options?.filters)],
     enabled,
     initialPageParam: 1,
-    staleTime: 60_000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
     queryFn: async ({ pageParam }): Promise<PatientTreatmentPlansResponse | null> => {
       const res = await apiClient.request<ApiResponse<PatientTreatmentPlansResponse>>({
         url: `/treatment/patient/${patientId}/list`,

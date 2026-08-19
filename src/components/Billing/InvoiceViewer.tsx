@@ -412,6 +412,16 @@ export function InvoiceViewer({
               render: (item: any) => <span className="text-muted-foreground">₹{(item.rate ?? 0).toLocaleString()}</span>,
             },
             {
+              key: "discount_value",
+              header: "Discount",
+              align: "right",
+              render: (item: any) => (
+                <span className="text-destructive font-medium">
+                  {item.discount_value ? `${item.discount_value}%` : "—"}
+                </span>
+              ),
+            },
+            {
               key: "amount",
               header: "Amount",
               align: "right",

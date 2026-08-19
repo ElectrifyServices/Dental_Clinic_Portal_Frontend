@@ -31,7 +31,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
     <div className={`grid grid-cols-12 gap-3 items-end p-3 rounded-xl border transition-all ${
       isLinked ? 'bg-indigo-50 border-indigo-100' : 'bg-muted/30 border-border/50 hover:border-border'
     }`}>
-      <div className="col-span-12 md:col-span-6">
+      <div className="col-span-12 md:col-span-5">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Service Description</Label>
         {isLinked ? (
           <div className="w-full px-3 h-10 bg-indigo-100 text-indigo-900 rounded-lg font-bold text-sm flex items-center border border-indigo-200">
@@ -69,7 +69,7 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       </div>
       */}
 
-      <div className="col-span-4 md:col-span-3">
+      <div className="col-span-4 md:col-span-2">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Paid (₹)</Label>
         <Input
           type="number"
@@ -86,6 +86,24 @@ export const InvoiceItemRow: React.FC<InvoiceItemRowProps> = ({
       </div>
 
       <div className="col-span-4 md:col-span-2">
+        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Discount (%)</Label>
+        <Input
+          type="number"
+          value={item.item_discount ?? 0}
+          onFocus={e => e.target.select()}
+          onChange={e => {
+            const valStr = sanitizeNumericString(e.target.value);
+            e.target.value = valStr;
+            const val = parseFloat(valStr);
+            onUpdate(item.id, 'item_discount', isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+          }}
+          min={0}
+          max={100}
+          className="w-full px-3 h-10 border rounded-lg text-sm font-bold text-right outline-none bg-card border-border focus:ring-2 focus:ring-primary/20"
+        />
+      </div>
+
+      <div className="col-span-3 md:col-span-2">
         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block px-1">Total (₹)</Label>
         <div className="w-full px-3 h-10 flex items-center justify-end bg-muted/50 border border-border/50 rounded-lg text-sm font-black text-foreground">
           {(item.amount || 0).toLocaleString()}

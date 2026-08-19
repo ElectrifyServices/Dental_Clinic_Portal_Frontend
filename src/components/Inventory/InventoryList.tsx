@@ -84,7 +84,7 @@ export function InventoryList({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -98,16 +98,13 @@ export function InventoryList({
     search: debouncedSearch,
     category: cat,
     low_stock: lowStockFilter,
-    // The inventory endpoint currently returns the first batch even when a
-    // page number is supplied. Fetch the filtered API collection once and use
-    // the shared paginator below for stable page navigation.
-    page: 1,
-    limit: 1000,
+    page: currentPage,
+    limit: itemsPerPage,
   }, { refetchOnMount: "always" });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, cat, lowStockFilter]);
+  }, [debouncedSearch, cat, lowStockFilter, itemsPerPage]);
 
   const { data: categoriesData } = useInventoryCategoriesQuery();
 
@@ -369,10 +366,7 @@ export function InventoryList({
       ),
     },
   ];
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const paginatedData = filtered;
 
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {
@@ -508,6 +502,7 @@ export function InventoryList({
                 totalItems={totalItems}
                 perPage={itemsPerPage}
                 onPageChange={setCurrentPage}
+                onPerPageChange={setItemsPerPage}
               />
             </div>
           ) : undefined

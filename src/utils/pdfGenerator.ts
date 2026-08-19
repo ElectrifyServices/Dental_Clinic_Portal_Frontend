@@ -1657,6 +1657,8 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
       const hsnCode = item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE;
       const totalVal = Number(item.total_amount || item.amount || 0);
       const billedVal = Number(item.billed_amount || item.amount || 0);
+      const discountPct = Number(item.discount_value || item.item_discount || 0);
+      const displayDiscount = discountPct > 0 ? `${discountPct}%` : "—";
 
       return `
       <tr style="border-bottom:1px solid ${T.LINE};" data-avoid-break="true">
@@ -1668,7 +1670,8 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
             ${displayDescription}
           </div>
         </td>
-        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${formatCurrency(totalVal)}`, "right", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${displayDiscount}`, "right", `font-size:12px; font-weight:400; color: #ef4444;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${formatCurrency(billedVal)}`, "right", `font-size:12px; font-weight:600;`)}</td>
       </tr>
     `;
     })
@@ -1739,6 +1742,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
                 <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%; vertical-align:middle; line-height:1.4;">Sr. No</th>
                 <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">HSN/SAC</th>
                 <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:45%; vertical-align:middle; line-height:1.4;">Item Type</th>
+                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">Discount</th>
                 <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">Amount</th>
               </tr>
             </thead>

@@ -925,6 +925,7 @@ function ModalRegistryContent() {
                   }
 
                   const descId = item.billing_description_id;
+                  const discountPct = Number(item.item_discount) || 0;
 
                   return {
                     item_type: type,
@@ -936,6 +937,7 @@ function ModalRegistryContent() {
                     description: item.description,
                     total_amount: item.amount,
                     billed_amount: item.amount,
+                    discount_value: discountPct,
                   };
                 }),
               };
