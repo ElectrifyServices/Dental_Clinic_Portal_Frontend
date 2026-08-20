@@ -1,5 +1,6 @@
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
+import { normalizePatient } from "../patients/usePatientDetailQuery";
 
 export function normalizeInvoice(payload: any, expectedId?: string) {
   if (!payload) return null;
@@ -91,15 +92,10 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
 }
 
 export function useInvoiceQuery(id: string, patientId?: string, isMember?: boolean, options?: any) {
-  const isMemberCheck = isMember || (patientId && (patientId.startsWith('EMP-') || patientId.startsWith('IND-') || patientId.startsWith('MEM-')));
   const queryParams: any = { invoice_id: id };
-  if (patientId) {
-    if (isMemberCheck) queryParams.member_id = patientId;
-    else queryParams.patient_id = patientId;
-  }
   
   const query = useApiQuery<any>({
-    queryKey: ["invoice", id, patientId],
+    queryKey: ["invoice", id],
     endpoint: `/invoice/history`,
     method: "get",
     params: queryParams,
@@ -113,6 +109,9 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
   });
 
   let rawData = query.data?.responseObject?.data || query.data?.data || query.data?.invoice || query.data;
+  const rawPatient = query.data?.responseObject?.data?.patient || query.data?.data?.patient || null;
+  const patient = rawPatient ? normalizePatient(rawPatient) : null;
+
   if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
     rawData = rawData.invoices;
   }
@@ -124,6 +123,7 @@ export function useInvoiceQuery(id: string, patientId?: string, isMember?: boole
     ...query,
     data: query.data ? normalizeInvoice(query.data, id) : null,
     allInvoices,
+    patient,
   };
 }
 

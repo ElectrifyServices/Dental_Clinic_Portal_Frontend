@@ -126,6 +126,20 @@ export function PatientConsultation({
   };
 
   const { state } = useAuth();
+  const isEditMode = !!(patient as any).isEditMode;
+
+  const originalSessionsMap = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    if (initialData?.consultationData?.treatmentPlans) {
+      initialData.consultationData.treatmentPlans.forEach((plan: any) => {
+        if (plan.id) {
+          map[plan.id] = plan.sessions || 1;
+        }
+      });
+    }
+    return map;
+  }, [initialData]);
+
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdConsultationId, setCreatedConsultationId] = useState<string | null>(null);
   const [selectedExistingDirectPatientId, setSelectedExistingDirectPatientId] = useState<string | undefined>(
@@ -1102,6 +1116,8 @@ export function PatientConsultation({
               followUpRequired={consultationData.followUpRequired}
               onFollowUpRequiredChange={handleChange}
               errors={errors}
+              isEditMode={isEditMode}
+              originalSessionsMap={originalSessionsMap}
             />
 
             <FollowUpScheduler

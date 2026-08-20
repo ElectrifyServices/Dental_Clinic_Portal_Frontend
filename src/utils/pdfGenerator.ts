@@ -56,7 +56,9 @@ function getBrandingTokens() {
         INK_MUTED: inkMutedColor,
         LINE: b.line_color ?? BRANDING_DEFAULTS.LINE,
         PANEL: b.panel_color ?? BRANDING_DEFAULTS.PANEL,
-        CLINIC_NAME: b.clinic_name ?? BRANDING_DEFAULTS.CLINIC_NAME,
+        CLINIC_NAME: (b.clinic_name && /dantel/i.test(b.clinic_name))
+          ? "Opal Smiles Dental Studio"
+          : (b.clinic_name ?? BRANDING_DEFAULTS.CLINIC_NAME),
         CLINIC_TAGLINE: t.tagline ?? BRANDING_DEFAULTS.CLINIC_TAGLINE,
         CLINIC_ADDRESS: b.address ?? BRANDING_DEFAULTS.CLINIC_ADDRESS,
         CLINIC_PHONE: b.phone ?? BRANDING_DEFAULTS.CLINIC_PHONE,
@@ -1516,7 +1518,25 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const isStatement =
     (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
 
-  const patientName = invoice.patient?.name || "N/A";
+  const targetMemberId = invoice.member_id || invoice.memberId || invoice.member?.id;
+  const matchedMember = (Array.isArray(patient?.members) && targetMemberId)
+    ? patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId)
+    : null;
+
+  const findPatientName = () => {
+    if (invoice.patientName) return invoice.patientName;
+    if (invoice.patient_name) return invoice.patient_name;
+    if (invoice.patient?.name) return invoice.patient.name;
+    if (invoice.member?.name) return invoice.member.name;
+    if (invoice.member_name) return invoice.member_name;
+    if (invoice.memberName) return invoice.memberName;
+    if (matchedMember?.name) return matchedMember.name;
+    if (patient?.name) return patient.name;
+    if (patient?.full_name) return patient.full_name;
+    return "N/A";
+  };
+
+  const patientName = findPatientName();
   const patientIdValue = invoice.patient_id;
   const patientCode =
     invoice.patient_code ||
@@ -1564,16 +1584,22 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     );
 
   const gender =
-    patient?.gender || invoice.member?.gender || invoice.patient?.gender || "—";
-  const age =
-    patient?.age ||
-    ageFromDOB(
-      patient?.dob ||
-      patient?.dateOfBirth ||
-      invoice.member?.dob ||
-      invoice.patient?.dob,
-    ) ||
+    matchedMember?.gender ||
+    patient?.gender ||
+    invoice.member?.gender ||
+    invoice.patient?.gender ||
     "—";
+
+  const dobValue =
+    matchedMember?.dob ||
+    matchedMember?.date_of_birth ||
+    matchedMember?.dateOfBirth ||
+    patient?.dob ||
+    patient?.dateOfBirth ||
+    invoice.member?.dob ||
+    invoice.patient?.dob;
+
+  const age = patient?.age || ageFromDOB(dobValue) || "—";
   const ageGender = age !== "—" || gender !== "—" ? `${age} / ${gender}` : "—";
 
   const phone =
@@ -1632,8 +1658,49 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
   const firstInvoiceNumber = invoice.invoice_number || "—";
   const firstItemDate = isStatement ? statementDateFormatted : invoiceDate;
 
-  // Member ID from the invoice response.
-  const memberId = String(invoice.member_id || "").trim() || "N/A";
+  // Member ID from the invoice response, patient object, or nested members list.
+  const findMemberId = () => {
+    // 1. Try to find the human-readable member_id in the patient's members list
+    if (matchedMember) {
+      if (matchedMember.member_id) return matchedMember.member_id;
+      if (matchedMember.memberId) return matchedMember.memberId;
+    }
+
+    if (Array.isArray(patient?.members) && patient.members.length > 0) {
+      if (targetMemberId) {
+        const found = patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId);
+        if (found?.member_id) return found.member_id;
+        if (found?.memberId) return found.memberId;
+      }
+      
+      const selfMember = patient.members.find((m: any) => m?.relationship_type === "SELF" || m?.relationshipType === "SELF");
+      if (selfMember?.member_id) return selfMember.member_id;
+      if (selfMember?.memberId) return selfMember.memberId;
+      if (selfMember?.id) return selfMember.id;
+
+      const firstMember = patient.members[0];
+      if (firstMember?.member_id) return firstMember.member_id;
+      if (firstMember?.memberId) return firstMember.memberId;
+      if (firstMember?.id) return firstMember.id;
+    }
+
+    // 2. If targetMemberId itself looks like a human-readable member_id (starts with a letter, e.g. M-)
+    if (targetMemberId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetMemberId)) {
+      return targetMemberId;
+    }
+
+    if (invoice.member?.member_id) return invoice.member.member_id;
+    if (invoice.member?.memberId) return invoice.member.memberId;
+    if (patient?.member_id) return patient.member_id;
+    if (patient?.memberId) return patient.memberId;
+    if (patient?.corporateMemberId) return patient.corporateMemberId;
+    if (patient?.corporate_member_id) return patient.corporate_member_id;
+
+    if (targetMemberId) return targetMemberId;
+    return "";
+  };
+
+  const memberId = String(findMemberId()).trim() || "N/A";
 
   const rows: Array<[string, string, string, string]> = [
     ["Name", patientName, "Date", firstItemDate],

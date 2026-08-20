@@ -773,6 +773,7 @@ function ModalRegistryContent() {
                   }
 
                   return {
+                    id: tp.id && !tp.id.startsWith("plan-") ? tp.id : undefined,
                     tooth_number: toothArray,
                     procedure: tp.procedure,
                     total_sessions: parseInt(tp.sessions || tp.total_sessions || tp.totalSessions) || 1,
@@ -927,16 +928,19 @@ function ModalRegistryContent() {
                   const descId = item.billing_description_id;
                   const discountPct = Number(item.item_discount) || 0;
 
+                  const rawLinkedId = item.linkedId;
+                  const cleanLinkedId = typeof rawLinkedId === "string" ? rawLinkedId.replace("-pending", "") : rawLinkedId;
+
                   return {
                     item_type: type,
-                    consultation_id: type === "CONSULTATION" ? item.linkedId : undefined,
-                    treatment_plan_id: type === "TREATMENT_SESSION" ? item.linkedId : undefined,
-                    membership_id: type === "MEMBERSHIP" && !item.isNewPlanPurchase ? item.linkedId : undefined,
+                    consultation_id: type === "CONSULTATION" ? cleanLinkedId : undefined,
+                    treatment_plan_id: type === "TREATMENT_SESSION" ? cleanLinkedId : undefined,
+                    membership_id: type === "MEMBERSHIP" && !item.isNewPlanPurchase ? cleanLinkedId : undefined,
                     billing_description_id: descId,
                     
                     description: item.description,
-                    total_amount: item.amount,
-                    billed_amount: item.amount,
+                    total_amount: (Number(item.rate) || 0) * (Number(item.quantity) || 1),
+                    billed_amount: Number(item.amount) || 0,
                     discount_value: discountPct,
                   };
                 }),

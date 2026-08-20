@@ -93,6 +93,82 @@ export function InvoiceForm({
 
   const formData = form.watch();
 
+  const [patientSearchInput, setPatientSearchInput] = useState("");
+  const [patientSearchQuery, setPatientSearchQuery] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setPatientSearchQuery(patientSearchInput);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [patientSearchInput]);
+
+  const { data: rawPatientsData } = usePatientQuery({
+    search: patientSearchQuery || undefined,
+    filters: { isDropdown: [true] as any },
+  });
+  const apiPatients = useMemo(() => {
+    if (!rawPatientsData) return [];
+    let rawList: any[] = [];
+    if (Array.isArray(rawPatientsData)) {
+      rawList = rawPatientsData;
+    } else {
+      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+      if (Array.isArray(target)) {
+        rawList = target;
+      } else if (target && typeof target === "object") {
+        if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
+        else if (Array.isArray(target.data?.data)) rawList = target.data.data;
+        else if (Array.isArray(target.data)) rawList = target.data;
+        else if (Array.isArray(target.patients)) rawList = target.patients;
+        else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
+      }
+    }
+    return rawList.map((p: any) => ({
+      ...p,
+      id: p.id || p.patient_id,
+      name: p.name || p.full_name || p.patient_name || "",
+      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
+    }));
+  }, [rawPatientsData]);
+
+  const selectedPatient = useMemo(() => {
+    return apiPatients.find(
+      (p: any) =>
+        p.id === formData.patientId || p.name === formData.patientName,
+    );
+  }, [apiPatients, formData.patientId, formData.patientName]);
+
+  const cat = (
+    selectedPatient?.category ||
+    selectedPatient?.patient_category ||
+    ""
+  ).toLowerCase();
+  const isCorporate =
+    cat === "corporate" ||
+    cat === "employee" ||
+    cat === "member" ||
+    selectedPatient?.corporatePlanId ||
+    selectedPatient?.companyId ||
+    selectedPatient?.company_id ||
+    selectedPatient?.is_member ||
+    selectedPatient?.is_employee ||
+    selectedPatient?.isMember ||
+    selectedPatient?.isEmployee ||
+    selectedPatient?.employeeId ||
+    selectedPatient?.employee_id ||
+    selectedPatient?.membership_id ||
+    selectedPatient?.membershipId;
+
+  const memberId =
+    selectedPatient?.source === "member"
+      ? selectedPatient.id
+      : selectedPatient?.corporateMemberId ||
+      selectedPatient?.member_id ||
+      selectedPatient?.memberId ||
+      selectedPatient?.primaryMemberId ||
+      (isCorporate ? selectedPatient.id : "");
+
   const [selectedPrevInvoiceId, setSelectedPrevInvoiceId] =
     useState<string>("");
   const [viewingInvoiceId, setViewingInvoiceId] = useState<string | null>(null);
@@ -103,7 +179,8 @@ export function InvoiceForm({
 
   // GET active membership for this patient
   const { data: membershipCheckData, isLoading: isMembershipCheckLoading } = usePatientMembershipQuery(
-    formData.patientId
+    formData.patientId,
+    memberId
   );
 
   const activeMembership = useMemo(() => {
@@ -214,81 +291,7 @@ export function InvoiceForm({
     return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
   }, [patientInvoicesData]);
 
-  const [patientSearchInput, setPatientSearchInput] = useState("");
-  const [patientSearchQuery, setPatientSearchQuery] = useState("");
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setPatientSearchQuery(patientSearchInput);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [patientSearchInput]);
-
-  const { data: rawPatientsData } = usePatientQuery({
-    search: patientSearchQuery || undefined,
-    filters: { isDropdown: [true] as any },
-  });
-  const apiPatients = useMemo(() => {
-    if (!rawPatientsData) return [];
-    let rawList: any[] = [];
-    if (Array.isArray(rawPatientsData)) {
-      rawList = rawPatientsData;
-    } else {
-      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
-      if (Array.isArray(target)) {
-        rawList = target;
-      } else if (target && typeof target === "object") {
-        if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
-        else if (Array.isArray(target.data?.data)) rawList = target.data.data;
-        else if (Array.isArray(target.data)) rawList = target.data;
-        else if (Array.isArray(target.patients)) rawList = target.patients;
-        else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
-      }
-    }
-    return rawList.map((p: any) => ({
-      ...p,
-      id: p.id || p.patient_id,
-      name: p.name || p.full_name || p.patient_name || "",
-      phone: p.phone || p.mobile || p.mobile_number || p.patient_phone || "",
-    }));
-  }, [rawPatientsData]);
-
-  const selectedPatient = useMemo(() => {
-    return apiPatients.find(
-      (p: any) =>
-        p.id === formData.patientId || p.name === formData.patientName,
-    );
-  }, [apiPatients, formData.patientId, formData.patientName]);
-
-  const cat = (
-    selectedPatient?.category ||
-    selectedPatient?.patient_category ||
-    ""
-  ).toLowerCase();
-  const isCorporate =
-    cat === "corporate" ||
-    cat === "employee" ||
-    cat === "member" ||
-    selectedPatient?.corporatePlanId ||
-    selectedPatient?.companyId ||
-    selectedPatient?.company_id ||
-    selectedPatient?.is_member ||
-    selectedPatient?.is_employee ||
-    selectedPatient?.isMember ||
-    selectedPatient?.isEmployee ||
-    selectedPatient?.employeeId ||
-    selectedPatient?.employee_id ||
-    selectedPatient?.membership_id ||
-    selectedPatient?.membershipId;
-
-  const memberId =
-    selectedPatient?.source === "member"
-      ? selectedPatient.id
-      : selectedPatient?.corporateMemberId ||
-      selectedPatient?.member_id ||
-      selectedPatient?.memberId ||
-      selectedPatient?.primaryMemberId ||
-      (isCorporate ? selectedPatient.id : "");
 
   const { data: rawUnbilledData, isLoading: isUnbilledLoading } = useUnbilledItemsQuery(
     formData.patientId,
@@ -379,44 +382,73 @@ export function InvoiceForm({
       const apiMemberships = unbilledObj.membership || [];
 
       apiConsultations.forEach((c: any) => {
-        list.push({
-          id: c.id,
-          type: c.type || "consultation",
-          description:
-            c.description ||
-            `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})`,
-          rate: c.final_amount ?? c.amount ?? c.original_amount ?? 0,
-          date: c.date,
-          doctor_name: c.doctor_name || c.doctorName,
-          status: c.status,
-          rawItem: c,
-        });
+        const rate = c.final_amount ?? c.amount ?? c.original_amount ?? 0;
+        if (Number(rate) > 0) {
+          list.push({
+            id: c.id,
+            type: c.type || "consultation",
+            description:
+              c.description ||
+              `Consultation Fee (${new Date(c.date).toLocaleDateString("en-IN")})`,
+            rate,
+            date: c.date,
+            doctor_name: c.doctor_name || c.doctorName,
+            status: c.status,
+            rawItem: c,
+          });
+        }
       });
 
       apiTreatments.forEach((t: any) => {
-        list.push({
-          id: t.id,
-          type: t.type || "treatment",
-          description: t.description || t.procedure || "Treatment Item",
-          rate: t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0,
-          date: t.date,
-          doctor_name: t.doctor_name || t.doctorName,
-          status: t.status,
-          rawItem: t,
-        });
+        const rate = t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0;
+        if (Number(rate) > 0) {
+          list.push({
+            id: t.id,
+            type: t.type || "treatment",
+            description: t.description || t.procedure || "Treatment Item",
+            rate,
+            date: t.date,
+            doctor_name: t.doctor_name || t.doctorName,
+            status: t.status,
+            rawItem: t,
+          });
+        }
+
+        if (t.pending_amount && Number(t.pending_amount) > 0) {
+          list.push({
+            id: `${t.id}-pending`,
+            type: "treatment-pending",
+            description: `${t.description || t.procedure || "Treatment Item"} (Pending Balance)`,
+            rate: Number(t.pending_amount),
+            date: t.date,
+            doctor_name: t.doctor_name || t.doctorName,
+            status: t.status,
+            rawItem: {
+              ...t,
+              original_amount: Number(t.pending_amount),
+              plan_discount_amount: 0,
+              already_paid: 0,
+              pending_amount: 0,
+              benefit_applied: null,
+            },
+          });
+        }
       });
 
       apiMemberships.forEach((m: any) => {
-        list.push({
-          id: m.id,
-          type: m.type || "membership",
-          description:
-            m.description || m.plan_name || m.planName || "Membership Fee",
-          rate: m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0,
-          date: m.date,
-          status: m.status,
-          rawItem: m,
-        });
+        const rate = m.final_amount ?? m.amount ?? m.cost ?? m.original_amount ?? 0;
+        if (Number(rate) > 0) {
+          list.push({
+            id: m.id,
+            type: m.type || "membership",
+            description:
+              m.description || m.plan_name || m.planName || "Membership Fee",
+            rate,
+            date: m.date,
+            status: m.status,
+            rawItem: m,
+          });
+        }
       });
     }
 
@@ -854,7 +886,6 @@ export function InvoiceForm({
                 <SelectItem value="UPI">UPI</SelectItem>
                 <SelectItem value="Card">Card</SelectItem>
                 <SelectItem value="Cash">Cash</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </LabeledField>
