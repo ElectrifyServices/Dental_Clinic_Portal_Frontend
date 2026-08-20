@@ -135,6 +135,7 @@ export function LabWorkForm({
       id: p.id,
       name: p.name || p.full_name || "",
       phone: p.phone || p.mobile || "",
+      country_code: p.country_code || "",
       avatar: getFileUrl(p.profile_picture_url) || getFileUrl(p.profile_picture) || getFileUrl(p.avatar) || "",
     }));
   }, [rawPatientsData]);
@@ -328,13 +329,16 @@ export function LabWorkForm({
               onSearchChange={setPatientSearchInput}
               options={[
                 { label: "Select Patient", value: "none", avatar: "", phone: "" },
-                ...apiPatients.map((p: any) => ({
-                  label: p.name,
-                  searchLabel: `${p.name} ${p.phone || ""}`,
-                  value: p.id,
-                  avatar: p.avatar,
-                  phone: p.phone,
-                })),
+                ...apiPatients.map((p: any) => {
+                  const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                  return {
+                    label: p.name,
+                    searchLabel: `${p.name} ${formattedPhone}`,
+                    value: p.id,
+                    avatar: p.avatar,
+                    phone: formattedPhone,
+                  };
+                }),
               ]}
               renderOption={(opt: any) => {
                 if (opt.value === "none") return <span className="text-muted-foreground">{opt.label}</span>;
@@ -354,7 +358,7 @@ export function LabWorkForm({
                     <div className="flex flex-col min-w-0">
                       <span className="truncate font-semibold text-foreground text-xs">{opt.label}</span>
                       {opt.phone && (
-                        <span className="text-[10px] text-muted-foreground">{opt.phone}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">{opt.phone}</span>
                       )}
                     </div>
                   </div>

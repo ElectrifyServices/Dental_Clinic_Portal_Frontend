@@ -74,12 +74,15 @@ export function BasicInfoSection({
           }}
           options={allPatients.map((p) => {
             const name = typeof p === "string" ? p : p.name;
+            const countryCode = typeof p === "object" ? p.country_code || "" : "";
+            const phone = typeof p === "object" ? p.phone || "" : "";
+            const formattedPhone = phone ? (countryCode ? `${countryCode} ${phone}` : phone) : "";
             return {
               label: name,
               value: name,
-              phone: typeof p === "object" ? p.phone : "",
+              phone: formattedPhone,
               avatar: typeof p === "object" ? p.avatar : "",
-              searchLabel: `${name} ${typeof p === "object" ? p.phone || "" : ""}`
+              searchLabel: `${name} ${formattedPhone}`
             };
           })}
           onSearchChange={onPatientSearch}

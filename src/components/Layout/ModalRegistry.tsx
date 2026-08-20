@@ -872,17 +872,7 @@ function ModalRegistryContent() {
                 findConsultationId(normalizedConsultation) ||
                 findConsultationId(consultationResult);
 
-              if (
-                d.isDirect &&
-                consultationSendId &&
-                String(consultationSendId).length === 36 &&
-                !String(consultationSendId).startsWith("WALK-")
-              ) {
-                await sendConsultationMutation({
-                  id: String(consultationSendId),
-                  type: "PRESCRIPTION",
-                });
-              }
+
 
               // Cleanup local queue and draft
               setQueuedPatients((prev: any[]) =>
@@ -929,7 +919,7 @@ function ModalRegistryContent() {
                   const discountPct = Number(item.item_discount) || 0;
 
                   const rawLinkedId = item.linkedId;
-                  const cleanLinkedId = typeof rawLinkedId === "string" ? rawLinkedId.replace("-pending", "") : rawLinkedId;
+                  const cleanLinkedId = typeof rawLinkedId === "string" ? rawLinkedId.split("-pending")[0] : rawLinkedId;
 
                   return {
                     item_type: type,

@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
+import { SearchInput } from "@/components/ui";
 import React, { useState } from "react";
 import {
   Search,
@@ -104,24 +105,12 @@ export function HistoryList({
     <div className="flex flex-col h-full" onClick={() => { setActiveDownloadMenuId(null); setActiveSendMenuId(null); }}>
       <div className="flex-shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2">
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-            <Input
-              type="text"
-              placeholder="Search by name, ID, diagnosis, contact..."
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-8 pr-8 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-muted-foreground/60"
-            />
-            {search && (
-              <Button
-                onClick={() => onSearchChange("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Search by name, ID, diagnosis, contact..."
+            className="flex-1"
+          />
           <Button
             onClick={onToggleFilters}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors font-medium whitespace-nowrap ${showFilters || activeFilters > 0 ? "bg-primary text-white border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
