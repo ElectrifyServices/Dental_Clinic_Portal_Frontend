@@ -50,6 +50,8 @@ interface TreatmentPlanningProps {
   onAddPlan?: () => void;
   onRemovePlan?: (index: number) => void;
   errors?: Record<string, string>;
+  isEditMode?: boolean;
+  originalSessionsMap?: Record<string, number>;
 }
 
 const defaultProcedures = [
@@ -103,6 +105,8 @@ export function TreatmentPlanning({
   onAddPlan,
   onRemovePlan,
   errors = {},
+  isEditMode = false,
+  originalSessionsMap = {},
 }: TreatmentPlanningProps) {
   const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({ all: true });
   const { confirmDelete } = useModal();
@@ -199,6 +203,13 @@ export function TreatmentPlanning({
     });
   }, [toothChartState]);
 
+  // Find the minimum value(s) from originalSessionsMap
+  const activeMins = treatmentPlans
+    .map(p => p.id ? originalSessionsMap[p.id] : undefined)
+    .filter((v): v is number => v !== undefined && v > 1);
+
+  const uniqueMins = Array.from(new Set(activeMins));
+
   const columns = [
     {
       key: "tooth",
@@ -285,18 +296,33 @@ export function TreatmentPlanning({
     },
     {
       key: "sessions",
-      header: "Sessions",
+      header: (isEditMode && uniqueMins.length > 0 ? (
+        <span>
+          Sessions
+          <span className="text-red-500 normal-case font-bold ml-1">
+            (min: {uniqueMins.join(', ')})
+          </span>
+        </span>
+      ) : "Sessions") as any,
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan, index: number) => (
-        <Input
-          type="number"
-          min="1"
-          value={plan.sessions || 1}
-          onChange={(e) => onUpdatePlan(index, "sessions", Math.max(1, parseInt(e.target.value) || 1))}
-          className="w-20 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-          placeholder="Sessions"
-        />
-      ),
+      render: (plan: TreatmentPlan, index: number) => {
+        const originalMin = isEditMode && originalSessionsMap && plan.id ? (originalSessionsMap[plan.id] || 1) : 1;
+        return (
+          <div className="flex items-center justify-center">
+            <Input
+              type="number"
+              min={originalMin}
+              value={plan.sessions || 1}
+              onChange={(e) => {
+                const val = Math.max(originalMin, parseInt(e.target.value) || 1);
+                onUpdatePlan(index, "sessions", val);
+              }}
+              className="w-20 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 text-center"
+              placeholder="Sessions"
+            />
+          </div>
+        );
+      },
     },
     // {
     //   key: "planDate",

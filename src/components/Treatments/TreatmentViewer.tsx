@@ -560,7 +560,7 @@ export function TreatmentViewer({
                 </div>
               )}
             </div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {treatment.sessions
                 .sort(
                   (a: any, b: any) =>
@@ -647,6 +647,8 @@ export function TreatmentViewer({
                         {(session.work_done ||
                           session.session_findings ||
                           session.next_session_plan ||
+                          session.paid_amount ||
+                          session.payment_method ||
                           session.attachments?.length > 0) && (
                           <div className="mt-4 ml-11 p-3 bg-muted/30 rounded-lg border border-border/50">
                             {session.work_done && (
@@ -666,11 +668,35 @@ export function TreatmentViewer({
                               </div>
                             )}
                             {session.next_session_plan && (
-                              <div>
+                              <div className="mb-2">
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
                                   Next Session Plan
                                 </p>
                                 <p className="text-sm">{session.next_session_plan}</p>
+                              </div>
+                            )}
+                            {(session.paid_amount != null || session.payment_method) && (
+                              <div className="mb-2 flex gap-4 border-t border-border/50 pt-2 mt-2">
+                                {session.paid_amount != null && Number(session.paid_amount) > 0 && (
+                                  <div>
+                                    <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
+                                      Paid Amount
+                                    </p>
+                                    <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                                      ₹{Number(session.paid_amount).toLocaleString("en-IN")}
+                                    </p>
+                                  </div>
+                                )}
+                                {session.payment_method && (
+                                  <div>
+                                    <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
+                                      Payment Method
+                                    </p>
+                                    <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block uppercase">
+                                      {session.payment_method}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             )}
                             {session.attachments?.length > 0 && (

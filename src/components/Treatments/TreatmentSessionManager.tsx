@@ -4,7 +4,7 @@ import {
   IndianRupee, Activity, X,
   TrendingUp, CalendarDays, Clock8, ClipboardList, UserRound,
   Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
-  Percent, AlertCircle
+  Percent, AlertCircle, CreditCard
 } from "lucide-react";
 import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
@@ -13,6 +13,7 @@ import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlo
 
 import {
   useTreatmentSessionsQuery,
+  useTreatmentSessionQuery,
   useAddTreatmentSessionMutation,
   useUpdateTreatmentSessionMutation,
   useCompleteTreatmentSessionMutation,
@@ -23,6 +24,7 @@ import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQue
 import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
+import apiClient from "../../services/apiClient";
 
 const extractApiError = (err: any, fallback: string) => {
   return err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc
@@ -320,11 +322,18 @@ export function TreatmentSessionManager({
   onClose,
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
-  const { data: treatmentPlanResponse } = useTreatmentPlanQuery(treatmentId, {
+  const { data: treatmentPlanResponse, refetch: refetchPlan } = useTreatmentPlanQuery(treatmentId, {
     enabled: !!treatmentId,
   });
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
+
+  useEffect(() => {
+    if (treatmentId) {
+      refetch();
+      refetchPlan();
+    }
+  }, [treatmentId, refetch, refetchPlan]);
   const treatmentPlan = (treatmentPlanResponse as any)?.data ?? treatmentPlanResponse;
   const assignedDoctorId =
     treatmentPlan?.doctor_id ||
@@ -383,6 +392,8 @@ export function TreatmentSessionManager({
   const [showNewSession, setShowNewSession] = useState(false);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
+  const [sessionPreviousPaidAmt, setSessionPreviousPaidAmt] = useState<number>(0);
+  const [isEditingCompleted, setIsEditingCompleted] = useState<boolean>(false);
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -410,6 +421,7 @@ export function TreatmentSessionManager({
     paid_amount: 0,
     paid_now: 0,
     create_invoice: false,
+    payment_method: "CASH",
   });
 
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -728,6 +740,8 @@ export function TreatmentSessionManager({
         cost: currentFee, // default next session fee to this session's fee
         clinical_objectives: "",
       });
+      setSessionPreviousPaidAmt(paidAmt);
+      setIsEditingCompleted(false);
       setCompletingId(session.id);
       return;
     }
@@ -785,16 +799,81 @@ export function TreatmentSessionManager({
     setSessionAttachments((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
   };
 
+  const startEditingSession = async (session: TreatmentSessionResponse) => {
+    try {
+      setCompletingId(session.id);
+      setIsEditingCompleted(true);
+      
+      // Fetch fresh session details
+      const response = await apiClient.get(`/treatment/${treatmentId}/sessions/${session.id}`);
+      const freshSession = response.data?.responseObject?.data || response.data?.data || response.data || session;
+
+      const paidValue = Number(freshSession.paid_amount || freshSession.paidAmount || session.paid_amount || 0);
+      const sessionFee = Number(freshSession.session_fee || freshSession.sessionFee || session.session_fee || estCost || 0);
+      const sessionDiscount = Number(
+        freshSession.discount_percentage ||
+        freshSession.discount ||
+        freshSession.discountPercentage ||
+        session.discount_percentage ||
+        (session as any).discount ||
+        discountVal ||
+        0
+      );
+
+      setCompleteForm({
+        work_done: freshSession.work_done || "",
+        session_findings: freshSession.session_findings || "",
+        next_session_plan: freshSession.next_session_plan || "",
+        session_fee: sessionFee,
+        discount_value: sessionDiscount,
+        paid_amount: paidAmt,
+        paid_now: paidValue,
+        create_invoice: false,
+        payment_method: freshSession.payment_method || "CASH",
+      });
+
+      setSessionPreviousPaidAmt(Math.max(0, paidAmt - paidValue));
+
+      if (Array.isArray(freshSession.prescriptions)) {
+        setPrescriptions(
+          freshSession.prescriptions.map((p: any) => ({
+            id: p.id,
+            medicine: p.medicine_id || p.medicine?.id || "",
+            medicineName: p.medicine_name || p.medicine?.name || "",
+            dosage: p.dosage || "",
+            timing: p.timing || "",
+            frequency: p.frequency || "",
+            duration: p.duration || "",
+            durationUnit: (p.duration_type || "DAYS").toLowerCase(),
+            qty: p.qty || "",
+          }))
+        );
+      } else {
+        setPrescriptions([]);
+      }
+
+      if (Array.isArray(freshSession.attachments)) {
+        setSessionAttachments(freshSession.attachments);
+      } else {
+        setSessionAttachments([]);
+      }
+    } catch (err: any) {
+      showToast(extractApiError(err, "Failed to load session details"), "error");
+      setCompletingId(null);
+      setIsEditingCompleted(false);
+    }
+  };
+
   const handleCompleteSession = async (sessionId: string) => {
     if (!completeForm.work_done && !completeForm.session_findings) {
       showToast("Please add work done or findings", "error");
       return;
     }
-    if (completeForm.paid_amount < paidAmt) {
-      showToast(`Paid amount cannot be less than the previously paid amount (₹${paidAmt.toLocaleString()})`, "error");
+    if (completeForm.paid_amount < sessionPreviousPaidAmt) {
+      showToast(`Paid amount cannot be less than the other sessions' paid amount (₹${sessionPreviousPaidAmt.toLocaleString()})`, "error");
       return;
     }
-    if (scheduleNext) {
+    if (!isEditingCompleted && scheduleNext) {
       if (!nextSessionDraft.date) {
         showToast("Please select a date for the next session", "error");
         return;
@@ -825,44 +904,62 @@ export function TreatmentSessionManager({
         return true;
       });
     try {
-      let nextSessionPayload: any = {};
-      if (scheduleNext && nextSessionDraft.date) {
-        nextSessionPayload = {
-          schedule_next_session: true,
-          next_visit_date: nextSessionDraft.date,
-          next_start_time: nextSessionDraft.time || "10:00 AM",
-          next_duration_min: Number(nextSessionDraft.duration) || 60,
-          next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
-        };
+      if (isEditingCompleted) {
+        await updateSession.mutateAsync({
+          planId: treatmentId,
+          sessionId,
+          work_done: completeForm.work_done,
+          session_findings: completeForm.session_findings,
+          paid_amount: completeForm.paid_now,
+          payment_method: completeForm.payment_method || undefined,
+          session_fee: completeForm.session_fee,
+          prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
+          attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
+        });
+        showToast("Session updated successfully!");
       } else {
-        nextSessionPayload = {
-          schedule_next_session: false,
-        };
+        let nextSessionPayload: any = {};
+        if (scheduleNext && nextSessionDraft.date) {
+          nextSessionPayload = {
+            schedule_next_session: true,
+            next_visit_date: nextSessionDraft.date,
+            next_start_time: nextSessionDraft.time || "10:00 AM",
+            next_duration_min: Number(nextSessionDraft.duration) || 60,
+            next_clinical_objectives: nextSessionDraft.clinical_objectives || "",
+          };
+        } else {
+          nextSessionPayload = {
+            schedule_next_session: false,
+          };
+        }
+
+        const effectiveDiscountVal = completeForm.discount_value || discountVal || 0;
+        const effectiveDiscountType = effectiveDiscountVal > 0 
+          ? (completeForm.discount_value > 0 ? "PERCENTAGE" : (treatmentPlan?.discount_type || "PERCENTAGE"))
+          : null;
+
+        await completeSession.mutateAsync({
+          planId: treatmentId,
+          sessionId,
+          work_done: completeForm.work_done,
+          session_findings: completeForm.session_findings,
+          paid_amount: completeForm.paid_now,
+          payment_method: completeForm.payment_method || undefined,
+          create_invoice: completeForm.create_invoice,
+          discount_type: effectiveDiscountType,
+          discount_value: effectiveDiscountVal,
+          ...nextSessionPayload,
+          prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
+          attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
+        });
+
+        showToast(completedCount + 1 >= totalSessions
+          ? "All sessions completed! Treatment plan done!"
+          : "Session completed!");
       }
 
-      const effectiveDiscountVal = completeForm.discount_value || discountVal || 0;
-      const effectiveDiscountType = effectiveDiscountVal > 0 
-        ? (completeForm.discount_value > 0 ? "PERCENTAGE" : (treatmentPlan?.discount_type || "PERCENTAGE"))
-        : null;
-
-      await completeSession.mutateAsync({
-        planId: treatmentId,
-        sessionId,
-        work_done: completeForm.work_done,
-        session_findings: completeForm.session_findings,
-        paid_amount: completeForm.paid_now,
-        create_invoice: completeForm.create_invoice,
-        discount_type: effectiveDiscountType,
-        discount_value: effectiveDiscountVal,
-        ...nextSessionPayload,
-        prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
-        attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
-      });
-
-      showToast(completedCount + 1 >= totalSessions
-        ? "All sessions completed! Treatment plan done!"
-        : "Session completed!");
       setCompletingId(null);
+      setIsEditingCompleted(false);
       setCompleteForm({
         work_done: "",
         session_findings: "",
@@ -872,13 +969,14 @@ export function TreatmentSessionManager({
         paid_amount: 0,
         paid_now: 0,
         create_invoice: false,
+        payment_method: "CASH",
       });
       setPrescriptions([]);
       setSessionAttachments([]);
       setScheduleNext(false);
       refetch();
     } catch (err: any) {
-      showToast(extractApiError(err, "Failed to complete"), "error");
+      showToast(extractApiError(err, isEditingCompleted ? "Failed to update session" : "Failed to complete session"), "error");
     }
   };
 
@@ -988,6 +1086,20 @@ export function TreatmentSessionManager({
                     </Select>
                   </div>
                 )}
+                {normalizedStatus === "COMPLETED" && (
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditingSession(session);
+                    }}
+                    className="h-9 w-9 rounded-xl border-blue-200 bg-blue-50 p-0 text-blue-700 hover:bg-blue-100"
+                    title="Edit session details"
+                    aria-label="Edit session details"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
                 {isExpanded
                   ? <ChevronUp className="w-5 h-5 text-muted-foreground" />
                   : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
@@ -1060,15 +1172,27 @@ export function TreatmentSessionManager({
                 </div>
               )}
               {normalizedStatus === "COMPLETED" && (
-                <div>
-                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <IndianRupee className="w-3 h-3" /> Paid Amount
-                  </p>
-                  <p className="text-sm leading-relaxed font-semibold">
-                    {session.paid_amount != null && Number(session.paid_amount) > 0
-                      ? "\u20B9" + Number(session.paid_amount).toLocaleString("en-IN")
-                      : "NA"}
-                  </p>
+                <div className="flex gap-6 border-t border-border/50 pt-3 mt-3">
+                  {session.paid_amount != null && Number(session.paid_amount) > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-1.5">
+                        <IndianRupee className="w-3 h-3" /> Paid Amount
+                      </p>
+                      <p className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                        ₹{Number(session.paid_amount).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  )}
+                  {session.payment_method && (
+                    <div>
+                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider flex items-center gap-2 mb-1.5">
+                        <CreditCard className="w-3 h-3" /> Payment Method
+                      </p>
+                      <p className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block uppercase">
+                        {session.payment_method}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1220,17 +1344,22 @@ export function TreatmentSessionManager({
         {/* ── Complete Session Modal ── */}
         {isCompleting && (
           <Modal
-            title={`Complete Session ${session.visit_number}`}
-            subtitle="Record what was done today"
-            onClose={() => setCompletingId(null)}
+            title={isEditingCompleted ? `Edit Session ${session.visit_number}` : `Complete Session ${session.visit_number}`}
+            subtitle={isEditingCompleted ? "Modify session details and findings" : "Record what was done today"}
+            onClose={() => {
+              setCompletingId(null);
+              setIsEditingCompleted(false);
+              setSessionAttachments([]);
+            }}
             size="5xl"
-            icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
+            icon={isEditingCompleted ? <Pencil className="w-5 h-5 text-blue-600" /> : <CheckCircle className="w-5 h-5 text-emerald-600" />}
             footer={
               <div className="flex gap-3 w-full">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setCompletingId(null);
+                    setIsEditingCompleted(false);
                     setSessionAttachments([]);
                   }}
                   className="flex-1"
@@ -1240,15 +1369,17 @@ export function TreatmentSessionManager({
                 <Button
                   onClick={() => handleCompleteSession(session.id)}
                   disabled={
-                    completeSession.isPending ||
+                    (isEditingCompleted ? updateSession.isPending : completeSession.isPending) ||
                     (!completeForm.work_done && !completeForm.session_findings)
                   }
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-2 text-white"
+                  className={`flex-1 gap-2 text-white ${isEditingCompleted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                 >
-                  {completeSession.isPending
+                  {(isEditingCompleted ? updateSession.isPending : completeSession.isPending)
                     ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <CheckCircle className="w-4 h-4" />}
-                  Complete Session
+                    : isEditingCompleted
+                      ? <Pencil className="w-4 h-4" />
+                      : <CheckCircle className="w-4 h-4" />}
+                  {isEditingCompleted ? "Update Session" : "Complete Session"}
                 </Button>
               </div>
             }
@@ -1308,7 +1439,7 @@ export function TreatmentSessionManager({
                       setCompleteForm(p => ({
                         ...p,
                         paid_now: val,
-                        paid_amount: paidAmt + val
+                        paid_amount: sessionPreviousPaidAmt + val
                       }));
                     }}
                     className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
@@ -1320,38 +1451,66 @@ export function TreatmentSessionManager({
                     type="number"
                     disabled
                     placeholder="Pending Amount"
-                    value={Math.max(0, completeForm.session_fee - (completeForm.session_fee * (Number(completeForm.discount_value) || discountVal || 0)) / 100 - membershipDiscount - (paidAmt + (completeForm.paid_now || 0)))}
+                    value={Math.max(
+                      0,
+                      completeForm.session_fee -
+                        (completeForm.session_fee *
+                          (Number(completeForm.discount_value) ||
+                            discountVal ||
+                            0)) /
+                          100 -
+                        membershipDiscount -
+                        (completeForm.paid_amount || 0)
+                    )}
                     className="w-full px-3 py-2 rounded-xl border bg-slate-50 font-bold text-red-600 outline-none cursor-not-allowed"
                   />
                 </div>
               </div>
 
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <input
-                    type="checkbox"
-                    id="create-invoice"
-                    checked={completeForm.create_invoice || false}
-                    onChange={(e) => setCompleteForm(p => ({ ...p, create_invoice: e.target.checked }))}
-                    className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
-                  />
-                  <Label htmlFor="create-invoice" className="text-sm font-bold text-foreground cursor-pointer">
-                    Create Invoice for this Session
-                  </Label>
-                </div>
+              <div className="pt-2">
+                <Label className="text-sm font-semibold block mb-2">Payment Method</Label>
+                <Select
+                  value={completeForm.payment_method}
+                  onValueChange={(val) => setCompleteForm(p => ({ ...p, payment_method: val }))}
+                >
+                  <SelectTrigger className="w-72 bg-white border-border h-10 rounded-xl">
+                    <SelectValue placeholder="Select Payment Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CASH">Cash</SelectItem>
+                    <SelectItem value="CARD">Card</SelectItem>
+                    <SelectItem value="UPI">UPI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="flex items-center gap-2 mb-3">
-                  <input
-                    type="checkbox"
-                    id="schedule-next-session"
-                    checked={scheduleNext}
-                    onChange={(e) => setScheduleNext(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
-                  />
-                  <Label htmlFor="schedule-next-session" className="text-sm font-bold text-muted-foreground cursor-pointer">
-                    Schedule Next Session (Optional)
-                  </Label>
-                </div>
+              {!isEditingCompleted && (
+                <div className="border-t pt-4 space-y-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      type="checkbox"
+                      id="create-invoice"
+                      checked={completeForm.create_invoice || false}
+                      onChange={(e) => setCompleteForm(p => ({ ...p, create_invoice: e.target.checked }))}
+                      className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <Label htmlFor="create-invoice" className="text-sm font-bold text-foreground cursor-pointer">
+                      Create Invoice for this Session
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      type="checkbox"
+                      id="schedule-next-session"
+                      checked={scheduleNext}
+                      onChange={(e) => setScheduleNext(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <Label htmlFor="schedule-next-session" className="text-sm font-bold text-muted-foreground cursor-pointer">
+                      Schedule Next Session (Optional)
+                    </Label>
+                  </div>
 
                 {scheduleNext && (
                   <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
@@ -1501,6 +1660,7 @@ export function TreatmentSessionManager({
                   </div>
                 )}
               </div>
+            )}
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Paperclip className="w-4 h-4 text-emerald-600" />
@@ -1700,7 +1860,7 @@ export function TreatmentSessionManager({
                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                       <Activity className="w-4 h-4 text-blue-600" /> In Progress ({groupedSessions.inProgress.length})
                     </h4>
-                    <div className="space-y-3">{groupedSessions.inProgress.map(renderSessionCard)}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">{groupedSessions.inProgress.map(renderSessionCard)}</div>
                   </div>
                 )}
                 {groupedSessions.upcoming.length > 0 && (
@@ -1708,7 +1868,7 @@ export function TreatmentSessionManager({
                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                       <CalendarDays className="w-4 h-4" /> Upcoming ({groupedSessions.upcoming.length})
                     </h4>
-                    <div className="space-y-3">{groupedSessions.upcoming.map(renderSessionCard)}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">{groupedSessions.upcoming.map(renderSessionCard)}</div>
                   </div>
                 )}
                 {groupedSessions.completed.length > 0 && (
@@ -1716,7 +1876,7 @@ export function TreatmentSessionManager({
                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-600" /> Completed ({groupedSessions.completed.length})
                     </h4>
-                    <div className="space-y-3">{groupedSessions.completed.map(renderSessionCard)}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">{groupedSessions.completed.map(renderSessionCard)}</div>
                   </div>
                 )}
                 {groupedSessions.cancelled.length > 0 && (
@@ -1724,7 +1884,7 @@ export function TreatmentSessionManager({
                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                       <X className="w-4 h-4 text-red-500" /> Cancelled ({groupedSessions.cancelled.length})
                     </h4>
-                    <div className="space-y-3">{groupedSessions.cancelled.map(renderSessionCard)}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">{groupedSessions.cancelled.map(renderSessionCard)}</div>
                   </div>
                 )}
               </div>

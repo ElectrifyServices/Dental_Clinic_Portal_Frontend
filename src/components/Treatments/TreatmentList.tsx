@@ -905,57 +905,58 @@ export function TreatmentList({
       </div>
 
       <ContentCard
-        bodyClassName="flex-1 min-h-0 p-0 overflow-hidden"
+        bodyClassName="flex-1 p-0 overflow-auto"
         className="min-w-0 flex-1 min-h-0 rounded-3xl"
-        footer={
-          totalItems > 0 && onPageChange ? (
-            <div className="w-full">
-              <Pagination
-                page={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                perPage={limit}
-                onPageChange={onPageChange}
-                onPerPageChange={onLimitChange}
-              />
-            </div>
-          ) : null
-        }
+        footer={null}
       >
         {isLoading ? (
           <div className="flex min-h-[360px] items-center justify-center px-4">
             <Loading type="spinner" text="Loading treatments..." />
           </div>
         ) : (
-          <div className="relative h-full min-h-0">
-            <DataTable
-              className="h-full rounded-none border-0 shadow-none [&_.data-table]:min-w-[760px] sm:[&_.data-table]:min-w-[880px]"
-              scrollClassName="h-full overflow-auto touch-pan-x [-webkit-overflow-scrolling:touch]"
-              disableRowAnimation
-              columns={columns}
-              data={treatments}
-              rowKey={(row) => row.id}
-              expandedRowIds={expandedRowIds}
-              onRowClick={(row: any) => toggleExpandedRow(row.id)}
-              rowClassName={(row: any) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
-              renderExpandedRow={(row: any) => (
-                <ExpandedTreatmentRow
-                  patientId={row.patientId}
-                  fallbackRowId={row.id}
-                  onViewTreatment={onViewTreatment}
-                  onEditTreatment={onEditTreatment}
-                  onManageSessions={onManageSessions}
-                  onStartTreatment={onStartTreatment}
-                  onDownloadPDF={handleDownloadPDF}
-                  onSendWhatsApp={handleSendWhatsApp}
-                  downloadingId={downloadingId}
-                  sendingWhatsappId={sendingWhatsappId}
+          <div className="flex flex-col min-h-full">
+            <div className="flex-1 overflow-x-auto min-w-0">
+              <DataTable
+                className="rounded-none border-0 shadow-none [&_.data-table]:min-w-[760px] sm:[&_.data-table]:min-w-[880px]"
+                scrollClassName="overflow-visible"
+                disableRowAnimation
+                columns={columns}
+                data={treatments}
+                rowKey={(row) => row.id}
+                expandedRowIds={expandedRowIds}
+                onRowClick={(row: any) => toggleExpandedRow(row.id)}
+                rowClassName={(row: any) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
+                renderExpandedRow={(row: any) => (
+                  <ExpandedTreatmentRow
+                    patientId={row.patientId}
+                    fallbackRowId={row.id}
+                    onViewTreatment={onViewTreatment}
+                    onEditTreatment={onEditTreatment}
+                    onManageSessions={onManageSessions}
+                    onStartTreatment={onStartTreatment}
+                    onDownloadPDF={handleDownloadPDF}
+                    onSendWhatsApp={handleSendWhatsApp}
+                    downloadingId={downloadingId}
+                    sendingWhatsappId={sendingWhatsappId}
+                  />
+                )}
+                emptyIcon={<Stethoscope className="w-10 h-10" />}
+                emptyTitle="No treatments found"
+                emptySubtitle={search || statusFilter.length ? "Adjust your search or clear filters." : "Create a new treatment plan."}
+              />
+            </div>
+            {totalItems > 0 && onPageChange && (
+              <div className="w-full p-4 border-t border-border bg-muted/30 mt-auto shrink-0">
+                <Pagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  perPage={limit}
+                  onPageChange={onPageChange}
+                  onPerPageChange={onLimitChange}
                 />
-              )}
-              emptyIcon={<Stethoscope className="w-10 h-10" />}
-              emptyTitle="No treatments found"
-              emptySubtitle={search || statusFilter.length ? "Adjust your search or clear filters." : "Create a new treatment plan."}
-            />
+              </div>
+            )}
           </div>
         )}
       </ContentCard>

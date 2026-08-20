@@ -1,10 +1,11 @@
 import { Modal, Button, Card, CardContent, DataTable, StatusBadge, Loading } from "@/components/ui";
 import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknote } from "lucide-react";
-import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
+import { normalizePatient } from "../../hooks/patients/usePatientDetailQuery";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
 import { normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useState } from "react";
+import apiClient from "../../services/apiClient";
 
 interface PaymentHistoryModalProps {
   invoice: any;
@@ -12,12 +13,10 @@ interface PaymentHistoryModalProps {
 }
 
 export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalProps) {
-  const patientId = invoice.patientId || invoice.patient_id;
-  const { data: patient, isLoading: isPatientLoading } = usePatientDetailQuery(patientId, !!patientId);
   const { data: fetchedPayments, isLoading: isPaymentsLoading } = usePaymentHistoryQuery(invoice.id);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const isLoading = isPaymentsLoading || isPatientLoading;
+  const isLoading = isPaymentsLoading;
 
   if (isLoading) {
     return (
@@ -40,62 +39,67 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         // Yield to the event loop so the loading spinner appears before heavy processing
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        const idToUse = invoice.patientId || invoice.memberId || invoice.member_id || patient?.id;
-        const isMemberCheck = invoice.isMemberInvoice || (idToUse && (idToUse.startsWith('EMP-') || idToUse.startsWith('IND-') || idToUse.startsWith('MEM-')));
         const queryParams: any = { invoice_id: invoice.id };
-        if (idToUse) {
-          if (isMemberCheck) queryParams.member_id = idToUse;
-          else queryParams.patient_id = idToUse;
-        }
 
         const data = await fetchInvoiceHistory(queryParams);
 
         let rawData = data?.responseObject?.data || data?.data || data?.invoices || data;
+        const rawPatient = data?.responseObject?.data?.patient || data?.data?.patient || null;
+        const freshPatient = rawPatient ? (normalizePatient(rawPatient) || rawPatient) : null;
         if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
           rawData = rawData.invoices;
         }
         const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: any) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
 
         if (fetchedInvoices.length > 0) {
-          let consolidatedItems: any[] = [];
-          let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
+          const isStatement = (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
+          if (isStatement) {
+            let consolidatedItems: any[] = [];
+            let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
 
-          fetchedInvoices.forEach((inv: any) => {
-            if (inv && inv.items) {
-              const itemsWithContext = inv.items.map((item: any) => ({
-                ...item,
-                invoice_number: inv.invoice_number || inv.id,
-                description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
-              }));
-              consolidatedItems = [...consolidatedItems, ...itemsWithContext];
-              totalSub += inv.subtotal || 0;
-              totalTax += inv.taxAmount || 0;
-              totalDiscount += inv.discountAmount || 0;
-              grandTotal += inv.total || 0;
-              totalPaid += inv.paidAmount || 0;
-              totalPending += inv.pendingAmount || 0;
-            }
-          });
+            fetchedInvoices.forEach((inv: any) => {
+              if (inv && inv.items) {
+                const itemsWithContext = inv.items.map((item: any) => ({
+                  ...item,
+                  invoice_number: inv.invoice_number || inv.id,
+                  description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
+                }));
+                consolidatedItems = [...consolidatedItems, ...itemsWithContext];
+                totalSub += inv.subtotal || 0;
+                totalTax += inv.taxAmount || 0;
+                totalDiscount += inv.discountAmount || 0;
+                grandTotal += inv.total || 0;
+                totalPaid += inv.paidAmount || 0;
+                totalPending += inv.pendingAmount || 0;
+              }
+            });
 
-          const freshData = {
-            ...fetchedInvoices[0],
-            items: consolidatedItems,
-            subtotal: totalSub,
-            taxAmount: totalTax,
-            discountAmount: totalDiscount,
-            total: grandTotal,
-            paidAmount: totalPaid,
-            pendingAmount: totalPending,
-            invoice_number: "STATEMENT",
-            date: new Date().toISOString(),
-          };
-          await generateInvoicePDF(freshData, patient);
+            const freshData = {
+              ...fetchedInvoices[0],
+              items: consolidatedItems,
+              subtotal: totalSub,
+              taxAmount: totalTax,
+              discountAmount: totalDiscount,
+              total: grandTotal,
+              paidAmount: totalPaid,
+              pendingAmount: totalPending,
+              invoice_number: "STATEMENT",
+              date: new Date().toISOString(),
+            };
+            await generateInvoicePDF(freshData, freshPatient);
+          } else {
+            // Download only the specific invoice
+            const targetInvoice = fetchedInvoices.find(
+              (inv: any) => inv.id === invoice.id || inv.invoice_number === invoice.invoice_number
+            ) || fetchedInvoices[0] || invoice;
+            await generateInvoicePDF(targetInvoice, freshPatient);
+          }
         } else {
-          await generateInvoicePDF(invoice, patient);
+          await generateInvoicePDF(invoice, freshPatient);
         }
       } catch (err) {
         console.error("Failed to fetch fresh invoice, generating from cache", err);
-        await generateInvoicePDF(invoice, patient);
+        await generateInvoicePDF(invoice, freshPatient);
       } finally {
         setIsDownloading(false);
       }

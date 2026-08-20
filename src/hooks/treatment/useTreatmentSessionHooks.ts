@@ -110,6 +110,28 @@ export function useTreatmentSessionsQuery(
     options: {
       enabled,
       staleTime: 0,  // always fresh — doctor may have just updated
+      gcTime: 0,
+      refetchOnMount: "always",
+    },
+  });
+}
+
+export function useTreatmentSessionQuery(
+  planId?: string,
+  sessionId?: string,
+  options?: { enabled?: boolean },
+) {
+  const enabled = (options?.enabled ?? true) && !!planId && !!sessionId;
+
+  return useApiQuery<TreatmentSessionResponse>({
+    queryKey: ["treatmentSession", planId, sessionId],
+    endpoint: `/treatment/${planId}/sessions/${sessionId}`,
+    method: "get",
+    options: {
+      enabled,
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
     },
   });
 }
@@ -197,6 +219,10 @@ export interface UpdateSessionVariables {
   session_findings?: string;
   next_session_plan?: string;
   status?: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  paid_amount?: number;
+  payment_method?: string;
+  prescriptions?: any[];
+  attachments?: File[];
 }
 
 export function useUpdateTreatmentSessionMutation() {
@@ -207,13 +233,47 @@ export function useUpdateTreatmentSessionMutation() {
       `/treatment/${variables.planId}/sessions/${variables.sessionId}`,
     method: "patch",
     headers: getAuthHeaders,
-    transformRequest: ({ planId: _p, sessionId: _s, ...rest }) => rest,
+    transformRequest: ({ planId: _p, sessionId: _s, attachments, ...rest }) => {
+      const appendFormValue = (formData: FormData, data: any, parentKey?: string) => {
+        if (data === null || data === undefined) return;
+
+        if (data instanceof File) {
+          formData.append(parentKey || "", data);
+        } else if (Array.isArray(data)) {
+          data.forEach((value, index) => {
+            appendFormValue(formData, value, `${parentKey}[${index}]`);
+          });
+        } else if (typeof data === "object") {
+          Object.keys(data).forEach((key) => {
+            appendFormValue(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+          });
+        } else {
+          formData.append(parentKey || "", String(data));
+        }
+      };
+
+      if (!attachments?.length) return rest;
+
+      const formData = new FormData();
+
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        appendFormValue(formData, value, key);
+      });
+
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      return formData;
+    },
     options: {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["treatmentSessions", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.planId] });
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
       },
     },
   });
@@ -225,6 +285,7 @@ export interface CompleteSessionVariables {
   planId: string;
   sessionId: string;
   paid_amount?: number;
+  payment_method?: string;
   /** Must be sent together with discount_value if billing */
   discount_type?: "PERCENTAGE" | "FLAT";
   /** PERCENTAGE capped at 100; FLAT capped at est_cost */
