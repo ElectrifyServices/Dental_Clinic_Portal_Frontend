@@ -833,18 +833,6 @@ export function PatientConsultation({
         setCreatedConsultationId(String(completedConsultationId));
       }
       setIsCompleted(true);
-      if (
-        (patient as any).isDirect &&
-        completedConsultationId &&
-        completedConsultationId.length === 36 &&
-        !completedConsultationId.startsWith("WALK-")
-      ) {
-        await sendMutation.mutateAsync({
-          id: completedConsultationId,
-          type: "PRESCRIPTION",
-        });
-        await handleDownloadPDF("PRESCRIPTION", completedConsultationId, true);
-      }
       const idToUse = patient.patientId || patient.id;
       if (idToUse && !idToUse.startsWith("WALK-")) {
         refetchConsultations();

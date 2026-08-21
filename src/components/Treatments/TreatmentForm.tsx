@@ -65,6 +65,7 @@ export function TreatmentForm({
       id: p.id,
       name: p.name || p.full_name || '',
       phone: p.phone || p.mobile || '',
+      country_code: p.country_code || '',
       avatar: getFileUrl(p.profile_picture_url) || getFileUrl(p.profile_picture) || getFileUrl(p.avatar) || '',
     }));
 

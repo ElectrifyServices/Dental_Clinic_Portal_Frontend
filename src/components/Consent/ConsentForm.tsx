@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
+import { useDebounce } from "@/hooks/useDebounce";
 import { CONSENT_TEMPLATES, CONSENT_CHECKBOX_TREATMENTS } from "../../constants/consent.constants";
 import { cn } from "@/lib/utils";
 
@@ -63,22 +64,42 @@ export function ConsentForm({
   isLoading,
 }: ConsentFormProps) {
   const { doctors: apiDoctors, isLoading: isDoctorsLoading } = useDoctorsListQuery();
-  const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({ filters: { isDropdown: [true] as any } });
+  const [patientSearch, setPatientSearch] = useState("");
+  const debouncedPatientSearch = useDebounce(patientSearch, 300);
+  const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({
+    search: debouncedPatientSearch || undefined,
+    filters: { isDropdown: [true] as any }
+  });
   
-  const apiPatients = (() => {
-    if (!rawPatientsData) return [];
-    if (Array.isArray(rawPatientsData)) return rawPatientsData;
-    const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
-    if (Array.isArray(target)) return target;
-    if (target && typeof target === "object") {
-      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
-      if (Array.isArray(target.data?.data)) return target.data.data;
-      if (Array.isArray(target.data)) return target.data;
-      if (Array.isArray(target.patients)) return target.patients;
-      if (Array.isArray(target.data?.patients)) return target.data.patients;
+  const extractPatients = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data.responseObject !== undefined) {
+      return extractPatients(data.responseObject);
+    }
+    if (typeof data === "object") {
+      if (Array.isArray(data.data)) return data.data;
+      if (Array.isArray(data.patients)) return data.patients;
+      if (data.data && typeof data.data === "object") {
+        const nested = extractPatients(data.data);
+        if (nested.length > 0) return nested;
+      }
+      if (data.patients && typeof data.patients === "object") {
+        const nested = extractPatients(data.patients);
+        if (nested.length > 0) return nested;
+      }
+      for (const key of Object.keys(data)) {
+        if (Array.isArray(data[key])) {
+          return data[key];
+        }
+      }
     }
     return [];
-  })();
+  };
+
+  const apiPatients = useMemo(() => {
+    return extractPatients(rawPatientsData);
+  }, [rawPatientsData]);
 
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(() => {
     if (form?.treatmentType) {
@@ -415,12 +436,16 @@ export function ConsentForm({
                             });
                           }
                         }}
-                        options={(apiPatients.length > 0 ? apiPatients : patients).map((p: any) => ({ 
-                          label: p.name, 
-                          value: p.id,
-                          searchLabel: `${p.name} ${p.phone || ''}`,
-                          patient: p
-                        }))}
+                        onSearchChange={setPatientSearch}
+                        options={(apiPatients.length > 0 ? apiPatients : patients).map((p: any) => {
+                          const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                          return { 
+                            label: p.name, 
+                            value: p.id,
+                            searchLabel: `${p.name} ${formattedPhone}`,
+                            patient: p
+                          };
+                        })}
                         renderOption={(option: any) => {
                           const p = option.patient;
                           if (!p) return <span>{option.label}</span>;
@@ -439,7 +464,7 @@ export function ConsentForm({
                                       const parent = (e.target as any).parentElement;
                                       if (parent) {
                                         const fallback = parent.querySelector('.avatar-fallback');
-                                        if (fallback) fallback.classList.remove('hidden');
+                                        if (fallback) fallback.classList.remove("hidden");
                                       }
                                     }}
                                   />
@@ -454,7 +479,11 @@ export function ConsentForm({
                               )}
                               <div className="flex flex-col min-w-0">
                                 <span className="font-bold text-foreground text-xs leading-tight">{p.name}</span>
-                                {p.phone && <span className="text-[10px] text-muted-foreground mt-0.5">{p.phone}</span>}
+                                {p.phone && (
+                                  <span className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                                    {p.country_code ? `${p.country_code} ` : ""}{p.phone}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );
@@ -539,9 +568,16 @@ export function ConsentForm({
                               )}
                               <div className="flex flex-col min-w-0">
                                 <span className="font-bold text-foreground text-xs leading-tight">{d.name}</span>
-                                {(d.specialization || d.role) && (
-                                  <span className="text-[10px] text-muted-foreground mt-0.5 capitalize">{d.specialization || d.role.replace(/_/g, ' ')}</span>
-                                )}
+                                <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground mt-0.5 font-medium">
+                                  {(d.specialization || d.role) && (
+                                    <span className="capitalize">{d.specialization || d.role.replace(/_/g, ' ')}</span>
+                                  )}
+                                  {d.phone && (
+                                    <span className="font-mono">
+                                      {d.country_code ? `${d.country_code} ` : ""}{d.phone}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           );

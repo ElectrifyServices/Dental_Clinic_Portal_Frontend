@@ -44,6 +44,7 @@ export function useDoctorsListQuery(search?: string, options?: any) {
           name: s.name || "",
           email: s.email || "",
           phone: s.phone || "",
+          country_code: s.country_code || "",
           specialization: s.personal_profile?.specialization?.name || s.specialization || "General Dentist",
           experience: s.personal_profile?.experience_years ? `${s.personal_profile.experience_years} Years` : s.experience || "",
           qualification: s.personal_profile?.qualification || s.qualification || "",

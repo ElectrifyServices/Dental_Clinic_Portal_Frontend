@@ -400,38 +400,69 @@ export function InvoiceForm({
       });
 
       apiTreatments.forEach((t: any) => {
-        const rate = t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0;
-        if (Number(rate) > 0) {
-          list.push({
-            id: t.id,
-            type: t.type || "treatment",
-            description: t.description || t.procedure || "Treatment Item",
-            rate,
-            date: t.date,
-            doctor_name: t.doctor_name || t.doctorName,
-            status: t.status,
-            rawItem: t,
-          });
+        // 1. If the plan has NOT been invoiced yet, we show the overall treatment plan card.
+        if (!t.invoice_generated) {
+          const rate = t.final_amount ?? t.amount ?? t.cost ?? t.original_amount ?? 0;
+          if (Number(rate) > 0) {
+            list.push({
+              id: t.id,
+              type: t.type || "treatment",
+              description: t.description || t.procedure || "Treatment Item",
+              rate,
+              date: t.date,
+              doctor_name: t.doctor_name || t.doctorName,
+              status: t.status,
+              rawItem: t,
+            });
+          }
         }
 
-        if (t.pending_amount && Number(t.pending_amount) > 0) {
-          list.push({
-            id: `${t.id}-pending`,
-            type: "treatment-pending",
-            description: `${t.description || t.procedure || "Treatment Item"} (Pending Balance)`,
-            rate: Number(t.pending_amount),
-            date: t.date,
-            doctor_name: t.doctor_name || t.doctorName,
-            status: t.status,
-            rawItem: {
-              ...t,
-              original_amount: Number(t.pending_amount),
-              plan_discount_amount: 0,
-              already_paid: 0,
-              pending_amount: 0,
-              benefit_applied: null,
-            },
+        // 2. Process unbilled sessions if they exist
+        if (t.unbilled_sessions && Array.isArray(t.unbilled_sessions) && t.unbilled_sessions.length > 0) {
+          t.unbilled_sessions.forEach((session: any) => {
+            const sessionAmount = Number(session.paid_amount ?? session.session_fee ?? session.amount ?? 0);
+            if (sessionAmount > 0) {
+              list.push({
+                id: `${t.id}-pending-${session.id}`,
+                type: "treatment-pending",
+                description: `${t.description || t.procedure || "Treatment Item"} (Visit ${session.visit_number} Pending)`,
+                rate: sessionAmount,
+                date: session.completed_at || t.date,
+                doctor_name: t.doctor_name || t.doctorName,
+                status: t.status,
+                rawItem: {
+                  ...t,
+                  original_amount: sessionAmount,
+                  plan_discount_amount: 0,
+                  already_paid: 0,
+                  pending_amount: 0,
+                  benefit_applied: null,
+                },
+              });
+            }
           });
+        } else if (t.invoice_generated) {
+          // 3. Fallback to pending balance card only if the plan has been invoiced and there are no unbilled sessions
+          const pendingAmount = Number(t.pending_amount || 0);
+          if (pendingAmount > 0) {
+            list.push({
+              id: `${t.id}-pending`,
+              type: "treatment-pending",
+              description: `${t.description || t.procedure || "Treatment Item"} (Pending Balance)`,
+              rate: pendingAmount,
+              date: t.date,
+              doctor_name: t.doctor_name || t.doctorName,
+              status: t.status,
+              rawItem: {
+                ...t,
+                original_amount: pendingAmount,
+                plan_discount_amount: 0,
+                already_paid: 0,
+                pending_amount: 0,
+                benefit_applied: null,
+              },
+            });
+          }
         }
       });
 
@@ -585,143 +616,6 @@ export function InvoiceForm({
     >
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <LabeledField label="Phone" required>
-            <SearchableSelect
-              value={formData.patientId || "none"}
-              onChange={(val) => {
-                if (val === "none") return;
-                const p = apiPatients.find((p: any) => p.id === val);
-                const cp =
-                  p?.corporatePlanId || p?.companyId
-                    ? corporatePlans.find(
-                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
-                    )
-                    : null;
-                setSelectedPrevInvoiceId("");
-                setSelectedNewPlanId(null);
-                setShowMembershipSuggestions(false);
-                setFormData({
-                  ...formData,
-                  patientPhone: p?.phone || "",
-                  patientName: p?.name || "",
-                  patientId: val,
-                  linkedItemIds: [],
-                  discount: Math.min(100, Math.max(0, cp ? cp.discountPercent : p?.defaultDiscount || 0)),
-                });
-              }}
-              onSearchChange={setPatientSearchInput}
-              options={[
-                { label: "Select Phone", value: "none" },
-                ...apiPatients
-                  .filter((p: any) => p.phone)
-                  .map((p: any) => ({
-                    label: `${p.phone} (${p.name})`,
-                    searchLabel: `${p.phone} ${p.name}`,
-                    value: p.id,
-                    patient: p,
-                  })),
-              ]}
-              renderOption={(option: any) => {
-                if (option.value === "none")
-                  return <span className="truncate pr-2">{option.label}</span>;
-                const p = option.patient;
-                if (!p)
-                  return <span className="truncate pr-2">{option.label}</span>;
-
-                const profilePic =
-                  p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name
-                  ? p.name.trim().charAt(0).toUpperCase()
-                  : "?";
-
-                return (
-                  <div className="flex items-center gap-3 py-1">
-                    {profilePic ? (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
-                        <img
-                          src={profilePic}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as any).style.display = "none";
-                            const parent = (e.target as any).parentElement;
-                            if (parent) {
-                              const fallback =
-                                parent.querySelector(".avatar-fallback");
-                              if (fallback) fallback.classList.remove("hidden");
-                            }
-                          }}
-                        />
-                        <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
-                          {initial}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
-                        {initial}
-                      </div>
-                    )}
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-bold text-foreground text-xs leading-tight">
-                        {p.phone}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">
-                        {p.name}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
-              renderValue={(option: any) => {
-                if (option.value === "none") return option.label;
-                const p = option.patient;
-                if (!p) return option.label;
-
-                const profilePic =
-                  p.profilePicture || p.avatar || p.profile_picture || p.image;
-                const initial = p.name
-                  ? p.name.trim().charAt(0).toUpperCase()
-                  : "?";
-
-                return (
-                  <div className="flex items-center gap-2">
-                    {profilePic ? (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
-                        <img
-                          src={profilePic}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as any).style.display = "none";
-                            const parent = (e.target as any).parentElement;
-                            if (parent) {
-                              const fallback = parent.querySelector(
-                                ".avatar-fallback-val",
-                              );
-                              if (fallback) fallback.classList.remove("hidden");
-                            }
-                          }}
-                        />
-                        <div className="avatar-fallback-val hidden w-full h-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center">
-                          {initial}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
-                        {initial}
-                      </div>
-                    )}
-                    <span className="font-bold text-foreground text-sm truncate">
-                      {p.phone}
-                    </span>
-                  </div>
-                );
-              }}
-              placeholder="Select Phone"
-              searchPlaceholder="Search Phone..."
-              className="w-full bg-white"
-            />
-          </LabeledField>
           <LabeledField label="Name" required>
             <SearchableSelect
               value={formData.patientId || "none"}
@@ -749,12 +643,15 @@ export function InvoiceForm({
               onSearchChange={setPatientSearchInput}
               options={[
                 { label: "Select Patient", value: "none" },
-                ...apiPatients.map((p: any) => ({
-                  label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
-                  searchLabel: `${p.name} ${p.phone || ""}`,
-                  value: p.id,
-                  patient: p,
-                })),
+                ...apiPatients.map((p: any) => {
+                  const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                  return {
+                    label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
+                    searchLabel: `${p.name} ${formattedPhone}`,
+                    value: p.id,
+                    patient: p,
+                  };
+                }),
               ]}
               renderOption={(option: any) => {
                 if (option.value === "none")
@@ -801,8 +698,8 @@ export function InvoiceForm({
                         {p.name}
                       </span>
                       {p.phone && (
-                        <span className="text-[10px] text-muted-foreground mt-0.5">
-                          {p.phone}
+                        <span className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                          {p.country_code ? `${p.country_code} ` : ""}{p.phone}
                         </span>
                       )}
                     </div>
@@ -856,6 +753,147 @@ export function InvoiceForm({
               }}
               placeholder="Select Patient"
               searchPlaceholder="Search Patient..."
+              className="w-full bg-white"
+            />
+          </LabeledField>
+
+          <LabeledField label="Phone" required>
+            <SearchableSelect
+              value={formData.patientId || "none"}
+              onChange={(val) => {
+                if (val === "none") return;
+                const p = apiPatients.find((p: any) => p.id === val);
+                const cp =
+                  p?.corporatePlanId || p?.companyId
+                    ? corporatePlans.find(
+                      (cp) => cp.id === (p.corporatePlanId || p.companyId),
+                    )
+                    : null;
+                setSelectedPrevInvoiceId("");
+                setSelectedNewPlanId(null);
+                setShowMembershipSuggestions(false);
+                setFormData({
+                  ...formData,
+                  patientPhone: p?.phone || "",
+                  patientName: p?.name || "",
+                  patientId: val,
+                  linkedItemIds: [],
+                  discount: Math.min(100, Math.max(0, cp ? cp.discountPercent : p?.defaultDiscount || 0)),
+                });
+              }}
+              onSearchChange={setPatientSearchInput}
+              options={[
+                { label: "Select Phone", value: "none" },
+                ...apiPatients
+                  .filter((p: any) => p.phone)
+                  .map((p: any) => {
+                    const formattedPhone = p.country_code ? `${p.country_code} ${p.phone}` : p.phone;
+                    return {
+                      label: `${formattedPhone} (${p.name})`,
+                      searchLabel: `${formattedPhone} ${p.name}`,
+                      value: p.id,
+                      patient: p,
+                    };
+                  }),
+              ]}
+              renderOption={(option: any) => {
+                if (option.value === "none")
+                  return <span className="truncate pr-2">{option.label}</span>;
+                const p = option.patient;
+                if (!p)
+                  return <span className="truncate pr-2">{option.label}</span>;
+
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
+
+                return (
+                  <div className="flex items-center gap-3 py-1">
+                    {profilePic ? (
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback =
+                                parent.querySelector(".avatar-fallback");
+                              if (fallback) fallback.classList.remove("hidden");
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback hidden w-full h-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-foreground text-xs leading-tight font-mono">
+                        {p.country_code ? `${p.country_code} ` : ""}{p.phone}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">
+                        {p.name}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
+              renderValue={(option: any) => {
+                if (option.value === "none") return option.label;
+                const p = option.patient;
+                if (!p) return option.label;
+
+                const profilePic =
+                  p.profilePicture || p.avatar || p.profile_picture || p.image;
+                const initial = p.name
+                  ? p.name.trim().charAt(0).toUpperCase()
+                  : "?";
+
+                return (
+                  <div className="flex items-center gap-2">
+                    {profilePic ? (
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                        <img
+                          src={profilePic}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as any).style.display = "none";
+                            const parent = (e.target as any).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector(
+                                ".avatar-fallback-val",
+                              );
+                              if (fallback) fallback.classList.remove("hidden");
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback-val hidden w-full h-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center">
+                          {initial}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                        {initial}
+                      </div>
+                    )}
+                    <span className="font-bold text-foreground text-sm truncate font-mono">
+                      {p.country_code ? `${p.country_code} ` : ""}{p.phone}
+                    </span>
+                  </div>
+                );
+              }}
+              placeholder="Select Phone"
+              searchPlaceholder="Search Phone..."
               className="w-full bg-white"
             />
           </LabeledField>

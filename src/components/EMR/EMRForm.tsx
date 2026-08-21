@@ -68,14 +68,25 @@ export function EMRForm({
   const extractPatients = (data: any): any[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    const target = data.responseObject !== undefined ? data.responseObject : data;
-    if (Array.isArray(target)) return target;
-    if (target && typeof target === "object") {
-      if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
-      if (Array.isArray(target.data?.data)) return target.data.data;
-      if (Array.isArray(target.data)) return target.data;
-      if (Array.isArray(target.patients)) return target.patients;
-      if (Array.isArray(target.data?.patients)) return target.data.patients;
+    if (data.responseObject !== undefined) {
+      return extractPatients(data.responseObject);
+    }
+    if (typeof data === "object") {
+      if (Array.isArray(data.data)) return data.data;
+      if (Array.isArray(data.patients)) return data.patients;
+      if (data.data && typeof data.data === "object") {
+        const nested = extractPatients(data.data);
+        if (nested.length > 0) return nested;
+      }
+      if (data.patients && typeof data.patients === "object") {
+        const nested = extractPatients(data.patients);
+        if (nested.length > 0) return nested;
+      }
+      for (const key of Object.keys(data)) {
+        if (Array.isArray(data[key])) {
+          return data[key];
+        }
+      }
     }
     return [];
   };
@@ -162,14 +173,17 @@ export function EMRForm({
                       }}
                       onSearchChange={setPatientSearchQuery}
                       isLoading={isPatientsLoading}
-                      options={[
+                       options={[
                         { label: "Select Patient", value: "none" },
-                        ...apiPatients.map((p: any) => ({
-                          label: `${p.name} ${p.phone ? `(${p.phone})` : ""}`,
-                          searchLabel: `${p.name} ${p.phone || ""}`,
-                          value: p.name,
-                          patient: p,
-                        }))
+                        ...apiPatients.map((p: any) => {
+                          const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                          return {
+                            label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
+                            searchLabel: `${p.name} ${formattedPhone}`,
+                            value: p.name,
+                            patient: p,
+                          };
+                        })
                       ]}
                       renderOption={(option: any) => {
                         if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
@@ -197,8 +211,8 @@ export function EMRForm({
                             <div className="flex flex-col min-w-0">
                               <span className="font-bold text-foreground text-sm truncate">{p.name}</span>
                               {p.phone && (
-                                <span className="text-[10px] font-semibold text-muted-foreground truncate tracking-wide">
-                                  {p.phone}
+                                <span className="text-[10px] font-semibold text-muted-foreground truncate tracking-wide font-mono">
+                                  {p.country_code ? `${p.country_code} ` : ""}{p.phone}
                                 </span>
                               )}
                             </div>
