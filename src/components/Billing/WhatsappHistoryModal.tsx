@@ -435,17 +435,19 @@ export function WhatsappHistoryModal({
                         )}
                         {isFailed && hasErrorDetails && (
                           <div className="flex flex-col items-start gap-1">
-                            <button
+                            <Button
+                              variant="destructive"
+                              size="xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleLogExpand(item.id);
                               }}
-                              className="flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 px-2 py-0.5 rounded-md mt-1 transition-colors border border-rose-200/50 cursor-pointer"
+                              className="mt-1 text-[10px] font-bold h-auto py-0.5 px-2"
                             >
                               <AlertCircle className="w-3 h-3 shrink-0" />
                               <span>{isExpanded ? "Hide Details" : "Show Error Details"}</span>
                               <ChevronDown className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-250", isExpanded ? "rotate-180" : "")} />
-                            </button>
+                            </Button>
 
                             {isExpanded && (
                               <div className="mt-1.5 p-2.5 bg-rose-50/80 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl space-y-1.5 text-[10px] sm:text-[11px] leading-relaxed w-full">
