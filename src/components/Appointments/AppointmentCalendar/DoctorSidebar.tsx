@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Search, Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui";
+import { Button, Pagination } from "@/components/ui";
 
 interface Doctor {
   id: string;
@@ -17,6 +17,12 @@ interface DoctorSidebarProps {
   setSearchTerm: (term: string) => void;
   selectedDoctorId: string | null;
   setSelectedDoctorId: (id: string | null) => void;
+  page: number;
+  onPageChange: (page: number) => void;
+  perPage: number;
+  onPerPageChange?: (size: number) => void;
+  totalItems: number;
+  totalPages: number;
 }
 
 export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
@@ -25,13 +31,13 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
   setSearchTerm,
   selectedDoctorId,
   setSelectedDoctorId,
+  page,
+  onPageChange,
+  perPage,
+  onPerPageChange,
+  totalItems,
+  totalPages,
 }) => {
-  const filteredDoctors = doctors.filter(
-    (d) =>
-      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.specialization.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   useEffect(() => {
     // Auto-select if there is only one doctor in the entire list and no doctor is currently selected
     if (doctors.length === 1 && selectedDoctorId === null) {
@@ -40,7 +46,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
   }, [doctors, selectedDoctorId, setSelectedDoctorId]);
 
   return (
-    <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden h-[400px] xl:h-full">
+    <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden h-[450px] xl:h-full">
       <div className="p-5 border-b border-border bg-muted/30">
         <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
           <Stethoscope className="w-4 h-4 text-primary" />
@@ -75,7 +81,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
           </div>
         </Button>
 
-        {filteredDoctors.map((doctor) => (
+        {doctors.map((doctor) => (
           <Button
             variant="ghost"
             key={doctor.id}
@@ -101,6 +107,17 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
             </div>
           </Button>
         ))}
+      </div>
+
+      <div className="border-t border-border bg-muted/10 shrink-0">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          perPage={perPage}
+          onPageChange={onPageChange}
+          onPerPageChange={onPerPageChange}
+        />
       </div>
     </div>
   );

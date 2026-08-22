@@ -394,6 +394,7 @@ export function TreatmentSessionManager({
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [sessionPreviousPaidAmt, setSessionPreviousPaidAmt] = useState<number>(0);
   const [isEditingCompleted, setIsEditingCompleted] = useState<boolean>(false);
+  const [originalPaidNow, setOriginalPaidNow] = useState<number>(0);
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -487,17 +488,10 @@ export function TreatmentSessionManager({
       return;
     }
 
-    const invalid = prescriptions.some(
-      (p) =>
-        !p.medicine ||
-        !p.dosage ||
-        !p.timing ||
-        !p.duration ||
-        !p.qty
-    );
+    const invalid = prescriptions.some((p) => !p.medicine && !p.medicineName);
 
     if (invalid) {
-      showToast("Please fill all fields (medicine name, dosage, timing, duration, quantity) for all prescription items before downloading.", "error");
+      showToast("Please select a medicine name for all prescription items before downloading.", "error");
       return;
     }
 
@@ -505,6 +499,7 @@ export function TreatmentSessionManager({
       type: "PRESCRIPTION",
       patient: {
         id: treatmentPlan?.patient_id || treatmentPlan?.patient?.id || "—",
+        patient_code: treatmentPlan?.patient?.patient_code || treatmentPlan?.patient?.patientCode || treatmentPlan?.patient_code || treatmentPlan?.patientCode || "",
         patientName: treatmentPlan?.patient?.name || patientName,
         phone: treatmentPlan?.patient?.phone || "",
         doctorName: treatmentPlan?.doctor?.staff?.name || doctorName || "DR. RAJAL SHAH",
@@ -513,12 +508,12 @@ export function TreatmentSessionManager({
         prescriptions: prescriptions.map((p) => ({
           medicine: p.medicineName || p.medicine,
           medicineName: p.medicineName || p.medicine,
-          dosage: p.dosage,
-          timing: p.timing,
-          frequency: p.frequency,
-          duration: p.duration,
-          durationUnit: p.durationUnit,
-          qty: p.qty,
+          dosage: p.dosage || "N/A",
+          timing: p.timing || "N/A",
+          frequency: p.frequency || "N/A",
+          duration: p.duration || "N/A",
+          durationUnit: p.durationUnit || "",
+          qty: p.qty || "N/A",
         })),
         additional_notes: "",
       },
@@ -742,6 +737,7 @@ export function TreatmentSessionManager({
       });
       setSessionPreviousPaidAmt(paidAmt);
       setIsEditingCompleted(false);
+      setOriginalPaidNow(0);
       setCompletingId(session.id);
       return;
     }
@@ -832,6 +828,7 @@ export function TreatmentSessionManager({
         payment_method: freshSession.payment_method || "CASH",
       });
 
+      setOriginalPaidNow(paidValue);
       setSessionPreviousPaidAmt(Math.max(0, paidAmt - paidValue));
 
       if (Array.isArray(freshSession.prescriptions)) {
@@ -1392,7 +1389,7 @@ export function TreatmentSessionManager({
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
               </div>
               <div>
-                <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
+                <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500"></span></Label>
                 <Textarea rows={3} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
                   onChange={(e) => setCompleteForm(p => ({ ...p, session_findings: e.target.value }))}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
@@ -1432,6 +1429,7 @@ export function TreatmentSessionManager({
                   <Input
                     type="number"
                     min="0"
+                    disabled={isEditingCompleted && originalPaidNow > 0}
                     placeholder="Paid today"
                     value={completeForm.paid_now || ""}
                     onChange={(e) => {
@@ -1442,8 +1440,13 @@ export function TreatmentSessionManager({
                         paid_amount: sessionPreviousPaidAmt + val
                       }));
                     }}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
+                    className={`w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold ${isEditingCompleted && originalPaidNow > 0 ? "bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200" : "text-emerald-700 bg-emerald-50/30"}`}
                   />
+                  {isEditingCompleted && originalPaidNow > 0 && (
+                    <p className="text-[10px] text-amber-600 mt-1 font-semibold">
+                      Note: Paid Amount cannot be changed after payment is recorded.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-semibold block mb-2">Pending (₹)</Label>
@@ -1814,6 +1817,15 @@ export function TreatmentSessionManager({
             />
           </div>
         </div>
+        {treatmentPlan?.reason && (
+          <div className="mt-4 p-4 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed flex items-start gap-2.5 shadow-sm">
+            <span className="text-base shrink-0">✨</span>
+            <div>
+              <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Membership Benefit Note</p>
+              {treatmentPlan.reason}
+            </div>
+          </div>
+        )}
 
         {/* Timeline header */}
         <div className="flex shrink-0 items-center justify-between">

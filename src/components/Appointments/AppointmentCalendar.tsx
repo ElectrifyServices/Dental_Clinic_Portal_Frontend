@@ -31,6 +31,12 @@ interface CalendarProps {
   setSelectedDate?: (date: string) => void;
   onDirectCheckIn?: (appointment: any) => void;
   checkingInApptId?: string | null;
+  specialistPage?: number;
+  setSpecialistPage?: (p: number) => void;
+  specialistLimit?: number;
+  setSpecialistLimit?: (l: number) => void;
+  totalSpecialists?: number;
+  totalSpecialistPages?: number;
 }
 
 export function AppointmentCalendar({
@@ -46,6 +52,12 @@ export function AppointmentCalendar({
   setSelectedDate: propSetSelectedDate,
   onDirectCheckIn,
   checkingInApptId,
+  specialistPage = 1,
+  setSpecialistPage,
+  specialistLimit = 5,
+  setSpecialistLimit,
+  totalSpecialists = 0,
+  totalSpecialistPages = 1,
 }: CalendarProps) {
   const [localSearch, setLocalSearch] = useState("");
   const currentSearch = searchTerm !== undefined ? searchTerm : localSearch;
@@ -197,6 +209,12 @@ export function AppointmentCalendar({
         setSearchTerm={currentSetSearch}
         selectedDoctorId={currentDoctorId}
         setSelectedDoctorId={currentSetDoctorId}
+        page={specialistPage}
+        onPageChange={setSpecialistPage || (() => {})}
+        perPage={specialistLimit}
+        onPerPageChange={setSpecialistLimit}
+        totalItems={totalSpecialists}
+        totalPages={totalSpecialistPages}
       />
 
       <CalendarGrid

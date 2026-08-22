@@ -143,7 +143,7 @@ export function PatientConsultation({
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdConsultationId, setCreatedConsultationId] = useState<string | null>(null);
   const [selectedExistingDirectPatientId, setSelectedExistingDirectPatientId] = useState<string | undefined>(
-    (patient as any).isDirect ? ((patient as any).patientId || undefined) : undefined,
+    (patient as any).isDirect ? ((patient as any).patientId || (patient as any).patient_id || undefined) : undefined,
   );
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
@@ -155,7 +155,7 @@ export function PatientConsultation({
     (patient as any).isDirect ? (patient.doctorId || "") : "",
   );
   const [directPatientId, setDirectPatientId] = useState<string | undefined>(
-    (patient as any).isDirect ? ((patient as any).patientId || undefined) : undefined
+    (patient as any).isDirect ? ((patient as any).patientId || (patient as any).patient_id || undefined) : undefined
   );
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -712,9 +712,11 @@ export function PatientConsultation({
   };
 
   const updateTreatmentPlan = (index: number, field: string, value: any) => {
-    const updatedPlans = [...consultationData.treatmentPlans];
-    updatedPlans[index] = { ...updatedPlans[index], [field]: value };
-    setConsultationData({ ...consultationData, treatmentPlans: updatedPlans });
+    setConsultationData((prev) => {
+      const updatedPlans = [...prev.treatmentPlans];
+      updatedPlans[index] = { ...updatedPlans[index], [field]: value };
+      return { ...prev, treatmentPlans: updatedPlans };
+    });
   };
 
   const validateForm = (): boolean => {
@@ -1070,6 +1072,7 @@ export function PatientConsultation({
             />
 
             <TreatmentPlanning
+              patientId={directPatientId || (patient as any).patient_id || patient.patientId || patient.id}
               toothChartState={toothChartState}
               requiresTreatment={consultationData.requiresTreatment}
               treatmentPlans={consultationData.treatmentPlans}

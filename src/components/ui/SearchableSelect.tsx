@@ -4,7 +4,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
-type OptionType = string | { label: string; value: string };
+type OptionType = string | { label: string; value: string; is_free?: boolean; isFree?: boolean; from_plan_benefit?: boolean; fromPlanBenefit?: boolean; [key: string]: any };
 
 interface SearchableSelectProps {
   value: string | string[];
@@ -28,6 +28,7 @@ interface SearchableSelectProps {
   renderValue?: (option: any) => React.ReactNode;
   capitalizeWords?: boolean;
   popoverClassName?: string;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function SearchableSelect({
@@ -52,6 +53,7 @@ export function SearchableSelect({
   renderValue,
   capitalizeWords = false,
   popoverClassName,
+  onOpenChange,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -66,6 +68,10 @@ export function SearchableSelect({
       setEditingValue(null);
     }
   }, [isOpen]);
+
+  React.useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
 
   // Close on scroll to prevent detached popover from overlapping headers
   React.useEffect(() => {
@@ -165,11 +171,22 @@ export function SearchableSelect({
                 : (() => {
                     const foundOpt = options.find(opt => getOptionValue(opt) === value);
                     if (foundOpt) {
-                      return renderValue ? renderValue(foundOpt) : getOptionLabel(foundOpt);
+                      if (renderValue) return renderValue(foundOpt);
+                      const isFree = typeof foundOpt === "object" && foundOpt !== null && (foundOpt.isFree || foundOpt.is_free);
+                      return (
+                        <span className="flex items-center gap-1.5 truncate">
+                          <span>{getOptionLabel(foundOpt)}</span>
+                          {isFree && (
+                            <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 flex-shrink-0">
+                              Free
+                            </span>
+                          )}
+                        </span>
+                      );
                     }
                     // If value exists but option not found in list (loading / no match), show displayValue or placeholder
                     if (displayValue) return displayValue;
-                    if (value && value !== "none") return placeholder;
+                    if (value && value !== "none") return value;
                     return placeholder;
                   })()}
           </div>
@@ -272,17 +289,30 @@ export function SearchableSelect({
                     <>
                       <button
                         type="button"
+                        disabled={typeof opt === "object" && opt !== null ? !!opt.disabled : false}
                         onClick={() => handleSelect(optValue)}
-                        className="flex-1 text-left flex items-center justify-between px-3 py-2 cursor-pointer bg-transparent outline-none transition-colors duration-150"
+                        className={cn(
+                          "flex-1 text-left flex items-center justify-between px-3 py-2 outline-none transition-colors duration-150",
+                          typeof opt === "object" && opt !== null && opt.disabled
+                            ? "cursor-not-allowed opacity-40 bg-muted/20"
+                            : "cursor-pointer bg-transparent"
+                        )}
                       >
                         {renderOption ? (
                           renderOption(opt)
                         ) : (
-                          <span className="truncate pr-2">{optLabel}</span>
+                          <span className="truncate pr-2 flex items-center gap-1.5">
+                            <span>{optLabel}</span>
+                            {typeof opt === "object" && opt !== null && (opt.isFree || opt.is_free) && (
+                              <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 flex-shrink-0">
+                                Free
+                              </span>
+                            )}
+                          </span>
                         )}
                         {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
                       </button>
-                      {onEditOption && optValue !== "none" && optValue !== "" && (
+                      {onEditOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit)) && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -297,7 +327,7 @@ export function SearchableSelect({
                           <Edit className="h-3.5 w-3.5" />
                         </button>
                       )}
-                      {onDeleteOption && optValue !== "none" && optValue !== "" && (
+                      {onDeleteOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit)) && (
                         <button
                           type="button"
                           onClick={(e) => {

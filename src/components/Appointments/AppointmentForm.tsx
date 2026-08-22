@@ -20,6 +20,7 @@ import { useAppointmentQuery } from "../../hooks/appointments/useAppointmentQuer
 import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import { useDebounce } from "../../hooks/useDebounce";
 import { getLocalDateString } from "../../utils/dateUtils";
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -265,6 +266,29 @@ export function AppointmentForm({
     }
   };
 
+  const [formDoctorSearch, setFormDoctorSearch] = useState("");
+  const debouncedFormDoctorSearch = useDebounce(formDoctorSearch, 500);
+
+  const {
+    doctors: formDoctorsList
+  } = useDoctorsListQuery(debouncedFormDoctorSearch);
+
+  const selectedDoctorIdInForm = form.watch("doctorId");
+
+  const finalDoctorsList = useMemo(() => {
+    const list = [...formDoctorsList];
+    if (selectedDoctorIdInForm) {
+      const exists = list.some((d) => String(d.id) === String(selectedDoctorIdInForm));
+      if (!exists) {
+        const selectedDoc = doctors.find((d) => String(d.id) === String(selectedDoctorIdInForm));
+        if (selectedDoc) {
+          list.push(selectedDoc);
+        }
+      }
+    }
+    return list;
+  }, [formDoctorsList, selectedDoctorIdInForm, doctors]);
+
   return (
     <Modal
       title={formTitle}
@@ -328,7 +352,9 @@ export function AppointmentForm({
             time={formData.time}
             duration={formData.duration ?? ""}
             doctorId={formData.doctorId}
-            doctors={doctors}
+            doctors={finalDoctorsList}
+            doctorSearch={formDoctorSearch}
+            setDoctorSearch={setFormDoctorSearch}
             onDateChange={handleChange}
             onTimeChange={handleChange}
             onDurationChange={(val) => form.setValue("duration", val)}

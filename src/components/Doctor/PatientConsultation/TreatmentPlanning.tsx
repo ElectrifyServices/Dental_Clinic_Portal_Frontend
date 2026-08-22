@@ -52,6 +52,7 @@ interface TreatmentPlanningProps {
   errors?: Record<string, string>;
   isEditMode?: boolean;
   originalSessionsMap?: Record<string, number>;
+  patientId?: string;
 }
 
 const defaultProcedures = [
@@ -107,8 +108,10 @@ export function TreatmentPlanning({
   errors = {},
   isEditMode = false,
   originalSessionsMap = {},
+  patientId,
 }: TreatmentPlanningProps) {
-  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({ all: true });
+  const effectivePatientId = patientId && !patientId.startsWith("WALK-") ? patientId : undefined;
+  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError, refetch: refetchProcedures } = useProcedureQuery({ all: true, patient_id: effectivePatientId });
   const { confirmDelete } = useModal();
   const createProcedureMutation = useCreateProcedureMutation();
   const updateProcedureMutation = useUpdateProcedureMutation();
@@ -170,6 +173,8 @@ export function TreatmentPlanning({
     return filtered.map((p: any) => ({
       label: p.name,
       value: p.name,
+      is_free: p.is_free || p.isFree || false,
+      from_plan_benefit: p.from_plan_benefit || p.fromPlanBenefit || !p.id || false,
     }));
   }, [rawProceduresData, isProceduresLoading, isProceduresError]);
 
@@ -237,8 +242,31 @@ export function TreatmentPlanning({
       render: (plan: TreatmentPlan, index: number) => (
         <SearchableSelect
           value={plan.procedure}
-          onChange={(val) => onUpdatePlan(index, "procedure", val)}
-          options={apiProcedures.length > 0 ? apiProcedures : defaultProcedures}
+          onChange={(val) => {
+            onUpdatePlan(index, "procedure", val);
+            const matched = apiProcedures.find((ap) => ap.value === val);
+            if (matched && (matched.is_free || matched.isFree)) {
+              onUpdatePlan(index, "cost", 0);
+              onUpdatePlan(index, "discount", 0);
+            }
+          }}
+          options={(() => {
+            const list = apiProcedures.length > 0 ? apiProcedures : defaultProcedures;
+            return list.map((opt) => {
+              if (typeof opt === "object" && opt !== null) {
+                const isFree = opt.is_free || opt.isFree;
+                if (isFree) {
+                  const isAlreadySelected = treatmentPlans.some(
+                    (p, idx) => idx !== index && p.procedure === opt.value
+                  );
+                  if (isAlreadySelected) {
+                    return { ...opt, disabled: true };
+                  }
+                }
+              }
+              return opt;
+            });
+          })()}
           placeholder="Select Procedure"
           searchPlaceholder="Search procedure..."
           className="h-9 font-semibold text-xs rounded-lg border-purple-200"
@@ -248,6 +276,11 @@ export function TreatmentPlanning({
           onDeleteOption={handleDeleteProcedure}
           onEditOption={handleUpdateProcedure}
           capitalizeWords
+          onOpenChange={(isOpen) => {
+            if (isOpen) {
+              refetchProcedures();
+            }
+          }}
         />
       ),
     },
@@ -255,44 +288,76 @@ export function TreatmentPlanning({
       key: "cost",
       header: "Cost (₹)",
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan, index: number) => (
-        <Input
-          type="number"
-          min="0"
-          value={plan.cost === 0 ? "" : plan.cost}
-          onChange={(e) => onUpdatePlan(index, "cost", parseInt(e.target.value) || 0)}
-          className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-          placeholder="Cost"
-        />
-      ),
+      render: (plan: TreatmentPlan, index: number) => {
+        const matchingProc = apiProcedures.find((ap) => ap.value === plan.procedure);
+        const isFreeProcedure = matchingProc ? !!(matchingProc.is_free || matchingProc.isFree) : false;
+        return (
+          <div className="flex flex-col gap-1 w-24">
+            <Input
+              type="number"
+              min="0"
+              disabled={isFreeProcedure}
+              value={isFreeProcedure ? "0" : (plan.cost === 0 ? "" : plan.cost)}
+              onChange={(e) => onUpdatePlan(index, "cost", parseInt(e.target.value) || 0)}
+              className={`px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 ${
+                isFreeProcedure 
+                  ? "bg-muted text-muted-foreground border-slate-200 cursor-not-allowed" 
+                  : "border-purple-200"
+              }`}
+              placeholder="Cost"
+            />
+            {isFreeProcedure && (
+              <span className="text-[9px] text-green-600 font-bold leading-tight">
+                Free due to membership plan
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "discount",
       header: "Discount (%)",
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
-      render: (plan: TreatmentPlan, index: number) => (
-        <Input
-          type="number"
-          min="0"
-          max="100"
-          value={plan.discount === 0 ? "" : (plan.discount || "")}
-          onChange={(e) => {
-            const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-            onUpdatePlan(index, "discount", val);
-          }}
-          onInput={(e: React.FormEvent<HTMLInputElement>) => {
-            const target = e.currentTarget;
-            let val = parseInt(target.value) || 0;
-            if (val > 100) {
-              target.value = "100";
-            } else if (val < 0) {
-              target.value = "0";
-            }
-          }}
-          className="w-24 px-2 py-1.5 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-          placeholder="Discount %"
-        />
-      ),
+      render: (plan: TreatmentPlan, index: number) => {
+        const matchingProc = apiProcedures.find((ap) => ap.value === plan.procedure);
+        const isFreeProcedure = matchingProc ? !!(matchingProc.is_free || matchingProc.isFree) : false;
+        return (
+          <div className="flex flex-col gap-1 w-24">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              disabled={isFreeProcedure}
+              value={isFreeProcedure ? "0" : (plan.discount === 0 ? "" : (plan.discount || ""))}
+              onChange={(e) => {
+                const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                onUpdatePlan(index, "discount", val);
+              }}
+              onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                const target = e.currentTarget;
+                let val = parseInt(target.value) || 0;
+                if (val > 100) {
+                  target.value = "100";
+                } else if (val < 0) {
+                  target.value = "0";
+                }
+              }}
+              className={`px-2 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 ${
+                isFreeProcedure 
+                  ? "bg-muted text-muted-foreground border-slate-200 cursor-not-allowed" 
+                  : "border-purple-200"
+              }`}
+              placeholder="Discount %"
+            />
+            {isFreeProcedure && (
+              <span className="text-[9px] text-green-600 font-bold leading-tight">
+                Free due to membership plan
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "sessions",

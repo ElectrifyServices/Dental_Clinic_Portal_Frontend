@@ -234,19 +234,20 @@ export function CorporatePlanManagement({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+        <div className="columns-1 md:columns-2 xl:columns-3 gap-5 [column-fill:_balance]">
           {paginatedData.map((plan, index) => (
-            <CorporatePlanCard
-              key={`${plan.id}-${index}`}
-              plan={plan}
-              BENEFIT_LABELS={BENEFIT_LABELS}
-              isUpdatingStatus={updateStatusMutation.isPending}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              onToggle={() => handleToggle(plan)}
-              expanded={expandedPlanId === plan.id}
-              onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
-            />
+            <div key={`${plan.id}-${index}`} className="break-inside-avoid mb-5">
+              <CorporatePlanCard
+                plan={plan}
+                BENEFIT_LABELS={BENEFIT_LABELS}
+                isUpdatingStatus={updateStatusMutation.isPending}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                onToggle={() => handleToggle(plan)}
+                expanded={expandedPlanId === plan.id}
+                onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
+              />
+            </div>
           ))}
         </div>
       )}
