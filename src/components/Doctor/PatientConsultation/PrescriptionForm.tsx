@@ -42,6 +42,7 @@ export function PrescriptionForm({
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -132,16 +133,7 @@ export function PrescriptionForm({
             <Button
               type="button"
               disabled={downloading}
-              onClick={async () => {
-                setDownloading(true);
-                try {
-                  await onDownload();
-                } catch (err) {
-                  console.error(err);
-                } finally {
-                  setDownloading(false);
-                }
-              }}
+              onClick={() => setShowDownloadConfirm(true)}
               className="border border-green-200 bg-green-50 text-green-700 hover:bg-green-100/80 px-4 py-2 rounded-xl flex items-center text-sm font-medium transition-all duration-200 shadow-sm gap-1.5"
             >
               {downloading ? (
@@ -319,6 +311,28 @@ export function PrescriptionForm({
             setConfirmDeleteId(null);
             setConfirmDeleteName(null);
           }}
+        />
+      )}
+
+      {showDownloadConfirm && (
+        <ConfirmModal
+          title="Download Prescription"
+          message="Are you sure you want to download this prescription PDF?"
+          confirmLabel="Download"
+          variant="default"
+          isLoading={downloading}
+          onConfirm={async () => {
+            setDownloading(true);
+            try {
+              if (onDownload) await onDownload();
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setDownloading(false);
+              setShowDownloadConfirm(false);
+            }
+          }}
+          onCancel={() => setShowDownloadConfirm(false)}
         />
       )}
     </div>

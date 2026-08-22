@@ -1156,11 +1156,11 @@ ${isBlankMode
             (p: any, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
-<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "N/A"} (${p.timing || "N/A"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.durationUnit || p.duration_type || "Days"}` : "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+<td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
 </tr>
           `,
           )
@@ -1372,11 +1372,11 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
           .map((p: any, idx: number) => `
           <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "-"} (${p.timing || "-"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
-            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "-"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.dosage || "N/A"} (${p.timing || "N/A"})`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.frequency || "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.duration ? `${p.duration} ${p.duration_type || "Days"}` : "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
+            <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.qty || "N/A"}`, "left", `font-size:12px; color:${T.INK};`)}</td>
           </tr>
         `)
           .join("")}

@@ -450,20 +450,20 @@ export function WhatsappHistoryModal({
                             </Button>
 
                             {isExpanded && (
-                              <div className="mt-1.5 p-2.5 bg-rose-50/80 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl space-y-1.5 text-[10px] sm:text-[11px] leading-relaxed w-full">
+                              <div className="mt-1.5 p-3 bg-red-50 dark:bg-rose-950/20 border border-red-100 dark:border-rose-900/30 rounded-xl space-y-2 text-[10.5px] sm:text-xs leading-relaxed w-full whitespace-normal break-words">
                                 {item.user_friendly_error && (
-                                  <div className="text-rose-700 dark:text-rose-400 font-extrabold flex items-start gap-1">
+                                  <div className="text-rose-700 dark:text-rose-400 font-extrabold flex items-start gap-1.5">
                                     <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
                                     <span>{item.user_friendly_error}</span>
                                   </div>
                                 )}
                                 {item.failure_reason && (
-                                  <div className="text-muted-foreground">
-                                    <span className="font-bold text-foreground/80">Reason:</span> {item.failure_reason}
+                                  <div className="text-slate-600 dark:text-slate-300">
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">Reason:</span> {item.failure_reason}
                                   </div>
                                 )}
                                 {item.suggested_action && (
-                                  <div className="text-emerald-700 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/10 px-2 py-0.5 rounded-lg border border-emerald-100/50 dark:border-emerald-900/20 w-max max-w-full">
+                                  <div className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/30 w-full whitespace-normal break-words mt-1">
                                     <span className="font-extrabold">Suggested Action:</span> {item.suggested_action}
                                   </div>
                                 )}

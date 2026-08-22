@@ -7,6 +7,7 @@ export interface ProcedureListParams {
   search?: string;
   sortBy?: string;
   sortOrder?: string;
+  patient_id?: string;
   filters?: {
     status?: string[];
     createdBy?: string[];
@@ -36,6 +37,7 @@ export function useProcedureQuery(params: ProcedureListParams = {}, options?: an
   if (params.sortBy !== undefined) body.sortBy = params.sortBy;
   if (params.sortOrder !== undefined) body.sortOrder = params.sortOrder;
   if (params.filters && Object.keys(params.filters).length > 0) body.filters = params.filters;
+  if (params.patient_id !== undefined) body.patient_id = params.patient_id;
 
   return useApiQuery<Procedure[]>({
     queryKey: ["procedures", body],

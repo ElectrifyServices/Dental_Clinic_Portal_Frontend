@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
-import { Button } from "@/components/ui";
+import { Button, Pagination } from "@/components/ui";
 import { Calendar, Clock, Loader2, CheckCircle, Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
@@ -11,6 +11,8 @@ interface ScheduleFieldsProps {
   duration: string;
   doctorId: string;
   doctors: any[];
+  doctorSearch: string;
+  setDoctorSearch: (s: string) => void;
   onDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDurationChange: (val: string) => void;
@@ -33,19 +35,14 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
   duration,
   doctorId,
   doctors,
+  doctorSearch,
+  setDoctorSearch,
   onDateChange,
   onTimeChange,
   onDurationChange,
   onDoctorChange,
 }) => {
-  const [doctorSearch, setDoctorSearch] = React.useState("");
-  const filteredDoctors = useMemo(() => {
-    return (doctors || []).filter(
-      (d) =>
-        (d.name || "").toLowerCase().includes(doctorSearch.toLowerCase()) ||
-        (d.specialization && d.specialization.toLowerCase().includes(doctorSearch.toLowerCase()))
-    );
-  }, [doctors, doctorSearch]);
+  const filteredDoctors = doctors;
 
   const { data: slotsResponse, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
     doctorId || null,

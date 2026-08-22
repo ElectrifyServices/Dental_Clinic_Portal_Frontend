@@ -302,7 +302,7 @@ export function TreatmentViewer({
       }
     >
       <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           <ContentCard
             title="Patient Overview"
             icon={<User className="w-5 h-5" />}
@@ -536,6 +536,12 @@ export function TreatmentViewer({
                 </div>
               </div>
             </div>
+            {treatment.reason && (
+              <div className="mt-4 p-3 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed">
+                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Reason for Complimentary Treatment</p>
+                {treatment.reason}
+              </div>
+            )}
           </ContentCard>
         )}
 

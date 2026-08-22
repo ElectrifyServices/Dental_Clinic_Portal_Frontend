@@ -53,6 +53,9 @@ export const AppointmentsPage: React.FC = () => {
   const [specialistSearch, setSpecialistSearch] = useState("");
   const debouncedSpecialistSearch = useDebounce(specialistSearch, 500);
 
+  const [specialistPage, setSpecialistPage] = useState(1);
+  const [specialistLimit, setSpecialistLimit] = useState(5);
+
   const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
   const [noShowReason, setNoShowReason] = useState("");
 
@@ -65,7 +68,16 @@ export const AppointmentsPage: React.FC = () => {
     }
   };
 
-  const { doctors: activeDoctors, refetch: refetchDoctors } = useDoctorsListQuery(debouncedSpecialistSearch);
+  const {
+    doctors: activeDoctors,
+    refetch: refetchDoctors,
+    total: totalSpecialists,
+    totalPages: totalSpecialistPages
+  } = useDoctorsListQuery(debouncedSpecialistSearch, specialistPage, specialistLimit);
+
+  useEffect(() => {
+    setSpecialistPage(1);
+  }, [debouncedSpecialistSearch]);
 
   useEffect(() => {
     if (refetchAppointments) {
@@ -250,6 +262,12 @@ export const AppointmentsPage: React.FC = () => {
             setSearchTerm={setSpecialistSearch}
             selectedDoctorId={selectedDoctorId}
             setSelectedDoctorId={setSelectedDoctorId}
+            specialistPage={specialistPage}
+            setSpecialistPage={setSpecialistPage}
+            specialistLimit={specialistLimit}
+            setSpecialistLimit={setSpecialistLimit}
+            totalSpecialists={totalSpecialists}
+            totalSpecialistPages={totalSpecialistPages}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             onBookAppointment={(
