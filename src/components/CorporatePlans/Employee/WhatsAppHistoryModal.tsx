@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "../../ui/Badge";
 import { Loader2, MessageCircle, Clock, CheckCircle2, AlertCircle, FileText, User, Phone, Calendar, Hash, Tag, Send, ArrowDown, ArrowUp, File, Info } from "lucide-react";
 import { useWhatsAppHistoryQuery } from "../../../hooks/corporate/useWhatsAppHistoryQuery";
+import { formatPhoneWithCountryCode } from "../../../utils/phoneUtils";
 
 interface WhatsAppHistoryModalProps {
   isOpen: boolean;
@@ -223,7 +224,9 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
               <strong className="text-foreground">{employee?.name || "Unknown"}</strong>
               <span className="text-xs text-muted-foreground/50">•</span>
               <Phone className="w-3 h-3 text-muted-foreground/50 inline" />
-              <span className="text-sm font-medium text-slate-600">{employee?.phone || "No phone"}</span>
+              <span className="text-sm font-medium text-slate-600">
+                {employee?.phone ? formatPhoneWithCountryCode(employee.phone, employee.country_code || employee.countryCode) : "No phone"}
+              </span>
             </DialogDescription>
           </DialogHeader>
         </div>

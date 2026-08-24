@@ -111,8 +111,6 @@ export function PatientForm({
   }
   if (!formData.phone?.trim()) {
     requiredErrors.push("Phone Number");
-  } else if (formData.phone.trim().length > 10) {
-    requiredErrors.push("Phone Number (maximum 10 digits)");
   }
   if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
     requiredErrors.push("Valid Email Address");

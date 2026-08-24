@@ -44,6 +44,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { getPhonePlaceholder } from "@/utils/phoneUtils";
 import confetti from "canvas-confetti";
 
 interface EmployeeFormModalProps {
@@ -120,7 +122,25 @@ export function EmployeeFormModal({
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  const activeSearchTerm = ((form.name || "") + (form.phone || "")).trim();
+  const { phoneError, handlePhoneChange: phoneValidationChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
+    dialingCode: formCountryCode,
+    onPhoneChange: (sanitized) => {
+      handleFormChange("phone", sanitized);
+      setForm(prev => ({ ...prev, patientId: undefined }));
+      setFocusedField("phone");
+      if (formErrors.phone) {
+        setFormErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
+      }
+    },
+  });
+
+  const phonePlaceholder = getPhonePlaceholder(countryIso);
+
+  const activeSearchTerm = React.useMemo(() => {
+    if (focusedField === "name") return (form.name || "").trim();
+    if (focusedField === "phone") return (form.phone || "").trim();
+    return (form.name || form.phone || "").trim();
+  }, [focusedField, form.name, form.phone]);
   const debouncedSearch = useDebounce(activeSearchTerm, 400);
 
   const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
@@ -873,32 +893,29 @@ export function EmployeeFormModal({
               <div className="flex items-center gap-2 sm:gap-2.5">
                 <CountryCodeSelect
                   value={formCountryCode}
-                  onChange={(val) => setFormCountryCode(val)}
+                  onChange={(val) => {
+                    setFormCountryCode(val);
+                    clearPhoneError();
+                  }}
                   className="rounded-xl text-sm h-10"
                 />
                 <Input
                   type="text"
                   name="phone"
-                  maxLength={10}
-                  placeholder="10-digit mobile number"
+                  maxLength={maxLength}
+                  placeholder={phonePlaceholder}
                   value={form.phone || ""}
                   onFocus={() => setFocusedField("phone")}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    handleFormChange("phone", val);
-                    setForm(prev => ({ ...prev, patientId: undefined })); // Clear patientId if phone is modified
-                    setFocusedField("phone");
-                    if (formErrors.phone) {
-                      setFormErrors(prev => { const n = { ...prev }; delete n.phone; return n; });
-                    }
+                    phoneValidationChange(e);
                   }}
                   autoComplete="off"
                   className="rounded-xl text-sm flex-1 h-10"
                 />
               </div>
               {focusedField === "phone" && renderPatientDropdown()}
-              {formErrors.phone && (
-                <p className="text-xs text-red-500 mt-1 font-medium">{formErrors.phone}</p>
+              {(formErrors.phone || phoneError) && (
+                <p className="text-xs text-red-500 mt-1 font-medium">{formErrors.phone || phoneError}</p>
               )}
             </div>
           </div>

@@ -219,6 +219,8 @@ export const COUNTRY_CODES_LIST: CountryCodeItem[] = [
 interface CountryCodeSelectProps {
   value?: string;
   onChange: (val: string) => void;
+  /** Optional: also receive the full CountryCodeItem (including ISO alpha-2 country code) on select */
+  onCountrySelect?: (item: CountryCodeItem) => void;
   disabled?: boolean;
   className?: string;
 }
@@ -226,6 +228,7 @@ interface CountryCodeSelectProps {
 export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
   value = "+91",
   onChange,
+  onCountrySelect,
   disabled = false,
   className = "",
 }) => {
@@ -300,6 +303,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
 
   const handleSelect = (item: CountryCodeItem) => {
     onChange(item.code);
+    onCountrySelect?.(item);
     setIsOpen(false);
   };
 

@@ -19,6 +19,7 @@ interface BasicInfoSectionProps {
   isEdit: boolean;
   onPatientSearch?: (query: string) => void;
   onDoctorSearch?: (query: string) => void;
+  onProcedureSearch?: (query: string) => void;
   onCreateProcedure?: (name: string) => Promise<string | void> | void;
   isCreatingProcedure?: boolean;
   onDeleteProcedure?: (name: string) => Promise<void> | void;
@@ -38,6 +39,7 @@ export function BasicInfoSection({
   isEdit,
   onPatientSearch,
   onDoctorSearch,
+  onProcedureSearch,
   onCreateProcedure,
   isCreatingProcedure,
   onDeleteProcedure,
@@ -49,11 +51,18 @@ export function BasicInfoSection({
         return { label: proc, value: proc };
       }
       return {
+        ...proc,
         label: proc.label || proc.name || "",
         value: proc.value || proc.name || "",
       };
     });
   }, [procedures]);
+
+  const isFreeProcedure = React.useMemo(() => {
+    const selectedProc = procedures.find((p) => p.value === formData.procedure);
+    return !!(selectedProc?.isFree || selectedProc?.is_free);
+  }, [procedures, formData.procedure]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="space-y-2">
@@ -166,6 +175,7 @@ export function BasicInfoSection({
           isCreating={isCreatingProcedure}
           onDeleteOption={onDeleteProcedure}
           onEditOption={onEditProcedure}
+          onSearchChange={onProcedureSearch}
           disabled={isEdit}
           capitalizeWords
         />
@@ -188,6 +198,17 @@ export function BasicInfoSection({
           disabled={isEdit}
         />
       </div>
+
+      {isFreeProcedure && (
+        <div className="md:col-span-3 p-3.5 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
+              Note: This procedure is free due to membership benefits.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label className="text-xs font-black text-foreground uppercase tracking-widest">
@@ -212,9 +233,10 @@ export function BasicInfoSection({
         <Input
           type="number"
           name="cost"
-          value={formData.cost === 0 ? "" : formData.cost}
+          value={isFreeProcedure ? "0" : (formData.cost === 0 ? "" : formData.cost)}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
+          disabled={isFreeProcedure}
+          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
           placeholder="0"
         />
       </div>
@@ -230,9 +252,10 @@ export function BasicInfoSection({
           name="discount_value"
           min={0}
           max={100}
-          value={formData.discount_value === undefined ? "" : formData.discount_value}
+          value={isFreeProcedure ? "0" : (formData.discount_value === 0 || formData.discount_value === undefined ? "" : formData.discount_value)}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11"
+          disabled={isFreeProcedure}
+          className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
           placeholder="e.g. 10"
         />
       </div>
@@ -293,9 +316,10 @@ export function BasicInfoSection({
             label: doc.name,
             value: doc.id,
             phone: doc.phone,
-            avatar: doc.avatar,
+            country_code: doc.country_code,
+            avatar: doc.avatar || doc.image || "",
             specialization: doc.specialization,
-            searchLabel: `${doc.name} ${doc.phone || ""}`
+            searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
           }))}
           onSearchChange={onDoctorSearch}
           renderOption={(doc: any) => (
@@ -314,7 +338,7 @@ export function BasicInfoSection({
               <div className="flex flex-col min-w-0">
                 <span className="font-bold text-foreground text-xs">{doc.label}</span>
                 <span className="text-[10px] text-muted-foreground">
-                  {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone || "No phone"}
+                  {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone ? (doc.country_code ? `${doc.country_code} ${doc.phone}` : doc.phone) : "No phone"}
                 </span>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { CheckCircle, History, ArrowLeft } from "lucide-react";
 import {
   downloadConsultationPDF,
@@ -7,7 +7,7 @@ import {
 import { Modal, Button, Input, Label, SearchableSelect } from "@/components/ui";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
-import { formatPhoneWithCountryCode } from "../../utils/phoneUtils";
+import { formatPhoneWithCountryCode, isoFromDialingCode, getPhoneMaxLength, getPhonePlaceholder, sanitizePhoneInput } from "../../utils/phoneUtils";
 
 import { ClinicalImages } from "./PatientConsultation/ClinicalImages";
 import { ObservationsAndToothChart } from "./PatientConsultation/ObservationsAndToothChart";
@@ -159,6 +159,10 @@ export function PatientConsultation({
   );
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const directCountryIso = useMemo(() => isoFromDialingCode(directCountryCode), [directCountryCode]);
+  const directPhoneMaxLength = useMemo(() => getPhoneMaxLength(directCountryIso), [directCountryIso]);
+  const directPhonePlaceholder = useMemo(() => getPhonePlaceholder(directCountryIso), [directCountryIso]);
 
   const activeSearchTerm = (directPatientName || directPatientPhone || "").trim();
   const debouncedSearch = useDebounce(activeSearchTerm, 400);
@@ -967,18 +971,25 @@ export function PatientConsultation({
                   <div className="flex items-center gap-2 sm:gap-2.5">
                     <CountryCodeSelect
                       value={directCountryCode}
-                      onChange={(val) => setDirectCountryCode(val)}
+                      onChange={(val) => {
+                        setDirectCountryCode(val);
+                        // Reset phone when country changes
+                        setDirectPatientPhone("");
+                        if (errors.directPatientPhone) {
+                          setErrors((prev) => { const n = { ...prev }; delete n.directPatientPhone; return n; });
+                        }
+                      }}
                       className="bg-background text-sm font-bold border-border/80 h-10"
                     />
                     <Input
                       type="text"
                       name="directPatientPhone"
-                      maxLength={10}
-                      placeholder="Enter Phone Number"
+                      maxLength={directPhoneMaxLength}
+                      placeholder={directPhonePlaceholder}
                       value={directPatientPhone}
                       onFocus={() => setFocusedField("phone")}
                       onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        const val = sanitizePhoneInput(e.target.value).slice(0, directPhoneMaxLength);
                         setDirectPatientPhone(val);
                         setDirectPatientId(undefined);
                         setSelectedExistingDirectPatientId(undefined);

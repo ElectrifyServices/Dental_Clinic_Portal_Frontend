@@ -16,6 +16,8 @@ import {
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 import { useDebounce } from "@/hooks/useDebounce";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { getPhonePlaceholder } from "@/utils/phoneUtils";
 import {
   AlertTriangle,
   Calendar,
@@ -70,7 +72,22 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const activeSearchTerm = ((formData.name || "") + (formData.phone || "")).trim();
+  const { phoneError, handlePhoneChange: phoneValidationChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
+    dialingCode: formData.country_code || "+91",
+    onPhoneChange: (sanitized) => {
+      handleChange({ target: { name: "phone", value: sanitized } } as any);
+      setFormData((prev: any) => ({ ...prev, id: undefined }));
+      setFocusedField("phone");
+    },
+  });
+
+  const phonePlaceholder = getPhonePlaceholder(countryIso);
+
+  const activeSearchTerm = React.useMemo(() => {
+    if (focusedField === "name") return (formData.name || "").trim();
+    if (focusedField === "phone") return (formData.phone || "").trim();
+    return (formData.name || formData.phone || "").trim();
+  }, [focusedField, formData.name, formData.phone]);
   const debouncedSearch = useDebounce(activeSearchTerm, 400);
 
   const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
@@ -121,6 +138,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
       id: p.id,
       name: p.name || "",
       phone: p.phone || "",
+      country_code: p.country_code || p.countryCode || "+91",
       email: p.email || "",
       gender: p.gender || "",
       dateOfBirth: p.dateOfBirth || p.date_of_birth || "",
@@ -495,35 +513,35 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <div className="flex items-center gap-2 sm:gap-2.5">
             <CountryCodeSelect
               value={formData.country_code || "+91"}
-              onChange={(val) => setFormData((prev: any) => ({ ...prev, country_code: val }))}
+              onChange={(val) => {
+                setFormData((prev: any) => ({ ...prev, country_code: val }));
+                clearPhoneError();
+              }}
               className="h-10 sm:h-11 rounded-xl"
             />
             <Input
               type="tel"
               name="phone"
-              maxLength={10}
               value={formData.phone || ""}
               onFocus={() => setFocusedField("phone")}
+              maxLength={maxLength}
               onChange={(e) => {
-                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                setFormData((prev: any) => ({ ...prev, id: undefined }));
-                setFocusedField("phone");
-                handleChange(e);
+                phoneValidationChange(e);
               }}
               autoComplete="off"
               className={`flex-1 h-10 sm:h-11 rounded-xl ${
-                validationErrors.phone
+                validationErrors.phone || phoneError
                   ? "border-destructive bg-destructive/5"
                   : ""
               }`}
-              placeholder="e.g. 98765 43210"
+              placeholder={phonePlaceholder}
             />
           </div>
           {focusedField === "phone" && renderPatientDropdown()}
-          {validationErrors.phone && (
+          {(validationErrors.phone || phoneError) && (
             <p className="text-destructive text-xs mt-1 flex items-center">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              {validationErrors.phone}
+              {validationErrors.phone || phoneError}
             </p>
           )}
         </div>
