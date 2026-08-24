@@ -7,6 +7,9 @@ export const BillingPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [paymentMethod, setPaymentMethod] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -30,6 +33,9 @@ export const BillingPage: React.FC = () => {
   } = useInvoiceData({
     search: search,
     status: status,
+    paymentMethod: paymentMethod,
+    startDate: startDate,
+    endDate: endDate,
   });
   const { setActiveModal, setSelectedItemId, confirmDelete } = useModal();
 
@@ -55,6 +61,12 @@ export const BillingPage: React.FC = () => {
         setSearch={setSearchInput}
         status={status}
         setStatus={setStatus}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
         page={page}
         onPageChange={setPage}
         limit={limit}

@@ -41,8 +41,7 @@ export function useNotificationsQuery(params: NotificationListParams = {}, optio
 export function useTotalSuccessNotificationsQuery(phone?: string, options?: any) {
   const params: Record<string, any> = {};
   if (phone) {
-    const cleaned = phone.replace(/\D/g, "");
-    params.phone_no = cleaned.length === 10 ? "91" + cleaned : cleaned;
+    params.phone_no = phone;
   }
   return useApiQuery<any>({
     queryKey: ["notifications", "total-success", params.phone_no],
@@ -61,8 +60,7 @@ export function useTotalSuccessNotificationsQuery(phone?: string, options?: any)
 export function useTotalFailedNotificationsQuery(phone?: string, options?: any) {
   const params: Record<string, any> = {};
   if (phone) {
-    const cleaned = phone.replace(/\D/g, "");
-    params.phone_no = cleaned.length === 10 ? "91" + cleaned : cleaned;
+    params.phone_no = phone;
   }
   return useApiQuery<any>({
     queryKey: ["notifications", "total-fail", params.phone_no],

@@ -1537,6 +1537,7 @@ function ModalRegistryContent() {
                       pendingCheckInAppt?.patientPhone ||
                       pendingCheckInAppt?.phone ||
                       "",
+                    country_code: pendingCheckInAppt?.country_code || "+91",
                   });
                   setActiveModal("patientForm");
                 }}

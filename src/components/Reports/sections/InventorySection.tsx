@@ -41,7 +41,7 @@ export function InventorySection({ period, startDate, endDate }: { period: strin
   const expiringSoonVal = typeof expiringSoonData === 'number' ? expiringSoonData : (expiringSoonData?.expiringSoon ?? expiringSoonData?.total ?? expiringSoonData?.count ?? 0);
 
   const monthlySpendData = getNestedData(monthlySpendRes);
-  const monthlySpendVal = typeof monthlySpendData === 'number' ? monthlySpendData : (monthlySpendData?.monthlySpend ?? monthlySpendData?.amount ?? monthlySpendData?.total ?? 0);
+  const monthlySpendVal = typeof monthlySpendData === 'number' ? monthlySpendData : (monthlySpendData?.restockSpend ?? monthlySpendData?.monthlySpend ?? monthlySpendData?.amount ?? monthlySpendData?.total ?? 0);
   const monthlySpendPct = monthlySpendData?.growthPercentage;
   const monthlySpendTrend = monthlySpendPct !== undefined ? { value: `${Math.abs(monthlySpendPct)}%`, isUp: monthlySpendPct >= 0 } : undefined;
 

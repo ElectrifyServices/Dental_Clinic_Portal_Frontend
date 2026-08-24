@@ -496,7 +496,7 @@ export function InvoiceForm({
       if (field === "quantity" || field === "rate" || field === "item_discount") {
         const sub = (updated.quantity || 1) * (updated.rate || 0);
         const discPct = Number((updated as any).item_discount) || 0;
-        updated.amount = Math.max(0, sub - (sub * discPct) / 100);
+        updated.amount = Math.round(Math.max(0, sub - (sub * discPct) / 100));
       }
       return updated;
     });
@@ -543,10 +543,10 @@ export function InvoiceForm({
     (sum, item) => sum + ((item.quantity || 1) * (item.rate || 0) * (Number((item as any).item_discount) || 0)) / 100,
     0
   );
-  const subtotal = Math.max(0, itemSubtotal - totalItemDiscount);
+  const subtotal = Math.round(Math.max(0, itemSubtotal - totalItemDiscount));
   const manualDiscount = formData.isComplimentary
     ? subtotal
-    : (subtotal * formData.discount) / 100;
+    : Math.round((subtotal * formData.discount) / 100);
   const planDiscountResult = useMemo(() => {
     if (!activeCorporatePlan || formData.isComplimentary)
       return { totalDiscount: 0, applied: [] };
@@ -568,11 +568,11 @@ export function InvoiceForm({
     formData.isComplimentary,
   ]);
 
-  const discountAmount = manualDiscount + planDiscountResult.totalDiscount;
+  const discountAmount = Math.round(manualDiscount + planDiscountResult.totalDiscount);
   const taxAmount = 0;
   const total = formData.isComplimentary
     ? 0
-    : Math.max(0, subtotal - discountAmount);
+    : Math.round(Math.max(0, subtotal - discountAmount));
 
   const handleSubmit = (data: InvoiceFormData) => {
     onSave({

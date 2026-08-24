@@ -70,7 +70,15 @@ export function normalizeInvoice(payload: any, expectedId?: string) {
     patientName: inv.patient_name || inv.patientName || (inv.patient?.name) || (inv.member?.name) || inv.member_name || inv.memberName || '',
     patientId: inv.patient_id || inv.patientId || (inv.patient?.id) || (inv.member?.id) || inv.member_id || inv.memberId || '',
     isMemberInvoice,
-    phone: inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '',
+    phone: (() => {
+      let p = inv.phone || inv.patient_phone || (inv.patient?.phone) || (inv.member?.phone) || inv.member_phone || '';
+      const cc = inv.country_code || inv.patient_country_code || (inv.patient?.country_code) || (inv.member?.country_code) || inv.member_country_code || '';
+      if (p && cc && !p.startsWith('+')) {
+        const prefix = cc.startsWith('+') ? cc : `+${cc}`;
+        return `${prefix} ${p}`;
+      }
+      return p;
+    })(),
     doctor: inv.doctor_name || inv.doctor || (inv.doctor?.name) || '',
     date: inv.invoice_date ? inv.invoice_date.split('T')[0] : (inv.date ? inv.date.split('T')[0] : (inv.created_at ? inv.created_at.split('T')[0] : '')),
     dueDate: inv.due_date ? inv.due_date.split('T')[0] : (inv.dueDate ? inv.dueDate.split('T')[0] : ''),

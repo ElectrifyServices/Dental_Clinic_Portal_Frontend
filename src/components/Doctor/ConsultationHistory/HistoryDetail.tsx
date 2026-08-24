@@ -404,36 +404,39 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 </Button>
                 {showPrintMenu && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
-                     {reportAvailability.clinical && <Button
+                    <Button
                        onClick={(e) => {
+                         if (!reportAvailability.clinical) return;
                          e.stopPropagation();
                          onDownloadPDF(fullRecord, "CLINICAL");
                          setShowPrintMenu(false);
                        }}
-                       className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.clinical ? "text-muted-foreground hover:bg-primary/5 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                      >
                        <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
-                     </Button>}
-                    {reportAvailability.treatment && <Button
+                     </Button>
+                    <Button
                       onClick={(e) => {
+                        if (!reportAvailability.treatment) return;
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "TREATMENT");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.treatment ? "text-muted-foreground hover:bg-purple-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
-                    </Button>}
-                    {reportAvailability.prescription && <Button
+                    </Button>
+                    <Button
                       onClick={(e) => {
+                        if (!reportAvailability.prescription) return;
                         e.stopPropagation();
                         onDownloadPDF(fullRecord, "PRESCRIPTION");
                         setShowPrintMenu(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
-                    </Button>}
+                    </Button>
                     <div className="h-px bg-muted my-1.5" />
                      <Button
                       onClick={(e) => {
@@ -465,36 +468,39 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 </Button>
                 {showSendMenu && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-border/80 rounded-2xl shadow-xl z-30 py-2 animate-in fade-in zoom-in-95 duration-200 text-left">
-                    {reportAvailability.clinical && <Button
+                    <Button
                       onClick={(e) => {
+                        if (!reportAvailability.clinical) return;
                         e.stopPropagation();
                         onSendPDF(fullRecord, "CLINICAL");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-primary/5 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.clinical ? "text-muted-foreground hover:bg-primary/5 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Activity className="w-4.5 h-4.5 text-primary shrink-0" /> Clinical Observations
-                    </Button>}
-                    {reportAvailability.treatment && <Button
+                    </Button>
+                    <Button
                       onClick={(e) => {
+                        if (!reportAvailability.treatment) return;
                         e.stopPropagation();
                         onSendPDF(fullRecord, "TREATMENT");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-purple-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.treatment ? "text-muted-foreground hover:bg-purple-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Stethoscope className="w-4.5 h-4.5 text-purple-600 shrink-0" /> Treatment Planning
-                    </Button>}
-                    {reportAvailability.prescription && <Button
+                    </Button>
+                    <Button
                       onClick={(e) => {
+                        if (!reportAvailability.prescription) return;
                         e.stopPropagation();
                         onSendPDF(fullRecord, "PRESCRIPTION");
                         setShowSendMenu(false);
                       }}
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-muted-foreground hover:bg-emerald-50 flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none"
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
-                    </Button>}
+                    </Button>
                     <div className="h-px bg-muted my-1.5" />
                     <Button
                       onClick={(e) => {

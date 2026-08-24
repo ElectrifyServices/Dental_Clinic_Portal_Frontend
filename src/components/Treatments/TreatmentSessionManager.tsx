@@ -6,7 +6,7 @@ import {
   Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
   Percent, AlertCircle, CreditCard
 } from "lucide-react";
-import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard } from "@/components/ui";
+import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
@@ -398,6 +398,7 @@ export function TreatmentSessionManager({
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
+  const [sessionToCancel, setSessionToCancel] = useState<TreatmentSessionResponse | null>(null);
   const [schedulingSessionId, setSchedulingSessionId] = useState<string | null>(null);
   const [scheduleDraft, setScheduleDraft] = useState<SessionScheduleDraft>({
     date: "",
@@ -743,6 +744,10 @@ export function TreatmentSessionManager({
     }
     if (newStatus === "SCHEDULED") {
       startSchedulingSession(session);
+      return;
+    }
+    if (newStatus === "CANCELLED") {
+      setSessionToCancel(session);
       return;
     }
     try {
@@ -2009,6 +2014,32 @@ export function TreatmentSessionManager({
             treatmentId={treatmentId}
             patientName={patientName}
             onClose={() => setShowConsultationFeedback(false)}
+          />
+        )}
+
+        {/* Cancel Confirmation Modal */}
+        {sessionToCancel && (
+          <ConfirmModal
+            title="Cancel Session"
+            message={`Are you sure you want to cancel Session ${sessionToCancel.visit_number}?`}
+            confirmLabel="Cancel Session"
+            variant="danger"
+            isLoading={updateSession.isPending}
+            onConfirm={async () => {
+              try {
+                await updateSession.mutateAsync({ planId: treatmentId, sessionId: sessionToCancel.id, status: "CANCELLED" });
+                if (schedulingSessionId === sessionToCancel.id) {
+                  cancelSchedulingSession();
+                }
+                showToast(`Session updated to Cancelled`);
+                refetch();
+              } catch (err: any) {
+                showToast(extractApiError(err, "Failed to update"), "error");
+              } finally {
+                setSessionToCancel(null);
+              }
+            }}
+            onCancel={() => setSessionToCancel(null)}
           />
         )}
 

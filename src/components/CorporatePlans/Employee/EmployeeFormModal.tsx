@@ -45,7 +45,7 @@ import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
-import { getPhonePlaceholder } from "@/utils/phoneUtils";
+import { getPhonePlaceholder, isoFromDialingCode, getPhoneMaxLength } from "@/utils/phoneUtils";
 import confetti from "canvas-confetti";
 
 interface EmployeeFormModalProps {
@@ -1200,9 +1200,10 @@ export function EmployeeFormModal({
                             />
                             <Input
                               value={dep.phone}
-                              maxLength={10}
+                              maxLength={getPhoneMaxLength(isoFromDialingCode(dep.countryCode || "+91"))}
                               onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                const phoneMaxLen = getPhoneMaxLength(isoFromDialingCode(dep.countryCode || "+91"));
+                                const val = e.target.value.replace(/\D/g, "").slice(0, phoneMaxLen);
                                 setPendingDependents((prev) =>
                                   prev.map((d, i) =>
                                     i === index ? { ...d, phone: val } : d,
@@ -1276,9 +1277,10 @@ export function EmployeeFormModal({
                         />
                         <Input
                           value={addDepForm.phone}
-                          maxLength={10}
+                          maxLength={getPhoneMaxLength(isoFromDialingCode(addDepForm.countryCode || "+91"))}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const phoneMaxLen = getPhoneMaxLength(isoFromDialingCode(addDepForm.countryCode || "+91"));
+                            const val = e.target.value.replace(/\D/g, "").slice(0, phoneMaxLen);
                             setAddDepForm((p) => ({ ...p, phone: val }));
                           }}
                           placeholder="Optional"

@@ -72,6 +72,8 @@ export function EmployeeManagement({
   const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
   const [whatsappHistoryEmp, setWhatsappHistoryEmp] = useState<CorporateEmployee | null>(null);
   const [benefitUsageEmp, setBenefitUsageEmp] = useState<CorporateEmployee | null>(null);
+  const [statusToggleEmp, setStatusToggleEmp] = useState<CorporateEmployee | null>(null);
+  const [statusToggleDep, setStatusToggleDep] = useState<any | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -299,10 +301,7 @@ export function EmployeeManagement({
               onClick={async (ev) => {
                 ev.stopPropagation();
                 if (isDepExpired) return;
-                try {
-                  await updateStatusMutation.mutateAsync({ id: dep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
-                  refetch();
-                } catch {}
+                setStatusToggleDep(dep);
               }}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
                 isDepExpired
@@ -460,10 +459,7 @@ export function EmployeeManagement({
             onClick={async (ev) => {
               ev.stopPropagation();
               if (isExpired) return;
-              try {
-                await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
-                refetch();
-              } catch {}
+              setStatusToggleEmp(e);
             }}
             className={`inline-flex items-center justify-center min-w-[90px] gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
               isExpired
@@ -680,10 +676,7 @@ export function EmployeeManagement({
                            }}
                            onToggleStatus={async () => {
                              if (e.status === 'EXPIRED') return;
-                             try {
-                               await updateStatusMutation.mutateAsync({ id: e.id, status: e.isActive ? 'INACTIVE' : 'ACTIVE' });
-                               refetch();
-                             } catch {}
+                             setStatusToggleEmp(e);
                            }}
                            isStatusPending={updateStatusMutation.isPending}
                            onEditDependent={(dep) => {
@@ -763,6 +756,39 @@ export function EmployeeManagement({
         />
       )}
 
+      {statusToggleEmp && (
+        <ConfirmModal
+          title="Update Status"
+          message={`Are you sure you want to ${statusToggleEmp.isActive ? 'deactivate' : 'activate'} ${statusToggleEmp.name}?`}
+          confirmLabel={statusToggleEmp.isActive ? 'Deactivate' : 'Activate'}
+          onConfirm={async () => {
+            try {
+              await updateStatusMutation.mutateAsync({ id: statusToggleEmp.id, status: statusToggleEmp.isActive ? 'INACTIVE' : 'ACTIVE' });
+              refetch();
+              setStatusToggleEmp(null);
+            } catch {}
+          }}
+          onCancel={() => setStatusToggleEmp(null)}
+        />
+      )}
+
+      {statusToggleDep && (
+        <ConfirmModal
+          title="Update Status"
+          message={`Are you sure you want to ${statusToggleDep.status === 'ACTIVE' || (statusToggleDep.status === undefined && statusToggleDep.isActive !== false) ? 'deactivate' : 'activate'} ${statusToggleDep.name}?`}
+          confirmLabel={statusToggleDep.status === 'ACTIVE' || (statusToggleDep.status === undefined && statusToggleDep.isActive !== false) ? 'Deactivate' : 'Activate'}
+          onConfirm={async () => {
+            try {
+              const isDepActive = statusToggleDep.status === 'ACTIVE' || (statusToggleDep.status === undefined && statusToggleDep.isActive !== false);
+              await updateStatusMutation.mutateAsync({ id: statusToggleDep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
+              refetch();
+              setStatusToggleDep(null);
+            } catch {}
+          }}
+          onCancel={() => setStatusToggleDep(null)}
+        />
+      )}
+
       {selectedEmp && (
         <Modal
           title={`Family Members - ${selectedEmp.name}`}
@@ -796,10 +822,7 @@ export function EmployeeManagement({
                           onClick={async (ev) => {
                             ev.stopPropagation();
                             if (isDepExpired) return;
-                            try {
-                              await updateStatusMutation.mutateAsync({ id: dep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
-                              refetch();
-                            } catch {}
+                            setStatusToggleDep(dep);
                           }}
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold border h-auto uppercase tracking-wide transition-all ${
                             isDepExpired

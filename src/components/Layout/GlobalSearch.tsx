@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, Users, Calendar, FileText, BarChart3, Package, CreditCard, UserCheck, Activity, Building2, DollarSign, Home } from "lucide-react";
+import { Search, X, Users, Calendar, FileText, BarChart3, Package, CreditCard, UserCheck, Activity, Building2, IndianRupee, Home } from "lucide-react";
 import { Input, Card } from "../ui";
 
 interface SearchResult {
@@ -25,7 +25,7 @@ const PAGES: Array<{ id: string; label: string; icon: React.ComponentType<{ clas
   { id: "reports",         label: "Analytics",          icon: BarChart3,  color: "text-purple-500" },
   { id: "staff",           label: "Staff",              icon: UserCheck,  color: "text-indigo-500" },
   { id: "membership",      label: "Memberships",        icon: Building2,  color: "text-teal-500" },
-  { id: "profit-sharing",  label: "Profit Sharing",     icon: DollarSign, color: "text-yellow-500" },
+  { id: "profit-sharing",  label: "Profit Sharing",     icon: IndianRupee, color: "text-yellow-500" },
 ];
 
 export function GlobalSearch() {
