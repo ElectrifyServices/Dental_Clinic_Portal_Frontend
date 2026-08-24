@@ -1,9 +1,10 @@
 import { Label } from "@/components/ui/Label";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { User, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { Loading } from "@/components/ui/Loading";
+import { isoFromDialingCode, getPhoneMaxLength, getPhonePlaceholder, sanitizePhoneInput } from "@/utils/phoneUtils";
 
 interface PatientInfoFieldsProps {
   patientName: string;
@@ -40,6 +41,10 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
 }) => {
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const countryIso = useMemo(() => isoFromDialingCode(countryCode), [countryCode]);
+  const phoneMaxLength = useMemo(() => getPhoneMaxLength(countryIso), [countryIso]);
+  const phonePlaceholder = useMemo(() => getPhonePlaceholder(countryIso), [countryIso]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -194,16 +199,18 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
           <div className="flex items-center gap-2 sm:gap-2.5">
             <CountryCodeSelect
               value={countryCode}
-              onChange={(val) => onCountryCodeChange?.(val)}
+              onChange={(val) => {
+                onCountryCodeChange?.(val);
+              }}
               disabled={isFollowUp || isConsulted}
               className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
             />
             <Input
               name="patientPhone"
-              maxLength={10}
+              maxLength={phoneMaxLength}
               value={patientPhone}
               onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                const val = sanitizePhoneInput(e.target.value).slice(0, phoneMaxLength);
                 onPhoneChange(val);
                 setFocusedField("phone");
               }}
@@ -211,7 +218,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
               required
               autoComplete="off"
               disabled={isFollowUp || isConsulted}
-              placeholder="98765 43210"
+              placeholder={phonePlaceholder}
               className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card flex-1"
             />
           </div>

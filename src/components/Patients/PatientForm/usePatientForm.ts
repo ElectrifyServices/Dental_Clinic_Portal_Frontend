@@ -242,6 +242,10 @@ export const usePatientForm = (patient: any) => {
     if (emp.date_of_birth) form.setValue("dateOfBirth", emp.date_of_birth.split("T")[0]);
     if (emp.designation) form.setValue("occupation", emp.designation);
     if (emp.email) form.setValue("email", emp.email);
+    if (emp.phone) form.setValue("phone", emp.phone);
+    if (emp.country_code || emp.countryCode) {
+      form.setValue("country_code", emp.country_code || emp.countryCode);
+    }
     
     const plan = emp.corporate_plan || emp.membership || {};
     
@@ -286,8 +290,6 @@ export const usePatientForm = (patient: any) => {
       const phoneVal = form.getValues("phone")?.trim();
       if (!phoneVal) {
         errors.phone = "Phone number is required";
-      } else if (phoneVal.length < 10) {
-        errors.phone = "Phone number must be exactly 10 digits";
       }
       const email = form.getValues("email");
       if (email && !/\S+@\S+\.\S+/.test(email))

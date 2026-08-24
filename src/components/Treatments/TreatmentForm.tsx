@@ -127,6 +127,7 @@ export function TreatmentForm({
         id: s.id,
         name: s.name,
         phone: s.phone,
+        country_code: s.country_code || '',
         role: normalizedRole,
         specialization: s.personal_profile?.specialization?.name || s.specialization || '',
         avatar: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || getFileUrl(s.personal_profile?.profile_picture_url) || getFileUrl(s.personal_profile?.profile_picture) || '',
@@ -143,7 +144,6 @@ export function TreatmentForm({
     return filtered;
   }, [apiStaffData, doctors, debouncedDoctorSearch]);
 
-  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({ all: true });
   const { confirmDelete } = useModal();
   const createProcedureMutation = useCreateProcedureMutation();
   const updateProcedureMutation = useUpdateProcedureMutation();
@@ -200,20 +200,6 @@ export function TreatmentForm({
     );
   };
 
-  const apiProcedures = React.useMemo(() => {
-    if (isProceduresLoading) {
-      return [{ label: "Loading procedures...", value: "", disabled: true }];
-    }
-    if (isProceduresError) {
-      return [{ label: "Error loading procedures", value: "", disabled: true }];
-    }
-
-    const rawList = getRawProceduresList(rawProceduresData);
-    return rawList.map((proc: any) => ({
-      label: proc.name,
-      value: proc.name,
-    }));
-  }, [rawProceduresData, isProceduresLoading, isProceduresError]);
   const {
     form,
     formData,
@@ -230,6 +216,35 @@ export function TreatmentForm({
     removePrescription,
     handleSubmit,
   } = useTreatmentForm(treatment, allPatients, allTreatments);
+
+  const [procedureSearch, setProcedureSearch] = React.useState("");
+  const debouncedProcedureSearch = useDebounce(procedureSearch, 300);
+
+  const effectivePatientId = formData.patientId && !formData.patientId.startsWith("WALK-") ? formData.patientId : undefined;
+
+  const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError } = useProcedureQuery({
+    all: true,
+    patient_id: effectivePatientId,
+    search: debouncedProcedureSearch || undefined
+  });
+
+  const apiProcedures = React.useMemo(() => {
+    if (isProceduresLoading) {
+      return [{ label: "Loading procedures...", value: "", disabled: true }];
+    }
+    if (isProceduresError) {
+      return [{ label: "Error loading procedures", value: "", disabled: true }];
+    }
+
+    const rawList = getRawProceduresList(rawProceduresData);
+    return rawList.map((proc: any) => ({
+      label: proc.name,
+      value: proc.name,
+      is_free: proc.is_free,
+      isFree: proc.is_free || proc.isFree,
+      from_plan_benefit: proc.from_plan_benefit || proc.fromPlanBenefit,
+    }));
+  }, [rawProceduresData, isProceduresLoading, isProceduresError]);
 
   // Complete Session Modal states
   const completeSessionMutation = useCompleteTreatmentSessionMutation();
@@ -398,17 +413,21 @@ export function TreatmentForm({
     });
 
     if (name === "patientName") {
-      const patient = allPatients.find(
-        (p) => (typeof p === "string" ? p : p.name) === value
+      const patient = apiPatients.find(
+        (p: any) => (p.name || p.full_name || p) === value
       );
-      form.setValue(
-        "patientId",
-        typeof patient === "object" ? patient.id : form.getValues("patientId") || ""
-      );
+      if (patient && typeof patient === "object") {
+        form.setValue("patientId", patient.id);
+      }
     }
 
     if (name === "procedure") {
       handleProcedureChange(value);
+      const selectedProc = apiProcedures.find((p) => p.value === value);
+      if (selectedProc?.isFree || selectedProc?.is_free) {
+        form.setValue("cost", 0);
+        form.setValue("discount_value", 0);
+      }
     }
   };
 
@@ -493,6 +512,7 @@ export function TreatmentForm({
             isEdit={!!treatment}
             onPatientSearch={setPatientSearch}
             onDoctorSearch={setDoctorSearch}
+            onProcedureSearch={setProcedureSearch}
             onCreateProcedure={handleCreateProcedure}
             isCreatingProcedure={createProcedureMutation.isPending}
             onDeleteProcedure={handleDeleteProcedure}

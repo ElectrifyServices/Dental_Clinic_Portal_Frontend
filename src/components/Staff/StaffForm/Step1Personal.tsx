@@ -1,10 +1,11 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React, { useState } from 'react';
-import { User, Mail, Phone, Upload, Eye, EyeOff, Check } from 'lucide-react';
+import { User, Mail, Phone, Upload, Eye, EyeOff, Check, AlertTriangle } from 'lucide-react';
 import { LabeledField } from '@/components/ui';
-
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+import { usePhoneValidation } from "@/hooks/usePhoneValidation";
+import { getPhonePlaceholder } from "@/utils/phoneUtils";
 
 interface Step1Props {
   formData: any;
@@ -19,6 +20,15 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
   const getInitials = (name: string) => name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { phoneError, handlePhoneChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
+    dialingCode: formData.country_code || "+91",
+    onPhoneChange: (sanitized) => {
+      onChange({ target: { name: "phone", value: sanitized } });
+    },
+  });
+
+  const phonePlaceholder = getPhonePlaceholder(countryIso);
 
   const password = formData.password || "";
   const criteria = {
@@ -124,29 +134,31 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         </LabeledField>
 
         <div className="md:col-span-2 text-left">
-          <LabeledField label="Phone Number" required error={errors.phone?.message}>
+          <LabeledField label="Phone Number" required error={errors.phone?.message || phoneError}>
             <div className="flex items-center gap-2 sm:gap-2.5">
               <CountryCodeSelect
                 value={formData.country_code || "+91"}
                 onChange={(val) => {
                   onChange({ target: { name: "country_code", value: val } });
+                  clearPhoneError();
                 }}
                 className="h-11 rounded-xl"
               />
               <div className="relative flex-1">
                 <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input type="tel" name="phone" value={formData.phone}
-                  maxLength={10}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    e.target.value = val;
-                    onChange(e);
-                  }}
+                  onChange={handlePhoneChange}
+                  maxLength={maxLength}
                   required
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.phone ? 'border-destructive ring-destructive/20' : ''}`}
-                  placeholder="9876543210" />
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${(errors.phone || phoneError) ? 'border-destructive ring-destructive/20' : ''}`}
+                  placeholder={phonePlaceholder} />
               </div>
             </div>
+            {phoneError && (
+              <p className="text-destructive text-xs mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />{phoneError}
+              </p>
+            )}
           </LabeledField>
         </div>
       </div>

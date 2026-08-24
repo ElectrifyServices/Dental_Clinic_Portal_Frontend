@@ -26,6 +26,7 @@ import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModa
 import { MemberCard } from './Employee/MemberCard';
 import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
 import { BenefitUsageModal } from './Employee/BenefitUsageModal';
+import { formatPhoneWithCountryCode } from '../../utils/phoneUtils';
 
 interface EmployeeManagementProps {
   employees: CorporateEmployee[];
@@ -41,7 +42,7 @@ export function EmployeeManagement({
   employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
 }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
-  const { showToast, confirmDelete, showConfirm } = useModal();
+  const { showToast, confirmDelete, showConfirm, setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
 
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
@@ -127,6 +128,7 @@ export function EmployeeManagement({
         employeeId: e.id || '', // No emp_id provided in new json
         name: e.name,
         phone: e.phone,
+        country_code: e.country_code || e.countryCode || '',
         email: e.email,
         gender: e.gender?.toLowerCase() || 'male',
         dateOfBirth: e.date_of_birth,
@@ -280,7 +282,7 @@ export function EmployeeManagement({
         header: 'Contact',
         render: (dep: any) => dep.phone ? (
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Phone className="w-3 h-3 opacity-60" /> {dep.phone}
+            <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode)}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground/40 italic">—</span>
@@ -403,7 +405,7 @@ export function EmployeeManagement({
           <div>
             <div className="font-bold text-foreground text-sm">{e.name}</div>
             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <Phone className="w-3 h-3 opacity-60" /> {e.phone}
+              <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(e.phone, (e as any).country_code || (e as any).countryCode)}
             </div>
           </div>
         </div>
@@ -500,8 +502,20 @@ export function EmployeeManagement({
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); handleResendInvoice(e); }}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setWhatsappHistoryEmp(e); }}>
+              {/* 
+                WhatsApp History (local modal) is commented out in favor of the global 
+                WhatsApp logs/notification history which supports advanced filtering and templates.
+              */}
+              {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setWhatsappHistoryEmp(e); }}>
                 <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
+              </DropdownMenuItem> */}
+              <DropdownMenuItem onSelect={ev => {
+                ev.stopPropagation();
+                setWhatsappPhone(e.phone);
+                setWhatsappPatientName(e.name);
+                setActiveModal("whatsappHistory");
+              }}>
+                <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp Logs
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setBenefitUsageEmp(e); }}>
                 <Activity className="w-4 h-4 mr-2 text-blue-600" /> Uses benefits
@@ -659,7 +673,11 @@ export function EmployeeManagement({
                            onChangePlan={() => setChangePlanEmp(e)}
                            onDelete={() => setDeleteEmp(e)}
                            onResendInvoice={() => handleResendInvoice(e)}
-                           onWhatsAppHistory={() => setWhatsappHistoryEmp(e)}
+                           onWhatsAppHistory={() => {
+                             setWhatsappPhone(e.phone);
+                             setWhatsappPatientName(e.name);
+                             setActiveModal("whatsappHistory");
+                           }}
                            onToggleStatus={async () => {
                              if (e.status === 'EXPIRED') return;
                              try {
@@ -803,7 +821,7 @@ export function EmployeeManagement({
                     <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2.5">
                       <span className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 opacity-60" />
-                        <span>{dep.phone || '—'}</span>
+                        <span>{dep.phone ? formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode) : '—'}</span>
                       </span>
 
                       <div className="flex items-center gap-1.5">

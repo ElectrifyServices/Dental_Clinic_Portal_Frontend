@@ -293,6 +293,8 @@ export interface CorporateEmployee {
   employeeId: string;          // company-issued ID
   name: string;
   phone: string;
+  country_code?: string;
+  countryCode?: string;
   email: string;
   gender: 'male' | 'female' | 'other';
   dateOfBirth?: string;

@@ -312,7 +312,7 @@ export function SearchableSelect({
                         )}
                         {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
                       </button>
-                      {onEditOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit)) && (
+                      {onEditOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit || opt.isFree || opt.is_free)) && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -327,7 +327,7 @@ export function SearchableSelect({
                           <Edit className="h-3.5 w-3.5" />
                         </button>
                       )}
-                      {onDeleteOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit)) && (
+                      {onDeleteOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit || opt.isFree || opt.is_free)) && (
                         <button
                           type="button"
                           onClick={(e) => {

@@ -7,6 +7,8 @@ export function useAppointmentQuery(id?: string) {
     method: "get",
     options: {
       enabled: !!id,
+      staleTime: 0,
+      refetchOnMount: "always",
     }
   });
 }

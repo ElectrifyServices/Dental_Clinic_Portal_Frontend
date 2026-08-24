@@ -21,6 +21,7 @@ import { usePatientQuery } from "../../hooks/patients/usePatientQuery";
 import { useDebounce } from "../../hooks/useDebounce";
 import { getLocalDateString } from "../../utils/dateUtils";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
+import { COUNTRY_CODES_LIST } from "@/components/ui/CountryCodeSelect";
 
 interface AppointmentFormProps {
   onClose: () => void;
@@ -34,6 +35,28 @@ interface AppointmentFormProps {
   patients?: any[];
   isFollowUp?: boolean;
 }
+
+const parsePhoneAndCountry = (
+  rawPhone: string,
+  existingCode?: string
+) => {
+  let cleanPhone = (rawPhone || "").trim();
+  let code = (existingCode || "").trim();
+
+  if (cleanPhone.startsWith("+")) {
+    const match = COUNTRY_CODES_LIST.find((c) => cleanPhone.startsWith(c.code));
+    if (match) {
+      code = match.code;
+      cleanPhone = cleanPhone.slice(match.code.length).trim();
+    }
+  } else if (code && !code.startsWith("+")) {
+    code = `+${code}`;
+  }
+
+  if (!code) code = "+91";
+
+  return { phone: cleanPhone, countryCode: code };
+};
 
 export function AppointmentForm({
   onClose,
@@ -67,12 +90,18 @@ export function AppointmentForm({
   const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? 0;
   const defaultDoctorName = appointment?.doctorName ?? appointment?.doctor_name ?? (initialDoctor?.name || "Dr. Sharma");
 
+  const parsedInitialPhone = useMemo(() => {
+    const rawPhone = appointment?.patientPhone ?? appointment?.patient_phone ?? "";
+    const rawCode = (appointment as any)?.country_code ?? (appointment as any)?.countryCode ?? "";
+    return parsePhoneAndCountry(rawPhone, rawCode);
+  }, [appointment]);
+
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema) as any,
     defaultValues: {
       patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
-      country_code: (appointment as any)?.country_code ?? "+91",
-      patientPhone: appointment?.patientPhone ?? appointment?.patient_phone ?? "",
+      country_code: parsedInitialPhone.countryCode,
+      patientPhone: parsedInitialPhone.phone,
       treatment: appointment?.treatment ?? appointment?.specific_treatment ?? "",
       doctorId: initialDoctorId,
       doctorName: defaultDoctorName,
@@ -119,9 +148,14 @@ export function AppointmentForm({
       // The API might wrap the data in response.data or response.data.data
       const fetchedAppointment = fetchedAppointmentResponse.data?.data || fetchedAppointmentResponse.data || fetchedAppointmentResponse;
       
+      const rawPhone = fetchedAppointment?.patientPhone ?? fetchedAppointment?.patient_phone ?? "";
+      const rawCode = fetchedAppointment?.country_code ?? fetchedAppointment?.countryCode ?? "";
+      const parsed = parsePhoneAndCountry(rawPhone, rawCode);
+
       form.reset({
         patientName: fetchedAppointment?.patientName ?? fetchedAppointment?.patient_name ?? form.getValues().patientName,
-        patientPhone: fetchedAppointment?.patientPhone ?? fetchedAppointment?.patient_phone ?? form.getValues().patientPhone,
+        country_code: parsed.countryCode,
+        patientPhone: parsed.phone,
         treatment: fetchedAppointment?.treatment ?? fetchedAppointment?.specific_treatment ?? form.getValues().treatment,
         doctorId: fetchedAppointment?.doctorId ?? fetchedAppointment?.doctor_id ?? form.getValues().doctorId,
         doctorName: fetchedAppointment?.doctorName ?? fetchedAppointment?.doctor_name ?? form.getValues().doctorName,

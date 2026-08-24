@@ -802,7 +802,12 @@ export function TreatmentSessionManager({
       
       // Fetch fresh session details
       const response = await apiClient.get(`/treatment/${treatmentId}/sessions/${session.id}`);
-      const freshSession = response.data?.responseObject?.data || response.data?.data || response.data || session;
+      const freshSession = 
+        response.data?.responseObject?.data || 
+        response.data?.responseObject || 
+        response.data?.data || 
+        response.data || 
+        session;
 
       const paidValue = Number(freshSession.paid_amount || freshSession.paidAmount || session.paid_amount || 0);
       const sessionFee = Number(freshSession.session_fee || freshSession.sessionFee || session.session_fee || estCost || 0);
@@ -831,9 +836,10 @@ export function TreatmentSessionManager({
       setOriginalPaidNow(paidValue);
       setSessionPreviousPaidAmt(Math.max(0, paidAmt - paidValue));
 
-      if (Array.isArray(freshSession.prescriptions)) {
+      const rawRx = freshSession.treatmentPrescriptions || freshSession.prescriptions || session.treatmentPrescriptions || session.prescriptions;
+      if (Array.isArray(rawRx)) {
         setPrescriptions(
-          freshSession.prescriptions.map((p: any) => ({
+          rawRx.map((p: any) => ({
             id: p.id,
             medicine: p.medicine_id || p.medicine?.id || "",
             medicineName: p.medicine_name || p.medicine?.name || "",
@@ -841,7 +847,7 @@ export function TreatmentSessionManager({
             timing: p.timing || "",
             frequency: p.frequency || "",
             duration: p.duration || "",
-            durationUnit: (p.duration_type || "DAYS").toLowerCase(),
+            durationUnit: p.duration_type ? (p.duration_type.charAt(0).toUpperCase() + p.duration_type.slice(1).toLowerCase()) : "Days",
             qty: p.qty || "",
           }))
         );
@@ -911,7 +917,9 @@ export function TreatmentSessionManager({
           payment_method: completeForm.payment_method || undefined,
           session_fee: completeForm.session_fee,
           prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
-          attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
+          attachments: sessionAttachments.filter(f => f instanceof File).length > 0
+            ? sessionAttachments.filter(f => f instanceof File)
+            : undefined,
         });
         showToast("Session updated successfully!");
       } else {
@@ -947,7 +955,9 @@ export function TreatmentSessionManager({
           discount_value: effectiveDiscountVal,
           ...nextSessionPayload,
           prescriptions: formattedPrescriptions.length > 0 ? formattedPrescriptions : undefined,
-          attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
+          attachments: sessionAttachments.filter(f => f instanceof File).length > 0
+            ? sessionAttachments.filter(f => f instanceof File)
+            : undefined,
         });
 
         showToast(completedCount + 1 >= totalSessions
@@ -1010,7 +1020,7 @@ export function TreatmentSessionManager({
     const appointmentTime = formatTime(getSessionTime(session));
 
     // Prescriptions already merged in sessions useMemo
-    const sessionRx: PlanPrescription[] = (session.prescriptions as PlanPrescription[]) ?? [];
+    const sessionRx: PlanPrescription[] = ((session.treatmentPrescriptions || session.prescriptions) as PlanPrescription[]) ?? [];
 
     return (
       <div className="relative" key={session.id}>
@@ -1694,32 +1704,52 @@ export function TreatmentSessionManager({
 
                   {sessionAttachments.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      {sessionAttachments.map((file, index) => (
-                        <div
-                          key={`${file.name}-${file.size}-${index}`}
-                          className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2"
-                        >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                            <FileText className="w-4 h-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-foreground">{file.name}</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {file.size >= 1024 * 1024
-                                ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
-                                : `${Math.max(1, Math.round(file.size / 1024))} KB`}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => removeSessionAttachment(index)}
-                            className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                      {sessionAttachments.map((file, index) => {
+                        const name = file.name || (file as any).file_name || "Attachment";
+                        const size = file.size !== undefined ? file.size : ((file as any).file_size || 0);
+                        const url = file instanceof File ? URL.createObjectURL(file) : ((file as any).file_url || "");
+                        const type = file.type || (file as any).file_type || "";
+                        const isImage = type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(name);
+
+                        return (
+                          <div
+                            key={`${name}-${size}-${index}`}
+                            className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2"
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <a
+                              href={url || "#"}
+                              target={url ? "_blank" : undefined}
+                              rel="noreferrer"
+                              className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-85 transition-opacity"
+                              onClick={(e) => { if (!url) e.preventDefault(); }}
+                            >
+                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden shrink-0 border border-slate-100">
+                                {isImage && url ? (
+                                  <img src={url} alt={name} className="h-full w-full object-cover" />
+                                ) : (
+                                  <FileText className="w-4 h-4" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {size >= 1024 * 1024
+                                    ? `${(size / 1024 / 1024).toFixed(1)} MB`
+                                    : `${Math.max(1, Math.round(size / 1024))} KB`}
+                                </p>
+                              </div>
+                            </a>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => removeSessionAttachment(index)}
+                              className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-red-50 hover:text-red-600 shrink-0"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

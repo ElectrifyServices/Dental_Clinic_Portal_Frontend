@@ -4,6 +4,7 @@ import {
   Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send, MessageCircle, Activity
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
+import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
 import {
   Button, PlanBadge,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem
@@ -73,7 +74,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             <h3 className="font-bold text-foreground text-sm truncate">{employee.name}</h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
-              <span>{employee.phone}</span>
+              <span>{formatPhoneWithCountryCode(employee.phone, (employee as any).country_code || (employee as any).countryCode)}</span>
             </p>
           </div>
         </div>
@@ -118,8 +119,15 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               <DropdownMenuItem onSelect={onResendInvoice}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onWhatsAppHistory}>
+              {/* 
+                WhatsApp History menu item is commented out in favor of the global 
+                WhatsApp Logs view which contains template and status details.
+              */}
+              {/* <DropdownMenuItem onSelect={onWhatsAppHistory}>
                 <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp History
+              </DropdownMenuItem> */}
+              <DropdownMenuItem onSelect={onWhatsAppHistory}>
+                <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" /> WhatsApp Logs
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onBenefitUsage}>
                 <Activity className="w-4 h-4 mr-2 text-blue-600" /> Uses benefits
