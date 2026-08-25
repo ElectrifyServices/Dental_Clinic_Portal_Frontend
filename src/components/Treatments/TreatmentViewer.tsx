@@ -30,7 +30,7 @@ interface TreatmentViewerProps {
   onEditTreatment: (id: string) => void;
   onMarkCompleted: (id: string) => void;
   onStartTreatment: (id: string) => void;
-  onManageSessions?: (id: string) => void;
+  onManageSessions?: (id: string, sessionId?: string) => void;
 }
 
 export function TreatmentViewer({
@@ -606,14 +606,14 @@ export function TreatmentViewer({
                                 Date
                               </p>
                               <p className="text-xs font-semibold">
-                                {new Date(session.visit_date).toLocaleDateString(
+                                {session.visit_date ? new Date(session.visit_date).toLocaleDateString(
                                   "en-IN",
                                   {
                                     day: "2-digit",
                                     month: "2-digit",
                                     year: "numeric",
                                   }
-                                )}
+                                ) : "Not Scheduled"}
                               </p>
                             </div>
                           </div>
@@ -641,7 +641,7 @@ export function TreatmentViewer({
                               </p>
                               <Badge
                                 variant={getSessionStatusBadge(session.status)}
-                                className="text-[9px] px-2 h-5"
+                                className="text-[9px] px-2 h-5 whitespace-nowrap"
                               >
                                 {session.status?.replace("_", " ") || "SCHEDULED"}
                               </Badge>
@@ -749,6 +749,16 @@ export function TreatmentViewer({
                           </div>
                         )}
                       </div>
+                      {onManageSessions && session.status === "COMPLETED" && (
+                        <Button
+                          variant="outline"
+                          className="h-9 w-9 rounded-xl border-blue-200 bg-blue-50 p-0 text-blue-700 hover:bg-blue-100 shrink-0"
+                          onClick={() => onManageSessions(treatment.id, session.id)}
+                          title="Edit Session details"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </ContentCard>
                 ))}

@@ -641,18 +641,31 @@ export function InvoiceForm({
                 });
               }}
               onSearchChange={setPatientSearchInput}
-              options={[
-                { label: "Select Patient", value: "none" },
-                ...apiPatients.map((p: any) => {
-                  const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
-                  return {
-                    label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
-                    searchLabel: `${p.name} ${formattedPhone}`,
-                    value: p.id,
-                    patient: p,
-                  };
-                }),
-              ]}
+              options={(() => {
+                const list = apiPatients;
+                const hasSelected = list.some((p: any) => p.id === formData.patientId);
+                const resultList = [...list];
+                if (!hasSelected && formData.patientId && formData.patientName) {
+                  resultList.push({
+                    id: formData.patientId,
+                    name: formData.patientName,
+                    phone: formData.patientPhone || "",
+                    country_code: "",
+                  });
+                }
+                return [
+                  { label: "Select Patient", value: "none" },
+                  ...resultList.map((p: any) => {
+                    const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                    return {
+                      label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
+                      searchLabel: `${p.name} ${formattedPhone}`,
+                      value: p.id,
+                      patient: p,
+                    };
+                  }),
+                ];
+              })()}
               renderOption={(option: any) => {
                 if (option.value === "none")
                   return <span className="truncate pr-2">{option.label}</span>;
@@ -782,20 +795,33 @@ export function InvoiceForm({
                 });
               }}
               onSearchChange={setPatientSearchInput}
-              options={[
-                { label: "Select Phone", value: "none" },
-                ...apiPatients
-                  .filter((p: any) => p.phone)
-                  .map((p: any) => {
-                    const formattedPhone = p.country_code ? `${p.country_code} ${p.phone}` : p.phone;
-                    return {
-                      label: `${formattedPhone} (${p.name})`,
-                      searchLabel: `${formattedPhone} ${p.name}`,
-                      value: p.id,
-                      patient: p,
-                    };
-                  }),
-              ]}
+              options={(() => {
+                const list = apiPatients;
+                const hasSelected = list.some((p: any) => p.id === formData.patientId);
+                const resultList = [...list];
+                if (!hasSelected && formData.patientId && formData.patientPhone) {
+                  resultList.push({
+                    id: formData.patientId,
+                    name: formData.patientName || "",
+                    phone: formData.patientPhone,
+                    country_code: "",
+                  });
+                }
+                return [
+                  { label: "Select Phone", value: "none" },
+                  ...resultList
+                    .filter((p: any) => p.phone)
+                    .map((p: any) => {
+                      const formattedPhone = p.country_code ? `${p.country_code} ${p.phone}` : p.phone;
+                      return {
+                        label: `${formattedPhone} (${p.name})`,
+                        searchLabel: `${formattedPhone} ${p.name}`,
+                        value: p.id,
+                        patient: p,
+                      };
+                    }),
+                ];
+              })()}
               renderOption={(option: any) => {
                 if (option.value === "none")
                   return <span className="truncate pr-2">{option.label}</span>;

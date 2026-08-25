@@ -77,7 +77,7 @@ export function Sidebar() {
 
   const allItems = tenant.sidebar.groups.flatMap((group) =>
     group.items
-      .filter((id) => tenant.screens[id]?.enabled !== false)
+      .filter((id) => id !== "profit-sharing" && tenant.screens[id]?.enabled !== false)
       .map((id) => ({
         id,
         label: tenant.screens[id]?.label ?? id,

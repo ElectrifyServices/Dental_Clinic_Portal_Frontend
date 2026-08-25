@@ -26,7 +26,6 @@ export function convertSessionToApi(session: any) {
   return {
     visit_date: session.scheduledDate || session.suggestedDate,
     duration_min: session.duration || 45,
-    session_fee: session.cost || 0,
     clinical_objectives: session.notes || session.description || "",
   };
 }
@@ -233,9 +232,8 @@ export function toApiCreatePlan(formData: any): CreateTreatmentPlanVariables {
     }));
 
   const sessions = (formData.sessions ?? [])
-    .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
-      visit_date: s.scheduledDate || s.suggestedDate,
+      visit_date: s.scheduledDate || s.suggestedDate || null,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       clinical_objectives: s.notes || s.description || "",
@@ -292,19 +290,18 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
     }));
 
   const sessions = (formData.sessions ?? [])
-    .filter((s: any) => s.scheduledDate || s.suggestedDate)
     .map((s: any) => ({
       id: s.id?.startsWith("session-") ? undefined : s.id,
-      visit_date: s.scheduledDate || s.suggestedDate,
+      visit_date: s.scheduledDate || s.suggestedDate || null,
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       clinical_objectives: s.notes || s.description || "",
-      status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
-        s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
+      status: s.status?.toUpperCase().replace("-", "_") === "IN_PROGRESS" ? "IN_PROGRESS" :
+        s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
           s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
             s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
-      work_done: s.workDone,
-      session_findings: s.findings,
+      work_done: s.workDone || s.work_done,
+      session_findings: s.findings || s.session_findings,
     }));
 
   const updateData: UpdateTreatmentPlanVariables = {

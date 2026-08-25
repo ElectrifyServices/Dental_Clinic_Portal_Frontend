@@ -35,6 +35,7 @@ interface Invoice {
   pendingAmount?: number;
   pending_amount?: number;
   allInvoices?: Invoice[];
+  is_edited?: boolean;
 }
 
 interface BillingCardProps {
@@ -137,9 +138,9 @@ export const BillingCard: React.FC<BillingCardProps> = ({
                 <IndianRupee className="w-4 h-4 mr-2 text-emerald-600" /> Mark as Paid
               </DropdownMenuItem>
             )}
-            {statusLower === "draft" && (
+            {(statusLower === "draft" || inv.is_edited) && (
               <DropdownMenuItem onSelect={() => onSend(inv.id)}>
-                <Send className="w-4 h-4 mr-2 text-blue-600" /> Send to Patient
+                <Send className="w-4 h-4 mr-2 text-blue-600" /> {inv.is_edited ? "Resend to Patient" : "Send to Patient"}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onSelect={() => onDelete(inv.id, inv.invoice_number || inv.id)}>
@@ -244,6 +245,21 @@ export const BillingCard: React.FC<BillingCardProps> = ({
           )}
         </div>
       )} */}
+      {invoice.is_edited && (
+        <div className="mt-2 bg-amber-50/70 border border-amber-100 rounded-xl p-2.5 flex items-center justify-between gap-2 text-[10px] text-amber-800">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <span className="text-amber-500 text-xs">⚠️</span>
+            <span>Invoice edited. Send again to patient.</span>
+          </div>
+          <Button
+            size="xs"
+            className="h-6 rounded-lg border border-amber-300 text-amber-800 bg-white hover:bg-amber-50 font-bold text-[9px] shrink-0 px-2 py-0 shadow-sm"
+            onClick={() => onSend(invoice.id)}
+          >
+            Resend
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

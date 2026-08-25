@@ -437,15 +437,28 @@ export function ConsentForm({
                           }
                         }}
                         onSearchChange={setPatientSearch}
-                        options={(apiPatients.length > 0 ? apiPatients : patients).map((p: any) => {
-                          const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
-                          return { 
-                            label: p.name, 
-                            value: p.id,
-                            searchLabel: `${p.name} ${formattedPhone}`,
-                            patient: p
-                          };
-                        })}
+                        options={(() => {
+                          const list = apiPatients.length > 0 ? apiPatients : patients;
+                          const hasSelected = list.some((p: any) => p.id === formData.patientId);
+                          const resultList = [...list];
+                          if (!hasSelected && formData.patientId && formData.patientName) {
+                            resultList.push({
+                              id: formData.patientId,
+                              name: formData.patientName,
+                              phone: "",
+                              country_code: "",
+                            });
+                          }
+                          return resultList.map((p: any) => {
+                            const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
+                            return { 
+                              label: p.name, 
+                              value: p.id,
+                              searchLabel: `${p.name} ${formattedPhone}`,
+                              patient: p
+                            };
+                          });
+                        })()}
                         renderOption={(option: any) => {
                           const p = option.patient;
                           if (!p) return <span>{option.label}</span>;

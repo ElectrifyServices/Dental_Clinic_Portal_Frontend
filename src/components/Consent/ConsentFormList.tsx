@@ -72,11 +72,15 @@ export function ConsentFormList({
           <div className="font-bold text-foreground text-sm">
             {form.patientName}
           </div>
-          {form.patientId && (
+          {form.patientCode ? (
+            <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
+              {form.patientCode}
+            </div>
+          ) : form.patientId ? (
             <div className="text-[10px] text-muted-foreground/60 font-mono tracking-tighter uppercase">
               #{form.patientId.slice(-6)}
             </div>
-          )}
+          ) : null}
         </>
       ),
       className: "px-6 py-4",
