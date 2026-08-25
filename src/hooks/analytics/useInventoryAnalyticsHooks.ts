@@ -36,8 +36,8 @@ export function useExpiringSoonAnalyticsQuery(filter: InventoryAnalyticsFilter =
 
 export function useMonthlySpendAnalyticsQuery(filter: InventoryAnalyticsFilter = {}) {
   return useApiQuery<any>({
-    queryKey: ["inventoryAnalytics", "monthly-spend", filter],
-    endpoint: "/inventoryAnalytics/monthly-spend",
+    queryKey: ["inventoryAnalytics", "restock-spend", filter],
+    endpoint: "/inventoryAnalytics/restock-spend",
     method: "post",
     data: filter,
   });

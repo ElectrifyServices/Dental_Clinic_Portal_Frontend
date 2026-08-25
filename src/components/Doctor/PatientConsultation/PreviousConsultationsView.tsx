@@ -248,27 +248,27 @@ export function PreviousConsultationsView({
                     <div className="relative">                      
                       {activeDownloadMenuId === c.id && (
                         <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                          {reportAvailability.clinical && <Button
+                          <Button
                             variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'CLINICAL'); setActiveDownloadMenuId(null); }}
-                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary flex items-center justify-start gap-2 h-auto rounded-none"
+                            onClick={(e) => { if (reportAvailability.clinical) { e.stopPropagation(); handleDownloadPDF(c, 'CLINICAL'); setActiveDownloadMenuId(null); } }}
+                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.clinical ? "text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                           >
                             <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
-                          </Button>}
-                          {reportAvailability.treatment && <Button
+                          </Button>
+                          <Button
                             variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'TREATMENT'); setActiveDownloadMenuId(null); }}
-                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-purple-50 hover:text-purple-700 flex items-center justify-start gap-2 h-auto rounded-none"
+                            onClick={(e) => { if (reportAvailability.treatment) { e.stopPropagation(); handleDownloadPDF(c, 'TREATMENT'); setActiveDownloadMenuId(null); } }}
+                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.treatment ? "text-muted-foreground hover:bg-purple-50 hover:text-purple-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                           >
                             <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                          </Button>}
-                          {reportAvailability.prescription && <Button
+                          </Button>
+                          <Button
                             variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'PRESCRIPTION'); setActiveDownloadMenuId(null); }}
-                            className="w-full px-4 py-2 text-left text-xs font-semibold text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 flex items-center justify-start gap-2 h-auto rounded-none"
+                            onClick={(e) => { if (reportAvailability.prescription) { e.stopPropagation(); handleDownloadPDF(c, 'PRESCRIPTION'); setActiveDownloadMenuId(null); } }}
+                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                           >
                             <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                          </Button>}
+                          </Button>
                           <div className="h-px bg-muted my-1" />
                           <Button
                             variant="ghost"

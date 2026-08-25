@@ -13,7 +13,7 @@ import {
   Package,
   BarChart3,
   UserCheck,
-  DollarSign,
+  IndianRupee,
   Building2,
   Menu,
   X,
@@ -93,7 +93,7 @@ const MENU_ITEMS = [
   {
     id: "profit-sharing",
     label: "Profit Sharing",
-    icon: DollarSign,
+    icon: IndianRupee,
     roles: ["admin", "superadmin"],
   },
   // Commented out from drawer menu because it is now in bottom primary tabs

@@ -131,9 +131,15 @@ export const AppointmentsPage: React.FC = () => {
   const handleCheckInPatient = async (appt: any) => {
     try {
       const response = await checkInAppointment({ id: appt.id });
-      setPendingCheckInAppt(appt);
-      
       const responseData = response?.data ?? response;
+
+      setPendingCheckInAppt({
+        ...appt,
+        patientName: responseData?.patient_name || appt.patientName,
+        patientPhone: responseData?.patient_phone || appt.patientPhone,
+        country_code: responseData?.patient_country_code || appt.country_code || "+91",
+      });
+      
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
       const patientId = responseData?.patient_id ?? responseData?.patientId;
 

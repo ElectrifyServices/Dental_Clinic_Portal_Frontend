@@ -12,6 +12,7 @@ import {
   ChevronRight,
   History,
   MessageCircle,
+  X,
 } from "lucide-react";
 import { PaymentHistoryModal } from "./PaymentHistoryModal";
 import { InvoicePaymentModal } from "./InvoicePaymentModal";
@@ -71,6 +72,12 @@ interface InvoiceListProps {
   onLimitChange?: (limit: number) => void;
   totalPages?: number;
   totalItems?: number;
+  paymentMethod?: string;
+  setPaymentMethod?: (val: string) => void;
+  startDate?: string;
+  setStartDate?: (val: string) => void;
+  endDate?: string;
+  setEndDate?: (val: string) => void;
 }
 
 const STATUS_META: Record<
@@ -113,6 +120,13 @@ const FILTERS = [
   { key: "paid", label: "Paid" },
 ];
 
+const PAYMENT_METHODS = [
+  { key: "all", label: "All" },
+  { key: "cash", label: "Cash" },
+  { key: "upi", label: "UPI" },
+  { key: "card", label: "Card" },
+];
+
 export function InvoiceList({
   onCreateInvoice,
   onDeleteInvoice,
@@ -130,6 +144,12 @@ export function InvoiceList({
   onLimitChange,
   totalPages = 1,
   totalItems = 0,
+  paymentMethod = "all",
+  setPaymentMethod,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
 }: InvoiceListProps) {
   // Stats APIs
   const { data: totalBilledData } = useTotalBilledQuery();
@@ -138,6 +158,22 @@ export function InvoiceList({
   const { mutateAsync: payInvoiceMutation, isPending: isPaying } = usePayInvoiceMutation();
   const { mutateAsync: sendInvoiceMutation } = useSendInvoiceMutation();
   const { mutateAsync: exportInvoices, isPending: isExporting } = useExportInvoicesMutation();
+
+  const hasFilters = Boolean(
+    (search && search.trim() !== "") ||
+    (status && status !== "all") ||
+    (paymentMethod && paymentMethod !== "all") ||
+    startDate ||
+    endDate
+  );
+
+  const handleClearFilters = () => {
+    setSearch?.("");
+    setStatus?.("all");
+    setPaymentMethod?.("all");
+    setStartDate?.("");
+    setEndDate?.("");
+  };
 
   const handleSendInvoice = async (id: string) => {
     try {
@@ -664,17 +700,17 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="flex flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm flex-wrap">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search by patient name or invoice ID…"
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 min-w-[200px]"
         />
-        <div className="shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
-              <SelectValue placeholder="All" />
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               {FILTERS.map((f) => (
@@ -684,6 +720,52 @@ export function InvoiceList({
               ))}
             </SelectContent>
           </Select>
+          {setPaymentMethod && (
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
+                <SelectValue placeholder="Payment Method" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((f) => (
+                  <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {setStartDate && setEndDate && (
+            <div className="flex items-center gap-1">
+              <input
+                type="date"
+                value={startDate || ""}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                placeholder="Start Date"
+                title="Start Date"
+              />
+              <span className="text-xs text-muted-foreground">-</span>
+              <input
+                type="date"
+                min={startDate || ""}
+                value={endDate || ""}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                placeholder="End Date"
+                title="End Date"
+              />
+            </div>
+          )}
+          {hasFilters && (
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 

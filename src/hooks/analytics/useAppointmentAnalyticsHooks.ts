@@ -78,7 +78,7 @@ export function usePeakHoursHeatmapAnalyticsQuery(filter: AppointmentAnalyticsFi
 export function useNext7DayForecastAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
   return useApiQuery<any>({
     queryKey: ["appointmentAnalytics", "next-7-day-forecast", filter],
-    endpoint: "/appointmentAnalytics/next-7-day-forecast",
+    endpoint: "/appointmentAnalytics/upcoming-appointments",
     method: "post",
     data: filter,
   });

@@ -133,7 +133,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
           
-          <div className="bg-white/50 rounded-lg p-1 border border-border/50">
+          <div className="bg-white/50 rounded-lg p-1 border border-border/50 max-w-full">
             <FilterTabs
               tabs={PERIODS}
               active={period}
@@ -141,7 +141,7 @@ export const DashboardPage: React.FC = () => {
             />
           </div>
           
-          <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm">
+          <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm w-full sm:w-auto">
             <UserPlus className="w-4 h-4" /> Add New Patient
           </Button>
         </div>

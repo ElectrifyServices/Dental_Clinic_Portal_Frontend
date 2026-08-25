@@ -117,8 +117,8 @@ export function SmartAlerts({ period = 'today', customStart, customEnd }: { peri
   const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+    <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full flex flex-col">
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
         <AlertTriangle className="w-4 h-4 text-amber-500" />
         {periodLabel} Smart Alerts
         {alerts.length > 0 && (
@@ -134,7 +134,7 @@ export function SmartAlerts({ period = 'today', customStart, customEnd }: { peri
           <p className="text-xs text-muted-foreground font-medium">All clear! No pending action items.</p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-2.5 flex-1 overflow-y-auto min-h-0 max-h-[350px] pr-1 custom-scrollbar">
           <AnimatePresence>
             {alerts.map((alert) => {
               const cfg = ALERT_CONFIG[alert.type as keyof typeof ALERT_CONFIG];

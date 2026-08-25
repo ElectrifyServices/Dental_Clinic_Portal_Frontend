@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDeleteInvoiceMutation } from './billing/useDeleteInvoiceMutation';
 
-export function useInvoiceData(params?: { search?: string; status?: string }, options?: { enabled?: boolean }) {
+export function useInvoiceData(params?: { search?: string; status?: string; paymentMethod?: string; startDate?: string; endDate?: string }, options?: { enabled?: boolean }) {
   const queryClient = useQueryClient();
 
   const isEnabled = options?.enabled !== false;
@@ -15,12 +15,21 @@ export function useInvoiceData(params?: { search?: string; status?: string }, op
   // Reset page to 1 when filters or search change
   useEffect(() => {
     setPage(1);
-  }, [params?.search, params?.status]);
+  }, [params?.search, params?.status, params?.paymentMethod, params?.startDate, params?.endDate]);
 
   const queryParams = useMemo(() => {
     const filters: any = {};
     if (params?.status && params.status !== "all") {
       filters.status = [params.status.toUpperCase()];
+    }
+    if (params?.paymentMethod && params.paymentMethod !== "all") {
+      filters.payment_methods = [params.paymentMethod.toUpperCase()];
+    }
+    if (params?.startDate) {
+      filters.start_date = params.startDate;
+    }
+    if (params?.endDate) {
+      filters.end_date = params.endDate;
     }
     return {
       page: page,
@@ -28,7 +37,7 @@ export function useInvoiceData(params?: { search?: string; status?: string }, op
       search: params?.search || undefined,
       filters: Object.keys(filters).length > 0 ? filters : undefined,
     };
-  }, [params?.search, params?.status, page, limit]);
+  }, [params?.search, params?.status, params?.paymentMethod, params?.startDate, params?.endDate, page, limit]);
 
   const { data: apiInvoices, isLoading: isInvoicesLoading } = useInvoicesQuery(
     queryParams,

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+  import React, { useState, useMemo } from "react";
 import {
-  DollarSign,
+  IndianRupee,
   User,
   TrendingUp,
   Wallet,
@@ -204,7 +204,7 @@ export const ProfitSharingPage: React.FC = () => {
         <MetricCard
           label="Net Clinic Profit"
           value={`₹${stats.netClinicProfit.toLocaleString()}`}
-          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
+          icon={<IndianRupee className="w-5 h-5 text-emerald-600" />}
           variant="emerald"
           className="border-emerald-100 bg-emerald-50/50 ring-1 ring-emerald-500/20"
         />

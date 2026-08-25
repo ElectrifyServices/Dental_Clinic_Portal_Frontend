@@ -90,15 +90,6 @@ export function WhatsappHistoryModal({
 
   // Hook query and mutations
   const { data: rawData, isLoading, refetch: refetchList } = useNotificationsQuery(queryParams);
-  const { data: successData, refetch: refetchSuccess } = useTotalSuccessNotificationsQuery(initialPhone);
-  const { data: failedData, refetch: refetchFailed } = useTotalFailedNotificationsQuery(initialPhone);
-  const retryMutation = useRetryNotificationMutation();
-
-  const refetch = React.useCallback(() => {
-    refetchList();
-    refetchSuccess();
-    refetchFailed();
-  }, [refetchList, refetchSuccess, refetchFailed]);
 
   const getCountValue = (data: any) => {
     if (data === undefined || data === null) return 0;
@@ -123,6 +114,32 @@ export function WhatsappHistoryModal({
     if (rawData.data && Array.isArray(rawData.data.rows)) return rawData.data.rows;
     return [];
   }, [rawData]);
+
+  const effectivePhone = useMemo(() => {
+    if (notifications.length > 0 && notifications[0].to_phone) {
+      return notifications[0].to_phone;
+    }
+    return initialPhone;
+  }, [notifications, initialPhone]);
+
+  const { data: successData, refetch: refetchSuccess } = useTotalSuccessNotificationsQuery(effectivePhone, {
+    enabled: !isLoading
+  });
+  const { data: failedData, refetch: refetchFailed } = useTotalFailedNotificationsQuery(effectivePhone, {
+    enabled: !isLoading
+  });
+  const retryMutation = useRetryNotificationMutation();
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refetch = React.useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refetchList(), refetchSuccess(), refetchFailed()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetchList, refetchSuccess, refetchFailed]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
@@ -290,8 +307,8 @@ export function WhatsappHistoryModal({
       bodyClassName="!p-0 !overflow-hidden flex flex-col flex-1 min-h-0"
       footer={
         <div className="flex justify-between items-center w-full bg-muted/10">
-          <Button variant="ghost" onClick={() => refetch()} className="gap-1.5 text-xs text-muted-foreground">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh List
+          <Button variant="ghost" onClick={refetch} disabled={isRefreshing} className="gap-1.5 text-xs text-muted-foreground">
+            <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} /> {isRefreshing ? "Refreshing..." : "Refresh List"}
           </Button>
           <Button variant="outline" onClick={onClose}>
             Close

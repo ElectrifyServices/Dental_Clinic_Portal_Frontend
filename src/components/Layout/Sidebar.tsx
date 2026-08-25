@@ -14,7 +14,7 @@ import {
   Stethoscope,
   Activity,
   Shield,
-  DollarSign,
+  IndianRupee,
   UserCheck,
   ChevronLeft,
   ChevronRight,
@@ -40,7 +40,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   "lab-work": FlaskConical,
   reports: BarChart3,
   staff: UserCheck,
-  "profit-sharing": DollarSign,
+  "profit-sharing": IndianRupee,
   membership: Building2,
 };
 
