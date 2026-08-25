@@ -161,7 +161,9 @@ export function EmployeeManagement({
       employeesData.responseObject?.total ??
       employeesData.data?.total ??
       employeesData.meta?.total ??
+      employeesData.pagination?.total_items ??
       employeesData.pagination?.total ??
+      employeesData.data?.pagination?.total_items ??
       employeesData.data?.pagination?.total;
 
     if (explicitTotal !== undefined && explicitTotal !== null) {
@@ -175,7 +177,11 @@ export function EmployeeManagement({
     return (page - 1) * limit + apiMembers.length;
   }, [employeesData, apiMembers.length, limit, page]);
 
-  const explicitTotalPages = employeesData?.pagination?.totalPages ?? employeesData?.data?.pagination?.totalPages;
+  const explicitTotalPages = 
+    employeesData?.pagination?.total_pages ??
+    employeesData?.pagination?.totalPages ?? 
+    employeesData?.data?.pagination?.total_pages ??
+    employeesData?.data?.pagination?.totalPages;
   const totalPages = explicitTotalPages ?? Math.max(1, Math.ceil(totalItems / limit));
   const displayMembers = apiMembers.length > limit ? apiMembers.slice((page - 1) * limit, page * limit) : apiMembers;
 

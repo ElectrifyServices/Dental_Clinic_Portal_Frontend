@@ -73,6 +73,7 @@ export function ConsentPage() {
       id: form.id,
       patientName: form.patient?.name || form.patient_name || "Unknown",
       patientId: patientIdStr || "",
+      patientCode: form.patient?.patient_code || form.patient?.patientCode || form.patient_code || "",
       treatmentType: form.procedure_type || "",
       createdDate: form.created_at || new Date().toISOString(),
       signedDate: form.signed_on || null,

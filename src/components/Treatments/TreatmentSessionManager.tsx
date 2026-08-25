@@ -41,6 +41,7 @@ interface TreatmentSessionManagerProps {
   doctorId?: string;
   doctorName?: string;
   onClose: () => void;
+  initialSessionId?: string;
 }
 
 interface SessionScheduleDraft {
@@ -320,6 +321,7 @@ export function TreatmentSessionManager({
   doctorId,
   doctorName,
   onClose,
+  initialSessionId,
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
   const { data: treatmentPlanResponse, refetch: refetchPlan } = useTreatmentPlanQuery(treatmentId, {
@@ -549,6 +551,19 @@ export function TreatmentSessionManager({
         ?? [],
     }));
   }, [rawSessions, prescriptionsBySession]);
+
+  useEffect(() => {
+    if (initialSessionId && sessions.length > 0 && !completingId) {
+      const session = sessions.find(s => s.id === initialSessionId);
+      if (session) {
+        if (session.status?.toUpperCase() === "COMPLETED") {
+          startEditingSession(session);
+        } else {
+          handleUpdateStatus(session, "COMPLETED");
+        }
+      }
+    }
+  }, [initialSessionId, sessions, completingId]);
 
   const totalSessions: number = responseData?.total ?? 0;
   const completedCount: number = responseData?.completed ?? 0;
@@ -987,6 +1002,9 @@ export function TreatmentSessionManager({
       setSessionAttachments([]);
       setScheduleNext(false);
       refetch();
+      if (initialSessionId) {
+        onClose();
+      }
     } catch (err: any) {
       showToast(extractApiError(err, isEditingCompleted ? "Failed to update session" : "Failed to complete session"), "error");
     }
@@ -1029,8 +1047,9 @@ export function TreatmentSessionManager({
 
     return (
       <div className="relative" key={session.id}>
-        <Card className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${normalizedStatus === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
-          }`}>
+        {!initialSessionId && (
+          <Card className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${cfg.borderColor} ${normalizedStatus === "IN_PROGRESS" ? "shadow-lg shadow-blue-100" : "hover:shadow-md"
+            }`}>
           {/* ── Card Header ── */}
           <div className="p-5 cursor-pointer hover:bg-muted/5 transition-colors" onClick={() => toggleExpand(session.id)}>
             <div className="flex items-start justify-between gap-4">
@@ -1054,11 +1073,9 @@ export function TreatmentSessionManager({
                   </div>
 
                   {normalizedStatus === "COMPLETED" && (
-
-                    <div className="flex items-center gap-2 text-muted-foreground">
-
-                      Clinical Objectives :
-                      <span className="truncate text-xs">{session.clinical_objectives || "No objectives set"}</span>
+                    <div className="flex items-center gap-1.5 text-muted-foreground sm:col-span-2 min-w-0">
+                      <span className="whitespace-nowrap text-xs">Clinical Objectives:</span>
+                      <span className="truncate text-xs font-medium text-foreground">{session.clinical_objectives || "No objectives set"}</span>
                     </div>
                   )}
                 </div>
@@ -1352,6 +1369,7 @@ export function TreatmentSessionManager({
             </div>
           )}
         </Card>
+        )}
 
         {/* ── Complete Session Modal ── */}
         {isCompleting && (
@@ -1359,25 +1377,33 @@ export function TreatmentSessionManager({
             title={isEditingCompleted ? `Edit Session ${session.visit_number}` : `Complete Session ${session.visit_number}`}
             subtitle={isEditingCompleted ? "Modify session details and findings" : "Record what was done today"}
             onClose={() => {
+            if (initialSessionId) {
+              onClose();
+            } else {
               setCompletingId(null);
               setIsEditingCompleted(false);
               setSessionAttachments([]);
-            }}
-            size="5xl"
-            icon={isEditingCompleted ? <Pencil className="w-5 h-5 text-blue-600" /> : <CheckCircle className="w-5 h-5 text-emerald-600" />}
-            footer={
-              <div className="flex gap-3 w-full">
-                <Button
-                  variant="outline"
-                  onClick={() => {
+            }
+          }}
+          size="5xl"
+          icon={isEditingCompleted ? <Pencil className="w-5 h-5 text-blue-600" /> : <CheckCircle className="w-5 h-5 text-emerald-600" />}
+          footer={
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (initialSessionId) {
+                    onClose();
+                  } else {
                     setCompletingId(null);
                     setIsEditingCompleted(false);
                     setSessionAttachments([]);
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
+                  }
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
                 <Button
                   onClick={() => handleCompleteSession(session.id)}
                   disabled={
@@ -1415,13 +1441,14 @@ export function TreatmentSessionManager({
                   <Input
                     type="number"
                     min="0"
+                    disabled
                     placeholder="Total Cost"
                     value={completeForm.session_fee || ""}
                     onChange={(e) => {
                       const cost = parseInt(e.target.value) || 0;
                       setCompleteForm(p => ({ ...p, session_fee: cost }));
                     }}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold"
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200"
                   />
                 </div>
                 <div>
@@ -1430,21 +1457,30 @@ export function TreatmentSessionManager({
                     type="number"
                     min="0"
                     max="100"
+                    disabled={isEditingCompleted}
                     placeholder="Discount %"
                     value={completeForm.discount_value || ""}
                     onChange={(e) => {
                       const pct = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
                       setCompleteForm(p => ({ ...p, discount_value: pct }));
                     }}
-                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold"
+                    className={`w-full px-3 py-2 rounded-xl border outline-none font-semibold ${
+                      isEditingCompleted
+                        ? "bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200"
+                        : "focus:ring-2 focus:ring-emerald-200"
+                    }`}
                   />
+                  {isEditingCompleted && (
+                    <span className="text-[10px] text-amber-600 font-semibold mt-1.5 block leading-tight">
+                      ⚠️ Discount cannot be modified after completion.
+                    </span>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-semibold block mb-2">Paid Today (₹)</Label>
                   <Input
                     type="number"
                     min="0"
-                    disabled={isEditingCompleted && originalPaidNow > 0}
                     placeholder="Paid today"
                     value={completeForm.paid_now || ""}
                     onChange={(e) => {
@@ -1455,13 +1491,8 @@ export function TreatmentSessionManager({
                         paid_amount: sessionPreviousPaidAmt + val
                       }));
                     }}
-                    className={`w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold ${isEditingCompleted && originalPaidNow > 0 ? "bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200" : "text-emerald-700 bg-emerald-50/30"}`}
+                    className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold text-emerald-700 bg-emerald-50/30"
                   />
-                  {isEditingCompleted && originalPaidNow > 0 && (
-                    <p className="text-[10px] text-amber-600 mt-1 font-semibold">
-                      Note: Paid Amount cannot be changed after payment is recorded.
-                    </p>
-                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-semibold block mb-2">Pending (₹)</Label>
@@ -1776,6 +1807,37 @@ export function TreatmentSessionManager({
   };
 
   // ─── Main Render ───────────────────────────────────────────────────────────
+
+  if (initialSessionId) {
+    if (isLoading) {
+      return (
+        <Modal
+          title="Loading Session..."
+          onClose={onClose}
+          size="lg"
+        >
+          <div className="flex min-h-[220px] items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        </Modal>
+      );
+    }
+    const session = sessions.find(s => s.id === initialSessionId);
+    if (session) {
+      return renderSessionCard(session);
+    }
+    return (
+      <Modal
+        title="Session Not Found"
+        onClose={onClose}
+        size="lg"
+      >
+        <div className="p-6 text-center text-sm font-semibold text-red-500">
+          Selected session could not be found.
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

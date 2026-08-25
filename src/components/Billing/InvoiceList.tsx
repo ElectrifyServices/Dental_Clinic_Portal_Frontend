@@ -53,6 +53,7 @@ interface Invoice {
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "complimentary";
   dueDate: string;
   patientId?: string;
+  is_edited?: boolean;
 }
 
 interface InvoiceListProps {
@@ -294,12 +295,20 @@ export function InvoiceList({
       key: "id",
       header: "Invoice",
       render: (inv: any) => (
-        <div className="flex items-center gap-1.5 min-w-[140px]">
+        <div className="flex items-center gap-1.5 min-w-[160px] flex-wrap">
           {/* Chevron expand/collapse button removed as per request */}
           {/* +N count badge removed as per request */}
           <span className="font-mono text-xs font-bold text-foreground">
             {inv.invoice_number || inv.id}
           </span>
+          {inv.is_edited && (
+            <span 
+              className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md cursor-help"
+              title="This invoice has been edited. It should be resent to the patient."
+            >
+              Edited • Resend
+            </span>
+          )}
         </div>
       ),
     },
@@ -447,7 +456,7 @@ export function InvoiceList({
                           <IndianRupee className="w-4 h-4" /> Mark as Paid
                         </Button>
                       )}
-                      {inv.status === "draft" && onUpdateStatus && (
+                      {((inv.status === "draft" || inv.is_edited) && onUpdateStatus) && (
                         <Button
                           variant="ghost"
                           onClick={() => {
@@ -456,7 +465,7 @@ export function InvoiceList({
                           }}
                           className="w-full justify-start text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
                         >
-                          <Send className="w-4 h-4" /> Send
+                          <Send className="w-4 h-4" /> {inv.is_edited ? "Resend to Patient" : "Send"}
                         </Button>
                       )}
                       <Button
@@ -835,7 +844,7 @@ export function InvoiceList({
                   onView={(id) => onViewInvoice?.(id)}
                   onHistory={setHistoryInvoice}
                   onPay={setPayInvoice}
-                  onSend={(id) => onUpdateStatus?.(id, "sent")}
+                  onSend={handleSendInvoice}
                   onDelete={(id, num) => onDeleteInvoice?.(id, num)}
                   onWhatsapp={(phone, name) => {
                     setWhatsappHistoryPhone(phone);

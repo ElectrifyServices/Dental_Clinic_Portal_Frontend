@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";
@@ -83,6 +83,7 @@ function ModalRegistryContent() {
   };
 
   const queryClient = useQueryClient();
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const {
     activeModal,
     setActiveModal,
@@ -1078,9 +1079,10 @@ function ModalRegistryContent() {
               showToast("Treatment started!");
             }
           }}
-          onManageSessions={(id: string) => {
+          onManageSessions={(id: string, sessionId?: string) => {
             setActiveModal("sessionManager");
             setSelectedItemId(id);
+            setSelectedSessionId(sessionId || null);
           }}
         />
       )}
@@ -1088,6 +1090,7 @@ function ModalRegistryContent() {
       {activeModal === "sessionManager" && (
         <TreatmentSessionManager
           treatmentId={selectedItemId}
+          initialSessionId={selectedSessionId || undefined}
           patientName={
             treatments.find((t: any) => t.id === selectedItemId)?.patientName ||
             ""
@@ -1113,6 +1116,7 @@ function ModalRegistryContent() {
           onClose={() => {
             setActiveModal(null);
             setSelectedItemId("");
+            setSelectedSessionId(null);
           }}
           onScheduleAppointment={(sd: any) => {
             handleSaveAppointment({
