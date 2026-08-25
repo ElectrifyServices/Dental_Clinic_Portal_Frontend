@@ -296,8 +296,8 @@ export function toApiUpdatePlan(formData: any): UpdateTreatmentPlanVariables {
       start_time: s.startTime || "09:00 AM",
       duration_min: s.duration || 45,
       clinical_objectives: s.notes || s.description || "",
-      status: s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
-        s.status?.toUpperCase() === "IN_PROGRESS" ? "IN_PROGRESS" :
+      status: s.status?.toUpperCase().replace("-", "_") === "IN_PROGRESS" ? "IN_PROGRESS" :
+        s.status?.toUpperCase() === "SCHEDULED" ? "SCHEDULED" :
           s.status?.toUpperCase() === "COMPLETED" ? "COMPLETED" :
             s.status?.toUpperCase() === "CANCELLED" ? "CANCELLED" : "SCHEDULED",
       work_done: s.workDone || s.work_done,

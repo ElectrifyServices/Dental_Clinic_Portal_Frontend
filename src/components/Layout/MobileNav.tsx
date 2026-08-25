@@ -90,12 +90,12 @@ const MENU_ITEMS = [
     icon: BarChart3,
     roles: ["admin", "superadmin"],
   },
-  {
-    id: "profit-sharing",
-    label: "Profit Sharing",
-    icon: IndianRupee,
-    roles: ["admin", "superadmin"],
-  },
+  // {
+  //   id: "profit-sharing",
+  //   label: "Profit Sharing",
+  //   icon: IndianRupee,
+  //   roles: ["admin", "superadmin"],
+  // },
   // Commented out from drawer menu because it is now in bottom primary tabs
   // {
   //   id: "membership",
