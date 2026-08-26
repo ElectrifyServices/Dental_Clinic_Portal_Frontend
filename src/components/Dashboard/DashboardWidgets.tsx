@@ -84,7 +84,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebounce(search, 500);
   
-  const { data: responseData } = useDoctorPerformance(page, limit, debouncedSearch);
+  const { data: responseData } = useDoctorPerformance(page, limit, debouncedSearch, period, customStart, customEnd);
   const doctors = Array.isArray(responseData) 
     ? responseData 
     : (responseData?.data || responseData?.items || []);

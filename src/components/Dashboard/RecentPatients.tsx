@@ -6,13 +6,13 @@ import { StatusBadge, ContentCard, Select, SelectContent, SelectItem, SelectTrig
 import { useRecentPatients } from "../../hooks/dashboard/useDashboardAnalytics";
 import { useDebounce } from "../../hooks/useDebounce";
 
-export function RecentPatients({ period = 'today' }: { period?: string }) {
+export function RecentPatients({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data: responseData } = useRecentPatients(page, limit, debouncedSearch);
+  const { data: responseData } = useRecentPatients(page, limit, debouncedSearch, period, customStart, customEnd);
 
   const patients = Array.isArray(responseData)
     ? responseData
