@@ -6,26 +6,10 @@ export interface ScheduleCountResponse {
   [key: string]: any;
 }
 
-export function useScheduleBookedQuery() {
-  return useApiQuery<ScheduleCountResponse>({
-    queryKey: ["dashboard", "schedule", "booked"],
-    endpoint: "/dashboard/schedule/booked",
-    method: "get",
-  });
-}
-
 export function useSchedulePendingQuery() {
   return useApiQuery<ScheduleCountResponse>({
     queryKey: ["dashboard", "schedule", "pending"],
     endpoint: "/dashboard/schedule/pending",
-    method: "get",
-  });
-}
-
-export function useScheduleCompletedQuery() {
-  return useApiQuery<ScheduleCountResponse>({
-    queryKey: ["dashboard", "schedule", "completed"],
-    endpoint: "/dashboard/schedule/completed",
     method: "get",
   });
 }
