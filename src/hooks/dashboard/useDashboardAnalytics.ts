@@ -1,12 +1,8 @@
 import { useApiQuery } from "../useApiQuery";
+import { getLocalDateString } from "../../utils/dateUtils";
 
-// Helper to get formatted date DD-MM-YYYY
-const formatDate = (date: Date) => {
-  const d = String(date.getDate()).padStart(2, "0");
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const y = date.getFullYear();
-  return `${d}-${m}-${y}`;
-};
+// Always sends dates as "YYYY-MM-DD"
+const formatDate = (date: Date) => getLocalDateString(date);
 
 export function getDashboardDateRange(
   period: string,
