@@ -5,12 +5,11 @@ import { Loading } from "@/components/ui/Loading";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
 import { AppointmentTimeline } from "./TodaySchedule/AppointmentTimeline";
 import {
-  useScheduleBookedQuery,
   useSchedulePendingQuery,
-  useScheduleCompletedQuery,
   useScheduleTeamAvailabilityQuery,
   useScheduleLiveTimelineQuery,
 } from "@/hooks/appointments/useScheduleQueries";
+import { useAppointmentCompletedQuery } from "@/hooks/appointments/useAppointmentStatsQueries";
 import { getLocalDateString } from "../../utils/dateUtils";
 
 interface TodaySchedulePopupProps {
@@ -42,22 +41,20 @@ export function TodaySchedulePopup({
   const todayStr = getLocalDateString();
   const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
-  const { data: bookedData, refetch: refetchBooked, isFetching: isBookedFetching } = useScheduleBookedQuery();
   const { data: pendingData, refetch: refetchPending, isFetching: isPendingFetching } = useSchedulePendingQuery();
-  const { data: completedData, refetch: refetchCompleted, isFetching: isCompletedFetching } = useScheduleCompletedQuery();
+  const { data: completedStatsData, refetch: refetchCompletedStats, isFetching: isCompletedStatsFetching } = useAppointmentCompletedQuery(todayStr);
   const { data: teamAvailData, refetch: refetchTeam, isFetching: isTeamFetching } = useScheduleTeamAvailabilityQuery();
   const { data: timelineData, refetch: refetchTimeline, isFetching: isTimelineFetching } = useScheduleLiveTimelineQuery();
 
-  const isFetching = isBookedFetching || isPendingFetching || isCompletedFetching || isTeamFetching || isTimelineFetching;
+  const isFetching = isPendingFetching || isCompletedStatsFetching || isTeamFetching || isTimelineFetching;
 
   useEffect(() => {
     // Refetch all APIs when this modal opens
-    refetchBooked();
     refetchPending();
-    refetchCompleted();
+    refetchCompletedStats();
     refetchTeam();
     refetchTimeline();
-  }, [refetchBooked, refetchPending, refetchCompleted, refetchTeam, refetchTimeline]);
+  }, [refetchPending, refetchCompletedStats, refetchTeam, refetchTimeline]);
 
 
   const extractCount = (data: any, fallback: number): number => {
@@ -116,8 +113,8 @@ export function TodaySchedulePopup({
     ? timelineData
     : [];
 
-  const bookedCount = extractCount(bookedData, resolvedAppointments.length);
-  const completedCount = extractCount(completedData, resolvedAppointments.filter((a: any) => (a.status || "").toLowerCase() === "completed").length);
+  const bookedCount = resolvedAppointments.length;
+  const completedCount = extractCount(completedStatsData, resolvedAppointments.filter((a: any) => (a.status || "").toLowerCase() === "completed").length);
   const pendingCount = extractCount(pendingData, resolvedAppointments.filter((a: any) => !["completed", "cancelled", "no-show"].includes((a.status || "").toLowerCase())).length);
 
   const resolvedDoctors = Array.isArray(teamAvailData?.data)
