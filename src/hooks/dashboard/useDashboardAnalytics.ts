@@ -270,12 +270,26 @@ export const useDoctorPerformance = (
   page: number = 1,
   limit: number = 5,
   search?: string,
+  period?: string,
+  customStart?: string,
+  customEnd?: string,
 ) => {
+  const range = period
+    ? getDashboardDateRange(period, customStart, customEnd)
+    : undefined;
   return useApiQuery<any>({
-    queryKey: ["dashboard", "doctor-performance", page, limit, search],
+    queryKey: [
+      "dashboard",
+      "doctor-performance",
+      page,
+      limit,
+      search,
+      range?.startDate,
+      range?.endDate,
+    ],
     endpoint: `/dashboard/doctor-performance`,
     method: "post",
-    data: { page, limit, search },
+    data: { page, limit, search, ...range },
     options: DASHBOARD_OPTIONS,
   });
 };
@@ -284,12 +298,26 @@ export const useRecentPatients = (
   page: number = 1,
   limit: number = 5,
   search?: string,
+  period?: string,
+  customStart?: string,
+  customEnd?: string,
 ) => {
+  const range = period
+    ? getDashboardDateRange(period, customStart, customEnd)
+    : undefined;
   return useApiQuery<any>({
-    queryKey: ["dashboard", "recent-patients", page, limit, search],
+    queryKey: [
+      "dashboard",
+      "recent-patients",
+      page,
+      limit,
+      search,
+      range?.startDate,
+      range?.endDate,
+    ],
     endpoint: `/dashboard/recent-patients`,
     method: "post",
-    data: { page, limit, search },
+    data: { page, limit, search, ...range },
     options: DASHBOARD_OPTIONS,
   });
 };
