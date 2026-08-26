@@ -77,9 +77,19 @@ export function useTreatmentPlansQuery(
     if (filters.sortBy) body.sortBy = filters.sortBy;
     if (filters.sortOrder) body.sortOrder = filters.sortOrder;
 
-    // Date ranges
-    if (filters.startDate) body.startDate = filters.startDate.toISOString();
-    if (filters.endDate) body.endDate = filters.endDate.toISOString();
+    // Date ranges (accepts Date objects or "YYYY-MM-DD" strings)
+    if (filters.startDate) {
+      body.startDate =
+        filters.startDate instanceof Date
+          ? filters.startDate.toISOString()
+          : filters.startDate;
+    }
+    if (filters.endDate) {
+      body.endDate =
+        filters.endDate instanceof Date
+          ? filters.endDate.toISOString()
+          : filters.endDate;
+    }
 
     // Advanced filters - convert arrays to proper format for API
     if (filters.filters) {

@@ -51,6 +51,7 @@ import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 import { procedures as procedureCatalog } from "../../constants/treatment.constants";
 import { useModal } from "../../contexts/ModalContext";
+import { getLocalDateString } from "../../utils/dateUtils";
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
   completed: {
@@ -602,8 +603,8 @@ export function TreatmentList({
           ...(adv.doctorId ? { doctorId: [adv.doctorId] } : {}),
           ...(adv.procedure ? { procedure: [adv.procedure] } : {}),
         },
-        startDate: adv.dateFrom,
-        endDate: adv.dateTo,
+        startDate: adv.dateFrom ? getLocalDateString(adv.dateFrom) : undefined,
+        endDate: adv.dateTo ? getLocalDateString(adv.dateTo) : undefined,
       });
     },
     [search, statusFilter, currentPage, advancedFilters, onParamsChange]

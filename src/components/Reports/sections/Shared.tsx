@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { getLocalDateString } from '../../../utils/dateUtils';
 
 // ─── Section wrapper ───────────────────────────────────────────────────────────
 export function Section({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,45 @@ export function Section({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Helper function to build filter payload based on period string
+// Compute the YYYY-MM-DD start/end for a preset period
+function getRangeForPeriod(period: string): { startDate: string; endDate: string } {
+  const now = new Date();
+  let start: Date;
+  let end: Date;
+
+  switch (period) {
+    case 'today':
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      end = new Date(start);
+      break;
+    case 'week': {
+      const day = now.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      break;
+    }
+    case 'lastmonth':
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      end = new Date(now.getFullYear(), now.getMonth(), 0);
+      break;
+    case 'year':
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear(), 11, 31);
+      break;
+    case 'month':
+    default:
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  }
+
+  return { startDate: getLocalDateString(start), endDate: getLocalDateString(end) };
+}
+
+// Always builds a complete filter payload: timeRange + startDate + endDate.
+// - custom   -> dates come from the date pickers
+// - presets  -> dates derived from the selected period
 export function getFilterPayload(period: string, startDate?: string, endDate?: string) {
   if (period === 'custom') {
     return {
@@ -26,19 +65,16 @@ export function getFilterPayload(period: string, startDate?: string, endDate?: s
     };
   }
 
-  let timeRange = 'this_month';
+  const timeRangeMap: Record<string, string> = {
+    today: 'today',
+    week: 'this_week',
+    month: 'this_month',
+    lastmonth: 'last_month',
+    year: 'this_year',
+  };
 
-  if (period === 'today') {
-    timeRange = 'today';
-  } else if (period === 'week') {
-    timeRange = 'this_week';
-  } else if (period === 'month') {
-    timeRange = 'this_month';
-  } else if (period === 'lastmonth') {
-    timeRange = 'last_month';
-  } else if (period === 'year') {
-    timeRange = 'this_year';
-  }
-
-  return { timeRange };
+  return {
+    timeRange: timeRangeMap[period] ?? 'this_month',
+    ...getRangeForPeriod(period),
+  };
 }
