@@ -45,9 +45,9 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
   const { data: appointmentsCount = 0 } = useAppointmentsCount(period, customStart, customEnd);
   const { data: revenueData = {} } = useRevenue(period, customStart, customEnd);
   const { data: patientsCount = 0 } = usePatientsCount(period, customStart, customEnd);
-  const { data: pendingInvoices = 0 } = usePendingInvoices();
-  const { data: lowStockItems = 0 } = useLowStockItems();
-  const { data: corporateMembers = 0 } = useCorporateMembers();
+  const { data: pendingInvoices = 0 } = usePendingInvoices(period, customStart, customEnd);
+  const { data: lowStockItems = 0 } = useLowStockItems(period, customStart, customEnd);
+  const { data: corporateMembers = 0 } = useCorporateMembers(period, customStart, customEnd);
   const { data: revenueTrend = [] } = useRevenueTrend();
 
   const mappedRevenueTrend = React.useMemo(() => {
