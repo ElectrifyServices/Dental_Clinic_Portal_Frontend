@@ -37,6 +37,7 @@ export const treatmentSchema = z.object({
   discount_value: z.coerce.number().min(0).optional().default(0),
   prescriptions: z.array(prescriptionItemSchema).default([]),
   sessions: z.array(sessionSchema).default([]),
+  removedAttachmentIds: z.array(z.string()).optional().default([]),
 });
 
 export type TreatmentFormData = z.infer<typeof treatmentSchema>;

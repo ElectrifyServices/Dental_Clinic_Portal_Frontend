@@ -95,6 +95,8 @@ interface ConsultationData {
   labFiles: { name: string; url: string; type: string }[];
   selectedTeeth: string[];
   treatmentPlans: any[];
+  attachmentsList?: any[];
+  removedAttachmentIds?: string[];
 }
 
 export function PatientConsultation({
@@ -364,6 +366,8 @@ export function PatientConsultation({
       rawXrays: [] as File[],
       labFiles: [] as { name: string; url: string; type: string }[],
       selectedTeeth: [] as string[],
+      attachmentsList: [] as any[],
+      removedAttachmentIds: [] as string[],
       treatmentPlans: initialData?.consultationData?.treatmentPlans || [
         {
           id: `plan-${Date.now()}`,
@@ -700,6 +704,22 @@ export function PatientConsultation({
   };
 
   const removeImage = (index: number) => {
+    const urlToRemove = consultationData.images[index];
+    if (urlToRemove && !urlToRemove.startsWith("blob:")) {
+      const matched = consultationData.attachmentsList?.find(
+        (a: any) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
+      );
+      if (matched?.id) {
+        setConsultationData((prev) => ({
+          ...prev,
+          images: prev.images.filter((_, i) => i !== index),
+          rawImages: prev.rawImages ? prev.rawImages.filter((_, i) => i !== index) : [],
+          removedAttachmentIds: [...(prev.removedAttachmentIds || []), matched.id],
+        }));
+        return;
+      }
+    }
+
     setConsultationData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
@@ -708,6 +728,22 @@ export function PatientConsultation({
   };
 
   const removeXrayFile = (index: number) => {
+    const urlToRemove = consultationData.xrayFiles[index];
+    if (urlToRemove && !urlToRemove.startsWith("blob:")) {
+      const matched = consultationData.attachmentsList?.find(
+        (a: any) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
+      );
+      if (matched?.id) {
+        setConsultationData((prev) => ({
+          ...prev,
+          xrayFiles: prev.xrayFiles.filter((_, i) => i !== index),
+          rawXrays: prev.rawXrays ? prev.rawXrays.filter((_, i) => i !== index) : [],
+          removedAttachmentIds: [...(prev.removedAttachmentIds || []), matched.id],
+        }));
+        return;
+      }
+    }
+
     setConsultationData((prev) => ({
       ...prev,
       xrayFiles: prev.xrayFiles.filter((_, i) => i !== index),

@@ -90,6 +90,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     discount_value: currentTreatment?.discount_value ?? 0,
     prescriptions: [],
     sessions: [],
+    removedAttachmentIds: [],
   });
 
   const form = useForm<TreatmentFormData>({

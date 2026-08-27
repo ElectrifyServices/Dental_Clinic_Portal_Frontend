@@ -129,7 +129,7 @@ export function toApiCreateConsultation(uiConsultation: Partial<UiConsultation> 
   };
 }
 
-export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, attachments?: File[] }): any {
+export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> & { appointment_info?: any, attachments?: File[], removedAttachmentIds?: string[] }): any {
   return {
     id: uiConsultation.id,
     patient_id: uiConsultation.patientId,
@@ -147,5 +147,6 @@ export function toApiUpdateConsultation(uiConsultation: Partial<UiConsultation> 
     prescriptions: uiConsultation.prescriptions,
     appointment_info: uiConsultation.appointment_info || undefined,
     attachments: uiConsultation.attachments || [],
+    removedAttachmentIds: uiConsultation.removedAttachmentIds || undefined,
   };
 }

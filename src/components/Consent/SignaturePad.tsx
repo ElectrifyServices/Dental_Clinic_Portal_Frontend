@@ -21,6 +21,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
     if (canvas && defaultValue) {
       const ctx = canvas.getContext('2d');
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -30,8 +31,24 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
         }
       };
+      img.onerror = () => {
+        // Fallback in case CORS headers are not configured on the CDN/S3 bucket
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => {
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const scale = Math.min(canvas.width / fallbackImg.width, canvas.height / fallbackImg.height);
+            const x = (canvas.width / 2) - (fallbackImg.width / 2) * scale;
+            const y = (canvas.height / 2) - (fallbackImg.height / 2) * scale;
+            ctx.drawImage(fallbackImg, x, y, fallbackImg.width * scale, fallbackImg.height * scale);
+          }
+        };
+        fallbackImg.src = defaultValue;
+      };
       img.src = defaultValue;
     }
+    setHasSigned(!!defaultValue);
+    setHasDrawn(!!defaultValue);
   }, [defaultValue, mode]);
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {

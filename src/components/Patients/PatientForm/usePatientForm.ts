@@ -91,6 +91,7 @@ export const usePatientForm = (patient: any) => {
       referredBy: "",
       avatar: "",
       dentalFiles: [],
+      remove_image_ids: [],
       previousDoctorName: "",
       previousClinicName: "",
       previousDoctorPhone: "",
@@ -175,7 +176,15 @@ export const usePatientForm = (patient: any) => {
         patientId: patient.patient_id || patient.patientId || generatePatientId(),
         medicalHistory: getHistoryString(patient.medicalHistories || patient.medical_histories || patient.medicalHistory),
         allergies: getAllergiesString(patient.allergies),
-        dentalFiles: patient.dentalFiles || patient.dental_files || [],
+        dentalFiles: (patient.dentalFiles || patient.dental_files || []).map((file: any) => {
+          if (typeof file === "string") return { url: file, name: file.split('/').pop() || "" };
+          return {
+            id: file.id || file.file_id || undefined,
+            name: file.name || file.file_name || "",
+            url: file.url || file.image_url || file.file_url || file.path || "",
+            type: file.type || file.mime_type || file.file_type || ""
+          };
+        }),
         pastDentalHistory: patient.past_dental_history || patient.pastDentalHistory || "",
         previousTreatments: (patient.previous_treatments || patient.previousTreatments || []).map((t: any) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
         previousDoctorName: patient.previous_doctor_name || patient.previousDoctorName || "",

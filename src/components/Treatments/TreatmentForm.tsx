@@ -584,6 +584,14 @@ export function TreatmentForm({
             } else if (urlToRemove) {
               const currentExisting = form.getValues("existingImages") || [];
               form.setValue("existingImages", currentExisting.filter((url) => url !== urlToRemove));
+
+              const matchedAttachment = treatment?.attachments?.find(
+                (a: any) => (a.file_url || a.url || a.path) === urlToRemove
+              );
+              if (matchedAttachment?.id) {
+                const currentRemoved = form.getValues("removedAttachmentIds") || [];
+                form.setValue("removedAttachmentIds", [...currentRemoved, matchedAttachment.id]);
+              }
             }
           }}
         />

@@ -80,6 +80,7 @@ export function normalizePatient(payload: any) {
     consentFormUrl: p.consent_form_url || p.consentFormUrl || '',
     patientSignature: p.consent_signature_url || p.patientSignature || '',
     dentalFiles: (p.images || []).map((img: any) => ({
+      id: img.id,
       name: img.file_name,
       url: img.image_url,
       type: img.mime_type

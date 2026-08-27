@@ -217,6 +217,10 @@ export function mapFormDataToCreatePayload(
     });
   }
 
+  if (formData.remove_image_ids?.length) {
+    payload.append('remove_image_ids', JSON.stringify(formData.remove_image_ids));
+  }
+
   return payload;
 }
 

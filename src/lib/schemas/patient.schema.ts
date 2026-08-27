@@ -46,6 +46,7 @@ export const patientSchema = z.object({
   barcode: z.string().optional(),
   avatar: z.string().optional(),
   dentalFiles: z.array(z.any()).optional().default([]),
+  remove_image_ids: z.array(z.string()).optional().default([]),
 });
 
 export type PatientFormData = z.infer<typeof patientSchema>;
