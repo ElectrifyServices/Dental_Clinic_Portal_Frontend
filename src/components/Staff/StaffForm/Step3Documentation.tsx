@@ -8,7 +8,7 @@ interface Step3Props {
   role: string;
   documents: any[];
   onUpload: (docType: string, file: File) => void;
-  onRemove: (docType: string) => void;
+  onRemove: (fileObj: any) => void;
 }
 
 const DOC_REQUIREMENTS: Record<string, string[]> = {

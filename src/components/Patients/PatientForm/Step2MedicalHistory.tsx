@@ -458,10 +458,16 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         size="icon-xs"
                         onClick={(e) => {
                           e.stopPropagation();
+                          const fileToRemove = formData.dentalFiles[index];
+                          const removeIds = [...(formData.remove_image_ids || [])];
+                          if (fileToRemove && fileToRemove.id) {
+                            removeIds.push(fileToRemove.id);
+                          }
                           setFormData((prev: any) => ({
                             ...prev,
                             dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
-                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : []
+                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : [],
+                            remove_image_ids: removeIds
                           }));
                         }}
                         className="h-6 w-6 rounded-full"

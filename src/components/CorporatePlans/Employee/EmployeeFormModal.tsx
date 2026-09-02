@@ -290,7 +290,8 @@ export function EmployeeFormModal({
         )}
       </div>
     );
-  };
+  }
+   ;
 
   const todayStr = React.useMemo(() => {
     const d = new Date();

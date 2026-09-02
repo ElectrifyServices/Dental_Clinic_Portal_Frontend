@@ -34,6 +34,26 @@ import { useRolesQuery, fetchRolesList } from "@/hooks/roles/useRolesQuery";
 import { useSpecializationsQuery } from "@/hooks/specializations/useSpecializationsQuery";
 import { useSingleStaffQuery } from "../../hooks/staff/useSingleStaffQuery";
 import { useModal } from "@/contexts/ModalContext";
+import { getFileUrl } from "@/services/apiClient";
+
+const normalizeCategoryToUiType = (category: string): string => {
+  if (!category) return "";
+  const cat = category.toUpperCase();
+  if (cat === "ADHAR_CARD" || cat === "AADHAR_CARD") return "Aadhaar / Identity Proof";
+  if (cat === "EDUCATIONAL_DEGREE" || cat === "MEDICAL_CERTIFICATE") return "Educational Degree Documents";
+  if (cat === "MEDICAL_COUNCIL_REGISTRATION") return "Medical Council Registration";
+  if (cat === "EXPERIENCE_CERTIFICATE" || cat === "EXPERIENCE_CERTIFICATES") return "Experience Certificates";
+  if (cat === "MEDICAL_INDEMNITY_INSURANCE" || cat === "MEDICAL_INDEMINITY_INSURANCE") return "Medical Indemnity Insurance";
+  if (cat === "NOC") return "NOC (if applicable)";
+  if (cat === "POLICE_VERIFICATION") return "Police Verification";
+  if (cat === "PAN_CARD") return "PAN Card";
+  if (cat === "BANK_DETAILS" || cat === "BANK_DETAIL") return "Bank Details / Passbook";
+  if (cat === "EMPLOYMENT_CONTRACT" || cat === "SIGNED_EMPLOYMENT_CONTRACT") return "Signed Employment Contract";
+  if (cat === "RESUME" || cat === "RESUME_CV") return "Resume / CV";
+  if (cat === "MEDICAL_FITNESS" || cat === "MEDICAL_FITNESS_CERTIFICATE") return "Medical Fitness Certificate";
+  if (cat === "VACCINATION" || cat === "VACCINATION_PROOF") return "Vaccination Proof (Hep-B/COVID)";
+  return category;
+};
 
 interface DoctorFormProps {
   onClose: () => void;
@@ -55,6 +75,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
 
   // Fetch detailed staff details from API GET /staff/:id when editing
   const { data: singleStaffData, isLoading: isFetching } = useSingleStaffQuery(doctor?.id || undefined, {
@@ -106,7 +127,15 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "lab_work",
       ]),
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
-      documents: doctor?.documents ?? [],
+      documents: Array.isArray(doctor?.files)
+        ? doctor.files.map((f: any) => ({
+            id: f.id,
+            type: normalizeCategoryToUiType(f.category),
+            name: f.file_name,
+            url: getFileUrl(f.file_url),
+            size: f.file_size || 0,
+          }))
+        : (doctor?.documents ?? []),
       profitSharing: doctor?.profitSharing ?? false,
       profitPercentage: doctor?.profitPercentage ?? 0,
       licenseNumber: doctor?.licenseNumber ?? "",
@@ -166,6 +195,16 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           }
         }
 
+        const mappedDocuments = Array.isArray(s.files)
+          ? s.files.map((f: any) => ({
+              id: f.id,
+              type: normalizeCategoryToUiType(f.category),
+              name: f.file_name,
+              url: getFileUrl(f.file_url),
+              size: f.file_size || 0,
+            }))
+          : (s.documents || doctor.documents || []);
+
         form.reset({
           name: s.name || doctor.name || "",
           email: s.email || doctor.email || "",
@@ -177,7 +216,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           confirmPassword: "",
           permissions: permissions.length > 0 ? permissions : normalizePermissions(doctor.permissions || ['dashboard']),
           uniqueId: s.emp_id || doctor.uniqueId || s.id.slice(0, 8),
-          documents: s.documents || doctor.documents || [],
+          documents: mappedDocuments,
           profitSharing: profile.profit_sharing || doctor.profitSharing || false,
           profitPercentage: profile.profit_sharing_percentage || doctor.profitPercentage || 0,
           licenseNumber: profile.license_number || doctor.licenseNumber || '',
@@ -193,6 +232,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           isActive: s.status === 'ACTIVE',
           avatar: s.profile_picture || doctor.avatar || doctor.image || '',
         });
+        setRemovedFileIds([]);
       } else {
         let rawPhone = doctor.phone || "";
         let parsedCountryCode = (doctor as any)?.country_code || "+91";
@@ -206,6 +246,16 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             }
           }
         }
+
+        const mappedDoctorDocs = Array.isArray(doctor.files)
+          ? doctor.files.map((f: any) => ({
+              id: f.id,
+              type: normalizeCategoryToUiType(f.category),
+              name: f.file_name,
+              url: getFileUrl(f.file_url),
+              size: f.file_size || 0,
+            }))
+          : (doctor.documents || []);
 
         form.reset({
           name: doctor.name ?? "",
@@ -226,7 +276,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
             "consent_forms",
           ]),
           uniqueId: doctor.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
-          documents: doctor.documents ?? [],
+          documents: mappedDoctorDocs,
           profitSharing: doctor.profitSharing ?? false,
           profitPercentage: doctor.profitPercentage ?? 0,
           licenseNumber: doctor.licenseNumber ?? "",
@@ -242,6 +292,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           isActive: doctor.isActive !== undefined ? doctor.isActive : true,
           avatar: doctor.avatar ?? doctor.image ?? "",
         });
+        setRemovedFileIds([]);
       }
     }
   }, [doctor, singleStaffData, form]);
@@ -473,6 +524,9 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         }
       });
 
+      // Add removedFileIds to form data
+      formDataObj.append("removedFileIds", JSON.stringify(removedFileIds));
+
       // API call
       let response;
       if (doctor?.id) {
@@ -581,11 +635,14 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   };
 
   const handleDocumentRemove = (fileObj: any) => {
-    const current = form.getValues("documents");
+    const current = form.getValues("documents") || [];
     form.setValue(
       "documents",
       current.filter((d: any) => d !== fileObj && d.url !== fileObj.url),
     );
+    if (fileObj.id) {
+      setRemovedFileIds((prev) => [...prev, fileObj.id]);
+    }
   };
 
   const renderCurrentStep = () => {

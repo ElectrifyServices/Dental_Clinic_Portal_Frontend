@@ -104,22 +104,6 @@ export const Step3Consent: React.FC<Step3Props> = ({
                       className="hidden" 
                     />
                   </Label>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        consentFormUrl: "",
-                        rawConsentFormFile: null
-                      }));
-                    }}
-                    className="h-8 py-1.5 px-3 text-xs text-destructive-foreground bg-destructive hover:bg-destructive/85 border-transparent"
-                  >
-                    <X className="w-3.5 h-3.5 mr-1" />
-                    Remove Form
-                  </Button>
                 </div>
               </div>
             ) : (

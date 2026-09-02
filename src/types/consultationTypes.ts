@@ -41,6 +41,7 @@ export interface CreateConsultationVariables {
 
 export interface UpdateConsultationVariables extends CreateConsultationVariables {
   id: string;
+  removedAttachmentIds?: string[];
 }
 
 export interface ConsultationResponse {

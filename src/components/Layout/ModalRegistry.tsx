@@ -289,6 +289,8 @@ function ModalRegistryContent() {
         ],
         images: (data.attachments || data.images || data.clinical_images || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
         xrayFiles: (data.xrayFiles || data.xray_files || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
+        attachmentsList: data.attachments || [],
+        removedAttachmentIds: [],
         labFiles: data.labFiles || data.lab_files || [],
         selectedTeeth: data.selectedTeeth || data.selected_teeth || [],
         bp: data.bp || "",
@@ -489,8 +491,8 @@ function ModalRegistryContent() {
       riskDisclosure: form.clinical_risks || "",
       alternativeTreatments: form.alternative_risks || "",
       witnessName: form.witness_name || "",
-      patientSignature: form.patient_signature || "",
-      witnessSignature: form.witness_signature || "",
+      patientSignature: form.patient_signature_url || form.patient_signature || "",
+      witnessSignature: form.witness_signature_url || form.witness_signature || "",
       doctorName: doctorObj?.name || form.doctor_name || "",
       doctorId: form.doctor_id || "",
       consentFormUrl: form.offline_consent_image_url || form.offlineConsentImageUrl || form.consent_form_image || form.consent_form_url || form.consentFormUrl || "",
@@ -840,7 +842,8 @@ function ModalRegistryContent() {
                 toothFindings: tooth_findings,
                 treatments: treatments,
                 prescriptions: prescriptions,
-                attachments: d.attachments || []
+                attachments: d.attachments || [],
+                removedAttachmentIds: d.removedAttachmentIds || []
               };
 
               if (d.followUpRequired) {
