@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
+import { Input } from "@/components/ui/Input";
 import { CorporateBulkSelectModal } from "./CorporateBulkSelectModal";
 
 interface CorporatePendingEmployeesProps {
@@ -118,13 +119,13 @@ export const CorporatePendingEmployees: React.FC<
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-52">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400" />
-              <input
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 z-10" />
+              <Input
                 type="text"
                 placeholder="Search employee..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-7 py-1.5 text-xs border border-indigo-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full pl-8 pr-7 py-1.5 h-8 text-xs border border-indigo-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
               {searchTerm && (
                 <Button
@@ -132,7 +133,7 @@ export const CorporatePendingEmployees: React.FC<
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600 p-0 h-4 w-4"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600 p-0 h-4 w-4 z-10"
                 >
                   <X className="w-3.5 h-3.5" />
                 </Button>

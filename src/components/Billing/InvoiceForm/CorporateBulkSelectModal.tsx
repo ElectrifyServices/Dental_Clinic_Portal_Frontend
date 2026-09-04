@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/Dialog";
 import { Button, DataTable } from "@/components/ui";
+import { Input } from "@/components/ui/Input";
 import { Search, CheckCircle2 } from "lucide-react";
 
 interface CorporateBulkSelectModalProps {
@@ -164,13 +165,13 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
 
         <div className="p-4 border-b bg-muted/20 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+            <Input
               type="text"
               placeholder="Search in list..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-4 py-2 h-10 text-sm border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div className="text-sm font-bold text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl">
