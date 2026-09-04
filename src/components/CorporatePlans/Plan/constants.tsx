@@ -51,6 +51,10 @@ export const mkForm = () => {
     annualFee: undefined as number | undefined,
     maxDependents: 0,
     planTier: undefined as CorporatePlanTier | undefined,
+    contactName: '',
+    contactPhone: '',
+    contactEmail: '',
+    contactCountryCode: '+91',
   };
 };
 

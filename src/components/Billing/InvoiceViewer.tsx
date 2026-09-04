@@ -313,21 +313,34 @@ export function InvoiceViewer({
             <CardContent className="p-4 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center border border-border shadow-sm">
-                  <User className="w-5 h-5 text-primary" />
+                  {invoice.isCorporateInvoice ? (
+                    <Building2 className="w-5 h-5 text-indigo-600" />
+                  ) : (
+                    <User className="w-5 h-5 text-primary" />
+                  )}
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Bill To
+                    {invoice.isCorporateInvoice ? "Bill To (Company)" : "Bill To"}
                   </p>
                   <p className="text-base font-bold text-foreground">
                     {invoice.patientName}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                     {invoice.phone || "No phone recorded"}
                   </p>
                 </div>
               </div>
-              {corporatePlan && (
+              {invoice.isCorporateInvoice && (
+                <div className="pt-2 border-t border-border/50">
+                  <Badge className="text-xs py-1 px-2.5 font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
+                    🏢 Corporate Invoice • {
+                      invoice.items?.filter((i: any) => i.item_type === "MEMBERSHIP" || (i.description && i.description.startsWith("Employee Membership"))).length || invoice.items?.length || 0
+                    } Employee(s) Billed
+                  </Badge>
+                </div>
+              )}
+              {corporatePlan && !invoice.isCorporateInvoice && (
                 <div className="flex items-start gap-3 pt-2 border-t border-border/50">
                   <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 shadow-sm">
                     <Building2 className="w-5 h-5 text-primary" />
@@ -397,6 +410,14 @@ export function InvoiceViewer({
         {/* Items Table */}
         <DataTable
           columns={[
+            {
+              key: "sr_no",
+              header: "Sr. No.",
+              align: "center",
+              render: (_: any, idx: number) => (
+                <span className="text-muted-foreground font-medium">{idx + 1}</span>
+              ),
+            },
             {
               key: "description",
               header: "Description",

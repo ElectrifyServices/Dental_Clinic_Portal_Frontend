@@ -911,6 +911,7 @@ function ModalRegistryContent() {
                 complimentary_reason: inv.complimentaryNote || undefined,
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
+                phone: inv.patientPhone || inv.phone || undefined,
                 items: inv.items.map((item: any) => {
                   let type: "CONSULTATION" | "TREATMENT_SESSION" | "MEMBERSHIP";
                   if (item.linkedType) {
@@ -931,6 +932,7 @@ function ModalRegistryContent() {
                     treatment_plan_id: type === "TREATMENT_SESSION" ? cleanLinkedId : undefined,
                     membership_id: type === "MEMBERSHIP" && !item.isNewPlanPurchase ? cleanLinkedId : undefined,
                     billing_description_id: descId,
+                    billing_description_name: item.billing_description_name || (inv.isCorporateBilling ? inv.patientName : undefined),
                     
                     description: item.description,
                     total_amount: (Number(item.rate) || 0) * (Number(item.quantity) || 1),
@@ -947,9 +949,13 @@ function ModalRegistryContent() {
                 payload.plan_id = newPlanPurchaseItem.linkedId;
               }
 
-              if (inv.memberId) {
+              if (inv.isCorporateBilling) {
+                payload.plan_id = inv.corporatePlanId || payload.plan_id || undefined;
+                payload.member_id = undefined;
+                payload.patient_id = undefined;
+              } else if (inv.memberId) {
                 payload.member_id = inv.memberId;
-              } else {
+              } else if (inv.patientId) {
                 payload.patient_id = inv.patientId;
               }
 

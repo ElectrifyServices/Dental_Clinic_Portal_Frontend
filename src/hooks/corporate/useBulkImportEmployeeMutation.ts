@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export interface BulkImportEmployee {
   name: string;
   emp_id: string;
+  country_code: string;
   phone: string;
   email: string;
   gender: string;

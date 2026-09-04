@@ -115,14 +115,16 @@ export function StatusBadge({ variant = "gray", children, className = "" }: Stat
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 interface ModalProps {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "5xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
   icon?: React.ReactNode;
   bodyClassName?: string;
+  headerRight?: React.ReactNode;
+  hideCloseButton?: boolean;
 }
 const MODAL_SIZES: Record<string, string> = {
   sm:  "max-w-sm",
@@ -137,7 +139,7 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName }: ModalProps) {
+export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName, headerRight, hideCloseButton }: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -166,12 +168,17 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
               )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {headerRight}
+            {!hideCloseButton && (
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </DialogHeader>
         <div className={cn("p-6 overflow-y-auto flex-1 custom-scrollbar", bodyClassName)}>{children}</div>
         {footer && (
