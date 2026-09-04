@@ -24,6 +24,7 @@ import { InventoryPage } from "./pages/InventoryPage";
 import { LabWorkPage } from "./pages/LabWorkPage";
 import { CorporatePlansPage } from "./pages/CorporatePlansPage";
 import ConsultationPage from "./pages/ConsultationPage";
+import { BroadcastPage } from "./pages/BroadcastPage";
 import { CalendarIntegrationPage } from "./pages/CalendarIntegrationPage";
 import { CalendarIntegrationCallbackPage } from "./pages/CalendarIntegrationCallbackPage";
 
@@ -120,6 +121,7 @@ function ProtectedRoutes() {
         <Route path="/inventory" element={<GuardedRoute path="/inventory" element={<InventoryPage />} />} />
         <Route path="/lab-work" element={<GuardedRoute path="/lab-work" element={<LabWorkPage />} />} />
         <Route path="/membership" element={<GuardedRoute path="/membership" element={<CorporatePlansPage />} />} />
+        <Route path="/broadcast" element={<GuardedRoute path="/broadcast" element={<BroadcastPage />} />} />
         <Route path="/calendar-integration" element={<CalendarIntegrationPage />} />
         <Route path="/calendar-integration/callback" element={<CalendarIntegrationCallbackPage />} />
         <Route path="*" element={<Navigate to={defaultPath} replace />} />
