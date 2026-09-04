@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/Button";
 import React, { useState, useRef } from "react";
 import {
   Users,
@@ -12,7 +11,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui";
+import { Card, CardContent, Button } from "@/components/ui";
 import { CorporateBulkSelectModal } from "./CorporateBulkSelectModal";
 
 interface CorporatePendingEmployeesProps {
@@ -128,13 +127,15 @@ export const CorporatePendingEmployees: React.FC<
                 className="w-full pl-8 pr-7 py-1.5 text-xs border border-indigo-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
               {searchTerm && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-600 p-0 h-4 w-4"
                 >
                   <X className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               )}
             </div>
 

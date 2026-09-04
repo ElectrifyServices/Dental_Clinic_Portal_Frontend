@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
+import { Button, DataTable } from "@/components/ui";
 import { Search, CheckCircle2 } from "lucide-react";
 
 interface CorporateBulkSelectModalProps {
@@ -92,6 +92,66 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
     onClose();
   };
 
+  const columns = [
+    {
+      key: "select",
+      header: (
+        <input
+          type="checkbox"
+          checked={allFilteredSelected}
+          onChange={toggleAll}
+          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+        />
+      ),
+      className: "w-12 text-center p-4",
+      align: "center" as const,
+      render: (emp: any) => (
+        <input
+          type="checkbox"
+          checked={localSelection.has(emp.enrollment_id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleOne(emp.enrollment_id);
+          }}
+          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+        />
+      ),
+    },
+    {
+      key: "name",
+      header: "Employee Name",
+      className: "p-4 font-bold text-indigo-900",
+      render: (emp: any) => (
+        <div>
+          <p className="font-bold text-slate-800">{emp.name || "Unknown Name"}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{emp.plan_name}</p>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contact Details",
+      className: "p-4 font-bold text-indigo-900",
+      render: (emp: any) => (
+        <div>
+          <p className="text-xs text-slate-600">📞 {emp.phone || "N/A"}</p>
+          {emp.email && <p className="text-xs text-slate-600">📧 {emp.email}</p>}
+        </div>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount (₹)",
+      className: "p-4 font-bold text-indigo-900 text-right",
+      align: "right" as const,
+      render: (emp: any) => (
+        <span className="font-black text-emerald-600">
+          ₹{(emp.billing_amount || 0).toLocaleString()}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white">
@@ -119,63 +179,19 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
         </div>
 
         <div className="flex-1 overflow-y-auto p-0 min-h-[300px]">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-indigo-50/50 sticky top-0 z-10 shadow-sm">
-              <tr>
-                <th className="p-4 w-12 text-center">
-                  <input
-                    type="checkbox"
-                    checked={allFilteredSelected}
-                    onChange={toggleAll}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                  />
-                </th>
-                <th className="p-4 font-bold text-indigo-900">Employee Name</th>
-                <th className="p-4 font-bold text-indigo-900">Contact Details</th>
-                <th className="p-4 font-bold text-indigo-900 text-right">Amount (₹)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                    No members match your search criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredEmployees.map((emp) => (
-                  <tr 
-                    key={emp.enrollment_id} 
-                    className={`hover:bg-indigo-50/30 transition-colors cursor-pointer ${localSelection.has(emp.enrollment_id) ? 'bg-indigo-50/40' : ''}`}
-                    onClick={() => toggleOne(emp.enrollment_id)}
-                  >
-                    <td className="p-4 text-center">
-                      <input
-                        type="checkbox"
-                        checked={localSelection.has(emp.enrollment_id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleOne(emp.enrollment_id);
-                        }}
-                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                      />
-                    </td>
-                    <td className="p-4">
-                      <p className="font-bold text-slate-800">{emp.name || "Unknown Name"}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{emp.plan_name}</p>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-xs text-slate-600">📞 {emp.phone || "N/A"}</p>
-                      {emp.email && <p className="text-xs text-slate-600">📧 {emp.email}</p>}
-                    </td>
-                    <td className="p-4 text-right font-black text-emerald-600">
-                      ₹{(emp.billing_amount || 0).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <DataTable
+            columns={columns}
+            data={filteredEmployees}
+            rowKey={(emp: any) => emp.enrollment_id}
+            onRowClick={(emp: any) => toggleOne(emp.enrollment_id)}
+            emptyTitle="No members match your search criteria."
+            rowClassName={(emp: any) =>
+              `hover:bg-indigo-50/30 transition-colors cursor-pointer ${
+                localSelection.has(emp.enrollment_id) ? 'bg-indigo-50/40' : ''
+              }`
+            }
+            disableRowAnimation
+          />
         </div>
 
         <DialogFooter className="p-4 border-t bg-muted/10 flex sm:justify-between items-center">
