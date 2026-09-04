@@ -4,6 +4,7 @@ import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User, Set
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
 import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
+import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -12,6 +13,8 @@ import { useModal } from '../../../contexts/ModalContext';
 import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
 import { mapProcedureLabelToKey } from '@/constants/consent.constants';
 import { sanitizeNumericString } from '@/utils/inputUtils';
+import { usePhoneValidation } from '@/hooks/usePhoneValidation';
+import { getPhonePlaceholder } from '@/utils/phoneUtils';
 
 // ── Tier config ───────────────────────────────────────────────────────────────
 const CORPORATE_TIERS: { value: CorporatePlanTier; label: string; activeClass: string }[] = [
@@ -63,6 +66,15 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const [form, setForm] = useState(mkForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [coveragePreset, setCoveragePreset] = useState<CoveragePreset>('self');
+
+  const { phoneError, handlePhoneChange: handleCorporatePhoneChange, validateOnSubmit: validatePhone, maxLength, countryIso, clearPhoneError } = usePhoneValidation({
+    dialingCode: form.contactCountryCode || "+91",
+    onPhoneChange: (sanitized) => {
+      setForm(prev => ({ ...prev, contactPhone: sanitized }));
+    },
+  });
+
+  const phonePlaceholder = getPhonePlaceholder(countryIso);
 
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -159,6 +171,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           name: planData.plan_name || editing.name,
           companyName: planData.company_name || editing.companyName,
           code: planData.plan_code || editing.code,
+          contactName: planData.contact_name || (editing as any).contactName || '',
+          contactPhone: planData.contact_phone || (editing as any).contactPhone || '',
+          contactEmail: planData.contact_email || (editing as any).contactEmail || '',
+          contactCountryCode: planData.contact_country_code || (editing as any).contactCountryCode || '+91',
           description: planData.description || editing.description,
           benefits: benefits.length > 0 ? benefits : editing.benefits,
           validFrom: planData.valid_from ? planData.valid_from.split('T')[0] : editing.validFrom,
@@ -178,6 +194,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           name: editing.name,
           companyName: editing.companyName,
           code: editing.code,
+          contactName: (editing as any).contactName || '',
+          contactPhone: (editing as any).contactPhone || '',
+          contactEmail: (editing as any).contactEmail || '',
+          contactCountryCode: (editing as any).contactCountryCode || '+91',
           description: editing.description,
           benefits: editing.benefits,
           validFrom: editing.validFrom,
@@ -228,7 +248,22 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     const e: Record<string, string> = {};
     if (!form.planCategory) e.planCategory = 'Required';
     if (!form.name.trim()) e.name = 'Required';
-    if (form.planCategory === 'corporate' && !form.companyName.trim()) e.companyName = 'Required';
+    if (form.planCategory === 'corporate') {
+      if (!form.companyName.trim()) e.companyName = 'Required';
+      if (!form.contactName.trim()) e.contactName = 'Required';
+      
+      if (!form.contactPhone.trim()) {
+        e.contactPhone = 'Required';
+      } else if (!validatePhone(form.contactPhone)) {
+        e.contactPhone = 'Invalid phone number';
+      }
+
+      if (!form.contactEmail.trim()) {
+        e.contactEmail = 'Required';
+      } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(form.contactEmail)) {
+        e.contactEmail = 'Invalid email address';
+      }
+    }
     if (!form.code.trim()) e.code = 'Required';
     if (!form.validFrom) e.validFrom = 'Required';
     if (!form.validTo || form.validTo < form.validFrom) e.validTo = 'Must be after start date';
@@ -287,6 +322,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     const basePayload = {
       plan_name: form.name,
       company_name: form.planCategory === 'individual' ? 'Individual' : form.companyName,
+      contact_name: form.contactName,
+      contact_phone: form.contactPhone,
+      contact_email: form.contactEmail.toLowerCase(),
+      contact_country_code: form.contactCountryCode,
       plan_code: form.code,
       description: form.description || "",
       valid_till: new Date(form.validTo).toISOString(),
@@ -459,16 +498,57 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             </LabeledField>
           )}
 
-          {/* Company Name (corporate only) */}
+          {/* Corporate specific fields */}
           {form.planCategory === 'corporate' && (
-            <LabeledField label={<span>Company Name <span className="text-destructive font-bold">*</span></span>} error={errors.companyName}>
-              <Input
-                value={form.companyName}
-                onChange={e => handleFormChange('companyName', e.target.value)}
-                placeholder="e.g. Tech Corp Pvt Ltd"
-                className="rounded-xl"
-              />
-            </LabeledField>
+            <div className="space-y-4 bg-muted/20 p-4 rounded-2xl border border-border">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Corporate Details</h4>
+              <LabeledField label={<span>Company Name <span className="text-destructive font-bold">*</span></span>} error={errors.companyName}>
+                <Input
+                  value={form.companyName}
+                  onChange={e => handleFormChange('companyName', e.target.value)}
+                  placeholder="e.g. Tech Corp Pvt Ltd"
+                  className="rounded-xl bg-background"
+                />
+              </LabeledField>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <LabeledField label={<span>Contact Name <span className="text-destructive font-bold">*</span></span>} error={errors.contactName}>
+                  <Input
+                    value={form.contactName}
+                    onChange={e => handleFormChange('contactName', e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="rounded-xl bg-background"
+                  />
+                </LabeledField>
+                <LabeledField label={<span>Email <span className="text-destructive font-bold">*</span></span>} error={errors.contactEmail}>
+                  <Input
+                    value={form.contactEmail}
+                    onChange={e => handleFormChange('contactEmail', e.target.value)}
+                    placeholder="e.g. contact@techcorp.com"
+                    className="rounded-xl bg-background"
+                  />
+                </LabeledField>
+              </div>
+              <LabeledField label={<span>Phone <span className="text-destructive font-bold">*</span></span>} error={errors.contactPhone || phoneError}>
+                <div className="flex gap-2 items-center">
+                  <CountryCodeSelect
+                    value={form.contactCountryCode || "+91"}
+                    onChange={(val) => {
+                      handleFormChange('contactCountryCode', val);
+                      clearPhoneError();
+                    }}
+                    className="w-[120px] rounded-xl bg-background border"
+                  />
+                  <Input
+                    type="tel"
+                    value={form.contactPhone}
+                    onChange={handleCorporatePhoneChange}
+                    maxLength={maxLength}
+                    placeholder={phonePlaceholder || "e.g. 9876543210"}
+                    className="rounded-xl bg-background flex-1"
+                  />
+                </div>
+              </LabeledField>
+            </div>
           )}
 
           {/* Dates + Max Members */}

@@ -46,6 +46,7 @@ interface CorporatePlan {
 
 interface BulkPatient {
   name: string;
+  country_code: string;
   phone: string;
   email: string;
   gender: string;
@@ -161,6 +162,7 @@ export function CorporateManagement({
       ...bulkPatients,
       {
         name: "",
+        country_code: "+91",
         phone: "",
         email: "",
         gender: "male",
@@ -251,6 +253,7 @@ export function CorporateManagement({
 
           return {
             name,
+            country_code: getVal(['countrycode', 'country_code', 'dialcode']) || "+91",
             phone: getVal(['phone', 'phonenumber', 'mobile', 'contact']),
             email: getVal(['email', 'emailaddress']).toLowerCase(),
             gender: getVal(['gender']) || 'male',
@@ -277,6 +280,7 @@ export function CorporateManagement({
           : [
               {
                 name: "",
+                country_code: "+91",
                 phone: "",
                 email: "",
                 gender: "male",
@@ -344,7 +348,7 @@ export function CorporateManagement({
 
   const downloadSampleCsv = () => {
     const csvContent =
-      "data:text/csv;charset=utf-8,Name,Phone,Email,Gender(male/female),Employee ID,Company Name,Designation,Department,Corporate Plan ID,Date of Birth,Eligible Date\nJohn Doe,9876543210,john@example.com,male,BULK001,Google,Developer,IT,e5e8ae28-d088-4db2-91df-931500725fa5,1995-01-01,2026-06-01\nJane Smith,8765432109,jane@example.com,female,BULK002,Google,Tester,QA,e5e8ae28-d088-4db2-91df-931500725fa5,1996-02-02,2026-06-01";
+      "data:text/csv;charset=utf-8,Name,Country Code,Phone,Email,Gender(male/female),Employee ID,Company Name,Designation,Department,Corporate Plan ID,Date of Birth,Eligible Date\nJohn Doe,+91,9876543210,john@example.com,male,BULK001,Google,Developer,IT,e5e8ae28-d088-4db2-91df-931500725fa5,1995-01-01,2026-06-01\nJane Smith,+91,8765432109,jane@example.com,female,BULK002,Google,Tester,QA,e5e8ae28-d088-4db2-91df-931500725fa5,1996-02-02,2026-06-01";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -376,6 +380,18 @@ export function CorporateManagement({
           </div>
         );
       },
+    },
+    {
+      key: "country_code",
+      header: "Code",
+      render: (p: BulkPatient, idx: number) => (
+        <Input
+          value={p.country_code}
+          onChange={(e) => handleBulkChange(idx, "country_code", e.target.value)}
+          placeholder="+91"
+          className="w-16 bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 text-foreground"
+        />
+      ),
     },
     {
       key: "phone",
