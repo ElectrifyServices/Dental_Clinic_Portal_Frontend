@@ -1,7 +1,9 @@
 import { useApiMutation } from "../useApiMutation";
 
 export interface SendBroadcastVars {
-  messageBody: string;
+  /** Approved template name — preferred. When set, messageBody/image are ignored. */
+  templateName?: string;
+  messageBody?: string;
   patientIds: string[];
   memberIds: string[];
   imageFile?: File | null;
@@ -24,10 +26,11 @@ export function useSendBroadcastMutation() {
     method: "post",
     transformRequest: (v) => {
       const fd = new FormData();
-      fd.append("messageBody", v.messageBody);
+      if (v.templateName) fd.append("templateName", v.templateName);
+      if (v.messageBody) fd.append("messageBody", v.messageBody);
       fd.append("patientIds", JSON.stringify(v.patientIds ?? []));
       fd.append("memberIds", JSON.stringify(v.memberIds ?? []));
-      if (v.imageFile) fd.append("image", v.imageFile);
+      if (v.imageFile && !v.templateName) fd.append("image", v.imageFile);
       return fd;
     },
   });
