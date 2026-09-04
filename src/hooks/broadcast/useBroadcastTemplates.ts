@@ -94,7 +94,10 @@ export function useRefreshBroadcastTemplateMutation() {
 
 export function useDeleteBroadcastTemplateMutation() {
   const qc = useQueryClient();
-  return useApiMutation<{ deleted: boolean }, { id: string }>({
+  return useApiMutation<
+    { deleted: boolean; metaDeleted?: boolean },
+    { id: string }
+  >({
     method: "delete",
     getEndpoint: (v) => `/notification/whatsapp/templates/${v.id}`,
     options: {

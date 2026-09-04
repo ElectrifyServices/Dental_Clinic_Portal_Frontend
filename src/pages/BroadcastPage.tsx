@@ -674,8 +674,16 @@ function TemplatesView({
                 onClick={() =>
                   deleteMutation
                     .mutateAsync({ id: confirmDelete.id })
-                    .then(() => {
-                      toast.success("Template deleted");
+                    .then((r) => {
+                      const metaDeleted = (
+                        r as { metaDeleted?: boolean } | undefined
+                      )?.metaDeleted;
+                      if (metaDeleted === false)
+                        toast.success(
+                          "Removed from the app. Also delete it in WhatsApp Manager — this account can't delete templates via API.",
+                          { duration: 6000 },
+                        );
+                      else toast.success("Template deleted");
                       setConfirmDelete(null);
                     })
                     .catch((e) =>
