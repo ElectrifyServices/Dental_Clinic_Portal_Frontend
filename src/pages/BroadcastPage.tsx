@@ -22,6 +22,7 @@ import {
   Pagination,
   Modal,
   StatusBadge,
+  Label,
   toast,
 } from "../components/ui";
 import {
@@ -89,33 +90,37 @@ export function BroadcastPage() {
       />
 
       <div className="inline-flex rounded-lg bg-muted p-1">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setView("send")}
-          className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+          className={`text-sm font-semibold ${
             view === "send"
-              ? "bg-background text-foreground shadow-sm"
+              ? "bg-background text-foreground shadow-sm hover:bg-background"
               : "text-muted-foreground"
           }`}
         >
-          <Megaphone className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+          <Megaphone className="w-4 h-4" />
           Send broadcast
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setView("templates")}
-          className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+          className={`text-sm font-semibold ${
             view === "templates"
-              ? "bg-background text-foreground shadow-sm"
+              ? "bg-background text-foreground shadow-sm hover:bg-background"
               : "text-muted-foreground"
           }`}
         >
-          <FileText className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+          <FileText className="w-4 h-4" />
           Templates
           {templates.length > 0 && (
-            <span className="ml-1.5 text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               ({templates.length})
             </span>
           )}
-        </button>
+        </Button>
       </div>
 
       {view === "send" ? (
@@ -288,12 +293,14 @@ function SendView({
                 Track delivery under Notifications (event “Festival Broadcast”).
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setResult(null)}
-              className="p-1 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </Card>
       )}
@@ -334,12 +341,12 @@ function SendView({
               disabled={pageSelectable.length === 0}
               id="select-page"
             />
-            <label
+            <Label
               htmlFor="select-page"
               className="text-xs font-medium text-muted-foreground cursor-pointer"
             >
               Select all on this page ({pageSelectable.length})
-            </label>
+            </Label>
             {isFetching && (
               <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground ml-auto" />
             )}
@@ -368,9 +375,9 @@ function SendView({
                         disabled={noPhone}
                         id={`r-${k}`}
                       />
-                      <label
+                      <Label
                         htmlFor={`r-${k}`}
-                        className="flex-1 min-w-0 cursor-pointer"
+                        className="flex-1 min-w-0 cursor-pointer font-normal"
                       >
                         <span className="block text-sm font-medium text-foreground truncate">
                           {r.name}
@@ -380,7 +387,7 @@ function SendView({
                             ? "No phone number"
                             : `${r.country_code ?? ""} ${r.phone}`}
                         </span>
-                      </label>
+                      </Label>
                       <StatusBadge
                         variant={r.source === "patient" ? "violet" : "indigo"}
                       >

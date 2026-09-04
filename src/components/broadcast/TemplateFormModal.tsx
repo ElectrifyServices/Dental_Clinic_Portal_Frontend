@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Image as ImageIcon, X, Loader2, Bold, Italic } from "lucide-react";
-import { Button, Input, Textarea, Modal, Switch, toast } from "../ui";
+import { Button, Input, Textarea, Modal, Switch, Label, toast } from "../ui";
 import { WaTextPreview } from "./WaTextPreview";
 import {
   useCreateBroadcastTemplateMutation,
@@ -143,9 +143,7 @@ export function TemplateFormModal({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-foreground mb-1.5 block">
-              Occasion
-            </label>
+            <Label className="text-xs mb-1.5 block">Occasion</Label>
             <Input
               value={occasion}
               onChange={(e) => setOccasion(e.target.value.slice(0, 120))}
@@ -155,26 +153,28 @@ export function TemplateFormModal({
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-foreground">
-                Message
-              </label>
+              <Label className="text-xs">Message</Label>
               <div className="flex items-center gap-1">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => wrapSelection("*")}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground"
+                  className="text-muted-foreground"
                   title="Bold"
                 >
                   <Bold className="w-3.5 h-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => wrapSelection("_")}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground"
+                  className="text-muted-foreground"
                   title="Italic"
                 >
                   <Italic className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
             <Textarea
@@ -213,12 +213,12 @@ export function TemplateFormModal({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-foreground mb-1.5 block">
+            <Label className="text-xs mb-1.5 block">
               Footer{" "}
               <span className="font-normal text-muted-foreground">
                 (optional)
               </span>
-            </label>
+            </Label>
             <Input
               value={footer}
               onChange={(e) => setFooter(e.target.value.slice(0, MAX_FOOTER))}
@@ -227,12 +227,12 @@ export function TemplateFormModal({
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-foreground mb-1.5">
+            <Label className="text-xs mb-1.5 block">
               Header image{" "}
               <span className="font-normal text-muted-foreground">
                 (optional — reused for every send)
               </span>
-            </p>
+            </Label>
             <input
               ref={fileRef}
               type="file"
@@ -250,26 +250,31 @@ export function TemplateFormModal({
                   alt="Header"
                   className="w-full max-h-44 object-contain bg-muted"
                 />
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={clearImage}
-                  className="absolute top-2 right-2 p-1 rounded-md bg-black/60 text-white hover:bg-black/80"
+                  className="absolute top-2 right-2 bg-black/60 text-white hover:bg-black/80 hover:text-white"
                 >
                   <X className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => fileRef.current?.click()}
-                className="w-full border-2 border-dashed border-border rounded-lg p-5 text-center hover:border-primary hover:bg-primary/5 transition-colors"
+                className="w-full h-auto flex-col whitespace-normal border-2 border-dashed border-border p-5 text-center shadow-none hover:border-primary hover:bg-primary/5 hover:translate-y-0"
               >
-                <ImageIcon className="w-6 h-6 text-muted-foreground/50 mx-auto mb-1.5" />
+                <ImageIcon className="size-6 text-muted-foreground/50 mb-1.5" />
                 <p className="text-xs font-medium text-foreground">
                   Click to add a JPG or PNG
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Max 5 MB
                 </p>
-              </button>
+              </Button>
             )}
           </div>
         </div>
