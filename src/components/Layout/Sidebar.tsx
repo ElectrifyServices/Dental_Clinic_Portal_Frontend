@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Building2,
   FlaskConical,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
@@ -42,6 +43,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   staff: UserCheck,
   "profit-sharing": IndianRupee,
   membership: Building2,
+  broadcast: Megaphone,
 };
 
 const PERMISSION_MAP: Record<string, string[]> = {
