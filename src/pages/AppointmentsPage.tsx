@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle } from "lucide-react";
+import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle, UserX } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
@@ -59,10 +59,16 @@ export const AppointmentsPage: React.FC = () => {
   const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
   const [noShowReason, setNoShowReason] = useState("");
 
+  const [cancelApptId, setCancelApptId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
   const handleUpdateStatusWrapper = async (id: string, status: string, reason?: string) => {
     if (status === 'no-show') {
       setNoShowApptId(id);
       setNoShowReason("");
+    } else if (status === 'cancelled') {
+      setCancelApptId(id);
+      setCancelReason("");
     } else {
       await handleUpdateAppointmentStatus(id, status, reason);
     }
@@ -325,13 +331,19 @@ export const AppointmentsPage: React.FC = () => {
         )}
       </div>
 
+      {/* No Show Modal */}
       {noShowApptId && (
         <Dialog open={!!noShowApptId} onOpenChange={(open) => !open && setNoShowApptId(null)}>
-          <DialogContent className="sm:max-w-[425px] rounded-2xl border border-border bg-card shadow-2xl p-6">
-            <DialogHeader className="text-left">
-              <DialogTitle className="text-base font-bold text-foreground">Mark as No-Show</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Please enter the reason for marking this appointment as No-Show.
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border-border shadow-2xl p-6 bg-card">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <UserX className="w-5 h-5" />
+                </span>
+                Mark Appointment as No-Show
+              </DialogTitle>
+              <DialogDescription className="text-xs font-medium text-muted-foreground">
+                Please enter a reason for marking this appointment as No-Show. A WhatsApp No-Show notification will be sent to the patient.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -361,13 +373,64 @@ export const AppointmentsPage: React.FC = () => {
                 disabled={!noShowReason.trim()}
                 onClick={async () => {
                   if (noShowReason.trim()) {
-                    await handleUpdateAppointmentStatus(noShowApptId, 'no-show', noShowReason.trim());
+                    await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
                     setNoShowApptId(null);
                   }
                 }}
-                className="h-10 rounded-xl px-4 text-xs font-semibold bg-destructive hover:bg-destructive/90 text-white"
+                className="h-10 rounded-xl px-4 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white"
               >
                 Mark No-Show
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Cancel Appointment Modal */}
+      {cancelApptId && (
+        <Dialog open={!!cancelApptId} onOpenChange={(open) => !open && setCancelApptId(null)}>
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border-border shadow-2xl p-6 bg-card">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+                  <UserX className="w-5 h-5" />
+                </span>
+                Cancel Appointment
+              </DialogTitle>
+              <DialogDescription className="text-xs font-medium text-muted-foreground">
+                Are you sure you want to cancel this appointment? A cancellation WhatsApp notification will be sent to the patient.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="cancel-reason" className="text-xs font-bold text-muted-foreground">
+                  Cancellation Reason (Optional)
+                </Label>
+                <textarea
+                  id="cancel-reason"
+                  placeholder="Enter reason for cancellation..."
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex flex-row justify-end gap-2 mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setCancelApptId(null)}
+                className="h-10 rounded-xl px-4 text-xs font-semibold"
+              >
+                Keep Appointment
+              </Button>
+              <Button
+                onClick={async () => {
+                  await handleUpdateAppointmentStatus(cancelApptId!, 'cancelled', cancelReason.trim());
+                  setCancelApptId(null);
+                }}
+                className="h-10 rounded-xl px-4 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                Cancel Appointment
               </Button>
             </DialogFooter>
           </DialogContent>
