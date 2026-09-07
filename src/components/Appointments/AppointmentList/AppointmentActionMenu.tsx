@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit, UserX, Trash2, UserCheck, MessageCircle, XCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 interface AppointmentActionMenuProps {
   appointment: any;
@@ -38,8 +39,8 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   return (
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
-      <div 
-        className="fixed z-[9999] bg-card rounded-2xl border border-border/80 shadow-2xl w-56 overflow-hidden animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md"
+      <Card 
+        className="fixed z-[9999] rounded-2xl border-border/80 shadow-2xl w-56 overflow-hidden animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md"
         style={{ top: pos.top, left: pos.left }}
       >
         <div className="p-1.5 space-y-0.5">
@@ -149,7 +150,7 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
             <span className="truncate">Delete Record</span>
           </Button>
         </div>
-      </div>
+      </Card>
     </>
   );
 };
