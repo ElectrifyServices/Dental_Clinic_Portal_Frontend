@@ -21,7 +21,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_TAGLINE: "Dental & Facial Aesthetics",
   CLINIC_ADDRESS: "104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat — 380 015",
   CLINIC_PHONE: "+91 99981 93256",
-  CLINIC_EMAIL: "rajal.shah@opalsmiles.com",
+  CLINIC_EMAIL: "Rajal.Shah@opalsmiles.com",
   CLINIC_HOURS: "Mon-Sat: 10:00 AM – 8:00 PM",
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",

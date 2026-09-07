@@ -287,7 +287,7 @@ export function AppointmentList({
                 top = rect.top - menuHeight;
                 if (top < 0) top = 10;
               }
-              setMenuPos({ top, left: rect.right - 200 });
+              setMenuPos({ top, left: Math.max(10, rect.right - 224) });
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >
