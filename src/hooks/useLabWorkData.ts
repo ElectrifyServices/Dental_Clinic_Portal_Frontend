@@ -38,7 +38,7 @@ export function useLabWorkData(
 
   const { data: apiLabWorks, isLoading: isLabWorksLoading } = useLabWorksQuery(
     queryParams,
-    { enabled: isEnabled }
+    { enabled: isEnabled, refetchOnMount: 'always' }
   );
 
   const { mutateAsync: createLabWorkMutation, isPending: isCreating } = useCreateLabWorkMutation();

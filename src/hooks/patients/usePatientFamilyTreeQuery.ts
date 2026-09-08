@@ -5,9 +5,10 @@ export const usePatientFamilyTreeQuery = (patientId: string) => {
     queryKey: ["patientFamilyTree", patientId],
     endpoint: `/patient/patient-family-tree/${patientId}`,
     method: "get",
-    enabled: !!patientId,
     options: {
+      enabled: !!patientId,
       refetchOnWindowFocus: false,
+      refetchOnMount: 'always',
     },
   });
 };

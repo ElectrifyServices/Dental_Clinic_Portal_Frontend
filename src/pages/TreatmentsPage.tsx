@@ -46,10 +46,6 @@ export const TreatmentsPage: React.FC = () => {
   }, [selectedItemId, fetchSingleTreatment, clearSelectedTreatment]);
 
   React.useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  React.useEffect(() => {
     const previousModal = previousModalRef.current;
     const shouldRefreshAfterClose =
       (previousModal === "treatmentForm" ||

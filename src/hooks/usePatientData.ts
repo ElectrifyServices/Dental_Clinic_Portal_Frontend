@@ -54,7 +54,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
     limit: patientLimit,
     search: debouncedSearch || undefined,
     filters: apiFilters,
-  }, { enabled: isEnabled });
+  }, { enabled: isEnabled, refetchOnMount: 'always' });
 
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 300000 });
   const { data: rawAllergies } = useAllergiesQuery({ staleTime: 300000 });

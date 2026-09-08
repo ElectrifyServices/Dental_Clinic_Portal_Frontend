@@ -25,7 +25,7 @@ export interface ConsentFormRecord {
   [key: string]: any;
 }
 
-export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
+export function useConsentFormsQuery(params: ConsentFormsParams = {}, options?: any) {
   const body: Record<string, any> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
@@ -44,5 +44,6 @@ export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
     endpoint: "/consent/list",
     method: "post",
     data: body,
+    options,
   });
 }

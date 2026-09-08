@@ -16,6 +16,7 @@ export interface CorporatePlansParams {
   status?: string;
   planType?: string;
   staleTime?: number;
+  refetchOnMount?: boolean | 'always';
 }
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
@@ -48,6 +49,7 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
       enabled,
       staleTime: params.staleTime !== undefined ? params.staleTime : 5 * 60 * 1000,
       refetchOnWindowFocus: false,
+      ...(params.refetchOnMount !== undefined ? { refetchOnMount: params.refetchOnMount } : {}),
     },
   });
 }

@@ -19,7 +19,6 @@ export const StaffPage: React.FC = () => {
     staffMembers,
     handleDeleteStaff,
     handleUpdateStaffStatus,
-    refetchStaff,
     isLoading,
     page,
     setPage,
@@ -32,11 +31,6 @@ export const StaffPage: React.FC = () => {
     role: roleFilter,
   });
 
-  useEffect(() => {
-    if (refetchStaff) {
-      refetchStaff();
-    }
-  }, [refetchStaff]);
   const {
     setActiveModal, setSelectedItemId, setSelectedStaffForSalary,
     confirmDelete,

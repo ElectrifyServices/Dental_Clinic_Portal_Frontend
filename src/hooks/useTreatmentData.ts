@@ -32,11 +32,11 @@ export function useTreatmentData(params?: { enabled?: boolean }) {
     isLoading,
     refetch,
     isFetching
-  } = useTreatmentPlansQuery(filters, { enabled: isEnabled });
+  } = useTreatmentPlansQuery(filters, { enabled: isEnabled, refetchOnMount: 'always' });
 
   const { data: statsRaw, isLoading: isStatsLoading } = useTreatmentPlanStatsQuery(
     undefined,
-    { enabled: isEnabled }
+    { enabled: isEnabled, refetchOnMount: 'always' }
   );
 
   

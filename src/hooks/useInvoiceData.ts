@@ -41,7 +41,7 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
 
   const { data: apiInvoices, isLoading: isInvoicesLoading } = useInvoicesQuery(
     queryParams,
-    { enabled: isEnabled }
+    { enabled: isEnabled, refetchOnMount: 'always' }
   );
 
   const { mutateAsync: deleteInvoice } = useDeleteInvoiceMutation();
