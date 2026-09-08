@@ -33,7 +33,7 @@ export function ConsentPage() {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data: consentFormsData, isLoading, refetch } = useConsentFormsQuery({
+  const { data: consentFormsData, isLoading } = useConsentFormsQuery({
     page,
     limit,
     search: debouncedSearch || undefined,
@@ -43,11 +43,7 @@ export function ConsentPage() {
       doctor_id: filters.doctor !== "All" ? [filters.doctor] : undefined,
       date_range: filters.date !== "All" ? filters.date : undefined,
     }
-  });
-
-  useEffect(() => {
-    refetch();
-  }, []);
+  }, { refetchOnMount: 'always' });
 
   const deleteMutation = useDeleteConsentFormMutation();
 

@@ -116,11 +116,37 @@ export function WhatsappHistoryModal({
   }, [rawData]);
 
   const effectivePhone = useMemo(() => {
+    const rawTarget = initialPhone || debouncedSearch;
+    if (!rawTarget || !rawTarget.trim()) {
+      return undefined;
+    }
+
+    const trimmed = rawTarget.trim();
+    const digits = trimmed.replace(/\D/g, "");
+
+    // If initialPhone is provided OR search string contains at least 7 digits (phone search)
+    const isPhoneSearch = Boolean(initialPhone) || digits.length >= 7;
+    if (!isPhoneSearch) {
+      return undefined;
+    }
+
+    // If notifications array has matched items, use exact to_phone from the first record
     if (notifications.length > 0 && notifications[0].to_phone) {
       return notifications[0].to_phone;
     }
-    return initialPhone;
-  }, [notifications, initialPhone]);
+
+    // Fallback: Format with country code +91 if missing
+    if (trimmed.startsWith("+")) {
+      return trimmed;
+    }
+    if (digits.length === 10) {
+      return `+91 ${digits}`;
+    }
+    if (digits.length === 12 && digits.startsWith("91")) {
+      return `+91 ${digits.slice(2)}`;
+    }
+    return `+91 ${digits}`;
+  }, [initialPhone, debouncedSearch, notifications]);
 
   const { data: successData, refetch: refetchSuccess } = useTotalSuccessNotificationsQuery(effectivePhone, {
     enabled: !isLoading

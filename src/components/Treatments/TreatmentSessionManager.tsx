@@ -324,18 +324,12 @@ export function TreatmentSessionManager({
   initialSessionId,
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
-  const { data: treatmentPlanResponse, refetch: refetchPlan } = useTreatmentPlanQuery(treatmentId, {
+  const { data: treatmentPlanResponse } = useTreatmentPlanQuery(treatmentId, {
     enabled: !!treatmentId,
   });
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
 
-  useEffect(() => {
-    if (treatmentId) {
-      refetch();
-      refetchPlan();
-    }
-  }, [treatmentId, refetch, refetchPlan]);
   const treatmentPlan = (treatmentPlanResponse as any)?.data ?? treatmentPlanResponse;
   const assignedDoctorId =
     treatmentPlan?.doctor_id ||

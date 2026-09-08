@@ -30,12 +30,16 @@ export const AppointmentsPage: React.FC = () => {
     setApptFilter,
     selectedDoctorId,
     setSelectedDoctorId,
-    refetchAppointments,
     startDate,
     setStartDate,
     endDate,
     setEndDate,
-  } = useAppointmentData({ loadAll: true });
+  } = useAppointmentData({ loadAll: true, includeNoShow: true });
+
+  const calendarAppointments = useMemo(
+    () => [...appointments, ...(noShowAppointments || [])],
+    [appointments, noShowAppointments]
+  );
 
   const { patients, setQueuedPatients } = usePatientData();
   const {
@@ -80,23 +84,13 @@ export const AppointmentsPage: React.FC = () => {
 
   const {
     doctors: activeDoctors,
-    refetch: refetchDoctors,
     total: totalSpecialists,
     totalPages: totalSpecialistPages
-  } = useDoctorsListQuery(debouncedSpecialistSearch, specialistPage, specialistLimit);
+  } = useDoctorsListQuery(debouncedSpecialistSearch, specialistPage, specialistLimit, { refetchOnMount: 'always' });
 
   useEffect(() => {
     setSpecialistPage(1);
   }, [debouncedSpecialistSearch]);
-
-  useEffect(() => {
-    if (refetchAppointments) {
-      refetchAppointments();
-    }
-    if (refetchDoctors) {
-      refetchDoctors();
-    }
-  }, [refetchAppointments, refetchDoctors]);
 
   // Sync selectedDate from Calendar view to startDate
   useEffect(() => {
@@ -272,7 +266,7 @@ export const AppointmentsPage: React.FC = () => {
         {viewMode === "calendar" && (
           <AppointmentCalendar
             onNewAppointment={handleNewAppointment}
-            appointments={[...appointments, ...(noShowAppointments || [])]}
+            appointments={calendarAppointments}
             doctors={activeDoctors}
             searchTerm={specialistSearch}
             setSearchTerm={setSpecialistSearch}

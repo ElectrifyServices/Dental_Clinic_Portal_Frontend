@@ -140,7 +140,14 @@ export function LabWorkForm({
     }));
   }, [rawPatientsData]);
 
+  const [labSearchInput, setLabSearchInput] = useState("");
   const [labSearch, setLabSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => setLabSearch(labSearchInput), 400);
+    return () => clearTimeout(handler);
+  }, [labSearchInput]);
+
   const { data: rawLabNamesData, isLoading: isLabNamesLoading } = useLabNamesQuery({
     search: labSearch || undefined,
   });
@@ -426,7 +433,7 @@ export function LabWorkForm({
               isCreating={createLabNameMutation.isPending}
               isDeletingValue={deletingLabName}
               isLoading={isLabNamesLoading}
-              onSearchChange={setLabSearch}
+              onSearchChange={setLabSearchInput}
               createLabel="Create lab"
               capitalizeWords
               options={[

@@ -13,7 +13,7 @@ import {
 import { Modal, Button, Badge, Card, CardContent, DataTable, Loading, toast } from "@/components/ui";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { normalizePatient } from "../../hooks/patients/usePatientDetailQuery";
-import { useCorporatePlansQuery } from "../../hooks/corporate/useCorporatePlansQuery";
+import { useCorporatePlanQuery } from "../../hooks/corporate/useCorporatePlanQuery";
 import { useInvoiceQuery, normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useSendInvoiceMutation } from "../../hooks/billing/useSendInvoiceMutation";
 import apiClient from "../../services/apiClient";
@@ -45,27 +45,20 @@ export function InvoiceViewer({
   const { data: invoice, allInvoices, patient, isLoading: isInvoiceLoading, error } = useInvoiceQuery(activeId, patientId, isMember);
 
   const corporatePlanId = invoice?.corporatePlanId;
-  const { data: corporatePlansData } = useCorporatePlansQuery({
+  const { data: corporatePlanData } = useCorporatePlanQuery(corporatePlanId, {
     enabled: !!corporatePlanId,
   });
 
   const corporatePlan = useMemo(() => {
-    if (!corporatePlanId || !corporatePlansData) return null;
-    let plansArray: any[] = [];
-    const raw = corporatePlansData;
-    if (Array.isArray(raw)) {
-      plansArray = raw;
-    } else if (raw && Array.isArray((raw as any).data)) {
-      plansArray = (raw as any).data;
-    }
-    const found = plansArray.find((p: any) => p.id === corporatePlanId);
+    if (!corporatePlanId || !corporatePlanData) return null;
+    const found = (corporatePlanData as any).data || corporatePlanData;
     if (!found) return null;
     return {
       id: found.id,
       name: found.plan_name || found.name,
       companyName: found.company_name || found.companyName,
     };
-  }, [corporatePlansData, corporatePlanId]);
+  }, [corporatePlanData, corporatePlanId]);
 
   const isLoading = isInvoiceLoading;
 

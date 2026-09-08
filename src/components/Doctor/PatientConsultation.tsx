@@ -500,13 +500,6 @@ export function PatientConsultation({
     }
   );
 
-  useEffect(() => {
-    const idToUse = patient.patientId || patient.id;
-    if (idToUse && !idToUse.startsWith("WALK-")) {
-      refetchConsultations();
-    }
-  }, [patient.id, patient.patientId, refetchConsultations]);
-
   const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
     consultationData.followUpRequired ? followUpDoctorId : null,
     consultationData.followUpRequired ? followUpDate : null

@@ -59,7 +59,7 @@ export interface TreatmentPlansResponse {
 
 export function useTreatmentPlansQuery(
   filters: TreatmentPlansFilters = {},
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; refetchOnMount?: boolean | 'always' },
 ) {
   // Build request body
   const buildRequestBody = () => {
@@ -149,6 +149,7 @@ export function useTreatmentPlansQuery(
       enabled: options?.enabled ?? true,
       staleTime: 0,
       placeholderData: keepPreviousData,
+      ...(options?.refetchOnMount !== undefined ? { refetchOnMount: options.refetchOnMount } : {}),
     },
   });
 }

@@ -49,6 +49,7 @@ export function usePatientConsultationsQuery(
         options: {
             enabled: !!patientId && !patientId.startsWith("WALK-") && (options?.enabled ?? true),
             staleTime: 30 * 1000,
+            refetchOnMount: 'always',
         },
     });
 }

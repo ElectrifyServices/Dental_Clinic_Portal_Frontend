@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   User,
   Calendar,
@@ -76,28 +76,18 @@ export function PatientDetails({
 
   if (!patient) return null;
 
-  const { data: historyData, refetch: refetchHistory } = usePatientAppointmentHistoryQuery(patient?.id || "");
-  const { data: familyTreeData, refetch: refetchFamily } = usePatientFamilyTreeQuery(patient?.id || "");
-  const { data: prescriptionsData, isLoading: isPrescriptionsLoading, refetch: refetchPrescriptions } = usePatientPrescriptionsQuery(patient?.id || "");
-  const { data: treatmentsData, refetch: refetchTreatments } = useTreatmentPlansQuery(
+  const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
+  const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
+  const { data: prescriptionsData, isLoading: isPrescriptionsLoading } = usePatientPrescriptionsQuery(patient?.id || "");
+  const { data: treatmentsData } = useTreatmentPlansQuery(
     { all: true, filters: { patientId: [patient?.id || ""] } },
-    { enabled: !!patient?.id }
+    { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
 
-  const { data: invoicesData, isLoading: isInvoicesLoading, refetch: refetchInvoices } = useInvoicesQuery(
+  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoicesQuery(
     { filters: { patient_id: [patient?.id || ""] } },
-    { enabled: !!patient?.id }
+    { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
-
-  useEffect(() => {
-    if (patient?.id) {
-      refetchHistory();
-      refetchFamily();
-      refetchPrescriptions();
-      refetchTreatments();
-      refetchInvoices();
-    }
-  }, [patient?.id, refetchHistory, refetchFamily, refetchPrescriptions, refetchTreatments, refetchInvoices]);
 
   const rawPrescriptions =
     prescriptionsData?.responseObject?.data?.prescriptions ||

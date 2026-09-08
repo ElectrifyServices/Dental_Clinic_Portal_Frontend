@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";
@@ -366,8 +366,9 @@ function ModalRegistryContent() {
     ) || null;
   }, [invoices, selectedItemId]);
 
-  const { doctors: apiDoctors, refetch: refetchDoctors } = useDoctorsListQuery(undefined, {
+  const { doctors: apiDoctors } = useDoctorsListQuery(undefined, {
     enabled: ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    refetchOnMount: 'always',
   });
 
   const activeDoctors = useMemo(
@@ -376,23 +377,10 @@ function ModalRegistryContent() {
   );
 
   // Fetch ALL staff (all roles) for Staff Directory edit form lookups
-  const { staffList: allStaffList, refetch: refetchAllStaff } = useAllStaffListQuery({
+  const { staffList: allStaffList } = useAllStaffListQuery({
     enabled: ["doctorForm", "scheduleManager"].includes(activeModal || ""),
+    refetchOnMount: 'always',
   });
-
-  useEffect(() => {
-    const modalsNeedingDoctors = ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"];
-    if (activeModal && modalsNeedingDoctors.includes(activeModal) && refetchDoctors) {
-      refetchDoctors();
-    }
-  }, [activeModal, refetchDoctors]);
-
-  useEffect(() => {
-    const modalsNeedingAllStaff = ["doctorForm", "scheduleManager"];
-    if (activeModal && modalsNeedingAllStaff.includes(activeModal) && refetchAllStaff) {
-      refetchAllStaff();
-    }
-  }, [activeModal, refetchAllStaff]);
 
   const { data: apiPatientDetail } = usePatientDetailQuery(
     selectedPatientId,

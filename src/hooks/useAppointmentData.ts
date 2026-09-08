@@ -7,7 +7,7 @@ import { useRestoreAppointmentStatusMutation } from './appointments/useRestoreAp
 import { useDebounce } from './useDebounce';
 import { toast } from '../components/ui';
 
-export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boolean }) {
+export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boolean; includeNoShow?: boolean }) {
   const queryClient = useQueryClient();
   const [apptSearch, setApptSearch] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -61,7 +61,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
     limit,
     search: debouncedSearch || undefined,
     filters: apptFilters,
-  }, { enabled: isEnabled });
+  }, { enabled: isEnabled, refetchOnMount: 'always' });
 
   const pagination = useMemo(() => {
     if (apiResponse && (apiResponse as any).pagination) {
@@ -88,7 +88,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
     limit: 1000,
     search: debouncedSearch || undefined,
     filters: { ...apptFilters, list_no_show: ["true"] },
-  }, { enabled: isEnabled });
+  }, { enabled: isEnabled && !!params?.includeNoShow, refetchOnMount: 'always' });
 
   const { mutateAsync: deleteAppointment } = useDeleteAppointmentMutation();
   const { mutateAsync: markNoShow } = useMarkNoShowMutation();

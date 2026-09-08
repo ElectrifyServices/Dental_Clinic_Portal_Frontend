@@ -46,7 +46,6 @@ export const LabWorkPage: React.FC = () => {
     isLabWorksLoading,
     isCreating,
     isUpdating,
-    refetchLabWorks,
     handleCreateLabWork,
     handleUpdateLabWork,
     handleDeleteLabWork,
@@ -54,10 +53,6 @@ export const LabWorkPage: React.FC = () => {
   } = useLabWorkData({ search, status, page, limit, groupBy });
 
   const { confirmDelete, showConfirm } = useModal();
-
-  useEffect(() => {
-    refetchLabWorks();
-  }, [refetchLabWorks]);
 
   // Live single-entry query for edit form
   const { data: rawActiveLabWork, isLoading: isActiveLoading } = useLabWorkQuery(activeLabWorkId || "", {

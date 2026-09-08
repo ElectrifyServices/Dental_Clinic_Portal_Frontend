@@ -39,7 +39,7 @@ export interface StatsFilters {
 
 export function useTreatmentPlanStatsQuery(
   filters?: StatsFilters,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; refetchOnMount?: boolean | 'always' },
 ) {
   // Build query parameters
   const buildQueryParams = () => {
@@ -112,6 +112,7 @@ export function useTreatmentPlanStatsQuery(
       enabled: options?.enabled ?? true,
       staleTime: 0,
       placeholderData: keepPreviousData,
+      ...(options?.refetchOnMount !== undefined ? { refetchOnMount: options.refetchOnMount } : {}),
     },
   });
 }

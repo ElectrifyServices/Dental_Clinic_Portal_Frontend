@@ -1,7 +1,8 @@
 import React from 'react';
 import { Building2, Users, Shield, Calendar, User } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { useCorporatePlansQuery } from '../../../hooks/corporate/useCorporatePlansQuery';
+import { useCorporatePlanQuery } from '../../../hooks/corporate/useCorporatePlanQuery';
+import { mapBackendPlanToFrontend } from '../../../hooks/corporate/mapBackendPlanToFrontend';
 import { getDependentsByMember } from '../../../hooks/corporate/dependentStorage';
 import { CorporatePlan, PlanDependent } from '../../../types';
 
@@ -13,23 +14,14 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
   const planId = patient?.corporatePlanId || patient?.companyId;
   const primaryMemberId = patient?.primaryMemberId || patient?.corporateMemberId;
 
-  const hasPlan = !!(planId || primaryMemberId);
-
-  const { data: plansResponse } = useCorporatePlansQuery({ 
-    enabled: hasPlan, 
-    status: "ACTIVE" 
+  const { data: planResponse } = useCorporatePlanQuery(planId, {
+    enabled: !!planId,
   });
 
-  const allPlans: CorporatePlan[] = React.useMemo(() => {
-    if (plansResponse && Array.isArray(plansResponse.data)) return plansResponse.data;
-    if (Array.isArray(plansResponse)) return plansResponse;
-    return [];
-  }, [plansResponse]);
-
-  const plan = React.useMemo(
-    () => allPlans.find(p => p.id === planId),
-    [allPlans, planId]
-  );
+  const plan: CorporatePlan | undefined = React.useMemo(() => {
+    const raw = (planResponse as any)?.data || planResponse;
+    return raw ? mapBackendPlanToFrontend(raw) : undefined;
+  }, [planResponse]);
 
   // Dependents of this patient (if they are the primary member)
   const dependents: PlanDependent[] = React.useMemo(() => {

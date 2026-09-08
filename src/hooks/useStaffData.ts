@@ -41,7 +41,7 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     };
   }, [params?.search, params?.role, params?.page, params?.limit, page, limit, shouldPaginate]);
 
-  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(queryParams, { enabled: isEnabled });
+  const { data: apiStaff, isLoading: isStaffLoading } = useStaffQuery(queryParams, { enabled: isEnabled, refetchOnMount: 'always' });
   const { mutateAsync: deleteStaffMutation } = useDeleteStaffMutation();
   const { mutateAsync: updateStatusMutation } = useUpdateStaffStatusMutation();
 

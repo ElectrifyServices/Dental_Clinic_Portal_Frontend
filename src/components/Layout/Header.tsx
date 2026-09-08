@@ -26,7 +26,6 @@ import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Popover, PopoverTrigger, PopoverContent, toast } from "@/components/ui";
-import { useNotifications } from "../../hooks/useNotifications";
 import { GlobalSearch } from "./GlobalSearch";
 import { useNavigate } from "react-router-dom";
 import { downloadBlankPDF, BlankPDFType } from "../../utils/pdfGenerator";
@@ -67,7 +66,6 @@ export function Header() {
   const { themeData } = useTheme();
   const navigate = useNavigate();
   const { setActiveModal, showConfirm, setWhatsappPhone, setWhatsappPatientName } = useModal();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
 
   const [downloadingBlank, setDownloadingBlank] = useState<string | null>(null);
 
