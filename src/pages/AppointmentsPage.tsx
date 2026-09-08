@@ -354,7 +354,7 @@ export const AppointmentsPage: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="reason" className="text-xs font-bold text-muted-foreground">
-                  No-Show Reason <span className="text-destructive font-black">*</span>
+                  No-Show Reason
                 </Label>
                 <textarea
                   id="reason"
@@ -362,7 +362,6 @@ export const AppointmentsPage: React.FC = () => {
                   value={noShowReason}
                   onChange={(e) => setNoShowReason(e.target.value)}
                   className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
-                  required
                 />
               </div>
             </div>
@@ -375,12 +374,9 @@ export const AppointmentsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                disabled={!noShowReason.trim()}
                 onClick={async () => {
-                  if (noShowReason.trim()) {
-                    await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
-                    setNoShowApptId(null);
-                  }
+                  await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
+                  setNoShowApptId(null);
                 }}
                 className="h-10 rounded-xl px-4 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white"
               >

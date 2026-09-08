@@ -309,14 +309,13 @@ export function AppointmentList({
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const menuHeight = 240;
+              const menuHeight = 190;
               const windowHeight = window.innerHeight;
-              let top = rect.bottom + 8;
+              let top = rect.bottom + 4;
               if (rect.bottom + menuHeight > windowHeight) {
-                top = rect.top - menuHeight;
-                if (top < 0) top = 10;
+                top = Math.max(10, rect.top - menuHeight);
               }
-              setMenuPos({ top, left: Math.max(10, rect.right - 224) });
+              setMenuPos({ top, left: Math.max(10, rect.right - 192) });
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >
