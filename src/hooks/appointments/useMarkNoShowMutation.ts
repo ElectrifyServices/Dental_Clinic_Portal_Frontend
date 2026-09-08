@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export function useMarkNoShowMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, { id: string; cancelled_reason: string }>({
+  return useApiMutation<any, { id: string; cancelled_reason?: string }>({
     getEndpoint: (variables) => `/appointment/no-show/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({

@@ -42,6 +42,7 @@ export const AppointmentsPage: React.FC = () => {
     setActiveModal,
     setSelectedAppointment,
     confirmDelete,
+    showConfirm,
     setPendingCheckInAppt,
     setSelectedPatientId,
     setWhatsappPhone,
@@ -59,16 +60,19 @@ export const AppointmentsPage: React.FC = () => {
   const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
   const [noShowReason, setNoShowReason] = useState("");
 
-  const [cancelApptId, setCancelApptId] = useState<string | null>(null);
-  const [cancelReason, setCancelReason] = useState("");
-
   const handleUpdateStatusWrapper = async (id: string, status: string, reason?: string) => {
     if (status === 'no-show') {
       setNoShowApptId(id);
       setNoShowReason("");
     } else if (status === 'cancelled') {
-      setCancelApptId(id);
-      setCancelReason("");
+      const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
+      showConfirm(
+        "Cancel Appointment",
+        `Are you sure you want to cancel the appointment for ${apt?.patientName || "this patient"}? A cancellation WhatsApp notification will be sent to the patient.`,
+        () => handleUpdateAppointmentStatus(id, 'cancelled'),
+        "Cancel Appointment",
+        "danger"
+      );
     } else {
       await handleUpdateAppointmentStatus(id, status, reason);
     }
@@ -307,6 +311,7 @@ export const AppointmentsPage: React.FC = () => {
         {(viewMode === "list" || viewMode === "no-show") && (
           <AppointmentList
             appointments={viewMode === "list" ? appointments.filter((apt: any) => apt.status !== "no-show") : noShowAppointments}
+            isNoShowView={viewMode === "no-show"}
             onEditAppointment={(id: string) => {
               const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
               setSelectedAppointment(apt);
@@ -349,7 +354,7 @@ export const AppointmentsPage: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="reason" className="text-xs font-bold text-muted-foreground">
-                  No-Show Reason <span className="text-destructive font-black">*</span>
+                  No-Show Reason
                 </Label>
                 <textarea
                   id="reason"
@@ -357,7 +362,6 @@ export const AppointmentsPage: React.FC = () => {
                   value={noShowReason}
                   onChange={(e) => setNoShowReason(e.target.value)}
                   className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
-                  required
                 />
               </div>
             </div>
@@ -370,67 +374,13 @@ export const AppointmentsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                disabled={!noShowReason.trim()}
                 onClick={async () => {
-                  if (noShowReason.trim()) {
-                    await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
-                    setNoShowApptId(null);
-                  }
+                  await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
+                  setNoShowApptId(null);
                 }}
                 className="h-10 rounded-xl px-4 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white"
               >
                 Mark No-Show
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Cancel Appointment Modal */}
-      {cancelApptId && (
-        <Dialog open={!!cancelApptId} onOpenChange={(open) => !open && setCancelApptId(null)}>
-          <DialogContent className="sm:max-w-[425px] rounded-2xl border-border shadow-2xl p-6 bg-card">
-            <DialogHeader className="space-y-2">
-              <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
-                  <UserX className="w-5 h-5" />
-                </span>
-                Cancel Appointment
-              </DialogTitle>
-              <DialogDescription className="text-xs font-medium text-muted-foreground">
-                Are you sure you want to cancel this appointment? A cancellation WhatsApp notification will be sent to the patient.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="cancel-reason" className="text-xs font-bold text-muted-foreground">
-                  Cancellation Reason (Optional)
-                </Label>
-                <textarea
-                  id="cancel-reason"
-                  placeholder="Enter reason for cancellation..."
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
-                />
-              </div>
-            </div>
-            <DialogFooter className="flex flex-row justify-end gap-2 mt-2">
-              <Button
-                variant="outline"
-                onClick={() => setCancelApptId(null)}
-                className="h-10 rounded-xl px-4 text-xs font-semibold"
-              >
-                Keep Appointment
-              </Button>
-              <Button
-                onClick={async () => {
-                  await handleUpdateAppointmentStatus(cancelApptId!, 'cancelled', cancelReason.trim());
-                  setCancelApptId(null);
-                }}
-                className="h-10 rounded-xl px-4 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
-              >
-                Cancel Appointment
               </Button>
             </DialogFooter>
           </DialogContent>

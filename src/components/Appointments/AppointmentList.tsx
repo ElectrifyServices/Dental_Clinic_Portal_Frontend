@@ -7,12 +7,14 @@ import {
   Calendar as CalendarIcon,
   Stethoscope,
   MoreVertical,
+  Info,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/Tooltip";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -20,6 +22,7 @@ import { useModal } from "../../contexts/ModalContext";
 
 interface AppointmentListProps {
   appointments?: any[];
+  isNoShowView?: boolean;
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
@@ -71,6 +74,7 @@ const formatTime = (t: string) => {
 
 export function AppointmentList({
   appointments: propAppointments = [],
+  isNoShowView = false,
   onEditAppointment,
   onDeleteAppointment,
   onUpdateStatus,
@@ -249,23 +253,48 @@ export function AppointmentList({
     {
       key: "status",
       header: "Current Status",
-      render: (a: any) => (
-        <Badge
-          variant={
-            STATUS_VARIANTS[a.status] ||
-            STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
-            STATUS_VARIANTS[
-              (a.status || "").toLowerCase().replace("_", "-")
-            ] ||
-            "gray"
-          }
-          className="text-[10px] px-3 py-0.5 font-medium"
-        >
-          {String(a.status || "")
-            .replace("_", " ")
-            .replace("-", " ")}
-        </Badge>
-      ),
+      render: (a: any) => {
+        const reason = a.cancelled_reason || a.cancelledReason || a.reason;
+        const showReason = isNoShowView && Boolean(reason);
+        return (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={
+                STATUS_VARIANTS[a.status] ||
+                STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
+                STATUS_VARIANTS[
+                  (a.status || "").toLowerCase().replace("_", "-")
+                ] ||
+                "gray"
+              }
+              className="text-[10px] px-3 py-0.5 font-medium"
+            >
+              {String(a.status || "")
+                .replace("_", " ")
+                .replace("-", " ")}
+            </Badge>
+            {showReason && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                    >
+                      <Info className="w-3 h-3" />
+                      <span>Reason</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs bg-slate-900 text-white p-2.5 text-xs rounded-xl shadow-xl border border-slate-800">
+                    <p className="font-bold text-amber-400 mb-0.5 text-[11px]">No-Show Reason:</p>
+                    <p className="text-slate-200 leading-relaxed break-words">{reason}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "actions",
@@ -280,14 +309,13 @@ export function AppointmentList({
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const menuHeight = 240;
+              const menuHeight = 190;
               const windowHeight = window.innerHeight;
-              let top = rect.bottom + 8;
+              let top = rect.bottom + 4;
               if (rect.bottom + menuHeight > windowHeight) {
-                top = rect.top - menuHeight;
-                if (top < 0) top = 10;
+                top = Math.max(10, rect.top - menuHeight);
               }
-              setMenuPos({ top, left: Math.max(10, rect.right - 224) });
+              setMenuPos({ top, left: Math.max(10, rect.right - 192) });
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >
