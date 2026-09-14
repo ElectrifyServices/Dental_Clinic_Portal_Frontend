@@ -53,17 +53,21 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
     if (!slotsResponse?.data?.slots) return [];
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    return slotsResponse.data.slots.map((slot) => {
+    return slotsResponse.data.slots.map((slot: any) => {
       const time24 = convert12to24(slot.time);
       const [h, m] = time24.split(":");
       const slotTime = new Date(date);
       slotTime.setHours(parseInt(h || "0"), parseInt(m || "0"), 0, 0);
       const isPast = slotTime < now;
+      // Backend already marks blocked/overlapped slots as disabled (duration-aware)
+      const isBlocked = Boolean(slot.disabled || slot.is_blocked);
       return {
         time12: slot.time,
         time24,
         appointmentCount: slot.appointment_count || 0,
         isPast,
+        isBlocked,
+        disabled: isPast || isBlocked,
       };
     });
   }, [slotsResponse, date]);
@@ -182,10 +186,10 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                 <SelectItem
                   key={slot.time24}
                   value={slot.time24}
-                  disabled={slot.isPast}
+                  disabled={slot.disabled}
                   className="font-medium"
                 >
-                  {slot.time12} {slot.isPast ? "(Passed)" : ""}
+                  {slot.time12} {slot.isBlocked ? "(Booked)" : slot.isPast ? "(Passed)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -209,6 +213,8 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
               <SelectItem value="30">30 Minutes</SelectItem>
               <SelectItem value="45">45 Minutes</SelectItem>
               <SelectItem value="60">1 Hour</SelectItem>
+              <SelectItem value="90">1.5 Hours</SelectItem>
+              <SelectItem value="120">2 Hours</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -240,7 +246,8 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
             <div className="flex gap-2 flex-wrap max-h-40 overflow-y-auto p-1.5 custom-scrollbar">
               {slots.map((slot) => {
                 const isSelected = time === slot.time24;
-                const isDisabled = slot.isPast;
+                const isDisabled = slot.disabled;
+                const isBlocked = (slot as any).isBlocked;
                 return (
                   <Button
                     key={slot.time24}
@@ -256,7 +263,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                           : "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200 hover:border-emerald-400 cursor-pointer hover:scale-105"
                       }
                      `}
-                    title={slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
+                    title={isBlocked ? "Slot blocked - overlaps existing booking" : slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
                   >
                     {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
                     {slot.time12} ({slot.appointmentCount})
