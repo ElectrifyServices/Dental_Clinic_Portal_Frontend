@@ -258,11 +258,20 @@ export const usePatientForm = (patient: any) => {
     }
     
     const plan = emp.corporate_plan || emp.membership || {};
-    
+    // Only default to "membership" when the match actually carries an active
+    // plan/enrollment — a member whose plan was cancelled still matches by
+    // phone/name, but should register as a regular patient, not membership.
+    const hasActivePlan = !!(emp.corporate_plan || emp.membership);
+
     setExtraData((prev) => ({
       ...prev,
-      category: "membership",
-      corporatePlanId: plan.plan_id || plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id,
+      category: hasActivePlan ? "membership" : "regular",
+      // Same reasoning as category — don't carry over a stale plan id from a
+      // cancelled enrollment, or the Patient Category dropdown re-locks to
+      // "Membership" via its own corporatePlanId check.
+      corporatePlanId: hasActivePlan
+        ? (plan.plan_id || plan.id || emp.corporate_plan_id || emp.corporatePlanId || emp.company_id)
+        : undefined,
       corporatePlanName: plan.plan_name || emp.company_name || emp.companyName || "Corporate Plan",
       corporateMemberId: emp.id || emp.emp_id || emp.employee_id || emp.employeeId,
     }));

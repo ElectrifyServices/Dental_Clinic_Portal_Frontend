@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Phone, Users, User, Building2, MoreHorizontal,
-  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send, MessageCircle, Activity
+  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, MessageCircle, Activity, Ban, Wallet
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
@@ -25,6 +25,8 @@ interface MemberCardProps {
   onResendInvoice: () => void;
   onWhatsAppHistory: () => void;
   onBenefitUsage: () => void;
+  onCancelMembership: () => void;
+  onRecordRefund: () => void;
 }
 
 // Avatar color cycling logic matching EmployeeManagement
@@ -51,9 +53,10 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   isStatusPending,
   onEditDependent,
   onDeleteDependent,
-  onResendInvoice,
   onWhatsAppHistory,
   onBenefitUsage,
+  onCancelMembership,
+  onRecordRefund,
 }) => {
   const avatarGrad = (name: string) =>
     AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -61,6 +64,8 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   const plan = plans.find(p => p.id === employee.corporatePlanId);
   const isInd = plan?.planCategory === 'individual' || employee.companyName === 'Individual';
   const isExpired = employee.status === 'EXPIRED';
+  const isCancelled = employee.status === 'CANCELLED';
+  const isLocked = isExpired || isCancelled;
 
   return (
     <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
@@ -84,22 +89,24 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           <Button
             onClick={async (ev) => {
               ev.stopPropagation();
-              if (isExpired) return;
+              if (isLocked) return;
               await onToggleStatus();
             }}
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
-              isExpired
-                ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
-                : employee.isActive
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+              isCancelled
+                ? 'bg-violet-50 text-violet-700 border-violet-200 cursor-not-allowed'
+                : isExpired
+                  ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                  : employee.isActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
             }`}
-            disabled={isExpired || isStatusPending}
+            disabled={isLocked || isStatusPending}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${
-              isExpired ? 'bg-rose-500' : employee.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+              isCancelled ? 'bg-violet-500' : isExpired ? 'bg-rose-500' : employee.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
             }`} />
-            <span>{isExpired ? 'Expired' : employee.isActive ? 'Active' : 'Inactive'}</span>
+            <span>{isCancelled ? 'Cancelled' : isExpired ? 'Expired' : employee.isActive ? 'Active' : 'Inactive'}</span>
           </Button>
 
           {/* Actions Dropdown */}
@@ -116,10 +123,11 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               <DropdownMenuItem onSelect={onChangePlan}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
+              {/* Resend Invoice disabled for now.
               <DropdownMenuItem onSelect={onResendInvoice}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
-              </DropdownMenuItem>
-              {/* 
+              </DropdownMenuItem> */}
+              {/*
                 WhatsApp History menu item is commented out in favor of the global 
                 WhatsApp Logs view which contains template and status details.
               */}
@@ -132,6 +140,15 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               <DropdownMenuItem onSelect={onBenefitUsage}>
                 <Activity className="w-4 h-4 mr-2 text-blue-600" /> Uses benefits
               </DropdownMenuItem>
+              {employee.status === 'CANCELLED' ? (
+                <DropdownMenuItem onSelect={onRecordRefund}>
+                  <Wallet className="w-4 h-4 mr-2 text-emerald-600" /> Record Refund
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onSelect={onCancelMembership} className="text-destructive">
+                  <Ban className="w-4 h-4 mr-2" /> Cancel Membership
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onSelect={onDelete} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>

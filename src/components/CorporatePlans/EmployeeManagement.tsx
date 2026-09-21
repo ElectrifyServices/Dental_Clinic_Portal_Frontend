@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Edit2, Upload, Building2, User,
   Users, Phone, Search,
   MoreHorizontal, ArrowRightLeft,
-  UserPlus, Zap, Send, MessageCircle, Activity,
+  UserPlus, Zap, MessageCircle, Activity, Ban, Wallet,
 } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import {
@@ -26,6 +26,8 @@ import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModa
 import { MemberCard } from './Employee/MemberCard';
 import { WhatsAppHistoryModal } from './Employee/WhatsAppHistoryModal';
 import { BenefitUsageModal } from './Employee/BenefitUsageModal';
+import { CancelMembershipModal } from './Employee/CancelMembershipModal';
+import { RecordRefundModal } from './Employee/RecordRefundModal';
 import { formatPhoneWithCountryCode } from '../../utils/phoneUtils';
 
 interface EmployeeManagementProps {
@@ -65,6 +67,8 @@ export function EmployeeManagement({
   const [editEmp, setEditEmp] = useState<CorporateEmployee | null>(null);
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
+  const [cancelMembershipEmp, setCancelMembershipEmp] = useState<CorporateEmployee | null>(null);
+  const [recordRefundEmp, setRecordRefundEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
   const [editDep, setEditDep] = useState<any | null>(null);
   const [deleteDep, setDeleteDep] = useState<any | null>(null);
@@ -230,7 +234,7 @@ export function EmployeeManagement({
       await deleteEmployeeMutation.mutateAsync({ id: deleteDep.id });
       queryClient.invalidateQueries({ queryKey: ['corporatePlans'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['member'] });
       showToast("Family member removed successfully", "success");
       refetch();
       setDeleteDep(null);
@@ -302,26 +306,30 @@ export function EmployeeManagement({
         render: (dep: any) => {
           const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
           const isDepExpired = dep.status === 'EXPIRED';
+          const isDepCancelled = dep.status === 'CANCELLED';
+          const isDepLocked = isDepExpired || isDepCancelled;
           return (
             <Button
               onClick={async (ev) => {
                 ev.stopPropagation();
-                if (isDepExpired) return;
+                if (isDepLocked) return;
                 setStatusToggleDep(dep);
               }}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
-                isDepExpired
-                  ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
-                  : isDepActive
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                isDepCancelled
+                  ? 'bg-violet-50 text-violet-700 border-violet-200 cursor-not-allowed'
+                  : isDepExpired
+                    ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                    : isDepActive
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
               }`}
-              disabled={isDepExpired || (updateStatusMutation as any).isPending}
+              disabled={isDepLocked || (updateStatusMutation as any).isPending}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${
-                isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                isDepCancelled ? 'bg-violet-500' : isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
               }`} />
-              {isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}
+              {isDepCancelled ? 'Cancelled' : isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}
             </Button>
           );
         },
@@ -460,26 +468,30 @@ export function EmployeeManagement({
       key: 'status', header: 'Status',
       render: (e: CorporateEmployee) => {
         const isExpired = e.status === 'EXPIRED';
+        const isCancelled = e.status === 'CANCELLED';
+        const isLocked = isExpired || isCancelled;
         return (
           <Button
             onClick={async (ev) => {
               ev.stopPropagation();
-              if (isExpired) return;
+              if (isLocked) return;
               setStatusToggleEmp(e);
             }}
             className={`inline-flex items-center justify-center min-w-[90px] gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
-              isExpired
-                ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
-                : e.isActive
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+              isCancelled
+                ? 'bg-violet-50 text-violet-700 border-violet-200 cursor-not-allowed'
+                : isExpired
+                  ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                  : e.isActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
             }`}
-            disabled={isExpired || (updateStatusMutation as any).isPending}
+            disabled={isLocked || (updateStatusMutation as any).isPending}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${
-              isExpired ? 'bg-rose-500' : e.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+              isCancelled ? 'bg-violet-500' : isExpired ? 'bg-rose-500' : e.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
             }`} />
-            {isExpired ? 'Expired' : e.isActive ? 'Active' : 'Inactive'}
+            {isCancelled ? 'Cancelled' : isExpired ? 'Expired' : e.isActive ? 'Active' : 'Inactive'}
           </Button>
         );
       },
@@ -501,10 +513,11 @@ export function EmployeeManagement({
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setChangePlanEmp(e); }}>
                 <ArrowRightLeft className="w-4 h-4 mr-2" /> Change Plan
               </DropdownMenuItem>
+              {/* Resend Invoice disabled for now.
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); handleResendInvoice(e); }}>
                 <Send className="w-4 h-4 mr-2 text-violet-600" /> Resend Invoice
-              </DropdownMenuItem>
-              {/* 
+              </DropdownMenuItem> */}
+              {/*
                 WhatsApp History (local modal) is commented out in favor of the global 
                 WhatsApp logs/notification history which supports advanced filtering and templates.
               */}
@@ -525,6 +538,15 @@ export function EmployeeManagement({
               {/* <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setAddDependentEmp(e); }}>
                 <UserPlus className="w-4 h-4 mr-2" /> Add Family Member
               </DropdownMenuItem> */}
+              {e.status === 'CANCELLED' ? (
+                <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setRecordRefundEmp(e); }}>
+                  <Wallet className="w-4 h-4 mr-2 text-emerald-600" /> Record Refund
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setCancelMembershipEmp(e); }} className="text-destructive">
+                  <Ban className="w-4 h-4 mr-2" /> Cancel Membership
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onSelect={ev => { ev.stopPropagation(); setDeleteEmp(e); }} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Remove
               </DropdownMenuItem>
@@ -674,6 +696,8 @@ export function EmployeeManagement({
                            onEdit={() => { setEditEmp(e); setShowForm(true); }}
                            onChangePlan={() => setChangePlanEmp(e)}
                            onDelete={() => setDeleteEmp(e)}
+                           onCancelMembership={() => setCancelMembershipEmp(e)}
+                           onRecordRefund={() => setRecordRefundEmp(e)}
                            onResendInvoice={() => handleResendInvoice(e)}
                            onWhatsAppHistory={() => {
                              setWhatsappPhone(e.phone);
@@ -809,6 +833,8 @@ export function EmployeeManagement({
               selectedEmp.dependents.map((dep: any) => {
                 const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
                 const isDepExpired = dep.status === 'EXPIRED';
+                const isDepCancelled = dep.status === 'CANCELLED';
+                const isDepLocked = isDepExpired || isDepCancelled;
 
                 return (
                   <div
@@ -827,22 +853,24 @@ export function EmployeeManagement({
                         <Button
                           onClick={async (ev) => {
                             ev.stopPropagation();
-                            if (isDepExpired) return;
+                            if (isDepLocked) return;
                             setStatusToggleDep(dep);
                           }}
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold border h-auto uppercase tracking-wide transition-all ${
-                            isDepExpired
-                              ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
-                              : isDepActive
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                            isDepCancelled
+                              ? 'bg-violet-50 text-violet-700 border-violet-200 cursor-not-allowed'
+                              : isDepExpired
+                                ? 'bg-rose-50 text-rose-600 border-rose-200 cursor-not-allowed'
+                                : isDepActive
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
                           }`}
-                          disabled={isDepExpired || updateStatusMutation.isPending}
+                          disabled={isDepLocked || updateStatusMutation.isPending}
                         >
                           <span className={`w-1 h-1 rounded-full ${
-                            isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                            isDepCancelled ? 'bg-violet-500' : isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
                           }`} />
-                          <span>{isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}</span>
+                          <span>{isDepCancelled ? 'Cancelled' : isDepExpired ? 'Expired' : isDepActive ? 'Active' : 'Inactive'}</span>
                         </Button>
                       </div>
                     </div>
@@ -919,6 +947,20 @@ export function EmployeeManagement({
           isOpen={!!benefitUsageEmp}
           onClose={() => setBenefitUsageEmp(null)}
           employee={benefitUsageEmp}
+        />
+      )}
+
+      {cancelMembershipEmp && (
+        <CancelMembershipModal
+          employee={cancelMembershipEmp}
+          onClose={() => setCancelMembershipEmp(null)}
+        />
+      )}
+
+      {recordRefundEmp && (
+        <RecordRefundModal
+          employee={recordRefundEmp}
+          onClose={() => setRecordRefundEmp(null)}
         />
       )}
     </div>
