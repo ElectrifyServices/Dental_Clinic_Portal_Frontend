@@ -1,9 +1,13 @@
-import React from "react";
-import { CalendarCheck, Stethoscope, Check } from "lucide-react";
+import React, { useState } from "react";
+import { CalendarCheck, Stethoscope, Check, Ban } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { BlockTimeModal } from "./BlockTimeModal";
 
 interface BookingSlotsProps {
   selectedDoctorId: string | null;
+  selectedDoctorName?: string;
+  /** "YYYY-MM-DD" — required to open Block Time */
+  selectedDate?: string;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
   availableSlots: any[];
@@ -13,20 +17,45 @@ interface BookingSlotsProps {
 
 export const BookingSlots: React.FC<BookingSlotsProps> = ({
   selectedDoctorId,
+  selectedDoctorName,
+  selectedDate,
   selectedTime,
   setSelectedTime,
   availableSlots,
   isLoading,
   onBookAppointment,
 }) => {
+  const [showBlockTime, setShowBlockTime] = useState(false);
+
   return (
     <div className={`bg-card rounded-2xl border border-border p-5 shadow-sm transition-all duration-300 ${selectedDoctorId ? "opacity-100 h-[300px]" : "opacity-50 h-[120px] pointer-events-none"}`}>
       {selectedDoctorId ? (
         <div className="flex flex-col h-full">
-          <div className="flex items-center gap-2 mb-4">
-            <CalendarCheck className="w-4 h-4 text-emerald-500" />
-            <h3 className="text-sm font-bold text-foreground tracking-tight">Available Slots</h3>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4 text-emerald-500" />
+              <h3 className="text-sm font-bold text-foreground tracking-tight">Available Slots</h3>
+            </div>
+            {selectedDate && (
+              <Button
+                variant="ghost"
+                onClick={() => setShowBlockTime(true)}
+                className="h-7 px-2 rounded-lg text-[10px] font-bold text-red-600 hover:bg-red-50 gap-1"
+              >
+                <Ban className="w-3.5 h-3.5" />
+                Block Time
+              </Button>
+            )}
           </div>
+
+          {showBlockTime && selectedDoctorId && selectedDate && (
+            <BlockTimeModal
+              doctorId={selectedDoctorId}
+              doctorName={selectedDoctorName}
+              date={selectedDate}
+              onClose={() => setShowBlockTime(false)}
+            />
+          )}
 
           <div className="flex-1 overflow-y-auto grid grid-cols-3 gap-2 custom-scrollbar p-1">
             {isLoading ? (

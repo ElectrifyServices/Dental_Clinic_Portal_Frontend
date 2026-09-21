@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { ConfirmModal } from "@/components/ui";
-import { Pill, Plus, Trash2, Download, Loader2 } from "lucide-react";
+import { Pill, Plus, Trash2, Download, Loader2, Send } from "lucide-react";
 import {
   useMedicinesQuery,
   useCreateMedicineMutation,
@@ -30,6 +30,8 @@ interface PrescriptionFormProps {
   onRemovePrescription: (id: string) => void;
   onUpdatePrescription: (id: string, field: string, value: string) => void;
   onDownload?: () => void;
+  /** Present only when viewing/editing an already-completed session — resends its prescription. */
+  onSend?: () => Promise<void> | void;
 }
 
 export function PrescriptionForm({
@@ -38,11 +40,14 @@ export function PrescriptionForm({
   onRemovePrescription,
   onUpdatePrescription,
   onDownload,
+  onSend,
 }: PrescriptionFormProps) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -142,6 +147,21 @@ export function PrescriptionForm({
                 <Download className="w-4 h-4 text-green-700" />
               )}
               {downloading ? "Downloading..." : "Download"}
+            </Button>
+          )}
+          {onSend && (
+            <Button
+              type="button"
+              disabled={sending}
+              onClick={() => setShowSendConfirm(true)}
+              className="border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100/80 px-4 py-2 rounded-xl flex items-center text-sm font-medium transition-all duration-200 shadow-sm gap-1.5"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 text-blue-700 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 text-blue-700" />
+              )}
+              {sending ? "Sending..." : "Send to Patient"}
             </Button>
           )}
           <Button
@@ -333,6 +353,28 @@ export function PrescriptionForm({
             }
           }}
           onCancel={() => setShowDownloadConfirm(false)}
+        />
+      )}
+
+      {showSendConfirm && (
+        <ConfirmModal
+          title="Send Prescription to Patient"
+          message="Send this prescription to the patient via WhatsApp (PDF + message)?"
+          confirmLabel="Send"
+          variant="default"
+          isLoading={sending}
+          onConfirm={async () => {
+            setSending(true);
+            try {
+              if (onSend) await onSend();
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setSending(false);
+              setShowSendConfirm(false);
+            }
+          }}
+          onCancel={() => setShowSendConfirm(false)}
         />
       )}
     </div>
