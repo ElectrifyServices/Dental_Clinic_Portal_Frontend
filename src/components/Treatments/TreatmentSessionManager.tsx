@@ -21,6 +21,7 @@ import {
   PlanPrescription,
 } from "../../hooks/treatment/useTreatmentSessionHooks";
 import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
+import { useSendSessionPrescriptionMutation } from "../../hooks/treatment/useSendSessionPrescriptionMutation";
 import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
@@ -350,6 +351,8 @@ export function TreatmentSessionManager({
   const addSession = useAddTreatmentSessionMutation();
   const updateSession = useUpdateTreatmentSessionMutation();
   const completeSession = useCompleteTreatmentSessionMutation();
+  const sendPrescription = useSendSessionPrescriptionMutation();
+  const [sendPrescriptionOnComplete, setSendPrescriptionOnComplete] = useState(false);
 
   const [scheduleNext, setScheduleNext] = useState(false);
   const [nextSessionDraft, setNextSessionDraft] = useState({
@@ -515,6 +518,20 @@ export function TreatmentSessionManager({
         additional_notes: "",
       },
     });
+  };
+
+  const handleSendPrescription = async () => {
+    if (!completingId) return;
+    if (prescriptions.length === 0) {
+      showToast("Please add at least one medicine before sending.", "error");
+      return;
+    }
+    try {
+      await sendPrescription.mutateAsync({ id: treatmentId, sessionId: completingId });
+      showToast("Prescription sent to patient via WhatsApp!");
+    } catch (err: any) {
+      showToast(extractApiError(err, "Failed to send prescription"), "error");
+    }
   };
 
   // ─── Derived data ──────────────────────────────────────────────────────────
@@ -977,10 +994,19 @@ export function TreatmentSessionManager({
         showToast(completedCount + 1 >= totalSessions
           ? "All sessions completed! Treatment plan done!"
           : "Session completed!");
+
+        if (sendPrescriptionOnComplete && formattedPrescriptions.length > 0) {
+          try {
+            await sendPrescription.mutateAsync({ id: treatmentId, sessionId });
+          } catch (err: any) {
+            showToast(extractApiError(err, "Session completed, but sending the prescription failed. You can resend it from the session view."), "error");
+          }
+        }
       }
 
       setCompletingId(null);
       setIsEditingCompleted(false);
+      setSendPrescriptionOnComplete(false);
       setCompleteForm({
         work_done: "",
         session_findings: "",
@@ -1785,12 +1811,34 @@ export function TreatmentSessionManager({
                 </div>
               </div>
               <div className="border-t pt-4">
+                {!isEditingCompleted && (() => {
+                  const hasFilledPrescription = prescriptions.some((p) => p.medicine || p.medicineName);
+                  return (
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="checkbox"
+                        id="send-prescription-on-complete"
+                        checked={sendPrescriptionOnComplete}
+                        disabled={!hasFilledPrescription}
+                        onChange={(e) => setSendPrescriptionOnComplete(e.target.checked)}
+                        className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                      <Label
+                        htmlFor="send-prescription-on-complete"
+                        className={`text-sm font-bold cursor-pointer ${hasFilledPrescription ? "text-muted-foreground" : "text-muted-foreground/50"}`}
+                      >
+                        Send Prescription to Patient (WhatsApp)
+                      </Label>
+                    </div>
+                  );
+                })()}
                 <PrescriptionForm
                   prescriptions={prescriptions}
                   onAddPrescription={addPrescription}
                   onRemovePrescription={removePrescription}
                   onUpdatePrescription={updatePrescription}
                   onDownload={handleDownloadPrescription}
+                  onSend={isEditingCompleted ? handleSendPrescription : undefined}
                 />
               </div>
             </div>

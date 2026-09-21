@@ -689,6 +689,7 @@ export * from "./Tooltip";
 export * from "./Dialog";
 export * from "./Tabs";
 export * from "./DropdownMenu";
+export * from "./HourMinPicker";
 export * from "./Popover";
 export * from "./SearchableSelect";
 export { FormRenderer, SectionRenderer } from "./FormRenderer";
