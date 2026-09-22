@@ -149,7 +149,9 @@ export function EmployeeFormModal({
     search: debouncedSearch || undefined,
     filters: { isDropdown: [true] as any },
   }, {
-    enabled: !!debouncedSearch.trim()
+    enabled: !!debouncedSearch.trim(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const extractPatients = (data: any): any[] => {
@@ -571,7 +573,7 @@ export function EmployeeFormModal({
     const errs: Record<string, string> = {};
     if (!form.name?.trim()) errs.name = "Required";
     if (!form.phone?.trim()) errs.phone = "Required";
-    if (!form.corporatePlanId) errs.corporatePlanId = "Assign a corporate plan";
+    if (!form.corporatePlanId) errs.corporatePlanId = "Assign a Membership Plan";
 
     const hasIncompleteDependent = pendingDependents.some(
       (dep) => dep.name?.trim() && !dep.relationship?.trim()

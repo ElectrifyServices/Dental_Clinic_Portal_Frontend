@@ -7,6 +7,7 @@ import {
 } from "@/lib/schemas/patient.schema";
 import { generatePatientId, generateBarcode } from "./utils";
 import { useCheckEmployeeQuery } from "@/hooks/patients/useCheckEmployeeQuery";
+import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "@/components/ui";
 
 const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
@@ -223,10 +224,15 @@ export const usePatientForm = (patient: any) => {
     }
   }, [form.watch("patientId")]);
 
-  const searchPhone = form.watch("phone")?.trim();
+  const rawSearchPhone = form.watch("phone")?.trim() || "";
   const searchCountryCode = form.watch("country_code")?.trim() || "+91";
-  const phoneToSearch = searchPhone && searchPhone.length >= 7 ? searchPhone : "";
-  const searchName = form.watch("name")?.trim() || "";
+  const rawSearchName = form.watch("name")?.trim() || "";
+  const debouncedSearchPhone = useDebounce(rawSearchPhone, 400);
+  const debouncedSearchName = useDebounce(rawSearchName, 400);
+  const phoneToSearch = debouncedSearchPhone.length >= 7 ? debouncedSearchPhone : "";
+  // A 3+ char name alone is enough to look a member up — previously this
+  // required a phone too, so typing just a name never found a match.
+  const searchName = debouncedSearchName.length >= 3 ? debouncedSearchName : "";
   const { data: checkEmployeeResponse } = useCheckEmployeeQuery(phoneToSearch, searchName, searchCountryCode);
 
   // Corporate Lookup logic using API
@@ -235,13 +241,13 @@ export const usePatientForm = (patient: any) => {
     const data = checkEmployeeResponse?.responseObject?.data || checkEmployeeResponse?.data || checkEmployeeResponse;
     const emp = data?.employee || data?.member || (data?.is_member === undefined && data?.is_employee === undefined && Object.keys(data || {}).length > 0 ? data : null);
     const isEmployee = data?.is_employee ?? data?.is_member ?? !!emp;
-    
-    if (phoneToSearch && emp && isEmployee && !emp.error && Object.keys(emp).length > 0) {
+
+    if ((phoneToSearch || searchName) && emp && isEmployee && !emp.error && Object.keys(emp).length > 0) {
       setMatchedCorporateEmp(emp);
     } else {
       setMatchedCorporateEmp(null);
     }
-  }, [checkEmployeeResponse, phoneToSearch]);
+  }, [checkEmployeeResponse, phoneToSearch, searchName]);
 
   const acceptCorporateEmployee = () => {
     if (!matchedCorporateEmp) return;

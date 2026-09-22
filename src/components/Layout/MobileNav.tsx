@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   FlaskConical,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getParsedPermissions } from "../../utils/permission";
@@ -88,6 +89,12 @@ const MENU_ITEMS = [
     id: "reports",
     label: "Reports",
     icon: BarChart3,
+    roles: ["admin", "superadmin"],
+  },
+  {
+    id: "broadcast",
+    label: "WhatsApp Broadcast",
+    icon: Megaphone,
     roles: ["admin", "superadmin"],
   },
   // {

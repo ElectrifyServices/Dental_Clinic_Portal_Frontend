@@ -96,7 +96,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
     search: debouncedSearch || undefined,
     filters: { isDropdown: [true] as any },
   }, {
-    enabled: !!debouncedSearch.trim()
+    enabled: !!debouncedSearch.trim(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const apiPatients = React.useMemo(() => {
