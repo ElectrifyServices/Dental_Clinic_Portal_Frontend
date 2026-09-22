@@ -38,7 +38,7 @@ export function useCreateEmployeeMutation() {
     method: "post",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["member"] });
         queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
       },
     },

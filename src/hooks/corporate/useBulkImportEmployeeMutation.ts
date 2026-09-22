@@ -33,7 +33,7 @@ export function useBulkImportEmployeeMutation() {
     method: "post",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["member"] });
       },
     },
   });

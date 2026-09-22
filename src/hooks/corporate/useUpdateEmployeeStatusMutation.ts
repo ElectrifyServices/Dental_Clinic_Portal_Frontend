@@ -14,7 +14,7 @@ export function useUpdateEmployeeStatusMutation() {
     transformRequest: (variables) => ({ status: variables.status }),
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["member"] });
       },
     },
   });

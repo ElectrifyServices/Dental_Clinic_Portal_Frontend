@@ -96,7 +96,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
     search: debouncedSearch || undefined,
     filters: { isDropdown: [true] as any },
   }, {
-    enabled: !!debouncedSearch.trim()
+    enabled: !!debouncedSearch.trim(),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const apiPatients = React.useMemo(() => {
@@ -871,8 +873,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         </div>
 
         {(() => {
-          // Lock the category dropdown only if a plan or employee is actually attached
-          const isCorporate = !!matchedCorporateEmp || !!formData.selectedMembershipPlanId || !!formData.corporatePlanId;
+          // Lock the category dropdown only if a plan is actually attached — a
+          // matched member/employee whose plan was cancelled has no active
+          // corporate_plan/membership on it, so it should NOT lock as "Membership".
+          const isCorporate = !!(matchedCorporateEmp?.corporate_plan || matchedCorporateEmp?.membership) || !!formData.selectedMembershipPlanId || !!formData.corporatePlanId;
           return (
             <>
               <div>
