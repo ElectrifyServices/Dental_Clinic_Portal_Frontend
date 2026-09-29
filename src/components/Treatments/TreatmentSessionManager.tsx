@@ -1777,7 +1777,7 @@ export function TreatmentSessionManager({
                             {nextSlots.map((slot) => {
                               const isSelected = nextSessionDraft.time === slot.time12;
                               return (
-                                <button
+                                <Button
                                   key={slot.time24}
                                   type="button"
                                   disabled={slot.isDisabled}
@@ -1785,14 +1785,14 @@ export function TreatmentSessionManager({
                                   className={[
                                     "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
                                     isSelected
-                                      ? "bg-emerald-600 border-emerald-600 text-white"
+                                      ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-600"
                                       : slot.isDisabled
-                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
                                         : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
                                   ].join(" ")}
                                 >
                                   {slot.time12} ({slot.appointmentCount})
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -1951,28 +1951,32 @@ export function TreatmentSessionManager({
 
                     {/* Mode Switch Toggle Button */}
                     <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="xs"
                         onClick={() => handleNoteListModeChange("NUMBERED")}
-                        className={`px-2.5 py-1 text-xs transition-all ${
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
                           noteListMode === "NUMBERED"
-                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold"
-                            : "text-slate-500 hover:text-slate-700 font-medium"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
                         }`}
                       >
                         1. 2. 3. Numbered
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="xs"
                         onClick={() => handleNoteListModeChange("BULLET")}
-                        className={`px-2.5 py-1 text-xs transition-all ${
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
                           noteListMode === "BULLET"
-                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold"
-                            : "text-slate-500 hover:text-slate-700 font-medium"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
                         }`}
                       >
                         . Points
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
