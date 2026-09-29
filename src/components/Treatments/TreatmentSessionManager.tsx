@@ -416,6 +416,7 @@ export function TreatmentSessionManager({
   const [completeForm, setCompleteForm] = useState({
     work_done: "",
     session_findings: "",
+    notes: "",
     next_session_plan: "",
     session_fee: 0,
     discount_value: 0,
@@ -425,8 +426,95 @@ export function TreatmentSessionManager({
     payment_method: "CASH",
   });
 
+  const [noteListMode, setNoteListMode] = useState<"NUMBERED" | "BULLET">("NUMBERED");
+
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
+
+  const handleNoteListModeChange = (newMode: "NUMBERED" | "BULLET") => {
+    setNoteListMode(newMode);
+    setCompleteForm((prev) => {
+      const raw = prev.notes || "";
+      if (!raw.trim()) return prev;
+
+      const lines = raw.split("\n");
+      const updatedLines = lines.map((line, idx) => {
+        const cleanLine = line.replace(/^(\d+\.|\.|\•)\s*/, "").trim();
+        if (!cleanLine) return "";
+        return newMode === "NUMBERED" ? `${idx + 1}. ${cleanLine}` : `. ${cleanLine}`;
+      });
+
+      return { ...prev, notes: updatedLines.join("\n") };
+    });
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const value = completeForm.notes || "";
+
+      const beforeCursor = value.slice(0, start);
+      const afterCursor = value.slice(end);
+
+      const linesBefore = beforeCursor.split("\n");
+      const currentLine = linesBefore[linesBefore.length - 1];
+
+      let nextPrefix = "";
+      if (noteListMode === "NUMBERED") {
+        const match = currentLine.match(/^(\d+)\.\s*(.*)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          const text = match[2].trim();
+          if (!text) {
+            linesBefore[linesBefore.length - 1] = "";
+            const newValue = linesBefore.join("\n") + afterCursor;
+            setCompleteForm((prev) => ({ ...prev, notes: newValue }));
+            return;
+          }
+          nextPrefix = `\n${num + 1}. `;
+        } else {
+          nextPrefix = `\n${linesBefore.length + 1}. `;
+        }
+      } else {
+        const match = currentLine.match(/^(\.|\•)\s*(.*)/);
+        if (match) {
+          const text = match[2].trim();
+          if (!text) {
+            linesBefore[linesBefore.length - 1] = "";
+            const newValue = linesBefore.join("\n") + afterCursor;
+            setCompleteForm((prev) => ({ ...prev, notes: newValue }));
+            return;
+          }
+          nextPrefix = "\n. ";
+        } else {
+          nextPrefix = "\n. ";
+        }
+      }
+
+      const newValue = beforeCursor + nextPrefix + afterCursor;
+      setCompleteForm((prev) => ({ ...prev, notes: newValue.slice(0, 500) }));
+
+      setTimeout(() => {
+        const newPos = start + nextPrefix.length;
+        target.setSelectionRange(newPos, newPos);
+      }, 0);
+    }
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    let val = e.target.value;
+    if (val.length === 1 && !val.startsWith("1.") && !val.startsWith(".")) {
+      if (noteListMode === "NUMBERED") {
+        val = `1. ${val}`;
+      } else if (noteListMode === "BULLET") {
+        val = `. ${val}`;
+      }
+    }
+    setCompleteForm((prev) => ({ ...prev, notes: val }));
+  };
 
   const addPrescription = () => {
     setPrescriptions((prev) => [
@@ -474,7 +562,7 @@ export function TreatmentSessionManager({
           : 0;
         const durationVal = parseFloat(updated.duration) || 0;
         const multiplier = { Weeks: 7, Months: 30, Years: 365 }[updated.durationUnit as string] ?? 1;
-        if (dosageSum > 0 && durationVal > 0) {
+        if (field !== "qty" && dosageSum > 0 && durationVal > 0) {
           updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
         }
         return updated;
@@ -515,7 +603,8 @@ export function TreatmentSessionManager({
           durationUnit: p.durationUnit || "",
           qty: p.qty || "N/A",
         })),
-        additional_notes: "",
+        additional_notes: completeForm.notes || "",
+        notes: completeForm.notes || "",
       },
     });
   };
@@ -705,13 +794,15 @@ export function TreatmentSessionManager({
 
   const handleAddSession = async () => {
     if (!newSession.date) { showToast("Please select a date", "error"); return; }
-    if (newSession.cost <= 0) { showToast("Please enter a valid session fee", "error"); return; }
     try {
+      // The fee is not captured here — it is entered when the session is
+      // marked COMPLETED (CreateTreatmentSessionDto has no session_fee, so
+      // sending one was silently dropped by the validation pipe anyway).
       await addSession.mutateAsync({
         planId: treatmentId,
         visit_date: newSession.date,
+        start_time: newSession.time,
         duration_min: newSession.duration,
-        session_fee: newSession.cost,
         clinical_objectives: newSession.clinical_objectives,
       });
       showToast("Session scheduled successfully!");
@@ -745,6 +836,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: "",
         session_findings: "",
+        notes: "",
         next_session_plan: "",
         session_fee: currentFee,
         discount_value: currentDiscount,
@@ -855,6 +947,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: freshSession.work_done || "",
         session_findings: freshSession.session_findings || "",
+        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as any).additional_notes || "",
         next_session_plan: freshSession.next_session_plan || "",
         session_fee: sessionFee,
         discount_value: sessionDiscount,
@@ -944,6 +1037,8 @@ export function TreatmentSessionManager({
           sessionId,
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
+          notes: completeForm.notes,
+          additional_notes: completeForm.notes,
           paid_amount: completeForm.paid_now,
           payment_method: completeForm.payment_method || undefined,
           session_fee: completeForm.session_fee,
@@ -979,6 +1074,8 @@ export function TreatmentSessionManager({
           sessionId,
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
+          notes: completeForm.notes,
+          additional_notes: completeForm.notes,
           paid_amount: completeForm.paid_now,
           payment_method: completeForm.payment_method || undefined,
           create_invoice: completeForm.create_invoice,
@@ -1010,6 +1107,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: "",
         session_findings: "",
+        notes: "",
         next_session_plan: "",
         session_fee: 0,
         discount_value: 0,
@@ -1679,7 +1777,7 @@ export function TreatmentSessionManager({
                             {nextSlots.map((slot) => {
                               const isSelected = nextSessionDraft.time === slot.time12;
                               return (
-                                <button
+                                <Button
                                   key={slot.time24}
                                   type="button"
                                   disabled={slot.isDisabled}
@@ -1687,14 +1785,14 @@ export function TreatmentSessionManager({
                                   className={[
                                     "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
                                     isSelected
-                                      ? "bg-emerald-600 border-emerald-600 text-white"
+                                      ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-600"
                                       : slot.isDisabled
-                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
                                         : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
                                   ].join(" ")}
                                 >
                                   {slot.time12} ({slot.appointmentCount})
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -1839,6 +1937,72 @@ export function TreatmentSessionManager({
                   onUpdatePrescription={updatePrescription}
                   onDownload={handleDownloadPrescription}
                   onSend={isEditingCompleted ? handleSendPrescription : undefined}
+                />
+              </div>
+
+              {/* Additional Notes Section */}
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquareText className="w-4 h-4 text-emerald-600" />
+                      <Label className="text-sm font-semibold">Additional Notes</Label>
+                    </div>
+
+                    {/* Mode Switch Toggle Button */}
+                    <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleNoteListModeChange("NUMBERED")}
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
+                          noteListMode === "NUMBERED"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
+                        }`}
+                      >
+                        1. 2. 3. Numbered
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleNoteListModeChange("BULLET")}
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
+                          noteListMode === "BULLET"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
+                        }`}
+                      >
+                        . Points
+                      </Button>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      (completeForm.notes?.length || 0) > 450
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {(completeForm.notes || "").length}/500 chars
+                  </span>
+                </div>
+
+                <Textarea
+                  rows={4}
+                  maxLength={500}
+                  placeholder={
+                    noteListMode === "NUMBERED"
+                      ? "1. Take medicines exactly as prescribed...\n2. Do not change dose..."
+                      : ". Take medicines exactly as prescribed...\n. Do not change dose..."
+                  }
+                  value={completeForm.notes || ""}
+                  onKeyDown={handleNotesKeyDown}
+                  onChange={handleNotesChange}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none text-sm font-medium resize-y"
                 />
               </div>
             </div>
@@ -1990,11 +2154,9 @@ export function TreatmentSessionManager({
             >
               <MessageSquareText className="w-4 h-4" /> Consultation Feedback
             </Button>
-            {/* 
             <Button onClick={() => setShowNewSession(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Add Session
             </Button>
-            */}
           </div>
         </div>
 
@@ -2061,7 +2223,7 @@ export function TreatmentSessionManager({
             footer={
               <div className="flex gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleAddSession} disabled={!newSession.date || !newSession.cost || addSession.isPending} className="flex-1 gap-2">
+                <Button onClick={handleAddSession} disabled={!newSession.date || addSession.isPending} className="flex-1 gap-2">
                   {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Schedule Session
                 </Button>
@@ -2096,12 +2258,9 @@ export function TreatmentSessionManager({
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Session Fee (₹)</Label>
-                <Input type="number" value={newSession.cost || ""} min="0" step="500" placeholder="Enter amount"
-                  onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
-              </div>
+              {/* Session Fee is deliberately not asked here — it is captured
+                  on the "Complete Session" form, which is where the amount
+                  actually becomes billable. */}
             </div>
             <div className="mb-6">
               <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
