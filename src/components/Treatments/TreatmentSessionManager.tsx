@@ -10,6 +10,7 @@ import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard, Confirm
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
 import {
   useTreatmentSessionsQuery,
@@ -152,8 +153,21 @@ function InlineSessionScheduler({
   onConfirm,
   isSaving,
 }: InlineSessionSchedulerProps) {
+  const { doctors: apiDoctors, isLoading: isDoctorsLoading } = useDoctorsListQuery();
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+
+  useEffect(() => {
+    if (doctorId && apiDoctors.some((d) => d.id === doctorId)) {
+      setSelectedDoctorId(doctorId);
+    } else if (apiDoctors.length > 0 && !selectedDoctorId) {
+      setSelectedDoctorId(apiDoctors[0].id);
+    }
+  }, [doctorId, apiDoctors]);
+
+  const activeDoctorId = selectedDoctorId || doctorId || (apiDoctors[0]?.id ?? "");
+
   const { data: slotsResponse, isLoading } = useAvailableSlotsQuery(
-    doctorId || null,
+    activeDoctorId || null,
     draft.date || null,
   );
 
@@ -177,7 +191,7 @@ function InlineSessionScheduler({
     });
   }, [draft.date, slotsResponse]);
 
-  const canConfirm = Boolean(doctorId && draft.date && draft.time);
+  const canConfirm = Boolean(activeDoctorId && draft.date && draft.time);
 
   return (
     <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-4">
@@ -190,12 +204,35 @@ function InlineSessionScheduler({
             Schedule Session
           </p>
           <p className="text-[11px] text-emerald-700/70">
-            Choose a visit date and confirm a slot.
+            Choose a doctor, visit date, and confirm a slot.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
+            Doctor
+          </Label>
+          <Select
+            value={activeDoctorId}
+            onValueChange={(val) => {
+              setSelectedDoctorId(val);
+              onChange({ time: "" });
+            }}
+          >
+            <SelectTrigger className="rounded-xl border-emerald-200 bg-white">
+              <SelectValue placeholder={isDoctorsLoading ? "Loading..." : "Select Doctor"} />
+            </SelectTrigger>
+            <SelectContent>
+              {apiDoctors.map((doc) => (
+                <SelectItem key={doc.id} value={doc.id}>
+                  {doc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Date
@@ -208,17 +245,6 @@ function InlineSessionScheduler({
             className="rounded-xl border-emerald-200 bg-white"
           />
         </div>
-        {/* <div>
-          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
-            Selected Time
-          </Label>
-          <Input
-            type="time"
-            value={draft.time}
-            onChange={(e) => onChange({ time: e.target.value })}
-            className="rounded-xl border-emerald-200 bg-white"
-          />
-        </div> */}
         <div>
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Duration
@@ -241,7 +267,7 @@ function InlineSessionScheduler({
         </div>
       </div>
 
-      {doctorId && draft.date ? (
+      {activeDoctorId && draft.date ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-emerald-700" />
@@ -281,7 +307,7 @@ function InlineSessionScheduler({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              No slots available for the selected date.
+              No slots available for the selected doctor and date.
             </p>
           )}
         </div>
@@ -291,9 +317,9 @@ function InlineSessionScheduler({
         </p>
       )}
 
-      {!doctorId && (
+      {!activeDoctorId && (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-          This treatment has no linked doctor, so slots cannot be loaded.
+          Select a doctor to view available slots.
         </p>
       )}
 
@@ -331,22 +357,46 @@ export function TreatmentSessionManager({
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
 
-  const treatmentPlan = (treatmentPlanResponse as any)?.data ?? treatmentPlanResponse;
-  const assignedDoctorId =
-    treatmentPlan?.doctor_id ||
-    treatmentPlan?.doctor?.id ||
-    doctorId;
-
-  // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
-  // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.
-  // Try both shapes: direct data or nested under responseObject.data
   const responseData = useMemo(() => {
     if (!apiResponse) return null;
-    // Shape 1: apiResponse.data (useApiQuery strips axios wrapper → this is responseObject)
-    const d = (apiResponse as any)?.data ?? apiResponse;
-    // Shape 2: some interceptors return responseObject.data directly
+    const d = (apiResponse as any)?.responseObject?.data ?? (apiResponse as any)?.data ?? apiResponse;
     return d;
   }, [apiResponse]);
+
+  const treatmentPlan = useMemo(() => {
+    if (!treatmentPlanResponse) return null;
+    return (
+      (treatmentPlanResponse as any)?.responseObject?.data ??
+      (treatmentPlanResponse as any)?.data?.data ??
+      (treatmentPlanResponse as any)?.data ??
+      treatmentPlanResponse
+    );
+  }, [treatmentPlanResponse]);
+
+  const extractDoctorStaffId = (obj: any): string | null => {
+    if (!obj) return null;
+    const doc = obj.doctor || obj.plan?.doctor || (obj.id && (obj.staff_id || obj.staff) ? obj : null);
+    if (doc) {
+      if (typeof doc.staff_id === "string" && doc.staff_id) return doc.staff_id;
+      if (typeof doc.staff?.id === "string" && doc.staff.id) return doc.staff.id;
+      if (typeof doc.id === "string" && doc.id && doc.id !== doc.created_by) return doc.id;
+    }
+    const docId = obj.doctor_id || obj.plan?.doctor_id;
+    if (typeof docId === "string" && docId && docId !== obj.created_by) {
+      return docId;
+    }
+    return null;
+  };
+
+  const assignedDoctorId = useMemo(() => {
+    return (
+      extractDoctorStaffId(treatmentPlan) ||
+      extractDoctorStaffId(responseData?.sessions?.[0]?.plan) ||
+      extractDoctorStaffId(responseData?.sessions?.[0]) ||
+      (doctorId && doctorId !== (treatmentPlan?.created_by || responseData?.sessions?.[0]?.created_by) ? doctorId : null) ||
+      null
+    );
+  }, [treatmentPlan, responseData, doctorId]);
 
   const addSession = useAddTreatmentSessionMutation();
   const updateSession = useUpdateTreatmentSessionMutation();
@@ -1259,7 +1309,11 @@ export function TreatmentSessionManager({
             <div className="border-t p-5 bg-muted/10 space-y-4">
               {isScheduling && (
                 <InlineSessionScheduler
-                  doctorId={assignedDoctorId || session.plan?.doctor?.id}
+                  doctorId={
+                    extractDoctorStaffId(session) ||
+                    extractDoctorStaffId(session.plan) ||
+                    assignedDoctorId
+                  }
                   draft={scheduleDraft}
                   onChange={(patch) =>
                     setScheduleDraft((prev) => ({ ...prev, ...patch }))
