@@ -871,9 +871,13 @@ export const downloadConsultationPDF = async ({
     "";
   const additionalNotes =
     consultationData.additional_notes ||
+    consultationData.notes ||
     consultationData.consultationNotes ||
     consultationData.data?.additional_notes ||
+    consultationData.data?.notes ||
     consultationData.data?.consultationNotes ||
+    consultationData.responseObject?.data?.additional_notes ||
+    consultationData.responseObject?.data?.notes ||
     "";
   const isFollowUp =
     consultationData.is_follow_up ||
