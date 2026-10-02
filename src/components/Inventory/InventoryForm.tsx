@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useEffect } from "react";
 import { Save, Package, AlertTriangle } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -35,8 +36,8 @@ import { useState } from "react";
 
 interface InventoryFormProps {
   onClose: () => void;
-  onSave: (item: any) => void;
-  item?: any;
+  onSave: (item: ApiAny) => void;
+  item?: ApiAny;
   isLoading?: boolean;
 }
 
@@ -69,7 +70,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string | null>(null);
 
-  let dynamicCategories: any[] = [];
+  let dynamicCategories: ApiAny[] = [];
   if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
   else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
   else if (Array.isArray(categoriesData?.items)) dynamicCategories = categoriesData.items;
@@ -77,14 +78,14 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
   else if (Array.isArray(categoriesData?.responseObject?.data)) dynamicCategories = categoriesData.responseObject.data;
   else if (categoriesData?.responseObject && Array.isArray(categoriesData?.responseObject?.categories)) dynamicCategories = categoriesData.responseObject.categories;
 
-  const categoryOptions = dynamicCategories.map((c: any) => ({
+  const categoryOptions = dynamicCategories.map((c: ApiAny) => ({
     label: c?.name || c?.value || c?.label || "Unknown",
     value: c?.id || c?._id || c?.categoryId || c?.category_id || "Unknown",
     id: c?.id || c?._id || c?.categoryId || c?.category_id || Math.random().toString()
-  })).filter((c: any) => c.value !== "Unknown");
+  })).filter((c: ApiAny) => c.value !== "Unknown");
 
   const form = useForm<InventoryFormData>({
-    resolver: zodResolver(inventorySchema) as any,
+    resolver: zodResolver(inventorySchema) as ApiAny,
     defaultValues: {
       name: item?.name ?? "",
       category: item?.category ?? "",
@@ -128,7 +129,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
     let categoryId = data.category;
     if (categoryId) {
       const matchedOpt = categoryOptions.find(
-        (opt: any) =>
+        (opt: ApiAny) =>
           opt.value === categoryId ||
           opt.label.toLowerCase() === categoryId.toLowerCase() ||
           opt.value.toLowerCase() === categoryId.toLowerCase()
@@ -147,7 +148,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
     });
   };
 
-  const selectCls =
+  const _selectCls =
     "form-input w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all";
 
   return (
@@ -239,7 +240,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           isCreating={createCategoryMutation.isPending}
                           createLabel="Add new category"
                           onDeleteOption={(val) => {
-                            const cat = categoryOptions.find((c: any) => c.value === val);
+                            const cat = categoryOptions.find((c: ApiAny) => c.value === val);
                             if (cat) {
                               setDeleteId(cat.value);
                               setDeleteName(cat.label);

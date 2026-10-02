@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Package, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,9 +20,9 @@ import {
 } from "@/lib/schemas/inventory.schema";
 
 interface RestockFormProps {
-  item: any;
+  item: ApiAny;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: ApiAny) => void;
 }
 
 export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
@@ -29,7 +30,7 @@ export function RestockForm({ item, onClose, onSave }: RestockFormProps) {
   const submitLabel = useSubmitLabel("restock", "create");
 
   const form = useForm<RestockFormData>({
-    resolver: zodResolver(restockSchema) as any,
+    resolver: zodResolver(restockSchema) as ApiAny,
     defaultValues: {
       quantity: 1,
       reason: "Monthly restock from supplier",

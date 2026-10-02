@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from 'react';
 import { Building2, IndianRupee, Activity, CheckCircle } from 'lucide-react';
 import { MetricCard, ContentCard, DataTable, Badge, Pagination } from '@/components/ui';
@@ -62,7 +63,7 @@ export function MembershipSection({ period, startDate, endDate }: { period: stri
         ? planDataObj
         : [];
 
-  const planPerformanceList = planListRaw.map((p: any) => ({
+  const planPerformanceList = planListRaw.map((p: ApiAny) => ({
     plan: p.plan ?? p.planName ?? p.name ?? 'N/A',
     members: Number(p.members ?? p.totalMembers ?? p.memberCount ?? 0),
     revenue: Number(p.revenue ?? p.totalRevenue ?? p.amount ?? 0),
@@ -132,12 +133,12 @@ export function MembershipSection({ period, startDate, endDate }: { period: stri
         ) : (
           <DataTable
             data={planPerformanceList}
-            rowKey={(m: any) => m.plan}
+            rowKey={(m: ApiAny) => m.plan}
             columns={[
-              { key: 'plan',        header: 'PLAN',           render: (m: any) => <span className="font-extrabold text-slate-800">{m.plan}</span> },
-              { key: 'members',     header: 'MEMBERS',        align: 'center', render: (m: any) => <Badge variant="blue">{m.members}</Badge> },
-              { key: 'revenue',     header: 'REVENUE',        align: 'right',  render: (m: any) => <span className="font-black text-emerald-600">₹{m.revenue.toLocaleString()}</span> },
-              { key: 'utilization', header: 'BENEFIT USED',  align: 'center', render: (m: any) => (
+              { key: 'plan',        header: 'PLAN',           render: (m: ApiAny) => <span className="font-extrabold text-slate-800">{m.plan}</span> },
+              { key: 'members',     header: 'MEMBERS',        align: 'center', render: (m: ApiAny) => <Badge variant="blue">{m.members}</Badge> },
+              { key: 'revenue',     header: 'REVENUE',        align: 'right',  render: (m: ApiAny) => <span className="font-black text-emerald-600">₹{m.revenue.toLocaleString()}</span> },
+              { key: 'utilization', header: 'BENEFIT USED',  align: 'center', render: (m: ApiAny) => (
                 <div className="flex items-center gap-2 justify-center">
                   <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${Math.min(m.utilization, 100)}%` }} />
@@ -145,7 +146,7 @@ export function MembershipSection({ period, startDate, endDate }: { period: stri
                   <span className="text-xs font-bold text-slate-700">{m.utilization}%</span>
                 </div>
               )},
-              { key: 'renewalRate', header: 'RENEWAL RATE',  align: 'right',  render: (m: any) => (
+              { key: 'renewalRate', header: 'RENEWAL RATE',  align: 'right',  render: (m: ApiAny) => (
                 <span className={`font-extrabold text-xs ${m.renewalRate >= 80 ? 'text-emerald-600' : m.renewalRate >= 65 ? 'text-amber-600' : 'text-rose-500'}`}>
                   {m.renewalRate}%
                 </span>

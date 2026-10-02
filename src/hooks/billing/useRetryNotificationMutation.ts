@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +9,7 @@ export interface RetryNotificationVariables {
 export function useRetryNotificationMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, RetryNotificationVariables>({
+  return useApiMutation<ApiAny, RetryNotificationVariables>({
     getEndpoint: (variables) => `/notifications/${variables.id}/retry`,
     method: "post",
     options: {

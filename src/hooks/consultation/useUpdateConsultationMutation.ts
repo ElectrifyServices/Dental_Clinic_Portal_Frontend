@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,7 +12,7 @@ export function useUpdateConsultationMutation() {
   return useApiMutation<ConsultationResponse, UpdateConsultationVariables>({
     getEndpoint: (variables) => `/consultations/${variables.id}`,
     method: "patch",
-    transformRequest: (variables: any) => {
+    transformRequest: (variables: ApiAny) => {
       if (variables.attachments && variables.attachments.length > 0) {
         const formData = new FormData();
         Object.keys(variables).forEach((key) => {
@@ -31,7 +32,7 @@ export function useUpdateConsultationMutation() {
       }
       return variables;
     },
-    headers: (variables: any) => {
+    headers: (variables: ApiAny) => {
       if (variables.attachments && variables.attachments.length > 0) {
         return { "Content-Type": "multipart/form-data" };
       }

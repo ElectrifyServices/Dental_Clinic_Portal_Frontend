@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
-import { User, Phone, Heart, ClipboardCheck, CheckCircle, ShieldCheck } from "lucide-react";
+import { User, Phone, Heart, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { calculateAge } from "./utils";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -9,12 +10,12 @@ import { getFileUrl } from "../../../services/apiClient";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface Step4Props {
-  formData: any;
+  formData: ApiAny;
   isCheckIn?: boolean;
-  corporatePlans?: any[];
+  corporatePlans?: ApiAny[];
 }
 
-const DentalFileThumbnail: React.FC<{ file: any; index: number }> = ({ file, index }) => {
+const DentalFileThumbnail: React.FC<{ file: ApiAny; index: number }> = ({ file, index }) => {
   const [failed, setFailed] = React.useState(false);
   const src = file.data || file.url || file;
   const isImage = typeof src === 'string' && (src.startsWith('data:image/') || src.match(/\.(jpeg|jpg|gif|png|webp)$/i));
@@ -80,14 +81,14 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
   const { data: rawMedicalHistories } = useMedicalHistoriesQuery({ staleTime: 0 });
   const { data: rawAllergies } = useAllergiesQuery({ staleTime: 0 });
 
-  const extractList = (data: any) => {
+  const extractList = (data: ApiAny) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    if (data && Array.isArray((data as any).all)) return (data as any).all;
-    if (data && Array.isArray((data as any).data?.all)) return (data as any).data.all;
-    if (data && Array.isArray((data as any).data)) return (data as any).data;
-    if (data && Array.isArray((data as any).responseObject?.data?.all)) return (data as any).responseObject.data.all;
-    if (data && Array.isArray((data as any).responseObject?.data)) return (data as any).responseObject.data;
+    if (data && Array.isArray((data as ApiAny).all)) return (data as ApiAny).all;
+    if (data && Array.isArray((data as ApiAny).data?.all)) return (data as ApiAny).data.all;
+    if (data && Array.isArray((data as ApiAny).data)) return (data as ApiAny).data;
+    if (data && Array.isArray((data as ApiAny).responseObject?.data?.all)) return (data as ApiAny).responseObject.data.all;
+    if (data && Array.isArray((data as ApiAny).responseObject?.data)) return (data as ApiAny).responseObject.data;
     if (data?.allergies && Array.isArray(data.allergies)) return data.allergies;
     if (data?.history && Array.isArray(data.history)) return data.history;
     if (data?.medicalHistories && Array.isArray(data.medicalHistories)) return data.medicalHistories;
@@ -96,13 +97,13 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
 
   const getAllergyName = (id: string) => {
     const list = extractList(rawAllergies);
-    const found = list.find((a: any) => a.id === id);
+    const found = list.find((a: ApiAny) => a.id === id);
     return found ? (found.allergy_name || found.name || id) : id;
   };
 
   const getMedicalHistoryName = (id: string) => {
     const list = extractList(rawMedicalHistories);
-    const found = list.find((m: any) => m.id === id);
+    const found = list.find((m: ApiAny) => m.id === id);
     return found ? (found.name || found.history_name || id) : id;
   };
 
@@ -249,7 +250,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     Enrolling in Corporate/Membership Plan
                   </span>
                   <p className="font-bold text-foreground text-sm">
-                    {formData.corporatePlanName || corporatePlans.find((p: any) => p.id === formData.corporatePlanId)?.name || "Corporate Plan"}
+                    {formData.corporatePlanName || corporatePlans.find((p: ApiAny) => p.id === formData.corporatePlanId)?.name || "Corporate Plan"}
                   </p>
                   {formData.corporateMemberId && (
                     <p className="text-xs text-muted-foreground mt-1">
@@ -447,7 +448,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                           Uploaded Images / X-rays
                         </span>
                         <div className="grid grid-cols-4 gap-2">
-                          {formData.dentalFiles.map((file: any, index: number) => (
+                          {formData.dentalFiles.map((file: ApiAny, index: number) => (
                             <DentalFileThumbnail key={index} file={file} index={index} />
                           ))}
                         </div>

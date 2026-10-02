@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { 
   Modal, 
@@ -72,7 +73,7 @@ export function WhatsappHistoryModal({
     setCurrentPage(1);
   }, [debouncedSearch, statusFilter, templateFilter, itemsPerPage]);
 
-  const queryParams: any = {
+  const queryParams: ApiAny = {
     page: currentPage,
     limit: itemsPerPage,
     filters: {}
@@ -91,7 +92,7 @@ export function WhatsappHistoryModal({
   // Hook query and mutations
   const { data: rawData, isLoading, refetch: refetchList } = useNotificationsQuery(queryParams);
 
-  const getCountValue = (data: any) => {
+  const getCountValue = (data: ApiAny) => {
     if (data === undefined || data === null) return 0;
     if (typeof data === "number") return data;
     if (typeof data === "string") return parseInt(data, 10) || 0;
@@ -180,12 +181,12 @@ export function WhatsappHistoryModal({
     });
   };
 
-  const getPatientNameFromNotification = (item: any) => {
+  const getPatientNameFromNotification = (item: ApiAny) => {
     if (item.content?.patient_name) {
       return item.content.patient_name;
     }
     const bodyComp = item.content?.template?.components?.find(
-      (c: any) => c.type === "body"
+      (c: ApiAny) => c.type === "body"
     );
     const firstParam = bodyComp?.parameters?.[0];
     if (firstParam && firstParam.type === "text" && firstParam.text) {
@@ -208,12 +209,12 @@ export function WhatsappHistoryModal({
     }
   };
 
-  const getMessageSummary = (item: any) => {
+  const getMessageSummary = (item: ApiAny) => {
     const bodyComp = item.content?.template?.components?.find(
-      (c: any) => c.type === "body"
+      (c: ApiAny) => c.type === "body"
     );
     if (bodyComp && bodyComp.parameters) {
-      const params = bodyComp.parameters.map((p: any) => p.text).filter(Boolean);
+      const params = bodyComp.parameters.map((p: ApiAny) => p.text).filter(Boolean);
       if (params.length > 2) {
         return `${params[2]} (${params[1]})`;
       }
@@ -247,7 +248,7 @@ export function WhatsappHistoryModal({
       setProcessingId(id);
       await retryMutation.mutateAsync({ id });
       toast.success("Notification resend triggered!");
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       console.error("Failed to retry message:", err);
       toast.error(err.message || "Failed to resend message");
     } finally {
@@ -258,7 +259,7 @@ export function WhatsappHistoryModal({
   // Get unique template names for filters
   const uniqueTemplates = useMemo(() => {
     const set = new Set<string>();
-    notifications.forEach((n: any) => {
+    notifications.forEach((n: ApiAny) => {
       if (n.template_name) set.add(n.template_name);
     });
     return Array.from(set);
@@ -266,7 +267,7 @@ export function WhatsappHistoryModal({
 
   // Apply filters on the list
   const filteredNotifications = useMemo(() => {
-    return notifications.filter((item: any) => {
+    return notifications.filter((item: ApiAny) => {
       const phoneStr = (item.to_phone || item.content?.to || "").toString();
       const patientName = getPatientNameFromNotification(item);
       const queryLower = searchQuery.toLowerCase();
@@ -295,13 +296,13 @@ export function WhatsappHistoryModal({
     
     // Attempt to extract total from various possible backend response formats
     const explicitTotal = 
-      (rawData as any).totalItems ??
-      (rawData as any).total ??
-      (rawData as any).responseObject?.data?.pagination?.total_items ??
-      (rawData as any).data?.pagination?.total_items ??
-      (rawData as any).pagination?.total_items ??
-      (rawData as any).pagination?.total ??
-      (rawData as any).meta?.total;
+      (rawData as ApiAny).totalItems ??
+      (rawData as ApiAny).total ??
+      (rawData as ApiAny).responseObject?.data?.pagination?.total_items ??
+      (rawData as ApiAny).data?.pagination?.total_items ??
+      (rawData as ApiAny).pagination?.total_items ??
+      (rawData as ApiAny).pagination?.total ??
+      (rawData as ApiAny).meta?.total;
 
     if (explicitTotal !== undefined && explicitTotal !== null) {
       return explicitTotal;
@@ -439,7 +440,7 @@ export function WhatsappHistoryModal({
                 {
                   key: "patient",
                   header: "Patient",
-                  render: (item: any) => (
+                  render: (item: ApiAny) => (
                     <div className="space-y-0.5 min-w-[120px]">
                       <div className="font-extrabold text-foreground text-sm">
                         {getPatientNameFromNotification(item)}
@@ -454,9 +455,9 @@ export function WhatsappHistoryModal({
                 {
                   key: "message",
                   header: "Message Details",
-                  render: (item: any) => {
+                  render: (item: ApiAny) => {
                     const headerComp = item.content?.template?.components?.find(
-                      (c: any) => c.type === "header"
+                      (c: ApiAny) => c.type === "header"
                     );
                     const docFilename = headerComp?.parameters?.[0]?.document?.filename;
                     const isFailed = item.status?.toLowerCase() === "failed";
@@ -521,7 +522,7 @@ export function WhatsappHistoryModal({
                 {
                   key: "timestamp",
                   header: "Sent / Failed At",
-                  render: (item: any) => (
+                  render: (item: ApiAny) => (
                     <div className="space-y-1 min-w-[140px]">
                       <span className="text-xs text-muted-foreground block font-mono">
                         {formatDate(item.sent_at || item.failed_at || item.created_at)}
@@ -542,7 +543,7 @@ export function WhatsappHistoryModal({
                   key: "status",
                   header: "Status",
                   align: "center" as const,
-                  render: (item: any) => (
+                  render: (item: ApiAny) => (
                     <div className="space-y-1 min-w-[120px] flex flex-col items-center justify-center" title={item.error_message}>
                       {getStatusBadge(item.status, item.error_message)}
                     </div>
@@ -552,7 +553,7 @@ export function WhatsappHistoryModal({
                   key: "actions",
                   header: "Actions",
                   align: "center" as const,
-                  render: (item: any) => {
+                  render: (item: ApiAny) => {
                     const isProcessing = processingId === item.id || retryMutation.isPending;
                     return (
                       <div className="flex items-center justify-center gap-1.5">

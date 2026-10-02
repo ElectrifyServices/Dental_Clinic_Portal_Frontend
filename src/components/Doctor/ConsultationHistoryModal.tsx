@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { FileText, ArrowLeft } from "lucide-react";
 import {
@@ -17,7 +18,7 @@ import { HistoryDetail } from "./ConsultationHistory/HistoryDetail";
 
 interface Props {
   onClose: () => void;
-  patients?: any[];
+  patients?: ApiAny[];
 }
 
 interface Prescription {
@@ -32,7 +33,7 @@ interface Prescription {
   instructions?: string;
 }
 
-interface ConsultationRecord {
+interface _ConsultationRecord {
   id: number;
   patientName: string;
   patientId?: string;
@@ -70,7 +71,7 @@ export default function ConsultationHistoryModal({
 }: Props) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<ApiAny | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [showFilters, setShowFilters] = useState(false);
@@ -83,7 +84,7 @@ export default function ConsultationHistoryModal({
   const isDeletingRef = useRef(false);
 
   const queryParams = useMemo(() => {
-    const params: any = {
+    const params: ApiAny = {
       page,
       limit: pageSize,
       filters: { status: ['COMPLETED'] }
@@ -106,7 +107,7 @@ export default function ConsultationHistoryModal({
     }
 
     return params;
-  }, [page, debouncedSearch, filterSort, startDateStr, endDateStr]);
+  }, [page, pageSize, debouncedSearch, filterSort, startDateStr, endDateStr]);
 
   const { data: apiData, isFetching } = useConsultationsQuery(queryParams);
 
@@ -114,13 +115,13 @@ export default function ConsultationHistoryModal({
     if (!apiData) return [];
     if (Array.isArray(apiData)) return apiData;
     if (Array.isArray(apiData.data)) return apiData.data;
-    if (apiData.data && Array.isArray((apiData.data as any).consultations)) return (apiData.data as any).consultations;
-    if (Array.isArray((apiData as any).consultations)) return (apiData as any).consultations;
+    if (apiData.data && Array.isArray((apiData.data as ApiAny).consultations)) return (apiData.data as ApiAny).consultations;
+    if (Array.isArray((apiData as ApiAny).consultations)) return (apiData as ApiAny).consultations;
     return [];
   }, [apiData]);
 
   const handleDownloadPDF = async (
-    record: any,
+    record: ApiAny,
     type: PDFReportType = "FULL",
   ) => {
     const toastId = toast.loading("Generating PDF report...");
@@ -146,7 +147,7 @@ export default function ConsultationHistoryModal({
           id: record.patientId || record.patient_id || record.patient?.id || "—",
           patientName: record.patientName || record.patient?.name || "—",
           phone: record.patientContact || record.patient_phone || record.patient?.phone || "—",
-          doctorName: (record as any).doctorName || record.doctor?.name,
+          doctorName: (record as ApiAny).doctorName || record.doctor?.name,
           treatmentType: record.treatmentType,
           gender: matchedPatient?.gender || record.patient?.gender || "—",
           bloodGroup: matchedPatient?.blood_group || matchedPatient?.bloodGroup || record.patient?.blood_group || record.patient?.bloodGroup || "—",
@@ -155,7 +156,7 @@ export default function ConsultationHistoryModal({
         toothChartState: consultationData.toothChartState || {},
       });
       toast.success("PDF Downloaded successfully!", { id: toastId });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to generate PDF", { id: toastId });
     }
   };
@@ -163,14 +164,14 @@ export default function ConsultationHistoryModal({
   const { mutateAsync: sendConsultation } = useSendConsultationMutation();
 
   const handleSendPDF = async (
-    record: any,
+    record: ApiAny,
     type: PDFReportType = "FULL"
   ) => {
     const toastId = toast.loading(`Sending ${type.toLowerCase().replace('_', ' ')} report...`);
     try {
-      await sendConsultation({ id: String(record.id), type: type as any });
+      await sendConsultation({ id: String(record.id), type: type as ApiAny });
       toast.success("Report sent successfully!", { id: toastId });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error("Failed to send report: " + (err.message || ""), { id: toastId });
     }
   };
@@ -223,7 +224,7 @@ export default function ConsultationHistoryModal({
         // If the deleted record is currently open in detail view, go back to list
         if (selectedRecord?.id === deleteConfirmId) setSelectedRecord(null);
         // History modal stays open — NO onClose() call here
-      } catch (error) {
+      } catch (_error) {
         toast.error("Failed to delete consultation record");
       } finally {
         setIsDeleting(false);

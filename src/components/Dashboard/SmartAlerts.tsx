@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useMemo } from 'react';
 import { AlertTriangle, CreditCard, Package, Users, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,7 +44,7 @@ const ALERT_ICONS: Record<string, React.ReactNode> = {
   membership: <CheckCircle className="w-4 h-4" />,
 };
 
-export function SmartAlerts({ period = 'today', customStart, customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
+export function SmartAlerts({ period = 'today', customStart: _customStart, customEnd: _customEnd }: { period?: string, customStart?: string, customEnd?: string }) {
   const [dismissed, setDismissed] = React.useState<Set<string>>(new Set());
 
   const { data: invoicesOverdue } = useInvoicesOverdue();
@@ -52,7 +53,7 @@ export function SmartAlerts({ period = 'today', customStart, customEnd }: { peri
   const { data: membershipsExpiring } = useMembershipsExpiring();
 
   const generatedAlerts = useMemo(() => {
-    const alerts: any[] = [];
+    const alerts: ApiAny[] = [];
 
     if (invoicesOverdue?.count > 0) {
       alerts.push({
@@ -66,7 +67,7 @@ export function SmartAlerts({ period = 'today', customStart, customEnd }: { peri
     }
 
     if (criticallyLowStock?.items?.length > 0) {
-      criticallyLowStock.items.forEach((item: any) => {
+      criticallyLowStock.items.forEach((item: ApiAny) => {
         alerts.push({
           id: `stock-${item.id || item.name}`,
           type: 'warning',

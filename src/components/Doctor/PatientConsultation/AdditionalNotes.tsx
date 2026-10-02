@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Button } from "@/components/ui/Button";
@@ -26,8 +27,8 @@ export function AdditionalNotes({ consultationNotes, onChange }: AdditionalNotes
     if (type === "numbered") {
       let counter = 1;
       newText = newText.split('\n').map(line => {
-        if (/^[•\-]\s/.test(line)) {
-          return line.replace(/^[•\-]\s/, `${counter++}. `);
+        if (/^[•-]\s/.test(line)) {
+          return line.replace(/^[•-]\s/, `${counter++}. `);
         }
         return line;
       }).join('\n');
@@ -76,7 +77,7 @@ export function AdditionalNotes({ consultationNotes, onChange }: AdditionalNotes
           prefix = '\n';
         }
       } else {
-        const match = lastLine.match(/^([•\-])\s/);
+        const match = lastLine.match(/^([•-])\s/);
         if (match) {
           const bullet = match[1];
           if (lastLine === `${bullet} `) {
@@ -145,7 +146,7 @@ export function AdditionalNotes({ consultationNotes, onChange }: AdditionalNotes
       <Textarea
         name="consultationNotes"
         value={consultationNotes}
-        onChange={onChange as any}
+        onChange={onChange as ApiAny}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         rows={4}

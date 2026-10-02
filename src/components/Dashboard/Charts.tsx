@@ -1,6 +1,4 @@
-import React, { useMemo } from 'react';
-import { MOCK_REVENUE_30DAYS } from '../../data/mockAnalytics';
-
+import React from 'react';
 interface MiniAreaChartProps {
   data: number[];
   color?: string;

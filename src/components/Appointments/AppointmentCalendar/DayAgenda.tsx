@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { Calendar as CalendarIcon, Clock, Stethoscope, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -5,9 +6,9 @@ import { Button } from "@/components/ui/Button";
 
 interface DayAgendaProps {
   selectedDate: Date;
-  appointments: any[];
-  onEditAppointment?: (appointment: any) => void;
-  onDirectCheckIn?: (appointment: any) => void;
+  appointments: ApiAny[];
+  onEditAppointment?: (appointment: ApiAny) => void;
+  onDirectCheckIn?: (appointment: ApiAny) => void;
   formatTime: (time: string) => string;
   checkingInApptId?: string | null;
 }

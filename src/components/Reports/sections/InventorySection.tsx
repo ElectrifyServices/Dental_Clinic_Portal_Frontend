@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from 'react';
 import { Package, AlertTriangle, Clock, IndianRupee } from 'lucide-react';
 import { MetricCard, ContentCard, Badge, DataTable, Pagination } from '@/components/ui';
@@ -27,7 +28,7 @@ export function InventorySection({ period, startDate, endDate }: { period: strin
     setPage(1);
   }, [period]);
 
-  const getNestedData = (res: any) => res?.responseObject?.data ?? res?.data?.responseObject?.data ?? res?.data ?? res;
+  const getNestedData = (res: ApiAny) => res?.responseObject?.data ?? res?.data?.responseObject?.data ?? res?.data ?? res;
 
   const totalSkusData = getNestedData(totalSkusRes);
   const totalSkusVal = typeof totalSkusData === 'number' ? totalSkusData : (totalSkusData?.totalSkus ?? totalSkusData?.total ?? totalSkusData?.count ?? 0);
@@ -60,7 +61,7 @@ export function InventorySection({ period, startDate, endDate }: { period: strin
         ? criticalStockData.data
         : [];
   
-  const criticalStockList = criticalStockRawArray.map((r: any) => ({
+  const criticalStockList = criticalStockRawArray.map((r: ApiAny) => ({
     item: r.name ?? r.item ?? r.itemName ?? 'N/A',
     category: r.category ?? 'N/A',
     stock: Number(r.currentStock ?? r.stock ?? r.stockLeft ?? 0),
@@ -105,16 +106,16 @@ export function InventorySection({ period, startDate, endDate }: { period: strin
         ) : (
           <DataTable
             data={criticalStockList}
-            rowKey={(r: any, idx: number) => r.item + idx}
+            rowKey={(r: ApiAny, idx: number) => r.item + idx}
             columns={[
-              { key: 'item',     header: 'Item',          render: (r: any) => <span className="font-bold text-foreground">{r.item}</span> },
-              { key: 'category', header: 'Category',      render: (r: any) => <Badge variant="gray">{r.category}</Badge> },
-              { key: 'stock',    header: 'Stock Left',    align: 'center', render: (r: any) => (
+              { key: 'item',     header: 'Item',          render: (r: ApiAny) => <span className="font-bold text-foreground">{r.item}</span> },
+              { key: 'category', header: 'Category',      render: (r: ApiAny) => <Badge variant="gray">{r.category}</Badge> },
+              { key: 'stock',    header: 'Stock Left',    align: 'center', render: (r: ApiAny) => (
                 <span className={`font-black text-sm ${r.stock <= r.min / 4 ? 'text-rose-600' : 'text-amber-600'}`}>{r.stock} {r.unit && <span className="text-xs font-medium text-slate-500">{r.unit}</span>}</span>
               )},
-              { key: 'min',      header: 'Min Required',  align: 'center', render: (r: any) => <span className="text-muted-foreground">{r.min}</span> },
-              { key: 'supplier', header: 'Supplier',      render: (r: any) => <span className="text-muted-foreground text-xs">{r.supplier}</span> },
-              { key: 'daysLeft', header: 'Days Left',     align: 'right',  render: (r: any) => (
+              { key: 'min',      header: 'Min Required',  align: 'center', render: (r: ApiAny) => <span className="text-muted-foreground">{r.min}</span> },
+              { key: 'supplier', header: 'Supplier',      render: (r: ApiAny) => <span className="text-muted-foreground text-xs">{r.supplier}</span> },
+              { key: 'daysLeft', header: 'Days Left',     align: 'right',  render: (r: ApiAny) => (
                 <Badge variant={Number(r.daysLeft) <= 2 ? 'red' : 'amber'}>{r.daysLeft}d</Badge>
               )},
             ]}

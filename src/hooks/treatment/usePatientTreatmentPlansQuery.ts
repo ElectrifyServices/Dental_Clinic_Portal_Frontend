@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import apiClient from "../../services/apiClient";
 import { parseApiResponse, type ApiResponse } from "../../services/parseApiResponse";
@@ -24,7 +25,7 @@ function getPagination(page: PatientTreatmentPlansResponse | null | undefined) {
 
 export function usePatientTreatmentPlansQuery(
   patientId?: string,
-  options?: { enabled?: boolean; limit?: number; filters?: any },
+  options?: { enabled?: boolean; limit?: number; filters?: ApiAny },
 ) {
   const enabled = (options?.enabled ?? true) && !!patientId;
   const limit = options?.limit ?? 10;

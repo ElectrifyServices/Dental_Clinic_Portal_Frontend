@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,7 +24,7 @@ export interface BulkImportEmployeeVariables {
 export interface BulkImportEmployeeResponse {
   message: string;
   count: number;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useBulkImportEmployeeMutation() {

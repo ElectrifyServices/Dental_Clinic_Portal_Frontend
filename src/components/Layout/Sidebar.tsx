@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/Button";
-import React, { useState } from "react";
+import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import logo from "../../logo.png";
 import {
   Home,

@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
-export function useCorporateEmployeesBillingQuery(planId: string, options?: any) {
-  return useApiQuery<any>({
+export function useCorporateEmployeesBillingQuery(planId: string, options?: ApiAny) {
+  return useApiQuery<ApiAny>({
     queryKey: ["corporateEmployeesBilling", planId],
     endpoint: `/membershipPlan/${planId}/enrolled-employees`,
     method: "get",

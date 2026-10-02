@@ -1,12 +1,12 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React from 'react';
-import { CorporatePlanSelector } from '../../CorporatePlans/CorporatePlanSelector';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect, Button } from '@/components/ui';
-import { X, Eye, AlertTriangle, FileText, Pill, Stethoscope, Scissors, Syringe, Zap, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
+import { X, Eye, AlertTriangle, FileText, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 export const openImageInNewTab = (src: string, title?: string) => {
@@ -37,12 +37,12 @@ export const openImageInNewTab = (src: string, title?: string) => {
 };
 
 interface Step2Props {
-  formData: any;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: ApiAny;
+  setFormData: React.Dispatch<React.SetStateAction<ApiAny>>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   validationErrors?: { [key: string]: string };
-  matchedCorporateEmp: any;
-  corporatePlans: any[];
+  matchedCorporateEmp: ApiAny;
+  corporatePlans: ApiAny[];
   medicalSearch: string;
   setMedicalSearch: (val: string) => void;
   selectedMedicalHistory: string[];
@@ -60,7 +60,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   handleChange,
   validationErrors = {},
   matchedCorporateEmp,
-  corporatePlans,
+  corporatePlans: _corporatePlans,
   selectedMedicalHistory,
   setSelectedMedicalHistory,
   selectedAllergies,
@@ -118,9 +118,9 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedMedicalHistory(values);
-                setFormData((prev: any) => ({ ...prev, medicalHistory: values.join('\n') }));
+                setFormData((prev: ApiAny) => ({ ...prev, medicalHistory: values.join('\n') }));
               }}
-              options={medicalHistories.filter((h: any) => h && h.name).map((h: any) => {
+              options={medicalHistories.filter((h: ApiAny) => h && h.name).map((h: ApiAny) => {
                 return { label: h.name, value: h.id || h.name };
               })}
               placeholder="Select medical conditions..."
@@ -132,7 +132,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             {selectedMedicalHistory.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedMedicalHistory.map((item) => {
-                  const history = medicalHistories.find((h: any) => (h.id || h.name) === item);
+                  const history = medicalHistories.find((h: ApiAny) => (h.id || h.name) === item);
                   const displayName = history ? history.name : item;
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-primary/20 bg-primary/5 text-primary">
@@ -144,7 +144,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         onClick={() => {
                           const updated = selectedMedicalHistory.filter((i) => i !== item);
                           setSelectedMedicalHistory(updated);
-                          setFormData((prev: any) => ({ ...prev, medicalHistory: updated.join('\n') }));
+                          setFormData((prev: ApiAny) => ({ ...prev, medicalHistory: updated.join('\n') }));
                         }}
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
@@ -170,9 +170,9 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedAllergies(values);
-                setFormData((prev: any) => ({ ...prev, allergies: values.join('\n') }));
+                setFormData((prev: ApiAny) => ({ ...prev, allergies: values.join('\n') }));
               }}
-              options={allergies.filter((a: any) => a && (a.allergy_name || a.name)).map((a: any) => {
+              options={allergies.filter((a: ApiAny) => a && (a.allergy_name || a.name)).map((a: ApiAny) => {
                 const name = a.allergy_name || a.name;
                 return { label: name, value: a.id || name };
               })}
@@ -185,7 +185,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             {selectedAllergies.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedAllergies.map((item) => {
-                  const allergy = allergies.find((a: any) => (a.id || a.allergy_name || a.name) === item);
+                  const allergy = allergies.find((a: ApiAny) => (a.id || a.allergy_name || a.name) === item);
                   const displayName = allergy ? (allergy.allergy_name || allergy.name) : item;
                   return (
                     <Badge key={item} variant="secondary" className="pl-3 pr-2 py-1 gap-1 border-destructive/20 bg-destructive/5 text-destructive">
@@ -197,7 +197,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                         onClick={() => {
                           const updated = selectedAllergies.filter((i) => i !== item);
                           setSelectedAllergies(updated);
-                          setFormData((prev: any) => ({ ...prev, allergies: updated.join('\n') }));
+                          setFormData((prev: ApiAny) => ({ ...prev, allergies: updated.join('\n') }));
                         }}
                         className="ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full p-0.5"
                       >
@@ -303,7 +303,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               value={formData.previousDoctorPhone}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setFormData((prev: any) => ({ ...prev, previousDoctorPhone: digits }));
+                setFormData((prev: ApiAny) => ({ ...prev, previousDoctorPhone: digits }));
               }}
               placeholder="10-digit phone number"
             />
@@ -374,7 +374,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                   const updated = formData.previousTreatments.includes(treatment)
                     ? formData.previousTreatments.filter((t: string) => t !== treatment)
                     : [...formData.previousTreatments, treatment];
-                  setFormData((prev: any) => ({ ...prev, previousTreatments: updated }));
+                  setFormData((prev: ApiAny) => ({ ...prev, previousTreatments: updated }));
                 }}
                 variant={formData.previousTreatments.includes(treatment) ? "default" : "outline"}
                 className="cursor-pointer text-xs"
@@ -417,7 +417,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </Label>
         {formData.dentalFiles?.length > 0 && (
           <div className="flex flex-wrap gap-4 mt-2">
-            {formData.dentalFiles.map((file: any, index: number) => {
+            {formData.dentalFiles.map((file: ApiAny, index: number) => {
               const fileUrl = file.data || file.url || (file.file ? URL.createObjectURL(file.file) : null);
               const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpeg|jpg|png|gif|webp)$/i) || (typeof fileUrl === 'string' && fileUrl.startsWith('data:image/'));
               
@@ -463,10 +463,10 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
                           if (fileToRemove && fileToRemove.id) {
                             removeIds.push(fileToRemove.id);
                           }
-                          setFormData((prev: any) => ({
+                          setFormData((prev: ApiAny) => ({
                             ...prev,
-                            dentalFiles: prev.dentalFiles.filter((_: any, i: number) => i !== index),
-                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: any, i: number) => i !== index) : [],
+                            dentalFiles: prev.dentalFiles.filter((_: ApiAny, i: number) => i !== index),
+                            rawDentalFiles: prev.rawDentalFiles ? prev.rawDentalFiles.filter((_: ApiAny, i: number) => i !== index) : [],
                             remove_image_ids: removeIds
                           }));
                         }}

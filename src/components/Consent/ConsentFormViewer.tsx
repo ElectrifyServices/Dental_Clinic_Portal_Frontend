@@ -1,28 +1,12 @@
+import type { ApiAny } from "../../types/api";
 import logo from "../../logo.png";
 import { useTheme } from "../../contexts/ThemeContext";
-import {
-  Printer,
-  Shield,
-  CheckCircle2,
-  MapPin,
-  Phone,
-  Upload,
-  BookOpen,
-  User,
-  Stethoscope,
-  FileText,
-  Calendar,
-  ClipboardCheck,
-  Quote,
-  PenLine,
-  HeartHandshake,
-  ShieldCheck
-} from "lucide-react";
+import { Printer, Shield, BookOpen, User, Stethoscope, Calendar, ClipboardCheck, Quote, PenLine, HeartHandshake, ShieldCheck } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import { printConsentForm } from "@/utils/consentPrintUtils";
 
 interface ConsentFormViewerProps {
-  form: any;
+  form: ApiAny;
   onClose: () => void;
   isLoading?: boolean;
 }

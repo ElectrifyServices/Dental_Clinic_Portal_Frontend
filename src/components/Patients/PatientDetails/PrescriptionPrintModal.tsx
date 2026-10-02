@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -10,10 +11,10 @@ interface PrescriptionPrintModalProps {
   onClose: () => void;
   printLanguage: "en" | "gu";
   setPrintLanguage: (lang: "en" | "gu") => void;
-  previewData: any;
-  setPreviewData: (data: any) => void;
-  customSections: any[];
-  setCustomSections: (sections: any[]) => void;
+  previewData: ApiAny;
+  setPreviewData: (data: ApiAny) => void;
+  customSections: ApiAny[];
+  setCustomSections: (sections: ApiAny[]) => void;
   onPrint: () => void;
 }
 

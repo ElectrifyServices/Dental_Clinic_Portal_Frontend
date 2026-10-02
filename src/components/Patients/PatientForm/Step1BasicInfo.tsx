@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -18,32 +19,20 @@ import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { getPhonePlaceholder } from "@/utils/phoneUtils";
-import {
-  AlertTriangle,
-  Calendar,
-  Mail,
-  MapPin,
-  Phone,
-  ShieldCheck,
-  Upload,
-  User,
-  Camera,
-  X,
-  CheckCircle,
-} from "lucide-react";
+import { AlertTriangle, Calendar, Mail, MapPin, Phone, ShieldCheck, Upload, User, Camera, X } from "lucide-react";
 
 interface Step1Props {
-  formData: any;
+  formData: ApiAny;
   handleChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >,
   ) => void;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: React.Dispatch<React.SetStateAction<ApiAny>>;
   validationErrors: { [key: string]: string };
-  matchedCorporateEmp: any;
+  matchedCorporateEmp: ApiAny;
   acceptCorporateEmployee: () => void;
-  corporatePlans: any[];
+  corporatePlans: ApiAny[];
   type?: string;
   handleCustomRelation: (value: string) => void;
   applyCustomRelation: () => void;
@@ -75,8 +64,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   const { phoneError, handlePhoneChange: phoneValidationChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
     dialingCode: formData.country_code || "+91",
     onPhoneChange: (sanitized) => {
-      handleChange({ target: { name: "phone", value: sanitized } } as any);
-      setFormData((prev: any) => ({ ...prev, id: undefined }));
+      handleChange({ target: { name: "phone", value: sanitized } } as ApiAny);
+      setFormData((prev: ApiAny) => ({ ...prev, id: undefined }));
       setFocusedField("phone");
     },
   });
@@ -94,7 +83,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as any },
+    filters: { isDropdown: [true] as ApiAny },
   }, {
     enabled: !!debouncedSearch.trim(),
     staleTime: 0,
@@ -103,10 +92,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
   const apiPatients = React.useMemo(() => {
     if (!rawPatientsData) return [];
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (Array.isArray(rawPatientsData)) rawList = rawPatientsData;
     else {
-      const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
+      const target = (rawPatientsData as ApiAny).responseObject !== undefined ? (rawPatientsData as ApiAny).responseObject : rawPatientsData;
       if (Array.isArray(target)) rawList = target;
       else if (target && typeof target === "object") {
         if (Array.isArray(target.data?.data?.data)) rawList = target.data.data.data;
@@ -116,7 +105,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         else if (Array.isArray(target.data?.patients)) rawList = target.data.patients;
       }
     }
-    return rawList.map((p: any) => ({
+    return rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -134,8 +123,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectPatient = (p: any) => {
-    setFormData((prev: any) => ({
+  const handleSelectPatient = (p: ApiAny) => {
+    setFormData((prev: ApiAny) => ({
       ...prev,
       id: p.id,
       name: p.name || "",
@@ -181,7 +170,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           </div>
         ) : filteredPatients.length > 0 ? (
           <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
-            {filteredPatients.map((p: any, idx: number) => {
+            {filteredPatients.map((p: ApiAny, idx: number) => {
               const pCode = p.country_code || p.countryCode || "+91";
               return (
                 <li
@@ -227,7 +216,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           videoRef.current.srcObject = stream;
         }
       }, 100);
-    } catch (err) {
+    } catch (_err) {
       alert("Unable to access camera. Please check permissions.");
     }
   };
@@ -251,7 +240,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         ctx.scale(-1, 1); // mirror capture
         ctx.drawImage(videoRef.current, 0, 0, 320, 320);
         const dataUrl = canvas.toDataURL("image/jpeg");
-        setFormData((prev: any) => ({ ...prev, avatar: dataUrl }));
+        setFormData((prev: ApiAny) => ({ ...prev, avatar: dataUrl }));
         stopCamera();
       }
     }
@@ -378,14 +367,14 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             const cp = matchedCorporateEmp.corporate_plan || matchedCorporateEmp.membership;
             
             // Try to find the detailed plan from corporatePlans to get full benefits if not in cp
-            const actualPlan = corporatePlans?.find((p: any) => p.id === cp.plan_id || p.id === cp.id);
+            const actualPlan = corporatePlans?.find((p: ApiAny) => p.id === cp.plan_id || p.id === cp.id);
             const benefitsSrc = cp.benefits || actualPlan?.benefits || [];
             
             plan = {
               name: cp.plan_name || actualPlan?.name || "Membership Plan",
               code: cp.plan_code || actualPlan?.code || "MEMBERSHIP",
               validTo: cp.valid_till || cp.expiry_date ? new Date(cp.valid_till || cp.expiry_date).toLocaleDateString("en-IN") : "Lifetime",
-              benefits: benefitsSrc.map((b: any) => ({
+              benefits: benefitsSrc.map((b: ApiAny) => ({
                 id: b.id || Math.random().toString(),
                 description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
               })),
@@ -394,13 +383,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             };
           } else {
             const planId = matchedCorporateEmp.corporatePlanId || matchedCorporateEmp.companyId;
-            const actualPlan = corporatePlans.find((cp: any) => cp.id === planId);
+            const actualPlan = corporatePlans.find((cp: ApiAny) => cp.id === planId);
             if (actualPlan) {
               plan = {
                 name: actualPlan.name,
                 code: actualPlan.code || "MEMBERSHIP",
                 validTo: "Lifetime",
-                benefits: actualPlan.benefits?.map((b: any) => ({
+                benefits: actualPlan.benefits?.map((b: ApiAny) => ({
                   id: b.id || Math.random().toString(),
                   description: b.benifit_label || b.description || `${b.discount_percentage}% off`,
                 })) || [],
@@ -448,7 +437,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {(plan.benefits || []).map((b: any) => (
+                    {(plan.benefits || []).map((b: ApiAny) => (
                       <Badge
                         key={b.id}
                         variant="secondary"
@@ -488,7 +477,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
               val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
               e.target.value = val;
-              setFormData((prev: any) => ({ ...prev, id: undefined }));
+              setFormData((prev: ApiAny) => ({ ...prev, id: undefined }));
               setFocusedField("name");
               handleChange(e);
             }}
@@ -516,7 +505,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <CountryCodeSelect
               value={formData.country_code || "+91"}
               onChange={(val) => {
-                setFormData((prev: any) => ({ ...prev, country_code: val }));
+                setFormData((prev: ApiAny) => ({ ...prev, country_code: val }));
                 clearPhoneError();
               }}
               className="h-10 sm:h-11 rounded-xl"
@@ -598,7 +587,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Select
             value={formData.gender || ""}
             onValueChange={(val) => {
-              setFormData((prev: any) => ({ ...prev, gender: val }));
+              setFormData((prev: ApiAny) => ({ ...prev, gender: val }));
             }}
           >
             <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
@@ -619,7 +608,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Select
             value={formData.bloodGroup || ""}
             onValueChange={(val) => {
-              setFormData((prev: any) => ({ ...prev, bloodGroup: val }));
+              setFormData((prev: ApiAny) => ({ ...prev, bloodGroup: val }));
             }}
           >
             <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
@@ -646,7 +635,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Select
               value={formData.relation || ""}
               onValueChange={(val) => {
-                setFormData((prev: any) => ({
+                setFormData((prev: ApiAny) => ({
                   ...prev,
                   relation: val,
                   customRelation: val === "OTHER" ? prev.customRelation : "",
@@ -712,7 +701,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <SearchableSelect
             value={formData.selectedMembershipPlanId || "none"}
             onChange={(val) => {
-              setFormData((prev: any) => ({
+              setFormData((prev: ApiAny) => ({
                 ...prev,
                 selectedMembershipPlanId: val === "none" ? undefined : val,
                 category: val !== "none" ? "membership" : (prev.category === "corporate" || prev.category === "membership" ? "regular" : prev.category),
@@ -721,7 +710,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             }}
             options={[
               { label: "No Membership Plan", value: "none", description: "Proceed without enrolling in any membership plan." },
-              ...corporatePlans.filter((p: any) => p.isActive !== false).map((plan: any) => {
+              ...corporatePlans.filter((p: ApiAny) => p.isActive !== false).map((plan: ApiAny) => {
                 const fee = plan.annual_fee || plan.annualFee || plan.fee || "0";
                 const limit = plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
                 const benefits = plan.benefits || [];
@@ -735,7 +724,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 };
               })
             ]}
-            renderValue={(opt: any) => {
+            renderValue={(opt: ApiAny) => {
               if (opt.value === "none") return <span className="font-semibold text-muted-foreground">{opt.label}</span>;
               const { planData, fee, limit } = opt;
               return (
@@ -760,7 +749,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 </div>
               );
             }}
-            renderOption={(opt: any) => {
+            renderOption={(opt: ApiAny) => {
               if (opt.value === "none") {
                 return (
                   <div className="flex flex-col gap-1 w-full min-w-0 p-2 border border-transparent rounded-lg hover:bg-muted/50">
@@ -800,7 +789,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   <div className="text-xs text-muted-foreground mt-1">
                     <p className="font-semibold mb-1 text-foreground/80">Benefits included:</p>
                     <ul className="space-y-1">
-                      {benefits.length > 0 ? benefits.map((b: any, idx: number) => (
+                      {benefits.length > 0 ? benefits.map((b: ApiAny, idx: number) => (
                         <li key={idx} className="flex items-start gap-1.5">
                           <span className="text-primary mt-0.5">•</span>
                           <span className="leading-snug">{b.description || b.benifit_label}</span>
@@ -857,7 +846,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           <Select
             value={formData.maritalStatus || ""}
             onValueChange={(val) => {
-              setFormData((prev: any) => ({ ...prev, maritalStatus: val }));
+              setFormData((prev: ApiAny) => ({ ...prev, maritalStatus: val }));
             }}
           >
             <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
@@ -886,9 +875,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 <Select
                   value={isCorporate ? "membership" : (formData.category?.toLowerCase() || "regular")}
                   onValueChange={(val) => {
-                    setFormData((prev: any) => ({
+                    setFormData((prev: ApiAny) => ({
                       ...prev,
-                      category: val as any,
+                      category: val as ApiAny,
                       defaultDiscount: 0,
                     }));
                   }}
@@ -919,7 +908,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   value={formData.defaultDiscount === "" ? "" : (formData.defaultDiscount ?? 0)}
                   onChange={(e) => {
                     const val = e.target.value === "" ? "" : parseInt(e.target.value, 10);
-                    setFormData((prev: any) => ({ ...prev, defaultDiscount: val }));
+                    setFormData((prev: ApiAny) => ({ ...prev, defaultDiscount: val }));
                   }}
                   disabled={isCorporate}
                   min="0"
@@ -948,7 +937,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             value={formData.emergencyName || ""}
             onChange={(e) => {
               const cleaned = e.target.value.replace(/[^A-Za-z\s-]/g, "").slice(0, 50);
-              setFormData((prev: any) => ({ ...prev, emergencyName: cleaned }));
+              setFormData((prev: ApiAny) => ({ ...prev, emergencyName: cleaned }));
             }}
             placeholder="Emergency contact person name"
           />
@@ -962,7 +951,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Select
               value={formData.emergencyRelation || ""}
               onValueChange={(val) => {
-                setFormData((prev: any) => ({
+                setFormData((prev: ApiAny) => ({
                   ...prev,
                   emergencyRelation: val,
                   customEmergencyRelation:
@@ -1008,7 +997,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   type="text"
                   value={formData.customEmergencyRelation || ""}
                   onChange={(e) =>
-                    setFormData((prev: any) => ({
+                    setFormData((prev: ApiAny) => ({
                       ...prev,
                       customEmergencyRelation: e.target.value,
                     }))
@@ -1017,7 +1006,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     if (e.key === "Enter") {
                       e.preventDefault();
                       if (formData.customEmergencyRelation?.trim()) {
-                        setFormData((prev: any) => ({
+                        setFormData((prev: ApiAny) => ({
                           ...prev,
                           emergencyRelation: prev.customEmergencyRelation,
                           customEmergencyRelation: "",
@@ -1032,7 +1021,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   type="button"
                   onClick={() => {
                     if (formData.customEmergencyRelation.trim()) {
-                      setFormData((prev: any) => ({
+                      setFormData((prev: ApiAny) => ({
                         ...prev,
                         emergencyRelation: prev.customEmergencyRelation,
                         customEmergencyRelation: "",
@@ -1062,7 +1051,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             value={formData.emergencyContact || ""}
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-              setFormData((prev: any) => ({ ...prev, emergencyContact: digits }));
+              setFormData((prev: ApiAny) => ({ ...prev, emergencyContact: digits }));
             }}
             placeholder="10-digit phone number"
           />

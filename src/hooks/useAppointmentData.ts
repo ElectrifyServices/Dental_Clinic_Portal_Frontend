@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppointmentsListQuery } from './appointments/useAppointmentsListQuery';
@@ -26,7 +27,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
   const debouncedSearch = useDebounce(apptSearch, 500);
 
   const apptFilters = useMemo(() => {
-    const f: any = {};
+    const f: ApiAny = {};
     if (selectedDate && apptFilter !== 'week' && apptFilter !== 'all') {
       f.date = [selectedDate];
     }
@@ -64,14 +65,14 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
   }, { enabled: isEnabled, refetchOnMount: 'always' });
 
   const pagination = useMemo(() => {
-    if (apiResponse && (apiResponse as any).pagination) {
-      return (apiResponse as any).pagination;
+    if (apiResponse && (apiResponse as ApiAny).pagination) {
+      return (apiResponse as ApiAny).pagination;
     }
-    if (apiResponse && (apiResponse as any).data?.pagination) {
-      return (apiResponse as any).data.pagination;
+    if (apiResponse && (apiResponse as ApiAny).data?.pagination) {
+      return (apiResponse as ApiAny).data.pagination;
     }
-    if (apiResponse && (apiResponse as any).responseObject?.data?.pagination) {
-      return (apiResponse as any).responseObject.data.pagination;
+    if (apiResponse && (apiResponse as ApiAny).responseObject?.data?.pagination) {
+      return (apiResponse as ApiAny).responseObject.data.pagination;
     }
     
     // Fallback if not found
@@ -95,21 +96,21 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
 
   const { mutateAsync: restoreStatus } = useRestoreAppointmentStatusMutation();
 
-  const parseAppointments = (response: any) => {
-    let rawList: any[] = [];
+  const parseAppointments = (response: ApiAny) => {
+    let rawList: ApiAny[] = [];
     if (Array.isArray(response)) {
       rawList = response;
-    } else if (response && Array.isArray((response as any).appointments)) {
-      rawList = (response as any).appointments;
-    } else if (response && Array.isArray((response as any).data?.appointments)) {
-      rawList = (response as any).data.appointments;
-    } else if (response && Array.isArray((response as any).data?.data)) {
-      rawList = (response as any).data.data;
-    } else if (response && Array.isArray((response as any).data)) {
-      rawList = (response as any).data;
+    } else if (response && Array.isArray((response as ApiAny).appointments)) {
+      rawList = (response as ApiAny).appointments;
+    } else if (response && Array.isArray((response as ApiAny).data?.appointments)) {
+      rawList = (response as ApiAny).data.appointments;
+    } else if (response && Array.isArray((response as ApiAny).data?.data)) {
+      rawList = (response as ApiAny).data.data;
+    } else if (response && Array.isArray((response as ApiAny).data)) {
+      rawList = (response as ApiAny).data;
     }
 
-    return rawList.map((a: any) => ({
+    return rawList.map((a: ApiAny) => ({
       ...a,
       id: a.id,
       patientName: a.patient_name || a.patientName,
@@ -134,7 +135,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
   const appointments = useMemo(() => parseAppointments(apiResponse), [apiResponse]);
   const noShowAppointments = useMemo(() => parseAppointments(noShowApiResponse), [noShowApiResponse]);
 
-  const handleSaveAppointment = (appointment: any) => {
+  const handleSaveAppointment = (_appointment: ApiAny) => {
     // This is handled by mutations now, but keeping dummy functions for backwards compatibility of context definition
   };
 
@@ -147,7 +148,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
       try {
         await markNoShow({ id, cancelled_reason: cancelledReason || "" });
         toast.success("Appointment marked as No-Show!");
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         toast.error(err?.response?.data?.message || err?.message || "Failed to mark as no-show");
       }
     } else {
@@ -163,7 +164,7 @@ export function useAppointmentData(params?: { enabled?: boolean; loadAll?: boole
         const apiStatus = statusMap[status] || status.toUpperCase().replace(/-/g, '_');
         await restoreStatus({ id, status: apiStatus });
         toast.success(`Appointment status updated to ${status}!`);
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         toast.error(err?.response?.data?.message || err?.message || "Failed to update status");
       }
     }

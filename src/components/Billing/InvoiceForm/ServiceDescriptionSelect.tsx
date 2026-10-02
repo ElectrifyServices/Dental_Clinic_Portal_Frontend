@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Popover, PopoverTrigger, PopoverContent, Button, Input, Loading, ConfirmModal } from '@/components/ui';
 import { Search, Plus, Edit2, Trash2, Check, X, ChevronDown } from 'lucide-react';
@@ -33,7 +34,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
     if (!rawData) return [];
     if (Array.isArray(rawData)) return rawData;
     
-    let list: any = [];
+    let list: ApiAny = [];
     if (rawData.responseObject?.data?.data) {
       list = rawData.responseObject.data.data;
     } else if (rawData.data?.data) {
@@ -49,7 +50,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
 
   const filteredServices = useMemo(() => {
     if (!search) return services;
-    return services.filter((s: any) => 
+    return services.filter((s: ApiAny) => 
       (s.name || s.description || s.label || '').toLowerCase().includes(search.toLowerCase())
     );
   }, [services, search]);
@@ -63,9 +64,9 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string | null>(null);
 
-  const handleSelect = (s: any) => {
+  const handleSelect = (s: ApiAny) => {
     const name = s.name || s.description || s.label || '';
-    onChange(name, undefined as any, s.id);
+    onChange(name, undefined as ApiAny, s.id);
     setOpen(false);
   };
 
@@ -165,7 +166,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
             ) : filteredServices.length === 0 && !adding ? (
               <p className="p-4 text-sm text-center text-muted-foreground">No services found.</p>
             ) : (
-              filteredServices.map((s: any) => {
+              filteredServices.map((s: ApiAny) => {
                 const sName = s.name || s.description || s.label || '';
                 const isEditing = editingId === s.id;
 

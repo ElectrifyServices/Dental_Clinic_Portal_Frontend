@@ -1,14 +1,15 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../ui/Dialog";
 import { Badge } from "../../ui/Badge";
-import { Loader2, MessageCircle, Clock, CheckCircle2, AlertCircle, FileText, User, Phone, Calendar, Hash, Tag, Send, ArrowDown, ArrowUp, File, Info } from "lucide-react";
+import { Loader2, MessageCircle, Clock, CheckCircle2, AlertCircle, User, Phone, Calendar, Hash, Tag, Send, ArrowDown, ArrowUp, File, Info } from "lucide-react";
 import { useWhatsAppHistoryQuery } from "../../../hooks/corporate/useWhatsAppHistoryQuery";
 import { formatPhoneWithCountryCode } from "../../../utils/phoneUtils";
 
 interface WhatsAppHistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employee: any;
+  employee: ApiAny;
 }
 
 export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
@@ -35,7 +36,7 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
   );
 
   // Extract messages array by checking all possible shapes in response
-  let messages: any[] = [];
+  let messages: ApiAny[] = [];
   if (response) {
     if (Array.isArray(response)) {
       messages = response;
@@ -96,19 +97,19 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
     }).replace(',', ' •');
   };
 
-  const renderTemplateContent = (template: any) => {
+  const renderTemplateContent = (template: ApiAny) => {
     if (!template) return null;
 
     const templateName = template.name || "Unknown Template";
     const components = template.components || [];
 
     // Extract header document
-    const headerComponent = components.find((comp: any) => comp.type === "header");
-    const documentParam = headerComponent?.parameters?.find((p: any) => p.type === "document");
+    const headerComponent = components.find((comp: ApiAny) => comp.type === "header");
+    const documentParam = headerComponent?.parameters?.find((p: ApiAny) => p.type === "document");
     const hasDocument = documentParam?.document;
 
     // Extract body fields
-    const bodyComponent = components.find((comp: any) => comp.type === "body");
+    const bodyComponent = components.find((comp: ApiAny) => comp.type === "body");
     const bodyParameters = bodyComponent?.parameters || [];
 
     return (
@@ -150,7 +151,7 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
               </div>
             </div>
             <div className="p-3 space-y-2">
-              {bodyParameters.map((param: any, idx: number) => {
+              {bodyParameters.map((param: ApiAny, idx: number) => {
                 const fieldLabel = idx === 0 ? "Patient Name" : "Invoice Number";
                 const fieldValue = param.text || param.value || JSON.stringify(param);
 
@@ -173,7 +174,7 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
     );
   };
 
-  const renderContent = (msg: any) => {
+  const renderContent = (msg: ApiAny) => {
     const content = msg.content;
 
     if (!content) {
@@ -255,7 +256,7 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
             </div>
           ) : (
             <div className="h-[480px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-              {messages.map((msg: any, index: number) => {
+              {messages.map((msg: ApiAny, index: number) => {
                 const status = msg.status || "PENDING";
                 const msgType = msg.message_type || msg.messageType || "TEXT";
                 const direction = msg.direction || "OUTBOUND";

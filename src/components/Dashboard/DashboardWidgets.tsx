@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import React from 'react';
-import { User, TrendingUp, Clock, UserRound } from 'lucide-react';
+import { TrendingUp, Clock, UserRound } from 'lucide-react';
 import { DonutChart } from './Charts';
-import { StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput, Card, Pagination } from '@/components/ui';
+import { SearchInput, Card, Pagination } from '@/components/ui';
 import { useAppointmentStatusBreakdown, useDoctorPerformance } from '../../hooks/dashboard/useDashboardAnalytics';
 
 function CircleProgress({ value, color = '#3b82f6', size = 48 }: { value: number; color?: string; size?: number }) {
@@ -35,7 +36,7 @@ export function AppointmentStatusWidget({ period = 'today', customStart, customE
     'No Show': { bg: 'bg-gray-500', color: '#6b7280' },
   };
 
-  let mappedStatuses = breakdown.map((s: any) => ({
+  let mappedStatuses = breakdown.map((s: ApiAny) => ({
     label: s.status,
     value: s.count || 0,
     ...(statusStyles[s.status] || { bg: 'bg-purple-500', color: '#a855f7' })
@@ -103,7 +104,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
       pageNumbers.push('...');
     }
   }
-  const displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
+  const _displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
 
   return (
     <Card className="flex flex-col shadow-card h-full overflow-hidden">
@@ -122,7 +123,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
       </div>
       <div className="flex-1 p-5 space-y-4">
         {doctors && doctors.length > 0 ? (
-          doctors.map((doc: any, index: number) => {
+          doctors.map((doc: ApiAny, index: number) => {
             const colorClass = DOCTOR_COLORS[index % DOCTOR_COLORS.length];
             return (
               <div key={doc.id || index} className="flex items-center gap-3">

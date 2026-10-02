@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../ui/Dialog";
 import { Badge } from "../../ui/Badge";
@@ -10,7 +11,7 @@ import { useBenefitUsageQuery } from "../../../hooks/corporate/useBenefitUsageQu
 interface BenefitUsageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employee: any;
+  employee: ApiAny;
 }
 
 export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
@@ -37,7 +38,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
   );
 
   // Extract records array from various possible shapes
-  let records: any[] = [];
+  let records: ApiAny[] = [];
   if (response) {
     if (Array.isArray(response)) {
       records = response;
@@ -54,7 +55,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
 
   // Find the exact record for this employee
   const activeRecord = records.find(
-    (r: any) =>
+    (r: ApiAny) =>
       r.member?.id === employee?.id ||
       (employee?.member_id && r.member?.member_id === employee?.member_id) ||
       r.member?.name?.toLowerCase() === employee?.name?.toLowerCase()
@@ -79,7 +80,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
     }
   };
 
-  const getBenefitBadge = (benefit: any) => {
+  const getBenefitBadge = (benefit: ApiAny) => {
     if (benefit.status === "UNLIMITED" || benefit.is_unlimited) {
       return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Unlimited</Badge>;
     }
@@ -120,7 +121,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
 
   const getPatientName = (patientId: string) => {
     const found = records.find(
-      (r: any) => r.member?.id === patientId || r.patient?.id === patientId
+      (r: ApiAny) => r.member?.id === patientId || r.patient?.id === patientId
     );
     if (!found) return "Family Member";
     if (found.member?.id === patientId) {
@@ -132,7 +133,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
     return found.member?.name || found.patient?.name || "Family Member";
   };
 
-  const familyMembers = records.map((r: any) => r.member).filter(Boolean);
+  const familyMembers = records.map((r: ApiAny) => r.member).filter(Boolean);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -183,7 +184,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
           ) : (
             <div className="space-y-6">
               {/* Member & Enrollment Summary */}
-              {activeRecord.enrollments?.map((enrollment: any, idx: number) => {
+              {activeRecord.enrollments?.map((enrollment: ApiAny, idx: number) => {
                 const plan = enrollment.plan || {};
                 const benefits = enrollment.benefits || [];
 
@@ -223,7 +224,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                           Family Coverage Group ({familyMembers.length} Members Enrolled)
                         </p>
                         <div className="flex flex-wrap gap-1.5">
-                          {familyMembers.map((m: any, mIdx: number) => {
+                          {familyMembers.map((m: ApiAny, mIdx: number) => {
                             const isSelf = m.relationship_type === 'SELF' || m.id === employee?.id;
                             return (
                               <div
@@ -254,11 +255,11 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                       {benefits.length === 0 ? (
                         <p className="text-sm text-muted-foreground italic text-center py-6">No specific benefits listed for this plan.</p>
                       ) : (
-                        benefits.map((benefit: any, bIdx: number) => {
+                        benefits.map((benefit: ApiAny, bIdx: number) => {
                           const hasProgress = benefit.allocation !== null && benefit.used !== null && benefit.remaining !== null;
                           const used = benefit.used ?? 0;
                           const allocation = benefit.allocation ?? 0;
-                          const remaining = benefit.remaining ?? 0;
+                          const _remaining = benefit.remaining ?? 0;
                           const percentUsed = allocation > 0 ? Math.min(100, (used / allocation) * 100) : 0;
 
                           return (
@@ -322,7 +323,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                 <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
                                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Usage Breakdown by Family Member</p>
                                   <div className="flex flex-wrap gap-3">
-                                    {benefit.by_patient.map((bp: any, bpIdx: number) => (
+                                    {benefit.by_patient.map((bp: ApiAny, bpIdx: number) => (
                                       <div
                                         key={bpIdx}
                                         className="bg-slate-50/80 border border-slate-200/50 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-slate-700 w-full sm:w-[48%] flex-grow"
@@ -336,7 +337,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                         {bp.usage_history && bp.usage_history.length > 0 ? (
                                           <div className="text-[10.5px] text-muted-foreground space-y-1.5 mt-1 border-t border-slate-200/40 pt-2">
                                             <span className="font-bold text-[8.5px] text-slate-400 block uppercase tracking-wider">Usage Timeline:</span>
-                                            {bp.usage_history.map((uh: any, uhIdx: number) => (
+                                            {bp.usage_history.map((uh: ApiAny, uhIdx: number) => (
                                               <div key={uhIdx} className="flex justify-between items-center gap-2">
                                                 <span className="font-mono text-slate-600">
                                                   #{uhIdx + 1}: {formatDateTime(uh.used_at || uh.usedAt)}

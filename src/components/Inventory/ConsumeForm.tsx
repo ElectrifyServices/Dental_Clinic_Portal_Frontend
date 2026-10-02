@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Package, MinusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,14 +19,14 @@ import {
 } from "@/lib/schemas/inventory.schema";
 
 interface ConsumeFormProps {
-  item: any;
+  item: ApiAny;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: ApiAny) => void;
 }
 
 export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
   const form = useForm<ConsumeFormData>({
-    resolver: zodResolver(consumeSchema) as any,
+    resolver: zodResolver(consumeSchema) as ApiAny,
     defaultValues: {
       quantity: 1,
       reason: "Used in treatment session",

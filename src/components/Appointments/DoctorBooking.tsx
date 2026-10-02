@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { useState, useRef, useEffect } from "react";
@@ -45,8 +46,8 @@ interface DoctorBookingProps {
   onBookAppointment: (doctorId: string, date?: Date, time?: string) => void;
   onViewAppointments: () => void;
   onViewCalendar: () => void;
-  onEditAppointment: (appointment: any) => void;
-  appointments: any[];
+  onEditAppointment: (appointment: ApiAny) => void;
+  appointments: ApiAny[];
 }
 
 export function DoctorBooking({

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthStorage } from "../../auth/authStorage";
@@ -89,26 +90,26 @@ export interface TreatmentPlanResponse {
   deleted_at?: string | null;
   patient: { id: string; name: string; phone: string };
   doctor: { id: string; staff: { name: string } };
-  sessions: any[];
-  prescriptions: any[];
+  sessions: ApiAny[];
+  prescriptions: ApiAny[];
   attachments?: TreatmentAttachment[];
 }
 
 export function useCreateTreatmentPlanMutation() {
   const queryClient = useQueryClient();
 
-  const buildFormData = (formData: FormData, data: any, parentKey?: string) => {
+  const _buildFormData = (formData: FormData, data: ApiAny, parentKey?: string) => {
     if (data === null || data === undefined) return;
 
     if (data instanceof File) {
       formData.append(parentKey || "", data);
     } else if (Array.isArray(data)) {
       data.forEach((val, i) => {
-        buildFormData(formData, val, `${parentKey}[${i}]`);
+        _buildFormData(formData, val, `${parentKey}[${i}]`);
       });
     } else if (typeof data === "object" && !(data instanceof Date)) {
       Object.keys(data).forEach((key) => {
-        buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
+        _buildFormData(formData, data[key], parentKey ? `${parentKey}[${key}]` : key);
       });
     } else {
       formData.append(parentKey || "", String(data));
@@ -121,7 +122,7 @@ export function useCreateTreatmentPlanMutation() {
     headers: getAuthHeaders,
     transformRequest: (variables) => {
       if (!variables.rawFiles || variables.rawFiles.length === 0) {
-        const { rawFiles, existingImages, ...rest } = variables;
+        const { rawFiles: _rawFiles, existingImages: _existingImages, ...rest } = variables;
         return rest;
       }
 
@@ -135,7 +136,7 @@ export function useCreateTreatmentPlanMutation() {
       // Append all other fields — arrays go as JSON strings (API multipart convention)
       Object.keys(variables).forEach((key) => {
         if (key === "rawFiles" || key === "existingImages") return;
-        const val = (variables as any)[key];
+        const val = (variables as ApiAny)[key];
         if (val === undefined || val === null) return;
 
         if (Array.isArray(val)) {

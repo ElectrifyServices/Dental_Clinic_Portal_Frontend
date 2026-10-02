@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import { useInvoicesQuery } from './billing/useInvoicesQuery';
 import { normalizeInvoice } from './billing/useInvoiceQuery';
 import { useMemo, useCallback, useState, useEffect } from 'react';
@@ -18,7 +19,7 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
   }, [params?.search, params?.status, params?.paymentMethod, params?.startDate, params?.endDate]);
 
   const queryParams = useMemo(() => {
-    const filters: any = {};
+    const filters: ApiAny = {};
     if (params?.status && params.status !== "all") {
       filters.status = [params.status.toUpperCase()];
     }
@@ -49,12 +50,12 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
   const handleDeleteInvoice = async (id: string) => {
     try {
       await deleteInvoice({ id });
-    } catch (err) {
+    } catch (_err) {
       // Error handled by mutation/toast
     }
   };
 
-  const handleUpdateInvoiceStatus = (id: string, status: string) => {
+  const handleUpdateInvoiceStatus = (_id: string, _status: string) => {
     queryClient.invalidateQueries({ queryKey: ["patients"] });
     queryClient.invalidateQueries({ queryKey: ["invoices"] });
   };
@@ -64,38 +65,38 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
   }, [queryClient]);
 
   const invoices = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (Array.isArray(apiInvoices)) {
       rawList = apiInvoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).invoices)) {
-      rawList = (apiInvoices as any).invoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.invoices)) {
-      rawList = (apiInvoices as any).data.invoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).data?.data)) {
-      rawList = (apiInvoices as any).data.data;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).data)) {
-      rawList = (apiInvoices as any).data;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data?.invoices)) {
-      rawList = (apiInvoices as any).responseObject.data.invoices;
-    } else if (apiInvoices && Array.isArray((apiInvoices as any).responseObject?.data)) {
-      rawList = (apiInvoices as any).responseObject.data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).invoices)) {
+      rawList = (apiInvoices as ApiAny).invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).data?.invoices)) {
+      rawList = (apiInvoices as ApiAny).data.invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).data?.data)) {
+      rawList = (apiInvoices as ApiAny).data.data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).data)) {
+      rawList = (apiInvoices as ApiAny).data;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).responseObject?.data?.invoices)) {
+      rawList = (apiInvoices as ApiAny).responseObject.data.invoices;
+    } else if (apiInvoices && Array.isArray((apiInvoices as ApiAny).responseObject?.data)) {
+      rawList = (apiInvoices as ApiAny).responseObject.data;
     }
 
-    return rawList.map((inv: any) => normalizeInvoice(inv)).filter(Boolean);
+    return rawList.map((inv: ApiAny) => normalizeInvoice(inv)).filter(Boolean);
   }, [apiInvoices]);
 
   const totalItems = useMemo(() => {
     return (
-      (apiInvoices as any)?.pagination?.total ||
-      (apiInvoices as any)?.pagination?.total_items ||
-      (apiInvoices as any)?.data?.pagination?.total ||
-      (apiInvoices as any)?.data?.pagination?.total_items ||
-      (apiInvoices as any)?.responseObject?.data?.pagination?.total ||
-      (apiInvoices as any)?.responseObject?.data?.pagination?.total_items ||
-      (apiInvoices as any)?.total ||
-      (apiInvoices as any)?.total_elements ||
-      (apiInvoices as any)?.totalElements ||
-      (apiInvoices as any)?.count ||
+      (apiInvoices as ApiAny)?.pagination?.total ||
+      (apiInvoices as ApiAny)?.pagination?.total_items ||
+      (apiInvoices as ApiAny)?.data?.pagination?.total ||
+      (apiInvoices as ApiAny)?.data?.pagination?.total_items ||
+      (apiInvoices as ApiAny)?.responseObject?.data?.pagination?.total ||
+      (apiInvoices as ApiAny)?.responseObject?.data?.pagination?.total_items ||
+      (apiInvoices as ApiAny)?.total ||
+      (apiInvoices as ApiAny)?.total_elements ||
+      (apiInvoices as ApiAny)?.totalElements ||
+      (apiInvoices as ApiAny)?.count ||
       invoices.length ||
       0
     );
@@ -103,20 +104,20 @@ export function useInvoiceData(params?: { search?: string; status?: string; paym
 
   const totalPages = useMemo(() => {
     return (
-      (apiInvoices as any)?.pagination?.totalPages ||
-      (apiInvoices as any)?.pagination?.total_pages ||
-      (apiInvoices as any)?.data?.pagination?.totalPages ||
-      (apiInvoices as any)?.data?.pagination?.total_pages ||
-      (apiInvoices as any)?.responseObject?.data?.pagination?.totalPages ||
-      (apiInvoices as any)?.responseObject?.data?.pagination?.total_pages ||
-      (apiInvoices as any)?.totalPages ||
-      (apiInvoices as any)?.total_pages ||
+      (apiInvoices as ApiAny)?.pagination?.totalPages ||
+      (apiInvoices as ApiAny)?.pagination?.total_pages ||
+      (apiInvoices as ApiAny)?.data?.pagination?.totalPages ||
+      (apiInvoices as ApiAny)?.data?.pagination?.total_pages ||
+      (apiInvoices as ApiAny)?.responseObject?.data?.pagination?.totalPages ||
+      (apiInvoices as ApiAny)?.responseObject?.data?.pagination?.total_pages ||
+      (apiInvoices as ApiAny)?.totalPages ||
+      (apiInvoices as ApiAny)?.total_pages ||
       Math.max(1, Math.ceil(totalItems / limit))
     );
   }, [apiInvoices, totalItems, limit]);
 
   // Keep setInvoices as no-op stub for backward compatibility
-  const setInvoices = (_updater: any) => {};
+  const setInvoices = (_updater: ApiAny) => {};
 
   return {
     invoices,

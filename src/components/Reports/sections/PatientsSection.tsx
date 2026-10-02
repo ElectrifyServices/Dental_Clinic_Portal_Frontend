@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Activity, Clock, TrendingUp } from 'lucide-react';
 import { MetricCard, ContentCard, Badge, DataTable, Pagination } from '@/components/ui';
@@ -74,7 +75,7 @@ export function PatientsSection({ period, startDate, endDate }: { period: string
   // --- Age Distribution ---
   const ageDataObj = ageRes?.data ?? ageRes;
   const ageRawArray = Array.isArray(ageDataObj?.data) ? ageDataObj.data : Array.isArray(ageDataObj) ? ageDataObj : [];
-  const ageGroups: { range: string; count: number; percentage: number; color: string }[] = ageRawArray.map((g: any, i: number) => ({
+  const ageGroups: { range: string; count: number; percentage: number; color: string }[] = ageRawArray.map((g: ApiAny, i: number) => ({
     range: g.ageRange ?? g.range ?? g.ageGroup ?? g.label ?? `${g.min ?? ''}-${g.max ?? ''}`,
     count: Number(g.count ?? g.value ?? 0),
     percentage: Number(g.percentage ?? 0),
@@ -86,7 +87,7 @@ export function PatientsSection({ period, startDate, endDate }: { period: string
   // --- Gender Distribution ---
   const genderDataObj = genderRes?.data ?? genderRes;
   const genderRawArray = Array.isArray(genderDataObj?.data) ? genderDataObj.data : Array.isArray(genderDataObj) ? genderDataObj : [];
-  const genderSlices: { label: string; count: number; percentage: number; value: number; color: string }[] = genderRawArray.map((g: any, i: number) => {
+  const genderSlices: { label: string; count: number; percentage: number; value: number; color: string }[] = genderRawArray.map((g: ApiAny, i: number) => {
     const rawLabel = String(g.gender ?? g.label ?? 'Unknown');
     const label = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1).toLowerCase();
     const count = Number(g.count ?? 0);
@@ -103,7 +104,7 @@ export function PatientsSection({ period, startDate, endDate }: { period: string
   // --- Monthly Patient Growth ---
   const growthDataObj = growthRes?.data ?? growthRes;
   const growthRawArray = Array.isArray(growthDataObj?.data) ? growthDataObj.data : Array.isArray(growthDataObj) ? growthDataObj : [];
-  const patientGrowthData: { month: string; newPatients: number; returningPatients: number; total: number }[] = growthRawArray.map((d: any) => {
+  const patientGrowthData: { month: string; newPatients: number; returningPatients: number; total: number }[] = growthRawArray.map((d: ApiAny) => {
     const newPatients = Number(d.newPatients ?? d.new ?? 0);
     const returningPatients = Number(d.returningPatients ?? d.returning ?? 0);
     const total = Number(d.total ?? (newPatients + returningPatients));
@@ -118,7 +119,7 @@ export function PatientsSection({ period, startDate, endDate }: { period: string
   // --- Churn Risk Table List ---
   const churnDataObj = churnListRes?.data ?? churnListRes;
   const churnRawArray = Array.isArray(churnDataObj?.patients) ? churnDataObj.patients : Array.isArray(churnDataObj?.data) ? churnDataObj.data : Array.isArray(churnDataObj) ? churnDataObj : [];
-  const churnRiskList: { name: string; phone: string; lastVisit: string; days: number; visits: number }[] = churnRawArray.map((r: any) => ({
+  const churnRiskList: { name: string; phone: string; lastVisit: string; days: number; visits: number }[] = churnRawArray.map((r: ApiAny) => ({
     name: r.name ?? r.patientName ?? r.full_name ?? (r.first_name ? `${r.first_name} ${r.last_name || ''}` : 'N/A'),
     phone: r.phone ?? r.phoneNumber ?? r.mobile ?? 'N/A',
     lastVisit: r.lastVisit ?? r.lastVisitDate ?? r.last_visit_date ?? 'N/A',
@@ -302,13 +303,13 @@ export function PatientsSection({ period, startDate, endDate }: { period: string
         ) : (
           <DataTable
             data={churnRiskList}
-            rowKey={(r: any, idx: number) => r.phone || idx}
+            rowKey={(r: ApiAny, idx: number) => r.phone || idx}
             columns={[
-              { key: 'name',      header: 'Patient',     render: (r: any) => <span className="font-bold text-foreground">{r.name}</span> },
-              { key: 'phone',     header: 'Phone',       render: (r: any) => <span className="text-muted-foreground text-xs">{r.phone}</span> },
-              { key: 'lastVisit', header: 'Last Visit',  render: (r: any) => <span className="text-muted-foreground">{r.lastVisit}</span> },
-              { key: 'days',      header: 'Days Ago',    align: 'center', render: (r: any) => <Badge variant={r.days > 50 ? 'red' : 'amber'}>{r.days}d</Badge> },
-              { key: 'visits',    header: 'Total Visits',align: 'right',  render: (r: any) => <span className="font-bold">{r.visits}</span> },
+              { key: 'name',      header: 'Patient',     render: (r: ApiAny) => <span className="font-bold text-foreground">{r.name}</span> },
+              { key: 'phone',     header: 'Phone',       render: (r: ApiAny) => <span className="text-muted-foreground text-xs">{r.phone}</span> },
+              { key: 'lastVisit', header: 'Last Visit',  render: (r: ApiAny) => <span className="text-muted-foreground">{r.lastVisit}</span> },
+              { key: 'days',      header: 'Days Ago',    align: 'center', render: (r: ApiAny) => <Badge variant={r.days > 50 ? 'red' : 'amber'}>{r.days}d</Badge> },
+              { key: 'visits',    header: 'Total Visits',align: 'right',  render: (r: ApiAny) => <span className="font-bold">{r.visits}</span> },
             ]}
             footer={paginationUI || undefined}
           />

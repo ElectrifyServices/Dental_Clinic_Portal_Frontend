@@ -1,27 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import React, { useCallback, useRef, useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import {
-  Search,
-  Plus,
-  Clock,
-  CheckCircle,
-  Calendar,
-  Stethoscope,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  Filter,
-  X,
-  Loader2,
-  FileText,
-  Edit,
-  Play,
-  MoreVertical,
-  Download,
-  MessageCircle,
-} from "lucide-react";
+import { Search, Plus, Clock, CheckCircle, Calendar, Stethoscope, ChevronDown, ChevronUp, Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download, MessageCircle } from "lucide-react";
 import {
   Button,
   ContentCard,
@@ -84,7 +65,7 @@ const UI_TO_API_STATUS: Record<string, string> = {
 };
 
 interface TreatmentListProps {
-  treatments: any[];
+  treatments: ApiAny[];
   totals: { all: number; active: number; completed: number; planned: number; revenue: number };
   isLoading: boolean;
   isTableFetching?: boolean;
@@ -129,7 +110,7 @@ interface ExpandedTreatmentRowProps {
   sendingWhatsappId: string | null;
 }
 
-const PER_PAGE = 10;
+const _PER_PAGE = 10;
 
 function formatDate(value?: string | Date | null, options?: Intl.DateTimeFormatOptions) {
   if (!value) return "-";
@@ -163,7 +144,7 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function extractTreatmentPlans(payload: any): any[] {
+function extractTreatmentPlans(payload: ApiAny): ApiAny[] {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data?.data)) return payload.data.data;
   if (Array.isArray(payload?.data)) return payload.data;
@@ -236,7 +217,7 @@ function ExpandedTreatmentRow({
       key: "index",
       header: "#",
       className: "w-16",
-      render: (_plan: any, index: number) => (
+      render: (_plan: ApiAny, index: number) => (
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-black text-primary">
           {index + 1}
         </span>
@@ -245,7 +226,7 @@ function ExpandedTreatmentRow({
     {
       key: "procedure",
       header: "Procedure",
-      render: (plan: any) => (
+      render: (plan: ApiAny) => (
         <div className="space-y-1">
           <div className="text-sm font-bold text-foreground">{plan.procedure || "Treatment Plan"}</div>
           {plan.notes ? (
@@ -257,7 +238,7 @@ function ExpandedTreatmentRow({
     {
       key: "tooth",
       header: "Tooth",
-      render: (plan: any) => {
+      render: (plan: ApiAny) => {
         const rawTooth = plan.tooth ?? plan.tooth_number;
         if (rawTooth === undefined || rawTooth === null || rawTooth === "" || rawTooth === "-" || rawTooth === "—") {
           return <span className="text-sm font-semibold text-muted-foreground">-</span>;
@@ -289,25 +270,25 @@ function ExpandedTreatmentRow({
     {
       key: "doctor",
       header: "Doctor",
-      render: (plan: any) => <span className="text-sm font-semibold text-muted-foreground">{plan.doctorName || "-"}</span>,
+      render: (plan: ApiAny) => <span className="text-sm font-semibold text-muted-foreground">{plan.doctorName || "-"}</span>,
     },
     {
       key: "date",
       header: "Date",
-      render: (plan: any) => <span className="text-sm font-medium text-muted-foreground">{formatDate(plan.date)}</span>,
+      render: (plan: ApiAny) => <span className="text-sm font-medium text-muted-foreground">{formatDate(plan.date)}</span>,
     },
     {
       key: "cost",
       header: "Cost",
       align: "right" as const,
-      render: (plan: any) => <span className="text-sm font-black text-foreground">{formatCurrency(plan.cost)}</span>,
+      render: (plan: ApiAny) => <span className="text-sm font-black text-foreground">{formatCurrency(plan.cost)}</span>,
     },
     {
       key: "nextSession",
       header: "Next Session",
-      render: (plan: any) => {
-        const sessions: any[] = plan.sessions ?? [];
-        const completedSessions = sessions.filter((session: any) => {
+      render: (plan: ApiAny) => {
+        const sessions: ApiAny[] = plan.sessions ?? [];
+        const completedSessions = sessions.filter((session: ApiAny) => {
           const status = normalizeStatus(session.status);
           return status === "completed" || status === "cancelled";
         }).length;
@@ -334,7 +315,7 @@ function ExpandedTreatmentRow({
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1">
                 {Array.from({ length: dotsToRender }, (_, index) => {
-                  const session = sessions.find((s: any) => (s.sessionNumber ?? s.visit_number ?? s.visitNumber) === index + 1);
+                  const session = sessions.find((s: ApiAny) => (s.sessionNumber ?? s.visit_number ?? s.visitNumber) === index + 1);
                   const status = session ? normalizeStatus(session.status) : "planned";
                   
                   let dotColor = "bg-slate-200";
@@ -366,13 +347,13 @@ function ExpandedTreatmentRow({
     {
       key: "status",
       header: "Status",
-      render: (plan: any) => <StatusPill status={plan.status} />,
+      render: (plan: ApiAny) => <StatusPill status={plan.status} />,
     },
     {
       key: "actions",
       header: "Actions",
       className: "w-24",
-      render: (plan: any) => {
+      render: (plan: ApiAny) => {
         const isCompleted = normalizeStatus(plan.status) === "completed";
         const isPlanned = normalizeStatus(plan.status) === "planned";
 
@@ -523,7 +504,7 @@ export function TreatmentList({
   treatments,
   totals,
   isLoading,
-  isTableFetching = false,
+  isTableFetching: _isTableFetching = false,
   isStatsLoading = false,
   totalItems,
   totalPages,
@@ -560,7 +541,7 @@ export function TreatmentList({
       const data = await downloadTreatment({ id });
       await downloadCompletedTreatmentPDF(data);
       toast.success("PDF downloaded successfully!", { id: "pdf-download" });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
     } finally {
       setDownloadingId(null);
@@ -582,7 +563,7 @@ export function TreatmentList({
       }
 
       toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
     } finally {
       setSendingWhatsappId(null);
@@ -632,7 +613,7 @@ export function TreatmentList({
     notify({ statusFilter: next, page: 1 });
   };
 
-  const handlePageChange = (page: number) => notify({ page });
+  const _handlePageChange = (page: number) => notify({ page });
 
   const handleAdvancedChange = (patch: Partial<AdvancedFilters>) => {
     const next = { ...advancedFilters, ...patch };
@@ -655,7 +636,7 @@ export function TreatmentList({
     !!advancedFilters.dateFrom || !!advancedFilters.dateTo,
   ].filter(Boolean).length;
 
-  const doctorOptions = doctors.map((doctor: any) => ({
+  const doctorOptions = doctors.map((doctor: ApiAny) => ({
     value: doctor.id,
     label: doctor.name || "Unknown Doctor",
     phone: doctor.phone || "",
@@ -677,7 +658,7 @@ export function TreatmentList({
       key: "expand",
       header: "",
       className: "w-12",
-      render: (treatment: any) => {
+      render: (treatment: ApiAny) => {
         const isExpanded = expandedRowIds.has(treatment.id);
         return (
           <Button
@@ -697,7 +678,7 @@ export function TreatmentList({
     {
       key: "patient",
       header: "Patient",
-      render: (treatment: any) => (
+      render: (treatment: ApiAny) => (
         <div>
           <div className="font-bold text-foreground">{treatment.patientName || treatment.name || "-"}</div>
           <div className="text-[11px] font-bold text-primary mt-0.5 uppercase tracking-wider">
@@ -709,7 +690,7 @@ export function TreatmentList({
     {
       key: "planCount",
       header: "Total Plans",
-      render: (treatment: any) => (
+      render: (treatment: ApiAny) => (
         <div className="flex items-center gap-2">
           <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-border bg-muted px-2 py-1 text-[12px] font-black text-foreground">
             {Number(treatment.treatment_plan_count ?? treatment.treatmentPlanCount ?? 0)}
@@ -723,13 +704,13 @@ export function TreatmentList({
     {
       key: "status",
       header: "Status",
-      render: (treatment: any) => <StatusPill status={treatment.overall_status || treatment.overallStatus || treatment.status} />,
+      render: (treatment: ApiAny) => <StatusPill status={treatment.overall_status || treatment.overallStatus || treatment.status} />,
     },
     {
       key: "cost",
       header: "Total Cost",
       align: "right" as const,
-      render: (treatment: any) => (
+      render: (treatment: ApiAny) => (
         <div className="text-sm font-bold text-foreground">
           {formatCurrency(treatment.total_treatment_cost)}
         </div>
@@ -739,7 +720,7 @@ export function TreatmentList({
       key: "whatsapp",
       header: "",
       className: "w-10",
-      render: (treatment: any) => (
+      render: (treatment: ApiAny) => (
         <Button
           variant="ghost"
           size="icon"
@@ -847,7 +828,7 @@ export function TreatmentList({
                   onSearchChange={setDoctorSearch}
                   isLoading={isDoctorsLoading}
                   className="h-11 bg-muted/50 hover:bg-card"
-                  renderOption={(doctor: any) => (
+                  renderOption={(doctor: ApiAny) => (
                     <div className="flex items-center gap-3 py-1">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                         {(doctor.label || "D").charAt(0)}
@@ -927,9 +908,9 @@ export function TreatmentList({
                 data={treatments}
                 rowKey={(row) => row.id}
                 expandedRowIds={expandedRowIds}
-                onRowClick={(row: any) => toggleExpandedRow(row.id)}
-                rowClassName={(row: any) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
-                renderExpandedRow={(row: any) => (
+                onRowClick={(row: ApiAny) => toggleExpandedRow(row.id)}
+                rowClassName={(row: ApiAny) => (expandedRowIds.has(row.id) ? "bg-slate-50" : "")}
+                renderExpandedRow={(row: ApiAny) => (
                   <ExpandedTreatmentRow
                     patientId={row.patientId}
                     fallbackRowId={row.id}

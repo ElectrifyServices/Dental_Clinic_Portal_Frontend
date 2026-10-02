@@ -1,27 +1,13 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
-import {
-  Calendar,
-  User,
-  FileText,
-  Pill,
-  Stethoscope,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  ShieldAlert,
-  AlertCircle,
-  X,
-  Filter,
-  Download,
-  Activity
-} from "lucide-react";
+import { FileText, Pill, Stethoscope, ChevronDown, Clock, ShieldAlert, AlertCircle, X, Filter, Activity } from "lucide-react";
 import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, Input } from "@/components/ui";
 import { downloadConsultationPDF } from "../../../utils/pdfGenerator";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface PreviousConsultationsViewProps {
-  consultations: any;
-  patient?: any;
+  consultations: ApiAny;
+  patient?: ApiAny;
   isLoading: boolean;
   isError: boolean;
   searchVal: string;
@@ -49,7 +35,7 @@ export function PreviousConsultationsView({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<string | null>(null);
 
-  const handleDownloadPDF = (record: any, type: any) => {
+  const handleDownloadPDF = (record: ApiAny, type: ApiAny) => {
     if (!patient) {
       console.error("Patient details missing for PDF download");
       return;
@@ -83,7 +69,7 @@ export function PreviousConsultationsView({
     if (Array.isArray(consultations)) {
       return consultations;
     }
-    const anyData = consultations as any;
+    const anyData = consultations as ApiAny;
     // Handle standard { data: [...] }
     if (Array.isArray(anyData.data)) {
       return anyData.data;
@@ -184,7 +170,7 @@ export function PreviousConsultationsView({
 
       {!isLoading && !isError && consultationsList.length > 0 && (
         <div className="space-y-4">
-          {consultationsList.map((c, idx) => {
+          {consultationsList.map((c, _idx) => {
             const isExpanded = expandedId === c.id;
             const reportAvailability = getConsultationReportAvailability(c);
             return (
@@ -318,7 +304,7 @@ export function PreviousConsultationsView({
                              <div className="pl-1.5">
                                 {c.tooth_findings && c.tooth_findings.length > 0 ? (
                                   <div className="flex flex-wrap gap-2">
-                                    {c.tooth_findings.map((f: any, i: number) => (
+                                    {c.tooth_findings.map((f: ApiAny, i: number) => (
                                       <div key={i} className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/60 rounded-lg pr-3 py-1 text-sm font-semibold shadow-sm">
                                         <span className="bg-amber-100 text-amber-800 px-2 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
                                           {f.tooth_number === "FM" ? "FM" : f.tooth_number}
@@ -399,7 +385,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "tooth_number",
                                 header: "Tooth",
-                                render: (t: any) => {
+                                render: (t: ApiAny) => {
                                   const tooth = t.tooth_number !== undefined ? t.tooth_number : t.tooth;
                                   return (
                                     <span className="font-black text-xs bg-muted px-2 py-1.5 rounded-md border border-border/50 shadow-sm">
@@ -411,18 +397,18 @@ export function PreviousConsultationsView({
                               {
                                 key: "procedure",
                                 header: "Procedure",
-                                render: (t: any) => <span className="font-bold text-foreground text-[13px]">{t.procedure || t.treatment_name}</span>,
+                                render: (t: ApiAny) => <span className="font-bold text-foreground text-[13px]">{t.procedure || t.treatment_name}</span>,
                               },
                               {
                                 key: "sessions",
                                 header: "Sessions",
-                                render: (t: any) => <span className="font-semibold text-muted-foreground">{Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</span>,
+                                render: (t: ApiAny) => <span className="font-semibold text-muted-foreground">{Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</span>,
                               },
                               {
                                 key: "est_cost",
                                 header: "Cost (₹)",
                                 align: "right",
-                                render: (t: any) => (
+                                render: (t: ApiAny) => (
                                   <span className="font-black text-foreground">
                                     ₹{(t.est_cost || t.cost || 0).toLocaleString()}
                                   </span>
@@ -432,7 +418,7 @@ export function PreviousConsultationsView({
                                 key: "is_active",
                                 header: "Status",
                                 align: "center",
-                                render: (t: any) => (
+                                render: (t: ApiAny) => (
                                   <Badge variant={t.is_active !== false && t.status !== "completed" ? "emerald" : "gray"} className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
                                     {t.is_active !== false && t.status !== "completed" ? "Active" : (t.status || "Inactive")}
                                   </Badge>
@@ -440,7 +426,7 @@ export function PreviousConsultationsView({
                               },
                             ]}
                             data={c.treatments || c.treatment_plans}
-                            rowKey={(t: any) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
+                            rowKey={(t: ApiAny) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
                           />
                          </div>
                       ) : (
@@ -463,7 +449,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "medicine",
                                 header: "Medicine",
-                                render: (pr: any) => {
+                                render: (pr: ApiAny) => {
                                   let medName = "";
                                   const m = pr.medicine_name || pr.medicine;
                                   if (typeof m === 'object' && m !== null) {
@@ -481,7 +467,7 @@ export function PreviousConsultationsView({
                               {
                                 key: "dosage",
                                 header: "Dosage",
-                                render: (pr: any) => (
+                                render: (pr: ApiAny) => (
                                   <span className="font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/50 text-[11px] uppercase tracking-wider shadow-sm">
                                     {pr.dosage || "—"}
                                   </span>
@@ -490,27 +476,27 @@ export function PreviousConsultationsView({
                               {
                                 key: "timing",
                                 header: "Timing",
-                                render: (pr: any) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.timing || "—"}</span>,
+                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.timing || "—"}</span>,
                               },
                               {
                                 key: "frequency",
                                 header: "Freq",
-                                render: (pr: any) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.frequency || "—"}</span>,
+                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.frequency || "—"}</span>,
                               },
                               {
                                 key: "duration",
                                 header: "Duration",
-                                render: (pr: any) => <span className="font-bold text-[13px] text-foreground/80">{pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || 'Days'}` : "—"}</span>,
+                                render: (pr: ApiAny) => <span className="font-bold text-[13px] text-foreground/80">{pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || 'Days'}` : "—"}</span>,
                               },
                               {
                                 key: "qty",
                                 header: "Qty",
                                 align: "right",
-                                render: (pr: any) => <span className="font-black text-lg text-foreground/80">{pr.qty || "—"}</span>,
+                                render: (pr: ApiAny) => <span className="font-black text-lg text-foreground/80">{pr.qty || "—"}</span>,
                               },
                             ]}
                             data={c.prescriptions}
-                            rowKey={(pr: any) => pr.id || pr.medicine_name || Math.random().toString()}
+                            rowKey={(pr: ApiAny) => pr.id || pr.medicine_name || Math.random().toString()}
                           />
                         </div>
                       ) : (

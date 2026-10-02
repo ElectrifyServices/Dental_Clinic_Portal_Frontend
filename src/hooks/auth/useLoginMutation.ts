@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 
 interface LoginVariables {
@@ -11,12 +12,12 @@ interface LoginResponseData {
     name: string;
     email: string;
     role: string | { name: string };
-    [key: string]: any;
+    [key: string]: ApiAny;
   };
   tokens: {
     accessToken: string;
     refreshToken: string;
-    [key: string]: any;
+    [key: string]: ApiAny;
   };
   sessionId?: string;
 }

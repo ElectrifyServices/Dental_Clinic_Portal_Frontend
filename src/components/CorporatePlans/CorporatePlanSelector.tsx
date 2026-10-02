@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Building2, Check, ChevronDown, X, Info, Tag } from 'lucide-react';
 import { CorporatePlan } from '../../types';
 import { COLOR_MAP, getPlanBenefitSummary } from '../../utils/corporatePlan';

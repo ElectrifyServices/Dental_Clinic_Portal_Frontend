@@ -1,16 +1,6 @@
-import { useState } from "react";
-import {
-  User,
-  Calendar,
-  Stethoscope,
-  Download,
-  QrCode,
-  Pill,
-  FileText,
-  Heart,
-  CreditCard,
-  AlertCircle,
-} from "lucide-react";
+import type { ApiAny } from "../../types/api";
+import { useState, useEffect } from "react";
+import { User, Calendar, Stethoscope, Pill, FileText, Heart, CreditCard, AlertCircle } from "lucide-react";
 import { Modal, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
 import {
@@ -37,11 +27,11 @@ import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
 
 interface PatientDetailsProps {
-  patient: any;
-  familyMembers: any[];
-  appointments: any[];
-  treatments: any[];
-  invoices: any[];
+  patient: ApiAny;
+  familyMembers: ApiAny[];
+  appointments: ApiAny[];
+  treatments: ApiAny[];
+  invoices: ApiAny[];
   onClose: () => void;
   onSendReminder: (patientId: string, amount: number) => void;
   onExport?: (patientId: string) => void;
@@ -55,13 +45,13 @@ export function PatientDetails({
   treatments = [],
   invoices = [],
   onSendReminder = () => { },
-  onExport = () => { },
+  onExport: _onExport = () => { },
 }: PatientDetailsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [printLanguage, setPrintLanguage] = useState<"en" | "gu">("en");
-  const [customSections, setCustomSections] = useState<any[]>([]);
+  const [customSections, setCustomSections] = useState<ApiAny[]>([]);
   const [previewData, setPreviewData] = useState({
     bp: "",
     height: "",
@@ -74,20 +64,32 @@ export function PatientDetails({
     nextVisit: "",
   });
 
-  if (!patient) return null;
-
-  const { data: historyData } = usePatientAppointmentHistoryQuery(patient?.id || "");
-  const { data: familyTreeData } = usePatientFamilyTreeQuery(patient?.id || "");
-  const { data: prescriptionsData, isLoading: isPrescriptionsLoading } = usePatientPrescriptionsQuery(patient?.id || "");
-  const { data: treatmentsData } = useTreatmentPlansQuery(
+  const { data: historyData, refetch: refetchHistory } = usePatientAppointmentHistoryQuery(patient?.id || "");
+  const { data: familyTreeData, refetch: refetchFamily } = usePatientFamilyTreeQuery(patient?.id || "");
+  const { data: prescriptionsData, isLoading: isPrescriptionsLoading, refetch: refetchPrescriptions } = usePatientPrescriptionsQuery(patient?.id || "");
+  const { data: treatmentsData, refetch: refetchTreatments } = useTreatmentPlansQuery(
     { all: true, filters: { patientId: [patient?.id || ""] } },
     { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
 
-  const { data: invoicesData, isLoading: isInvoicesLoading } = useInvoicesQuery(
+  const { data: invoicesData, isLoading: _isInvoicesLoading, refetch: refetchInvoices } = useInvoicesQuery(
     { filters: { patient_id: [patient?.id || ""] } },
     { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
+
+  useEffect(() => {
+    if (patient?.id) {
+      refetchHistory();
+      refetchFamily();
+      refetchPrescriptions();
+      refetchTreatments();
+      refetchInvoices();
+    }
+  }, [patient?.id, refetchHistory, refetchFamily, refetchPrescriptions, refetchTreatments, refetchInvoices]);
+
+  // Every hook above runs on each render; the queries are disabled while
+  // `patient` is null, so bailing out here keeps the hook order stable.
+  if (!patient) return null;
 
   const rawPrescriptions =
     prescriptionsData?.responseObject?.data?.prescriptions ||
@@ -100,7 +102,7 @@ export function PatientDetails({
   // Extract family members from API response
   const apiData = familyTreeData?.responseObject?.data || familyTreeData?.data;
 
-  let allFamilyMembers: any[] = [];
+  let allFamilyMembers: ApiAny[] = [];
   if (apiData) {
     if (apiData.primary) {
       allFamilyMembers.push(apiData.primary);
@@ -111,10 +113,10 @@ export function PatientDetails({
   }
 
   // Filter out the current patient so they don't see themselves in their own family list
-  const otherFamilyMembers = allFamilyMembers.filter((m: any) => m.id !== patient.id);
+  const otherFamilyMembers = allFamilyMembers.filter((m: ApiAny) => m.id !== patient.id);
 
   const resolvedFamilyMembers = (otherFamilyMembers.length > 0 || apiData)
-    ? otherFamilyMembers.map((m: any) => ({
+    ? otherFamilyMembers.map((m: ApiAny) => ({
       id: m.id,
       patientCode: m.patient_code || m.patientCode || m.id,
       name: m.name,
@@ -146,7 +148,7 @@ export function PatientDetails({
           year: "numeric",
         })
         : String(dateVal);
-    } catch (e) {
+    } catch (_e) {
       return String(dateVal);
     }
   };
@@ -158,23 +160,23 @@ export function PatientDetails({
   let patientAppointments = localPatientAppointments;
   if (historyData) {
     // Navigate the exact API structure: responseObject.data.history[]
-    const rawAppointments: any[] =
+    const rawAppointments: ApiAny[] =
       historyData?.responseObject?.data?.history ||
       historyData?.data?.history ||
       historyData?.history ||
       (Array.isArray(historyData) ? historyData : []);
 
     if (rawAppointments.length > 0) {
-      patientAppointments = rawAppointments.map((a: any) => {
-        let dateVal = a.date_ist || a.date;
-        let formattedDate = formatAppointmentDate(dateVal);
+      patientAppointments = rawAppointments.map((a: ApiAny) => {
+        const dateVal = a.date_ist || a.date;
+        const formattedDate = formatAppointmentDate(dateVal);
 
         let timeStr = a.start_time_ist || a.time || a.start_time || "";
         if (timeStr) {
           if (timeStr.includes("T")) {
             try {
               timeStr = new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch (e) { }
+            } catch (_e) { /* unparseable time - keep the raw string */ }
           } else if (timeStr.match(/^\d{2}:\d{2}$/) || timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
             try {
               const [h, m] = timeStr.split(":");
@@ -182,7 +184,7 @@ export function PatientDetails({
               const ampm = hr >= 12 ? "PM" : "AM";
               hr = hr % 12 || 12;
               timeStr = `${String(hr).padStart(2, '0')}:${m} ${ampm}`;
-            } catch (e) { }
+            } catch (_e) { /* unparseable time - keep the raw string */ }
           }
         }
 
@@ -219,7 +221,7 @@ export function PatientDetails({
   );
 
   if (treatmentsData?.data) {
-    const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as any).data || [];
+    const rawData = Array.isArray(treatmentsData.data) ? treatmentsData.data : (treatmentsData.data as ApiAny).data || [];
     if (Array.isArray(rawData) && rawData.length > 0) {
       patientTreatments = rawData.map(toUiTreatment);
     }
@@ -254,7 +256,7 @@ export function PatientDetails({
     setLoading(false);
   };
 
-  const handlePrintBarcode = () => {
+  const _handlePrintBarcode = () => {
     const win = window.open("", "_blank");
     if (win) {
       win.document.write(getBarcodeHTML(patient));
@@ -263,7 +265,7 @@ export function PatientDetails({
     }
   };
 
-  const handleOpenPrintModal = (record?: any) => {
+  const _handleOpenPrintModal = (record?: ApiAny) => {
     const latest = record || rawPrescriptions?.[0];
     if (latest) {
       setPreviewData({
@@ -370,7 +372,7 @@ export function PatientDetails({
         </div>
       )}
       <div className="space-y-8">
-        <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
+        <Tabs value={activeTab} onValueChange={(val: ApiAny) => setActiveTab(val)}>
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;

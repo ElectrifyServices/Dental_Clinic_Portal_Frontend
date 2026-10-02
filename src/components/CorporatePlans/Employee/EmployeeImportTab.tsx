@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useRef, useState } from 'react';
 import { X, Download, AlertTriangle, CheckCircle } from 'lucide-react';
 import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
@@ -36,13 +37,13 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
     setImporting(true);
     try {
       const payload = {
-        members: valid.map((r, i) => {
+        members: valid.map((r, _i) => {
           const matchedPlan = activePlans.find(p => p.id === r.corporatePlanId);
           const planCodeToUse = matchedPlan ? matchedPlan.code : r.corporatePlanId;
           
           return {
             name: r.name!,
-            country_code: (r as any).country_code || "+91",
+            country_code: (r as ApiAny).country_code || "+91",
             phone: r.phone!,
             email: r.email || "",
             gender: (r.gender || "male").toUpperCase(),
@@ -53,13 +54,13 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         })
       };
 
-      const res: any = await bulkImportMutation.mutateAsync(payload);
+      const res: ApiAny = await bulkImportMutation.mutateAsync(payload);
 
       const responseData = res?.responseObject?.data || res?.data;
       const failed = responseData?.failed || [];
 
       if (failed.length > 0) {
-        const backendErrors = failed.map((f: any) => `Row ${f.index + 2}: ${f.error}`);
+        const backendErrors = failed.map((f: ApiAny) => `Row ${f.index + 2}: ${f.error}`);
         setImportErrors(backendErrors);
         setImporting(false);
         return; // Do not redirect to list
@@ -73,7 +74,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       setImportRows([]);
       setImportErrors([]);
       setTab('list');
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       setImportErrors(prev => [
         err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
         ...prev
@@ -133,7 +134,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           <DataTable
             columns={[
               { key: 'name', header: 'Name', render: r => <span className="font-medium text-sm">{r.name}</span> },
-              { key: 'country_code', header: 'Code', render: r => <span className="text-sm font-bold text-foreground">{(r as any).country_code || '+91'}</span> },
+              { key: 'country_code', header: 'Code', render: r => <span className="text-sm font-bold text-foreground">{(r as ApiAny).country_code || '+91'}</span> },
               { key: 'phone', header: 'Phone', render: r => <span className="text-sm text-muted-foreground">{r.phone}</span> },
               { key: 'email', header: 'Email', render: r => <span className="text-xs text-muted-foreground">{r.email}</span> },
               {

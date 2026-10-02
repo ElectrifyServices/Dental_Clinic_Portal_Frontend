@@ -1,4 +1,21 @@
 import React, { useMemo } from "react";
+
+/** A queue row exactly as PatientQueue defines it. */
+type QueuedPatientRow = Parameters<
+  React.ComponentProps<typeof PatientQueue>["onSelectPatient"]
+>[0];
+
+/** The same row while it is only held in local state, where `status` is still
+ *  a plain string coming from the UI. */
+interface QueueStateRow {
+  id: string;
+  [key: string]: unknown;
+}
+
+/** A staff member, narrowed to the fields this page filters on. */
+interface StaffRow {
+  role?: string;
+}
 import { useAppData } from "../hooks/useAppData";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,12 +37,12 @@ export const QueuePage: React.FC = () => {
   const { mutateAsync: updateConsultation } = useUpdateConsultationMutation();
 
   const activeDoctors = useMemo(
-    () => staffMembers.filter((s: any) => s.role === "doctor" || s.role === "admin"),
+    () => staffMembers.filter((s: StaffRow) => s.role === "doctor" || s.role === "admin"),
     [staffMembers]
   );
 
-  const handleSelectPatient = (p: any) => {
-    const bg = patients.find((bp: any) => bp.phone === p.patientPhone);
+  const handleSelectPatient = (p: QueuedPatientRow) => {
+    const bg = patients.find((bp) => bp.phone === p.patientPhone);
     setSelectedPatientForDiagnose({
       ...p,
       phone: p.patientPhone,
@@ -49,7 +66,7 @@ export const QueuePage: React.FC = () => {
     const cleanPhone = (phone || "").replace(/\D/g, "");
 
     const ex = (trimmedName && cleanPhone) ? patients.find(
-      (p: any) =>
+      (p) =>
         p.name.toLowerCase() === trimmedName.toLowerCase() &&
         p.phone.replace(/\D/g, "") === cleanPhone
     ) : null;
@@ -113,14 +130,15 @@ export const QueuePage: React.FC = () => {
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
         onUpdatePatientStatus={async (id: string, s: string) => {
-          setQueuedPatients((prev: any[]) =>
-            prev.map((p: any) => (p.id === id ? { ...p, status: s } : p))
+          setQueuedPatients((prev: QueueStateRow[]) =>
+            prev.map((p) => (p.id === id ? { ...p, status: s } : p))
           );
           const isExistingBackend = id && !String(id).startsWith("WALK-");
           if (isExistingBackend) {
             try {
-              await updateConsultation({ id, status: s } as any);
-            } catch (err) {
+              await updateConsultation({ id, status: s } as Parameters<typeof updateConsultation>[0]);
+            } catch {
+              /* status is already updated locally; a failed sync is non-fatal */
             }
           }
         }}

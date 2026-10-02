@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/Dialog";
 import { Button, DataTable } from "@/components/ui";
@@ -7,9 +8,9 @@ import { Search, CheckCircle2 } from "lucide-react";
 interface CorporateBulkSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employees: any[];
+  employees: ApiAny[];
   linkedItemIds: string[];
-  onAddMultiple: (items: any[]) => void;
+  onAddMultiple: (items: ApiAny[]) => void;
   onRemoveMultiple: (ids: string[]) => void;
 }
 
@@ -106,7 +107,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       ),
       className: "w-12 text-center p-4",
       align: "center" as const,
-      render: (emp: any) => (
+      render: (emp: ApiAny) => (
         <input
           type="checkbox"
           checked={localSelection.has(emp.enrollment_id)}
@@ -122,7 +123,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       key: "name",
       header: "Employee Name",
       className: "p-4 font-bold text-indigo-900",
-      render: (emp: any) => (
+      render: (emp: ApiAny) => (
         <div>
           <p className="font-bold text-slate-800">{emp.name || "Unknown Name"}</p>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{emp.plan_name}</p>
@@ -133,7 +134,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       key: "contact",
       header: "Contact Details",
       className: "p-4 font-bold text-indigo-900",
-      render: (emp: any) => (
+      render: (emp: ApiAny) => (
         <div>
           <p className="text-xs text-slate-600">📞 {emp.phone || "N/A"}</p>
           {emp.email && <p className="text-xs text-slate-600">📧 {emp.email}</p>}
@@ -145,7 +146,7 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
       header: "Amount (₹)",
       className: "p-4 font-bold text-indigo-900 text-right",
       align: "right" as const,
-      render: (emp: any) => (
+      render: (emp: ApiAny) => (
         <span className="font-black text-emerald-600">
           ₹{(emp.billing_amount || 0).toLocaleString()}
         </span>
@@ -183,10 +184,10 @@ export const CorporateBulkSelectModal: React.FC<CorporateBulkSelectModalProps> =
           <DataTable
             columns={columns}
             data={filteredEmployees}
-            rowKey={(emp: any) => emp.enrollment_id}
-            onRowClick={(emp: any) => toggleOne(emp.enrollment_id)}
+            rowKey={(emp: ApiAny) => emp.enrollment_id}
+            onRowClick={(emp: ApiAny) => toggleOne(emp.enrollment_id)}
             emptyTitle="No members match your search criteria."
-            rowClassName={(emp: any) =>
+            rowClassName={(emp: ApiAny) =>
               `hover:bg-indigo-50/30 transition-colors cursor-pointer ${
                 localSelection.has(emp.enrollment_id) ? 'bg-indigo-50/40' : ''
               }`

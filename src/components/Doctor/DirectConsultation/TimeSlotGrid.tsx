@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-﻿import { Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface Slot {
   time24: string;

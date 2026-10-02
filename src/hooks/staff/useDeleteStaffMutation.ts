@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +9,7 @@ export interface DeleteStaffVariables {
 export function useDeleteStaffMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, DeleteStaffVariables>({
+  return useApiMutation<ApiAny, DeleteStaffVariables>({
     getEndpoint: (variables) => `/staff/${variables.id}`,
     method: "delete",
     options: {

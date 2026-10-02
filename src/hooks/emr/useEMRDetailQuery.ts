@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface EMRDetailParams {
@@ -5,8 +6,8 @@ export interface EMRDetailParams {
   category?: string;
 }
 
-export function useEMRDetailQuery(id: string, params: EMRDetailParams = {}, options?: any) {
-  const queryParams: Record<string, any> = {};
+export function useEMRDetailQuery(id: string, params: EMRDetailParams = {}, options?: ApiAny) {
+  const queryParams: Record<string, ApiAny> = {};
   if (params.search) {
     queryParams.search = params.search;
   }
@@ -16,7 +17,7 @@ export function useEMRDetailQuery(id: string, params: EMRDetailParams = {}, opti
     };
   }
 
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["medicalRecords", "detail", id, queryParams],
     endpoint: `/medicalRecord/${id}`,
     method: "get",

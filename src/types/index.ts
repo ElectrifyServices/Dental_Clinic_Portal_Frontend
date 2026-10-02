@@ -282,7 +282,8 @@ export interface Report {
   type: 'earnings' | 'patients' | 'appointments' | 'inventory' | 'treatments';
   title: string;
   dateRange: { start: string; end: string; };
-  data: any;
+  /** Report payload shape depends on `type`, so it stays untyped here. */
+  data: unknown;
   generatedAt: string;
   generatedBy: string;
 }

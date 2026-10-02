@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState } from "react";
 import { Save, Calendar, CheckCircle, AlertTriangle } from "lucide-react";
 import { usePatientForm } from "./PatientForm/usePatientForm";
@@ -5,7 +6,6 @@ import { Step1BasicInfo } from "./PatientForm/Step1BasicInfo";
 import { Step2MedicalHistory } from "./PatientForm/Step2MedicalHistory";
 import { Step3Consent } from "./PatientForm/Step3Consent";
 import { Step4Review } from "./PatientForm/Step4Review";
-import { PatientData } from "@/types";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import { useMedicalHistoriesQuery } from "@/hooks/patients/useMedicalHistoriesQuery";
 import { useAllergiesQuery } from "@/hooks/patients/useAllergiesQuery";
@@ -13,13 +13,13 @@ import { Button, Modal } from "@/components/ui";
 
 interface PatientFormProps {
   onClose: () => void;
-  onSave: (patient: any) => void;
-  patient?: any;
+  onSave: (patient: ApiAny) => void;
+  patient?: ApiAny;
   type?: "normal" | "person";
   parentId?: string;
   isCheckIn?: boolean;
-  corporateEmployees?: any[];
-  corporatePlans?: any[];
+  corporateEmployees?: ApiAny[];
+  corporatePlans?: ApiAny[];
 }
 
 export function PatientForm({
@@ -29,7 +29,7 @@ export function PatientForm({
   type,
   parentId,
   isCheckIn,
-  corporateEmployees = [],
+  corporateEmployees: _corporateEmployees = [],
   corporatePlans = [],
 }: PatientFormProps) {
   const {
@@ -66,11 +66,11 @@ export function PatientForm({
   const [step, setStep] = useState(1);
   const [medicalSearch, setMedicalSearch] = useState("");
   const [allergySearch, setAllergySearch] = useState("");
-  const extractIds = (field: any, idKeys: string[]) => {
+  const extractIds = (field: ApiAny, idKeys: string[]) => {
     if (!field) return [];
     if (typeof field === "string") return field.split('\n').filter(Boolean);
     if (Array.isArray(field)) {
-      return field.map((item: any) => {
+      return field.map((item: ApiAny) => {
         if (typeof item === "object" && item !== null) {
           for (const key of idKeys) {
             if (item[key]) return item[key];
@@ -133,7 +133,7 @@ export function PatientForm({
         id: patient?.id ?? undefined,
         parentId: type === "person" ? parentId : (patient?.primary_patient_id || patient?.primaryPatientId || patient?.parentId || undefined),
       });
-    } catch (err) {
+    } catch (_err) {
       setFormErrors({ submit: "Failed to save patient. Please try again." });
     } finally {
       setLoading(false);

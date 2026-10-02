@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useEffect, useState, useMemo } from "react";
 import {
   Calendar, Clock, Plus, CheckCircle, Loader2, ChevronDown, ChevronUp,
@@ -6,21 +7,13 @@ import {
   Stethoscope, BadgeCheck, Sparkle, Pill, Pencil, MessageSquareText, Paperclip, Upload, FileText, ExternalLink,
   Percent, AlertCircle, CreditCard
 } from "lucide-react";
-import { Modal, Button, Badge, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
+import { Modal, Button, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
-import {
-  useTreatmentSessionsQuery,
-  useTreatmentSessionQuery,
-  useAddTreatmentSessionMutation,
-  useUpdateTreatmentSessionMutation,
-  useCompleteTreatmentSessionMutation,
-  TreatmentSessionResponse,
-  PlanPrescription,
-} from "../../hooks/treatment/useTreatmentSessionHooks";
+import { useTreatmentSessionsQuery, useAddTreatmentSessionMutation, useUpdateTreatmentSessionMutation, useCompleteTreatmentSessionMutation, TreatmentSessionResponse, PlanPrescription } from "../../hooks/treatment/useTreatmentSessionHooks";
 import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
 import { useSendSessionPrescriptionMutation } from "../../hooks/treatment/useSendSessionPrescriptionMutation";
 import { useModal } from "../../contexts/ModalContext";
@@ -28,7 +21,7 @@ import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
 import apiClient from "../../services/apiClient";
 
-const extractApiError = (err: any, fallback: string) => {
+const extractApiError = (err: ApiAny, fallback: string) => {
   return err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc
     || err?.response?.data?.message
     || err?.message
@@ -67,7 +60,7 @@ const STATUS_CONFIG: Record<string, {
   textColor: string;
   borderColor: string;
   badgeVariant: string;
-  icon: any;
+  icon: ApiAny;
 }> = {
   PLANNED: {
     label: "Planned",
@@ -123,7 +116,8 @@ const convert12to24 = (time12?: string) => {
   if (!trimmed.includes(" ")) return trimmed;
 
   const [timePart, modifier] = trimmed.split(" ");
-  let [hours, minutes] = timePart.split(":");
+  const [rawHours, minutes] = timePart.split(":");
+  let hours = rawHours;
 
   if (!hours || !minutes || !modifier) return trimmed;
   if (hours === "12") hours = "00";
@@ -357,23 +351,35 @@ export function TreatmentSessionManager({
 
   const { data: apiResponse, isLoading, refetch } = useTreatmentSessionsQuery(treatmentId);
 
+  useEffect(() => {
+    if (treatmentId) {
+      refetch();
+      refetchPlan();
+    }
+  }, [treatmentId, refetch, refetchPlan]);
+
+  // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
+  // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.
+  // Try both shapes: direct data or nested under responseObject.data
   const responseData = useMemo(() => {
     if (!apiResponse) return null;
-    const d = (apiResponse as any)?.responseObject?.data ?? (apiResponse as any)?.data ?? apiResponse;
+    // Shape 1: apiResponse.data (useApiQuery strips axios wrapper → this is responseObject)
+    const d = (apiResponse as ApiAny)?.data ?? apiResponse;
+    // Shape 2: some interceptors return responseObject.data directly
     return d;
   }, [apiResponse]);
 
   const treatmentPlan = useMemo(() => {
     if (!treatmentPlanResponse) return null;
     return (
-      (treatmentPlanResponse as any)?.responseObject?.data ??
-      (treatmentPlanResponse as any)?.data?.data ??
-      (treatmentPlanResponse as any)?.data ??
+      (treatmentPlanResponse as ApiAny)?.responseObject?.data ??
+      (treatmentPlanResponse as ApiAny)?.data?.data ??
+      (treatmentPlanResponse as ApiAny)?.data ??
       treatmentPlanResponse
     );
   }, [treatmentPlanResponse]);
 
-  const extractDoctorStaffId = (obj: any): string | null => {
+  const extractDoctorStaffId = (obj: ApiAny): string | null => {
     if (!obj) return null;
     const doc = obj.doctor || obj.plan?.doctor || (obj.id && (obj.staff_id || obj.staff) ? obj : null);
     if (doc) {
@@ -421,7 +427,7 @@ export function TreatmentSessionManager({
   const nextSlots = useMemo(() => {
     if (!nextSlotsResponse?.data?.slots || !nextSessionDraft.date) return [];
 
-    return nextSlotsResponse.data.slots.map((slot: any) => {
+    return nextSlotsResponse.data.slots.map((slot: ApiAny) => {
       const time24 = convert12to24(slot.time);
       const slotDateTime = new Date(`${nextSessionDraft.date}T${time24}:00`);
       const isPast =
@@ -443,7 +449,7 @@ export function TreatmentSessionManager({
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [sessionPreviousPaidAmt, setSessionPreviousPaidAmt] = useState<number>(0);
   const [isEditingCompleted, setIsEditingCompleted] = useState<boolean>(false);
-  const [originalPaidNow, setOriginalPaidNow] = useState<number>(0);
+  const [_originalPaidNow, setOriginalPaidNow] = useState<number>(0);
   const [editingClinicalNotes, setEditingClinicalNotes] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -476,9 +482,7 @@ export function TreatmentSessionManager({
     payment_method: "CASH",
   });
 
-  const [noteListMode, setNoteListMode] = useState<"NUMBERED" | "BULLET">("NUMBERED");
-
-  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<ApiAny[]>([]);
   const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
 
   const handleNoteListModeChange = (newMode: "NUMBERED" | "BULLET") => {
@@ -489,7 +493,7 @@ export function TreatmentSessionManager({
 
       const lines = raw.split("\n");
       const updatedLines = lines.map((line, idx) => {
-        const cleanLine = line.replace(/^(\d+\.|\.|\•)\s*/, "").trim();
+        const cleanLine = line.replace(/^(\d+\.|\.|•)\s*/, "").trim();
         if (!cleanLine) return "";
         return newMode === "NUMBERED" ? `${idx + 1}. ${cleanLine}` : `. ${cleanLine}`;
       });
@@ -529,7 +533,7 @@ export function TreatmentSessionManager({
           nextPrefix = `\n${linesBefore.length + 1}. `;
         }
       } else {
-        const match = currentLine.match(/^(\.|\•)\s*(.*)/);
+        const match = currentLine.match(/^(\.|•)\s*(.*)/);
         if (match) {
           const text = match[2].trim();
           if (!text) {
@@ -668,7 +672,7 @@ export function TreatmentSessionManager({
     try {
       await sendPrescription.mutateAsync({ id: treatmentId, sessionId: completingId });
       showToast("Prescription sent to patient via WhatsApp!");
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to send prescription"), "error");
     }
   };
@@ -713,12 +717,15 @@ export function TreatmentSessionManager({
         }
       }
     }
+  // the two handlers are rebuilt every render and both set state, so listing
+  // them would re-trigger this one-shot deep link in a loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSessionId, sessions, completingId]);
 
   const totalSessions: number = responseData?.total ?? 0;
   const completedCount: number = responseData?.completed ?? 0;
   const totalFees: number = Number(responseData?.total_fees ?? responseData?.projected_revenue ?? 0);
-  const sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
+  const _sessionProgress = totalSessions > 0 ? (completedCount / totalSessions) * 100 : 0;
 
   const estCost = Number(treatmentPlan?.est_cost) || 0;
   const discountVal = Number(treatmentPlan?.discount_value) || 0;
@@ -784,8 +791,8 @@ export function TreatmentSessionManager({
 
   const getSessionDate = (session: TreatmentSessionResponse) =>
     session.visit_date ||
-    (session as any).scheduledDate ||
-    (session as any).suggestedDate;
+    (session as ApiAny).scheduledDate ||
+    (session as ApiAny).suggestedDate;
 
   const formatTime = (t?: string) => {
     if (!t) return "N/A";
@@ -806,8 +813,8 @@ export function TreatmentSessionManager({
       session.appointment?.start_time ||
       session.appointment?.time ||
       session.start_time ||
-      (session as any).startTime ||
-      (session as any).time;
+      (session as ApiAny).startTime ||
+      (session as ApiAny).time;
 
     if (explicitTime) return explicitTime;
 
@@ -817,7 +824,8 @@ export function TreatmentSessionManager({
   const toggleExpand = (id: string) =>
     setExpandedSessions(prev => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
 
@@ -859,7 +867,7 @@ export function TreatmentSessionManager({
       setShowNewSession(false);
       setNewSession({ date: "", time: "09:00 AM", duration: 45, cost: 0, clinical_objectives: "" });
       refetch();
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
@@ -876,12 +884,12 @@ export function TreatmentSessionManager({
         : null;
 
       const fallbackFee = lastCompleted ? (Number(lastCompleted.session_fee) || 0) : 0;
-      const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
-      const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
+      const fallbackDiscount = lastCompleted ? (Number((lastCompleted as ApiAny).discount_percentage || (lastCompleted as ApiAny).discount) || 0) : 0;
+      const _fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
-      const currentFee = estCost || Number(session.session_fee || (session as any).cost) || fallbackFee || 0;
+      const currentFee = estCost || Number(session.session_fee || (session as ApiAny).cost) || fallbackFee || 0;
       const currentDiscount = discountVal || fallbackDiscount || 0;
-      const currentPaid = paidAmt || Number(session.paid_amount || (session as any).paidAmount) || 0;
+      const currentPaid = paidAmt || Number(session.paid_amount || (session as ApiAny).paidAmount) || 0;
 
       setCompleteForm({
         work_done: "",
@@ -925,7 +933,7 @@ export function TreatmentSessionManager({
       }
       showToast(`Session updated to ${STATUS_CONFIG[newStatus]?.label}`);
       refetch();
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
@@ -951,7 +959,7 @@ export function TreatmentSessionManager({
       showToast("Session scheduled successfully!");
       cancelSchedulingSession();
       refetch();
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to schedule session"), "error");
     }
   };
@@ -989,7 +997,7 @@ export function TreatmentSessionManager({
         freshSession.discount ||
         freshSession.discountPercentage ||
         session.discount_percentage ||
-        (session as any).discount ||
+        (session as ApiAny).discount ||
         discountVal ||
         0
       );
@@ -997,7 +1005,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: freshSession.work_done || "",
         session_findings: freshSession.session_findings || "",
-        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as any).additional_notes || "",
+        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as ApiAny).additional_notes || "",
         next_session_plan: freshSession.next_session_plan || "",
         session_fee: sessionFee,
         discount_value: sessionDiscount,
@@ -1013,7 +1021,7 @@ export function TreatmentSessionManager({
       const rawRx = freshSession.treatmentPrescriptions || freshSession.prescriptions || session.treatmentPrescriptions || session.prescriptions;
       if (Array.isArray(rawRx)) {
         setPrescriptions(
-          rawRx.map((p: any) => ({
+          rawRx.map((p: ApiAny) => ({
             id: p.id,
             medicine: p.medicine_id || p.medicine?.id || "",
             medicineName: p.medicine_name || p.medicine?.name || "",
@@ -1034,7 +1042,7 @@ export function TreatmentSessionManager({
       } else {
         setSessionAttachments([]);
       }
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to load session details"), "error");
       setCompletingId(null);
       setIsEditingCompleted(false);
@@ -1062,8 +1070,8 @@ export function TreatmentSessionManager({
     }
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const formattedPrescriptions = prescriptions
-      .filter((p: any) => p.medicine?.trim())
-      .map((p: any) => ({
+      .filter((p: ApiAny) => p.medicine?.trim())
+      .map((p: ApiAny) => ({
         medicine_id: p.medicine,
         dosage: p.dosage,
         timing: p.timing,
@@ -1072,7 +1080,7 @@ export function TreatmentSessionManager({
         duration_type: p.durationUnit?.toUpperCase() || "DAYS",
         qty: parseInt(p.qty) || 0,
       }))
-      .filter((p: any) => {
+      .filter((p: ApiAny) => {
         if (!UUID_REGEX.test(p.medicine_id)) {
           console.warn("Skipping prescription — medicine_id is not a UUID:", p.medicine_id);
           showToast(`Medicine "${p.medicine_id}" was not found in the system. Please re-select it.`, "error");
@@ -1099,7 +1107,7 @@ export function TreatmentSessionManager({
         });
         showToast("Session updated successfully!");
       } else {
-        let nextSessionPayload: any = {};
+        let nextSessionPayload: ApiAny = {};
         if (scheduleNext && nextSessionDraft.date) {
           nextSessionPayload = {
             schedule_next_session: true,
@@ -1145,7 +1153,7 @@ export function TreatmentSessionManager({
         if (sendPrescriptionOnComplete && formattedPrescriptions.length > 0) {
           try {
             await sendPrescription.mutateAsync({ id: treatmentId, sessionId });
-          } catch (err: any) {
+          } catch (err: ApiAny) {
             showToast(extractApiError(err, "Session completed, but sending the prescription failed. You can resend it from the session view."), "error");
           }
         }
@@ -1173,7 +1181,7 @@ export function TreatmentSessionManager({
       if (initialSessionId) {
         onClose();
       }
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, isEditingCompleted ? "Failed to update session" : "Failed to complete session"), "error");
     }
   };
@@ -1193,7 +1201,7 @@ export function TreatmentSessionManager({
       showToast("Clinical objectives updated!");
       setEditingClinicalNotes(null);
       refetch();
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to update"), "error");
     }
   };
@@ -1208,7 +1216,7 @@ export function TreatmentSessionManager({
     const isExpanded = expandedSessions.has(session.id);
     const isEditing = editingClinicalNotes === session.id;
     const isScheduling = schedulingSessionId === session.id;
-    const appointmentTime = formatTime(getSessionTime(session));
+    const _appointmentTime = formatTime(getSessionTime(session));
 
     // Prescriptions already merged in sessions useMemo
     const sessionRx: PlanPrescription[] = ((session.treatmentPrescriptions || session.prescriptions) as PlanPrescription[]) ?? [];
@@ -1267,7 +1275,7 @@ export function TreatmentSessionManager({
                   <div onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={normalizedStatus}
-                      onValueChange={(val) => handleUpdateStatus(session, val as any)}
+                      onValueChange={(val) => handleUpdateStatus(session, val as ApiAny)}
                       disabled={updateSession.isPending}
                     >
                       <SelectTrigger className={`text-[10px] h-auto font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border cursor-pointer outline-none focus:ring-2 transition-all ${cfg.bgColor} ${cfg.textColor} ${cfg.borderColor}`}>
@@ -1913,10 +1921,10 @@ export function TreatmentSessionManager({
                   {sessionAttachments.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {sessionAttachments.map((file, index) => {
-                        const name = file.name || (file as any).file_name || "Attachment";
-                        const size = file.size !== undefined ? file.size : ((file as any).file_size || 0);
-                        const url = file instanceof File ? URL.createObjectURL(file) : ((file as any).file_url || "");
-                        const type = file.type || (file as any).file_type || "";
+                        const name = file.name || (file as ApiAny).file_name || "Attachment";
+                        const size = file.size !== undefined ? file.size : ((file as ApiAny).file_size || 0);
+                        const url = file instanceof File ? URL.createObjectURL(file) : ((file as ApiAny).file_url || "");
+                        const type = file.type || (file as ApiAny).file_type || "";
                         const isImage = type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(name);
 
                         return (
@@ -2350,7 +2358,7 @@ export function TreatmentSessionManager({
                 }
                 showToast(`Session updated to Cancelled`);
                 refetch();
-              } catch (err: any) {
+              } catch (err: ApiAny) {
                 showToast(extractApiError(err, "Failed to update"), "error");
               } finally {
                 setSessionToCancel(null);

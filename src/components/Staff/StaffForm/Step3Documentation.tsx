@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
@@ -6,9 +7,9 @@ import { useModal } from '@/contexts/ModalContext';
 
 interface Step3Props {
   role: string;
-  documents: any[];
+  documents: ApiAny[];
   onUpload: (docType: string, file: File) => void;
-  onRemove: (fileObj: any) => void;
+  onRemove: (fileObj: ApiAny) => void;
 }
 
 const DOC_REQUIREMENTS: Record<string, string[]> = {
@@ -88,7 +89,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
 
               {hasFiles && (
                 <div className="space-y-2 mb-3 relative z-20">
-                  {uploadedFiles.map((file: any, fIdx: number) => (
+                  {uploadedFiles.map((file: ApiAny, fIdx: number) => (
                     <div key={fIdx} className="flex items-center justify-between bg-card/60 p-2 rounded-xl border border-emerald-100 animate-in zoom-in-95 duration-300">
                       <div className="flex items-center gap-2 overflow-hidden">
                         <FileText className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />

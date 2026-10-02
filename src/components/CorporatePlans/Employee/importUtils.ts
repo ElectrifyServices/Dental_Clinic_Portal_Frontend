@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import * as XLSX from 'xlsx';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 
@@ -8,14 +9,14 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
       try {
         const wb = XLSX.read(e.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        const raw: ApiAny[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
         const errors: string[] = [];
         const rows: Partial<CorporateEmployee>[] = [];
 
         raw.forEach((r, i) => {
           const row = i + 2;
           const name = String(r['Name'] || r['name'] || '').trim();
-          const countryCode = String(r['Country Code'] || r['country_code'] || r['Code'] || '').trim() || '+91';
+          const _countryCode = String(r['Country Code'] || r['country_code'] || r['Code'] || '').trim() || '+91';
           const phone = String(r['Phone'] || r['Mobile'] || r['phone'] || '').trim();
           const email = String(r['Email'] || r['email'] || '').trim();
           const planCode = String(
@@ -50,8 +51,8 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           rows.push({
             id: `EMP-${Date.now()}-${i}`,
             employeeId: String(r['EmployeeId'] || r['EmpID'] || r['employee_id'] || r['emp_id'] || '').trim(),
-            name, country_code: countryCode, phone, email,
-            gender: (['male','female','other'].includes(String(r['Gender'] || r['gender'] || '').toLowerCase()) ? String(r['Gender'] || r['gender']).toLowerCase() : 'male') as any,
+            name, phone, email,
+            gender: (['male','female','other'].includes(String(r['Gender'] || r['gender'] || '').toLowerCase()) ? String(r['Gender'] || r['gender']).toLowerCase() : 'male') as ApiAny,
             dateOfBirth: String(r['DOB'] || r['DateOfBirth'] || r['date_of_birth'] || '').trim(),
             designation: String(r['Designation'] || r['designation'] || '').trim(),
             department: String(r['Department'] || r['department'] || '').trim(),
@@ -73,8 +74,8 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
 }
 
 export function downloadTemplate(plans?: CorporatePlan[]) {
-  const activePlanCode = plans && plans.length > 0 ? (plans[0].code || plans[0].id) : 'DENTAL-BASIC-2024';
-  const activeCompanyName = plans && plans.length > 0 ? (plans[0].companyName || 'electrify') : 'Tata Consultancy Services';
+  const _activePlanCode = plans && plans.length > 0 ? (plans[0].code || plans[0].id) : 'DENTAL-BASIC-2024';
+  const _activeCompanyName = plans && plans.length > 0 ? (plans[0].companyName || 'electrify') : 'Tata Consultancy Services';
 
   const ws = XLSX.utils.aoa_to_sheet([
     ['name', 'country_code', 'phone', 'email', 'gender', 'plan_code', 'date_of_birth'],

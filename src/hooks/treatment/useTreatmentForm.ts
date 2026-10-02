@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +8,7 @@ import type { Prescription, TreatmentSession } from "@/types/treatment.types";
 import { dosageMappings, procedures, teeth } from "@/constants/treatment.constants";
 import { getLocalDateString, addDaysToLocalDateString } from "../../utils/dateUtils";
 
-export function useTreatmentForm(treatment?: any, patients?: any[], allTreatments?: any[]) {
+export function useTreatmentForm(treatment?: ApiAny, patients?: ApiAny[], allTreatments?: ApiAny[]) {
   const normalizeSingleTooth = (raw: string) => {
     const trimmed = raw.trim();
     const exact = teeth.find((tooth) => tooth === trimmed);
@@ -27,7 +28,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     return trimmed;
   };
 
-  const normalizeToothForForm = (toothValue?: any) => {
+  const normalizeToothForForm = (toothValue?: ApiAny) => {
     if (!toothValue) return "";
     
     // If it's already an array or a comma-separated string, handle each item
@@ -72,7 +73,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     return partial || raw;
   };
 
-  const buildDefaultValues = (currentTreatment?: any) => ({
+  const buildDefaultValues = (currentTreatment?: ApiAny) => ({
     patientName: currentTreatment?.patientName ?? "",
     patientId: currentTreatment?.patientId ?? "",
     procedure: normalizeProcedureForForm(currentTreatment?.procedure),
@@ -94,7 +95,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   });
 
   const form = useForm<TreatmentFormData>({
-    resolver: zodResolver(treatmentSchema) as any,
+    resolver: zodResolver(treatmentSchema) as ApiAny,
     defaultValues: buildDefaultValues(treatment),
   });
 
@@ -146,6 +147,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         ? treatment.sessions
         : []
     );
+  // `buildDefaultValues` is rebuilt every render; this effect must only reset
+  // the form when a different treatment is loaded
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treatment, form]);
 
 
@@ -155,6 +159,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         handleProcedureChange(watchedProcedure);
       }
     }
+  // runs only when the procedure changes - the missing values are written by
+  // this effect, so depending on them would loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedProcedure]);
 
 
@@ -162,6 +169,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     if (treatmentSessions.length > 0 && watchedDate && treatmentSessions[0]?.suggestedDate !== watchedDate) {
       updateAllSessionDates(watchedDate);
     }
+  // runs only when the date changes - `updateAllSessionDates` rewrites the
+  // sessions this would depend on, so listing them would loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedDate]);
 
   const watchedCost = form.watch("cost");
@@ -187,6 +197,9 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
         }
       }
     }
+  // the session count is the trigger; the full array is rewritten inside, so
+  // depending on it would loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedCost, treatmentSessions.length]);
 
   const updateAllSessionDates = (baseDate: string) => {
@@ -211,7 +224,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
   const pendingPlans = useMemo(() => {
     if (!formData.patientName || !allTreatments || treatment) return [];
     return allTreatments.filter(
-      (t: any) =>
+      (t: ApiAny) =>
         t.patientName === formData.patientName && t.status === "planned",
     );
   }, [formData.patientName, allTreatments, treatment]);
@@ -286,7 +299,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     };
   };
 
-  const handleLoadPlan = (plan: any) => {
+  const handleLoadPlan = (plan: ApiAny) => {
     form.setValue("procedure", plan.procedure);
     form.setValue("tooth", plan.tooth);
     form.setValue("cost", plan.cost);
@@ -390,7 +403,7 @@ export function useTreatmentForm(treatment?: any, patients?: any[], allTreatment
     }
   };
 
-  const handleSubmit = (onSave: (treatment: any) => void) => {
+  const handleSubmit = (onSave: (treatment: ApiAny) => void) => {
     return (data: TreatmentFormData) => {
       const submitData = {
         ...data,

@@ -1,10 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  ReactNode,
-  useEffect,
-} from "react";
+import type { ApiAny } from "../types/api";
+import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { User } from "../types";
 import { useLoginMutation } from "../hooks/auth/useLoginMutation";
 import { useLogoutMutation } from "../hooks/auth/useLogoutMutation";
@@ -38,7 +33,7 @@ function initAuth(initial: AuthState): AuthState {
   const token = AuthStorage.getAccessToken();
   if (savedUser && token) {
     if (typeof savedUser.role === 'object' && savedUser.role !== null) {
-      savedUser.role = (savedUser.role as any).name.toLowerCase().replace('_', '');
+      savedUser.role = (savedUser.role as ApiAny).name.toLowerCase().replace('_', '');
     }
     return { ...initial, user: savedUser, isAuthenticated: true };
   }
@@ -112,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await loginMutation.mutateAsync({ email, password });
 
       // Support wrapping in response.data or flat response
-      const apiData = response && "data" in response ? (response as any).data : response;
+      const apiData = response && "data" in response ? (response as ApiAny).data : response;
 
       const user_info = apiData?.user_info;
       const tokens = apiData?.tokens;
@@ -193,13 +188,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 2. Fallback to old tenant-nested structure if not populated
       if (!apiTheme || !apiBranding) {
-        const tenant = apiData?.tenant || (response as any)?.tenant || (response as any)?.data?.tenant || (apiData as any)?.data?.tenant;
+        const tenant = apiData?.tenant || (response as ApiAny)?.tenant || (response as ApiAny)?.data?.tenant || (apiData as ApiAny)?.data?.tenant;
         if (tenant) {
           let config = tenant.config;
           if (typeof config === "string") {
             try {
               config = JSON.parse(config);
-            } catch (e) {
+            } catch (_e) {
               config = null;
             }
           }
@@ -233,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: "LOGIN_SUCCESS", payload: normalizedUserInfo });
       toast.success("Welcome back! Logged in successfully.");
-    } catch (error: any) {
+    } catch (error: ApiAny) {
       // The API returns error messages inside responseStatusList.statusList[0].statusDesc
       const apiStatusDesc =
         error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc;
@@ -252,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await logoutMutation.mutateAsync({});
-    } catch (error) {
+    } catch (_error) { /* logout API failed; `finally` clears local auth either way */
     } finally {
       AuthStorage.clear();
       clearTheme();

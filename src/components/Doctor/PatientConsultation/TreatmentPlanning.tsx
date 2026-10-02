@@ -1,9 +1,10 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React from "react";
 import { Stethoscope } from "lucide-react";
-import { SearchableSelect, DataTable, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
+import { SearchableSelect, DataTable } from "@/components/ui";
 import { useProcedureQuery } from "@/hooks/procedures/useProcedureQuery";
 import { useCreateProcedureMutation } from "@/hooks/procedures/useCreateProcedureMutation";
 import { useUpdateProcedureMutation } from "@/hooks/procedures/useUpdateProcedureMutation";
@@ -40,7 +41,7 @@ interface TreatmentPlanningProps {
   treatmentPlanText: string;
   treatmentCost: number | string;
   onRequiresTreatmentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onUpdatePlan: (index: number, field: keyof TreatmentPlan, value: any) => void;
+  onUpdatePlan: (index: number, field: keyof TreatmentPlan, value: ApiAny) => void;
   onTreatmentPlanTextChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onTreatmentCostChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTreatmentCostFocus: () => void;
@@ -69,7 +70,7 @@ const defaultProcedures = [
   { label: "No Treatment Required", value: "No Treatment Required" }
 ];
 
-const getRawProceduresList = (rawProceduresData: any): any[] => {
+const getRawProceduresList = (rawProceduresData: ApiAny): ApiAny[] => {
   if (!rawProceduresData) return [];
   const target = rawProceduresData.responseObject !== undefined ? rawProceduresData.responseObject : rawProceduresData;
   if (Array.isArray(target)) {
@@ -94,13 +95,13 @@ export function TreatmentPlanning({
   requiresTreatment,
   treatmentPlans,
   treatmentPlanText,
-  treatmentCost,
+  treatmentCost: _treatmentCost,
   onRequiresTreatmentChange,
   onUpdatePlan,
   onTreatmentPlanTextChange,
-  onTreatmentCostChange,
-  onTreatmentCostFocus,
-  onTreatmentCostBlur,
+  onTreatmentCostChange: _onTreatmentCostChange,
+  onTreatmentCostFocus: _onTreatmentCostFocus,
+  onTreatmentCostBlur: _onTreatmentCostBlur,
   followUpRequired,
   onFollowUpRequiredChange,
   onAddPlan,
@@ -121,7 +122,7 @@ export function TreatmentPlanning({
     try {
       const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
       return created?.name || newProcedureName;
-    } catch (error) {
+    } catch (_error) {
       // handled in hook
     }
   };
@@ -129,11 +130,11 @@ export function TreatmentPlanning({
   const handleUpdateProcedure = async (oldName: string, newName: string) => {
     try {
       const rawList = getRawProceduresList(rawProceduresData);
-      const matched = rawList.find((p: any) => p.name === oldName);
+      const matched = rawList.find((p: ApiAny) => p.name === oldName);
       if (matched?.id) {
         await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
       }
-    } catch (error) {
+    } catch (_error) {
       // handled in hook
     }
   };
@@ -145,11 +146,11 @@ export function TreatmentPlanning({
       async () => {
         try {
           const rawList = getRawProceduresList(rawProceduresData);
-          const matched = rawList.find((p: any) => p.name === name);
+          const matched = rawList.find((p: ApiAny) => p.name === name);
           if (matched?.id) {
             await deleteProcedureMutation.mutateAsync({ id: matched.id });
           }
-        } catch (error) {
+        } catch (_error) {
           // handled in hook
         }
       }
@@ -165,12 +166,12 @@ export function TreatmentPlanning({
     }
 
     const rawList = getRawProceduresList(rawProceduresData);
-    const filtered = rawList.filter((p: any) => p.status === "ACTIVE" && !p.deleted_at);
+    const filtered = rawList.filter((p: ApiAny) => p.status === "ACTIVE" && !p.deleted_at);
     if (filtered.length === 0) {
       return [{ label: "No procedures found", value: "", disabled: true }];
     }
 
-    return filtered.map((p: any) => ({
+    return filtered.map((p: ApiAny) => ({
       label: p.name,
       value: p.name,
       is_free: p.is_free || p.isFree || false,
@@ -336,7 +337,7 @@ export function TreatmentPlanning({
               }}
               onInput={(e: React.FormEvent<HTMLInputElement>) => {
                 const target = e.currentTarget;
-                let val = parseInt(target.value) || 0;
+                const val = parseInt(target.value) || 0;
                 if (val > 100) {
                   target.value = "100";
                 } else if (val < 0) {
@@ -368,7 +369,7 @@ export function TreatmentPlanning({
             (min: {uniqueMins.join(', ')})
           </span>
         </span>
-      ) : "Sessions") as any,
+      ) : "Sessions") as ApiAny,
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
       render: (plan: TreatmentPlan, index: number) => {
         const originalMin = isEditMode && originalSessionsMap && plan.id ? (originalSessionsMap[plan.id] || 1) : 1;
@@ -415,7 +416,7 @@ export function TreatmentPlanning({
       key: "actions",
       header: "",
       className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider w-10",
-      render: (_: any, index: number) => (
+      render: (_: ApiAny, index: number) => (
         <button
           type="button"
           onClick={() => onRemovePlan?.(index)}

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateInventoryItemPayload } from "./useCreateInventoryItemMutation";
@@ -9,7 +10,7 @@ export interface UpdateInventoryItemPayload extends CreateInventoryItemPayload {
 export function useUpdateInventoryItemMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, UpdateInventoryItemPayload>({
+  return useApiMutation<ApiAny, UpdateInventoryItemPayload>({
     getEndpoint: (variables) => `/inventory/${variables.id}`,
     method: "patch",
     options: {

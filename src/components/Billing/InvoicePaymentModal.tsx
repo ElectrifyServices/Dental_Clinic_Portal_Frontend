@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { useState } from "react";
 import { CreditCard, Banknote, Landmark, CheckCircle2, ChevronRight } from "lucide-react";
@@ -5,7 +6,7 @@ import { Modal, Button, Loading, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface InvoicePaymentModalProps {
-  invoice: any;
+  invoice: ApiAny;
   onClose: () => void;
   onConfirmPayment: (invoiceId: string, method: string, amount: number) => void;
   isProcessing?: boolean;

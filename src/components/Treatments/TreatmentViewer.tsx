@@ -1,24 +1,5 @@
-import {
-  MessageSquareText,
-  Download,
-  Stethoscope,
-  User,
-  Calendar,
-  FileText,
-  Camera,
-  Pill,
-  IndianRupee,
-  Clock,
-  Activity,
-  CheckCircle2,
-  Clock as ClockIcon,
-  CalendarDays,
-  Edit2,
-  ExternalLink,
-  Paperclip,
-  ShieldCheck,
-  Percent,
-} from "lucide-react";
+import type { ApiAny } from "../../types/api";
+import { MessageSquareText, Stethoscope, User, Calendar, FileText, Pill, IndianRupee, Clock, Activity, CheckCircle2, Clock as ClockIcon, CalendarDays, Edit2, ExternalLink, Paperclip, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
@@ -36,9 +17,9 @@ interface TreatmentViewerProps {
 export function TreatmentViewer({
   treatmentId,
   onClose,
-  onEditTreatment,
-  onMarkCompleted,
-  onStartTreatment,
+  onEditTreatment: _onEditTreatment,
+  onMarkCompleted: _onMarkCompleted,
+  onStartTreatment: _onStartTreatment,
   onManageSessions,
 }: TreatmentViewerProps) {
   const [showConsultationFeedback, setShowConsultationFeedback] = useState(false);
@@ -86,7 +67,7 @@ export function TreatmentViewer({
   }
 
   if (!treatment) return null;
-  const handleDownload = () => {
+  const _handleDownload = () => {
     const printContent = `
       <html>
         <head>
@@ -148,7 +129,7 @@ export function TreatmentViewer({
             <h3>Treatment Sessions</h3>
             ${treatment.sessions
           .map(
-            (session: any) => `
+            (session: ApiAny) => `
               <div class="session-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                   <h4 style="margin: 0;">Session ${session.visit_number}</h4>
@@ -183,7 +164,7 @@ export function TreatmentViewer({
             <div class="prescription-grid">
               ${(treatment.prescriptions || [])
         .map(
-          (p: any) => {
+          (p: ApiAny) => {
             const printMedName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
             return `
                 <div class="med-card">
@@ -217,7 +198,7 @@ export function TreatmentViewer({
   };
 
   const getSessionStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
+    const variants: Record<string, ApiAny> = {
       SCHEDULED: "amber",
       IN_PROGRESS: "blue",
       COMPLETED: "green",
@@ -252,12 +233,12 @@ export function TreatmentViewer({
       : treatment.status === "IN_PROGRESS"
         ? "blue"
         : "amber"
-  ) as any;
+  ) as ApiAny;
 
   // Calculate session progress
   const totalSessions = treatment.sessions?.length || 0;
   const completedSessions =
-    treatment.sessions?.filter((s: any) => s.status === "COMPLETED").length || 0;
+    treatment.sessions?.filter((s: ApiAny) => s.status === "COMPLETED").length || 0;
   const sessionProgress =
     totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
 
@@ -338,7 +319,7 @@ export function TreatmentViewer({
                   Doctor
                 </span>
                 <span className="text-sm font-black text-foreground">
-                  {treatment.doctor?.name || treatment.doctor?.staff?.name || treatment.doctorName || (treatment.doctor as any)?.personal_profile?.staff?.name || "—"}
+                  {treatment.doctor?.name || treatment.doctor?.staff?.name || treatment.doctorName || (treatment.doctor as ApiAny)?.personal_profile?.staff?.name || "—"}
                 </span>
               </div>
             </div>
@@ -508,7 +489,7 @@ export function TreatmentViewer({
               <div>
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Benefit Summary</p>
                 <div className="space-y-2">
-                  {(treatment.membership_benefits.benefits || []).map((benefit: any, idx: number) => {
+                  {(treatment.membership_benefits.benefits || []).map((benefit: ApiAny, idx: number) => {
                     const isFlatDiscount = benefit.type === "FLAT_DISCOUNT";
                     return (
                       <div key={idx} className="flex items-start justify-between p-2.5 bg-card rounded-xl border border-indigo-50/80 text-xs">
@@ -569,10 +550,10 @@ export function TreatmentViewer({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {treatment.sessions
                 .sort(
-                  (a: any, b: any) =>
+                  (a: ApiAny, b: ApiAny) =>
                     (a.visit_number || 0) - (b.visit_number || 0)
                 )
-                .map((session: any) => (
+                .map((session: ApiAny) => (
                   <ContentCard
                     key={session.id}
                     className={`border-l-4 hover:shadow-md transition-all ${session.status === "COMPLETED"
@@ -712,7 +693,7 @@ export function TreatmentViewer({
                                   Attachments
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {session.attachments.map((attachment: any) => {
+                                  {session.attachments.map((attachment: ApiAny) => {
                                     const fileSize = formatFileSize(Number(attachment.file_size));
                                     const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
                                       .filter(Boolean)
@@ -783,7 +764,7 @@ export function TreatmentViewer({
               <Pill className="w-4 h-4 text-emerald-500" /> Prescribed Medications
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {treatment.prescriptions.map((p: any) => {
+              {treatment.prescriptions.map((p: ApiAny) => {
                 const medName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
                 const dosageText = p.dosage ? `Dosage: ${p.dosage}` : undefined;
                 return (

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +9,7 @@ export interface DeleteInventoryCategoryPayload {
 export function useDeleteInventoryCategoryMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, DeleteInventoryCategoryPayload>({
+  return useApiMutation<ApiAny, DeleteInventoryCategoryPayload>({
     getEndpoint: (data) => `/inventory/categories/${data.id}`,
     method: "delete",
     options: {

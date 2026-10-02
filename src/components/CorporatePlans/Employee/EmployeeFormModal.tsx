@@ -1,36 +1,8 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from "react";
-import {
-  User,
-  CheckCircle,
-  Users,
-  Plus,
-  Trash2,
-  UserPlus,
-  Edit,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import {
-  Modal,
-  Button,
-  SectionRenderer,
-  Label,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Card,
-  ContentCard,
-  Loading,
-} from "../../ui";
-import {
-  CorporateEmployee,
-  CorporatePlan,
-  PlanDependent,
-  CoverageType,
-} from "../../../types";
+import { User, CheckCircle, Trash2 } from "lucide-react";
+import { Modal, Button, SectionRenderer, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ContentCard, Loading } from "../../ui";
+import { CorporateEmployee, CorporatePlan, CoverageType } from "../../../types";
 import { useFormConfig } from "../../../hooks/useFormConfig";
 import { useCreateEmployeeMutation } from "../../../hooks/corporate/useCreateEmployeeMutation";
 import { useUpdateEmployeeMutation } from "../../../hooks/corporate/useUpdateEmployeeMutation";
@@ -116,7 +88,7 @@ export function EmployeeFormModal({
     Record<string, boolean>
   >({});
   // Family members from API response — populated when editing
-  const [apiDependents, setApiDependents] = useState<any[]>([]);
+  const [apiDependents, setApiDependents] = useState<ApiAny[]>([]);
 
   const [formCountryCode, setFormCountryCode] = useState("+91");
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
@@ -147,14 +119,14 @@ export function EmployeeFormModal({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as any },
+    filters: { isDropdown: [true] as ApiAny },
   }, {
     enabled: !!debouncedSearch.trim(),
     staleTime: 0,
     refetchOnMount: "always",
   });
 
-  const extractPatients = (data: any): any[] => {
+  const extractPatients = (data: ApiAny): ApiAny[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
     const target = data.responseObject !== undefined ? data.responseObject : data;
@@ -171,7 +143,7 @@ export function EmployeeFormModal({
 
   const apiPatients = React.useMemo(() => {
     const rawList = extractPatients(rawPatientsData);
-    return rawList.map((p: any) => ({
+    return rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -189,7 +161,7 @@ export function EmployeeFormModal({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectPatient = (p: any) => {
+  const handleSelectPatient = (p: ApiAny) => {
     const pName = p.name || p.full_name || p.patient_name || "";
     const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
 
@@ -233,7 +205,7 @@ export function EmployeeFormModal({
   const renderPatientDropdown = () => {
     if (!focusedField) return null;
 
-    const searchTerm = focusedField === "name"
+    const _searchTerm = focusedField === "name"
       ? (form.name || "").toLowerCase().trim()
       : (form.phone || "").toLowerCase().trim();
 
@@ -260,7 +232,7 @@ export function EmployeeFormModal({
           </div>
         ) : filteredPatients.length > 0 ? (
           <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
-            {filteredPatients.map((p: any, idx: number) => {
+            {filteredPatients.map((p: ApiAny, idx: number) => {
               const pCode = p.country_code || p.countryCode || "+91";
               return (
                 <li
@@ -300,7 +272,7 @@ export function EmployeeFormModal({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }, []);
 
-  const isDateInPast = React.useMemo(() => {
+  const _isDateInPast = React.useMemo(() => {
     if (!form.eligible_date) return false;
     return form.eligible_date < todayStr;
   }, [form.eligible_date, todayStr]);
@@ -309,7 +281,7 @@ export function EmployeeFormModal({
   const createEmployeeMutation = useCreateEmployeeMutation();
   const updateEmployeeMutation = useUpdateEmployeeMutation();
   const addDependentMutation = useAddDependentMutation();
-  const removeDependentMutation = useRemoveDependentMutation();
+  const _removeDependentMutation = useRemoveDependentMutation();
   const updateDependentMutation = useUpdateDependentMutation();
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
 
@@ -329,8 +301,8 @@ export function EmployeeFormModal({
   );
 
   const maxDependents = selectedPlan
-    ? Number((selectedPlan as any).family_coverage_limit) ||
-    Number((selectedPlan as any).familyCoverageLimit) ||
+    ? Number((selectedPlan as ApiAny).family_coverage_limit) ||
+    Number((selectedPlan as ApiAny).familyCoverageLimit) ||
     Number(selectedPlan.limit) ||
     Number(selectedPlan.maxDependents) ||
     0
@@ -341,10 +313,10 @@ export function EmployeeFormModal({
     const localDeps = existingDependents || [];
     if (!apiDependents.length) return localDeps;
     // Prefer API data; supplement with any local-only entries not yet in API
-    const apiIds = new Set(apiDependents.map((d: any) => d.id));
+    const apiIds = new Set(apiDependents.map((d: ApiAny) => d.id));
     const localOnly = localDeps.filter((d) => !apiIds.has(d.id));
     return [
-      ...apiDependents.map((d: any) => {
+      ...apiDependents.map((d: ApiAny) => {
         let depPhone = d.phone || "";
         let depCountryCode = "+91";
         if (depPhone.startsWith("+")) {
@@ -375,8 +347,8 @@ export function EmployeeFormModal({
   const totalDependents =
     (mergedDependents?.length ?? 0) + pendingDependents.length;
 
-  const empCfgAny = empCfg as any;
-  const personalSection = React.useMemo(() => {
+  const empCfgAny = empCfg as ApiAny;
+  const _personalSection = React.useMemo(() => {
     const sec = empCfg.sections?.find((s) => s.id === "personal");
     if (!sec) return undefined;
     return {
@@ -387,7 +359,7 @@ export function EmployeeFormModal({
       ),
     };
   }, [empCfg]);
-  const employmentSection = empCfg.sections?.find((s) => s.id === "employment");
+  const _employmentSection = empCfg.sections?.find((s) => s.id === "employment");
   const eligibilitySection = empCfg.sections?.find(
     (s) => s.id === "eligibility",
   );
@@ -406,15 +378,15 @@ export function EmployeeFormModal({
             raw;
 
           const activeEnrollment =
-            empData.enrollments?.find((en: any) => en.status === "ACTIVE") ||
+            empData.enrollments?.find((en: ApiAny) => en.status === "ACTIVE") ||
             empData.enrollments?.[0];
           const planId = activeEnrollment?.plan_id || editEmp.corporatePlanId || "";
           const plan = activePlans.find((p) => p.id === planId);
           const expiryDate = activeEnrollment?.expiry_date || "";
 
           let rawPhone = empData.phone || editEmp.phone || "";
-          let parsedCountryCode = empData.country_code || (editEmp as any)?.country_code || "+91";
-          if (!empData.country_code && !(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
+          let parsedCountryCode = empData.country_code || (editEmp as ApiAny)?.country_code || "+91";
+          if (!empData.country_code && !(editEmp as ApiAny)?.country_code && rawPhone.startsWith("+")) {
             const codes = ["+91", "+1", "+44", "+971"];
             for (const c of codes) {
               if (rawPhone.startsWith(c)) {
@@ -472,8 +444,8 @@ export function EmployeeFormModal({
         } else {
           // Fallback: use the editEmp object directly while API loads
           let rawPhone = editEmp.phone || "";
-          let parsedCountryCode = (editEmp as any)?.country_code || "+91";
-          if (!(editEmp as any)?.country_code && rawPhone.startsWith("+")) {
+          let parsedCountryCode = (editEmp as ApiAny)?.country_code || "+91";
+          if (!(editEmp as ApiAny)?.country_code && rawPhone.startsWith("+")) {
             const codes = ["+91", "+1", "+44", "+971"];
             for (const c of codes) {
               if (rawPhone.startsWith(c)) {
@@ -533,7 +505,7 @@ export function EmployeeFormModal({
   }, [maxDependents, showForm, mergedDependents?.length]);
 
 
-  const handleFormChange = (name: string, value: any) => {
+  const handleFormChange = (name: string, value: ApiAny) => {
     if (name === "name") {
       value = typeof value === 'string' ? value.replace(/[^a-zA-Z\s]/g, "") : value;
       value = typeof value === 'string' ? value.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase()) : value;
@@ -550,11 +522,11 @@ export function EmployeeFormModal({
           plan.family_coverage_limit || plan.familyCoverageLimit || plan.limit;
         const benefitsSummary =
           plan.benefits
-            ?.map((b: any) => b.description || b.benifit_label)
+            ?.map((b: ApiAny) => b.description || b.benifit_label)
             .join(", ") || "No specific benefits listed";
-        const benefitsArray = plan.benefits?.map((b: any) => b.description || b.benifit_label).filter(Boolean) || [];
+        const benefitsArray = plan.benefits?.map((b: ApiAny) => b.description || b.benifit_label).filter(Boolean) || [];
         const planType =
-          (plan as any).plan_type || plan.planCategory || "Unknown";
+          (plan as ApiAny).plan_type || plan.planCategory || "Unknown";
         return {
           label: plan.name,
           value: plan.id,
@@ -589,7 +561,7 @@ export function EmployeeFormModal({
     return !Object.keys(errs).length;
   };
 
-  const handleEditDependent = (dep: any, isExisting: boolean) => {
+  const _handleEditDependent = (dep: ApiAny, isExisting: boolean) => {
     setEditingDepId(isExisting ? dep.id : dep.tempId);
     setAddDepForm({
       tempId: isExisting ? dep.id : dep.tempId,
@@ -636,11 +608,11 @@ export function EmployeeFormModal({
     if (!validateForm()) return;
     const plan = activePlans.find((p) => p.id === form.corporatePlanId);
     const companyNameVal = plan?.companyName || "Individual";
-    const coverageTypeVal = form.coverageType === "family" ? "FAMILY" : "SELF";
+    const _coverageTypeVal = form.coverageType === "family" ? "FAMILY" : "SELF";
 
     if (!editEmp) {
       try {
-        const transformedBody: any = {
+        const transformedBody: ApiAny = {
           plan_id: form.corporatePlanId!,
           name: form.name!,
           phone: form.phone!,
@@ -687,7 +659,7 @@ export function EmployeeFormModal({
           isActive: form.isActive !== false,
           patientId: form.patientId || undefined,
           coverageType: form.coverageType || "self",
-        } as any;
+        } as ApiAny;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -706,7 +678,7 @@ export function EmployeeFormModal({
           origin: { x: 0.9, y: 0.6 },
           angle: 120,
         });
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         const apiError =
           err?.response?.data?.responseStatusList?.statusList?.[0]
             ?.statusDesc ||
@@ -720,7 +692,7 @@ export function EmployeeFormModal({
       }
     } else {
       try {
-        const transformedBody: any = {
+        const transformedBody: ApiAny = {
           id: editEmp.id,
           plan_id: form.corporatePlanId!,
           name: form.name!,
@@ -766,7 +738,7 @@ export function EmployeeFormModal({
           isActive: form.isActive !== false,
           patientId: form.patientId || editEmp?.patientId || undefined,
           coverageType: form.coverageType || "self",
-        } as any;
+        } as ApiAny;
         onSave(emp);
         queryClient.invalidateQueries({ queryKey: ["corporatePlans"] });
         queryClient.invalidateQueries({ queryKey: ["member"] });
@@ -785,7 +757,7 @@ export function EmployeeFormModal({
           origin: { x: 0.9, y: 0.6 },
           angle: 120,
         });
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         const apiError =
           err?.response?.data?.responseStatusList?.statusList?.[0]
             ?.statusDesc ||
@@ -944,8 +916,8 @@ export function EmployeeFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
                   {planOptions.map((opt) => {
                     const isSelected = form.corporatePlanId === opt.value;
-                    const isExpanded = !!expandedBenefits[opt.value];
-                    const benefits =
+                    const _isExpanded = !!expandedBenefits[opt.value];
+                    const _benefits =
                       opt.benefitsArray?.length > 0
                         ? opt.benefitsArray
                         : (opt.benefitsSummary && opt.benefitsSummary !== "No specific benefits listed"
@@ -1082,7 +1054,7 @@ export function EmployeeFormModal({
               {/* Existing (saved) dependents */}
               {mergedDependents && mergedDependents.length > 0 && (
                 <div className="space-y-2">
-                  {mergedDependents.map((dep: any) => (
+                  {mergedDependents.map((dep: ApiAny) => (
                     <div
                       key={dep.id}
                       className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border"

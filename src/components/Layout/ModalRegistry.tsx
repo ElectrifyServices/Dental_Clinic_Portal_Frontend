@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";
 import { useAppData } from "../../hooks/useAppData";
@@ -60,13 +61,13 @@ import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQue
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 
 function ModalRegistryContent() {
-  const normalizeConsultationResult = (payload: any) =>
+  const normalizeConsultationResult = (payload: ApiAny) =>
     payload?.data?.data ||
     payload?.data ||
     payload?.responseObject?.data?.data ||
     payload?.responseObject?.data ||
     payload;
-  const findConsultationId = (payload: any, depth = 0): string | undefined => {
+  const findConsultationId = (payload: ApiAny, depth = 0): string | undefined => {
     if (!payload || depth > 4) return undefined;
     if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
     if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
@@ -121,15 +122,15 @@ function ModalRegistryContent() {
     doctorAvailability,
     setDoctorAvailability,
     showToast,
-    confirmConfig,
-    setConfirmConfig,
+    confirmConfig: _confirmConfig,
+    setConfirmConfig: _setConfirmConfig,
     whatsappPhone,
     setWhatsappPhone,
     whatsappPatientName,
     setWhatsappPatientName,
   } = useModal();
 
-  const { data: editConsultationRaw, isLoading: isEditLoading } = useConsultationQuery(
+  const { data: editConsultationRaw, isLoading: _isEditLoading } = useConsultationQuery(
     selectedPatientForDiagnose?.consultationId,
     { enabled: !!selectedPatientForDiagnose?.isEditMode && !!selectedPatientForDiagnose?.consultationId }
   );
@@ -139,10 +140,10 @@ function ModalRegistryContent() {
     const data = editConsultationRaw.data || editConsultationRaw;
 
     // Map to toothChartState format
-    const toothChartState: any = {};
+    const toothChartState: ApiAny = {};
     const toothFindingsRaw = data.tooth_findings || data.toothFindings || [];
 
-    toothFindingsRaw.forEach((tf: any) => {
+    toothFindingsRaw.forEach((tf: ApiAny) => {
       if (!toothChartState[tf.tooth_number]) {
         toothChartState[tf.tooth_number] = [];
       }
@@ -164,7 +165,7 @@ function ModalRegistryContent() {
       }
     });
 
-    const availableConditionsByTooth: any = {};
+    const availableConditionsByTooth: ApiAny = {};
     Object.keys(toothChartState).forEach((key) => {
       availableConditionsByTooth[key] = [...toothChartState[key]];
     });
@@ -178,8 +179,8 @@ function ModalRegistryContent() {
       extract: "For Extraction",
     };
 
-    const treatments = (data.treatment_plans || data.treatments || []).map((t: any) => {
-      let toothNums: any[] = [];
+    const treatments = (data.treatment_plans || data.treatments || []).map((t: ApiAny) => {
+      let toothNums: ApiAny[] = [];
       if (Array.isArray(t.tooth_number)) {
         toothNums = t.tooth_number;
       } else if (t.tooth_number !== undefined && t.tooth_number !== null) {
@@ -213,7 +214,7 @@ function ModalRegistryContent() {
       };
     });
 
-    const prescriptions = (data.prescriptions || []).map((p: any) => {
+    const prescriptions = (data.prescriptions || []).map((p: ApiAny) => {
       let dUnit = "Days";
       if (p.duration_type) {
         dUnit = p.duration_type.charAt(0).toUpperCase() + p.duration_type.slice(1).toLowerCase();
@@ -287,8 +288,8 @@ function ModalRegistryContent() {
             qty: "",
           }
         ],
-        images: (data.attachments || data.images || data.clinical_images || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
-        xrayFiles: (data.xrayFiles || data.xray_files || []).map((a: any) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
+        images: (data.attachments || data.images || data.clinical_images || []).map((a: ApiAny) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
+        xrayFiles: (data.xrayFiles || data.xray_files || []).map((a: ApiAny) => typeof a === 'string' ? a : a.file_url).filter(Boolean),
         attachmentsList: data.attachments || [],
         removedAttachmentIds: [],
         labFiles: data.labFiles || data.lab_files || [],
@@ -313,7 +314,7 @@ function ModalRegistryContent() {
 
   const editTreatmentData = useMemo(() => {
     if (!editTreatmentRaw) return null;
-    const treatmentData = (editTreatmentRaw as any)?.data?.data || (editTreatmentRaw as any)?.data || editTreatmentRaw;
+    const treatmentData = (editTreatmentRaw as ApiAny)?.data?.data || (editTreatmentRaw as ApiAny)?.data || editTreatmentRaw;
     return treatmentData ? toUiTreatment(treatmentData) : null;
   }, [editTreatmentRaw]);
 
@@ -344,12 +345,12 @@ function ModalRegistryContent() {
     handleSaveTreatment,
     handleSaveStaff,
     handleUpdateStaffStatus,
-    handleSaveEMR,
-    handleSaveConsentForm,
+    handleSaveEMR: _handleSaveEMR,
+    handleSaveConsentForm: _handleSaveConsentForm,
     handleSaveInventoryItem,
-    handleUpdateAppointmentStatus,
+    handleUpdateAppointmentStatus: _handleUpdateAppointmentStatus,
     handleUpdateInvoiceStatus,
-    handleCompleteConsultation,
+    handleCompleteConsultation: _handleCompleteConsultation,
     handleSaveCorporatePlan,
     handleDeleteCorporatePlan,
     handleBulkSavePatients,
@@ -359,7 +360,7 @@ function ModalRegistryContent() {
 
   const matchingInvoice = useMemo(() => {
     if (!selectedItemId) return null;
-    return invoices.find((i: any) =>
+    return invoices.find((i: ApiAny) =>
       String(i.id) === String(selectedItemId) ||
       String(i.invoice_number) === String(selectedItemId) ||
       String(i.invoiceNumber) === String(selectedItemId)
@@ -404,7 +405,7 @@ function ModalRegistryContent() {
   const { mutateAsync: consumeInventoryMutation } = useConsumeInventoryItemMutation();
   const { mutateAsync: adjustInventoryMutation } = useAdjustInventoryItemMutation();
   const { mutateAsync: createConsultationMutation } = useCreateConsultationMutation();
-  const { mutateAsync: sendConsultationMutation } = useSendConsultationMutation();
+  const { mutateAsync: _sendConsultationMutation } = useSendConsultationMutation();
   const { mutateAsync: updateConsultationMutation } = useUpdateConsultationMutation();
 
   const isInventoryAction = ["inventoryForm", "restockForm", "consumeForm", "adjustForm"].includes(activeModal || "");
@@ -416,8 +417,8 @@ function ModalRegistryContent() {
 
   const mappedInventoryItem = useMemo(() => {
     if (!currentInvItemId) return null;
-    const raw: any = apiInventoryItem;
-    if (!raw) return (inventory || []).find((i: any) => i.id === currentInvItemId);
+    const raw: ApiAny = apiInventoryItem;
+    if (!raw) return (inventory || []).find((i: ApiAny) => i.id === currentInvItemId);
 
     const itemData = raw.data || raw;
     if (!itemData) return null;
@@ -469,7 +470,7 @@ function ModalRegistryContent() {
   const mappedEditForm = useMemo(() => {
     if (!apiConsentDetail) return selectedConsentForm;
     const form = apiConsentDetail?.data || apiConsentDetail;
-    const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
+    const doctorObj = staffMembers.find((s: ApiAny) => s.id === form.doctor_id);
     return {
       id: form.id,
       patientId: form.patient_id || "",
@@ -490,8 +491,8 @@ function ModalRegistryContent() {
   const mappedViewerForm = useMemo(() => {
     if (!apiConsentDetail) return selectedConsentForm;
     const form = apiConsentDetail?.data || apiConsentDetail;
-    const doctorObj = staffMembers.find((s: any) => s.id === form.doctor_id);
-    const patientObj = patients.find((p: any) => p.id === (form.patient?.id || form.patient_id));
+    const doctorObj = staffMembers.find((s: ApiAny) => s.id === form.doctor_id);
+    const patientObj = patients.find((p: ApiAny) => p.id === (form.patient?.id || form.patient_id));
     return {
       id: form.id,
       patientId: form.patient_id || "",
@@ -526,7 +527,7 @@ function ModalRegistryContent() {
           doctorAvailability={doctorAvailability}
           appointments={appointments}
           patients={patients}
-          onSave={async (apt: any) => {
+          onSave={async (apt: ApiAny) => {
             try {
               const statusMap: Record<string, string> = {
                 'scheduled': 'BOOKED',
@@ -558,7 +559,7 @@ function ModalRegistryContent() {
               if (isNew) {
                 // Only attach patient_id if it's a valid uuid (length > 20)
                 if (apt.patientId && apt.patientId.length > 20) {
-                  (payload as any).patient_id = apt.patientId;
+                  (payload as ApiAny).patient_id = apt.patientId;
                 }
 
                 const response = await createAppointmentMutation(payload);
@@ -577,7 +578,7 @@ function ModalRegistryContent() {
               setSelectedAppointment(null);
               setIsFollowUpBooking(false);
               toast.success(isNew ? "Appointment created successfully!" : "Appointment updated successfully!");
-            } catch (error: any) {
+            } catch (error: ApiAny) {
               const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                 error?.response?.data?.statusDesc ||
                 error?.response?.data?.message ||
@@ -603,10 +604,10 @@ function ModalRegistryContent() {
           corporatePlans={corporatePlans}
           patient={
             selectedPatientId
-              ? apiPatientDetail || patients.find((p: any) => p.id === selectedPatientId)
+              ? apiPatientDetail || patients.find((p: ApiAny) => p.id === selectedPatientId)
               : preFilledPatientData
           }
-          onSave={async (p: any) => {
+          onSave={async (p: ApiAny) => {
             try {
               const savedPatientResponse = await handleSavePatient(p, patientFormType, parentPatientId);
               const patientId = p.id || savedPatientResponse?.data?.id || savedPatientResponse?.id;
@@ -616,7 +617,7 @@ function ModalRegistryContent() {
               setParentPatientId("");
               setPreFilledPatientData(null);
               if (hasCheckIn && patientId) {
-                setQueuedPatients((prev: any[]) => [
+                setQueuedPatients((prev: ApiAny[]) => [
                   ...prev,
                   {
                     id: pendingCheckInAppt.id,
@@ -631,21 +632,17 @@ function ModalRegistryContent() {
                   },
                 ]);
 
-                try {
-                  await checkInAfterRegistration({
-                    id: pendingCheckInAppt.id,
-                    patient_id: patientId
-                  });
-                } catch (err) {
-                  throw err;
-                }
+                await checkInAfterRegistration({
+                  id: pendingCheckInAppt.id,
+                  patient_id: patientId
+                });
 
                 setPendingCheckInAppt(null);
                 toast.success("Patient checked-in successfully!");
               } else {
                 toast.success("Patient saved successfully!");
               }
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const apiError = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                 err?.response?.data?.message ||
                 err?.message ||
@@ -672,14 +669,14 @@ function ModalRegistryContent() {
               selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id
               ]
           }
-          onDraftUpdate={(d: any) =>
+          onDraftUpdate={(d: ApiAny) =>
             handleDraftUpdate(
               selectedPatientForDiagnose.patientId ||
               selectedPatientForDiagnose.id,
               d,
             )
           }
-          onScheduleFollowUp={(d: any) => {
+          onScheduleFollowUp={(d: ApiAny) => {
             setSelectedAppointment(d);
             setActiveModal("appointmentForm");
             setIsFollowUpBooking(true);
@@ -689,7 +686,7 @@ function ModalRegistryContent() {
             setBookedFollowUp(null);
             setSelectedPatientForDiagnose(null);
           }}
-          onCompleteConsultation={async (d: any) => {
+          onCompleteConsultation={async (d: ApiAny) => {
             try {
               let resolvedPatientId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
 
@@ -739,22 +736,22 @@ function ModalRegistryContent() {
 
               // Map treatment plans to treatments array
               const treatments = (d.treatmentPlans || [])
-                .map((tp: any) => {
+                .map((tp: ApiAny) => {
                   let toothArray: number[] = [];
                   if (Array.isArray(tp.tooth)) {
-                    toothArray = tp.tooth.map((t: any) => {
+                    toothArray = tp.tooth.map((t: ApiAny) => {
                       const str = String(t).trim();
                       if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
                       const parsed = parseInt(str);
                       return isNaN(parsed) ? null : parsed;
-                    }).filter((n: any) => n !== null) as number[];
+                    }).filter((n: ApiAny) => n !== null) as number[];
                   } else if (typeof tp.tooth === "string" && tp.tooth.trim()) {
                     toothArray = tp.tooth.split(",").map((s: string) => {
                       const str = s.trim();
                       if (str.toUpperCase() === "FM" || str.includes("Full Mouth") || str.startsWith("-1")) return -1;
                       const parsed = parseInt(str);
                       return isNaN(parsed) ? null : parsed;
-                    }).filter((n: any) => n !== null) as number[];
+                    }).filter((n: ApiAny) => n !== null) as number[];
                   } else if (typeof tp.tooth === "number") {
                     toothArray = [tp.tooth];
                   }
@@ -778,8 +775,8 @@ function ModalRegistryContent() {
 
               // Map prescriptions array
               const prescriptions = (d.prescriptions || [])
-                .filter((p: any) => p.medicine)
-                .map((p: any) => ({
+                .filter((p: ApiAny) => p.medicine)
+                .map((p: ApiAny) => ({
                   medicine_id: p.medicine,
                   // medicine_name: p.medicineName || undefined,
                   dosage: p.dosage,
@@ -808,7 +805,7 @@ function ModalRegistryContent() {
                 d.patientPhone ||
                 selectedPatientForDiagnose.phone ||
                 selectedPatientForDiagnose.patientPhone;
-              const apiPayload: any = {
+              const apiPayload: ApiAny = {
                 id: selectedPatientForDiagnose.isEditMode ? selectedPatientForDiagnose.consultationId : undefined,
                 patientId: isWalkIn ? undefined : resolvedPatientId,
                 patient_name: isWalkIn
@@ -846,7 +843,7 @@ function ModalRegistryContent() {
 
               const consultationId = selectedPatientForDiagnose.id;
               const isExistingBackendConsultation = consultationId && !String(consultationId).startsWith("WALK-");
-              let consultationResult: any;
+              let consultationResult: ApiAny;
 
               if (isExistingBackendConsultation) {
                 // Update existing consultation via PATCH
@@ -860,25 +857,25 @@ function ModalRegistryContent() {
               }
 
               const normalizedConsultation = normalizeConsultationResult(consultationResult);
-              const consultationSendId =
+              const _consultationSendId =
                 findConsultationId(normalizedConsultation) ||
                 findConsultationId(consultationResult);
 
 
 
               // Cleanup local queue and draft
-              setQueuedPatients((prev: any[]) =>
-                prev.filter((p: any) => p.id !== selectedPatientForDiagnose.id),
+              setQueuedPatients((prev: ApiAny[]) =>
+                prev.filter((p: ApiAny) => p.id !== selectedPatientForDiagnose.id),
               );
               const pId = selectedPatientForDiagnose.patientId || selectedPatientForDiagnose.id;
-              setDraftConsultations((prev: Record<string, any>) => {
+              setDraftConsultations((prev: Record<string, ApiAny>) => {
                 const n = { ...prev };
                 delete n[pId];
                 return n;
               });
               showToast("Consultation completed successfully", "success");
               return normalizedConsultation;
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const message = err?.response?.data?.message || err?.message || "Failed to complete consultation";
               showToast(message, "error");
               throw err;
@@ -891,7 +888,7 @@ function ModalRegistryContent() {
       {activeModal === "invoiceForm" && (
         <InvoiceForm
           onClose={() => setActiveModal(null)}
-          onSave={async (inv: any) => {
+          onSave={async (inv: ApiAny) => {
             try {
               const payload: CreateInvoiceVariables = {
                 due_date: inv.dueDate,
@@ -899,8 +896,7 @@ function ModalRegistryContent() {
                 complimentary_reason: inv.complimentaryNote || undefined,
                 discount: inv.discount || 0,
                 tax_percentage: inv.tax || 0,
-                phone: inv.patientPhone || inv.phone || undefined,
-                items: inv.items.map((item: any) => {
+                items: inv.items.map((item: ApiAny) => {
                   let type: "CONSULTATION" | "TREATMENT_SESSION" | "MEMBERSHIP";
                   if (item.linkedType) {
                     if (item.linkedType.toLowerCase().includes("consultation")) type = "CONSULTATION";
@@ -931,7 +927,7 @@ function ModalRegistryContent() {
               };
 
               const newPlanPurchaseItem = inv.items.find(
-                (item: any) => item.isNewPlanPurchase || (item.linkedType === "MEMBERSHIP" && String(item.id).startsWith("new-membership-"))
+                (item: ApiAny) => item.isNewPlanPurchase || (item.linkedType === "MEMBERSHIP" && String(item.id).startsWith("new-membership-"))
               );
               if (newPlanPurchaseItem) {
                 payload.plan_id = newPlanPurchaseItem.linkedId;
@@ -955,7 +951,7 @@ function ModalRegistryContent() {
               queryClient.invalidateQueries({ queryKey: ["unbilledItems"] });
               setActiveModal(null);
               showToast("Invoice created successfully!", "success");
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const message = err?.response?.data?.message || err?.message || "Failed to create invoice";
               showToast(message, "error");
             }
@@ -973,7 +969,7 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          onSave={async (t: any) => {
+          onSave={async (t: ApiAny) => {
             await handleSaveTreatment(t);
             setActiveModal(null);
             setSelectedItemId("");
@@ -1039,11 +1035,11 @@ function ModalRegistryContent() {
           corporateEmployees={corporateEmployees}
           onSavePlan={handleSaveCorporatePlan}
           onDeletePlan={handleDeleteCorporatePlan}
-          onBulkAddPatients={async (ps: any[]) => {
+          onBulkAddPatients={async (ps: ApiAny[]) => {
             try {
               await handleBulkSavePatients(ps);
               showToast(`Registered ${ps.length} employees successfully!`);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const msg = err?.response?.data?.message || err?.message || "Bulk registration failed";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
@@ -1063,14 +1059,14 @@ function ModalRegistryContent() {
             setSelectedItemId(id);
           }}
           onMarkCompleted={(id: string) => {
-            const t = treatments.find((x: any) => x.id === id);
+            const t = treatments.find((x: ApiAny) => x.id === id);
             if (t) {
               handleSaveTreatment({ ...t, status: "completed" });
               showToast("Treatment completed!");
             }
           }}
           onStartTreatment={(id: string) => {
-            const t = treatments.find((x: any) => x.id === id);
+            const t = treatments.find((x: ApiAny) => x.id === id);
             if (t) {
               handleSaveTreatment({ ...t, status: "in-progress" });
               showToast("Treatment started!");
@@ -1089,22 +1085,22 @@ function ModalRegistryContent() {
           treatmentId={selectedItemId}
           initialSessionId={selectedSessionId || undefined}
           patientName={
-            treatments.find((t: any) => t.id === selectedItemId)?.patientName ||
+            treatments.find((t: ApiAny) => t.id === selectedItemId)?.patientName ||
             ""
           }
           procedure={
-            treatments.find((t: any) => t.id === selectedItemId)?.procedure ||
+            treatments.find((t: ApiAny) => t.id === selectedItemId)?.procedure ||
             ""
           }
           doctorId={
-            treatments.find((t: any) => t.id === selectedItemId)?.doctorId ||
+            treatments.find((t: ApiAny) => t.id === selectedItemId)?.doctorId ||
             ""
           }
           sessions={
-            treatments.find((t: any) => t.id === selectedItemId)?.sessions || []
+            treatments.find((t: ApiAny) => t.id === selectedItemId)?.sessions || []
           }
-          onUpdateSessions={(us: any) => {
-            const t = treatments.find((x: any) => x.id === selectedItemId);
+          onUpdateSessions={(us: ApiAny) => {
+            const t = treatments.find((x: ApiAny) => x.id === selectedItemId);
             if (t) {
               handleSaveTreatment({ ...t, sessions: us });
               showToast("Sessions updated!");
@@ -1115,7 +1111,7 @@ function ModalRegistryContent() {
             setSelectedItemId("");
             setSelectedSessionId(null);
           }}
-          onScheduleAppointment={(sd: any) => {
+          onScheduleAppointment={(sd: ApiAny) => {
             handleSaveAppointment({
               ...sd,
               id: Date.now().toString(),
@@ -1129,12 +1125,12 @@ function ModalRegistryContent() {
       {activeModal === "emrForm" && (
         <EMRForm
           onClose={() => setActiveModal(null)}
-          onSave={async (r: any) => {
+          onSave={async (r: ApiAny) => {
             try {
               const formData = new FormData();
 
               // Find the selected patient ID from patients list
-              const selectedPatient = patients.find((p: any) => p.name === r.patientName);
+              const selectedPatient = patients.find((p: ApiAny) => p.name === r.patientName);
               const pId = selectedPatient?.id || r.patientId || "59ff70ab-0adf-443b-be94-f8defa47dfba";
               formData.append("patient_id", pId);
 
@@ -1151,7 +1147,7 @@ function ModalRegistryContent() {
               await createEMRMutation(formData);
               setActiveModal(null);
               showToast("EMR saved!");
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               showToast(err?.response?.data?.message || err?.message || "Failed to save EMR", "error");
             }
           }}
@@ -1176,7 +1172,7 @@ function ModalRegistryContent() {
           doctors={activeDoctors}
           doctorAvailability={doctorAvailability}
           onToggleDoctorAvailability={async (id: string) => {
-            const doc = staffMembers.find((s: any) => s.id === id);
+            const doc = staffMembers.find((s: ApiAny) => s.id === id);
             const currentIsActive = doc ? (doc.status === "ACTIVE" || doc.isActive) : !!doctorAvailability[id];
             const newStatus = currentIsActive ? "INACTIVE" : "ACTIVE";
             try {
@@ -1186,7 +1182,7 @@ function ModalRegistryContent() {
               }));
               await handleUpdateStaffStatus(id, newStatus);
               toast.success(`Doctor status updated to ${newStatus}`);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               setDoctorAvailability((prev: Record<string, boolean>) => ({
                 ...prev,
                 [id]: currentIsActive,
@@ -1203,7 +1199,7 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          onSave={(d: any) => {
+          onSave={(d: ApiAny) => {
             handleSaveStaff(d);
             setActiveModal(null);
             setSelectedItemId("");
@@ -1211,9 +1207,9 @@ function ModalRegistryContent() {
           }}
           doctor={
             selectedItemId
-              ? (allStaffList.find((s: any) => s.id === selectedItemId) ||
-                 activeDoctors.find((s: any) => s.id === selectedItemId) ||
-                 staffMembers.find((s: any) => s.id === selectedItemId) ||
+              ? (allStaffList.find((s: ApiAny) => s.id === selectedItemId) ||
+                 activeDoctors.find((s: ApiAny) => s.id === selectedItemId) ||
+                 staffMembers.find((s: ApiAny) => s.id === selectedItemId) ||
                  { id: selectedItemId })
               : null
           }
@@ -1224,9 +1220,9 @@ function ModalRegistryContent() {
         <DoctorScheduleManager
           doctorId={selectedItemId}
           doctorName={
-            (allStaffList.find((s: any) => s.id === selectedItemId) ||
-             activeDoctors.find((s: any) => s.id === selectedItemId) ||
-             staffMembers.find((s: any) => s.id === selectedItemId))?.name || ""
+            (allStaffList.find((s: ApiAny) => s.id === selectedItemId) ||
+             activeDoctors.find((s: ApiAny) => s.id === selectedItemId) ||
+             staffMembers.find((s: ApiAny) => s.id === selectedItemId))?.name || ""
           }
           onClose={() => {
             setActiveModal(null);
@@ -1246,15 +1242,15 @@ function ModalRegistryContent() {
           staffName={selectedStaffForSalary.name}
           pendingAmount={parseFloat(
             staffMembers
-              .find((s: any) => s.id === selectedStaffForSalary.id)
+              .find((s: ApiAny) => s.id === selectedStaffForSalary.id)
               ?.salaryPending?.toString().replace(/,/g, "") || "0"
           )}
           onClose={() => {
             setActiveModal(null);
             setSelectedStaffForSalary(null);
           }}
-          onSave={(pd: any) => {
-            const s = staffMembers.find((x: any) => x.id === pd.staffId);
+          onSave={(pd: ApiAny) => {
+            const s = staffMembers.find((x: ApiAny) => x.id === pd.staffId);
             if (s) {
               const paid = parseFloat(s.salaryPaid?.toString().replace(/,/g, "") || "0");
               const pending = parseFloat(
@@ -1304,7 +1300,7 @@ function ModalRegistryContent() {
           doctors={activeDoctors}
           form={mappedEditForm || undefined}
           isLoading={isConsentDetailLoading}
-          onSave={async (f: any) => {
+          onSave={async (f: ApiAny) => {
             try {
               const payload = new FormData();
               payload.append("doctor_id", f.doctorId || "d11a6adb-2420-4ca6-8b10-a798edbbfce9");
@@ -1366,7 +1362,7 @@ function ModalRegistryContent() {
               }
               setActiveModal(null);
               setSelectedConsentForm(null);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               showToast(err?.response?.data?.message || err?.message || "Failed to save consent form", "error");
             }
           }}
@@ -1392,9 +1388,9 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemId("");
           }}
-          onSave={async (i: any) => {
+          onSave={async (i: ApiAny) => {
             try {
-              const payload: any = {
+              const payload: ApiAny = {
                 name: i.name,
                 category_id: i.category,
                 description: i.description || "",
@@ -1420,7 +1416,7 @@ function ModalRegistryContent() {
               setActiveModal(null);
               setSelectedItemId("");
               showToast(selectedItemId ? "Item updated!" : "Item added successfully!");
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const msg = err?.response?.data?.message || err?.message || "Failed to save item";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
@@ -1435,7 +1431,7 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemForRestock(null);
           }}
-          onSave={async (ui: any) => {
+          onSave={async (ui: ApiAny) => {
             try {
               await restockInventoryMutation({
                 id: ui.id,
@@ -1447,7 +1443,7 @@ function ModalRegistryContent() {
               setActiveModal(null);
               setSelectedItemForRestock(null);
               showToast(`${ui.name || 'Item'} restocked successfully!`);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const msg = err?.response?.data?.message || err?.message || "Failed to restock item";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
@@ -1462,7 +1458,7 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemForRestock(null);
           }}
-          onSave={async (ui: any) => {
+          onSave={async (ui: ApiAny) => {
             try {
               await consumeInventoryMutation({
                 id: ui.id,
@@ -1474,7 +1470,7 @@ function ModalRegistryContent() {
               setActiveModal(null);
               setSelectedItemForRestock(null);
               showToast(`${ui.name || 'Item'} consumed successfully!`);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const msg = err?.response?.data?.message || err?.message || "Failed to consume item";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
@@ -1489,7 +1485,7 @@ function ModalRegistryContent() {
             setActiveModal(null);
             setSelectedItemForRestock(null);
           }}
-          onSave={async (ui: any) => {
+          onSave={async (ui: ApiAny) => {
             try {
               await adjustInventoryMutation({
                 id: ui.id,
@@ -1501,7 +1497,7 @@ function ModalRegistryContent() {
               setActiveModal(null);
               setSelectedItemForRestock(null);
               showToast(`${ui.name || 'Item'} adjusted successfully!`);
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               const msg = err?.response?.data?.message || err?.message || "Failed to adjust item";
               showToast(Array.isArray(msg) ? msg.join(', ') : msg, "error");
             }
@@ -1612,7 +1608,7 @@ export function ModalRegistry() {
           message={confirmConfig.message}
           onConfirm={confirmConfig.onConfirm}
           onCancel={() =>
-            setConfirmConfig((prev: any) => ({ ...prev, show: false }))
+            setConfirmConfig((prev: ApiAny) => ({ ...prev, show: false }))
           }
           confirmLabel={confirmConfig.confirmLabel}
           variant={confirmConfig.variant}

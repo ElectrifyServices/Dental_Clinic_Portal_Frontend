@@ -1,4 +1,5 @@
-import { useApiQuery } from "../useApiQuery";
+import type { ApiAny } from "../../types/api";
+import { useApiQuery, type ApiQueryOptions } from "../useApiQuery";
 
 export interface LabWorkListParams {
   page?: number;
@@ -10,8 +11,11 @@ export interface LabWorkListParams {
   };
 }
 
-export function useLabWorksQuery(params: LabWorkListParams = {}, options?: any) {
-  const body: Record<string, any> = {
+export function useLabWorksQuery(
+  params: LabWorkListParams = {},
+  options?: ApiQueryOptions<ApiAny>,
+) {
+  const body: Record<string, unknown> = {
     page: params.page ?? 1,
     limit: params.limit ?? 1000,
   };
@@ -24,7 +28,7 @@ export function useLabWorksQuery(params: LabWorkListParams = {}, options?: any) 
     body.filters = params.filters;
   }
 
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["labWorks", body],
     endpoint: "/labWork/list",
     method: "post",

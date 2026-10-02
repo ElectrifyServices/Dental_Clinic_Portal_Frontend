@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModal } from "@/contexts/ModalContext";
@@ -17,7 +18,7 @@ export function useUpdateProcedureMutation() {
     getEndpoint: (vars) => `/procedures/${vars.id}`,
     method: "patch",
     transformRequest: (vars) => {
-      const { id, ...data } = vars;
+      const { id: _id, ...data } = vars;
       return data;
     },
     options: {
@@ -25,7 +26,7 @@ export function useUpdateProcedureMutation() {
         queryClient.invalidateQueries({ queryKey: ["procedures"] });
         showToast("Procedure updated successfully", "success");
       },
-      onError: (err: any) => {
+      onError: (err: ApiAny) => {
         showToast(err?.message || "Failed to update procedure", "error");
       },
     },

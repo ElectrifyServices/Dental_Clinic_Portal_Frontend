@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -60,7 +61,7 @@ const ORDERED_DAYS: Array<keyof typeof DAY_KEY_TO_ENUM> = [
  * and slot settings into the POST /doctorSchedule/create/:doctorId payload.
  */
 export function mapScheduleToPayload(
-  workingHours: Record<string, any>,
+  workingHours: Record<string, ApiAny>,
   settings: { duration: number; bufferTime: number }
 ): CreateDoctorSchedulePayload {
   const day_schedules: DaySchedulePayload[] = ORDERED_DAYS.map((dayKey) => {
@@ -97,7 +98,7 @@ export function mapScheduleToPayload(
 export function useCreateDoctorScheduleMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, CreateDoctorScheduleVariables>({
+  return useApiMutation<ApiAny, CreateDoctorScheduleVariables>({
     getEndpoint: (variables) =>
       `/doctorSchedule/${variables.doctorId}`,
     method: "post",

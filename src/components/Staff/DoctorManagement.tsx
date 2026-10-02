@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -38,7 +39,7 @@ interface DoctorManagementProps {
   onAddDoctor: () => void;
   onEditDoctor: (id: string) => void;
   onDeleteDoctor: (id: string) => void;
-  onUpdateStaff: (staff: any) => void;
+  onUpdateStaff: (staff: ApiAny) => void;
   onManageSchedule: (id: string, name: string) => void;
   onPaySalary?: (id: string, name: string) => void;
   onViewSalaryHistory?: (id: string, name: string) => void;
@@ -284,7 +285,7 @@ export function DoctorManagement({
       render: (staff: UserType) => {
         const isDoctor = staff.role?.toLowerCase() === "doctor" || staff.originalRoleName?.toLowerCase()?.includes("doctor");
         const rm = isDoctor ? ROLE_META.doctor : (ROLE_META[staff.role] || ROLE_META.assistant);
-        const rawLabel = (staff as any).originalRoleName || rm.label;
+        const rawLabel = (staff as ApiAny).originalRoleName || rm.label;
         const displayLabel = rawLabel.replace(/_/g, ' ');
         return (
           <Badge
@@ -307,7 +308,7 @@ export function DoctorManagement({
           </div>
           {staff.phone && (
             <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
-              <Phone className="w-3 h-3" /> {staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}
+              <Phone className="w-3 h-3" /> {staff.phone.startsWith("+") ? staff.phone : `${(staff as ApiAny).country_code || "+91"} ${staff.phone}`}
             </div>
           )}
         </div>
@@ -316,15 +317,15 @@ export function DoctorManagement({
     {
       key: "salary",
       header: "Financials",
-      render: (staff: any) => (
+      render: (staff: ApiAny) => (
         <div className="text-[11px] font-bold">
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-muted-foreground/60 font-medium">Monthly:</span>
-            <span className="text-foreground">₹{(staff as any).monthlySalary?.toLocaleString() || "0"}</span>
+            <span className="text-foreground">₹{(staff as ApiAny).monthlySalary?.toLocaleString() || "0"}</span>
           </div>
           <div className="flex justify-between gap-4 mb-0.5">
             <span className="text-muted-foreground/60 font-medium">Paid:</span>
-            <span className="text-emerald-600">₹{(staff as any).salaryPaid?.toLocaleString() || "0"}</span>
+            <span className="text-emerald-600">₹{(staff as ApiAny).salaryPaid?.toLocaleString() || "0"}</span>
           </div>
           {/* <div className="flex justify-between gap-4">
             <span className="text-muted-foreground/60 font-medium">Due:</span>
@@ -553,7 +554,7 @@ export function DoctorManagement({
                           variant={rm.variant}
                           className="text-[10px] font-black uppercase px-2 py-0.5 shadow-sm"
                         >
-                          {((staff as any).originalRoleName || rm.label).replace(/_/g, ' ')}
+                          {((staff as ApiAny).originalRoleName || rm.label).replace(/_/g, ' ')}
                         </Badge>
                         <Badge
                           variant={staff.isActive ? "green" : "gray"}
@@ -581,15 +582,15 @@ export function DoctorManagement({
                           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-emerald-500/20">
                             <Phone className="w-3.5 h-3.5 text-emerald-500" />
                           </div>
-                          <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as any).country_code || "+91"} ${staff.phone}`}</span>
+                          <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as ApiAny).country_code || "+91"} ${staff.phone}`}</span>
                         </div>
                       )}
-                      {(staff as any).experience && (
+                      {(staff as ApiAny).experience && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
                           <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-amber-500/20">
                             <Stethoscope className="w-3.5 h-3.5 text-amber-500" />
                           </div>
-                          <span>{(staff as any).experience} Years Exp.</span>
+                          <span>{(staff as ApiAny).experience} Years Exp.</span>
                         </div>
                       )}
                     </div>
@@ -599,16 +600,16 @@ export function DoctorManagement({
                         <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
                           Monthly
                         </p>
-                        <p className="text-xs font-black text-foreground truncate" title={(staff as any).monthlySalary?.toLocaleString()}>
-                          ₹{(staff as any).monthlySalary?.toLocaleString() || "0"}
+                        <p className="text-xs font-black text-foreground truncate" title={(staff as ApiAny).monthlySalary?.toLocaleString()}>
+                          ₹{(staff as ApiAny).monthlySalary?.toLocaleString() || "0"}
                         </p>
                       </div>
                       <div className="p-2 bg-emerald-50/30 rounded-xl border border-emerald-100/50 group-hover:bg-emerald-50 transition-colors">
                         <p className="text-[9px] text-emerald-600/70 font-bold uppercase tracking-wider mb-1">
                           Paid
                         </p>
-                        <p className="text-xs font-black text-emerald-600 truncate" title={(staff as any).salaryPaid?.toLocaleString()}>
-                          ₹{(staff as any).salaryPaid?.toLocaleString() || "0"}
+                        <p className="text-xs font-black text-emerald-600 truncate" title={(staff as ApiAny).salaryPaid?.toLocaleString()}>
+                          ₹{(staff as ApiAny).salaryPaid?.toLocaleString() || "0"}
                         </p>
                       </div>
                       {/* <div className="p-2 bg-amber-50/30 rounded-xl border border-amber-100/50 group-hover:bg-amber-50 transition-colors">

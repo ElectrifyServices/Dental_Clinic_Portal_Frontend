@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,7 +12,7 @@ export interface RestockInventoryItemPayload {
 export function useRestockInventoryItemMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, RestockInventoryItemPayload>({
+  return useApiMutation<ApiAny, RestockInventoryItemPayload>({
     getEndpoint: (variables) => `/inventory/${variables.id}/restock`,
     method: "post",
     options: {

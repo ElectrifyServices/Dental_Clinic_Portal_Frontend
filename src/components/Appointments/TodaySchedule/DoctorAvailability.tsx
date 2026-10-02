@@ -1,9 +1,10 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { UserCheck, UserX } from 'lucide-react';
 import { Button, Card, StatusBadge } from '@/components/ui';
 
 interface DoctorAvailabilityProps {
-  doctors: any[];
+  doctors: ApiAny[];
   doctorAvailability: { [key: string]: boolean };
   onToggle: (id: string) => void;
 }

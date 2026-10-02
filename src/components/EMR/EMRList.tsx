@@ -1,6 +1,7 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
 import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText } from 'lucide-react';
-import { PageHeader, SearchInput, DataTable, StatusBadge, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 interface EMRRecord {
   id: string;
@@ -17,7 +18,7 @@ interface EMRRecord {
   attachments?: string[];
   doctorId?: string;
   doctorName: string;
-  timeline?: any[];
+  timeline?: ApiAny[];
 }
 
 interface EMRListProps {
@@ -37,7 +38,7 @@ interface EMRListProps {
   totalItems?: number;
 }
 
-const TYPE_META: Record<string, { label: string; icon: React.ReactNode; variant: 'blue' | 'green' | 'violet' | 'amber' | 'indigo' | 'gray' }> = {
+const _TYPE_META: Record<string, { label: string; icon: React.ReactNode; variant: 'blue' | 'green' | 'violet' | 'amber' | 'indigo' | 'gray' }> = {
   consultation: { label: 'Consultation', icon: <Stethoscope className="w-3.5 h-3.5" />, variant: 'blue' },
   prescription: { label: 'Prescription', icon: <Pill className="w-3.5 h-3.5" />, variant: 'green' },
   'treatment-plan': { label: 'Treatment Plan', icon: <FileText className="w-3.5 h-3.5" />, variant: 'violet' },

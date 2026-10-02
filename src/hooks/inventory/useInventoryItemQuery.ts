@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface InventoryItemData {
@@ -14,7 +15,7 @@ export interface InventoryItemData {
   unit_cost: number;
   supplier: string;
   warranty: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useInventoryItemQuery(id?: string) {

@@ -1,9 +1,10 @@
+import type { ApiAny } from "../../types/api";
 import React from "react";
-import { Phone, Calendar, ChevronRight, ChevronLeft } from "lucide-react";
-import { ContentCard, Badge, Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SearchInput, Pagination } from "@/components/ui";
+import { Phone, Calendar } from "lucide-react";
+import { ContentCard, Badge, SearchInput, Pagination } from "@/components/ui";
 import { Appointment } from "@/types";
 
-const STATUS_META: Record<string, { label: string; variant: any }> = {
+const STATUS_META: Record<string, { label: string; variant: ApiAny }> = {
   scheduled: { label: "Scheduled", variant: "gray" },
   confirmed: { label: "Confirmed", variant: "indigo" },
   "checked-in": { label: "Checked In", variant: "purple" },
@@ -28,7 +29,7 @@ export function TodayAppointments({
   period?: string;
   customStart?: string;
   customEnd?: string;
-  pagination?: any;
+  pagination?: ApiAny;
   page?: number;
   setPage?: (p: number) => void;
   limit?: number;
@@ -58,7 +59,7 @@ export function TodayAppointments({
   }
   
   // Remove duplicate '...'
-  const displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
+  const _displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
 
   return (
     <ContentCard

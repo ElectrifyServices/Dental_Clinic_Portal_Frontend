@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Button } from "@/components/ui/Button";
 import { X, Stethoscope, User } from "lucide-react";
 import { toTitleCase } from "@/utils/stringUtils";
@@ -114,7 +115,7 @@ export function ConsultationHeader({
                     Phone
                   </p>
                   <p className="text-sm font-bold text-blue-900">
-                    {formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}
+                    {formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}
                   </p>
                 </div>
               </div>

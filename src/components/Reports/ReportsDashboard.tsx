@@ -1,8 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
-import {
-  BarChart3, TrendingUp, Users, Calendar, Download,
-  Package, Building2, Loader2,
-} from 'lucide-react';
+import { BarChart3, Users, Calendar, Download, Package, Building2, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { Button, FilterTabs, toast } from '@/components/ui';
 import { downloadExcelFromBlob } from '@/utils/export/exportHandler';
@@ -45,13 +43,13 @@ const REPORT_TABS = [
   // { id: 'revenue',     label: 'Revenue',     icon: TrendingUp,   color: 'from-emerald-500 to-teal-600'     },
 ];
 
-export function ReportsDashboard({ patients, appointments, treatments, invoices }: any) {
+export function ReportsDashboard({ patients: _patients, appointments: _appointments, treatments: _treatments, invoices: _invoices }: ApiAny) {
   const [period, setPeriod]   = useState('month');
   const [activeTab, setTab]   = useState('patients');
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
-    const exportFnMap: Record<string, (filter: any) => Promise<any>> = {
+    const exportFnMap: Record<string, (filter: ApiAny) => Promise<ApiAny>> = {
       revenue: exportRevenueAnalytics,
       appointments: exportAppointmentAnalytics,
       patients: exportPatientAnalytics,
@@ -84,7 +82,7 @@ export function ReportsDashboard({ patients, appointments, treatments, invoices 
 
       await downloadExcelFromBlob(response.data, `${activeTab}-analytics-export.xlsx`);
       toast.success("Export successful");
-    } catch (error: any) {
+    } catch (error: ApiAny) {
       console.error("Export failed:", error);
       const errorMessage = error?.response?.data?.message || error?.message || "Failed to export data. Please try again.";
       toast.error(errorMessage);

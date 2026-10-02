@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface EMRListParams {
@@ -10,8 +11,8 @@ export interface EMRListParams {
   };
 }
 
-export function useEMRListQuery(params: EMRListParams = {}, options?: any) {
-  const body: Record<string, any> = {
+export function useEMRListQuery(params: EMRListParams = {}, options?: ApiAny) {
+  const body: Record<string, ApiAny> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };
@@ -32,7 +33,7 @@ export function useEMRListQuery(params: EMRListParams = {}, options?: any) {
     }
   }
 
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["medicalRecords", body],
     endpoint: "/medicalRecord/list",
     method: "post",

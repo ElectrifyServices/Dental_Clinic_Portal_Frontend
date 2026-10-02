@@ -1,12 +1,13 @@
+import type { ApiAny } from "../../../types/api";
 import { Button } from "@/components/ui/Button";
 import React from 'react';
 import { ClipboardList, Check, Plus } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui";
 
 interface PendingItemsProps {
-  pendingItems: any[];
+  pendingItems: ApiAny[];
   linkedItemIds: string[];
-  onAdd: (item: any) => void;
+  onAdd: (item: ApiAny) => void;
   onRemove: (id: string) => void;
 }
 

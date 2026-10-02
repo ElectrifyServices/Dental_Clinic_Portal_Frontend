@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +9,7 @@ export interface UpdateEmployeeStatusVariables {
 
 export function useUpdateEmployeeStatusMutation() {
   const queryClient = useQueryClient();
-  return useApiMutation<any, UpdateEmployeeStatusVariables>({
+  return useApiMutation<ApiAny, UpdateEmployeeStatusVariables>({
     getEndpoint: (variables) => `/member/${variables.id}`,
     method: "patch",
     transformRequest: (variables) => ({ status: variables.status }),

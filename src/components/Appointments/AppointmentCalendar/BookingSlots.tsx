@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { CalendarCheck, Stethoscope, Check, Ban } from "lucide-react";
+import type { ApiAny } from "../../../types/api";
+import React from "react";
+import { CalendarCheck, Stethoscope, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BlockTimeModal } from "./BlockTimeModal";
 
@@ -10,7 +11,7 @@ interface BookingSlotsProps {
   selectedDate?: string;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
-  availableSlots: any[];
+  availableSlots: ApiAny[];
   isLoading?: boolean;
   onBookAppointment?: (doctorId: string, time: string) => void;
 }

@@ -1,3 +1,4 @@
+import type { ApiRecord } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,7 +24,7 @@ export interface UpdateAppointmentVariables {
 export function useUpdateAppointmentMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, UpdateAppointmentVariables>({
+  return useApiMutation<ApiRecord, UpdateAppointmentVariables>({
     getEndpoint: (variables) => `/appointment/${variables.id}`,
     method: "put",
     transformRequest: (variables) => variables.payload,

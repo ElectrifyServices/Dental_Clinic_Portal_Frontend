@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface ConsentFormsParams {
@@ -22,11 +23,11 @@ export interface ConsentFormRecord {
   patient_signature?: string;
   witness_signature?: string;
   created_at?: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
-export function useConsentFormsQuery(params: ConsentFormsParams = {}, options?: any) {
-  const body: Record<string, any> = {
+export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
+  const body: Record<string, ApiAny> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,
   };

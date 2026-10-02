@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
@@ -11,7 +12,7 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "O_NEGATIVE": "O-",
 };
 
-export function normalizePatient(payload: any) {
+export function normalizePatient(payload: ApiAny) {
   if (!payload) return null;
   
   // Unwrap the patient object if the backend wraps it
@@ -61,10 +62,10 @@ export function normalizePatient(payload: any) {
           : (p.outstandingBalance || 0))),
     
     // Medical History
-    medicalHistory: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
-    allergies: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
-    medicalHistoryNames: rawMedHistory.map((m: any) => typeof m === 'object' ? (m.history?.name || m.name || m.condition || m.history_name || '') : m).filter(Boolean),
-    allergyNames: rawAllergies.map((a: any) => typeof a === 'object' ? (a.allergy?.name || a.name || a.allergen || '') : a).filter(Boolean),
+    medicalHistory: rawMedHistory.map((m: ApiAny) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
+    allergies: rawAllergies.map((a: ApiAny) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
+    medicalHistoryNames: rawMedHistory.map((m: ApiAny) => typeof m === 'object' ? (m.history?.name || m.name || m.condition || m.history_name || '') : m).filter(Boolean),
+    allergyNames: rawAllergies.map((a: ApiAny) => typeof a === 'object' ? (a.allergy?.name || a.name || a.allergen || '') : a).filter(Boolean),
     pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
     
     // Previous Dentist (nested in previous_dental)
@@ -79,7 +80,7 @@ export function normalizePatient(payload: any) {
     // Consents & Images
     consentFormUrl: p.consent_form_url || p.consentFormUrl || '',
     patientSignature: p.consent_signature_url || p.patientSignature || '',
-    dentalFiles: (p.images || []).map((img: any) => ({
+    dentalFiles: (p.images || []).map((img: ApiAny) => ({
       id: img.id,
       name: img.file_name,
       url: img.image_url,
@@ -93,7 +94,7 @@ export function normalizePatient(payload: any) {
 }
 
 export function usePatientDetailQuery(id: string, enabled = true) {
-  const query = useApiQuery<any>({
+  const query = useApiQuery<ApiAny>({
     queryKey: ["patients", "detail", id],
     endpoint: `/patient/${id}`,
     method: "get",

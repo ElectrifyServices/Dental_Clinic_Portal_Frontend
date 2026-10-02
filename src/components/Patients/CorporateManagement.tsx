@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import React, { useState, useRef } from "react";
@@ -65,12 +66,12 @@ interface CorporateManagementProps {
   onSavePlan: (plan: CorporatePlan) => void;
   onDeletePlan: (id: string) => void;
   onBulkAddPatients: (patients: BulkPatient[]) => void;
-  corporateEmployees: any[];
+  corporateEmployees: ApiAny[];
   onDeleteEmployee: (name: string, email: string) => void;
   onUpdateEmployee: (
     oldName: string,
     oldEmail: string,
-    updatedEmp: any,
+    updatedEmp: ApiAny,
   ) => void;
   onClose: () => void;
 }
@@ -101,7 +102,7 @@ export function CorporateManagement({
     name: string;
     email: string;
   } | null>(null);
-  const [tempEmpData, setTempEmpData] = useState<any>(null);
+  const [tempEmpData, setTempEmpData] = useState<ApiAny>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Outside click for search suggestions
@@ -239,10 +240,10 @@ export function CorporateManagement({
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const rows = XLSX.utils.sheet_to_json(worksheet) as any[];
+      const rows = XLSX.utils.sheet_to_json(worksheet) as ApiAny[];
 
       const importedPatients: BulkPatient[] = rows
-        .map((row: any) => {
+        .map((row: ApiAny) => {
           const getVal = (keys: string[]) => {
             const foundKey = Object.keys(row).find(k => keys.some(key => k.toLowerCase().replace(/[^a-z0-9]/g, '') === key.toLowerCase().replace(/[^a-z0-9]/g, '')));
             return foundKey ? String(row[foundKey]).trim() : '';
@@ -505,7 +506,7 @@ export function CorporateManagement({
     {
       key: "name",
       header: "Name",
-      render: (emp: any, idx: number) => {
+      render: (emp: ApiAny, idx: number) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return (
           <div className="flex items-center gap-3">
@@ -540,7 +541,7 @@ export function CorporateManagement({
     {
       key: "phone",
       header: "Phone",
-      render: (emp: any) => {
+      render: (emp: ApiAny) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Input
@@ -565,7 +566,7 @@ export function CorporateManagement({
     {
       key: "email",
       header: "Email Address",
-      render: (emp: any) => {
+      render: (emp: ApiAny) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Input
@@ -590,7 +591,7 @@ export function CorporateManagement({
     {
       key: "gender",
       header: "Gender",
-      render: (emp: any) => {
+      render: (emp: ApiAny) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return isEditing ? (
           <Select
@@ -617,7 +618,7 @@ export function CorporateManagement({
       key: "action",
       header: "Action",
       align: "right" as const,
-      render: (emp: any) => {
+      render: (emp: ApiAny) => {
         const isEditing = editingEmployee?.name === emp.name && editingEmployee?.email === emp.email;
         return (
           <div className="flex justify-end gap-1">
@@ -690,7 +691,7 @@ export function CorporateManagement({
     >
       <div className="space-y-6">
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)}>
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ApiAny)}>
           <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
             <TabsTrigger value="plans">Corporate Plans</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Employee Registration</TabsTrigger>

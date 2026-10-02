@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -18,7 +19,7 @@ export interface CreateInventoryItemPayload {
 
 export interface CreateInventoryItemResponse {
   id: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useCreateInventoryItemMutation() {

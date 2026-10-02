@@ -1,8 +1,9 @@
-﻿import React from 'react';
+﻿import type { ApiAny } from "../../../types/api";
+import React from 'react';
 import { Building2, Users } from 'lucide-react';
 
 interface PlanBannerProps {
-  plan: any;
+  plan: ApiAny;
   savings: number;
   dependentOf?: string;  // primary member name if this patient is a dependent
 }
@@ -35,7 +36,7 @@ export const PlanBanner: React.FC<PlanBannerProps> = ({ plan, savings, dependent
           </p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-2.5">
-          {(plan.benefits || []).slice(0, 3).map((b: any) => (
+          {(plan.benefits || []).slice(0, 3).map((b: ApiAny) => (
             <span key={b.id} className={`text-[9px] font-bold bg-card border px-2.5 py-1 rounded-full uppercase tracking-tighter ${isIndividual ? 'text-teal-700 border-teal-200' : 'text-primary border-primary/20'}`}>
               {b.description}
             </span>

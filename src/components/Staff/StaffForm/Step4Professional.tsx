@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { Award, IndianRupee, GraduationCap, Search, Plus, Check, X } from "lucide-react";
+import type { ApiAny } from "../../../types/api";
+import { useState } from "react";
+import { Award, IndianRupee, GraduationCap } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LabeledField, SearchableSelect, Label, Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
@@ -10,9 +11,9 @@ import { useModal } from "@/contexts/ModalContext";
 import { preventScientificNotation, handleNumericChange } from "@/utils/inputUtils";
 
 interface Step4Props {
-  formData: any;
-  onChange: (e: any) => void;
-  errors?: any;
+  formData: ApiAny;
+  onChange: (e: ApiAny) => void;
+  errors?: ApiAny;
 }
 
 const SPECIALIZATIONS = [
@@ -35,19 +36,19 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
   const { confirmDelete, showToast } = useModal();
   const [deletingName, setDeletingName] = useState<string | null>(null);
 
-  let rawSpecs: any[] | null = null;
+  let rawSpecs: ApiAny[] | null = null;
   if (Array.isArray(apiSpecs)) {
     rawSpecs = apiSpecs;
-  } else if (apiSpecs && Array.isArray((apiSpecs as any).specializations)) {
-    rawSpecs = (apiSpecs as any).specializations;
-  } else if (apiSpecs && (apiSpecs as any).data && Array.isArray((apiSpecs as any).data.specializations)) {
-    rawSpecs = (apiSpecs as any).data.specializations;
-  } else if (apiSpecs && Array.isArray((apiSpecs as any).data)) {
-    rawSpecs = (apiSpecs as any).data;
+  } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).specializations)) {
+    rawSpecs = (apiSpecs as ApiAny).specializations;
+  } else if (apiSpecs && (apiSpecs as ApiAny).data && Array.isArray((apiSpecs as ApiAny).data.specializations)) {
+    rawSpecs = (apiSpecs as ApiAny).data.specializations;
+  } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).data)) {
+    rawSpecs = (apiSpecs as ApiAny).data;
   }
 
   const specsList = rawSpecs
-    ? rawSpecs.map((s: any) => (typeof s === "string" ? s : s.name || ""))
+    ? rawSpecs.map((s: ApiAny) => (typeof s === "string" ? s : s.name || ""))
     : SPECIALIZATIONS;
 
   const handleCreateSpecialization = async (createdValue: string) => {
@@ -68,7 +69,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
           value: createdValue,
         },
       });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       let errMsg = "Failed to create specialization.";
       const resData = err.response?.data || err;
       if (resData?.responseStatusList?.statusList?.[0]?.statusDesc) {
@@ -84,7 +85,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
 
   const handleDeleteSpecialization = (valueName: string) => {
     if (!rawSpecs) return;
-    const spec = rawSpecs.find((s: any) => s.name === valueName || s === valueName);
+    const spec = rawSpecs.find((s: ApiAny) => s.name === valueName || s === valueName);
     if (!spec || !spec.id) return; // Cannot delete if there's no ID
 
     confirmDelete(
@@ -105,7 +106,7 @@ export function Step4Professional({ formData, onChange, errors = {} }: Step4Prop
               target: { name: "specialization", value: "" }
             });
           }
-        } catch (err) {
+        } catch (_err) { /* delete failed; `finally` clears the pending name */
         } finally {
           setDeletingName(null);
         }

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import {
   Clock,
@@ -10,9 +11,9 @@ import { Button } from "@/components/ui/Button";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface AppointmentTableRowProps {
-  appointment: any;
-  doctors?: any[];
-  statusVariants: Record<string, any>;
+  appointment: ApiAny;
+  doctors?: ApiAny[];
+  statusVariants: Record<string, ApiAny>;
   formatTime: (t: string) => string;
   onOpenMenu: (e: React.MouseEvent, id: string) => void;
 }
@@ -25,7 +26,7 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
   onOpenMenu,
 }) => {
   const a = appointment;
-  const doc = doctors?.find((d: any) => d.id === a.doctor_id || d.id === a.doctorId);
+  const doc = doctors?.find((d: ApiAny) => d.id === a.doctor_id || d.id === a.doctorId);
   let doctorName = doc ? doc.name : (a.doctorName || a.doctor || "");
   if (doctorName && typeof doctorName === "string") {
     doctorName = doctorName.replace(/^(Dr\.\s+|Dr\s+)/i, "");

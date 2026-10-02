@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -9,13 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-﻿import React from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 
 interface DiagnoseFormProps {
-  patient: any;
+  patient: ApiAny;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: ApiAny) => void;
 }
 
 export const DiagnoseForm: React.FC<DiagnoseFormProps> = ({ patient, onClose, onSubmit }) => {

@@ -15,7 +15,7 @@ export function useResetPasswordMutation() {
     getEndpoint: (variables) => `/auth/reset-password?token=${encodeURIComponent(variables.token)}`,
     method: "patch",
     transformRequest: (variables) => {
-      const { token, ...body } = variables;
+      const { token: _token, ...body } = variables;
       return body;
     },
   });

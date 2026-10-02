@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,7 +12,7 @@ interface PaySalaryPayload {
 
 export function usePaySalaryMutation() {
   const queryClient = useQueryClient();
-  return useApiMutation<any, PaySalaryPayload>({
+  return useApiMutation<ApiAny, PaySalaryPayload>({
     endpoint: "/staffPaymentHistory",
     method: "post",
     options: {

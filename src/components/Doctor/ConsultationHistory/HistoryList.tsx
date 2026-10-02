@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
@@ -18,9 +19,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface HistoryListProps {
-  data: any[];
-  pageData: any[];
-  patients: any[];
+  data: ApiAny[];
+  pageData: ApiAny[];
+  patients: ApiAny[];
   search: string;
   onSearchChange: (val: string) => void;
   showFilters: boolean;
@@ -34,9 +35,9 @@ interface HistoryListProps {
   activeFilters: number;
   activeMenuId: number | null;
   onSetActiveMenuId: (id: number | null) => void;
-  onSelectRecord: (record: any) => void;
-  onDownloadPDF: (record: any, type: any) => void;
-  onSendPDF: (record: any, type: any) => void;
+  onSelectRecord: (record: ApiAny) => void;
+  onDownloadPDF: (record: ApiAny, type: ApiAny) => void;
+  onSendPDF: (record: ApiAny, type: ApiAny) => void;
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
   safePage: number;
   PAGE_SIZE: number;
@@ -90,7 +91,7 @@ export function HistoryList({
   ];
   const avatarColor = (id: number) => avatarColors[id % avatarColors.length];
 
-  const fmtShort = (d: any) => {
+  const fmtShort = (d: ApiAny) => {
     if (!d) return "—";
     const date = new Date(d);
     if (isNaN(date.getTime())) return "—";

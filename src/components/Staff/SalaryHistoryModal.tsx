@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Calendar, IndianRupee, History, Loader2 } from "lucide-react";
 import { Modal, Button, Badge } from "@/components/ui";
 import { useSalaryHistoryQuery } from "../../hooks/staff/useSalaryHistoryQuery";
@@ -47,7 +48,7 @@ export function SalaryHistoryModal({
           </div>
         ) : (
           <div className="space-y-3">
-            {history.map((payment: any, index: number) => {
+            {history.map((payment: ApiAny, index: number) => {
               const amount = payment.payment_amount || payment.amount || 0;
               const date = payment.payment_date || payment.date || new Date().toISOString();
               const mode = payment.payment_mode || payment.mode || "Unknown";

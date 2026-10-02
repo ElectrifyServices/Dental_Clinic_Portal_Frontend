@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { CreditCard, Zap, Users, Shield } from "lucide-react";
+import { CreditCard, Users } from "lucide-react";
 import { CorporatePlanManagement } from "../components/CorporatePlans/CorporatePlanManagement";
 import { EmployeeManagement } from "../components/CorporatePlans/EmployeeManagement";
-import { QuickRegistrationFlow } from "../components/CorporatePlans/QuickRegistration/QuickRegistrationFlow";
 import { useCorporateData } from "../hooks/useCorporateData";
 import { PageHeader } from "../components/ui";
 import { useSidebar } from "../contexts/SidebarContext";

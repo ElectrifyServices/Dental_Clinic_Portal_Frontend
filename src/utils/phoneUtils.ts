@@ -8,7 +8,6 @@
  */
 import {
   isValidPhoneNumber,
-  parsePhoneNumber,
   getExampleNumber,
   AsYouType,
   type CountryCode,
@@ -150,8 +149,17 @@ export function isoFromDialingCode(dialingCode: string): string {
  *  formatPhoneWithCountryCode("9803332386", "+1")  => "+1 9803332386"
  *  formatPhoneWithCountryCode({ phone: "9876543210", country_code: "+91" }) => "+91 9876543210"
  */
+export interface PhoneLike {
+  phone?: string | number | null;
+  patient_phone?: string | number | null;
+  patientPhone?: string | number | null;
+  mobile?: string | number | null;
+  country_code?: string | null;
+  countryCode?: string | null;
+}
+
 export function formatPhoneWithCountryCode(
-  phoneOrObj?: any,
+  phoneOrObj?: string | number | PhoneLike | null,
   countryCode?: string
 ): string {
   if (!phoneOrObj && phoneOrObj !== 0) return "—";
@@ -160,12 +168,13 @@ export function formatPhoneWithCountryCode(
   let code = countryCode || "";
 
   if (typeof phoneOrObj === "object" && phoneOrObj !== null) {
-    rawPhone =
+    rawPhone = String(
       phoneOrObj.phone ||
-      phoneOrObj.patient_phone ||
-      phoneOrObj.patientPhone ||
-      phoneOrObj.mobile ||
-      "";
+        phoneOrObj.patient_phone ||
+        phoneOrObj.patientPhone ||
+        phoneOrObj.mobile ||
+        ""
+    );
     code = phoneOrObj.country_code || phoneOrObj.countryCode || code;
   } else {
     rawPhone = String(phoneOrObj || "").trim();

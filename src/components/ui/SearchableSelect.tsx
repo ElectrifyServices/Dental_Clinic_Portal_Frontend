@@ -1,14 +1,15 @@
+import type { ApiAny } from "../../types/api";
 import * as React from "react";
 import { Search, Check, X, Plus, ChevronDown, Trash2, Edit } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
-type OptionType = string | { label: string; value: string; is_free?: boolean; isFree?: boolean; from_plan_benefit?: boolean; fromPlanBenefit?: boolean; [key: string]: any };
+type OptionType = string | { label: string; value: string; is_free?: boolean; isFree?: boolean; from_plan_benefit?: boolean; fromPlanBenefit?: boolean; [key: string]: ApiAny };
 
 interface SearchableSelectProps {
   value: string | string[];
-  onChange: (value: any) => void;
+  onChange: (value: ApiAny) => void;
   options: OptionType[];
   placeholder?: string;
   searchPlaceholder?: string;
@@ -24,8 +25,8 @@ interface SearchableSelectProps {
   className?: string;
   onSearchChange?: (query: string) => void;
   displayValue?: React.ReactNode | string;
-  renderOption?: (option: any) => React.ReactNode;
-  renderValue?: (option: any) => React.ReactNode;
+  renderOption?: (option: ApiAny) => React.ReactNode;
+  renderValue?: (option: ApiAny) => React.ReactNode;
   capitalizeWords?: boolean;
   popoverClassName?: string;
   onOpenChange?: (open: boolean) => void;
@@ -67,6 +68,9 @@ export function SearchableSelect({
       onSearchChange?.("");
       setEditingValue(null);
     }
+  // `onSearchChange` is a caller-supplied prop that is usually not memoised;
+  // depending on it would clear the user's search on every parent render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   React.useEffect(() => {
@@ -96,7 +100,7 @@ export function SearchableSelect({
     if (onEditOption && editInputValue.trim() && editInputValue.trim() !== optValue) {
       try {
         await onEditOption(optValue, editInputValue.trim());
-      } catch (err) {
+      } catch (_err) {
         // Handled
       }
     }
@@ -144,7 +148,7 @@ export function SearchableSelect({
           handleSelect(typeof createdValue === 'string' ? createdValue : query);
           setIsOpen(false);
         }
-      } catch (error) {
+      } catch (_error) {
         // Do not add the option or close the popover if creation fails
       }
     }

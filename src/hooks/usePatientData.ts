@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePatientQuery } from './patients/usePatientQuery';
@@ -40,6 +41,9 @@ export function usePatientData(params?: { enabled?: boolean }) {
   // Reset page to 1 when filters change
   useMemo(() => {
     setPatientPage(1);
+  // this memo is here for its side effect - those three values are exactly what
+  // should send the list back to page 1
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, patientStatus, patientCategory]);
 
   const isEnabled = useMemo(() => {
@@ -66,24 +70,24 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const { mutateAsync: bulkImportEmployee } = useBulkImportEmployeeMutation();
 
   // Local storage for queue (not part of API)
-  const [queuedPatients, setQueuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
+  const [queuedPatients, setQueuedPatients] = useLocalStorage<ApiAny[]>('queuedPatients', []);
 
   // Normalize API response into a flat list
   const patients = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
 
     if (Array.isArray(apiPatients)) {
       rawList = apiPatients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).patients)) {
-      rawList = (apiPatients as any).patients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.patients)) {
-      rawList = (apiPatients as any).data.patients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data?.data)) {
-      rawList = (apiPatients as any).data.data.data;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data)) {
-      rawList = (apiPatients as any).data.data;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data)) {
-      rawList = (apiPatients as any).data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).patients)) {
+      rawList = (apiPatients as ApiAny).patients;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.patients)) {
+      rawList = (apiPatients as ApiAny).data.patients;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.data?.data)) {
+      rawList = (apiPatients as ApiAny).data.data.data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.data)) {
+      rawList = (apiPatients as ApiAny).data.data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data)) {
+      rawList = (apiPatients as ApiAny).data;
     }
 
     const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
@@ -97,7 +101,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
       "O_NEGATIVE": "O-",
     };
 
-    return rawList.map((p: any) => ({
+    return rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id,
       name: p.name || p.full_name || '',
@@ -135,20 +139,20 @@ export function usePatientData(params?: { enabled?: boolean }) {
             : (p.outstandingBalance || 0))),
       
       // Medical History
-      medicalHistory: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
-      allergies: (p.allergies || []).map((a: any) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
-      medicalHistoryNames: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: any) => {
+      medicalHistory: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: ApiAny) => typeof m === 'object' ? (m.history_id || m.medical_history_id || m.id) : m),
+      allergies: (p.allergies || []).map((a: ApiAny) => typeof a === 'object' ? (a.allergy_id || a.id) : a),
+      medicalHistoryNames: (p.medicalHistories || p.medical_histories || p.medicalHistory || []).map((m: ApiAny) => {
         if (typeof m === 'object') {
           return m.history?.name || m.medical_history?.name || m.name || m.history_id || m.medical_history_id || m.id;
         }
-        const found = (rawMedicalHistories || []).find((mh: any) => mh.id === m);
+        const found = (rawMedicalHistories || []).find((mh: ApiAny) => mh.id === m);
         return found ? (found.name || found.history_name || m) : m;
       }),
-      allergyNames: (p.allergies || []).map((a: any) => {
+      allergyNames: (p.allergies || []).map((a: ApiAny) => {
         if (typeof a === 'object') {
           return a.allergy?.allergy_name || a.allergy?.name || a.allergy_name || a.name || a.allergy_id || a.id;
         }
-        const found = (rawAllergies || []).find((al: any) => al.id === a);
+        const found = (rawAllergies || []).find((al: ApiAny) => al.id === a);
         return found ? (found.allergy_name || found.name || a) : a;
       }),
       pastDentalHistory: p.past_dental_history || p.pastDentalHistory || '',
@@ -160,7 +164,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
       previousLastVisitDate: p.last_visit_date || p.previousLastVisitDate || '',
       previousClinicAddress: p.clinic_address || p.previousClinicAddress || '',
       previousReason: p.reason_for_treatment || p.previousReason || '',
-      previousTreatments: (p.previous_treatments || p.previousTreatments || []).map((t: any) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
+      previousTreatments: (p.previous_treatments || p.previousTreatments || []).map((t: ApiAny) => typeof t === 'object' ? (t.treatment_name || t.name || t.id || '') : t),
       
       // Consents
       consentFormUrl: p.consent_form_image || p.consentFormUrl || '',
@@ -175,7 +179,7 @@ export function usePatientData(params?: { enabled?: boolean }) {
   const handleUpdatePatientStatus = async (id: string, status: 'ACTIVE' | 'INACTIVE') => {
     try {
       await updateStatusMutation({ id, status });
-    } catch (e) {
+    } catch (_e) { /* the mutation surfaces its own error toast */
     }
   };
 
@@ -194,56 +198,48 @@ export function usePatientData(params?: { enabled?: boolean }) {
    * - If no `id` → new patient, calls POST /patient/create.
    */
   const handleSavePatient = async (
-    patient: any,
+    patient: ApiAny,
     _type?: string,
     parentPatientId?: string,
   ) => {
-    try {
-      const isNew = !patient?.id;
+    const isNew = !patient?.id;
 
-      const payload = mapFormDataToCreatePayload(patient, {
-        primaryPatientId: parentPatientId || patient.parentId || patient.primaryPatientId || patient.primary_patient_id || undefined,
-      });
+    const payload = mapFormDataToCreatePayload(patient, {
+      primaryPatientId: parentPatientId || patient.parentId || patient.primaryPatientId || patient.primary_patient_id || undefined,
+    });
 
-      if (isNew) {
-        return await createPatientMutation(payload);
-      } else {
-        return await updatePatientMutation({ id: patient.id, formData: payload });
-      }
-    } catch (e) {
-      throw e; // re-throw so ModalRegistry can show an error toast if needed
+    if (isNew) {
+      return await createPatientMutation(payload);
+    } else {
+      return await updatePatientMutation({ id: patient.id, formData: payload });
     }
   };
 
   // Bulk save
-  const handleBulkSavePatients = async (newPatients: any[]) => {
-    try {
-      const payload = {
-        employees: newPatients.map((p) => ({
-          name: p.name,
-          emp_id: p.emp_id || `EMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          phone: p.phone || "",
-          email: p.email || "",
-          gender: (p.gender || "MALE").toUpperCase(),
-          company_name: p.company_name || p.companyName || "Corporate",
-          designation: p.designation || p.occupation || "Employee",
-          department: p.department || "Staff",
-          corporate_plan_id: p.corporate_plan_id || p.corporatePlanId || p.companyId || "",
-          date_of_birth: p.date_of_birth || p.dateOfBirth || "1990-01-01",
-          eligible_date: p.eligible_date || p.eligibleDate || new Date().toISOString().split("T")[0],
-        })),
-      };
-      await bulkImportEmployee(payload);
-      refetchPatients();
-    } catch (e) {
-      throw e;
-    }
+  const handleBulkSavePatients = async (newPatients: ApiAny[]) => {
+    const payload = {
+      employees: newPatients.map((p) => ({
+        name: p.name,
+        emp_id: p.emp_id || `EMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        phone: p.phone || "",
+        email: p.email || "",
+        gender: (p.gender || "MALE").toUpperCase(),
+        company_name: p.company_name || p.companyName || "Corporate",
+        designation: p.designation || p.occupation || "Employee",
+        department: p.department || "Staff",
+        corporate_plan_id: p.corporate_plan_id || p.corporatePlanId || p.companyId || "",
+        date_of_birth: p.date_of_birth || p.dateOfBirth || "1990-01-01",
+        eligible_date: p.eligible_date || p.eligibleDate || new Date().toISOString().split("T")[0],
+      })),
+    };
+    await bulkImportEmployee(payload);
+    refetchPatients();
   };
 
   // setPatients stub – kept for useAppData cross-domain operations (invoice outstanding balance etc.)
   // Since patients are now server-driven, cross-domain balance updates are no-ops until
   // a dedicated balance API is available.
-  const setPatients = (_updater: any) => {
+  const setPatients = (_updater: ApiAny) => {
     // no-op: patient list is managed by React Query
   };
 
@@ -266,8 +262,8 @@ export function usePatientData(params?: { enabled?: boolean }) {
     refetchPatients,
     patientPage,
     setPatientPage,
-    totalItems: (apiPatients as any)?.pagination?.total || (apiPatients as any)?.pagination?.total_items || (apiPatients as any)?.data?.pagination?.total || (apiPatients as any)?.data?.pagination?.total_items || (apiPatients as any)?.total || (apiPatients as any)?.total_elements || (apiPatients as any)?.totalElements || (apiPatients as any)?.count || patients.length || 0,
-    totalPages: (apiPatients as any)?.pagination?.totalPages || (apiPatients as any)?.pagination?.total_pages || (apiPatients as any)?.data?.pagination?.totalPages || (apiPatients as any)?.data?.pagination?.total_pages || (apiPatients as any)?.totalPages || (apiPatients as any)?.total_pages || Math.max(1, Math.ceil(patients.length / patientLimit)),
+    totalItems: (apiPatients as ApiAny)?.pagination?.total || (apiPatients as ApiAny)?.pagination?.total_items || (apiPatients as ApiAny)?.data?.pagination?.total || (apiPatients as ApiAny)?.data?.pagination?.total_items || (apiPatients as ApiAny)?.total || (apiPatients as ApiAny)?.total_elements || (apiPatients as ApiAny)?.totalElements || (apiPatients as ApiAny)?.count || patients.length || 0,
+    totalPages: (apiPatients as ApiAny)?.pagination?.totalPages || (apiPatients as ApiAny)?.pagination?.total_pages || (apiPatients as ApiAny)?.data?.pagination?.totalPages || (apiPatients as ApiAny)?.data?.pagination?.total_pages || (apiPatients as ApiAny)?.totalPages || (apiPatients as ApiAny)?.total_pages || Math.max(1, Math.ceil(patients.length / patientLimit)),
     patientLimit,
     setPatientLimit,
   };

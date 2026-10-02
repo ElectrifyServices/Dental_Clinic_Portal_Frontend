@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { useState } from "react";
 import { Ban, Trash2, Loader2, AlertTriangle, CalendarOff } from "lucide-react";
 import { Modal, Button, LabeledField, Input, HourMinPicker } from "@/components/ui";
@@ -62,7 +63,8 @@ export function BlockTimeModal({ doctorId, doctorName, date, onClose }: BlockTim
       setStartTime("");
       setEndTime("");
       setReason("");
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as ApiAny;
       setError(err?.message || "Failed to add block");
     }
   };
@@ -70,7 +72,8 @@ export function BlockTimeModal({ doctorId, doctorName, date, onClose }: BlockTim
   const handleRemove = async (overrideId: string) => {
     try {
       await deleteOverride.mutateAsync({ doctorId, overrideId });
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as ApiAny;
       setError(err?.message || "Failed to remove block");
     }
   };

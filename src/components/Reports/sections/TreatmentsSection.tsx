@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from 'react';
 import { BarChart3, CheckCircle, IndianRupee, Zap, TrendingUp } from 'lucide-react';
 import { MetricCard, ContentCard, Badge, DataTable, Pagination } from '@/components/ui';
@@ -51,7 +52,7 @@ export function TreatmentsSection({ period }: { period: string }) {
   // 5. Top Treatments by Revenue (Horizontal Bar Chart)
   const topDataObj = topTreatmentsRes?.data ?? topTreatmentsRes;
   const topRawArray = Array.isArray(topDataObj?.data) ? topDataObj.data : Array.isArray(topDataObj) ? topDataObj : [];
-  const topTreatments = topRawArray.map((t: any) => ({
+  const topTreatments = topRawArray.map((t: ApiAny) => ({
     procedure: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
     revenue: Number(t.revenue ?? t.totalRevenue ?? t.amount ?? 0),
   }));
@@ -60,8 +61,8 @@ export function TreatmentsSection({ period }: { period: string }) {
   // 6. Procedures by Volume (Donut Chart)
   const volumeDataObj = proceduresVolumeRes?.data ?? proceduresVolumeRes;
   const volumeRawArray = Array.isArray(volumeDataObj?.data?.data) ? volumeDataObj.data.data : Array.isArray(volumeDataObj?.data) ? volumeDataObj.data : Array.isArray(volumeDataObj) ? volumeDataObj : [];
-  const totalVolumeCount = volumeDataObj?.data?.totalCount ?? volumeDataObj?.totalVolume ?? volumeDataObj?.total ?? volumeRawArray.reduce((acc: number, curr: any) => acc + Number(curr.count ?? curr.value ?? 0), 0);
-  const volumeSlices = volumeRawArray.map((t: any, i: number) => ({
+  const totalVolumeCount = volumeDataObj?.data?.totalCount ?? volumeDataObj?.totalVolume ?? volumeDataObj?.total ?? volumeRawArray.reduce((acc: number, curr: ApiAny) => acc + Number(curr.count ?? curr.value ?? 0), 0);
+  const volumeSlices = volumeRawArray.map((t: ApiAny, i: number) => ({
     label: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
     value: Number(t.count ?? t.value ?? 0),
     color: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e'][i % 5],
@@ -77,7 +78,7 @@ export function TreatmentsSection({ period }: { period: string }) {
         ? allRevenueDataObj 
         : [];
 
-  const allRevenueList = allRevenueRawArray.map((t: any) => ({
+  const allRevenueList = allRevenueRawArray.map((t: ApiAny) => ({
     procedure: t.treatment ?? t.procedure ?? t.procedureName ?? t.name ?? 'N/A',
     count: Number(t.count ?? t.cases ?? t.totalCases ?? t.value ?? 0),
     revenue: Number(t.revenue ?? t.totalRevenue ?? t.amount ?? 0),
@@ -196,12 +197,12 @@ export function TreatmentsSection({ period }: { period: string }) {
         ) : (
           <DataTable
             data={allRevenueList}
-            rowKey={(t: any, idx: number) => t.procedure + idx}
+            rowKey={(t: ApiAny, idx: number) => t.procedure + idx}
             columns={[
-              { key: 'procedure', header: 'Treatment',    render: (t: any) => <span className="font-bold">{t.procedure}</span> },
-              { key: 'count',     header: 'Cases',        align: 'center', render: (t: any) => <Badge variant="gray">{t.count}</Badge> },
-              { key: 'revenue',   header: 'Total Revenue', align: 'right', render: (t: any) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
-              { key: 'avg',       header: 'Avg Cost',     align: 'right', render: (t: any) => <span className="font-bold text-primary">₹{t.avg.toLocaleString()}</span> },
+              { key: 'procedure', header: 'Treatment',    render: (t: ApiAny) => <span className="font-bold">{t.procedure}</span> },
+              { key: 'count',     header: 'Cases',        align: 'center', render: (t: ApiAny) => <Badge variant="gray">{t.count}</Badge> },
+              { key: 'revenue',   header: 'Total Revenue', align: 'right', render: (t: ApiAny) => <span className="font-black text-emerald-600">₹{t.revenue.toLocaleString()}</span> },
+              { key: 'avg',       header: 'Avg Cost',     align: 'right', render: (t: ApiAny) => <span className="font-bold text-primary">₹{t.avg.toLocaleString()}</span> },
             ]}
             footer={paginationUI || undefined}
           />

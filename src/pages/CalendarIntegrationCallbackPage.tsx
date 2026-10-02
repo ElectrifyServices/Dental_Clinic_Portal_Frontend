@@ -33,6 +33,9 @@ export const CalendarIntegrationCallbackPage: React.FC = () => {
         setOutcome("error");
         setTimeout(() => navigate("/calendar-integration?connected=0", { replace: true }), 1500);
       });
+  // one-shot on mount, already guarded by `hasFired`; the OAuth callback must
+  // be submitted exactly once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

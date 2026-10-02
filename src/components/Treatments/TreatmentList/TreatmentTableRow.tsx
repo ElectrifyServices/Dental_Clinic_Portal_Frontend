@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Button } from "@/components/ui/Button";
 import React, { useState } from "react";
 import {
@@ -15,7 +16,7 @@ import { useSendWhatsappTreatmentMutation } from "../../../hooks/treatment/useSe
 import { useSendWhatsappSessionMutation } from "../../../hooks/treatment/useSendWhatsappSessionMutation";
 
 interface TreatmentTableRowProps {
-  treatment: any;
+  treatment: ApiAny;
   statusMeta: Record<string, { label: string; cls: string; icon: React.ReactNode }>;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
@@ -40,7 +41,7 @@ export function TreatmentTableRow({
       const data = await downloadTreatment({ id });
       await downloadCompletedTreatmentPDF(data);
       toast.success("PDF downloaded successfully!", { id: "pdf-download" });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error("Failed to download PDF: " + (err.message || ""), { id: "pdf-download" });
     } finally {
       setDownloading(false);
@@ -62,7 +63,7 @@ export function TreatmentTableRow({
       }
       
       toast.success(isAll ? "Treatment plan sent to WhatsApp successfully" : `Session ${sessionIndex} plan sent to WhatsApp successfully`, { id: "whatsapp-send" });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error("Failed to send WhatsApp: " + (err.message || "Unknown error"), { id: "whatsapp-send" });
     } finally {
       setSending(false);
@@ -73,18 +74,18 @@ export function TreatmentTableRow({
   const cost = Number(treatment.cost) < 100_000_000 ? Number(treatment.cost) : 0;
 
   // Session progress from already-mapped sessions array on the UI treatment object
-  const sessions: any[] = treatment.sessions ?? [];
+  const sessions: ApiAny[] = treatment.sessions ?? [];
   const totalSessions = sessions.length;
-  const completedSessions = sessions.filter((s: any) => s.status === "completed").length;
-  const cancelledSessions = sessions.filter((s: any) => s.status === "cancelled").length;
+  const completedSessions = sessions.filter((s: ApiAny) => s.status === "completed").length;
+  const cancelledSessions = sessions.filter((s: ApiAny) => s.status === "cancelled").length;
 
   // FIX: next session date — use plan's nextAppointment (set by backend when session is scheduled)
   // Fall back to finding the earliest SCHEDULED session date
   const nextApptRaw: string | undefined =
     treatment.nextAppointment ||
     sessions
-      .filter((s: any) => s.status === "scheduled" || s.status === "in-progress")
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]?.date;
+      .filter((s: ApiAny) => s.status === "scheduled" || s.status === "in-progress")
+      .sort((a: ApiAny, b: ApiAny) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]?.date;
 
   const nextApptLabel = nextApptRaw
     ? new Date(nextApptRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
@@ -104,7 +105,7 @@ export function TreatmentTableRow({
       {/* Tooth */}
       <td className="py-4 px-6">
         {(() => {
-          const rawTooth = treatment.tooth ?? (treatment as any).tooth_number;
+          const rawTooth = treatment.tooth ?? (treatment as ApiAny).tooth_number;
           if (rawTooth === undefined || rawTooth === null || rawTooth === "" || rawTooth === "—" || rawTooth === "-") {
             return <span className="px-2 py-1 bg-muted text-muted-foreground rounded-lg text-[10px] font-bold border border-border">—</span>;
           }
@@ -178,7 +179,7 @@ export function TreatmentTableRow({
           {/* Session progress dots — shown when sessions exist */}
           {totalSessions > 0 && (
             <div className="flex items-center gap-1">
-              {sessions.slice(0, 6).map((s: any, i: number) => (
+              {sessions.slice(0, 6).map((s: ApiAny, i: number) => (
                 <div
                   key={i}
                   className={`w-1.5 h-1.5 rounded-full ${s.status === "completed"

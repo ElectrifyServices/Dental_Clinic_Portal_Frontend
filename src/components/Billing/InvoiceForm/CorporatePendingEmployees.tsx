@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState, useRef } from "react";
 import {
   Users,
@@ -16,11 +17,11 @@ import { Input } from "@/components/ui/Input";
 import { CorporateBulkSelectModal } from "./CorporateBulkSelectModal";
 
 interface CorporatePendingEmployeesProps {
-  employees: any[];
+  employees: ApiAny[];
   linkedItemIds: string[];
-  onAdd: (item: any) => void;
+  onAdd: (item: ApiAny) => void;
   onRemove: (id: string) => void;
-  onAddMultiple: (items: any[]) => void;
+  onAddMultiple: (items: ApiAny[]) => void;
   onRemoveMultiple: (ids: string[]) => void;
 }
 
@@ -308,9 +309,8 @@ export const CorporatePendingEmployees: React.FC<
                             status: emp.status,
                             rawItem: emp,
                           };
-                          isSelected
-                            ? onRemove(emp.enrollment_id)
-                            : onAdd(invoiceItem);
+                          if (isSelected) onRemove(emp.enrollment_id);
+                          else onAdd(invoiceItem);
                         }}
                         className={`w-full text-[10px] h-7 font-black uppercase tracking-wider transition-all ${
                           isSelected ? btnSelected : btnDefault

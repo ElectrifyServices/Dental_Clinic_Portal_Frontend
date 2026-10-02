@@ -1,10 +1,11 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface Specialization {
   id: string;
   name: string;
   description: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useSpecializationsQuery() {

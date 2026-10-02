@@ -1,5 +1,8 @@
-export const downloadExcelFromBlob = async (blobData: any, filename: string) => {
-  let finalBlob = blobData;
+export const downloadExcelFromBlob = async (
+  blobData: Blob | BlobPart,
+  filename: string,
+) => {
+  let finalBlob: Blob;
 
   // Handle case where backend returns a JSON-encoded binary string inside a Blob
   if (blobData instanceof Blob) {
@@ -17,6 +20,7 @@ export const downloadExcelFromBlob = async (blobData: any, filename: string) => 
         });
       } catch (e) {
         console.warn("Failed to parse JSON string to binary", e);
+        finalBlob = blobData;
       }
     } else {
       finalBlob = new Blob([blobData], { 

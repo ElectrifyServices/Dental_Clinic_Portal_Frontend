@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Save,
@@ -26,10 +27,10 @@ import { cn } from "@/lib/utils";
 
 interface ConsentFormProps {
   onClose: () => void;
-  onSave: (form: any) => void;
-  form?: any;
+  onSave: (form: ApiAny) => void;
+  form?: ApiAny;
   patients: Patient[];
-  doctors: any[];
+  doctors: ApiAny[];
   isLoading?: boolean;
 }
 
@@ -55,6 +56,34 @@ function buildResponsibilitiesText(key: string) {
   return t.responsibilities.map((r) => `• ${r}`).join("\n");
 }
 
+/** Digs the patient array out of whichever envelope the API used. */
+const extractPatients = (data: ApiAny): ApiAny[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.responseObject !== undefined) {
+    return extractPatients(data.responseObject);
+  }
+  if (typeof data === "object") {
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data.patients)) return data.patients;
+    if (data.data && typeof data.data === "object") {
+      const nested = extractPatients(data.data);
+      if (nested.length > 0) return nested;
+    }
+    if (data.patients && typeof data.patients === "object") {
+      const nested = extractPatients(data.patients);
+      if (nested.length > 0) return nested;
+    }
+    for (const key of Object.keys(data)) {
+      if (Array.isArray(data[key])) {
+        return data[key];
+      }
+    }
+  }
+  return [];
+};
+
+
 export function ConsentForm({
   onClose,
   onSave,
@@ -68,34 +97,9 @@ export function ConsentForm({
   const debouncedPatientSearch = useDebounce(patientSearch, 300);
   const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({
     search: debouncedPatientSearch || undefined,
-    filters: { isDropdown: [true] as any }
+    filters: { isDropdown: [true] as ApiAny }
   });
   
-  const extractPatients = (data: any): any[] => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (data.responseObject !== undefined) {
-      return extractPatients(data.responseObject);
-    }
-    if (typeof data === "object") {
-      if (Array.isArray(data.data)) return data.data;
-      if (Array.isArray(data.patients)) return data.patients;
-      if (data.data && typeof data.data === "object") {
-        const nested = extractPatients(data.data);
-        if (nested.length > 0) return nested;
-      }
-      if (data.patients && typeof data.patients === "object") {
-        const nested = extractPatients(data.patients);
-        if (nested.length > 0) return nested;
-      }
-      for (const key of Object.keys(data)) {
-        if (Array.isArray(data[key])) {
-          return data[key];
-        }
-      }
-    }
-    return [];
-  };
 
   const apiPatients = useMemo(() => {
     return extractPatients(rawPatientsData);
@@ -236,7 +240,7 @@ export function ConsentForm({
     });
   };
 
-  const handlePatientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const _handlePatientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedPatient = patients.find((p) => p.id === e.target.value);
     if (selectedPatient) {
       setFormData({
@@ -399,7 +403,7 @@ export function ConsentForm({
                         setShowErrors(true);
                         return;
                       }
-                      setActiveTab(tab.id as any);
+                      setActiveTab(tab.id as ApiAny);
                     }}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all h-auto border-transparent bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground ${
                       activeTab === tab.id
@@ -427,7 +431,7 @@ export function ConsentForm({
                         value={formData.patientId}
                         onChange={(val: string) => {
                           const pList = apiPatients.length > 0 ? apiPatients : patients;
-                          const selectedPatient = pList.find((p: any) => p.id === val);
+                          const selectedPatient = pList.find((p: ApiAny) => p.id === val);
                           if (selectedPatient) {
                             setFormData({
                               ...formData,
@@ -439,7 +443,7 @@ export function ConsentForm({
                         onSearchChange={setPatientSearch}
                         options={(() => {
                           const list = apiPatients.length > 0 ? apiPatients : patients;
-                          const hasSelected = list.some((p: any) => p.id === formData.patientId);
+                          const hasSelected = list.some((p: ApiAny) => p.id === formData.patientId);
                           const resultList = [...list];
                           if (!hasSelected && formData.patientId && formData.patientName) {
                             resultList.push({
@@ -449,7 +453,7 @@ export function ConsentForm({
                               country_code: "",
                             });
                           }
-                          return resultList.map((p: any) => {
+                          return resultList.map((p: ApiAny) => {
                             const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
                             return { 
                               label: p.name, 
@@ -459,7 +463,7 @@ export function ConsentForm({
                             };
                           });
                         })()}
-                        renderOption={(option: any) => {
+                        renderOption={(option: ApiAny) => {
                           const p = option.patient;
                           if (!p) return <span>{option.label}</span>;
                           const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
@@ -473,8 +477,8 @@ export function ConsentForm({
                                     alt={p.name}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      (e.target as any).style.display = 'none';
-                                      const parent = (e.target as any).parentElement;
+                                      (e.target as ApiAny).style.display = 'none';
+                                      const parent = (e.target as ApiAny).parentElement;
                                       if (parent) {
                                         const fallback = parent.querySelector('.avatar-fallback');
                                         if (fallback) fallback.classList.remove("hidden");
@@ -501,7 +505,7 @@ export function ConsentForm({
                             </div>
                           );
                         }}
-                        renderValue={(option: any) => {
+                        renderValue={(option: ApiAny) => {
                           const p = option.patient;
                           if (!p) return option.label;
                           const profilePic = p.profilePicture || p.avatar || p.profile_picture || p.image;
@@ -535,20 +539,20 @@ export function ConsentForm({
                       <SearchableSelect
                         value={formData.doctorName}
                         onChange={(val: string) => {
-                          const matched = apiDoctors?.find((d: any) => d.name === val) || doctors.find((d) => d.name === val);
+                          const matched = apiDoctors?.find((d: ApiAny) => d.name === val) || doctors.find((d) => d.name === val);
                           setFormData({
                             ...formData,
                             doctorName: val,
                             doctorId: matched ? matched.id : "",
                           });
                         }}
-                        options={(apiDoctors?.length ? apiDoctors : doctors).map((d: any) => ({ 
+                        options={(apiDoctors?.length ? apiDoctors : doctors).map((d: ApiAny) => ({ 
                           label: d.name, 
                           value: d.name,
                           searchLabel: `${d.name} ${d.specialization || d.role || ''}`,
                           doctor: d
                         }))}
-                        renderOption={(option: any) => {
+                        renderOption={(option: ApiAny) => {
                           const d = option.doctor;
                           if (!d) return <span>{option.label}</span>;
                           const profilePic = d.avatar || d.profile_picture || d.image;
@@ -562,8 +566,8 @@ export function ConsentForm({
                                     alt={d.name}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      (e.target as any).style.display = 'none';
-                                      const parent = (e.target as any).parentElement;
+                                      (e.target as ApiAny).style.display = 'none';
+                                      const parent = (e.target as ApiAny).parentElement;
                                       if (parent) {
                                         const fallback = parent.querySelector('.avatar-fallback');
                                         if (fallback) fallback.classList.remove('hidden');
@@ -595,7 +599,7 @@ export function ConsentForm({
                             </div>
                           );
                         }}
-                        renderValue={(option: any) => {
+                        renderValue={(option: ApiAny) => {
                           const d = option.doctor;
                           if (!d) return option.label;
                           const profilePic = d.avatar || d.profile_picture || d.image;
@@ -702,7 +706,7 @@ export function ConsentForm({
                             variant="destructive"
                             size="sm"
                             onClick={() => {
-                              setFormData((prev: any) => ({
+                              setFormData((prev: ApiAny) => ({
                                 ...prev,
                                 consentFormUrl: "",
                                 rawConsentFormFile: null
@@ -732,7 +736,7 @@ export function ConsentForm({
                             if (file) {
                               const reader = new FileReader();
                               reader.onload = (event) => {
-                                setFormData((prev: any) => ({
+                                setFormData((prev: ApiAny) => ({
                                   ...prev,
                                   consentFormUrl: event.target?.result as string,
                                   rawConsentFormFile: file,

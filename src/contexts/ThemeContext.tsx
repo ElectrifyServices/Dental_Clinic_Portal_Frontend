@@ -170,7 +170,7 @@ function clearThemeFromDom(): void {
   document.documentElement.classList.remove("dark");
   try {
     document.title = "Opal Smiles Dental Studio";
-    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    const link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
     if (link) {
       link.href = "/favicon.png";
     }

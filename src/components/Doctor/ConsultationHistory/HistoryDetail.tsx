@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -14,18 +15,18 @@ import { SearchableSelect, Button, Label, Loading, Card, CardContent } from "@/c
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
 interface HistoryDetailProps {
-  record: any;
-  onDownloadPDF: (record: any, type: any) => void;
-  onSendPDF: (record: any, type: any) => void;
+  record: ApiAny;
+  onDownloadPDF: (record: ApiAny, type: ApiAny) => void;
+  onSendPDF: (record: ApiAny, type: ApiAny) => void;
   onDeleteClick: (id: number, e: React.MouseEvent) => void;
 }
 
 export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick: _onDeleteClick }: HistoryDetailProps) {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [showSendMenu, setShowSendMenu] = useState(false);
-  const [fullRecord, setFullRecord] = useState<any>(record);
+  const [fullRecord, setFullRecord] = useState<ApiAny>(record);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<ApiAny>(null);
   const [isLoadingAppt, setIsLoadingAppt] = useState(false);
   const reportAvailability = getConsultationReportAvailability(fullRecord);
 
@@ -43,7 +44,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
     const p = fullRecord.patient;
     if (!p) return "";
     const list = p.medicalHistoryNames || p.medicalHistory || p.medical_histories || p.medicalHistories || [];
-    return list.map((item: any) => typeof item === 'object' ? (item.name || item.history?.name || item.condition || item.history_name) : item).filter(Boolean).join(", ");
+    return list.map((item: ApiAny) => typeof item === 'object' ? (item.name || item.history?.name || item.condition || item.history_name) : item).filter(Boolean).join(", ");
   };
 
   const getAllergiesText = () => {
@@ -51,7 +52,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
     const p = fullRecord.patient;
     if (!p) return "";
     const list = p.allergyNames || p.allergies || [];
-    return list.map((item: any) => typeof item === 'object' ? (item.allergy_name || item.name) : item).filter(Boolean).join(", ");
+    return list.map((item: ApiAny) => typeof item === 'object' ? (item.allergy_name || item.name) : item).filter(Boolean).join(", ");
   };
 
   // Edit Appointment States
@@ -71,7 +72,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
 
   const availableSlots = useMemo(() => {
     if (!slotsData?.data?.slots) return [];
-    return slotsData.data.slots.map((s: any) => {
+    return slotsData.data.slots.map((s: ApiAny) => {
       const time24 = s.time;
       let time12 = time24;
       if (!time24.includes("AM") && !time24.includes("PM")) {
@@ -95,15 +96,15 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
         const response = await apiClient.get(`/consultations/${record.id}`);
         const parsed = parseApiResponse(response.data);
         if (parsed.data) {
-          const detailedData = (parsed.data as any).data || parsed.data;
+          const detailedData = (parsed.data as ApiAny).data || parsed.data;
           setFullRecord({ ...record, ...detailedData });
 
           // Try to get associated appointment directly from the response or record
-          const pData: any = detailedData;
-          const rec: any = record;
+          const pData: ApiAny = detailedData;
+          const rec: ApiAny = record;
 
           // Helper to check if an object is non-empty
-          const isNonEmptyObj = (x: any) => x && typeof x === 'object' && Object.keys(x).length > 0;
+          const isNonEmptyObj = (x: ApiAny) => x && typeof x === 'object' && Object.keys(x).length > 0;
 
           let appt = null;
 
@@ -138,7 +139,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
             setAppointment(appt);
           } else if (!hasExplicitFollowUpArray) {
             // Search appointment using patient ID and follow-up date if no array was provided
-            const patientId = (parsed.data as any).patient_id || (parsed.data as any).patientId || record.patient_id || record.patientId;
+            const patientId = (parsed.data as ApiAny).patient_id || (parsed.data as ApiAny).patientId || record.patient_id || record.patientId;
             if (patientId) {
               setIsLoadingAppt(true);
               const apptListRes = await apiClient.post("/appointment/list", {
@@ -150,10 +151,10 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 apptListRes.data?.data?.appointments ||
                 apptListRes.data?.appointments || [];
               if (Array.isArray(appts) && appts.length > 0) {
-                const followUpDateStr = (parsed.data as any).follow_up_date || record.follow_up_date;
+                const followUpDateStr = (parsed.data as ApiAny).follow_up_date || record.follow_up_date;
                 if (followUpDateStr) {
                   const targetDate = followUpDateStr.includes("T") ? followUpDateStr.split("T")[0] : followUpDateStr;
-                  const match = appts.find((a: any) => {
+                  const match = appts.find((a: ApiAny) => {
                     const aDateStr = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
                     return aDateStr === targetDate;
                   });
@@ -172,12 +173,15 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
             setAppointment(null);
           }
         }
-      } catch (err) {
+      } catch (_err) { /* leave the appointment as it was; `finally` stops the spinner */
       } finally {
         setIsLoadingFull(false);
       }
     };
     fetchDetails();
+  // keyed on the id on purpose: `record` is a fresh object on every parent
+  // render, so depending on it would refetch the details continuously
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record.id]);
 
   const extractTime24 = (timeStr: string) => {
@@ -197,7 +201,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
     if (appointment?.doctor?.name) return appointment.doctor.name;
     if (appointment?.personal_profile?.staff?.name) return appointment.personal_profile.staff.name;
     const docId = appointment?.doctor_id || appointment?.personal_profile?.staff?.id;
-    const doc = doctorsList.find((d: any) => d.id === docId);
+    const doc = doctorsList.find((d: ApiAny) => d.id === docId);
     return doc ? doc.name : "Doctor";
   };
 
@@ -213,7 +217,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
           if (!isNaN(d.getTime())) {
             dateStr = d.toISOString().split("T")[0];
           }
-        } catch (e) { }
+        } catch (_e) { /* unparseable date - keep the fallback string */ }
       }
       setSelectedDate(dateStr);
       setSelectedSlot(appointment.start_time ? extractTime24(appointment.start_time) : "");
@@ -234,28 +238,28 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
           }
         });
         // Refresh local display state
-        setAppointment((prev: any) => ({
+        setAppointment((prev: ApiAny) => ({
           ...prev,
           doctor_id: selectedDoctorId,
           date: selectedDate,
           start_time: selectedSlot,
-          doctor: doctorsList.find((d: any) => d.id === selectedDoctorId) || prev.doctor
+          doctor: doctorsList.find((d: ApiAny) => d.id === selectedDoctorId) || prev.doctor
         }));
         setEditMode(false);
-      } catch (err) {
+      } catch (_err) { /* save failed; `finally` clears the saving flag */
       } finally {
         setIsSavingAppt(false);
       }
     };
 
-    const fmt = (d: any) => {
+    const fmt = (d: ApiAny) => {
       if (!d) return "—";
       const date = new Date(d);
       if (isNaN(date.getTime())) return "—";
       return date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
     };
 
-    const fmtShort = (d: any) => {
+    const fmtShort = (d: ApiAny) => {
       if (!d) return "—";
       const date = new Date(d);
       if (isNaN(date.getTime())) return "—";
@@ -277,7 +281,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
       return `${h12}:${m.substring(0, 2)} ${ampm}`;
     };
 
-    const getMedName = (x: any) => {
+    const getMedName = (x: ApiAny) => {
       if (!x) return "";
       if (typeof x.medicine_name === "string") return x.medicine_name;
       if (typeof x.medicine === "string") return x.medicine;
@@ -286,13 +290,13 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
       return String(x.medicine_name || x.medicine || "");
     };
 
-    const hasValidPrescriptions = (p?: any[]) =>
+    const hasValidPrescriptions = (p?: ApiAny[]) =>
       p && p.some(x => getMedName(x).trim() !== "");
 
-    const formatTeeth = (toothInput: any) => {
+    const formatTeeth = (toothInput: ApiAny) => {
       if (toothInput === undefined || toothInput === null) return "General";
       
-      let teethArray: any[] = [];
+      let teethArray: ApiAny[] = [];
       if (Array.isArray(toothInput)) {
         teethArray = toothInput;
       } else if (typeof toothInput === "string") {
@@ -643,7 +647,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 <Activity className="w-4.5 h-4.5 mr-2 text-primary" /> Tooth Chart Findings
               </p>
               <div className="flex flex-wrap gap-2">
-                {fullRecord.tooth_findings.map((finding: any) => (
+                {fullRecord.tooth_findings.map((finding: ApiAny) => (
                   <div
                     key={finding.id || finding.tooth_number}
                     className={`border rounded-lg px-3 py-1.5 text-xs flex items-center gap-2.5 shadow-sm font-bold ${getToothConditionBadgeStyle(finding.condition)}`}
@@ -677,7 +681,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 )}
                 {((fullRecord.treatment_plans || fullRecord.treatments || []).length > 0) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: any, index: number) => (
+                    {(fullRecord.treatment_plans || fullRecord.treatments || []).map((tp: ApiAny, index: number) => (
                       <div key={tp.id || tp.tooth_number || index} className="bg-slate-50 border border-border/40 rounded-lg p-3 text-sm flex justify-between items-center font-bold">
                         <span className="text-foreground">
                           {formatTeeth(tp.tooth_number !== undefined ? tp.tooth_number : tp.tooth)}: <span className="font-semibold text-muted-foreground">{tp.treatment_name || tp.procedure}</span>
@@ -701,7 +705,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 <Pill className="w-4.5 h-4.5 text-indigo-600" /> Prescribed Medicines
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {fullRecord.prescriptions?.map((p: any) => {
+                {fullRecord.prescriptions?.map((p: ApiAny) => {
                   const medName = getMedName(p);
                   return medName.trim() ? (
                     <div key={p.id} className="bg-indigo-50/10 border border-indigo-100/40 rounded-xl p-3 text-sm font-semibold flex flex-col justify-between space-y-2">
@@ -769,7 +773,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 🔬 Lab Reports
               </p>
               <div className="flex flex-wrap gap-2">
-                {(fullRecord.labFiles || fullRecord.lab_files || []).map((file: any, idx: number) => {
+                {(fullRecord.labFiles || fullRecord.lab_files || []).map((file: ApiAny, idx: number) => {
                   const url = typeof file === 'string' ? file : file.url;
                   const name = typeof file === 'string' ? `Lab Report ${idx + 1}` : file.name || `Report ${idx + 1}`;
                   return (
@@ -875,7 +879,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                         setSelectedDoctorId(val);
                         setSelectedSlot("");
                       }}
-                      options={doctorsList.map((d: any) => ({
+                      options={doctorsList.map((d: ApiAny) => ({
                         label: `${d.name} (${d.specialization || "Doctor"})`,
                         value: d.id
                       }))}
@@ -1001,7 +1005,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                 <FileText className="w-4.5 h-4.5 text-primary/70" /> Attachments
               </p>
               <div className="flex flex-wrap gap-3">
-                {fullRecord.attachments.map((attachment: any, idx: number) => {
+                {fullRecord.attachments.map((attachment: ApiAny, idx: number) => {
                   const isImage = attachment.file_type?.startsWith("image/") || attachment.file_name?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                   return isImage ? (
                     <img
@@ -1054,7 +1058,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
         )}
       </div>
     );
-  } catch (error: any) {
+  } catch (error: ApiAny) {
     console.error("Error in HistoryDetail render:", error);
     return (
       <div className="p-6 text-center space-y-2 bg-red-50/20 border border-red-100 rounded-xl">

@@ -1,33 +1,23 @@
+import type { ApiAny } from "../../types/api";
 import { useState } from "react";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Calendar as CalendarIcon,
-  Stethoscope,
-  MoreVertical,
-  Info,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/Tooltip";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 import { useModal } from "../../contexts/ModalContext";
 
 interface AppointmentListProps {
-  appointments?: any[];
-  isNoShowView?: boolean;
+  appointments?: ApiAny[];
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
-  onCheckInPatient?: (appointment: any) => void;
-  onDirectCheckIn?: (appointment: any) => void;
+  onCheckInPatient?: (appointment: ApiAny) => void;
+  onDirectCheckIn?: (appointment: ApiAny) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
   searchValue?: string;
@@ -41,7 +31,7 @@ interface AppointmentListProps {
   checkingInApptId?: string | null;
 }
 
-const STATUS_VARIANTS: Record<string, any> = {
+const STATUS_VARIANTS: Record<string, ApiAny> = {
   completed: "green",
   "in-progress": "blue",
   "checked-in": "green",
@@ -67,14 +57,14 @@ const formatTime = (t: string) => {
   const upper = t.toUpperCase();
   if (upper.includes("AM") || upper.includes("PM")) return upper;
   const [h, m] = t.split(":");
-  let hr = parseInt(h);
+  const hr = parseInt(h);
   const ap = hr >= 12 ? "PM" : "AM";
   return `${hr % 12 || 12}:${m} ${ap}`;
 };
 
 export function AppointmentList({
   appointments: propAppointments = [],
-  isNoShowView = false,
+  isNoShowView: _isNoShowView = false,
   onEditAppointment,
   onDeleteAppointment,
   onUpdateStatus,
@@ -129,7 +119,7 @@ export function AppointmentList({
 
   const { doctors } = useDoctorsListQuery();
 
-  const today = new Date();
+  const _today = new Date();
   const filtered = propAppointments.filter((a) => {
     const ptName =
       a.patientName ||
@@ -161,7 +151,7 @@ export function AppointmentList({
     {
       key: "patient",
       header: "Patient Details",
-      render: (a: any) => {
+      render: (a: ApiAny) => {
         const ptNameRaw =
           a.patientName ||
           (a.patient && a.patient.name) ||
@@ -192,9 +182,9 @@ export function AppointmentList({
     {
       key: "doctor",
       header: "Doctor",
-      render: (a: any) => {
+      render: (a: ApiAny) => {
         const doc = doctors?.find(
-          (d: any) => d.id === a.doctor_id || d.id === a.doctorId
+          (d: ApiAny) => d.id === a.doctor_id || d.id === a.doctorId
         );
         let doctorName = doc ? doc.name : a.doctorName || a.doctor || "";
         if (doctorName && typeof doctorName === "string") {
@@ -220,7 +210,7 @@ export function AppointmentList({
     {
       key: "schedule",
       header: "Schedule",
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
             <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
@@ -244,7 +234,7 @@ export function AppointmentList({
       key: "fee",
       header: "Total Fee",
       align: "right" as const,
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="font-semibold text-foreground text-sm">
           ₹{(a.fee || 0).toLocaleString()}
         </div>
@@ -253,54 +243,29 @@ export function AppointmentList({
     {
       key: "status",
       header: "Current Status",
-      render: (a: any) => {
-        const reason = a.cancelled_reason || a.cancelledReason || a.reason;
-        const showReason = isNoShowView && Boolean(reason);
-        return (
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={
-                STATUS_VARIANTS[a.status] ||
-                STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
-                STATUS_VARIANTS[
-                  (a.status || "").toLowerCase().replace("_", "-")
-                ] ||
-                "gray"
-              }
-              className="text-[10px] px-3 py-0.5 font-medium"
-            >
-              {String(a.status || "")
-                .replace("_", " ")
-                .replace("-", " ")}
-            </Badge>
-            {showReason && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-                    >
-                      <Info className="w-3 h-3" />
-                      <span>Reason</span>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs bg-slate-900 text-white p-2.5 text-xs rounded-xl shadow-xl border border-slate-800">
-                    <p className="font-bold text-amber-400 mb-0.5 text-[11px]">No-Show Reason:</p>
-                    <p className="text-slate-200 leading-relaxed break-words">{reason}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        );
-      },
+      render: (a: ApiAny) => (
+        <Badge
+          variant={
+            STATUS_VARIANTS[a.status] ||
+            STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
+            STATUS_VARIANTS[
+              (a.status || "").toLowerCase().replace("_", "-")
+            ] ||
+            "gray"
+          }
+          className="text-[10px] px-3 py-0.5 font-medium"
+        >
+          {String(a.status || "")
+            .replace("_", " ")
+            .replace("-", " ")}
+        </Badge>
+      ),
     },
     {
       key: "actions",
       header: "Actions",
       align: "left" as const,
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="flex justify-start">
           <Button
             variant="ghost"

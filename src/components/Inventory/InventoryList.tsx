@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect } from "react";
 import {
   Plus,
@@ -13,16 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import {
-  Button,
-  PageHeader,
-  DataTable,
-  SearchInput,
-  FilterTabs,
-  StatusBadge,
-  MetricCard,
-  Pagination,
-} from "@/components/ui";
+import { Button, PageHeader, DataTable, SearchInput, StatusBadge, MetricCard, Pagination } from "@/components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/Popover";
 import { cn } from "@/lib/utils";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
@@ -67,7 +59,7 @@ const CAT_META: Record<
 // Removed hardcoded CATEGORIES
 
 export function InventoryList({
-  inventory,
+  inventory: _inventory,
   onAddItem,
   onEditItem,
   onDeleteItem,
@@ -94,7 +86,7 @@ export function InventoryList({
   }, [search]);
 
   const { data: summary } = useInventorySummaryQuery({ refetchOnMount: "always" });
-  const { data: listData, isLoading } = useInventoryListQuery({
+  const { data: listData, isLoading: _isLoading } = useInventoryListQuery({
     search: debouncedSearch,
     category: cat,
     low_stock: lowStockFilter,
@@ -108,7 +100,7 @@ export function InventoryList({
 
   const { data: categoriesData } = useInventoryCategoriesQuery();
 
-  let dynamicCategories: any[] = [];
+  let dynamicCategories: ApiAny[] = [];
   if (Array.isArray(categoriesData)) dynamicCategories = categoriesData;
   else if (Array.isArray(categoriesData?.data)) dynamicCategories = categoriesData.data;
   else if (Array.isArray(categoriesData?.items)) dynamicCategories = categoriesData.items;
@@ -118,20 +110,20 @@ export function InventoryList({
 
   const filterTabs = [
     { key: "all", label: "All Items" },
-    ...dynamicCategories.map((c: any) => ({
+    ...dynamicCategories.map((c: ApiAny) => ({
       key: c?.id || c?._id || c?.categoryId || c?.category_id || c?.name,
       label: c.name || "Unknown"
     }))
   ];
 
-  let rawList: any[] = [];
+  let rawList: ApiAny[] = [];
   if (Array.isArray(listData)) rawList = listData;
   else if (Array.isArray(listData?.items)) rawList = listData.items;
   else if (Array.isArray(listData?.data)) rawList = listData.data;
   else if (Array.isArray(listData?.data?.items)) rawList = listData.data.items;
   else if (Array.isArray(listData?.responseObject)) rawList = listData.responseObject;
   
-  const filtered = rawList.map((item: any) => ({
+  const filtered = rawList.map((item: ApiAny) => ({
     id: item.id,
     name: item.name,
     category: item.category?.name || item.category_name || item.category,
@@ -146,9 +138,9 @@ export function InventoryList({
     batchNumber: item.batch_number ?? item.batchNumber ?? "",
   }));
 
-  const summaryData = (summary as any)?.data || summary;
+  const summaryData = (summary as ApiAny)?.data || summary;
   const lowCount = summaryData?.low_stock_count || 0;
-  const listWrapper: any = listData || {};
+  const listWrapper: ApiAny = listData || {};
   const pagination = listWrapper?.pagination || listWrapper?.data?.pagination || listWrapper?.responseObject?.pagination || listWrapper?.responseObject?.data?.pagination || {};
   const totalItems = Number(
     pagination.total_items ?? pagination.totalItems ?? listWrapper?.total ?? listWrapper?.data?.total ?? listWrapper?.responseObject?.total ?? listWrapper?.responseObject?.data?.total ?? rawList.length,

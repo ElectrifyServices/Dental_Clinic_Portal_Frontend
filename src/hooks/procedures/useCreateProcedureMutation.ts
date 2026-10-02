@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModal } from "@/contexts/ModalContext";
@@ -20,7 +21,7 @@ export function useCreateProcedureMutation() {
         queryClient.invalidateQueries({ queryKey: ["procedures"] });
         showToast("Procedure created successfully", "success");
       },
-      onError: (err: any) => {
+      onError: (err: ApiAny) => {
         showToast(err?.message || "Failed to create procedure", "error");
       },
     },

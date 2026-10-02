@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -28,11 +29,11 @@ interface AppointmentFormProps {
   onSave: (appointment: Partial<Appointment>) => void;
   appointment?: Appointment;
   isQuickBooking?: boolean;
-  doctors?: any[];
+  doctors?: ApiAny[];
   doctorAvailability?: { [key: string]: boolean };
-  appointments?: any[];
+  appointments?: ApiAny[];
   selectedDate?: Date | null;
-  patients?: any[];
+  patients?: ApiAny[];
   isFollowUp?: boolean;
 }
 
@@ -86,18 +87,18 @@ export function AppointmentForm({
   } | null>(null);
 
   const initialDoctorId = appointment?.doctorId ?? appointment?.doctor_id ?? (doctors && doctors.length > 0 ? doctors[0].id : "1");
-  const initialDoctor = doctors?.find((d: any) => String(d.id) === String(initialDoctorId));
+  const initialDoctor = doctors?.find((d: ApiAny) => String(d.id) === String(initialDoctorId));
   const defaultFee = appointment?.fee ?? appointment?.treatment_cost ?? 0;
   const defaultDoctorName = appointment?.doctorName ?? appointment?.doctor_name ?? (initialDoctor?.name || "Dr. Sharma");
 
   const parsedInitialPhone = useMemo(() => {
     const rawPhone = appointment?.patientPhone ?? appointment?.patient_phone ?? "";
-    const rawCode = (appointment as any)?.country_code ?? (appointment as any)?.countryCode ?? "";
+    const rawCode = (appointment as ApiAny)?.country_code ?? (appointment as ApiAny)?.countryCode ?? "";
     return parsePhoneAndCountry(rawPhone, rawCode);
   }, [appointment]);
 
   const form = useForm<AppointmentFormData>({
-    resolver: zodResolver(appointmentSchema) as any,
+    resolver: zodResolver(appointmentSchema) as ApiAny,
     defaultValues: {
       patientName: appointment?.patientName ?? appointment?.patient_name ?? "",
       country_code: parsedInitialPhone.countryCode,
@@ -141,7 +142,7 @@ export function AppointmentForm({
     },
   });
 
-  const { data: fetchedAppointmentResponse, isPending: isFetchingAppointment } = useAppointmentQuery(appointment?.id);
+  const { data: fetchedAppointmentResponse, isPending: _isFetchingAppointment } = useAppointmentQuery(appointment?.id);
 
   useEffect(() => {
     if (fetchedAppointmentResponse) {
@@ -250,12 +251,16 @@ export function AppointmentForm({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as any },
-  }, { refetchOnMount: 'always' });
+    filters: { isDropdown: [true] as ApiAny },
+  });
+
+  useEffect(() => {
+    refetchPatients();
+  }, [refetchPatients]);
 
   const apiPatients = useMemo(() => {
-    let rawList: any[] = [];
-    const dataObj: any = rawPatientsData;
+    let rawList: ApiAny[] = [];
+    const dataObj: ApiAny = rawPatientsData;
 
     const target = dataObj?.responseObject !== undefined ? dataObj.responseObject : dataObj;
 
@@ -275,7 +280,7 @@ export function AppointmentForm({
       rawList = patients;
     }
 
-    return rawList.map((p: any) => ({
+    return rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -283,14 +288,14 @@ export function AppointmentForm({
     }));
   }, [rawPatientsData, patients, debouncedSearch]);
 
-  const handleChange = (e: React.ChangeEvent<any>) => {
+  const handleChange = (e: React.ChangeEvent<ApiAny>) => {
     const { name, value } = e.target;
     form.setValue(name as keyof AppointmentFormData, value, {
       shouldValidate: true,
     });
     if (name === "patientName" && value.trim().length > 2) {
       const found = apiPatients.find(
-        (p: any) => p.name.toLowerCase() === value.toLowerCase().trim(),
+        (p: ApiAny) => p.name.toLowerCase() === value.toLowerCase().trim(),
       );
       setSuggestion(found ? { name: found.name, phone: found.phone } : null);
     }
@@ -390,7 +395,7 @@ export function AppointmentForm({
             onDurationChange={(val) => form.setValue("duration", val)}
             onDoctorChange={(val) => {
               form.setValue("doctorId", val);
-              const selectedDoctor = doctors.find((d: any) => d.id === val);
+              const selectedDoctor = doctors.find((d: ApiAny) => d.id === val);
               form.setValue("doctorName", selectedDoctor?.name);
             }}
           />

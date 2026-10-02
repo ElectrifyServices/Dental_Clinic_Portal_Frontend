@@ -1,7 +1,8 @@
+import type { ApiAny, ApiRecord } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface CorporatePlansResponse {
-  data: any[];
+  data: ApiRecord[];
   pagination: {
     page: number;
     limit: number;
@@ -21,7 +22,7 @@ export interface CorporatePlansParams {
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
   const enabled = params.enabled ?? false;
-  const body: Record<string, any> = {
+  const body: Record<string, ApiAny> = {
     page: 1,
     limit: 100,
   };

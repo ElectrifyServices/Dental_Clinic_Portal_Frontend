@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
-import { Mail, ArrowRight, Lock, Key, ArrowLeft, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
+import { Mail, ArrowRight, Lock, Key, Eye, EyeOff, Check } from "lucide-react";
 const logoImg = "/Portal_logo.png";
 import { useState } from "react";
 import { useVerifyEmailMutation } from "@/hooks/auth/useVerifyEmailMutation";
@@ -65,7 +66,8 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       await verifyEmail({ email: resetEmail });
       setIsVerified(true);
       toast.success("Email verified successfully!");
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught as ApiAny;
       const msg = error.message || "Failed to verify email. Backend might be down.";
       setEmailError(msg);
       toast.error(msg);
@@ -83,7 +85,8 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       await forgotPassword({ email: resetEmail });
       toast.success("Password reset link sent to your email!");
       setView('forgot-sent');
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught as ApiAny;
       const msg = error.message || "Failed to send reset link";
       setEmailError(msg);
       toast.error(msg);
@@ -119,7 +122,8 @@ export function ForgotView({ setView, resetEmail, setResetEmail }: ForgotViewPro
       toast.success("Password updated successfully!");
       setShowChangeModal(false);
       setView('login');
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught as ApiAny;
       toast.error(error.message || "Failed to change password");
     } finally {
       setIsLoading(false);

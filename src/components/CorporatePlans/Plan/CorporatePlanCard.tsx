@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Users, Calendar, ChevronDown, ChevronUp,
-  ToggleLeft, ToggleRight, Edit2, Trash2,
-  MoreHorizontal, Building2, User, Shield,
-  Star, Award, Sparkles, CheckCircle2, Clock,
-} from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Edit2, Trash2, MoreHorizontal, Building2, User, Shield, Star, Award, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CorporatePlan } from '../../../types';
 import { getPlanStatus, TREATMENT_LABELS } from '../../../utils/corporatePlan';

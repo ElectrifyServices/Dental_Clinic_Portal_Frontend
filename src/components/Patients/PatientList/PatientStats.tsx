@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Users, UserCheck, UserPlus, CreditCard } from 'lucide-react';
 import { useSidebar } from "../../../contexts/SidebarContext";
@@ -25,7 +26,7 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   const { data: newData } = usePatientNewQuery();
   const { data: outstandingData } = usePatientOutstandingQuery();
 
-  const parseData = (d: any) => {
+  const parseData = (d: ApiAny) => {
     if (!d) return undefined;
     return d.total_pending ?? d.count ?? d.total ?? d.amount ?? d.data?.total_pending ?? d.data?.count ?? d.data?.total ?? d.data?.amount;
   };

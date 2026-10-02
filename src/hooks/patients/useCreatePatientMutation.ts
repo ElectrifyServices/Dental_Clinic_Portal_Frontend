@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -47,7 +48,7 @@ export interface CreatePatientPayload {
 
 export interface CreatePatientResponse {
   id: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 // ─── Field Mapping Helpers ───────────────────────────────────────────────────
@@ -91,7 +92,7 @@ const CATEGORY_MAP: Record<string, string> = {
  * object expected by POST /patient/create.
  */
 export function mapFormDataToCreatePayload(
-  formData: any,
+  formData: ApiAny,
   options?: { primaryPatientId?: string }
 ): FormData {
   const payload = new FormData();
@@ -207,7 +208,7 @@ export function mapFormDataToCreatePayload(
         const file = new File([u8arr], "signature.png", { type: mime });
         payload.append('consent_signature_image', file);
       }
-    } catch (e) {
+    } catch (_e) { /* malformed signature data URL - send the payload without the image */
     }
   }
 
@@ -228,7 +229,7 @@ export function mapFormDataToCreatePayload(
 
 export interface CreatePatientResponse {
   id: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useCreatePatientMutation() {
