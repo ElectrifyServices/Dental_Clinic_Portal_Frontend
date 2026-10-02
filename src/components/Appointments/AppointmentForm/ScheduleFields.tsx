@@ -55,7 +55,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
     if (!slotsResponse?.data?.slots) return [];
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    return slotsResponse.data.slots.map((slot: any) => {
+    return slotsResponse.data.slots.map((slot: ApiAny) => {
       const time24 = convert12to24(slot.time);
       const [h, m] = time24.split(":");
       const slotTime = new Date(date);
@@ -249,7 +249,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
               {slots.map((slot) => {
                 const isSelected = time === slot.time24;
                 const isDisabled = slot.disabled;
-                const isBlocked = (slot as any).isBlocked;
+                const isBlocked = (slot as ApiAny).isBlocked;
                 return (
                   <Button
                     key={slot.time24}

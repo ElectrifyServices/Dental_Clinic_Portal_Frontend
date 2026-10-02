@@ -68,7 +68,7 @@ export const AppointmentsPage: React.FC = () => {
       setNoShowApptId(id);
       setNoShowReason("");
     } else if (status === 'cancelled') {
-      const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
+      const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
       showConfirm(
         "Cancel Appointment",
         `Are you sure you want to cancel the appointment for ${apt?.patientName || "this patient"}? A cancellation WhatsApp notification will be sent to the patient.`,

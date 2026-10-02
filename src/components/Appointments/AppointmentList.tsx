@@ -1,21 +1,11 @@
 import type { ApiAny } from "../../types/api";
 import { useState } from "react";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Calendar as CalendarIcon,
-  Stethoscope,
-  MoreVertical,
-  Info,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/Tooltip";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -74,7 +64,7 @@ const formatTime = (t: string) => {
 
 export function AppointmentList({
   appointments: propAppointments = [],
-  isNoShowView = false,
+  isNoShowView: _isNoShowView = false,
   onEditAppointment,
   onDeleteAppointment,
   onUpdateStatus,

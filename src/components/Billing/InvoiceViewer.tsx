@@ -325,7 +325,7 @@ export function InvoiceViewer({
                 <div className="pt-2 border-t border-border/50">
                   <Badge className="text-xs py-1 px-2.5 font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
                     🏢 Corporate Invoice • {
-                      invoice.items?.filter((i: any) => i.item_type === "MEMBERSHIP" || (i.description && i.description.startsWith("Employee Membership"))).length || invoice.items?.length || 0
+                      invoice.items?.filter((i: ApiAny) => i.item_type === "MEMBERSHIP" || (i.description && i.description.startsWith("Employee Membership"))).length || invoice.items?.length || 0
                     } Employee(s) Billed
                   </Badge>
                 </div>
@@ -404,7 +404,7 @@ export function InvoiceViewer({
               key: "sr_no",
               header: "Sr. No.",
               align: "center",
-              render: (_: any, idx: number) => (
+              render: (_: ApiAny, idx: number) => (
                 <span className="text-muted-foreground font-medium">{idx + 1}</span>
               ),
             },

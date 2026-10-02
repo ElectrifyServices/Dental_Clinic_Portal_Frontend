@@ -88,7 +88,7 @@ export function InvoiceForm({
   const { data: rawPatientsData } = usePatientQuery(
     {
       search: patientSearchQuery || undefined,
-      filters: { isDropdown: [true] as any },
+      filters: { isDropdown: [true] as ApiAny },
     },
     { enabled: !isCorporateBilling, staleTime: 0, refetchOnMount: "always" }
   );
@@ -101,14 +101,14 @@ export function InvoiceForm({
 
   const apiCorporatePlans = useMemo(() => {
     if (!rawCorporatePlansList) return [];
-    const target = (rawCorporatePlansList as any)?.data ?? rawCorporatePlansList;
-    let list: any[] = [];
+    const target = (rawCorporatePlansList as ApiAny)?.data ?? rawCorporatePlansList;
+    let list: ApiAny[] = [];
     if (Array.isArray(target)) {
       list = target;
     } else if (target && typeof target === "object") {
       list = target.data?.data?.data || target.data?.data || target.data || target.plans || target.data?.plans || [];
     }
-    return list.filter((p: any) => p.status === "ACTIVE" || p.isActive !== false);
+    return list.filter((p: ApiAny) => p.status === "ACTIVE" || p.isActive !== false);
   }, [rawCorporatePlansList]);
   const apiPatients = useMemo(() => {
     if (!rawPatientsData) return [];
@@ -571,7 +571,7 @@ export function InvoiceForm({
     const currentItems = (form.getValues("items") ?? []) as InvoiceItem[];
     setItems(
       currentItems.filter(
-        (i: any) =>
+        (i: ApiAny) =>
           String(i.linkedId) !== targetLid &&
           String(i.id) !== targetLid &&
           !String(i.id).endsWith(`-${targetLid}`)
@@ -579,7 +579,7 @@ export function InvoiceForm({
     );
   };
 
-  const addPendingItemsMultiple = (pItems: any[]) => {
+  const addPendingItemsMultiple = (pItems: ApiAny[]) => {
     const currentLinked = formData.linkedItemIds.map(id => String(id));
     const itemsToAdd = pItems.filter(pItem => !currentLinked.includes(String(pItem.id)));
     if (itemsToAdd.length === 0) return;
@@ -595,7 +595,7 @@ export function InvoiceForm({
       linkedType: pItem.type,
       item_discount: 0,
       rawItem: pItem.rawItem,
-    } as any));
+    } as ApiAny));
 
     const finalItems = currentItems.length === 1 && !currentItems[0].description && currentItems[0].rate === 0
       ? newItems
@@ -759,7 +759,7 @@ export function InvoiceForm({
                 if (isCorporateBilling) {
                   return [
                     { label: "Select Company", value: "none" },
-                    ...apiCorporatePlans.map((cp: any) => {
+                    ...apiCorporatePlans.map((cp: ApiAny) => {
                       const formattedPhone = cp.contact_phone ? (cp.contact_country_code ? `${cp.contact_country_code} ${cp.contact_phone}` : cp.contact_phone) : "";
                       return {
                         label: `${cp.company_name || cp.plan_name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
@@ -935,8 +935,8 @@ export function InvoiceForm({
                   return [
                     { label: "Select Phone", value: "none" },
                     ...apiCorporatePlans
-                      .filter((cp: any) => cp.contact_phone)
-                      .map((cp: any) => {
+                      .filter((cp: ApiAny) => cp.contact_phone)
+                      .map((cp: ApiAny) => {
                         const formattedPhone = cp.contact_country_code ? `${cp.contact_country_code} ${cp.contact_phone}` : cp.contact_phone;
                         return {
                           label: `${formattedPhone} - ${cp.company_name || cp.plan_name}`,
@@ -1224,7 +1224,7 @@ export function InvoiceForm({
 
         {isCorporateBilling ? (
           <CorporatePendingEmployees
-            employees={Array.isArray(rawCorporateEmployeesData) ? rawCorporateEmployeesData : (rawCorporateEmployeesData as any)?.data || []}
+            employees={Array.isArray(rawCorporateEmployeesData) ? rawCorporateEmployeesData : (rawCorporateEmployeesData as ApiAny)?.data || []}
             linkedItemIds={formData.linkedItemIds}
             onAdd={addPendingItem}
             onRemove={removePendingItem}

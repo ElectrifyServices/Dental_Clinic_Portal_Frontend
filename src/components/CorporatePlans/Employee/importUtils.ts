@@ -16,7 +16,7 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
         raw.forEach((r, i) => {
           const row = i + 2;
           const name = String(r['Name'] || r['name'] || '').trim();
-          const countryCode = String(r['Country Code'] || r['country_code'] || r['Code'] || '').trim() || '+91';
+          const _countryCode = String(r['Country Code'] || r['country_code'] || r['Code'] || '').trim() || '+91';
           const phone = String(r['Phone'] || r['Mobile'] || r['phone'] || '').trim();
           const email = String(r['Email'] || r['email'] || '').trim();
           const planCode = String(

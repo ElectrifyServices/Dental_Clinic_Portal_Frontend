@@ -372,14 +372,14 @@ export function TreatmentSessionManager({
   const treatmentPlan = useMemo(() => {
     if (!treatmentPlanResponse) return null;
     return (
-      (treatmentPlanResponse as any)?.responseObject?.data ??
-      (treatmentPlanResponse as any)?.data?.data ??
-      (treatmentPlanResponse as any)?.data ??
+      (treatmentPlanResponse as ApiAny)?.responseObject?.data ??
+      (treatmentPlanResponse as ApiAny)?.data?.data ??
+      (treatmentPlanResponse as ApiAny)?.data ??
       treatmentPlanResponse
     );
   }, [treatmentPlanResponse]);
 
-  const extractDoctorStaffId = (obj: any): string | null => {
+  const extractDoctorStaffId = (obj: ApiAny): string | null => {
     if (!obj) return null;
     const doc = obj.doctor || obj.plan?.doctor || (obj.id && (obj.staff_id || obj.staff) ? obj : null);
     if (doc) {
@@ -493,7 +493,7 @@ export function TreatmentSessionManager({
 
       const lines = raw.split("\n");
       const updatedLines = lines.map((line, idx) => {
-        const cleanLine = line.replace(/^(\d+\.|\.|\•)\s*/, "").trim();
+        const cleanLine = line.replace(/^(\d+\.|\.|•)\s*/, "").trim();
         if (!cleanLine) return "";
         return newMode === "NUMBERED" ? `${idx + 1}. ${cleanLine}` : `. ${cleanLine}`;
       });
@@ -533,7 +533,7 @@ export function TreatmentSessionManager({
           nextPrefix = `\n${linesBefore.length + 1}. `;
         }
       } else {
-        const match = currentLine.match(/^(\.|\•)\s*(.*)/);
+        const match = currentLine.match(/^(\.|•)\s*(.*)/);
         if (match) {
           const text = match[2].trim();
           if (!text) {
@@ -672,7 +672,7 @@ export function TreatmentSessionManager({
     try {
       await sendPrescription.mutateAsync({ id: treatmentId, sessionId: completingId });
       showToast("Prescription sent to patient via WhatsApp!");
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(extractApiError(err, "Failed to send prescription"), "error");
     }
   };
@@ -1005,7 +1005,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: freshSession.work_done || "",
         session_findings: freshSession.session_findings || "",
-        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as any).additional_notes || "",
+        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as ApiAny).additional_notes || "",
         next_session_plan: freshSession.next_session_plan || "",
         session_fee: sessionFee,
         discount_value: sessionDiscount,
@@ -1153,7 +1153,7 @@ export function TreatmentSessionManager({
         if (sendPrescriptionOnComplete && formattedPrescriptions.length > 0) {
           try {
             await sendPrescription.mutateAsync({ id: treatmentId, sessionId });
-          } catch (err: any) {
+          } catch (err: ApiAny) {
             showToast(extractApiError(err, "Session completed, but sending the prescription failed. You can resend it from the session view."), "error");
           }
         }

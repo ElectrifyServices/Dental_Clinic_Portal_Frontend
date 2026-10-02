@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
@@ -25,7 +26,7 @@ export function normalizeRecipients(raw: unknown): {
   rows: BroadcastRecipient[];
   total: number;
 } {
-  let node: any = raw;
+  let node: ApiAny = raw;
   let total: number | undefined;
 
   for (let i = 0; i < 6 && node && typeof node === "object"; i++) {

@@ -49,7 +49,6 @@ export function ConsentPage() {
   useEffect(() => {
     refetch();
   // refetch once on mount only
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteMutation = useDeleteConsentFormMutation();

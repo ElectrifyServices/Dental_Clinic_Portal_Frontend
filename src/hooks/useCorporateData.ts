@@ -2,7 +2,6 @@ import type { ApiAny } from "../types/api";
 import { useLocalStorage } from './useLocalStorage';
 import { demoCorporatePlans } from '../data/demoData';
 import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
-import { mapBackendPlanToFrontend } from './corporate/mapBackendPlanToFrontend';
 import { CorporatePlan } from '../types';
 import { useMemo } from 'react';
 

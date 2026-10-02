@@ -20,7 +20,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
   });
 
   const plan: CorporatePlan | undefined = React.useMemo(() => {
-    const raw = (planResponse as any)?.data || planResponse;
+    const raw = (planResponse as ApiAny)?.data || planResponse;
     return raw ? mapBackendPlanToFrontend(raw) : undefined;
   }, [planResponse]);
 

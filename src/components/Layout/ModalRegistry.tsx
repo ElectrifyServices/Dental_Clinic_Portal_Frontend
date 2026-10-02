@@ -1,5 +1,5 @@
 import type { ApiAny } from "../../types/api";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";

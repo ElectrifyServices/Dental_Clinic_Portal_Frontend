@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../../types/api";
 import React from 'react';
-import { Phone, Users, User, Building2, MoreHorizontal, Edit2, ArrowRightLeft, Trash2, Send, MessageCircle, Activity } from 'lucide-react';
+import { Phone, Users, User, Building2, MoreHorizontal, Edit2, ArrowRightLeft, Trash2, MessageCircle, Activity } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
 import {
@@ -51,7 +51,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   isStatusPending,
   onEditDependent: _onEditDependent,
   onDeleteDependent: _onDeleteDependent,
-  onResendInvoice,
+  onResendInvoice: _onResendInvoice,
   onWhatsAppHistory,
   onBenefitUsage,
   onCancelMembership,

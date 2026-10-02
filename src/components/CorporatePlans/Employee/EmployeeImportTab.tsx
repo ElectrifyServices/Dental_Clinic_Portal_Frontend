@@ -43,7 +43,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           
           return {
             name: r.name!,
-            country_code: (r as any).country_code || "+91",
+            country_code: (r as ApiAny).country_code || "+91",
             phone: r.phone!,
             email: r.email || "",
             gender: (r.gender || "male").toUpperCase(),
@@ -134,7 +134,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           <DataTable
             columns={[
               { key: 'name', header: 'Name', render: r => <span className="font-medium text-sm">{r.name}</span> },
-              { key: 'country_code', header: 'Code', render: r => <span className="text-sm font-bold text-foreground">{(r as any).country_code || '+91'}</span> },
+              { key: 'country_code', header: 'Code', render: r => <span className="text-sm font-bold text-foreground">{(r as ApiAny).country_code || '+91'}</span> },
               { key: 'phone', header: 'Phone', render: r => <span className="text-sm text-muted-foreground">{r.phone}</span> },
               { key: 'email', header: 'Email', render: r => <span className="text-xs text-muted-foreground">{r.email}</span> },
               {

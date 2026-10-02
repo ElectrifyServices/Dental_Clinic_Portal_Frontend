@@ -59,7 +59,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
     !!inv.is_corporate_billing ||
     hasNoPatientOrMember ||
     parsedItems.some(
-      (item: any) =>
+      (item: ApiAny) =>
         (item.description && item.description.startsWith("Employee Membership")) ||
         (item.item_type === "MEMBERSHIP" && !!item.billing_description_name) ||
         !!item.billing_description_name
@@ -80,7 +80,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
 
     if (!companyName) {
       const itemWithCompany = parsedItems.find(
-        (i: any) => i.billing_description_name || i.company_name
+        (i: ApiAny) => i.billing_description_name || i.company_name
       );
       if (itemWithCompany) {
         companyName =
@@ -91,20 +91,20 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   }
 
   // Consolidate corporate membership items if present
-  const isCorporateItem = (item: any) =>
+  const isCorporateItem = (item: ApiAny) =>
     item.item_type === "MEMBERSHIP" ||
     (item.description && item.description.startsWith("Employee Membership")) ||
     (isCorporateInvoice && !!item.billing_description_name);
 
   const corpItems = parsedItems.filter(isCorporateItem);
-  const otherItems = parsedItems.filter((item: any) => !isCorporateItem(item));
+  const otherItems = parsedItems.filter((item: ApiAny) => !isCorporateItem(item));
 
   let items = parsedItems;
 
   if (corpItems.length > 0) {
     // Group corporate items by (billing_description_name or rate)
-    const groupedMap = new Map<string, any[]>();
-    corpItems.forEach((item: any) => {
+    const groupedMap = new Map<string, ApiAny[]>();
+    corpItems.forEach((item: ApiAny) => {
       const key = `${item.billing_description_name || companyName || 'Corporate Plan'}_${item.rate}`;
       if (!groupedMap.has(key)) {
         groupedMap.set(key, []);
@@ -112,8 +112,8 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
       groupedMap.get(key)!.push(item);
     });
 
-    const consolidatedCorpItems: any[] = [];
-    groupedMap.forEach((groupItems: any[]) => {
+    const consolidatedCorpItems: ApiAny[] = [];
+    groupedMap.forEach((groupItems: ApiAny[]) => {
       const totalQty = groupItems.reduce((acc, i) => acc + (i.quantity || 1), 0);
       const unitRate = groupItems[0].rate || (groupItems[0].total_amount ? groupItems[0].total_amount / (groupItems[0].quantity || 1) : 0);
       const discountPct = groupItems[0].discount_value || 0;
