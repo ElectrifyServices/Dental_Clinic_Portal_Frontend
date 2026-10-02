@@ -1683,7 +1683,6 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
           : "";
 
       const hsnCode = item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE;
-      const billedVal = Number(item.billed_amount || item.amount || 0);
       const discountPct = Number(item.discount_value || item.item_discount || 0);
       const displayDiscount = discountPct > 0 ? `${discountPct}%` : "—";
 

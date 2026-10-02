@@ -24,7 +24,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
 
   // Normalize items array
   const rawItems = inv.invoice_items || inv.invoiceItems || inv.items || [];
-  const items = rawItems.map((item: ApiRecord) => {
+  const parsedItems = rawItems.map((item: ApiRecord) => {
     const rate = Number(item.rate ?? item.unit_price ?? item.total_amount ?? item.billed_amount ?? 0);
     const quantity = Number(item.quantity ?? 1);
     const discountPct = Number(item.discount_value ?? item.item_discount ?? 0);

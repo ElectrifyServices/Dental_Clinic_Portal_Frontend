@@ -357,11 +357,6 @@ export function TreatmentSessionManager({
       refetchPlan();
     }
   }, [treatmentId, refetch, refetchPlan]);
-  const treatmentPlan = (treatmentPlanResponse as ApiAny)?.data ?? treatmentPlanResponse;
-  const assignedDoctorId =
-    treatmentPlan?.doctor_id ||
-    treatmentPlan?.doctor?.id ||
-    doctorId;
 
   // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
   // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.
