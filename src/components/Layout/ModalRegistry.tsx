@@ -367,8 +367,9 @@ function ModalRegistryContent() {
     ) || null;
   }, [invoices, selectedItemId]);
 
-  const { doctors: apiDoctors, refetch: refetchDoctors } = useDoctorsListQuery(undefined, {
+  const { doctors: apiDoctors } = useDoctorsListQuery(undefined, {
     enabled: ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"].includes(activeModal || ""),
+    refetchOnMount: 'always',
   });
 
   const activeDoctors = useMemo(
@@ -377,23 +378,10 @@ function ModalRegistryContent() {
   );
 
   // Fetch ALL staff (all roles) for Staff Directory edit form lookups
-  const { staffList: allStaffList, refetch: refetchAllStaff } = useAllStaffListQuery({
+  const { staffList: allStaffList } = useAllStaffListQuery({
     enabled: ["doctorForm", "scheduleManager"].includes(activeModal || ""),
+    refetchOnMount: 'always',
   });
-
-  useEffect(() => {
-    const modalsNeedingDoctors = ["appointmentForm", "doctorSchedule", "diagnoseForm", "consentForm", "consentViewer"];
-    if (activeModal && modalsNeedingDoctors.includes(activeModal) && refetchDoctors) {
-      refetchDoctors();
-    }
-  }, [activeModal, refetchDoctors]);
-
-  useEffect(() => {
-    const modalsNeedingAllStaff = ["doctorForm", "scheduleManager"];
-    if (activeModal && modalsNeedingAllStaff.includes(activeModal) && refetchAllStaff) {
-      refetchAllStaff();
-    }
-  }, [activeModal, refetchAllStaff]);
 
   const { data: apiPatientDetail } = usePatientDetailQuery(
     selectedPatientId,
@@ -928,6 +916,7 @@ function ModalRegistryContent() {
                     treatment_plan_id: type === "TREATMENT_SESSION" ? cleanLinkedId : undefined,
                     membership_id: type === "MEMBERSHIP" && !item.isNewPlanPurchase ? cleanLinkedId : undefined,
                     billing_description_id: descId,
+                    billing_description_name: item.billing_description_name || (inv.isCorporateBilling ? inv.patientName : undefined),
                     
                     description: item.description,
                     total_amount: (Number(item.rate) || 0) * (Number(item.quantity) || 1),
@@ -944,9 +933,13 @@ function ModalRegistryContent() {
                 payload.plan_id = newPlanPurchaseItem.linkedId;
               }
 
-              if (inv.memberId) {
+              if (inv.isCorporateBilling) {
+                payload.plan_id = inv.corporatePlanId || payload.plan_id || undefined;
+                payload.member_id = undefined;
+                payload.patient_id = undefined;
+              } else if (inv.memberId) {
                 payload.member_id = inv.memberId;
-              } else {
+              } else if (inv.patientId) {
                 payload.patient_id = inv.patientId;
               }
 

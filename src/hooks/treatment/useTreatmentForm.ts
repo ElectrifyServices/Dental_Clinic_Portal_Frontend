@@ -370,7 +370,7 @@ export function useTreatmentForm(treatment?: ApiAny, patients?: ApiAny[], allTre
             dosageSum = parts.reduce((sum, part) => sum + (parseFloat(part) || 0), 0);
           }
 
-          if (dosageSum > 0 && durationVal > 0) {
+          if (field !== "qty" && dosageSum > 0 && durationVal > 0) {
             updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
           }
           return updated;

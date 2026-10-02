@@ -21,7 +21,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_TAGLINE: "Dental & Facial Aesthetics",
   CLINIC_ADDRESS: "104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat — 380 015",
   CLINIC_PHONE: "+91 99981 93256",
-  CLINIC_EMAIL: "rajal.shah@opalsmiles.com",
+  CLINIC_EMAIL: "Rajal.Shah@opalsmiles.com",
   CLINIC_HOURS: "Mon-Sat: 10:00 AM – 8:00 PM",
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",
@@ -487,7 +487,7 @@ function makeOffscreenContainer(): HTMLDivElement {
 function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandingTokens>) {
   const T = tokens ?? getBrandingTokens();
   return `
-<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${T.LINE}; position:relative; overflow:hidden; background:#ffffff; min-height:120px;">
+<div style="padding: 18px 40px 14px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-bottom: 1px solid ${T.LINE}; position:relative; overflow:hidden; background:#ffffff; min-height:160px;">
     <!-- Left: Doctor Name & Title -->
   <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1;">
     <div style="font-size: 20px; font-weight: 700; color: ${T.BRAND}; letter-spacing: 0.5px; text-transform: uppercase; line-height:1.3;">${T.DOCTOR_NAME}</div>
@@ -497,11 +497,11 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
   </div>
   
   <!-- Vertical Divider Line -->
-  <div style="width:1.5px; height:70px; background:${T.BRAND}; position:relative; z-index:1;"></div>
+  <div style="width:1.5px; height:90px; background:${T.BRAND}; position:relative; z-index:1;"></div>
 
   <!-- Right: Logo -->
   <div style="display:flex; align-items:center; gap:0; position:relative; z-index:1;">
-    <img src="${T.LOGO_URL}" style="height:90px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
+    <img src="${T.LOGO_URL}" style="height:160px; max-height:160px; width:auto; display:block; flex-shrink:0;" crossorigin="anonymous" />
   </div>
 </div>
   `;
@@ -550,6 +550,24 @@ style="display:block;width:14px;height:14px;"
 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
 </svg>`;
 
+  const bankAccountName = import.meta.env.VITE_BANK_ACCOUNT_NAME || "Opal Smiles Dental Studio";
+  const bankName = import.meta.env.VITE_BANK_NAME || "HDFC Bank";
+  const bankAccountNumber = import.meta.env.VITE_BANK_ACCOUNT_NUMBER || "50200111840850";
+  const bankIfsc = import.meta.env.VITE_BANK_IFSC || "HDFC0000048";
+
+  const bankDetailsBlock = isInvoice
+    ? `
+    <div style="font-family:'Inter',sans-serif; text-align:left;">
+      <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:${T.INK}; margin-bottom:3px;">Account Details:</div>
+      <div style="font-size:10px; font-weight:400; color:${T.INK}; line-height:1.4;">
+        <div><strong>Account Name:</strong> ${bankAccountName}</div>
+        <div><strong>Bank Name:</strong> ${bankName}</div>
+        <div><strong>Account Number:</strong> ${bankAccountNumber}</div>
+        <div><strong>IFSC Number:</strong> ${bankIfsc}</div>
+      </div>
+    </div>`
+    : "<div></div>";
+
   const computerGeneratedBlock = isInvoice
     ? `
 <div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px; text-align:center; font-size:13px; font-weight:600; opacity:0.9; letter-spacing:0.3px;">
@@ -560,7 +578,8 @@ style="display:block;width:14px;height:14px;"
   return `
 <div style="margin-top:auto;" data-footer="true">
 <div data-signature="true" style="padding: 14px 40px 15px; background: #ffffff;">
-<div style="display:flex; justify-content:flex-end;">
+<div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          ${bankDetailsBlock}
           ${signatureBlock}
 </div>
 </div>
@@ -917,9 +936,13 @@ export const downloadConsultationPDF = async ({
     "";
   const additionalNotes =
     consultationData.additional_notes ||
+    consultationData.notes ||
     consultationData.consultationNotes ||
     consultationData.data?.additional_notes ||
+    consultationData.data?.notes ||
     consultationData.data?.consultationNotes ||
+    consultationData.responseObject?.data?.additional_notes ||
+    consultationData.responseObject?.data?.notes ||
     "";
   const isFollowUp =
     consultationData.is_follow_up ||
@@ -1648,6 +1671,11 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
         itemType.charAt(0).toUpperCase() +
         itemType.slice(1).replace("_", " ").toLowerCase();
 
+      const qty = Number(item.quantity ?? 1);
+      const billedVal = Number(item.billed_amount || item.amount || 0);
+      const totalVal = Number(item.total_amount || item.amount || 0);
+      const rate = Number(item.rate ?? (qty > 0 ? totalVal / qty : totalVal));
+
       const displayDescription =
         item.description &&
           item.description.toLowerCase() !== itemType.toLowerCase()
@@ -1659,18 +1687,38 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
       const discountPct = Number(item.discount_value || item.item_discount || 0);
       const displayDiscount = discountPct > 0 ? `${discountPct}%` : "—";
 
+      if (hasDiscount) {
+        return `
+        <tr style="border-bottom:1px solid ${T.LINE};" data-avoid-break="true">
+          <td style="padding:0; vertical-align:middle; width:8%;">${makeCellContent(`${i + 1}`, "center", `font-size:12px; font-weight:400;`)}</td>
+          <td style="padding:0; vertical-align:middle; width:12%;">${makeCellContent(`${hsnCode}`, "center", `font-size:12px; font-weight:400;`)}</td>
+          <td style="padding:0; vertical-align:middle; width:35%;">
+            <div style="padding:12px 10px; font-size:12px; font-weight:400; text-align:left; line-height:1.2;">
+              <div>${formattedType}</div>
+              ${displayDescription}
+            </div>
+          </td>
+          <td style="padding:0; vertical-align:middle; width:10%;">${makeCellContent(`${qty}`, "center", `font-size:12px; font-weight:400;`)}</td>
+          <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${formatCurrency(rate)}`, "right", `font-size:12px; font-weight:400;`)}</td>
+          <td style="padding:0; vertical-align:middle; width:10%;">${makeCellContent(`${displayDiscount}`, "center", `font-size:12px; font-weight:400; color: #ef4444;`)}</td>
+          <td style="padding:0; vertical-align:middle; width:10%;">${makeCellContent(`${formatCurrency(billedVal)}`, "right", `font-size:12px; font-weight:600;`)}</td>
+        </tr>
+      `;
+      }
+
       return `
       <tr style="border-bottom:1px solid ${T.LINE};" data-avoid-break="true">
-        <td style="padding:0; vertical-align:middle; width:10%;">${makeCellContent(`${i + 1}`, "center", `font-size:12px; font-weight:400;`)}</td>
-        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${hsnCode}`, "center", `font-size:12px; font-weight:400;`)}</td>
-        <td style="padding:0; vertical-align:middle; width:45%;">
-          <div style="padding:12px 12px; font-size:12px; font-weight:400; text-align:left; line-height:1.2;">
+        <td style="padding:0; vertical-align:middle; width:8%;">${makeCellContent(`${i + 1}`, "center", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:12%;">${makeCellContent(`${hsnCode}`, "center", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:40%;">
+          <div style="padding:12px 10px; font-size:12px; font-weight:400; text-align:left; line-height:1.2;">
             <div>${formattedType}</div>
             ${displayDescription}
           </div>
         </td>
-        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${displayDiscount}`, "right", `font-size:12px; font-weight:400; color: #ef4444;`)}</td>
-        <td style="padding:0; vertical-align:middle; width:15%;">${makeCellContent(`${formatCurrency(billedVal)}`, "right", `font-size:12px; font-weight:600;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:12%;">${makeCellContent(`${qty}`, "center", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:14%;">${makeCellContent(`${formatCurrency(rate)}`, "right", `font-size:12px; font-weight:400;`)}</td>
+        <td style="padding:0; vertical-align:middle; width:14%;">${makeCellContent(`${formatCurrency(billedVal)}`, "right", `font-size:12px; font-weight:600;`)}</td>
       </tr>
     `;
     })
@@ -1738,11 +1786,13 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
           <table style="width:100%; border-collapse:collapse; margin-top:8px; border-bottom:1.5px solid ${T.LINE};">
             <thead>
               <tr style="border-top:1.5px solid ${T.LINE}; border-bottom:1.5px solid ${T.LINE}; background:#fafafa;">
-                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%; vertical-align:middle; line-height:1.4;">Sr. No</th>
-                <th style="padding:10px 12px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">HSN/SAC</th>
-                <th style="padding:10px 12px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:45%; vertical-align:middle; line-height:1.4;">Item Type</th>
-                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">Discount</th>
-                <th style="padding:10px 12px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:15%; vertical-align:middle; line-height:1.4;">Amount</th>
+                <th style="padding:10px 10px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:8%; vertical-align:middle; line-height:1.4;">Sr. No</th>
+                <th style="padding:10px 10px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:12%; vertical-align:middle; line-height:1.4;">HSN/SAC</th>
+                <th style="padding:10px 10px; text-align:left; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:${hasDiscount ? '35%' : '40%'}; vertical-align:middle; line-height:1.4;">Item Type</th>
+                <th style="padding:10px 10px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:${hasDiscount ? '10%' : '12%'}; vertical-align:middle; line-height:1.4;">Qty</th>
+                <th style="padding:10px 10px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:${hasDiscount ? '15%' : '14%'}; vertical-align:middle; line-height:1.4;">Rate</th>
+                ${hasDiscount ? `<th style="padding:10px 10px; text-align:center; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:10%; vertical-align:middle; line-height:1.4;">Discount</th>` : ''}
+                <th style="padding:10px 10px; text-align:right; font-size:12px; font-weight:400; text-transform:uppercase; letter-spacing:0.4px; width:${hasDiscount ? '10%' : '14%'}; vertical-align:middle; line-height:1.4;">Amount</th>
               </tr>
             </thead>
             <tbody>

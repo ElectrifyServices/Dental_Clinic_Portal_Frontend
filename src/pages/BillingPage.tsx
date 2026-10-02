@@ -22,7 +22,6 @@ export const BillingPage: React.FC = () => {
     invoices,
     handleDeleteInvoice,
     handleUpdateInvoiceStatus,
-    refetchInvoices,
     isInvoicesLoading,
     page,
     setPage,
@@ -38,10 +37,6 @@ export const BillingPage: React.FC = () => {
     endDate: endDate,
   });
   const { setActiveModal, setSelectedItemId, confirmDelete } = useModal();
-
-  useEffect(() => {
-    refetchInvoices();
-  }, [refetchInvoices]);
 
   return (
     <div className="space-y-6">

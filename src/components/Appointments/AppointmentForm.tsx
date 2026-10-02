@@ -247,7 +247,7 @@ export function AppointmentForm({
   const activeSearchTerm = (patientNameVal || patientPhoneVal || "").trim();
   const debouncedSearch = useDebounce(activeSearchTerm, 400);
 
-  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching, refetch: refetchPatients } = usePatientQuery({
+  const { data: rawPatientsData, isLoading: isPatientsLoading, isFetching: isPatientsFetching } = usePatientQuery({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,

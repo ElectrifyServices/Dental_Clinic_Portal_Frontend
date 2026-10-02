@@ -31,18 +31,23 @@ export const AppointmentsPage: React.FC = () => {
     setApptFilter,
     selectedDoctorId,
     setSelectedDoctorId,
-    refetchAppointments,
     startDate,
     setStartDate,
     endDate,
     setEndDate,
-  } = useAppointmentData({ loadAll: true });
+  } = useAppointmentData({ loadAll: true, includeNoShow: true });
+
+  const calendarAppointments = useMemo(
+    () => [...appointments, ...(noShowAppointments || [])],
+    [appointments, noShowAppointments]
+  );
 
   const { patients, setQueuedPatients } = usePatientData();
   const {
     setActiveModal,
     setSelectedAppointment,
     confirmDelete,
+    showConfirm,
     setPendingCheckInAppt,
     setSelectedPatientId,
   } = useModal();
@@ -62,6 +67,15 @@ export const AppointmentsPage: React.FC = () => {
     if (status === 'no-show') {
       setNoShowApptId(id);
       setNoShowReason("");
+    } else if (status === 'cancelled') {
+      const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
+      showConfirm(
+        "Cancel Appointment",
+        `Are you sure you want to cancel the appointment for ${apt?.patientName || "this patient"}? A cancellation WhatsApp notification will be sent to the patient.`,
+        () => handleUpdateAppointmentStatus(id, 'cancelled'),
+        "Cancel Appointment",
+        "danger"
+      );
     } else {
       await handleUpdateAppointmentStatus(id, status, reason);
     }
@@ -69,23 +83,13 @@ export const AppointmentsPage: React.FC = () => {
 
   const {
     doctors: activeDoctors,
-    refetch: refetchDoctors,
     total: totalSpecialists,
     totalPages: totalSpecialistPages
-  } = useDoctorsListQuery(debouncedSpecialistSearch, specialistPage, specialistLimit);
+  } = useDoctorsListQuery(debouncedSpecialistSearch, specialistPage, specialistLimit, { refetchOnMount: 'always' });
 
   useEffect(() => {
     setSpecialistPage(1);
   }, [debouncedSpecialistSearch]);
-
-  useEffect(() => {
-    if (refetchAppointments) {
-      refetchAppointments();
-    }
-    if (refetchDoctors) {
-      refetchDoctors();
-    }
-  }, [refetchAppointments, refetchDoctors]);
 
   // Sync selectedDate from Calendar view to startDate
   useEffect(() => {
@@ -259,7 +263,7 @@ export const AppointmentsPage: React.FC = () => {
         {viewMode === "calendar" && (
           <AppointmentCalendar
             onNewAppointment={handleNewAppointment}
-            appointments={[...appointments, ...(noShowAppointments || [])]}
+            appointments={calendarAppointments}
             doctors={activeDoctors}
             searchTerm={specialistSearch}
             setSearchTerm={setSpecialistSearch}
@@ -322,19 +326,25 @@ export const AppointmentsPage: React.FC = () => {
         )}
       </div>
 
+      {/* No Show Modal */}
       {noShowApptId && (
         <Dialog open={!!noShowApptId} onOpenChange={(open) => !open && setNoShowApptId(null)}>
-          <DialogContent className="sm:max-w-[425px] rounded-2xl border border-border bg-card shadow-2xl p-6">
-            <DialogHeader className="text-left">
-              <DialogTitle className="text-base font-bold text-foreground">Mark as No-Show</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-1">
-                Please enter the reason for marking this appointment as No-Show.
+          <DialogContent className="sm:max-w-[425px] rounded-2xl border-border shadow-2xl p-6 bg-card">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <UserX className="w-5 h-5" />
+                </span>
+                Mark Appointment as No-Show
+              </DialogTitle>
+              <DialogDescription className="text-xs font-medium text-muted-foreground">
+                Please enter a reason for marking this appointment as No-Show. A WhatsApp No-Show notification will be sent to the patient.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="reason" className="text-xs font-bold text-muted-foreground">
-                  No-Show Reason <span className="text-destructive font-black">*</span>
+                  No-Show Reason
                 </Label>
                 <textarea
                   id="reason"
@@ -342,7 +352,6 @@ export const AppointmentsPage: React.FC = () => {
                   value={noShowReason}
                   onChange={(e) => setNoShowReason(e.target.value)}
                   className="w-full min-h-[100px] px-3.5 py-2.5 text-sm border border-border rounded-xl bg-muted/40 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium resize-none"
-                  required
                 />
               </div>
             </div>
@@ -355,14 +364,11 @@ export const AppointmentsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                disabled={!noShowReason.trim()}
                 onClick={async () => {
-                  if (noShowReason.trim()) {
-                    await handleUpdateAppointmentStatus(noShowApptId, 'no-show', noShowReason.trim());
-                    setNoShowApptId(null);
-                  }
+                  await handleUpdateAppointmentStatus(noShowApptId!, 'no-show', noShowReason.trim());
+                  setNoShowApptId(null);
                 }}
-                className="h-10 rounded-xl px-4 text-xs font-semibold bg-destructive hover:bg-destructive/90 text-white"
+                className="h-10 rounded-xl px-4 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white"
               >
                 Mark No-Show
               </Button>

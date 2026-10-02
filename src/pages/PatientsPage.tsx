@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
@@ -15,15 +15,9 @@ export const PatientsPage: React.FC = () => {
     patientPage, setPatientPage,
     patientLimit, setPatientLimit,
     totalItems, totalPages,
-    refetchPatients,
     isPatientsLoading,
   } = usePatientData();
 
-  useEffect(() => {
-    if (refetchPatients) {
-      refetchPatients();
-    }
-  }, [refetchPatients]);
   const {
     setActiveModal, setSelectedPatientId, setPatientFormType,
     setParentPatientId, confirmDelete,

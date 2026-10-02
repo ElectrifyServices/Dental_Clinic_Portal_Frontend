@@ -2,7 +2,12 @@ import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export const useCheckEmployeeQuery = (phone: string, name: string, countryCode?: string) => {
-  const enabled = !!phone && phone.length >= 7 && !!name.trim();
+  // Fire on either a usable phone (7+ digits) or a real name (3+ chars) —
+  // previously this required BOTH, so typing just a name (no phone yet)
+  // never looked up a matching member.
+  const hasPhone = !!phone && phone.length >= 7;
+  const hasName = !!name.trim() && name.trim().length >= 3;
+  const enabled = hasPhone || hasName;
   const queryParams = new URLSearchParams();
   queryParams.append("phone", phone.trim());
   queryParams.append("name", name.trim());
@@ -17,6 +22,8 @@ export const useCheckEmployeeQuery = (phone: string, name: string, countryCode?:
     options: {
       enabled,
       retry: false, // Don't retry if employee not found (404)
+      staleTime: 0,
+      refetchOnMount: "always",
     },
   });
 };

@@ -255,6 +255,8 @@ export function AppointmentCalendar({
         />
         <BookingSlots
           selectedDoctorId={currentDoctorId}
+          selectedDoctorName={doctors.find((d) => d.id === currentDoctorId)?.name}
+          selectedDate={formattedDate}
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           availableSlots={availableSlots}

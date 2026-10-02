@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export interface BulkImportEmployee {
   name: string;
   emp_id: string;
+  country_code: string;
   phone: string;
   email: string;
   gender: string;
@@ -33,7 +34,7 @@ export function useBulkImportEmployeeMutation() {
     method: "post",
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["member"] });
       },
     },
   });

@@ -8,12 +8,14 @@ import {
   Calendar as CalendarIcon,
   Stethoscope,
   MoreVertical,
+  Info,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/Tooltip";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -72,6 +74,7 @@ const formatTime = (t: string) => {
 
 export function AppointmentList({
   appointments: propAppointments = [],
+  isNoShowView = false,
   onEditAppointment,
   onDeleteAppointment,
   onUpdateStatus,
@@ -281,14 +284,13 @@ export function AppointmentList({
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const menuHeight = 240;
+              const menuHeight = 190;
               const windowHeight = window.innerHeight;
-              let top = rect.bottom + 8;
+              let top = rect.bottom + 4;
               if (rect.bottom + menuHeight > windowHeight) {
-                top = rect.top - menuHeight;
-                if (top < 0) top = 10;
+                top = Math.max(10, rect.top - menuHeight);
               }
-              setMenuPos({ top, left: rect.right - 200 });
+              setMenuPos({ top, left: Math.max(10, rect.right - 192) });
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >

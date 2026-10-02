@@ -45,5 +45,6 @@ export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
     endpoint: "/consent/list",
     method: "post",
     data: body,
+    options,
   });
 }

@@ -13,6 +13,9 @@ export function MainLayout() {
         <main className="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-1 min-w-0">
           <div className="w-full h-full min-h-0 mx-auto p-3 max-w-[1600px]">
             <Outlet />
+            {/* main's pb-20 isn't reliably applied past this h-full child's overflow,
+                so the fixed bottom nav would sit over the last element on mobile. */}
+            <div aria-hidden className="h-16 md:hidden" />
           </div>
         </main>
       </div>

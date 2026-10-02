@@ -69,7 +69,6 @@ export const CorporatePlansPage: React.FC = () => {
     handleBulkSaveEmployees,
     handleChangeEmployeePlan,
     isPlansLoading,
-    refetchCorporate,
   } = useCorporateData({
     search: debouncedSearch,
     status: filter === "all" ? undefined : filter.toUpperCase(),
@@ -82,10 +81,6 @@ export const CorporatePlansPage: React.FC = () => {
   });
 
   const { data: statsData } = useMembershipStatsQuery();
-
-  useEffect(() => {
-    if (refetchCorporate) refetchCorporate();
-  }, [refetchCorporate]);
 
   const stats = [
     {

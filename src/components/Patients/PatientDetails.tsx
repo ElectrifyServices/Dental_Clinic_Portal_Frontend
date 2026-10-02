@@ -69,12 +69,12 @@ export function PatientDetails({
   const { data: prescriptionsData, isLoading: isPrescriptionsLoading, refetch: refetchPrescriptions } = usePatientPrescriptionsQuery(patient?.id || "");
   const { data: treatmentsData, refetch: refetchTreatments } = useTreatmentPlansQuery(
     { all: true, filters: { patientId: [patient?.id || ""] } },
-    { enabled: !!patient?.id }
+    { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
 
   const { data: invoicesData, isLoading: _isInvoicesLoading, refetch: refetchInvoices } = useInvoicesQuery(
     { filters: { patient_id: [patient?.id || ""] } },
-    { enabled: !!patient?.id }
+    { enabled: !!patient?.id, refetchOnMount: 'always' }
   );
 
   useEffect(() => {

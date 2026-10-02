@@ -442,17 +442,19 @@ function ExpandedTreatmentRow({
                 </DropdownMenuItem>
               )}
 
-              {!isCompleted && (
-                <DropdownMenuItem
-                  onClick={() => onManageSessions(plan.id)}
-                  className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
-                >
-                  <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  Sessions
-                </DropdownMenuItem>
-              )}
+              {/* Shown for COMPLETED plans too: the plan auto-completes once
+                  its last session is done, and a follow-up session may still
+                  need to be appended. Adding one reopens the plan as
+                  IN_PROGRESS. Unlike "Edit Plan", this stays available. */}
+              <DropdownMenuItem
+                onClick={() => onManageSessions(plan.id)}
+                className="px-3.5 py-2.5 text-xs font-bold hover:bg-muted rounded-xl flex items-center gap-3 text-muted-foreground cursor-pointer"
+              >
+                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                  <Clock className="w-4 h-4" />
+                </div>
+                Sessions
+              </DropdownMenuItem>
 
               {isPlanned && (
                 <DropdownMenuItem

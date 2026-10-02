@@ -4,6 +4,7 @@ export interface AvailableSlot {
   time: string;
   appointment_count: number;
   disabled?: boolean;
+  is_blocked?: boolean;
 }
 
 export interface AvailableSlotsData {

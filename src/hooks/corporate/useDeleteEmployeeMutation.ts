@@ -14,7 +14,7 @@ export function useDeleteEmployeeMutation() {
     transformRequest: () => undefined,
     options: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["members"] });
+        queryClient.invalidateQueries({ queryKey: ["member"] });
         queryClient.invalidateQueries({ queryKey: ["membershipStats"] });
       },
     },

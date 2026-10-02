@@ -26,6 +26,8 @@ export interface TreatmentSessionResponse {
   clinical_objectives?: string;
   work_done?: string;
   session_findings?: string;
+  notes?: string;
+  additional_notes?: string;
   next_session_plan?: string;
   completed_at?: string;
   created_at: string;
@@ -180,7 +182,6 @@ export interface AddSessionVariables {
   visit_date?: string;          // "2026-06-10"
   start_time?: string;          // "09:00 AM"
   duration_min?: number;
-  session_fee?: number;
   clinical_objectives?: string;
 }
 
@@ -201,6 +202,12 @@ export function useAddTreatmentSessionMutation() {
         queryClient.invalidateQueries({ queryKey: ["patientTreatmentPlans"] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlan", variables.planId] });
         queryClient.invalidateQueries({ queryKey: ["treatmentPlanStats"] });
+        // The consultation's Treatment Planning grid renders the same
+        // sessions, so it has to pick the new one up too. The plan does not
+        // carry its consultation id here, so invalidate by key prefix.
+        queryClient.invalidateQueries({ queryKey: ["consultation"] });
+        queryClient.invalidateQueries({ queryKey: ["consultations"] });
+        queryClient.invalidateQueries({ queryKey: ["patient-consultations"] });
       },
     },
   });
@@ -218,6 +225,8 @@ export interface UpdateSessionVariables {
   clinical_objectives?: string;
   work_done?: string;
   session_findings?: string;
+  notes?: string;
+  additional_notes?: string;
   next_session_plan?: string;
   status?: "PLANNED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   paid_amount?: number;

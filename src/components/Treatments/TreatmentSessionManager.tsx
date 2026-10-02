@@ -11,9 +11,11 @@ import { Modal, Button, Label, Input, Textarea, Card, MetricCard, ConfirmModal }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
+import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 
 import { useTreatmentSessionsQuery, useAddTreatmentSessionMutation, useUpdateTreatmentSessionMutation, useCompleteTreatmentSessionMutation, TreatmentSessionResponse, PlanPrescription } from "../../hooks/treatment/useTreatmentSessionHooks";
 import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQuery";
+import { useSendSessionPrescriptionMutation } from "../../hooks/treatment/useSendSessionPrescriptionMutation";
 import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
@@ -145,8 +147,21 @@ function InlineSessionScheduler({
   onConfirm,
   isSaving,
 }: InlineSessionSchedulerProps) {
+  const { doctors: apiDoctors, isLoading: isDoctorsLoading } = useDoctorsListQuery();
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+
+  useEffect(() => {
+    if (doctorId && apiDoctors.some((d) => d.id === doctorId)) {
+      setSelectedDoctorId(doctorId);
+    } else if (apiDoctors.length > 0 && !selectedDoctorId) {
+      setSelectedDoctorId(apiDoctors[0].id);
+    }
+  }, [doctorId, apiDoctors]);
+
+  const activeDoctorId = selectedDoctorId || doctorId || (apiDoctors[0]?.id ?? "");
+
   const { data: slotsResponse, isLoading } = useAvailableSlotsQuery(
-    doctorId || null,
+    activeDoctorId || null,
     draft.date || null,
   );
 
@@ -170,7 +185,7 @@ function InlineSessionScheduler({
     });
   }, [draft.date, slotsResponse]);
 
-  const canConfirm = Boolean(doctorId && draft.date && draft.time);
+  const canConfirm = Boolean(activeDoctorId && draft.date && draft.time);
 
   return (
     <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-4">
@@ -183,12 +198,35 @@ function InlineSessionScheduler({
             Schedule Session
           </p>
           <p className="text-[11px] text-emerald-700/70">
-            Choose a visit date and confirm a slot.
+            Choose a doctor, visit date, and confirm a slot.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
+            Doctor
+          </Label>
+          <Select
+            value={activeDoctorId}
+            onValueChange={(val) => {
+              setSelectedDoctorId(val);
+              onChange({ time: "" });
+            }}
+          >
+            <SelectTrigger className="rounded-xl border-emerald-200 bg-white">
+              <SelectValue placeholder={isDoctorsLoading ? "Loading..." : "Select Doctor"} />
+            </SelectTrigger>
+            <SelectContent>
+              {apiDoctors.map((doc) => (
+                <SelectItem key={doc.id} value={doc.id}>
+                  {doc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Date
@@ -201,17 +239,6 @@ function InlineSessionScheduler({
             className="rounded-xl border-emerald-200 bg-white"
           />
         </div>
-        {/* <div>
-          <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
-            Selected Time
-          </Label>
-          <Input
-            type="time"
-            value={draft.time}
-            onChange={(e) => onChange({ time: e.target.value })}
-            className="rounded-xl border-emerald-200 bg-white"
-          />
-        </div> */}
         <div>
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Duration
@@ -234,7 +261,7 @@ function InlineSessionScheduler({
         </div>
       </div>
 
-      {doctorId && draft.date ? (
+      {activeDoctorId && draft.date ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-emerald-700" />
@@ -274,7 +301,7 @@ function InlineSessionScheduler({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              No slots available for the selected date.
+              No slots available for the selected doctor and date.
             </p>
           )}
         </div>
@@ -284,9 +311,9 @@ function InlineSessionScheduler({
         </p>
       )}
 
-      {!doctorId && (
+      {!activeDoctorId && (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-          This treatment has no linked doctor, so slots cannot be loaded.
+          Select a doctor to view available slots.
         </p>
       )}
 
@@ -318,7 +345,7 @@ export function TreatmentSessionManager({
   initialSessionId,
 }: TreatmentSessionManagerProps) {
   const { showToast } = useModal();
-  const { data: treatmentPlanResponse, refetch: refetchPlan } = useTreatmentPlanQuery(treatmentId, {
+  const { data: treatmentPlanResponse } = useTreatmentPlanQuery(treatmentId, {
     enabled: !!treatmentId,
   });
 
@@ -347,9 +374,46 @@ export function TreatmentSessionManager({
     return d;
   }, [apiResponse]);
 
+  const treatmentPlan = useMemo(() => {
+    if (!treatmentPlanResponse) return null;
+    return (
+      (treatmentPlanResponse as any)?.responseObject?.data ??
+      (treatmentPlanResponse as any)?.data?.data ??
+      (treatmentPlanResponse as any)?.data ??
+      treatmentPlanResponse
+    );
+  }, [treatmentPlanResponse]);
+
+  const extractDoctorStaffId = (obj: any): string | null => {
+    if (!obj) return null;
+    const doc = obj.doctor || obj.plan?.doctor || (obj.id && (obj.staff_id || obj.staff) ? obj : null);
+    if (doc) {
+      if (typeof doc.staff_id === "string" && doc.staff_id) return doc.staff_id;
+      if (typeof doc.staff?.id === "string" && doc.staff.id) return doc.staff.id;
+      if (typeof doc.id === "string" && doc.id && doc.id !== doc.created_by) return doc.id;
+    }
+    const docId = obj.doctor_id || obj.plan?.doctor_id;
+    if (typeof docId === "string" && docId && docId !== obj.created_by) {
+      return docId;
+    }
+    return null;
+  };
+
+  const assignedDoctorId = useMemo(() => {
+    return (
+      extractDoctorStaffId(treatmentPlan) ||
+      extractDoctorStaffId(responseData?.sessions?.[0]?.plan) ||
+      extractDoctorStaffId(responseData?.sessions?.[0]) ||
+      (doctorId && doctorId !== (treatmentPlan?.created_by || responseData?.sessions?.[0]?.created_by) ? doctorId : null) ||
+      null
+    );
+  }, [treatmentPlan, responseData, doctorId]);
+
   const addSession = useAddTreatmentSessionMutation();
   const updateSession = useUpdateTreatmentSessionMutation();
   const completeSession = useCompleteTreatmentSessionMutation();
+  const sendPrescription = useSendSessionPrescriptionMutation();
+  const [sendPrescriptionOnComplete, setSendPrescriptionOnComplete] = useState(false);
 
   const [scheduleNext, setScheduleNext] = useState(false);
   const [nextSessionDraft, setNextSessionDraft] = useState({
@@ -413,6 +477,7 @@ export function TreatmentSessionManager({
   const [completeForm, setCompleteForm] = useState({
     work_done: "",
     session_findings: "",
+    notes: "",
     next_session_plan: "",
     session_fee: 0,
     discount_value: 0,
@@ -424,6 +489,91 @@ export function TreatmentSessionManager({
 
   const [prescriptions, setPrescriptions] = useState<ApiAny[]>([]);
   const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
+
+  const handleNoteListModeChange = (newMode: "NUMBERED" | "BULLET") => {
+    setNoteListMode(newMode);
+    setCompleteForm((prev) => {
+      const raw = prev.notes || "";
+      if (!raw.trim()) return prev;
+
+      const lines = raw.split("\n");
+      const updatedLines = lines.map((line, idx) => {
+        const cleanLine = line.replace(/^(\d+\.|\.|\•)\s*/, "").trim();
+        if (!cleanLine) return "";
+        return newMode === "NUMBERED" ? `${idx + 1}. ${cleanLine}` : `. ${cleanLine}`;
+      });
+
+      return { ...prev, notes: updatedLines.join("\n") };
+    });
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const value = completeForm.notes || "";
+
+      const beforeCursor = value.slice(0, start);
+      const afterCursor = value.slice(end);
+
+      const linesBefore = beforeCursor.split("\n");
+      const currentLine = linesBefore[linesBefore.length - 1];
+
+      let nextPrefix = "";
+      if (noteListMode === "NUMBERED") {
+        const match = currentLine.match(/^(\d+)\.\s*(.*)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          const text = match[2].trim();
+          if (!text) {
+            linesBefore[linesBefore.length - 1] = "";
+            const newValue = linesBefore.join("\n") + afterCursor;
+            setCompleteForm((prev) => ({ ...prev, notes: newValue }));
+            return;
+          }
+          nextPrefix = `\n${num + 1}. `;
+        } else {
+          nextPrefix = `\n${linesBefore.length + 1}. `;
+        }
+      } else {
+        const match = currentLine.match(/^(\.|\•)\s*(.*)/);
+        if (match) {
+          const text = match[2].trim();
+          if (!text) {
+            linesBefore[linesBefore.length - 1] = "";
+            const newValue = linesBefore.join("\n") + afterCursor;
+            setCompleteForm((prev) => ({ ...prev, notes: newValue }));
+            return;
+          }
+          nextPrefix = "\n. ";
+        } else {
+          nextPrefix = "\n. ";
+        }
+      }
+
+      const newValue = beforeCursor + nextPrefix + afterCursor;
+      setCompleteForm((prev) => ({ ...prev, notes: newValue.slice(0, 500) }));
+
+      setTimeout(() => {
+        const newPos = start + nextPrefix.length;
+        target.setSelectionRange(newPos, newPos);
+      }, 0);
+    }
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    let val = e.target.value;
+    if (val.length === 1 && !val.startsWith("1.") && !val.startsWith(".")) {
+      if (noteListMode === "NUMBERED") {
+        val = `1. ${val}`;
+      } else if (noteListMode === "BULLET") {
+        val = `. ${val}`;
+      }
+    }
+    setCompleteForm((prev) => ({ ...prev, notes: val }));
+  };
 
   const addPrescription = () => {
     setPrescriptions((prev) => [
@@ -471,7 +621,7 @@ export function TreatmentSessionManager({
           : 0;
         const durationVal = parseFloat(updated.duration) || 0;
         const multiplier = { Weeks: 7, Months: 30, Years: 365 }[updated.durationUnit as string] ?? 1;
-        if (dosageSum > 0 && durationVal > 0) {
+        if (field !== "qty" && dosageSum > 0 && durationVal > 0) {
           updated.qty = String(Math.round(dosageSum * durationVal * multiplier));
         }
         return updated;
@@ -512,9 +662,24 @@ export function TreatmentSessionManager({
           durationUnit: p.durationUnit || "",
           qty: p.qty || "N/A",
         })),
-        additional_notes: "",
+        additional_notes: completeForm.notes || "",
+        notes: completeForm.notes || "",
       },
     });
+  };
+
+  const handleSendPrescription = async () => {
+    if (!completingId) return;
+    if (prescriptions.length === 0) {
+      showToast("Please add at least one medicine before sending.", "error");
+      return;
+    }
+    try {
+      await sendPrescription.mutateAsync({ id: treatmentId, sessionId: completingId });
+      showToast("Prescription sent to patient via WhatsApp!");
+    } catch (err: any) {
+      showToast(extractApiError(err, "Failed to send prescription"), "error");
+    }
   };
 
   // ─── Derived data ──────────────────────────────────────────────────────────
@@ -692,13 +857,15 @@ export function TreatmentSessionManager({
 
   const handleAddSession = async () => {
     if (!newSession.date) { showToast("Please select a date", "error"); return; }
-    if (newSession.cost <= 0) { showToast("Please enter a valid session fee", "error"); return; }
     try {
+      // The fee is not captured here — it is entered when the session is
+      // marked COMPLETED (CreateTreatmentSessionDto has no session_fee, so
+      // sending one was silently dropped by the validation pipe anyway).
       await addSession.mutateAsync({
         planId: treatmentId,
         visit_date: newSession.date,
+        start_time: newSession.time,
         duration_min: newSession.duration,
-        session_fee: newSession.cost,
         clinical_objectives: newSession.clinical_objectives,
       });
       showToast("Session scheduled successfully!");
@@ -732,6 +899,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: "",
         session_findings: "",
+        notes: "",
         next_session_plan: "",
         session_fee: currentFee,
         discount_value: currentDiscount,
@@ -842,6 +1010,7 @@ export function TreatmentSessionManager({
       setCompleteForm({
         work_done: freshSession.work_done || "",
         session_findings: freshSession.session_findings || "",
+        notes: freshSession.notes || freshSession.additional_notes || session.notes || (session as any).additional_notes || "",
         next_session_plan: freshSession.next_session_plan || "",
         session_fee: sessionFee,
         discount_value: sessionDiscount,
@@ -931,6 +1100,8 @@ export function TreatmentSessionManager({
           sessionId,
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
+          notes: completeForm.notes,
+          additional_notes: completeForm.notes,
           paid_amount: completeForm.paid_now,
           payment_method: completeForm.payment_method || undefined,
           session_fee: completeForm.session_fee,
@@ -966,6 +1137,8 @@ export function TreatmentSessionManager({
           sessionId,
           work_done: completeForm.work_done,
           session_findings: completeForm.session_findings,
+          notes: completeForm.notes,
+          additional_notes: completeForm.notes,
           paid_amount: completeForm.paid_now,
           payment_method: completeForm.payment_method || undefined,
           create_invoice: completeForm.create_invoice,
@@ -981,13 +1154,23 @@ export function TreatmentSessionManager({
         showToast(completedCount + 1 >= totalSessions
           ? "All sessions completed! Treatment plan done!"
           : "Session completed!");
+
+        if (sendPrescriptionOnComplete && formattedPrescriptions.length > 0) {
+          try {
+            await sendPrescription.mutateAsync({ id: treatmentId, sessionId });
+          } catch (err: any) {
+            showToast(extractApiError(err, "Session completed, but sending the prescription failed. You can resend it from the session view."), "error");
+          }
+        }
       }
 
       setCompletingId(null);
       setIsEditingCompleted(false);
+      setSendPrescriptionOnComplete(false);
       setCompleteForm({
         work_done: "",
         session_findings: "",
+        notes: "",
         next_session_plan: "",
         session_fee: 0,
         discount_value: 0,
@@ -1139,7 +1322,11 @@ export function TreatmentSessionManager({
             <div className="border-t p-5 bg-muted/10 space-y-4">
               {isScheduling && (
                 <InlineSessionScheduler
-                  doctorId={assignedDoctorId || session.plan?.doctor?.id}
+                  doctorId={
+                    extractDoctorStaffId(session) ||
+                    extractDoctorStaffId(session.plan) ||
+                    assignedDoctorId
+                  }
                   draft={scheduleDraft}
                   onChange={(patch) =>
                     setScheduleDraft((prev) => ({ ...prev, ...patch }))
@@ -1657,7 +1844,7 @@ export function TreatmentSessionManager({
                             {nextSlots.map((slot) => {
                               const isSelected = nextSessionDraft.time === slot.time12;
                               return (
-                                <button
+                                <Button
                                   key={slot.time24}
                                   type="button"
                                   disabled={slot.isDisabled}
@@ -1665,14 +1852,14 @@ export function TreatmentSessionManager({
                                   className={[
                                     "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
                                     isSelected
-                                      ? "bg-emerald-600 border-emerald-600 text-white"
+                                      ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-600"
                                       : slot.isDisabled
-                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                                        ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
                                         : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
                                   ].join(" ")}
                                 >
                                   {slot.time12} ({slot.appointmentCount})
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -1789,12 +1976,100 @@ export function TreatmentSessionManager({
                 </div>
               </div>
               <div className="border-t pt-4">
+                {!isEditingCompleted && (() => {
+                  const hasFilledPrescription = prescriptions.some((p) => p.medicine || p.medicineName);
+                  return (
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="checkbox"
+                        id="send-prescription-on-complete"
+                        checked={sendPrescriptionOnComplete}
+                        disabled={!hasFilledPrescription}
+                        onChange={(e) => setSendPrescriptionOnComplete(e.target.checked)}
+                        className="w-4 h-4 text-emerald-600 border-border rounded focus:ring-emerald-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                      <Label
+                        htmlFor="send-prescription-on-complete"
+                        className={`text-sm font-bold cursor-pointer ${hasFilledPrescription ? "text-muted-foreground" : "text-muted-foreground/50"}`}
+                      >
+                        Send Prescription to Patient (WhatsApp)
+                      </Label>
+                    </div>
+                  );
+                })()}
                 <PrescriptionForm
                   prescriptions={prescriptions}
                   onAddPrescription={addPrescription}
                   onRemovePrescription={removePrescription}
                   onUpdatePrescription={updatePrescription}
                   onDownload={handleDownloadPrescription}
+                  onSend={isEditingCompleted ? handleSendPrescription : undefined}
+                />
+              </div>
+
+              {/* Additional Notes Section */}
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquareText className="w-4 h-4 text-emerald-600" />
+                      <Label className="text-sm font-semibold">Additional Notes</Label>
+                    </div>
+
+                    {/* Mode Switch Toggle Button */}
+                    <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleNoteListModeChange("NUMBERED")}
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
+                          noteListMode === "NUMBERED"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
+                        }`}
+                      >
+                        1. 2. 3. Numbered
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleNoteListModeChange("BULLET")}
+                        className={`px-2.5 py-1 text-xs transition-all h-auto rounded-md ${
+                          noteListMode === "BULLET"
+                            ? "bg-white text-emerald-700 shadow-sm border border-slate-200 font-extrabold hover:bg-white hover:text-emerald-700"
+                            : "text-slate-500 hover:text-slate-700 font-medium bg-transparent border-transparent"
+                        }`}
+                      >
+                        . Points
+                      </Button>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      (completeForm.notes?.length || 0) > 450
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {(completeForm.notes || "").length}/500 chars
+                  </span>
+                </div>
+
+                <Textarea
+                  rows={4}
+                  maxLength={500}
+                  placeholder={
+                    noteListMode === "NUMBERED"
+                      ? "1. Take medicines exactly as prescribed...\n2. Do not change dose..."
+                      : ". Take medicines exactly as prescribed...\n. Do not change dose..."
+                  }
+                  value={completeForm.notes || ""}
+                  onKeyDown={handleNotesKeyDown}
+                  onChange={handleNotesChange}
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none text-sm font-medium resize-y"
                 />
               </div>
             </div>
@@ -1946,11 +2221,9 @@ export function TreatmentSessionManager({
             >
               <MessageSquareText className="w-4 h-4" /> Consultation Feedback
             </Button>
-            {/* 
             <Button onClick={() => setShowNewSession(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Add Session
             </Button>
-            */}
           </div>
         </div>
 
@@ -2017,7 +2290,7 @@ export function TreatmentSessionManager({
             footer={
               <div className="flex gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleAddSession} disabled={!newSession.date || !newSession.cost || addSession.isPending} className="flex-1 gap-2">
+                <Button onClick={handleAddSession} disabled={!newSession.date || addSession.isPending} className="flex-1 gap-2">
                   {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Schedule Session
                 </Button>
@@ -2052,12 +2325,9 @@ export function TreatmentSessionManager({
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Session Fee (₹)</Label>
-                <Input type="number" value={newSession.cost || ""} min="0" step="500" placeholder="Enter amount"
-                  onChange={(e) => setNewSession({ ...newSession, cost: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
-              </div>
+              {/* Session Fee is deliberately not asked here — it is captured
+                  on the "Complete Session" form, which is where the amount
+                  actually becomes billable. */}
             </div>
             <div className="mb-6">
               <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>

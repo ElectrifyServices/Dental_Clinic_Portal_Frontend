@@ -21,6 +21,7 @@ export function usePatientPrescriptionsQuery(patientId: string, filters: Prescri
     },
     options: {
       enabled: !!patientId && enabled,
+      refetchOnMount: 'always',
     },
   });
 }

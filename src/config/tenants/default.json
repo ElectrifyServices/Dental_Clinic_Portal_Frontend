@@ -124,6 +124,11 @@
       "enabled": true,
       "label": "Memberships",
       "features": {}
+    },
+    "broadcast": {
+      "enabled": true,
+      "label": "WhatsApp Broadcast",
+      "features": {}
     }
   },
   "sidebar": {
@@ -146,7 +151,7 @@
       {
         "id": "admin",
         "label": "Administration",
-        "items": ["billing", "staff", "inventory", "lab-work", "reports", "profit-sharing"]
+        "items": ["billing", "staff", "inventory", "lab-work", "reports", "profit-sharing", "broadcast"]
       }
     ]
   },

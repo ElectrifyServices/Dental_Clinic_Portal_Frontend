@@ -2,9 +2,9 @@ import type { ApiAny } from "../types/api";
 import { useLocalStorage } from './useLocalStorage';
 import { demoCorporatePlans } from '../data/demoData';
 import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
-import { CorporatePlan, PlanBenefitType } from '../types';
+import { mapBackendPlanToFrontend } from './corporate/mapBackendPlanToFrontend';
+import { CorporatePlan } from '../types';
 import { useMemo } from 'react';
-import { mapProcedureLabelToKey } from '../constants/consent.constants';
 
 export function useCorporateData(params?: { search?: string; status?: string; planType?: string; enabled?: boolean; }) {
   const [localPlans, setLocalPlans] = useLocalStorage<ApiAny[]>('corporatePlans', demoCorporatePlans);
@@ -22,6 +22,7 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
     search: params?.search,
     status: params?.status,
     planType: params?.planType,
+    refetchOnMount: 'always',
   });
 
   const mapBackendPlanToFrontend = (plan: ApiAny): CorporatePlan => {

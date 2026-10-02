@@ -17,6 +17,9 @@ export function useCalendarIntegrationsQuery() {
     queryKey: ["calendarIntegrations"],
     endpoint: "/calendarIntegration",
     method: "get",
+    options: {
+      refetchOnMount: 'always',
+    },
   });
 
   return { ...query, data: unwrapList(query.data) };

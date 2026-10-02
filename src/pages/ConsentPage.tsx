@@ -34,7 +34,7 @@ export function ConsentPage() {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data: consentFormsData, isLoading, refetch } = useConsentFormsQuery({
+  const { data: consentFormsData, isLoading } = useConsentFormsQuery({
     page,
     limit,
     search: debouncedSearch || undefined,
