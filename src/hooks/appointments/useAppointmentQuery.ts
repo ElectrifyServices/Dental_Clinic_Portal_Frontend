@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export function useAppointmentQuery(id?: string) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointments", id],
     endpoint: `/appointment/${id}`,
     method: "get",

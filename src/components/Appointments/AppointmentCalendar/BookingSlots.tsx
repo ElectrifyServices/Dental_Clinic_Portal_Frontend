@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { CalendarCheck, Stethoscope, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -6,7 +7,7 @@ interface BookingSlotsProps {
   selectedDoctorId: string | null;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
-  availableSlots: any[];
+  availableSlots: ApiAny[];
   isLoading?: boolean;
   onBookAppointment?: (doctorId: string, time: string) => void;
 }

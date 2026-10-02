@@ -1,8 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
-import {
-  Phone, Users, User, Building2, MoreHorizontal,
-  Edit2, ArrowRightLeft, Trash2, ChevronDown, ChevronUp, Send, MessageCircle, Activity
-} from 'lucide-react';
+import { Phone, Users, User, Building2, MoreHorizontal, Edit2, ArrowRightLeft, Trash2, Send, MessageCircle, Activity } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
 import {
@@ -20,8 +18,8 @@ interface MemberCardProps {
   onDelete: () => void;
   onToggleStatus: () => Promise<void>;
   isStatusPending: boolean;
-  onEditDependent: (dep: any) => void;
-  onDeleteDependent: (dep: any) => void;
+  onEditDependent: (dep: ApiAny) => void;
+  onDeleteDependent: (dep: ApiAny) => void;
   onResendInvoice: () => void;
   onWhatsAppHistory: () => void;
   onBenefitUsage: () => void;
@@ -42,15 +40,15 @@ const AVATAR_COLORS = [
 export const MemberCard: React.FC<MemberCardProps> = ({
   employee,
   plans,
-  isExpanded,
+  isExpanded: _isExpanded,
   onToggleExpand,
   onEdit,
   onChangePlan,
   onDelete,
   onToggleStatus,
   isStatusPending,
-  onEditDependent,
-  onDeleteDependent,
+  onEditDependent: _onEditDependent,
+  onDeleteDependent: _onDeleteDependent,
   onResendInvoice,
   onWhatsAppHistory,
   onBenefitUsage,
@@ -74,7 +72,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             <h3 className="font-bold text-foreground text-sm truncate">{employee.name}</h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
-              <span>{formatPhoneWithCountryCode(employee.phone, (employee as any).country_code || (employee as any).countryCode)}</span>
+              <span>{formatPhoneWithCountryCode(employee.phone, (employee as ApiAny).country_code || (employee as ApiAny).countryCode)}</span>
             </p>
           </div>
         </div>

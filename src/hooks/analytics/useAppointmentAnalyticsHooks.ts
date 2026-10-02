@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import apiClient from "../../services/apiClient";
 export interface AppointmentAnalyticsFilter {
@@ -11,7 +12,7 @@ export interface AppointmentAnalyticsFilter {
  * Endpoint: POST /appointmentAnalytics/total-bookings
  */
 export function useTotalBookingsAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "total-bookings", filter],
     endpoint: "/appointmentAnalytics/total-bookings",
     method: "post",
@@ -24,7 +25,7 @@ export function useTotalBookingsAnalyticsQuery(filter: AppointmentAnalyticsFilte
  * Endpoint: POST /appointmentAnalytics/completed
  */
 export function useCompletedBookingsAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "completed", filter],
     endpoint: "/appointmentAnalytics/completed",
     method: "post",
@@ -37,7 +38,7 @@ export function useCompletedBookingsAnalyticsQuery(filter: AppointmentAnalyticsF
  * Endpoint: POST /appointmentAnalytics/no-show-rate
  */
 export function useNoShowRateAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "no-show-rate", filter],
     endpoint: "/appointmentAnalytics/no-show-rate",
     method: "post",
@@ -50,7 +51,7 @@ export function useNoShowRateAnalyticsQuery(filter: AppointmentAnalyticsFilter =
  * Endpoint: POST /appointmentAnalytics/completion-rate
  */
 export function useApptCompletionRateAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "completion-rate", filter],
     endpoint: "/appointmentAnalytics/completion-rate",
     method: "post",
@@ -63,7 +64,7 @@ export function useApptCompletionRateAnalyticsQuery(filter: AppointmentAnalytics
  * Endpoint: POST /appointmentAnalytics/peak-hours-heatmap
  */
 export function usePeakHoursHeatmapAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "peak-hours-heatmap", filter],
     endpoint: "/appointmentAnalytics/peak-hours-heatmap",
     method: "post",
@@ -76,7 +77,7 @@ export function usePeakHoursHeatmapAnalyticsQuery(filter: AppointmentAnalyticsFi
  * Endpoint: POST /appointmentAnalytics/next-7-day-forecast
  */
 export function useNext7DayForecastAnalyticsQuery(filter: AppointmentAnalyticsFilter = {}) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["appointmentAnalytics", "next-7-day-forecast", filter],
     endpoint: "/appointmentAnalytics/upcoming-appointments",
     method: "post",
@@ -84,7 +85,7 @@ export function useNext7DayForecastAnalyticsQuery(filter: AppointmentAnalyticsFi
   });
 }
 
-export const exportAppointmentAnalytics = async (filter: any) => {
+export const exportAppointmentAnalytics = async (filter: ApiAny) => {
   return apiClient.post("/appointmentAnalytics/export", { ...filter, format: "xlsx" }, {
     
    });

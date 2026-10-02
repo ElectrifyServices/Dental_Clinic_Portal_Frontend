@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import {
   User,
@@ -14,8 +15,8 @@ import { PlanCoverageCard } from "./PlanCoverageCard";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 
 interface OverviewTabProps {
-  patient: any;
-  patientAppointments: any[];
+  patient: ApiAny;
+  patientAppointments: ApiAny[];
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
@@ -33,7 +34,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             year: "numeric",
           })
         : String(visitVal);
-    } catch (e) {
+    } catch (_e) {
       return String(visitVal);
     }
   };
@@ -60,7 +61,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <Phone className="w-5 h-5 text-muted-foreground/60 mr-3" />
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</p>
+              <p className="font-medium text-foreground">{formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</p>
             </div>
           </div>
           <div className="flex items-center">

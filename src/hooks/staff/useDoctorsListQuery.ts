@@ -1,10 +1,11 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { getFileUrl } from "../../services/apiClient";
 import { useMemo } from "react";
 
-export function useDoctorsListQuery(search?: string, pageOrOptions?: number | any, limit?: number, options?: any) {
+export function useDoctorsListQuery(search?: string, pageOrOptions?: number | ApiAny, limit?: number, options?: ApiAny) {
   let page: number | undefined;
-  let queryOptions: any = options;
+  let queryOptions: ApiAny = options;
 
   if (typeof pageOrOptions === "object" && pageOrOptions !== null) {
     queryOptions = pageOrOptions;
@@ -12,7 +13,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
     page = pageOrOptions;
   }
 
-  const body: any = {
+  const body: ApiAny = {
     search: search || undefined,
     filters: {
       roles: ["DOCTOR"]
@@ -27,7 +28,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
     body.limit = 1000;
   }
 
-  const query = useApiQuery<any>({
+  const query = useApiQuery<ApiAny>({
     queryKey: ["doctorsList", search, page, limit],
     endpoint: "/staff/list",
     method: "post",
@@ -36,25 +37,25 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
   });
 
   const doctors = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     const apiData = query.data;
 
     if (Array.isArray(apiData)) {
       rawList = apiData;
-    } else if (apiData && Array.isArray((apiData as any).responseObject?.data)) {
-      rawList = (apiData as any).responseObject.data;
-    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as any).responseObject.data.staffs)) {
-      rawList = (apiData as any).responseObject.data.staffs;
-    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as any).responseObject.data.data)) {
-      rawList = (apiData as any).responseObject.data.data;
-    } else if (apiData && Array.isArray((apiData as any).data?.staffs)) {
-      rawList = (apiData as any).data.staffs;
-    } else if (apiData && Array.isArray((apiData as any).data?.data)) {
-      rawList = (apiData as any).data.data;
-    } else if (apiData && Array.isArray((apiData as any).data)) {
-      rawList = (apiData as any).data;
-    } else if (apiData && Array.isArray((apiData as any).staffs)) {
-      rawList = (apiData as any).staffs;
+    } else if (apiData && Array.isArray((apiData as ApiAny).responseObject?.data)) {
+      rawList = (apiData as ApiAny).responseObject.data;
+    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as ApiAny).responseObject.data.staffs)) {
+      rawList = (apiData as ApiAny).responseObject.data.staffs;
+    } else if (apiData && apiData.responseObject?.data && Array.isArray((apiData as ApiAny).responseObject.data.data)) {
+      rawList = (apiData as ApiAny).responseObject.data.data;
+    } else if (apiData && Array.isArray((apiData as ApiAny).data?.staffs)) {
+      rawList = (apiData as ApiAny).data.staffs;
+    } else if (apiData && Array.isArray((apiData as ApiAny).data?.data)) {
+      rawList = (apiData as ApiAny).data.data;
+    } else if (apiData && Array.isArray((apiData as ApiAny).data)) {
+      rawList = (apiData as ApiAny).data;
+    } else if (apiData && Array.isArray((apiData as ApiAny).staffs)) {
+      rawList = (apiData as ApiAny).staffs;
     }
 
     return rawList
@@ -78,13 +79,13 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
   const total = useMemo(() => {
     const apiData = query.data;
     return (
-      (apiData as any)?.pagination?.totalItems ||
-      (apiData as any)?.data?.pagination?.totalItems ||
-      (apiData as any)?.responseObject?.data?.pagination?.total ||
-      (apiData as any)?.responseObject?.data?.pagination?.totalItems ||
-      (apiData as any)?.responseObject?.data?.pagination?.total_items ||
-      (apiData as any)?.pagination?.total ||
-      (apiData as any)?.total ||
+      (apiData as ApiAny)?.pagination?.totalItems ||
+      (apiData as ApiAny)?.data?.pagination?.totalItems ||
+      (apiData as ApiAny)?.responseObject?.data?.pagination?.total ||
+      (apiData as ApiAny)?.responseObject?.data?.pagination?.totalItems ||
+      (apiData as ApiAny)?.responseObject?.data?.pagination?.total_items ||
+      (apiData as ApiAny)?.pagination?.total ||
+      (apiData as ApiAny)?.total ||
       doctors.length
     );
   }, [query.data, doctors.length]);
@@ -92,11 +93,11 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
   const totalPages = useMemo(() => {
     const apiData = query.data;
     const computedTotalPages = (
-      (apiData as any)?.pagination?.totalPages ||
-      (apiData as any)?.data?.pagination?.totalPages ||
-      (apiData as any)?.responseObject?.data?.pagination?.totalPages ||
-      (apiData as any)?.responseObject?.data?.pagination?.total_pages ||
-      (apiData as any)?.totalPages ||
+      (apiData as ApiAny)?.pagination?.totalPages ||
+      (apiData as ApiAny)?.data?.pagination?.totalPages ||
+      (apiData as ApiAny)?.responseObject?.data?.pagination?.totalPages ||
+      (apiData as ApiAny)?.responseObject?.data?.pagination?.total_pages ||
+      (apiData as ApiAny)?.totalPages ||
       1
     );
     if (computedTotalPages > 1) return computedTotalPages;

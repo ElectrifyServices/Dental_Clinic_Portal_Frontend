@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -28,7 +29,7 @@ export interface CreateEmployeeResponse {
   patient_id: string | null;
   eligible_date: string;
   status: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
 export function useCreateEmployeeMutation() {

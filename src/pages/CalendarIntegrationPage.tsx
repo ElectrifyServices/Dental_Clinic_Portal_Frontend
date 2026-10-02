@@ -1,3 +1,4 @@
+import { errorMessage } from "../utils/errorMessage";
 import React, { useState } from "react";
 import { CalendarDays, AlertTriangle, RefreshCw, Mail } from "lucide-react";
 import {
@@ -42,8 +43,8 @@ export const CalendarIntegrationPage: React.FC = () => {
     try {
       const { authUrl } = await connectCalendar("google");
       window.location.href = authUrl;
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to start Google Calendar connection");
+    } catch (error) {
+      toast.error(errorMessage(error) || "Failed to start Google Calendar connection");
     }
   };
 
@@ -52,8 +53,8 @@ export const CalendarIntegrationPage: React.FC = () => {
     try {
       await toggleSync({ id: google.id, sync_enabled: checked });
       toast.success(checked ? "Calendar sync enabled" : "Calendar sync paused");
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to update sync setting");
+    } catch (error) {
+      toast.error(errorMessage(error) || "Failed to update sync setting");
     }
   };
 
@@ -63,8 +64,8 @@ export const CalendarIntegrationPage: React.FC = () => {
       await disconnectCalendar({ id: disconnectTarget.id });
       toast.success("Google Calendar disconnected");
       setDisconnectTarget(null);
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to disconnect calendar");
+    } catch (error) {
+      toast.error(errorMessage(error) || "Failed to disconnect calendar");
     }
   };
 

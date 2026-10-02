@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getParsedPermissions } from "../utils/permission";
@@ -94,42 +95,42 @@ export function useNotifications() {
   });
 
   // 4. Local storage queued patients
-  const [queuedPatients] = useLocalStorage<any[]>('queuedPatients', []);
+  const [queuedPatients] = useLocalStorage<ApiAny[]>('queuedPatients', []);
 
   // Map/normalize data
   const patientsList = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (Array.isArray(apiPatients)) {
       rawList = apiPatients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).patients)) {
-      rawList = (apiPatients as any).patients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.patients)) {
-      rawList = (apiPatients as any).data.patients;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data?.data)) {
-      rawList = (apiPatients as any).data.data.data;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data?.data)) {
-      rawList = (apiPatients as any).data.data;
-    } else if (apiPatients && Array.isArray((apiPatients as any).data)) {
-      rawList = (apiPatients as any).data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).patients)) {
+      rawList = (apiPatients as ApiAny).patients;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.patients)) {
+      rawList = (apiPatients as ApiAny).data.patients;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.data?.data)) {
+      rawList = (apiPatients as ApiAny).data.data.data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data?.data)) {
+      rawList = (apiPatients as ApiAny).data.data;
+    } else if (apiPatients && Array.isArray((apiPatients as ApiAny).data)) {
+      rawList = (apiPatients as ApiAny).data;
     }
     return rawList;
   }, [apiPatients]);
 
   const appointmentsList = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (Array.isArray(apiAppointments)) {
       rawList = apiAppointments;
-    } else if (apiAppointments && Array.isArray((apiAppointments as any).appointments)) {
-      rawList = (apiAppointments as any).appointments;
-    } else if (apiAppointments && Array.isArray((apiAppointments as any).data?.appointments)) {
-      rawList = (apiAppointments as any).data.appointments;
-    } else if (apiAppointments && Array.isArray((apiAppointments as any).data?.data)) {
-      rawList = (apiAppointments as any).data.data;
-    } else if (apiAppointments && Array.isArray((apiAppointments as any).data)) {
-      rawList = (apiAppointments as any).data;
+    } else if (apiAppointments && Array.isArray((apiAppointments as ApiAny).appointments)) {
+      rawList = (apiAppointments as ApiAny).appointments;
+    } else if (apiAppointments && Array.isArray((apiAppointments as ApiAny).data?.appointments)) {
+      rawList = (apiAppointments as ApiAny).data.appointments;
+    } else if (apiAppointments && Array.isArray((apiAppointments as ApiAny).data?.data)) {
+      rawList = (apiAppointments as ApiAny).data.data;
+    } else if (apiAppointments && Array.isArray((apiAppointments as ApiAny).data)) {
+      rawList = (apiAppointments as ApiAny).data;
     }
 
-    return rawList.map((a: any) => ({
+    return rawList.map((a: ApiAny) => ({
       ...a,
       id: a.id,
       patientName: a.patient_name || a.patientName,
@@ -144,13 +145,13 @@ export function useNotifications() {
   }, [apiAppointments]);
 
   const inventoryList = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (Array.isArray(apiInventory)) {
       rawList = apiInventory;
-    } else if (apiInventory && Array.isArray((apiInventory as any).data)) {
-      rawList = (apiInventory as any).data;
-    } else if (apiInventory && Array.isArray((apiInventory as any).data?.data)) {
-      rawList = (apiInventory as any).data.data;
+    } else if (apiInventory && Array.isArray((apiInventory as ApiAny).data)) {
+      rawList = (apiInventory as ApiAny).data;
+    } else if (apiInventory && Array.isArray((apiInventory as ApiAny).data?.data)) {
+      rawList = (apiInventory as ApiAny).data.data;
     }
     return rawList;
   }, [apiInventory]);
@@ -270,6 +271,9 @@ export function useNotifications() {
     return list
       .filter((n) => !dismissedIds.includes(n.id))
       .sort((a, b) => b.timestamp - a.timestamp);
+  // `hasModuleAccess` only reads `role`, `rawModulePerms` and `hasAll`, which are
+  // already listed; naming the function itself would rebuild the list each render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentsList, inventoryList, queuedPatients, patientsList, readIds, dismissedIds, role, rawModulePerms, hasAll]);
 
   const unreadCount = useMemo(() => {

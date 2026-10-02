@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 import { useMutation } from "@tanstack/react-query";
 import apiClient from "../../services/apiClient";
@@ -30,9 +31,9 @@ export function useDownloadTreatmentQuery(
  * Backward-compatible alias — existing components that call mutateAsync({ id }) continue to work.
  */
 export function useDownloadTreatmentMutation() {
-  return useMutation<TreatmentPlanResponse, any, { id: string }>({
+  return useMutation<TreatmentPlanResponse, ApiAny, { id: string }>({
     mutationFn: async ({ id }) => {
-      const res = await apiClient.request<any>({
+      const res = await apiClient.request<ApiAny>({
         url: `/treatment/download/${id}`,
         method: "get",
       });

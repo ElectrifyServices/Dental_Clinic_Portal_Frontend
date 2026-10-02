@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Building2, Users, Shield, Calendar, User } from 'lucide-react';
 import { Card } from '@/components/ui';
@@ -6,7 +7,7 @@ import { getDependentsByMember } from '../../../hooks/corporate/dependentStorage
 import { CorporatePlan, PlanDependent } from '../../../types';
 
 interface PlanCoverageCardProps {
-  patient: any;
+  patient: ApiAny;
 }
 
 export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) => {
@@ -38,7 +39,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
   }, [primaryMemberId]);
 
   // If patient is a dependent: find primary member's plan info
-  const [primaryMemberName, setPrimaryMemberName] = React.useState<string | null>(null);
+  const [_primaryMemberName, setPrimaryMemberName] = React.useState<string | null>(null);
   React.useEffect(() => {
     if (!patient?.primaryMemberId) { setPrimaryMemberName(null); return; }
     // Try to find name from dependents storage cross-reference

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface ProcedureListParams {
@@ -27,8 +28,8 @@ export interface Procedure {
   deleted_at?: string | null;
 }
 
-export function useProcedureQuery(params: ProcedureListParams = {}, options?: any) {
-  const body: Record<string, any> = {};
+export function useProcedureQuery(params: ProcedureListParams = {}, options?: ApiAny) {
+  const body: Record<string, ApiAny> = {};
 
   if (params.page !== undefined) body.page = params.page;
   if (params.limit !== undefined) body.limit = params.limit;

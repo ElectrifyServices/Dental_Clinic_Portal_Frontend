@@ -1,6 +1,7 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useMemo, useEffect } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
-import { Button, Pagination } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Calendar, Clock, Loader2, CheckCircle, Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
@@ -10,7 +11,7 @@ interface ScheduleFieldsProps {
   time: string;
   duration: string;
   doctorId: string;
-  doctors: any[];
+  doctors: ApiAny[];
   doctorSearch: string;
   setDoctorSearch: (s: string) => void;
   onDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -23,7 +24,8 @@ function convert12to24(time12: string): string {
   if (!time12) return "";
   const [timePart, modifier] = time12.split(" ");
   if (!modifier) return time12;
-  let [hours, minutes] = timePart.split(":");
+  const [rawHours, minutes] = timePart.split(":");
+  let hours = rawHours;
   if (hours === "12") hours = "00";
   if (modifier?.toUpperCase() === "PM") hours = String(parseInt(hours, 10) + 12);
   return `${hours.padStart(2, "0")}:${minutes}`;

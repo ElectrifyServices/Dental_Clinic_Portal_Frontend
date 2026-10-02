@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React, { useState } from 'react';
@@ -8,12 +9,12 @@ import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { getPhonePlaceholder } from "@/utils/phoneUtils";
 
 interface Step1Props {
-  formData: any;
-  onChange: (e: any) => void;
+  formData: ApiAny;
+  onChange: (e: ApiAny) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
-  onImageUpload: (e: any) => void;
+  onImageUpload: (e: ApiAny) => void;
   isEdit?: boolean;
-  errors?: any;
+  errors?: ApiAny;
 }
 
 export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload, isEdit, errors = {} }: Step1Props) {

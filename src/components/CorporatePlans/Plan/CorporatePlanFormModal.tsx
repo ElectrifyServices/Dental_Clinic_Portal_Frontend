@@ -1,9 +1,10 @@
+import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User, Settings2 } from 'lucide-react';
+import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, LabeledField, SectionRenderer, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
+import { Modal, Button, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -41,7 +42,7 @@ function getCoveragePreset(maxDependents: number): CoveragePreset {
   return 'custom';
 }
 
-function parseBackendError(err: any, fallback = "An error occurred"): string {
+function parseBackendError(err: ApiAny, fallback = "An error occurred"): string {
   const data = err?.response?.data;
   if (!data) return err?.message || fallback;
   const desc = data.responseStatusList?.statusList?.[0]?.statusDesc || data.statusDesc;
@@ -68,7 +69,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const cfg = useFormConfig('corporate');
-  const cfgAny = cfg as any;
+  const cfgAny = cfg as ApiAny;
   const { showToast } = useModal();
 
   const createPlanMutation = useCreateCorporatePlanMutation();
@@ -89,13 +90,13 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   };
 
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
-    (cfgAny.benefitTypes ?? []).map((b: any) => [b.value, b.label])
+    (cfgAny.benefitTypes ?? []).map((b: ApiAny) => [b.value, b.label])
   );
   const planColorDots: Record<string, string> = Object.fromEntries(
-    (cfgAny.planColors ?? []).map((c: any) => [c.value, c.dot])
+    (cfgAny.planColors ?? []).map((c: ApiAny) => [c.value, c.dot])
   );
 
-  const coreIdentitySection = cfg.sections?.find(s => s.id === 'coreIdentity');
+  const _coreIdentitySection = cfg.sections?.find(s => s.id === 'coreIdentity');
 
   useEffect(() => {
     if (!showForm) return;
@@ -122,7 +123,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           CUSTOM: "custom",
         }[t] || "custom");
 
-        const benefits = (planData.benefits || []).map((b: any) => {
+        const benefits = (planData.benefits || []).map((b: ApiAny) => {
           let customTreatmentText = "";
           const standardKeys = [
             'consultation', 'follow-up', 'xray-review', 'cleaning', 'emergency',
@@ -151,7 +152,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           };
         });
 
-        const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as any;
+        const resolvedCategory = (planData.plan_type?.toLowerCase() === 'company' ? 'corporate' : planData.plan_type?.toLowerCase() === 'individual' ? 'individual' : planData.plan_category?.toLowerCase() || editing.planCategory || 'corporate') as ApiAny;
         const resolvedMaxDep = planData.family_coverage_limit ?? planData.max_dependents ?? editing.maxDependents ?? 0;
         setCoveragePreset(getCoveragePreset(resolvedMaxDep));
 
@@ -165,7 +166,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           validTo: planData.valid_till ? planData.valid_till.split('T')[0] : editing.validTo,
           maxMembers: planData.max_member || planData.enrollment_cap || editing.maxMembers,
           isActive: planData.status === "ACTIVE",
-          color: planData.theme_color ? mapHexToColor(planData.theme_color) as any : editing.color,
+          color: planData.theme_color ? mapHexToColor(planData.theme_color) as ApiAny : editing.color,
           planCategory: resolvedCategory,
           planTier: (planData.plan_tier?.toLowerCase() || editing.planTier) as CorporatePlanTier | undefined,
           annualFee: planData.annual_fee ?? editing.annualFee,
@@ -198,7 +199,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     setErrors({});
   }, [showForm, editing, planDetails]);
 
-  const handleFormChange = (name: string, value: any) => {
+  const handleFormChange = (name: string, value: ApiAny) => {
     setForm(prev => {
       if (name === 'code') return { ...prev, code: String(value).toUpperCase() };
       if (name === 'maxMembers') return { ...prev, maxMembers: value ? parseInt(value) : undefined };
@@ -214,7 +215,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     }
   };
 
-  const updateBenefit = (idx: number, field: keyof PlanBenefit, val: any) => {
+  const updateBenefit = (idx: number, field: keyof PlanBenefit, val: ApiAny) => {
     const updated = form.benefits.map((b, i) => {
       if (i !== idx) return b;
       const nb = { ...b, [field]: val } as PlanBenefit;
@@ -318,7 +319,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         onSave(plan);
         showToast('Membership plan created');
         setShowForm(false);
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         const msg = parseBackendError(err, "Failed to create plan").replace(/enrollment_cap/gi, "Max Members");
         setErrors(prev => ({ ...prev, submit: msg }));
       }
@@ -331,7 +332,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         onSave({ ...editing, ...form });
         showToast('Plan updated');
         setShowForm(false);
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         const msg = parseBackendError(err, "Failed to update plan").replace(/enrollment_cap/gi, "Max Members");
         setErrors(prev => ({ ...prev, submit: msg }));
       }
@@ -437,10 +438,10 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     key={tier.value}
                     type="button"
                     onClick={() => {
-                      const updates: any = { planTier: tier.value };
+                      const updates: ApiAny = { planTier: tier.value };
                       if (form.planCategory === 'individual') {
-                        updates.maxDependents = (tier as any).pax;
-                        setCoveragePreset(getCoveragePreset((tier as any).pax));
+                        updates.maxDependents = (tier as ApiAny).pax;
+                        setCoveragePreset(getCoveragePreset((tier as ApiAny).pax));
                       }
                       setForm(prev => ({ ...prev, ...updates }));
                     }}
@@ -450,7 +451,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                     {tier.label}
                     {form.planCategory === 'individual' && (
                       <span className="text-[10px] opacity-60">
-                        {(tier as any).pax === 0 ? 'Self only' : `+${(tier as any).pax} pax`}
+                        {(tier as ApiAny).pax === 0 ? 'Self only' : `+${(tier as ApiAny).pax} pax`}
                       </span>
                     )}
                   </button>
@@ -544,7 +545,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 <button
                   key={c}
                   type="button"
-                  onClick={() => setForm({ ...form, color: c as any })}
+                  onClick={() => setForm({ ...form, color: c as ApiAny })}
                   className={`w-8 h-8 rounded-xl transition-all shadow-sm ${planColorDots[c] ?? 'bg-gray-400'} ${form.color === c ? 'ring-2 ring-offset-3 ring-primary scale-110' : 'opacity-40 hover:opacity-80'
                     }`}
                 />

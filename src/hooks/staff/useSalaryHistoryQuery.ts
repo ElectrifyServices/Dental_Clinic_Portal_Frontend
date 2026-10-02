@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export function useSalaryHistoryQuery(staffId: string | undefined) {
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["salaryHistory", staffId],
     endpoint: `/staffPaymentHistory/${staffId}`,
     method: "post",

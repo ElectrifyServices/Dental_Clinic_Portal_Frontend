@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -9,20 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { Calendar, Plus, Trash2, Clock, DollarSign, FileText, IndianRupee } from "lucide-react";
+import { Calendar, Trash2, Clock, FileText } from "lucide-react";
 
 interface SessionPlannerSectionProps {
-  sessions: any[];
+  sessions: ApiAny[];
   onAddSession: () => void;
   onRemoveSession: (id: string) => void;
-  onUpdateSession: (id: string, updates: any) => void;
+  onUpdateSession: (id: string, updates: ApiAny) => void;
   baseDate: string;
-  onCompleteSessionTrigger?: (session: any) => void;
+  onCompleteSessionTrigger?: (session: ApiAny) => void;
 }
 
 export function SessionPlannerSection({
   sessions,
-  onAddSession,
+  onAddSession: _onAddSession,
   onRemoveSession,
   onUpdateSession,
   baseDate,

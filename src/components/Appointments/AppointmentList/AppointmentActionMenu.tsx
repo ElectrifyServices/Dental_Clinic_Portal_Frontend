@@ -1,14 +1,15 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Edit, UserX, CheckCircle, Trash2, UserCheck, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 interface AppointmentActionMenuProps {
-  appointment: any;
+  appointment: ApiAny;
   onEdit?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
   onDelete?: (id: string) => void;
-  onCheckIn?: (appointment: any) => void;
-  onDirectCheckIn?: (appointment: any) => void;
+  onCheckIn?: (appointment: ApiAny) => void;
+  onDirectCheckIn?: (appointment: ApiAny) => void;
   onClose: () => void;
   pos: { top: number; left: number };
   checkingInApptId?: string | null;
@@ -21,10 +22,10 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
   onUpdateStatus,
   onDelete,
   onCheckIn,
-  onDirectCheckIn,
+  onDirectCheckIn: _onDirectCheckIn,
   onClose,
   pos,
-  checkingInApptId,
+  checkingInApptId: _checkingInApptId,
   onWhatsappHistory
 }) => {
   const canCheckIn = onCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(appointment.status);

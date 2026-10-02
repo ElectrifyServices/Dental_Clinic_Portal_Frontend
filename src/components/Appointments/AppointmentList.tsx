@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useState } from "react";
 import {
   Search,
@@ -19,12 +20,12 @@ import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 import { useModal } from "../../contexts/ModalContext";
 
 interface AppointmentListProps {
-  appointments?: any[];
+  appointments?: ApiAny[];
   onEditAppointment?: (id: string) => void;
   onDeleteAppointment?: (id: string) => void;
   onUpdateStatus?: (id: string, status: string, cancelledReason?: string) => void;
-  onCheckInPatient?: (appointment: any) => void;
-  onDirectCheckIn?: (appointment: any) => void;
+  onCheckInPatient?: (appointment: ApiAny) => void;
+  onDirectCheckIn?: (appointment: ApiAny) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
   searchValue?: string;
@@ -38,7 +39,7 @@ interface AppointmentListProps {
   checkingInApptId?: string | null;
 }
 
-const STATUS_VARIANTS: Record<string, any> = {
+const STATUS_VARIANTS: Record<string, ApiAny> = {
   completed: "green",
   "in-progress": "blue",
   "checked-in": "green",
@@ -64,7 +65,7 @@ const formatTime = (t: string) => {
   const upper = t.toUpperCase();
   if (upper.includes("AM") || upper.includes("PM")) return upper;
   const [h, m] = t.split(":");
-  let hr = parseInt(h);
+  const hr = parseInt(h);
   const ap = hr >= 12 ? "PM" : "AM";
   return `${hr % 12 || 12}:${m} ${ap}`;
 };
@@ -125,7 +126,7 @@ export function AppointmentList({
 
   const { doctors } = useDoctorsListQuery();
 
-  const today = new Date();
+  const _today = new Date();
   const filtered = propAppointments.filter((a) => {
     const ptName =
       a.patientName ||
@@ -157,7 +158,7 @@ export function AppointmentList({
     {
       key: "patient",
       header: "Patient Details",
-      render: (a: any) => {
+      render: (a: ApiAny) => {
         const ptNameRaw =
           a.patientName ||
           (a.patient && a.patient.name) ||
@@ -188,9 +189,9 @@ export function AppointmentList({
     {
       key: "doctor",
       header: "Doctor",
-      render: (a: any) => {
+      render: (a: ApiAny) => {
         const doc = doctors?.find(
-          (d: any) => d.id === a.doctor_id || d.id === a.doctorId
+          (d: ApiAny) => d.id === a.doctor_id || d.id === a.doctorId
         );
         let doctorName = doc ? doc.name : a.doctorName || a.doctor || "";
         if (doctorName && typeof doctorName === "string") {
@@ -216,7 +217,7 @@ export function AppointmentList({
     {
       key: "schedule",
       header: "Schedule",
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
             <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
@@ -240,7 +241,7 @@ export function AppointmentList({
       key: "fee",
       header: "Total Fee",
       align: "right" as const,
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="font-semibold text-foreground text-sm">
           ₹{(a.fee || 0).toLocaleString()}
         </div>
@@ -249,7 +250,7 @@ export function AppointmentList({
     {
       key: "status",
       header: "Current Status",
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <Badge
           variant={
             STATUS_VARIANTS[a.status] ||
@@ -271,7 +272,7 @@ export function AppointmentList({
       key: "actions",
       header: "Actions",
       align: "left" as const,
-      render: (a: any) => (
+      render: (a: ApiAny) => (
         <div className="flex justify-start">
           <Button
             variant="ghost"

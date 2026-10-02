@@ -1,13 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import { useState, useEffect, useMemo } from "react";
-import {
-  User,
-  Phone,
-  Search,
-  AlertCircle,
-  UserPlus,
-  Stethoscope,
-  Calendar,
-} from "lucide-react";
+import { User, Phone, Search, UserPlus, Stethoscope, Calendar } from "lucide-react";
 import {
   Modal,
   Button,
@@ -28,15 +21,15 @@ import { checkPatientPhoneExists } from "../../hooks/patients/usePatientPhoneExi
 interface DirectConsultationPopupProps {
   onClose: () => void;
   onPatientFound: (
-    patient: any,
+    patient: ApiAny,
     doctorId: string,
     doctorName: string,
     time: string,
   ) => void;
   onRegisterNew: (name: string, phone: string) => void;
-  patients: any[];
-  doctors: any[];
-  appointments: any[];
+  patients: ApiAny[];
+  doctors: ApiAny[];
+  appointments: ApiAny[];
   doctorAvailability: { [key: string]: boolean };
 }
 
@@ -44,10 +37,10 @@ export function DirectConsultationPopup({
   onClose,
   onPatientFound,
   onRegisterNew,
-  patients,
-  doctors: dummyDoctors, // alias to avoid confusion
-  appointments,
-  doctorAvailability,
+  patients: _patients,
+  doctors: _dummyDoctors, // alias to avoid confusion
+  appointments: _appointments,
+  doctorAvailability: _doctorAvailability,
 }: DirectConsultationPopupProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -84,7 +77,7 @@ export function DirectConsultationPopup({
 
   const allSlots = useMemo(() => {
     const rawSlots = slotsData?.data?.slots || [];
-    return rawSlots.map((slot: any) => {
+    return rawSlots.map((slot: ApiAny) => {
       const time24 = slot.time;
       const [h, m] = time24.split(":");
       const hour = parseInt(h);
@@ -92,7 +85,7 @@ export function DirectConsultationPopup({
       const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
       const time12 = `${hour12}:${m} ${ampm}`;
 
-      let isPast = false;
+      const isPast = false;
 
       return {
         time24,
@@ -102,7 +95,7 @@ export function DirectConsultationPopup({
         disabled: slot.disabled === true,
       };
     });
-  }, [slotsData, selectedDate, todayStr]);
+  }, [slotsData]);
 
   useEffect(() => {
     const firstAvailable = allSlots.find((s) => !s.isPast);
@@ -149,7 +142,7 @@ export function DirectConsultationPopup({
       } else {
         setError("Patient not found in records.");
       }
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       setError(
         err.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
         err.message ||

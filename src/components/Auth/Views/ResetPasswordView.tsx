@@ -1,8 +1,9 @@
+import type { ApiAny } from "../../../types/api";
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
-import { Lock, Eye, EyeOff, Check, X } from "lucide-react";
+import { Lock, Eye, EyeOff, Check } from "lucide-react";
 const logoImg = "/Portal_logo.png";
 import { useResetPasswordMutation } from "@/hooks/auth/useResetPasswordMutation";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -61,7 +62,8 @@ export function ResetPasswordView() {
       });
       toast.success("Password has been reset successfully!");
       setIsSuccess(true);
-    } catch (error: any) {
+    } catch (caught) {
+      const error = caught as ApiAny;
       const msg = error.message || "Failed to reset password";
       setFormError(msg);
       toast.error(msg);

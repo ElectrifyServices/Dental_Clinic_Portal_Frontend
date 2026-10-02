@@ -1,22 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import React from "react";
-import ReactDOM from "react-dom";
-import {
-  Download,
-  FileText,
-  Calendar,
-  Stethoscope,
-  Camera,
-  Pill,
-  Activity,
-  CreditCard,
-  FlaskConical,
-  ScanLine,
-  ClipboardList,
-  Image as ImageIcon,
-  ExternalLink,
-  X,
-  User,
-} from "lucide-react";
+import { Download, FileText, Calendar, Stethoscope, Camera, Pill, Activity, CreditCard, FlaskConical, ScanLine, ClipboardList, Image as ImageIcon, ExternalLink, User } from "lucide-react";
 import {
   Modal,
   Badge,
@@ -33,7 +17,7 @@ import html2canvas from "html2canvas";
 import logoImg from "../../logo.png";
 
 interface EMRViewerProps {
-  record: any;
+  record: ApiAny;
   onClose: () => void;
 }
 
@@ -46,7 +30,7 @@ const CATEGORY_META: Record<
     border: string;
     iconBg: string;
     icon: React.ReactNode;
-    variant: any;
+    variant: ApiAny;
   }
 > = {
   consultation: {
@@ -148,7 +132,7 @@ const TIMELINE_FILTERS = [
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateEMRPDF(
   patientName: string,
-  timeline: any[],
+  timeline: ApiAny[],
   recordType?: string,
   logoUrl?: string | null
 ) {
@@ -162,7 +146,7 @@ export async function generateEMRPDF(
   // Build records rows HTML
   const rowsHtml = timeline
     .map(
-      (item: any, idx: number) => `
+      (item: ApiAny, idx: number) => `
     <tr style="background: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"}; page-break-inside: avoid;">
       <td style="padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; width: 25%;">
         <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px;">
@@ -220,7 +204,7 @@ export async function generateEMRPDF(
         <div style="flex:1; padding-right:10px; border-right: 1px solid #e2e8f0;">
           <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:2px;">Record Summary</div>
           <div style="font-size:13px; font-weight:800; color:#0f172a;">${timeline.length} Medical Record${timeline.length !== 1 ? "s" : ""}</div>
-          <div style="font-size:11px; font-weight:500; color:#475569; margin-top:2px;">${[...new Set(timeline.map((t: any) => (t.category || "").replace(/_/g, " ")))].filter(Boolean).join(", ") || "Various Categories"}</div>
+          <div style="font-size:11px; font-weight:500; color:#475569; margin-top:2px;">${[...new Set(timeline.map((t: ApiAny) => (t.category || "").replace(/_/g, " ")))].filter(Boolean).join(", ") || "Various Categories"}</div>
         </div>
         <div style="flex:1; padding-left:18px;">
           <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:2px;">Clinic</div>
@@ -408,9 +392,19 @@ function AttachmentPreview({
 // ─────────────────────────────────────────────────────────────────────────────
 // Main EMR Viewer Component
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Guards the null case before any hook runs. The hooks below read `record`
+ * unconditionally, so they live in their own component that is only mounted
+ * once there is a record to show - a bare early return above them would make
+ * React see a different number of hooks between renders.
+ */
 export function EMRViewer({ record, onClose }: EMRViewerProps) {
-  const { themeData } = useTheme();
   if (!record) return null;
+  return <EMRViewerContent record={record} onClose={onClose} />;
+}
+
+function EMRViewerContent({ record, onClose }: EMRViewerProps) {
+  const { themeData } = useTheme();
 
   const [search, setSearch] = React.useState("");
   const [activeTab, setActiveTab] = React.useState("all");
@@ -420,7 +414,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
 
   const debouncedSearch = useDebounce(search, 500);
 
-  const queryParams: any = {
+  const queryParams: ApiAny = {
     page: 1,
     limit: 1000,
     filters: { patient_id: record.patientId },
@@ -435,22 +429,22 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
   });
 
   const detailedRecord = React.useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: ApiAny[] = [];
     if (apiListData) {
       if (Array.isArray(apiListData)) rawList = apiListData;
-      else if (Array.isArray((apiListData as any).data?.data)) rawList = (apiListData as any).data.data;
-      else if (Array.isArray((apiListData as any).data)) rawList = (apiListData as any).data;
-      else if (Array.isArray((apiListData as any).responseObject?.data)) rawList = (apiListData as any).responseObject.data;
-      else if (Array.isArray((apiListData as any).responseObject)) rawList = (apiListData as any).responseObject;
+      else if (Array.isArray((apiListData as ApiAny).data?.data)) rawList = (apiListData as ApiAny).data.data;
+      else if (Array.isArray((apiListData as ApiAny).data)) rawList = (apiListData as ApiAny).data;
+      else if (Array.isArray((apiListData as ApiAny).responseObject?.data)) rawList = (apiListData as ApiAny).responseObject.data;
+      else if (Array.isArray((apiListData as ApiAny).responseObject)) rawList = (apiListData as ApiAny).responseObject;
     }
 
     const latestItem = rawList[0] || record;
 
     // Extract attachments properly (objects with file_url)
-    const extractAttachments = (item: any) => {
+    const extractAttachments = (item: ApiAny) => {
       const atts = item.attachments;
       if (!Array.isArray(atts)) return [];
-      return atts.map((a: any) => {
+      return atts.map((a: ApiAny) => {
         if (typeof a === "string") return { url: a, name: a.split("/").pop() || "File" };
         return {
           url: a.file_url || a.url || a.file_path || "",
@@ -458,7 +452,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
           type: a.file_type || a.type || "",
           size: a.file_size || a.size,
         };
-      }).filter((a: any) => a.url);
+      }).filter((a: ApiAny) => a.url);
     };
 
     return {
@@ -472,7 +466,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
       attachments: extractAttachments(latestItem).length > 0
         ? extractAttachments(latestItem)
         : extractAttachments(record),
-      timeline: rawList.map((item: any) => ({
+      timeline: rawList.map((item: ApiAny) => ({
         id: item.id,
         title: item.title || "N/A",
         content: item.content || "N/A",
@@ -593,7 +587,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                 </div>
                 <div className="text-center flex-1 sm:flex-initial">
                   <p className="text-2xl font-black text-[#c9a24b]">
-                    {new Set(filteredTimeline.map((t: any) => t.category)).size}
+                    {new Set(filteredTimeline.map((t: ApiAny) => t.category)).size}
                   </p>
                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Categories</p>
                 </div>
@@ -638,7 +632,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
           {/* ── Timeline ── */}
           {filteredTimeline.length > 0 ? (
             <div className="relative border-l-2 border-border/80 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-6">
-              {filteredTimeline.map((item: any, idx: number) => {
+              {filteredTimeline.map((item: ApiAny, idx: number) => {
                 const meta = getCategoryMeta(item.category);
                 const formattedDate = item.date
                   ? new Date(item.date).toLocaleDateString("en-IN", {
@@ -700,7 +694,7 @@ export function EMRViewer({ record, onClose }: EMRViewerProps) {
                             <Camera className="w-3 h-3 text-[#4e6e65]" /> Attachments ({item.attachments.length})
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {item.attachments.map((att: any, aIdx: number) => {
+                            {item.attachments.map((att: ApiAny, aIdx: number) => {
                               const ext = (att.url?.split(".").pop() || "").toLowerCase();
                               const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
                               return (

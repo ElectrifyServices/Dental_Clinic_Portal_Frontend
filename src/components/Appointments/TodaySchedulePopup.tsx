@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import React, { useEffect } from "react";
-import { Layout, Calendar, CheckCircle, Clock, Hourglass } from "lucide-react";
+import { Layout, Calendar, CheckCircle, Hourglass } from "lucide-react";
 import { Modal, MetricCard } from "@/components/ui";
 import { Loading } from "@/components/ui/Loading";
 import { DoctorAvailability } from "./TodaySchedule/DoctorAvailability";
@@ -14,13 +15,13 @@ import { getLocalDateString } from "../../utils/dateUtils";
 
 interface TodaySchedulePopupProps {
   onClose: () => void;
-  appointments: any[];
-  doctors: any[];
+  appointments: ApiAny[];
+  doctors: ApiAny[];
   doctorAvailability: { [key: string]: boolean };
   onToggleDoctorAvailability: (doctorId: string) => void;
 }
 
-const STATUS_VARIANTS: Record<string, any> = {
+const STATUS_VARIANTS: Record<string, ApiAny> = {
   completed: "green",
   "in-progress": "blue",
   "checked-in": "green",
@@ -34,12 +35,12 @@ const STATUS_VARIANTS: Record<string, any> = {
 export function TodaySchedulePopup({
   onClose,
   appointments = [],
-  doctors = [],
+  doctors: _doctors = [],
   doctorAvailability = {},
   onToggleDoctorAvailability = () => { },
 }: TodaySchedulePopupProps) {
   const todayStr = getLocalDateString();
-  const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
+  const _todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
   const { data: pendingData, refetch: refetchPending, isFetching: isPendingFetching } = useSchedulePendingQuery();
   const { data: completedStatsData, refetch: refetchCompletedStats, isFetching: isCompletedStatsFetching } = useAppointmentCompletedQuery(todayStr);
@@ -57,7 +58,7 @@ export function TodaySchedulePopup({
   }, [refetchPending, refetchCompletedStats, refetchTeam, refetchTimeline]);
 
 
-  const extractCount = (data: any, fallback: number): number => {
+  const extractCount = (data: ApiAny, fallback: number): number => {
     if (data === null || data === undefined) return fallback;
     if (typeof data === "number") return data;
     if (typeof data === "string") {
@@ -114,8 +115,8 @@ export function TodaySchedulePopup({
     : [];
 
   const bookedCount = resolvedAppointments.length;
-  const completedCount = extractCount(completedStatsData, resolvedAppointments.filter((a: any) => (a.status || "").toLowerCase() === "completed").length);
-  const pendingCount = extractCount(pendingData, resolvedAppointments.filter((a: any) => !["completed", "cancelled", "no-show"].includes((a.status || "").toLowerCase())).length);
+  const completedCount = extractCount(completedStatsData, resolvedAppointments.filter((a: ApiAny) => (a.status || "").toLowerCase() === "completed").length);
+  const pendingCount = extractCount(pendingData, resolvedAppointments.filter((a: ApiAny) => !["completed", "cancelled", "no-show"].includes((a.status || "").toLowerCase())).length);
 
   const resolvedDoctors = Array.isArray(teamAvailData?.data)
     ? teamAvailData.data
@@ -125,7 +126,7 @@ export function TodaySchedulePopup({
 
   const mergedDoctorAvailability = { ...doctorAvailability };
   if (Array.isArray(resolvedDoctors)) {
-    resolvedDoctors.forEach((doc: any) => {
+    resolvedDoctors.forEach((doc: ApiAny) => {
       if (mergedDoctorAvailability[doc.id] === undefined) {
         mergedDoctorAvailability[doc.id] = doc.status === "ACTIVE" || doc.isActive === true;
       }

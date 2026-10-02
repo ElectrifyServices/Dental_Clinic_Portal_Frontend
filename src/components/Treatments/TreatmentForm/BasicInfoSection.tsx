@@ -1,21 +1,20 @@
+import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React from "react";
 import { Info, AlertCircle, Calendar, Tag, IndianRupee } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
-
 interface BasicInfoSectionProps {
-  formData: any;
-  handleChange: (e: React.ChangeEvent<any>) => void;
+  formData: ApiAny;
+  handleChange: (e: React.ChangeEvent<ApiAny>) => void;
   doctorError?: string;
-  allPatients: any[];
-  doctors: any[];
-  procedures: any[];
+  allPatients: ApiAny[];
+  doctors: ApiAny[];
+  procedures: ApiAny[];
   teeth: string[];
-  pendingPlans: any[];
-  onLoadPlan: (plan: any) => void;
+  pendingPlans: ApiAny[];
+  onLoadPlan: (plan: ApiAny) => void;
   isEdit: boolean;
   onPatientSearch?: (query: string) => void;
   onDoctorSearch?: (query: string) => void;
@@ -46,7 +45,7 @@ export function BasicInfoSection({
   onEditProcedure,
 }: BasicInfoSectionProps) {
   const normalizedProcedures = React.useMemo(() => {
-    return (procedures || []).map((proc: any) => {
+    return (procedures || []).map((proc: ApiAny) => {
       if (typeof proc === "string") {
         return { label: proc, value: proc };
       }
@@ -76,9 +75,9 @@ export function BasicInfoSection({
             const selectedPat = allPatients.find(
               (p) => (typeof p === "string" ? p : p.name) === val
             );
-            handleChange({ target: { name: "patientName", value: val } } as any);
+            handleChange({ target: { name: "patientName", value: val } } as ApiAny);
             if (selectedPat) {
-              handleChange({ target: { name: "patientId", value: selectedPat.id } } as any);
+              handleChange({ target: { name: "patientId", value: selectedPat.id } } as ApiAny);
             }
           }}
           options={allPatients.map((p) => {
@@ -95,7 +94,7 @@ export function BasicInfoSection({
             };
           })}
           onSearchChange={onPatientSearch}
-          renderOption={(pat: any) => (
+          renderOption={(pat: ApiAny) => (
             <div className="flex items-center gap-3 py-1">
               {pat.avatar ? (
                 <img
@@ -116,7 +115,7 @@ export function BasicInfoSection({
               </div>
             </div>
           )}
-          renderValue={(option: any) => (
+          renderValue={(option: ApiAny) => (
             <div className="flex items-center gap-2">
               {option.avatar ? (
                 <img
@@ -166,7 +165,7 @@ export function BasicInfoSection({
         </Label>
         <SearchableSelect
           value={formData.procedure}
-          onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as any)}
+          onChange={(val) => handleChange({ target: { name: "procedure", value: val } } as ApiAny)}
           options={normalizedProcedures}
           placeholder="Select Procedure"
           searchPlaceholder="Search procedure..."
@@ -190,7 +189,7 @@ export function BasicInfoSection({
           value={formData.tooth ? formData.tooth.split(', ').filter(Boolean) : []}
           onChange={(val: string[]) => {
             const stringVal = Array.isArray(val) ? val.join(', ') : val;
-            handleChange({ target: { name: "tooth", value: stringVal } } as any);
+            handleChange({ target: { name: "tooth", value: stringVal } } as ApiAny);
           }}
           options={teeth.map((tooth) => ({ label: tooth, value: tooth }))}
           placeholder="Select Tooth/Area"
@@ -287,7 +286,7 @@ export function BasicInfoSection({
         </Label>
         <SearchableSelect
           value={formData.status}
-          onChange={(val) => handleChange({ target: { name: "status", value: val } } as any)}
+          onChange={(val) => handleChange({ target: { name: "status", value: val } } as ApiAny)}
           options={[
             { label: "Planned", value: "planned" },
             { label: "In Progress", value: "in-progress" },
@@ -308,8 +307,8 @@ export function BasicInfoSection({
           displayValue={formData.doctorName}
           onChange={(val) => {
             const selectedDoc = doctors.find((d) => d.id === val);
-            handleChange({ target: { name: "doctorId", value: val } } as any);
-            handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as any);
+            handleChange({ target: { name: "doctorId", value: val } } as ApiAny);
+            handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as ApiAny);
           }}
           disabled={isEdit}
           options={doctors.map((doc) => ({
@@ -322,7 +321,7 @@ export function BasicInfoSection({
             searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
           }))}
           onSearchChange={onDoctorSearch}
-          renderOption={(doc: any) => (
+          renderOption={(doc: ApiAny) => (
             <div className="flex items-center gap-3 py-1">
               {doc.avatar ? (
                 <img
@@ -343,7 +342,7 @@ export function BasicInfoSection({
               </div>
             </div>
           )}
-          renderValue={(option: any) => (
+          renderValue={(option: ApiAny) => (
             <div className="flex items-center gap-2">
               {option.avatar ? (
                 <img

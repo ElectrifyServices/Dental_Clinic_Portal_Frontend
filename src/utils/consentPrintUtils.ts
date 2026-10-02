@@ -1,6 +1,25 @@
 import logoDefault from "../logo.png";
 
-export function printConsentForm(form: any, logoUrl: string | null) {
+/** The consent-form fields this printer renders. */
+export interface PrintableConsentForm {
+  patientName?: string;
+  doctorName?: string;
+  treatmentType?: string;
+  status?: string;
+  createdDate?: string;
+  signedDate?: string;
+  content?: string;
+  riskDisclosure?: string;
+  alternativeTreatments?: string;
+  signature?: string;
+  witnessSignature?: string;
+  witnessName?: string;
+}
+
+export function printConsentForm(
+  form: PrintableConsentForm,
+  logoUrl: string | null,
+) {
   // Create a temporary hidden iframe element
   const iframe = document.createElement("iframe");
   iframe.style.position = "absolute";

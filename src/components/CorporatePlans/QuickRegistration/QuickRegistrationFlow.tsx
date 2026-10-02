@@ -1,11 +1,7 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState } from 'react';
-import {
-  CheckCircle, ChevronRight, ChevronLeft, User, Users, Tag,
-  Building2, Phone, Mail, Calendar, Search, Zap, ArrowRight,
-  Sparkles, Shield, Star, Award,
-} from 'lucide-react';
+import { CheckCircle, ChevronRight, ChevronLeft, User, Users, Tag, Building2, Phone, Mail, Calendar, Zap, Sparkles, Shield, Star, Award } from 'lucide-react';
 import { CorporatePlan } from '../../../types';
-import { COLOR_MAP } from '../../../utils/corporatePlan';
 import { Button, Input, LabeledField, Card, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
@@ -139,7 +135,8 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
       setSaved(true);
       showToast(`${memberName} registered successfully`);
       setTimeout(onRegistered, 1800);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as ApiAny;
       const msg = err?.response?.data?.message || err?.response?.data?.statusDesc || err?.message || 'Registration failed';
       setErrors({ submit: msg });
     } finally {

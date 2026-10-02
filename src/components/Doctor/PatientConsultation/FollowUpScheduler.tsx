@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import React from "react";
-import { Clock, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
+import { Clock, CheckCircle } from "lucide-react";
 
 interface FollowUpSchedulerProps {
   followUpRequired: boolean;
@@ -19,7 +20,7 @@ interface FollowUpSchedulerProps {
   selectedSlot: string | null;
   initialSelectedSlot?: string | null;
   availableSlots: { time24: string; time12: string; appointmentCount: number; disabled?: boolean }[];
-  doctors: any[];
+  doctors: ApiAny[];
   onFollowUpRequiredChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDoctorChange: (id: string) => void;
   onDateChange: (date: string) => void;
@@ -37,14 +38,14 @@ export function FollowUpScheduler({
   initialSelectedSlot,
   availableSlots,
   doctors,
-  onFollowUpRequiredChange,
+  onFollowUpRequiredChange: _onFollowUpRequiredChange,
   onDoctorChange,
   onDateChange,
   onSlotSelect,
-  onSchedule,
+  onSchedule: _onSchedule,
   errors = {}
 }: FollowUpSchedulerProps) {
-  const formatFollowUpDate = (dateStr: string) => {
+  const _formatFollowUpDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -66,7 +67,7 @@ export function FollowUpScheduler({
 
   const normalizeSlot = (s: string | null | undefined): string => {
     if (!s) return "";
-    let clean = s.trim().toUpperCase();
+    const clean = s.trim().toUpperCase();
     if (clean.includes("AM") || clean.includes("PM")) {
       const match = clean.match(/(\d+):(\d+)\s*(AM|PM)/);
       if (match) {

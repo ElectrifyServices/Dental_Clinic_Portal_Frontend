@@ -1,4 +1,5 @@
 // hooks/treatment/useTreatmentPlanStatsQuery.ts
+import type { ApiAny } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
@@ -43,7 +44,7 @@ export function useTreatmentPlanStatsQuery(
 ) {
   // Build query parameters
   const buildQueryParams = () => {
-    const params: any = {};
+    const params: ApiAny = {};
     
     if (!filters) return params;
     

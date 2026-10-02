@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import type { ApiAny } from "../types/api";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle } from "lucide-react";
+import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
@@ -44,8 +45,6 @@ export const AppointmentsPage: React.FC = () => {
     confirmDelete,
     setPendingCheckInAppt,
     setSelectedPatientId,
-    setWhatsappPhone,
-    setWhatsappPatientName,
   } = useModal();
 
   const [viewMode, setViewMode] = useState("calendar");
@@ -94,7 +93,7 @@ export const AppointmentsPage: React.FC = () => {
       setStartDate(selectedDate);
       setEndDate("");
     }
-  }, [selectedDate, viewMode]);
+  }, [selectedDate, viewMode, setStartDate, setEndDate]);
 
 
 
@@ -105,20 +104,18 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   const listCount = appointments.filter(
-    (a: any) => a.status !== "no-show" && isMatchingDate(a.date),
+    (a: ApiAny) => a.status !== "no-show" && isMatchingDate(a.date),
   ).length;
 
-  const noShowCount = (noShowAppointments || []).filter((a: any) => isMatchingDate(a.date)).length;
+  const noShowCount = (noShowAppointments || []).filter((a: ApiAny) => isMatchingDate(a.date)).length;
   
-  const calendarCount = appointments.filter((a: any) => isMatchingDate(a.date)).length + noShowCount;
-
-  const handleNewAppointment = (date?: any) => {
+  const handleNewAppointment = (date?: Date) => {
     setSelectedAppointment(date ? { date } : null);
     setActiveModal("appointmentForm");
   };
 
   const handleDeleteAppt = (id: string) => {
-    const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
+    const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
     confirmDelete(
       "Delete Appointment",
       `Delete appointment for ${apt?.patientName || "this patient"}?`,
@@ -128,7 +125,7 @@ export const AppointmentsPage: React.FC = () => {
 
   const { mutateAsync: checkInAppointment } = useCheckInAppointmentMutation();
 
-  const handleCheckInPatient = async (appt: any) => {
+  const handleCheckInPatient = async (appt: ApiAny) => {
     try {
       const response = await checkInAppointment({ id: appt.id });
       const responseData = response?.data ?? response;
@@ -150,14 +147,14 @@ export const AppointmentsPage: React.FC = () => {
       } else {
         setActiveModal("patientNotFound");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update appointment check-in status");
     }
   };
 
   const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
 
-  const handleDirectCheckInPatient = async (appt: any) => {
+  const handleDirectCheckInPatient = async (appt: ApiAny) => {
     setCheckingInApptId(appt.id);
     try {
       // First update the appointment status
@@ -173,7 +170,7 @@ export const AppointmentsPage: React.FC = () => {
 
       if (!patientId && !requiresRegistration) {
         const existing = patients.find(
-          (p: any) =>
+          (p: ApiAny) =>
             (p.phone || "").trim() === sPhone &&
             (p.name || "").toLowerCase().trim() === sName,
         );
@@ -184,7 +181,7 @@ export const AppointmentsPage: React.FC = () => {
 
       if (patientId && !requiresRegistration) {
         // Add to local queue
-        setQueuedPatients((prev: any[]) => [
+        setQueuedPatients((prev: ApiAny[]) => [
           ...prev,
           {
             id: appt.id,
@@ -204,7 +201,7 @@ export const AppointmentsPage: React.FC = () => {
             id: appt.id,
             patient_id: patientId
           });
-        } catch (err) {
+        } catch {
           toast.error("Failed to add patient to consultation queue");
         }
         
@@ -213,7 +210,7 @@ export const AppointmentsPage: React.FC = () => {
         setPendingCheckInAppt(appt);
         setActiveModal("patientNotFound");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to check in patient directly");
     } finally {
       setCheckingInApptId(null);
@@ -281,7 +278,7 @@ export const AppointmentsPage: React.FC = () => {
               date: Date,
               time: string,
             ) => {
-              const doctor = activeDoctors.find((d: any) => d.id === doctorId);
+              const doctor = activeDoctors.find((d: ApiAny) => d.id === doctorId);
               setSelectedAppointment({
                 doctorId,
                 doctorName: doctor?.name,
@@ -290,7 +287,7 @@ export const AppointmentsPage: React.FC = () => {
               });
               setActiveModal("appointmentForm");
             }}
-            onEditAppointment={(apt: any) => {
+            onEditAppointment={(apt: ApiAny) => {
               setSelectedAppointment(apt);
               setActiveModal("appointmentForm");
             }}
@@ -300,9 +297,9 @@ export const AppointmentsPage: React.FC = () => {
         )}
         {(viewMode === "list" || viewMode === "no-show") && (
           <AppointmentList
-            appointments={viewMode === "list" ? appointments.filter((apt: any) => apt.status !== "no-show") : noShowAppointments}
+            appointments={viewMode === "list" ? appointments.filter((apt: ApiAny) => apt.status !== "no-show") : noShowAppointments}
             onEditAppointment={(id: string) => {
-              const apt = appointments.find((a: any) => a.id === id) || noShowAppointments?.find((a: any) => a.id === id);
+              const apt = appointments.find((a: ApiAny) => a.id === id) || noShowAppointments?.find((a: ApiAny) => a.id === id);
               setSelectedAppointment(apt);
               setActiveModal("appointmentForm");
             }}

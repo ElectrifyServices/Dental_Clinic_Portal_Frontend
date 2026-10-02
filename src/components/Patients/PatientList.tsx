@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { User } from "lucide-react";
-import { ConfirmModal } from "@/components/ui";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { PatientStats } from "./PatientList/PatientStats";
 import { PatientFilters } from "./PatientList/PatientFilters";

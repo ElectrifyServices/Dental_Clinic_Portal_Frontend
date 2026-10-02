@@ -1,26 +1,17 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
-import {
-  Plus, Trash2, Edit2, Upload, Building2, User,
-  Users, Phone, Search,
-  MoreHorizontal, ArrowRightLeft,
-  UserPlus, Zap, Send, MessageCircle, Activity,
-} from 'lucide-react';
+import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, Send, MessageCircle, Activity } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
-import {
-  PageHeader, DataTable, Pagination, PlanBadge, ConfirmModal, Modal,
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading,
-} from '../ui';
+import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
-import { useCompaniesQuery } from '../../hooks/corporate/useCompaniesQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
 import { useRegenerateInvoiceMutation } from '../../hooks/corporate/useRegenerateInvoiceMutation';
 import { useModal } from '../../contexts/ModalContext';
 import { EmployeeImportTab } from './Employee/EmployeeImportTab';
 import { EmployeeFormModal } from './Employee/EmployeeFormModal';
 import { ChangePlanModal } from './Employee/ChangePlanModal';
-import { getDependentsByMember, removeDependent, notifyDependentChange } from '../../hooks/corporate/dependentStorage';
+import { getDependentsByMember } from '../../hooks/corporate/dependentStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { EmployeeDependentFormModal } from './Employee/EmployeeDependentFormModal';
 import { MemberCard } from './Employee/MemberCard';
@@ -39,10 +30,10 @@ interface EmployeeManagementProps {
 }
 
 export function EmployeeManagement({
-  employees, plans, onSave, onDelete, onBulkSave, onChangePlan, onGoToRegister,
+  employees: _employees, plans, onSave, onDelete, onBulkSave, onChangePlan: _onChangePlan, onGoToRegister: _onGoToRegister,
 }: EmployeeManagementProps) {
   const queryClient = useQueryClient();
-  const { showToast, confirmDelete, showConfirm, setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
+  const { showToast, confirmDelete: _confirmDelete, showConfirm: _showConfirm, setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
 
   const deleteEmployeeMutation = useDeleteEmployeeMutation();
   const updateStatusMutation = useUpdateEmployeeStatusMutation();
@@ -66,14 +57,14 @@ export function EmployeeManagement({
   const [changePlanEmp, setChangePlanEmp] = useState<CorporateEmployee | null>(null);
   const [deleteEmp, setDeleteEmp] = useState<CorporateEmployee | null>(null);
   const [addDependentEmp, setAddDependentEmp] = useState<CorporateEmployee | null>(null);
-  const [editDep, setEditDep] = useState<any | null>(null);
-  const [deleteDep, setDeleteDep] = useState<any | null>(null);
+  const [editDep, setEditDep] = useState<ApiAny | null>(null);
+  const [deleteDep, setDeleteDep] = useState<ApiAny | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
   const [viewDependentsEmpId, setViewDependentsEmpId] = useState<string | null>(null);
   const [whatsappHistoryEmp, setWhatsappHistoryEmp] = useState<CorporateEmployee | null>(null);
   const [benefitUsageEmp, setBenefitUsageEmp] = useState<CorporateEmployee | null>(null);
   const [statusToggleEmp, setStatusToggleEmp] = useState<CorporateEmployee | null>(null);
-  const [statusToggleDep, setStatusToggleDep] = useState<any | null>(null);
+  const [statusToggleDep, setStatusToggleDep] = useState<ApiAny | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 500);
@@ -81,7 +72,7 @@ export function EmployeeManagement({
   }, [search]);
 
   const queryFilters = useMemo(() => {
-    const filters: any = {};
+    const filters: ApiAny = {};
 
     if (planTypeFilter === 'corporate') {
       filters.plan_type = ['COMPANY'];
@@ -94,7 +85,7 @@ export function EmployeeManagement({
     }
 
     return filters;
-  }, [planTypeFilter, selectedPlanFilter, plans]);
+  }, [planTypeFilter, selectedPlanFilter]);
 
   const { data: employeesData, isLoading: employeesLoading, refetch } = useEmployeesQuery({
     search: debouncedSearch,
@@ -113,15 +104,15 @@ export function EmployeeManagement({
   }, [refetch, queryClient]);
 
   const apiMembers: CorporateEmployee[] = useMemo(() => {
-    let arr: any[] = [];
+    let arr: ApiAny[] = [];
     if (Array.isArray(employeesData)) arr = employeesData;
     else if (Array.isArray(employeesData?.data)) arr = employeesData.data;
     else if (Array.isArray(employeesData?.data?.data)) arr = employeesData.data.data;
     else if (Array.isArray(employeesData?.data?.employees)) arr = employeesData.data.employees;
     else if (Array.isArray(employeesData?.employees)) arr = employeesData.employees;
 
-    return arr.map((e: any) => {
-      const activeEnrollment = e.enrollments?.find((en: any) => en.status === 'ACTIVE') || e.enrollments?.[0];
+    return arr.map((e: ApiAny) => {
+      const activeEnrollment = e.enrollments?.find((en: ApiAny) => en.status === 'ACTIVE') || e.enrollments?.[0];
       const planInfo = activeEnrollment?.plan || {};
       const planId = activeEnrollment?.plan_id || '';
       
@@ -192,7 +183,7 @@ export function EmployeeManagement({
   ];
 
   const handlePlanTypeChange = (val: string) => {
-    setPlanTypeFilter(val as any);
+    setPlanTypeFilter(val as ApiAny);
     setSelectedPlanFilter('all');
     setPage(1);
   };
@@ -217,7 +208,7 @@ export function EmployeeManagement({
       onDelete(deleteEmp.id);
       refetch();
       setDeleteEmp(null);
-    } catch (e: any) {
+    } catch (e: ApiAny) {
       const d = e.response?.data || e;
       const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || e.message || 'Failed to remove member';
       showToast(msg, 'error');
@@ -234,7 +225,7 @@ export function EmployeeManagement({
       showToast("Family member removed successfully", "success");
       refetch();
       setDeleteDep(null);
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       showToast(err?.message || "Failed to remove family member", "error");
     }
   };
@@ -250,9 +241,9 @@ export function EmployeeManagement({
         plan_id: emp.corporatePlanId,
       });
       showToast(`Invoice resent successfully for ${emp.name}`, 'success');
-    } catch (e: any) {
-      const d = (e as any).response?.data || e;
-      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || (e as any).message || 'Failed to resend invoice';
+    } catch (e: ApiAny) {
+      const d = (e as ApiAny).response?.data || e;
+      const msg = d?.responseStatusList?.statusList?.[0]?.statusDesc || d?.statusDesc || d?.message || (e as ApiAny).message || 'Failed to resend invoice';
       showToast(msg, 'error');
     }
   };
@@ -260,7 +251,8 @@ export function EmployeeManagement({
   const handleRowClick = (emp: CorporateEmployee) => {
     setExpandedRowIds(prev => {
       const next = new Set(prev);
-      next.has(emp.id) ? next.delete(emp.id) : next.add(emp.id);
+      if (next.has(emp.id)) next.delete(emp.id);
+      else next.add(emp.id);
       return next;
     });
   };
@@ -278,17 +270,17 @@ export function EmployeeManagement({
       {
         key: 'name',
         header: 'Name',
-        render: (dep: any) => <span className="font-bold text-foreground text-sm">{dep.name}</span>,
+        render: (dep: ApiAny) => <span className="font-bold text-foreground text-sm">{dep.name}</span>,
       },
       {
         key: 'relationship',
         header: 'Relation',
-        render: (dep: any) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
+        render: (dep: ApiAny) => <span className="text-xs text-muted-foreground">{dep.relationship_type || dep.relationship}</span>,
       },
       {
         key: 'contact',
         header: 'Contact',
-        render: (dep: any) => dep.phone ? (
+        render: (dep: ApiAny) => dep.phone ? (
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode)}
           </span>
@@ -299,7 +291,7 @@ export function EmployeeManagement({
       {
         key: 'status',
         header: 'Status',
-        render: (dep: any) => {
+        render: (dep: ApiAny) => {
           const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
           const isDepExpired = dep.status === 'EXPIRED';
           return (
@@ -316,7 +308,7 @@ export function EmployeeManagement({
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                     : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
               }`}
-              disabled={isDepExpired || (updateStatusMutation as any).isPending}
+              disabled={isDepExpired || (updateStatusMutation as ApiAny).isPending}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${
                 isDepExpired ? 'bg-rose-500' : isDepActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
@@ -330,7 +322,7 @@ export function EmployeeManagement({
         key: 'actions',
         header: 'ACTION',
         align: 'right' as const,
-        render: (dep: any) => (
+        render: (dep: ApiAny) => (
           <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
             <Button
               variant="outline"
@@ -410,7 +402,7 @@ export function EmployeeManagement({
           <div>
             <div className="font-bold text-foreground text-sm">{e.name}</div>
             <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(e.phone, (e as any).country_code || (e as any).countryCode)}
+              <Phone className="w-3 h-3 opacity-60" /> {formatPhoneWithCountryCode(e.phone, (e as ApiAny).country_code || (e as ApiAny).countryCode)}
             </div>
           </div>
         </div>
@@ -444,7 +436,7 @@ export function EmployeeManagement({
     },
     {
       key: 'family', header: 'Family',
-      render: (e: any) => {
+      render: (e: ApiAny) => {
         const count = e.dependents?.length ?? 0;
         const limit = e.familyCoverageLimit ?? 0;
         return count > 0 || limit > 0 ? (
@@ -474,7 +466,7 @@ export function EmployeeManagement({
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                   : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
             }`}
-            disabled={isExpired || (updateStatusMutation as any).isPending}
+            disabled={isExpired || (updateStatusMutation as ApiAny).isPending}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${
               isExpired ? 'bg-rose-500' : e.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40'
@@ -772,7 +764,7 @@ export function EmployeeManagement({
               await updateStatusMutation.mutateAsync({ id: statusToggleEmp.id, status: statusToggleEmp.isActive ? 'INACTIVE' : 'ACTIVE' });
               refetch();
               setStatusToggleEmp(null);
-            } catch {}
+            } catch { /* the mutation surfaces its own error toast */ }
           }}
           onCancel={() => setStatusToggleEmp(null)}
         />
@@ -789,7 +781,7 @@ export function EmployeeManagement({
               await updateStatusMutation.mutateAsync({ id: statusToggleDep.id, status: isDepActive ? 'INACTIVE' : 'ACTIVE' });
               refetch();
               setStatusToggleDep(null);
-            } catch {}
+            } catch { /* the mutation surfaces its own error toast */ }
           }}
           onCancel={() => setStatusToggleDep(null)}
         />
@@ -806,7 +798,7 @@ export function EmployeeManagement({
             {(!selectedEmp.dependents || selectedEmp.dependents.length === 0) ? (
               <p className="text-sm text-muted-foreground py-4 text-center">No family members enrolled.</p>
             ) : (
-              selectedEmp.dependents.map((dep: any) => {
+              selectedEmp.dependents.map((dep: ApiAny) => {
                 const isDepActive = dep.status === 'ACTIVE' || (dep.status === undefined && dep.isActive !== false);
                 const isDepExpired = dep.status === 'EXPIRED';
 

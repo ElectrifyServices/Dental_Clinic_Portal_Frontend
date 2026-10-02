@@ -10,6 +10,8 @@ import { useLabWorkQuery, normalizeLabWork } from "../hooks/labWork/useLabWorkQu
 import type { LabWorkFormSaveData } from "../components/LabWork/LabWorkForm";
 import type { LabWorkStatus } from "../types";
 
+import { errorMessage } from "../utils/errorMessage";
+
 export const LabWorkPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState("");
@@ -143,8 +145,8 @@ export const LabWorkPage: React.FC = () => {
         toast.success("Lab work added successfully");
       }
       closeForm();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to save lab work");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to save lab work");
     }
   };
 
@@ -162,8 +164,8 @@ export const LabWorkPage: React.FC = () => {
         try {
           await handleUpdateLabWorkStatus(id, newStatus);
           toast.success(`Marked as ${statusLabels[newStatus]} successfully`);
-        } catch (err: any) {
-          toast.error(err?.message || "Failed to update status");
+        } catch (err) {
+          toast.error(errorMessage(err) || "Failed to update status");
         }
       },
       "Update Status",

@@ -1,14 +1,14 @@
+import type { ApiAny } from "../../types/api";
 import { Modal, Button, Card, CardContent, DataTable, StatusBadge, Loading } from "@/components/ui";
-import { Printer, Download, FileText, CheckCircle2, History, CreditCard, Banknote } from "lucide-react";
+import { History, Banknote } from "lucide-react";
 import { normalizePatient } from "../../hooks/patients/usePatientDetailQuery";
 import { generateInvoicePDF } from "../../utils/pdfGenerator";
 import { usePaymentHistoryQuery } from "../../hooks/billing/usePaymentHistoryQuery";
 import { normalizeInvoice, fetchInvoiceHistory } from "../../hooks/billing/useInvoiceQuery";
 import { useState } from "react";
-import apiClient from "../../services/apiClient";
 
 interface PaymentHistoryModalProps {
-  invoice: any;
+  invoice: ApiAny;
   onClose: () => void;
 }
 
@@ -28,18 +28,18 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
     );
   }
 
-  const handlePrint = () => {
+  const _handlePrint = () => {
     window.print();
   };
 
-  const handleDownload = async () => {
+  const _handleDownload = async () => {
     if (invoice) {
       try {
         setIsDownloading(true);
         // Yield to the event loop so the loading spinner appears before heavy processing
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        const queryParams: any = { invoice_id: invoice.id };
+        const queryParams: ApiAny = { invoice_id: invoice.id };
 
         const data = await fetchInvoiceHistory(queryParams);
 
@@ -49,17 +49,17 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
         if (rawData && rawData.invoices && Array.isArray(rawData.invoices)) {
           rawData = rawData.invoices;
         }
-        const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: any) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
+        const fetchedInvoices = Array.isArray(rawData) ? rawData.map((i: ApiAny) => normalizeInvoice(i)) : [normalizeInvoice(rawData, invoice.id)];
 
         if (fetchedInvoices.length > 0) {
           const isStatement = (invoice.invoice_number || "").toUpperCase() === "STATEMENT";
           if (isStatement) {
-            let consolidatedItems: any[] = [];
+            let consolidatedItems: ApiAny[] = [];
             let totalSub = 0, totalTax = 0, totalDiscount = 0, grandTotal = 0, totalPaid = 0, totalPending = 0;
 
-            fetchedInvoices.forEach((inv: any) => {
+            fetchedInvoices.forEach((inv: ApiAny) => {
               if (inv && inv.items) {
-                const itemsWithContext = inv.items.map((item: any) => ({
+                const itemsWithContext = inv.items.map((item: ApiAny) => ({
                   ...item,
                   invoice_number: inv.invoice_number || inv.id,
                   description: `${item.description} (${new Date(inv.date).toLocaleDateString('en-GB')})`
@@ -90,7 +90,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
           } else {
             // Download only the specific invoice
             const targetInvoice = fetchedInvoices.find(
-              (inv: any) => inv.id === invoice.id || inv.invoice_number === invoice.invoice_number
+              (inv: ApiAny) => inv.id === invoice.id || inv.invoice_number === invoice.invoice_number
             ) || fetchedInvoices[0] || invoice;
             await generateInvoicePDF(targetInvoice, freshPatient);
           }
@@ -116,7 +116,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
   const dueAmount = apiSummary?.pending_amount ?? invoice.pendingAmount ?? Math.max(0, totalAmount - paidAmount);
 
   const payments = Array.isArray(rawPayments)
-    ? rawPayments.map((p: any) => ({
+    ? rawPayments.map((p: ApiAny) => ({
       id: p.id || p.payment_id || p.transaction_id || `PAY-${p.invoice_id || invoice.id}-${Date.now()}`,
       invoice_number: p.invoice_number || invoice.invoice_number || invoice.id,
       date: p.payment_date || p.date || p.created_at || invoice.date,
@@ -201,7 +201,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
                 {
                   key: "invoice_number",
                   header: "Invoice No.",
-                  render: (pay: any) => (
+                  render: (pay: ApiAny) => (
                     <span className="font-mono text-xs font-bold text-foreground">
                       {pay.invoice_number}
                     </span>
@@ -210,7 +210,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
                 {
                   key: "date",
                   header: "Date",
-                  render: (pay: any) => (
+                  render: (pay: ApiAny) => (
                     <span className="text-muted-foreground">
                       {new Date(pay.date).toLocaleDateString("en-IN", {
                         day: "2-digit",
@@ -223,7 +223,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
                 {
                   key: "method",
                   header: "Method",
-                  render: (pay: any) => (
+                  render: (pay: ApiAny) => (
                     <span className="text-muted-foreground font-medium">
                       {pay.method}
                     </span>
@@ -233,7 +233,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
                   key: "amount",
                   header: "Amount",
                   align: "right" as const,
-                  render: (pay: any) => (
+                  render: (pay: ApiAny) => (
                     <span className="font-bold text-foreground">
                       ₹{pay.amount.toLocaleString()}
                     </span>
@@ -243,7 +243,7 @@ export function PaymentHistoryModal({ invoice, onClose }: PaymentHistoryModalPro
                   key: "status",
                   header: "Status",
                   align: "center" as const,
-                  render: (pay: any) => (
+                  render: (pay: ApiAny) => (
                     <StatusBadge variant="green" className="text-[9px] uppercase font-bold">
                       {pay.status}
                     </StatusBadge>

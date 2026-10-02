@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { useState, useEffect } from "react";
@@ -30,7 +31,7 @@ interface DoctorScheduleManagerProps {
   doctorId: string;
   doctorName: string;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: ApiAny) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -216,7 +217,7 @@ export function DoctorScheduleManager({
   };
 
   // ── Generic day field handler (isWorking, breakStart, breakEnd) ───────────
-  const handleDayChange = (dayKey: string, field: string, value: any) => {
+  const handleDayChange = (dayKey: string, field: string, value: ApiAny) => {
     setSchedule((prev) => ({
       ...prev,
       [dayKey]: { ...prev[dayKey], [field]: value },
@@ -272,7 +273,7 @@ export function DoctorScheduleManager({
       const payload = mapScheduleToPayload(schedule, settings);
       await createSchedule({ doctorId, payload });
       onSave({ doctorId, workingHours: schedule, timeSlots: settings });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       // Extract detailed validation messages from backend responseObject if available
       const backendErr = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                         err?.response?.data?.message ||

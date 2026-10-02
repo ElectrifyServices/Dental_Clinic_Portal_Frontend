@@ -1,5 +1,6 @@
+import type { ApiAny } from "../types/api";
+import { apiErrorMessage } from "../utils/errorMessage";
 import { useState, useEffect, useMemo } from "react";
-import { Loading } from "@/components/ui/Loading";
 import { useModal } from "../contexts/ModalContext";
 import { ConsentFormList } from "../components/Consent/ConsentFormList";
 import { useConsentFormsQuery } from "../hooks/patients/useConsentFormsQuery";
@@ -47,12 +48,14 @@ export function ConsentPage() {
 
   useEffect(() => {
     refetch();
+  // refetch once on mount only
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteMutation = useDeleteConsentFormMutation();
 
-  let consentFormsList: any[] = [];
-  const raw = consentFormsData as any;
+  let consentFormsList: ApiAny[] = [];
+  const raw = consentFormsData as ApiAny;
   if (raw) {
     if (Array.isArray(raw)) {
       consentFormsList = raw;
@@ -67,7 +70,7 @@ export function ConsentPage() {
     }
   }
 
-  const mappedForms = consentFormsList.map((form: any) => {
+  const mappedForms = consentFormsList.map((form: ApiAny) => {
     const patientIdStr = form.patient?.id || form.patient_id;
     return {
       id: form.id,
@@ -107,8 +110,8 @@ export function ConsentPage() {
     try {
       await deleteMutation.mutateAsync({ id });
       showToast("Consent form deleted successfully");
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || err?.message || "Failed to delete consent form", "error");
+    } catch (err) {
+      showToast(apiErrorMessage(err) || "Failed to delete consent form", "error");
     }
   };
 
@@ -123,14 +126,14 @@ export function ConsentPage() {
         doctorsList={apiDoctors || []}
         onAddForm={() => setActiveModal("consentForm")}
         onViewForm={(id: string) => {
-          const f = mappedForms.find((x: any) => x.id === id);
+          const f = mappedForms.find((x) => x.id === id);
           if (f) {
             setSelectedConsentForm(f);
             setActiveModal("consentViewer");
           }
         }}
         onEditForm={(id: string) => {
-          const f = mappedForms.find((x: any) => x.id === id);
+          const f = mappedForms.find((x) => x.id === id);
           if (f) {
             setSelectedConsentForm(f);
             setActiveModal("consentForm");

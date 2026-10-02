@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -34,7 +35,7 @@ export function TreatmentForm({
   const [patientSearch, setPatientSearch] = React.useState("");
   const debouncedPatientSearch = useDebounce(patientSearch, 300);
 
-  const { data: apiPatientsData } = useApiQuery<any[]>({
+  const { data: apiPatientsData } = useApiQuery<ApiAny[]>({
     queryKey: ["treatment-form-patients", debouncedPatientSearch],
     endpoint: "/patient/list",
     method: "post",
@@ -46,8 +47,8 @@ export function TreatmentForm({
   });
 
   const apiPatients = React.useMemo(() => {
-    let rawList: any[] = [];
-    const dataObj: any = apiPatientsData;
+    let rawList: ApiAny[] = [];
+    const dataObj: ApiAny = apiPatientsData;
     if (Array.isArray(dataObj)) {
       rawList = dataObj;
     } else if (dataObj && Array.isArray(dataObj.patients)) {
@@ -60,7 +61,7 @@ export function TreatmentForm({
       rawList = dataObj.data;
     }
 
-    const mapped = rawList.map((p: any) => ({
+    const mapped = rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id,
       name: p.name || p.full_name || '',
@@ -81,7 +82,7 @@ export function TreatmentForm({
   const [doctorSearch, setDoctorSearch] = React.useState("");
   const debouncedDoctorSearch = useDebounce(doctorSearch, 300);
 
-  const { data: apiStaffData } = useApiQuery<any[]>({
+  const { data: apiStaffData } = useApiQuery<ApiAny[]>({
     queryKey: ["treatment-form-doctors", debouncedDoctorSearch],
     endpoint: "/staff/list",
     method: "post",
@@ -92,8 +93,8 @@ export function TreatmentForm({
   });
 
   const apiDoctors = React.useMemo(() => {
-    let rawList: any[] = [];
-    const dataObj: any = apiStaffData;
+    let rawList: ApiAny[] = [];
+    const dataObj: ApiAny = apiStaffData;
     if (Array.isArray(dataObj)) {
       rawList = dataObj;
     } else if (dataObj && Array.isArray(dataObj.staffs)) {
@@ -108,7 +109,7 @@ export function TreatmentForm({
       rawList = dataObj.data;
     }
 
-    const mapped = rawList.map((s: any) => {
+    const mapped = rawList.map((s: ApiAny) => {
       let normalizedRole = 'staff';
       let rawRole = s.role?.name || s.role_id || s.role || 'staff';
       if (typeof rawRole !== 'string') rawRole = String(rawRole);
@@ -135,7 +136,7 @@ export function TreatmentForm({
     });
 
     const filtered = mapped.filter(
-      (s: any) => s.role === "doctor" || s.role === "admin"
+      (s: ApiAny) => s.role === "doctor" || s.role === "admin"
     );
 
     if (filtered.length === 0 && !debouncedDoctorSearch) {
@@ -149,7 +150,7 @@ export function TreatmentForm({
   const updateProcedureMutation = useUpdateProcedureMutation();
   const deleteProcedureMutation = useDeleteProcedureMutation();
 
-  const getRawProceduresList = (raw: any): any[] => {
+  const getRawProceduresList = (raw: ApiAny): ApiAny[] => {
     if (!raw) return [];
     const target = raw.responseObject !== undefined ? raw.responseObject : raw;
     if (Array.isArray(target)) return target;
@@ -165,7 +166,7 @@ export function TreatmentForm({
     try {
       const created = await createProcedureMutation.mutateAsync({ name: newProcedureName });
       return created?.name || newProcedureName;
-    } catch (error) {
+    } catch (_error) {
       // handled
     }
   };
@@ -173,11 +174,11 @@ export function TreatmentForm({
   const handleUpdateProcedure = async (oldName: string, newName: string) => {
     try {
       const rawList = getRawProceduresList(rawProceduresData);
-      const matched = rawList.find((p: any) => p.name === oldName);
+      const matched = rawList.find((p: ApiAny) => p.name === oldName);
       if (matched?.id) {
         await updateProcedureMutation.mutateAsync({ id: matched.id, name: newName });
       }
-    } catch (error) {
+    } catch (_error) {
       // handled
     }
   };
@@ -189,11 +190,11 @@ export function TreatmentForm({
       async () => {
         try {
           const rawList = getRawProceduresList(rawProceduresData);
-          const matched = rawList.find((p: any) => p.name === name);
+          const matched = rawList.find((p: ApiAny) => p.name === name);
           if (matched?.id) {
             await deleteProcedureMutation.mutateAsync({ id: matched.id });
           }
-        } catch (error) {
+        } catch (_error) {
           // handled
         }
       }
@@ -214,7 +215,7 @@ export function TreatmentForm({
     updatePrescription,
     addPrescription,
     removePrescription,
-    handleSubmit,
+    handleSubmit: _handleSubmit,
   } = useTreatmentForm(treatment, allPatients, allTreatments);
 
   const [procedureSearch, setProcedureSearch] = React.useState("");
@@ -237,7 +238,7 @@ export function TreatmentForm({
     }
 
     const rawList = getRawProceduresList(rawProceduresData);
-    return rawList.map((proc: any) => ({
+    return rawList.map((proc: ApiAny) => ({
       label: proc.name,
       value: proc.name,
       is_free: proc.is_free,
@@ -248,9 +249,9 @@ export function TreatmentForm({
 
   // Complete Session Modal states
   const completeSessionMutation = useCompleteTreatmentSessionMutation();
-  const addSessionMutation = useAddTreatmentSessionMutation();
+  const _addSessionMutation = useAddTreatmentSessionMutation();
 
-  const [completingSession, setCompletingSession] = React.useState<any | null>(null);
+  const [completingSession, setCompletingSession] = React.useState<ApiAny | null>(null);
   const [completeForm, setCompleteForm] = React.useState({
     work_done: "",
     session_findings: "",
@@ -269,19 +270,19 @@ export function TreatmentForm({
   });
   const [sessionAttachments, setSessionAttachments] = React.useState<File[]>([]);
 
-  const handleOpenCompleteSession = (session: any) => {
+  const handleOpenCompleteSession = (session: ApiAny) => {
     // Find previous completed sessions in treatmentSessions
     const completedList = treatmentSessions.filter(s => s.status === "completed" || s.status === "COMPLETED");
     const lastCompleted = completedList.length > 0 ? completedList[completedList.length - 1] : null;
 
     const fallbackFee = lastCompleted ? (Number(lastCompleted.session_fee || lastCompleted.cost) || 0) : 0;
-    const fallbackDiscount = lastCompleted ? (Number((lastCompleted as any).discount_percentage || (lastCompleted as any).discount) || 0) : 0;
-    const fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
+    const fallbackDiscount = lastCompleted ? (Number((lastCompleted as ApiAny).discount_percentage || (lastCompleted as ApiAny).discount) || 0) : 0;
+    const _fallbackPaid = lastCompleted ? (Number(lastCompleted.paid_amount) || 0) : 0;
 
     const currentFee = Number(session.session_fee || session.cost) || fallbackFee;
     const planDiscount = Number(formData.discount_value) || 0;
     const currentDiscount = planDiscount || fallbackDiscount || 0;
-    const currentPaid = Number(session.paid_amount || (session as any).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
+    const currentPaid = Number(session.paid_amount || (session as ApiAny).paidAmount) || (currentFee - (currentFee * currentDiscount) / 100);
 
     setCompleteForm({
       work_done: session.work_done || session.workDone || "",
@@ -335,7 +336,7 @@ export function TreatmentForm({
           ...nextSessionPayload,
           attachments: sessionAttachments.length > 0 ? sessionAttachments : undefined,
         });
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         // Catch backend API errors & display user-friendly UI error toast without console logs
         const msg = err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                     err?.response?.data?.message ||
@@ -378,7 +379,7 @@ export function TreatmentForm({
       };
       
       // Update form sessions value
-      form.setValue("sessions", [...treatmentSessions, newSess] as any);
+      form.setValue("sessions", [...treatmentSessions, newSess] as ApiAny);
     }
 
     setCompletingSession(null);
@@ -401,20 +402,20 @@ export function TreatmentForm({
     >,
   ) => {
     const { name, value } = e.target;
-    let val: any = value;
+    let val: ApiAny = value;
     if (name === "cost" || name === "discount_value") {
       val = value === "" ? "" : Number(value);
       if (typeof val === "number" && isNaN(val)) {
         val = 0;
       }
     }
-    form.setValue(name as keyof typeof formData, val as any, {
+    form.setValue(name as keyof typeof formData, val as ApiAny, {
       shouldValidate: true,
     });
 
     if (name === "patientName") {
       const patient = apiPatients.find(
-        (p: any) => (p.name || p.full_name || p) === value
+        (p: ApiAny) => (p.name || p.full_name || p) === value
       );
       if (patient && typeof patient === "object") {
         form.setValue("patientId", patient.id);
@@ -433,7 +434,7 @@ export function TreatmentForm({
 
   const [isSaving, setIsSaving] = React.useState(false);
 
-  const handleSaveForm = async (formDataVal: any) => {
+  const handleSaveForm = async (formDataVal: ApiAny) => {
     const submitData = {
       ...formDataVal,
       id: treatment?.id,
@@ -459,7 +460,7 @@ export function TreatmentForm({
     setIsSaving(true);
     try {
       await onSave(submitData);
-    } catch (error: any) {
+    } catch (error: ApiAny) {
       const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
                   error?.responseStatusList?.statusList?.[0]?.statusDesc ||
                   error?.response?.data?.message ||
@@ -586,7 +587,7 @@ export function TreatmentForm({
               form.setValue("existingImages", currentExisting.filter((url) => url !== urlToRemove));
 
               const matchedAttachment = treatment?.attachments?.find(
-                (a: any) => (a.file_url || a.url || a.path) === urlToRemove
+                (a: ApiAny) => (a.file_url || a.url || a.path) === urlToRemove
               );
               if (matchedAttachment?.id) {
                 const currentRemoved = form.getValues("removedAttachmentIds") || [];
@@ -651,7 +652,7 @@ export function TreatmentForm({
                 <Label className="text-sm font-semibold block mb-2">Discount Type</Label>
                 <select
                   value={completeForm.discount_type || ""}
-                  onChange={(e) => setCompleteForm(p => ({ ...p, discount_type: e.target.value as any, discount_value: 0 }))}
+                  onChange={(e) => setCompleteForm(p => ({ ...p, discount_type: e.target.value as ApiAny, discount_value: 0 }))}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none font-semibold bg-white text-sm h-10"
                 >
                   <option value="">No Discount</option>

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +12,7 @@ interface CalendarGridProps {
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
   appointmentsByDate?: Record<string, number>;
-  getDayAppointmentsForDate: (date: Date) => any[];
+  getDayAppointmentsForDate: (date: Date) => ApiAny[];
   monthNames: string[];
   currentDoctorId?: string | null;
   scheduleState?: InternalScheduleState | null;

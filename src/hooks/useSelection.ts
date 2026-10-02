@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import { useState, useCallback } from "react";
 
 interface UseSelectionOptions<T> {
@@ -7,7 +8,7 @@ interface UseSelectionOptions<T> {
 
 export function useSelection<T>({
   initialSelected = [],
-  getKey = (item) => (item as any).id || (item as any),
+  getKey = (item) => (item as ApiAny).id || (item as ApiAny),
 }: UseSelectionOptions<T> = {}) {
   const [selectedMap, setSelectedMap] = useState<Record<string | number, T>>(() => {
     const map: Record<string | number, T> = {};

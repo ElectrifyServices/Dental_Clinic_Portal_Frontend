@@ -1,5 +1,6 @@
 // hooks/useConsultationData.ts
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import type { ApiAny } from "../types/api";
+import { useMemo, useState, useCallback } from 'react';
 import { useConsultationsQuery, ConsultationsFilters } from './consultation/useConsultationsQuery';
 import { useConsultationQuery } from './consultation/useConsultationQuery';
 import { useCreateConsultationMutation } from './consultation/useCreateConsultationMutation';
@@ -13,7 +14,7 @@ import {
 } from '../utils/consultationUtils';
 
 export function useConsultationData() {
-  const unwrapConsultationResponse = (payload: any) =>
+  const unwrapConsultationResponse = (payload: ApiAny) =>
     payload?.data?.data ||
     payload?.responseObject?.data?.data ||
     payload?.data ||
@@ -33,8 +34,8 @@ export function useConsultationData() {
   const [shouldFetchSingle, setShouldFetchSingle] = useState(false);
 
   // Queue management state
-  const [queuedPatients, setQueuedPatients] = useState<any[]>([]);
-  const [localConsultations, setLocalConsultations] = useState<any[]>([]);
+  const [queuedPatients, setQueuedPatients] = useState<ApiAny[]>([]);
+  const [localConsultations, setLocalConsultations] = useState<ApiAny[]>([]);
 
   // Use the hook with the current filters - sends POST request with body
   const {
@@ -75,11 +76,11 @@ export function useConsultationData() {
 
   // Merge API consultations with local updates
   const consultations = useMemo(() => {
-    const merged = new Map<string, any>();
-    apiConsultations.forEach((c: any) => {
+    const merged = new Map<string, ApiAny>();
+    apiConsultations.forEach((c: ApiAny) => {
       if (c && c.id) merged.set(c.id, c);
     });
-    localConsultations.forEach((c: any) => {
+    localConsultations.forEach((c: ApiAny) => {
       if (c && c.id) merged.set(c.id, c);
     });
     return Array.from(merged.values());
@@ -130,7 +131,7 @@ export function useConsultationData() {
   }, []);
 
   // Handlers for filtering consultations
-  const handleFiltersChange = useCallback((searchFilters: any) => {
+  const handleFiltersChange = useCallback((searchFilters: ApiAny) => {
     const newFilters: ConsultationsFilters = {};
 
     if (searchFilters.search) {
@@ -208,9 +209,9 @@ export function useConsultationData() {
   }, [filters.filters]);
 
   // Save consultation (create or update)
-  const handleSaveConsultation = async (consultation: any) => {
+  const handleSaveConsultation = async (consultation: ApiAny) => {
     const isEdit = Boolean(
-      consultation.id && apiConsultations.some((c: any) => c && c.id === consultation.id),
+      consultation.id && apiConsultations.some((c: ApiAny) => c && c.id === consultation.id),
     );
 
     if (isEdit) {
@@ -246,47 +247,39 @@ export function useConsultationData() {
   };
 
   // Mark consultation as completed
-  const handleCompleteConsultation = async (id: string, completionData?: any) => {
-    try {
-      const updated = await completeConsultation.mutateAsync({ id, ...completionData });
-      const updatedUi = toUiConsultation(updated);
-      setLocalConsultations((prev) => [
-        ...prev.filter((item) => item && item.id !== updatedUi.id),
-        updatedUi,
-      ]);
+  const handleCompleteConsultation = async (id: string, completionData?: ApiAny) => {
+    const updated = await completeConsultation.mutateAsync({ id, ...completionData });
+    const updatedUi = toUiConsultation(updated);
+    setLocalConsultations((prev) => [
+      ...prev.filter((item) => item && item.id !== updatedUi.id),
+      updatedUi,
+    ]);
 
-      // Do not remove from queue, so it shows in 'All' and 'Completed' filters
-      setQueuedPatients((prev) =>
-        prev.map((p) => p.id === id ? { ...p, status: "completed" } : p)
-      );
+    // Do not remove from queue, so it shows in 'All' and 'Completed' filters
+    setQueuedPatients((prev) =>
+      prev.map((p) => p.id === id ? { ...p, status: "completed" } : p)
+    );
 
-      await refetch(); // Refetch to sync with server
+    await refetch(); // Refetch to sync with server
 
-      // Refresh single consultation if it's the one being completed
-      if (selectedConsultationId === id) {
-        await refreshSingleConsultation();
-      }
-
-      return updatedUi;
-    } catch (error) {
-      throw error;
+    // Refresh single consultation if it's the one being completed
+    if (selectedConsultationId === id) {
+      await refreshSingleConsultation();
     }
+
+    return updatedUi;
   };
 
   // Delete consultation
   const handleDeleteConsultation = async (id: string) => {
-    try {
-      await deleteConsultation.mutateAsync({ id });
-      setLocalConsultations((prev) => prev.filter((item) => item && item.id !== id));
-      setQueuedPatients((prev) => prev.filter((p) => p.id !== id));
-      await refetch(); // Refetch to sync with server
+    await deleteConsultation.mutateAsync({ id });
+    setLocalConsultations((prev) => prev.filter((item) => item && item.id !== id));
+    setQueuedPatients((prev) => prev.filter((p) => p.id !== id));
+    await refetch(); // Refetch to sync with server
 
-      // Clear selected if it was deleted
-      if (selectedConsultationId === id) {
-        clearSelectedConsultation();
-      }
-    } catch (error) {
-      throw error;
+    // Clear selected if it was deleted
+    if (selectedConsultationId === id) {
+      clearSelectedConsultation();
     }
   };
 
@@ -298,14 +291,14 @@ export function useConsultationData() {
     const isExistingBackend = id && !String(id).startsWith("WALK-");
     if (isExistingBackend) {
       try {
-        await updateConsultation.mutateAsync({ id, status } as any);
-      } catch (err) {
+        await updateConsultation.mutateAsync({ id, status } as ApiAny);
+      } catch (_err) { /* status is already updated locally; a failed sync is non-fatal */
       }
     }
   }, [updateConsultation]);
 
   // Add patient to queue
-  const addToQueue = useCallback((patient: any) => {
+  const addToQueue = useCallback((patient: ApiAny) => {
     setQueuedPatients((prev) => {
       // Check if patient already in queue
       if (prev.some((p) => p.id === patient.id)) {

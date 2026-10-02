@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Calendar } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
@@ -22,12 +22,12 @@ export const DashboardPage: React.FC = () => {
   const [period, setPeriod] = useState('today');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
-  
-  const { 
-    appointments, 
-    setStartDate, 
-    setEndDate, 
-    setApptFilter, 
+ 
+  const {
+    appointments,
+    setStartDate,
+    setEndDate,
+    setApptFilter,
     setSelectedDate,
     pagination,
     page,
@@ -37,7 +37,7 @@ export const DashboardPage: React.FC = () => {
     apptSearch,
     setApptSearch
   } = useAppointmentData({ limit: 10 });
-  
+ 
   const { state } = useAuth();
   const { setActiveModal, setSelectedPatientId, setPreFilledPatientData, setPatientFormType } = useModal();
 
@@ -45,19 +45,20 @@ export const DashboardPage: React.FC = () => {
     const now = new Date();
     let startD: Date;
     let endD: Date;
-    
+   
     switch (period) {
       case 'today':
         startD = new Date();
         endD = new Date();
         break;
-      case 'week':
+      case 'week': {
         const day = now.getDay();
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
         startD = new Date(now.setDate(diff));
         endD = new Date(startD);
         endD.setDate(startD.getDate() + 6);
         break;
+      }
       case 'month':
         startD = new Date(now.getFullYear(), now.getMonth(), 1);
         endD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -74,9 +75,9 @@ export const DashboardPage: React.FC = () => {
         startD = new Date();
         endD = new Date();
     }
-    
+   
     const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    
+   
     const startStr = formatDate(startD);
     const endStr = formatDate(endD);
 
@@ -113,7 +114,7 @@ export const DashboardPage: React.FC = () => {
             {day} · Here's your clinic overview
           </p>
         </div>
-        
+       
         <div className="flex items-center gap-4 flex-wrap">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
@@ -132,7 +133,7 @@ export const DashboardPage: React.FC = () => {
               />
             </div>
           )}
-          
+         
           <div className="bg-white/50 rounded-lg p-1 border border-border/50 max-w-full">
             <FilterTabs
               tabs={PERIODS}
@@ -140,7 +141,7 @@ export const DashboardPage: React.FC = () => {
               onChange={setPeriod}
             />
           </div>
-          
+         
           <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm w-full sm:w-auto">
             <UserPlus className="w-4 h-4" /> Add New Patient
           </Button>
@@ -154,10 +155,10 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Appointments List */}
         <div className="lg:col-span-2">
-          <TodayAppointments 
-            appointments={appointments} 
-            period={period} 
-            customStart={customStart} 
+          <TodayAppointments
+            appointments={appointments}
+            period={period}
+            customStart={customStart}
             customEnd={customEnd}
             pagination={pagination}
             page={page}

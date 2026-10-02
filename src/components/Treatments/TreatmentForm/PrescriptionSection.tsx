@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
@@ -55,36 +56,36 @@ export function PrescriptionSection({
     if (!rawMedicines) return [];
     // Debug: remove after confirming correct shape
     console.log("[PrescriptionSection] rawMedicines:", rawMedicines);
-    let list: any[] = [];
+    let list: ApiAny[] = [];
     if (Array.isArray(rawMedicines)) {
       list = rawMedicines;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data?.data)) {
-      list = (rawMedicines as any).responseObject.data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject?.data)) {
-      list = (rawMedicines as any).responseObject.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).responseObject)) {
-      list = (rawMedicines as any).responseObject;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).data?.data)) {
-      list = (rawMedicines as any).data.data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).data)) {
-      list = (rawMedicines as any).data;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).list)) {
-      list = (rawMedicines as any).list;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).medicines)) {
-      list = (rawMedicines as any).medicines;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).items)) {
-      list = (rawMedicines as any).items;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).records)) {
-      list = (rawMedicines as any).records;
-    } else if (rawMedicines && Array.isArray((rawMedicines as any).results)) {
-      list = (rawMedicines as any).results;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data?.data)) {
+      list = (rawMedicines as ApiAny).responseObject.data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject?.data)) {
+      list = (rawMedicines as ApiAny).responseObject.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).responseObject)) {
+      list = (rawMedicines as ApiAny).responseObject;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data?.data)) {
+      list = (rawMedicines as ApiAny).data.data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).data)) {
+      list = (rawMedicines as ApiAny).data;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).list)) {
+      list = (rawMedicines as ApiAny).list;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).medicines)) {
+      list = (rawMedicines as ApiAny).medicines;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).items)) {
+      list = (rawMedicines as ApiAny).items;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).records)) {
+      list = (rawMedicines as ApiAny).records;
+    } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).results)) {
+      list = (rawMedicines as ApiAny).results;
     }
     console.log("[PrescriptionSection] resolved medicinesList:", list);
     return list;
   }, [rawMedicines]);
 
   const selectOptions = React.useMemo(() => {
-    const opts = medicinesList.map((m: any) => ({
+    const opts = medicinesList.map((m: ApiAny) => ({
       label: m.name || m.label || m.medicine_name || (typeof m === "string" ? m : ""),
       // Always prefer the UUID field; never fall back to name string
       value: m.id || m._id || m.uuid || m.medicine_id || m.value || (typeof m === "string" ? m : ""),
@@ -128,7 +129,7 @@ export function PrescriptionSection({
   const handleDeleteMedicine = async () => {
     if (!confirmDeleteName) return;
     const name = confirmDeleteName;
-    const found = medicinesList.find((m: any) => m.name === name);
+    const found = medicinesList.find((m: ApiAny) => m.name === name);
     const id = found?.id || found?._id || name;
     setDeletingId(name);
     try {

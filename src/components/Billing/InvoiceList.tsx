@@ -1,19 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import type { ApiAny } from "../../types/api";
+import React, { useState, useMemo } from "react";
 import { BillingCard } from "./BillingCard";
-import {
-  Plus,
-  Eye,
-  Trash2,
-  MoreVertical,
-  IndianRupee,
-  Send,
-  FileText,
-  ChevronDown,
-  ChevronRight,
-  History,
-  MessageCircle,
-  X,
-} from "lucide-react";
+import { Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText, History, MessageCircle, X } from "lucide-react";
 import { PaymentHistoryModal } from "./PaymentHistoryModal";
 import { InvoicePaymentModal } from "./InvoicePaymentModal";
 import { WhatsappHistoryModal } from "./WhatsappHistoryModal";
@@ -181,7 +169,7 @@ export function InvoiceList({
       await sendInvoiceMutation({ id });
       onUpdateStatus?.(id, "sent");
       toast.success("Invoice queued for sending");
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       console.error("Failed to send invoice:", err);
       const serverResponse = err.response?.data;
       let errMsg = "";
@@ -252,9 +240,9 @@ export function InvoiceList({
   const [historyInvoice, setHistoryInvoice] = useState<Invoice | null>(null);
   const [whatsappHistoryPhone, setWhatsappHistoryPhone] = useState<string | null>(null);
   const [whatsappHistoryPatientName, setWhatsappHistoryPatientName] = useState<string | null>(null);
-  const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+  const [_expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
 
-  const toggleRowExpanded = (id: string) => {
+  const _toggleRowExpanded = (id: string) => {
     setExpandedRowIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -266,13 +254,11 @@ export function InvoiceList({
     });
   };
 
-  const filtered = invoices || [];
-
   const flatSortedInvoices = useMemo(() => {
-    return [...filtered].sort((a, b) => {
+    return [...(invoices || [])].sort((a, b) => {
       return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
     });
-  }, [filtered]);
+  }, [invoices]);
 
   const openMenu = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -294,7 +280,7 @@ export function InvoiceList({
     {
       key: "id",
       header: "Invoice",
-      render: (inv: any) => (
+      render: (inv: ApiAny) => (
         <div className="flex items-center gap-1.5 min-w-[160px] flex-wrap">
           {/* Chevron expand/collapse button removed as per request */}
           {/* +N count badge removed as per request */}
@@ -346,7 +332,7 @@ export function InvoiceList({
       key: "amount",
       header: "Grand Total",
       render: (inv: Invoice) => {
-        const displayAmount = (inv as any).grand_total || (inv as any).grandTotal || inv.total || inv.amount || 0;
+        const displayAmount = (inv as ApiAny).grand_total || (inv as ApiAny).grandTotal || inv.total || inv.amount || 0;
         return (
           <span className="font-bold text-foreground">
             ₹{displayAmount.toLocaleString()}
@@ -357,7 +343,7 @@ export function InvoiceList({
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (inv: any) => {
+      render: (inv: ApiAny) => {
         let pm = "N/A";
         if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
           pm = inv.payment_methods.join(", ");
@@ -378,7 +364,7 @@ export function InvoiceList({
         const meta = STATUS_META[inv.status?.toLowerCase()] || { variant: "gray", label: inv.status };
         return (
           <StatusBadge
-            variant={meta.variant as any}
+            variant={meta.variant as ApiAny}
             className="text-[10px] uppercase font-bold"
           >
             {inv.status}
@@ -471,7 +457,7 @@ export function InvoiceList({
                       <Button
                         variant="ghost"
                         onClick={() => {
-                          onDeleteInvoice?.(inv.id, (inv as any).invoice_number || inv.id);
+                          onDeleteInvoice?.(inv.id, (inv as ApiAny).invoice_number || inv.id);
                           setOpenMenuId(null);
                         }}
                         className="w-full justify-start text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 font-medium transition-colors"
@@ -489,11 +475,11 @@ export function InvoiceList({
     },
   ];
 
-  const subColumns = [
+  const _subColumns = [
     {
       key: "id",
       header: "Invoice Number",
-      render: (inv: any) => (
+      render: (inv: ApiAny) => (
         <span className="font-mono text-xs font-bold text-foreground">
           {inv.invoice_number || inv.id}
         </span>
@@ -502,7 +488,7 @@ export function InvoiceList({
     {
       key: "date",
       header: "Date",
-      render: (inv: any) => (
+      render: (inv: ApiAny) => (
         <span className="text-muted-foreground">
           {inv.date
             ? new Date(inv.date).toLocaleDateString("en-IN", {
@@ -519,7 +505,7 @@ export function InvoiceList({
       key: "amount",
       header: "Amount",
       align: "right" as const,
-      render: (inv: any) => {
+      render: (inv: ApiAny) => {
         const hasPaid = inv.paidAmount > 0 || inv.paid_amount > 0;
         const displayAmount = hasPaid ? (inv.pendingAmount ?? inv.pending_amount ?? 0) : (inv.total || inv.amount || 0);
         return (
@@ -532,7 +518,7 @@ export function InvoiceList({
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (inv: any) => {
+      render: (inv: ApiAny) => {
         let pm = "N/A";
         if (Array.isArray(inv.payment_methods) && inv.payment_methods.length > 0) {
           pm = inv.payment_methods.join(", ");
@@ -549,11 +535,11 @@ export function InvoiceList({
     {
       key: "status",
       header: "Status",
-      render: (inv: any) => {
+      render: (inv: ApiAny) => {
         const meta = STATUS_META[inv.status?.toLowerCase()] || { variant: "gray", label: inv.status };
         return (
           <StatusBadge
-            variant={meta.variant as any}
+            variant={meta.variant as ApiAny}
             className="text-[9px] uppercase font-bold px-2 py-0.5"
           >
             {inv.status}
@@ -565,7 +551,7 @@ export function InvoiceList({
       key: "actions",
       header: "Actions",
       align: "center" as const,
-      render: (inv: any) => (
+      render: (inv: ApiAny) => (
         <div className="flex items-center justify-center gap-1">
           <div className="relative">
             <Button
@@ -786,7 +772,7 @@ export function InvoiceList({
           <div className="hidden lg:block">
             <DataTable
           columns={columns}
-          data={paginatedData as any[]}
+          data={paginatedData as ApiAny[]}
           rowKey={(inv) => inv.id}
           emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
           emptyTitle="No invoices found"
@@ -907,7 +893,7 @@ export function InvoiceList({
               onUpdateStatus?.(id, "paid");
               setPayInvoice(null);
               toast.success("Payment completed successfully!");
-            } catch (err: any) {
+            } catch (err: ApiAny) {
               console.error("Failed to confirm payment:", err);
 
               const serverResponse = err.response?.data;

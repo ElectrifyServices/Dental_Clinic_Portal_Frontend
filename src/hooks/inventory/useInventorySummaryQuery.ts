@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface InventorySummary {
@@ -10,7 +11,7 @@ export interface InventorySummary {
   }>;
 }
 
-export function useInventorySummaryQuery(options?: any) {
+export function useInventorySummaryQuery(options?: ApiAny) {
   return useApiQuery<InventorySummary>({
     queryKey: ["inventorySummary"],
     endpoint: "/inventory/summary",

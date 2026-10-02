@@ -1,13 +1,14 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface InventoryCategory {
   id: string;
   name: string;
   description?: string;
-  [key: string]: any;
+  [key: string]: ApiAny;
 }
 
-export function useInventoryCategoriesQuery(options?: any) {
+export function useInventoryCategoriesQuery(options?: ApiAny) {
   return useApiQuery<InventoryCategory[]>({
     queryKey: ["inventoryCategories"],
     endpoint: "/inventory/categories",

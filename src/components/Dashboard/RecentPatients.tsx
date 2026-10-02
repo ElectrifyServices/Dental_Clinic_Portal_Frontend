@@ -1,7 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState } from "react";
-import { Phone, Calendar, TrendingUp, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Phone, Calendar, TrendingUp, User } from "lucide-react";
 
-import { StatusBadge, ContentCard, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, SearchInput, Pagination } from "@/components/ui";
+import { StatusBadge, ContentCard, SearchInput, Pagination } from "@/components/ui";
 
 import { useRecentPatients } from "../../hooks/dashboard/useDashboardAnalytics";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -39,7 +40,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
       pageNumbers.push('...');
     }
   }
-  const displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
+  const _displayPages = pageNumbers.filter((val, index, arr) => val !== '...' || arr[index - 1] !== '...');
 
   return (
     <ContentCard
@@ -76,7 +77,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
       ) : (
         <>
           <div className="divide-y divide-border flex-1">
-            {patients.map((p: any, i: number) => (
+            {patients.map((p: ApiAny, i: number) => (
               <div
                 key={p.id || i}
                 className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors"

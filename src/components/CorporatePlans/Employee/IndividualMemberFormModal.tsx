@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useState } from 'react';
-import { UserPlus, CheckCircle, Users, Plus, Trash2, User, Edit } from 'lucide-react';
+import { UserPlus, CheckCircle } from 'lucide-react';
 import {
   Modal,
   Button,
@@ -53,16 +54,16 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
   const [form, setForm] = useState(EMPTY_FORM());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingDependents, setPendingDependents] = useState<PendingDependent[]>([]);
-  const [showAddDepForm, setShowAddDepForm] = useState(false);
-  const [addDepForm, setAddDepForm] = useState<PendingDependent>(EMPTY_PENDING());
-  const [editingDepId, setEditingDepId] = useState<string | null>(null);
+  const [_showAddDepForm, setShowAddDepForm] = useState(false);
+  const [_addDepForm, _setAddDepForm] = useState<PendingDependent>(EMPTY_PENDING());
+  const [_editingDepId, setEditingDepId] = useState<string | null>(null);
 
   const createEmployeeMutation = useCreateEmployeeMutation();
-  const addDependentMutation = useAddDependentMutation();
+  const _addDependentMutation = useAddDependentMutation();
 
   const selectedPlan = individualPlans.find(p => p.id === form.planId);
-  const maxDependents = selectedPlan ? (Number((selectedPlan as any).family_coverage_limit) || Number((selectedPlan as any).familyCoverageLimit) || Number(selectedPlan.limit) || Number(selectedPlan.maxDependents) || 0) : 0;
-  const coverageLimitReached = pendingDependents.length >= maxDependents && maxDependents > 0;
+  const maxDependents = selectedPlan ? (Number((selectedPlan as ApiAny).family_coverage_limit) || Number((selectedPlan as ApiAny).familyCoverageLimit) || Number(selectedPlan.limit) || Number(selectedPlan.maxDependents) || 0) : 0;
+  const _coverageLimitReached = pendingDependents.length >= maxDependents && maxDependents > 0;
 
   React.useEffect(() => {
     if (showForm) {
@@ -109,14 +110,14 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
     return !Object.keys(e).length;
   };
 
-  const handleAddDependent = () => {};
-  const handleEditDependent = () => {};
+  const _handleAddDependent = () => {};
+  const _handleEditDependent = () => {};
 
   const handleSave = async () => {
     if (!validate()) return;
 
     try {
-      const payload: any = {
+      const payload: ApiAny = {
         name: form.name,
         phone: form.phone,
         plan_id: form.planId,
@@ -138,7 +139,7 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
       queryClient.invalidateQueries({ queryKey: ['corporatePlans'] });
       onSave();
       setShowForm(false);
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to register member';
       setErrors(prev => ({ ...prev, submit: Array.isArray(msg) ? msg.join(', ') : msg }));
     }

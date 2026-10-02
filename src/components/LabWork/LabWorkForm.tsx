@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useMemo, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,19 +56,19 @@ interface LabWorkFormProps {
   isLoading?: boolean;
 }
 
-export function LabWorkForm({
-  onClose,
-  onSave,
-  labWork,
-  existingLabNames,
-  isSaving,
-  isLoading,
-}: LabWorkFormProps) {
-  if (isLoading) {
+/**
+ * Shows the loading shell before any hook runs. The form below builds its state
+ * from `labWork`, which is not there yet while loading, so the hooks live in
+ * their own component that mounts only once the data has arrived - returning
+ * early above them would make React see a different number of hooks between
+ * renders.
+ */
+export function LabWorkForm(props: LabWorkFormProps) {
+  if (props.isLoading) {
     return (
       <Modal
-        title={labWork ? "Edit Lab Work" : "Add Lab Work"}
-        onClose={onClose}
+        title={props.labWork ? "Edit Lab Work" : "Add Lab Work"}
+        onClose={props.onClose}
         size="5xl"
         icon={<FlaskConical className="w-4 h-4" />}
       >
@@ -77,9 +78,18 @@ export function LabWorkForm({
       </Modal>
     );
   }
+  return <LabWorkFormContent {...props} />;
+}
 
+function LabWorkFormContent({
+  onClose,
+  onSave,
+  labWork,
+  existingLabNames: _existingLabNames,
+  isSaving,
+}: LabWorkFormProps) {
   const form = useForm<LabWorkFormData>({
-    resolver: zodResolver(labWorkSchema) as any,
+    resolver: zodResolver(labWorkSchema) as ApiAny,
     defaultValues: {
       patientId: labWork?.patientId ?? "",
       patientName: labWork?.patientName ?? "",
@@ -119,8 +129,8 @@ export function LabWorkForm({
   const apiPatients = useMemo(() => {
     if (!rawPatientsData) return [];
     if (Array.isArray(rawPatientsData)) return rawPatientsData;
-    const target = (rawPatientsData as any).responseObject !== undefined ? (rawPatientsData as any).responseObject : rawPatientsData;
-    let list: any[] = [];
+    const target = (rawPatientsData as ApiAny).responseObject !== undefined ? (rawPatientsData as ApiAny).responseObject : rawPatientsData;
+    let list: ApiAny[] = [];
     if (Array.isArray(target)) {
       list = target;
     } else if (target && typeof target === "object") {
@@ -130,7 +140,7 @@ export function LabWorkForm({
       else if (Array.isArray(target.patients)) list = target.patients;
       else if (Array.isArray(target.data?.patients)) list = target.data.patients;
     }
-    return list.map((p: any) => ({
+    return list.map((p: ApiAny) => ({
       ...p,
       id: p.id,
       name: p.name || p.full_name || "",
@@ -153,7 +163,7 @@ export function LabWorkForm({
   const apiLabNames = useMemo(() => {
     if (!rawLabNamesData) return [];
     if (Array.isArray(rawLabNamesData)) return rawLabNamesData;
-    const target = (rawLabNamesData as any).responseObject !== undefined ? (rawLabNamesData as any).responseObject : rawLabNamesData;
+    const target = (rawLabNamesData as ApiAny).responseObject !== undefined ? (rawLabNamesData as ApiAny).responseObject : rawLabNamesData;
     if (Array.isArray(target)) return target;
     if (target && typeof target === "object") {
       if (Array.isArray(target.data?.data?.data)) return target.data.data.data;
@@ -169,7 +179,7 @@ export function LabWorkForm({
   }, [rawLabNamesData]);
 
   const labOptions = useMemo(() => {
-    const apiNames = apiLabNames.map((lab: any) => typeof lab === "string" ? lab : (lab.name || "")).filter(Boolean);
+    const apiNames = apiLabNames.map((lab: ApiAny) => typeof lab === "string" ? lab : (lab.name || "")).filter(Boolean);
     const currentName = labWork?.labName ? [labWork.labName] : [];
     const names = Array.from(new Set([...apiNames, ...currentName]));
     return names.map((name) => ({ label: name, value: name }));
@@ -180,14 +190,14 @@ export function LabWorkForm({
       await createLabNameMutation.mutateAsync({ name });
       toast.success("Lab added successfully");
       form.setValue("labName", name, { shouldValidate: true });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error(err?.message || "Failed to create lab");
     }
   };
 
   const handleUpdateLabName = async (oldName: string, newName: string) => {
     try {
-      const lab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === oldName);
+      const lab = apiLabNames.find((l: ApiAny) => (typeof l === "string" ? l : l.name) === oldName);
       if (!lab || typeof lab === "string" || !lab.id) {
         form.setValue("labName", newName, { shouldValidate: true });
         return;
@@ -197,13 +207,13 @@ export function LabWorkForm({
       if (formData.labName === oldName) {
         form.setValue("labName", newName, { shouldValidate: true });
       }
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       toast.error(err?.message || "Failed to update lab");
     }
   };
 
   const handleDeleteLabName = async (nameToDelete: string) => {
-    const lab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === nameToDelete);
+    const lab = apiLabNames.find((l: ApiAny) => (typeof l === "string" ? l : l.name) === nameToDelete);
     if (!lab || typeof lab === "string" || !lab.id) {
       toast.error("Lab not found");
       return;
@@ -219,8 +229,6 @@ export function LabWorkForm({
           if (formData.labName === nameToDelete) {
             form.setValue("labName", "");
           }
-        } catch (err) {
-          throw err;
         } finally {
           setDeletingLabName(null);
         }
@@ -240,13 +248,13 @@ export function LabWorkForm({
   );
 
   const inProgressTreatments = useMemo(() => {
-    const pages = (treatmentPagesData as any)?.pages || [];
-    const all = pages.flatMap((p: any) => p?.data?.data ?? p?.data ?? []);
+    const pages = (treatmentPagesData as ApiAny)?.pages || [];
+    const all = pages.flatMap((p: ApiAny) => p?.data?.data ?? p?.data ?? []);
     // Keep currently assigned treatment plan selectable
     if (
       labWork?.treatmentId &&
       formData.patientId === labWork.patientId &&
-      !all.some((t: any) => t.id === labWork.treatmentId)
+      !all.some((t: ApiAny) => t.id === labWork.treatmentId)
     ) {
       all.push({ id: labWork.treatmentId, procedure: labWork.treatmentName || labWork.treatmentId });
     }
@@ -286,7 +294,7 @@ export function LabWorkForm({
   };
 
   const handleSubmit = (data: LabWorkFormData) => {
-    const selectedLab = apiLabNames.find((l: any) => (typeof l === "string" ? l : l.name) === data.labName);
+    const selectedLab = apiLabNames.find((l: ApiAny) => (typeof l === "string" ? l : l.name) === data.labName);
     const labNameId = selectedLab && typeof selectedLab === "object" ? selectedLab.id : "";
     onSave({
       ...data,
@@ -322,14 +330,14 @@ export function LabWorkForm({
               value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                const p = apiPatients.find((p: any) => p.id === val);
+                const p = apiPatients.find((p: ApiAny) => p.id === val);
                 form.setValue("patientId", val, { shouldValidate: true });
                 form.setValue("patientName", p?.name || "", { shouldValidate: true });
               }}
               onSearchChange={setPatientSearchInput}
               options={[
                 { label: "Select Patient", value: "none", avatar: "", phone: "" },
-                ...apiPatients.map((p: any) => {
+                ...apiPatients.map((p: ApiAny) => {
                   const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
                   return {
                     label: p.name,
@@ -340,7 +348,7 @@ export function LabWorkForm({
                   };
                 }),
               ]}
-              renderOption={(opt: any) => {
+              renderOption={(opt: ApiAny) => {
                 if (opt.value === "none") return <span className="text-muted-foreground">{opt.label}</span>;
                 return (
                   <div className="flex items-center gap-2 py-0.5">
@@ -364,7 +372,7 @@ export function LabWorkForm({
                   </div>
                 );
               }}
-              renderValue={(opt: any) => {
+              renderValue={(opt: ApiAny) => {
                 if (opt.value === "none") return <span>{opt.label}</span>;
                 return (
                   <div className="flex items-center gap-2">
@@ -396,13 +404,13 @@ export function LabWorkForm({
               isLoading={isTreatmentsLoading}
               onChange={(val) => {
                 const targetVal = val === "none" ? "" : val;
-                const t = inProgressTreatments.find((t: any) => t.id === targetVal);
+                const t = inProgressTreatments.find((t: ApiAny) => t.id === targetVal);
                 form.setValue("treatmentId", targetVal, { shouldValidate: true });
                 form.setValue("treatmentName", t?.procedure || "");
               }}
               options={[
                 { label: "Select Treatment", value: "none" },
-                ...inProgressTreatments.map((t: any) => ({
+                ...inProgressTreatments.map((t: ApiAny) => ({
                   label: t.procedure,
                   value: t.id,
                 })),

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export const useCheckEmployeeQuery = (phone: string, name: string, countryCode?: string) => {
@@ -9,7 +10,7 @@ export const useCheckEmployeeQuery = (phone: string, name: string, countryCode?:
     queryParams.append("country_code", countryCode.trim());
   }
 
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["checkEmployee", phone, name, countryCode],
     endpoint: `/patient/check-member?${queryParams.toString()}`,
     method: "get",

@@ -1,4 +1,5 @@
-export const getPrescriptionHTML = (data: any) => {
+import type { ApiAny } from "../../../types/api";
+export const getPrescriptionHTML = (data: ApiAny) => {
   const {
     t,
     localizedClinicName,
@@ -59,7 +60,7 @@ export const getPrescriptionHTML = (data: any) => {
   `;
 };
 
-export const getBarcodeHTML = (patient: any) => {
+export const getBarcodeHTML = (patient: ApiAny) => {
   return `
     <html>
       <head><title>Barcode - ${patient.name}</title></head>

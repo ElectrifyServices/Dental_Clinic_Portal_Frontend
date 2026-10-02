@@ -17,14 +17,15 @@ export const InventoryPage: React.FC = () => {
           confirmDelete("Delete Inventory Item", `Delete this item from inventory?`, async () => {
             try {
               await deleteMutation.mutateAsync({ id });
-            } catch (error) {
+            } catch {
+              /* delete failed - the mutation surfaces its own error toast */
             }
           });
         }}
-        onRestock={(item: any) => { setSelectedItemForRestock(item); setActiveModal("restockForm"); }}
-        onConsume={(item: any) => { setSelectedItemForRestock(item); setActiveModal("consumeForm"); }}
-        onAdjust={(item: any) => { setSelectedItemForRestock(item); setActiveModal("adjustForm"); }}
-        onViewHistory={(item: any) => { setSelectedItemForRestock(item); setActiveModal("inventoryHistory"); }}
+        onRestock={(item) => { setSelectedItemForRestock(item); setActiveModal("restockForm"); }}
+        onConsume={(item) => { setSelectedItemForRestock(item); setActiveModal("consumeForm"); }}
+        onAdjust={(item) => { setSelectedItemForRestock(item); setActiveModal("adjustForm"); }}
+        onViewHistory={(item) => { setSelectedItemForRestock(item); setActiveModal("inventoryHistory"); }}
       />
     </div>
   );

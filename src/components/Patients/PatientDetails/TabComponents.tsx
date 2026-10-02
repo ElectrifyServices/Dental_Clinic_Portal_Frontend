@@ -1,20 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import { useState } from "react";
-import {
-  Activity,
-  AlertTriangle,
-  Calendar,
-  ChevronDown,
-  CheckCircle,
-  CreditCard,
-  Heart,
-  Image as ImageIcon,
-  Pill,
-  Printer,
-  Send,
-  Stethoscope,
-  User,
-  X,
-} from "lucide-react";
+import { Activity, AlertTriangle, Calendar, ChevronDown, CheckCircle, CreditCard, Heart, Image as ImageIcon, Pill, Send, Stethoscope, User, X } from "lucide-react";
 import { Card, Button, Badge, Loading } from "@/components/ui";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
 
@@ -24,7 +10,7 @@ const EmptyState = ({
   title,
   description,
 }: {
-  icon: any;
+  icon: ApiAny;
   title: string;
   description: string;
 }) => (
@@ -42,7 +28,7 @@ const EmptyState = ({
 );
 
 // --- Medical Info Tab ---
-export const MedicalInfoTab = ({ patient }: { patient: any }) => (
+export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {/* Medical History */}
     <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
@@ -51,7 +37,7 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
       </h3>
       <div className="space-y-3">
         {(patient?.medicalHistoryNames || patient?.medicalHistory || patient?.medicalHistories || []).length > 0 ? (
-          (patient.medicalHistoryNames || patient.medicalHistory || patient.medicalHistories).map((item: any, index: number) => {
+          (patient.medicalHistoryNames || patient.medicalHistory || patient.medicalHistories).map((item: ApiAny, index: number) => {
             const name = typeof item === "object" ? (item.name || item.history?.name || item.condition || item.history_name) : item;
             return (
               <div
@@ -81,7 +67,7 @@ export const MedicalInfoTab = ({ patient }: { patient: any }) => (
       </h3>
       <div className="space-y-3">
         {(patient?.allergyNames || patient?.allergies || []).length > 0 ? (
-          (patient.allergyNames || patient.allergies).map((allergy: any, index: number) => {
+          (patient.allergyNames || patient.allergies).map((allergy: ApiAny, index: number) => {
             const name = typeof allergy === "object" ? (allergy.allergy_name || allergy.name) : allergy;
             return (
               <div
@@ -150,7 +136,7 @@ export const AppointmentsTab = ({
   patientAppointments,
   getStatusColor,
 }: {
-  patientAppointments: any[];
+  patientAppointments: ApiAny[];
   getStatusColor: (s: string) => string;
 }) => (
   <div className="space-y-4">
@@ -222,7 +208,7 @@ export const AppointmentsTab = ({
 export const TreatmentsTab = ({
   patientTreatments,
 }: {
-  patientTreatments: any[];
+  patientTreatments: ApiAny[];
 }) => {
   const hasInProgress = patientTreatments.some(
     (t) => t.status === "in-progress",
@@ -383,8 +369,8 @@ export const BillingTab = ({
   getStatusColor,
   handleSendReminder,
 }: {
-  patient: any;
-  patientInvoices: any[];
+  patient: ApiAny;
+  patientInvoices: ApiAny[];
   getStatusColor: (s: string) => string;
   handleSendReminder: () => void;
 }) => (
@@ -456,7 +442,7 @@ export const BillingTab = ({
 export const PrescriptionsTab = ({
   patient,
 }: {
-  patient: any;
+  patient: ApiAny;
 }) => {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
@@ -477,8 +463,8 @@ export const PrescriptionsTab = ({
     
     // If the list is flat (items contain medicine_name, medicine_id, or medicine directly), group them:
     if (rawList.length > 0 && (rawList[0].medicine_name || rawList[0].medicine_id || rawList[0].medicine)) {
-      const groups: Record<string, any> = {};
-      rawList.forEach((item: any) => {
+      const groups: Record<string, ApiAny> = {};
+      rawList.forEach((item: ApiAny) => {
         const key = item.source_id || `${item.visit_date || item.created_at || item.createdAt}_${item.procedure || item.treatment || 'Consultation'}`;
         if (!groups[key]) {
           groups[key] = {
@@ -498,7 +484,7 @@ export const PrescriptionsTab = ({
     return rawList;
   })();
 
-  const getRecordDate = (record: any) => {
+  const getRecordDate = (record: ApiAny) => {
     const dateVal = record.date || record.treatment_date || record.created_at || record.createdAt || record.visit_date;
     if (!dateVal) return "—";
     try {
@@ -508,12 +494,12 @@ export const PrescriptionsTab = ({
         month: "short",
         year: "numeric",
       }) : String(dateVal);
-    } catch (e) {
+    } catch (_e) {
       return String(dateVal);
     }
   };
 
-  const getRecordTreatment = (record: any) => {
+  const getRecordTreatment = (record: ApiAny) => {
     return (
       record.treatment ||
       record.procedure ||
@@ -534,7 +520,7 @@ export const PrescriptionsTab = ({
         </span>
       </div>
 
-      {prescriptionHistory.map((record: any, idx: number) => {
+      {prescriptionHistory.map((record: ApiAny, idx: number) => {
         const recordId = record.id || record._id || `record-${idx}`;
         const recordDate = getRecordDate(record);
         const recordTreatment = getRecordTreatment(record);
@@ -608,7 +594,7 @@ export const PrescriptionsTab = ({
             {isExpanded && (
               <div className="p-5 pt-0 border-t border-border/40 bg-card space-y-3">
                 <div className="pt-4 space-y-3 animate-in fade-in duration-200">
-                  {prescriptionsList.map((prescription: any, index: number) => {
+                  {prescriptionsList.map((prescription: ApiAny, index: number) => {
                     const medicineName =
                       prescription.medicine_name ||
                       prescription.medicine ||
@@ -729,7 +715,7 @@ export const PrescriptionsTab = ({
 export const DocumentsTab = ({
   patient,
 }: {
-  patient: any;
+  patient: ApiAny;
   loading: boolean;
 }) => {
   const { data: documentsResponse, isLoading } = usePatientDocumentsQuery(patient?.id);
@@ -760,7 +746,7 @@ export const DocumentsTab = ({
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc: any, index: number) => {
+            {documents.map((doc: ApiAny, index: number) => {
               const docUrl = doc.url || doc.document_url || doc.file_url;
               const docName = doc.file_name || doc.name || doc.document_name || "Document";
               
@@ -840,7 +826,7 @@ export const DocumentsTab = ({
 };
 
 // --- Family Tab ---
-export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
+export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
   const calculateAge = (dob: string) => {
     if (!dob) return "N/A";
     const birthDate = new Date(dob);

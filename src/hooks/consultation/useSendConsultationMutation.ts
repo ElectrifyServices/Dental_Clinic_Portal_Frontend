@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { AuthStorage } from "../../auth/authStorage";
 
@@ -7,7 +8,7 @@ export interface SendConsultationVariables {
 }
 
 export function useSendConsultationMutation() {
-  return useApiMutation<any, SendConsultationVariables>({
+  return useApiMutation<ApiAny, SendConsultationVariables>({
     getEndpoint: (variables) => {
       if (variables.type === "CLINICAL") {
         return `/consultations/${variables.id}/Observations`;

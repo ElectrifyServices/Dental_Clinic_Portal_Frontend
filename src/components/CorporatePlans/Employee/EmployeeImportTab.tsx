@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import React, { useRef, useState } from 'react';
 import { X, Download, AlertTriangle, CheckCircle } from 'lucide-react';
 import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
@@ -36,7 +37,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
     setImporting(true);
     try {
       const payload = {
-        members: valid.map((r, i) => {
+        members: valid.map((r, _i) => {
           const matchedPlan = activePlans.find(p => p.id === r.corporatePlanId);
           const planCodeToUse = matchedPlan ? matchedPlan.code : r.corporatePlanId;
           
@@ -52,13 +53,13 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         })
       };
 
-      const res: any = await bulkImportMutation.mutateAsync(payload);
+      const res: ApiAny = await bulkImportMutation.mutateAsync(payload);
 
       const responseData = res?.responseObject?.data || res?.data;
       const failed = responseData?.failed || [];
 
       if (failed.length > 0) {
-        const backendErrors = failed.map((f: any) => `Row ${f.index + 2}: ${f.error}`);
+        const backendErrors = failed.map((f: ApiAny) => `Row ${f.index + 2}: ${f.error}`);
         setImportErrors(backendErrors);
         setImporting(false);
         return; // Do not redirect to list
@@ -72,7 +73,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       setImportRows([]);
       setImportErrors([]);
       setTab('list');
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       setImportErrors(prev => [
         err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
         ...prev

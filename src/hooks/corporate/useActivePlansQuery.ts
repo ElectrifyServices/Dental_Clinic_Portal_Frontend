@@ -1,10 +1,11 @@
+import type { ApiAny } from "../../types/api";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../useApiQuery";
 
 export function useActivePlansQuery(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
   
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["activePlans"],
     endpoint: "/employee/plans/active",
     method: "get",

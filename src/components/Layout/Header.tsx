@@ -1,38 +1,18 @@
+import type { ApiAny } from "../../types/api";
 import { Button } from "@/components/ui/Button";
 import logo from "../../logo.png";
-import {
-  Bell,
-  LogOut,
-  Calendar,
-  ChevronDown,
-  Package,
-  UserCheck,
-  Coins,
-  CalendarDays,
-  CheckCheck,
-  Trash2,
-  Zap,
-  MoreVertical,
-  FileText,
-  ClipboardList,
-  Pill,
-  FileCheck,
-  CheckCircle2,
-  Loader2,
-  MessageCircle,
-} from "lucide-react";
+import { Bell, LogOut, Calendar, ChevronDown, Package, UserCheck, Coins, CalendarDays, Zap, MoreVertical, FileText, ClipboardList, Pill, FileCheck, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTenant } from "../../contexts/TenantContext";
 import { useModal } from "../../contexts/ModalContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { Popover, PopoverTrigger, PopoverContent, toast } from "@/components/ui";
 import { useNotifications } from "../../hooks/useNotifications";
-import { GlobalSearch } from "./GlobalSearch";
 import { useNavigate } from "react-router-dom";
 import { downloadBlankPDF, BlankPDFType } from "../../utils/pdfGenerator";
 import { useState } from "react";
 
-const getNotificationIcon = (type: string) => {
+const _getNotificationIcon = (type: string) => {
   switch (type) {
     case "inventory": return Package;
     case "queue": return UserCheck;
@@ -43,7 +23,7 @@ const getNotificationIcon = (type: string) => {
   }
 };
 
-const getNotificationColorCls = (type: string) => {
+const _getNotificationColorCls = (type: string) => {
   switch (type) {
     case "inventory": return "bg-red-50 text-red-600";
     case "queue": return "bg-emerald-50 text-emerald-600";
@@ -67,7 +47,7 @@ export function Header() {
   const { themeData } = useTheme();
   const navigate = useNavigate();
   const { setActiveModal, showConfirm, setWhatsappPhone, setWhatsappPatientName } = useModal();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
+  const { notifications: _notifications, unreadCount: _unreadCount, markAsRead: _markAsRead, markAllAsRead: _markAllAsRead, clearAll: _clearAll } = useNotifications();
 
   const [downloadingBlank, setDownloadingBlank] = useState<string | null>(null);
 
@@ -75,7 +55,8 @@ export function Header() {
     try {
       setDownloadingBlank(type);
       await downloadBlankPDF(type);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as ApiAny;
       toast.error(err?.message || "Failed to download blank PDF. Please try again.");
     } finally {
       setDownloadingBlank(null);

@@ -1,7 +1,6 @@
   import React, { useState, useMemo } from "react";
 import {
   IndianRupee,
-  User,
   TrendingUp,
   Wallet,
   Activity,
@@ -15,13 +14,33 @@ import { MetricCard, PageHeader, Card, Button, Input, DataTable } from "../compo
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
 
+/** A staff member, narrowed to the field this page filters on. */
+interface StaffRow {
+  role?: string;
+}
+
+/** A treatment row enriched with the per-procedure profit split shown in the
+ *  expanded doctor table. */
+interface ProcedureRow {
+  id?: string;
+  patientName?: string;
+  procedure?: string;
+  date?: string;
+  createdAt?: string;
+  cost?: number | string;
+  mockExpense: number;
+  distributableProfit: number;
+  doctorShare: number;
+  clinicProfit: number;
+}
+
 export const ProfitSharingPage: React.FC = () => {
   const { treatments } = useTreatmentData();
   const { staffMembers } = useStaffData();
   const doctorsWithSchedules = useMemo(
     () =>
       staffMembers.filter(
-        (s: any) => s.role === "doctor" || s.role === "admin",
+        (s: StaffRow) => s.role === "doctor" || s.role === "admin",
       ),
     [staffMembers],
   );
@@ -61,7 +80,7 @@ export const ProfitSharingPage: React.FC = () => {
     let totalPayout = 0;
     const doctorStats: Record<
       string,
-      { name: string; specialization: string; profitPercent: number; revenue: number; expenses: number; payout: number; clinicProfit: number; treatments: any[] }
+      { name: string; specialization: string; profitPercent: number; revenue: number; expenses: number; payout: number; clinicProfit: number; treatments: ProcedureRow[] }
     > = {};
 
     filteredTreatments.forEach((t) => {
@@ -144,7 +163,7 @@ export const ProfitSharingPage: React.FC = () => {
             <Button
               key={f.id}
               variant={dateFilter === f.id ? "default" : "ghost"}
-              onClick={() => setDateFilter(f.id as any)}
+              onClick={() => setDateFilter(f.id as DateFilter)}
               className={dateFilter === f.id ? "bg-white text-primary shadow-sm hover:bg-white" : "text-muted-foreground hover:text-foreground"}
               size="sm"
             >
@@ -310,53 +329,53 @@ export const ProfitSharingPage: React.FC = () => {
                     <div className="overflow-x-auto">
                       <DataTable
                         data={ds.treatments}
-                        rowKey={(row: any) => row.id || Math.random().toString()}
+                        rowKey={(row: ProcedureRow) => row.id || Math.random().toString()}
                         emptyTitle="No procedures found for this period"
                         columns={[
                           { 
                             header: 'Date & Patient', 
                             key: 'patientName', 
-                            render: (t: any) => (
+                            render: (t: ProcedureRow) => (
                               <div className="py-1">
                                 <span className="block font-semibold text-foreground text-[13px]">{t.patientName}</span>
-                                <span className="block text-[11px] text-muted-foreground mt-0.5">{new Date(t.date || t.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                                <span className="block text-[11px] text-muted-foreground mt-0.5">{new Date(t.date || t.createdAt || "").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
                               </div>
                             ) 
                           },
                           { 
                             header: 'Procedure', 
                             key: 'procedure', 
-                            render: (t: any) => <span className="text-xs font-medium text-muted-foreground">{t.procedure}</span> 
+                            render: (t: ProcedureRow) => <span className="text-xs font-medium text-muted-foreground">{t.procedure}</span> 
                           },
                           { 
                             header: 'Total Bill', 
                             key: 'cost', 
                             align: 'right', 
-                            render: (t: any) => <span className="font-bold text-[13px] text-foreground">₹{Number(t.cost).toLocaleString()}</span> 
+                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-foreground">₹{Number(t.cost).toLocaleString()}</span> 
                           },
                           { 
                             header: 'X-Ray/Lab', 
                             key: 'expense', 
                             align: 'right', 
-                            render: (t: any) => <span className="font-bold text-[13px] text-amber-600">-₹{t.mockExpense.toLocaleString()}</span> 
+                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-amber-600">-₹{t.mockExpense.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Distributable', 
                             key: 'base', 
                             align: 'right', 
-                            render: (t: any) => <span className="font-bold text-[13px] text-slate-600">₹{t.distributableProfit.toLocaleString()}</span> 
+                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-slate-600">₹{t.distributableProfit.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Doctor Share', 
                             key: 'share', 
                             align: 'right', 
-                            render: (t: any) => <span className="font-bold text-[13px] text-blue-600">₹{t.doctorShare.toLocaleString()}</span> 
+                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-blue-600">₹{t.doctorShare.toLocaleString()}</span> 
                           },
                           { 
                             header: 'Clinic Profit', 
                             key: 'clinic', 
                             align: 'right', 
-                            render: (t: any) => <span className="font-bold text-[13px] text-emerald-600">₹{t.clinicProfit.toLocaleString()}</span> 
+                            render: (t: ProcedureRow) => <span className="font-bold text-[13px] text-emerald-600">₹{t.clinicProfit.toLocaleString()}</span> 
                           },
                         ]}
                       />

@@ -1,8 +1,9 @@
+import type { ApiAny } from "../types/api";
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { Patient, Appointment, Treatment, Invoice, InventoryItem, DashboardStats } from '../types';
 
 interface AppState {
-  currentUser: any;
+  currentUser: ApiAny;
   patients: Patient[];
   appointments: Appointment[];
   treatments: Treatment[];

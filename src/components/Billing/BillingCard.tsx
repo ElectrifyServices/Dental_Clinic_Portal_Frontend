@@ -1,16 +1,5 @@
 import React, { useState } from "react";
-import { PreviousBillsModal } from "./PreviousBillsModal";
-import {
-  Phone,
-  MoreVertical,
-  ChevronDown,
-  Eye,
-  History,
-  IndianRupee,
-  Send,
-  Trash2,
-  MessageCircle,
-} from "lucide-react";
+import { Phone, MoreVertical, Eye, History, IndianRupee, Send, Trash2, MessageCircle } from "lucide-react";
 import {
   Button,
   StatusBadge,
@@ -95,7 +84,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   onDelete,
   onWhatsapp,
 }) => {
-  const [showPrevious, setShowPrevious] = useState(false);
+  const [_showPrevious, _setShowPrevious] = useState(false);
 
   const avatarGrad = (name: string) => {
     const safeName = name || "P";
@@ -104,7 +93,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
 
   const mainStatus = invoice.status?.toLowerCase() || "draft";
   const mainMeta = STATUS_META[mainStatus] || { label: invoice.status, variant: "gray" };
-  const hasMultiple = invoice.allInvoices && invoice.allInvoices.length > 1;
+  const _hasMultiple = invoice.allInvoices && invoice.allInvoices.length > 1;
 
   const ActionMenu = ({ inv }: { inv: Invoice }) => {
     const statusLower = inv.status?.toLowerCase() || "draft";

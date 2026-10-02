@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React, { useState, useEffect } from "react";
@@ -36,7 +37,7 @@ interface TreatmentFieldsProps {
   fee: number;
   patientConcern: string;
   notes: string;
-  appointmentTypes: any[];
+  appointmentTypes: ApiAny[];
   onChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -110,7 +111,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
                     if (onTreatmentTypeChange) {
                       onTreatmentTypeChange(val);
                     } else {
-                      onChange({ target: { name: "treatmentType", value: val } } as any);
+                      onChange({ target: { name: "treatmentType", value: val } } as ApiAny);
                     }
                   }
                 }}
@@ -126,7 +127,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
                   if (onTreatmentTypeChange) {
                     onTreatmentTypeChange("");
                   } else {
-                    onChange({ target: { name: "treatmentType", value: "" } } as any);
+                    onChange({ target: { name: "treatmentType", value: "" } } as ApiAny);
                   }
                 }}
                 className="h-11 px-3"
@@ -144,7 +145,7 @@ export const TreatmentFields: React.FC<TreatmentFieldsProps> = ({
                 } else {
                   onChange({
                     target: { name: "treatmentType", value: val }
-                  } as any);
+                  } as ApiAny);
                 }
               }}
               options={allOptions.map(opt => ({ label: opt, value: opt }))}

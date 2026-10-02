@@ -13,6 +13,7 @@
  * SectionRenderer wraps multiple FormRenderer calls for a whole form section.
  */
 
+import type { ApiAny } from "../../types/api";
 import React from 'react';
 import type { FormField, SelectOption } from '../../config/forms/schema';
 import { SearchableSelect } from './SearchableSelect';
@@ -58,9 +59,9 @@ export interface FormRendererProps {
   /** Field metadata from JSON config */
   field: FormField;
   /** Current value from form state */
-  value: any;
+  value: ApiAny;
   /** Called with (fieldName, newValue) when the field changes */
-  onChange: (name: string, value: any) => void;
+  onChange: (name: string, value: ApiAny) => void;
   /** Validation error message */
   error?: string;
   /**
@@ -115,7 +116,7 @@ export function FormRenderer({
   ) => {
     const { type } = e.target as HTMLInputElement;
     const raw = e.target.value;
-    let parsed: any = raw;
+    let parsed: ApiAny = raw;
     if (field.type === 'phone') {
       parsed = raw.replace(/[a-zA-Z]/g, "");
     } else if (type === 'number') {
@@ -300,8 +301,8 @@ export function FormRenderer({
  */
 export interface SectionRendererProps {
   section: import('../../config/forms/schema').FormSection;
-  values: Record<string, any>;
-  onChange: (name: string, value: any) => void;
+  values: Record<string, ApiAny>;
+  onChange: (name: string, value: ApiAny) => void;
   errors?: Record<string, string>;
   /**
    * Map of fieldName → SelectOption[] for fields whose options come from

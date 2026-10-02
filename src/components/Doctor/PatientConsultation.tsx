@@ -1,10 +1,11 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import { CheckCircle, History, ArrowLeft } from "lucide-react";
 import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
-import { Modal, Button, Input, Label, SearchableSelect } from "@/components/ui";
+import { Modal, Button, Input, Label } from "@/components/ui";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 import { formatPhoneWithCountryCode, isoFromDialingCode, getPhoneMaxLength, getPhonePlaceholder, sanitizePhoneInput } from "../../utils/phoneUtils";
@@ -54,16 +55,16 @@ interface PatientConsultationProps {
       emergencyRelation?: string;
     };
   };
-  doctors?: any[];
+  doctors?: ApiAny[];
   doctorAvailability?: { [key: string]: boolean };
-  appointments?: any[];
+  appointments?: ApiAny[];
   bookedFollowUp?: { date: string; time: string } | null;
-  onScheduleFollowUp?: (data: any) => void;
-  initialData?: any;
-  onDraftUpdate?: (data: any) => void;
+  onScheduleFollowUp?: (data: ApiAny) => void;
+  initialData?: ApiAny;
+  onDraftUpdate?: (data: ApiAny) => void;
   onClose: () => void;
-  onCompleteConsultation: (consultationData: any) => Promise<any>;
-  onCreateTreatment?: (treatmentData: any) => void;
+  onCompleteConsultation: (consultationData: ApiAny) => Promise<ApiAny>;
+  onCreateTreatment?: (treatmentData: ApiAny) => void;
 }
 
 interface ConsultationData {
@@ -87,23 +88,23 @@ interface ConsultationData {
   tests: string;
   consultationNotes: string;
   nextVisit: string;
-  prescriptions: any[];
+  prescriptions: ApiAny[];
   images: string[];
   rawImages: File[];
   xrayFiles: string[];
   rawXrays: File[];
   labFiles: { name: string; url: string; type: string }[];
   selectedTeeth: string[];
-  treatmentPlans: any[];
-  attachmentsList?: any[];
+  treatmentPlans: ApiAny[];
+  attachmentsList?: ApiAny[];
   removedAttachmentIds?: string[];
 }
 
 export function PatientConsultation({
   patient,
   doctors = [],
-  doctorAvailability = {},
-  appointments = [],
+  doctorAvailability: _doctorAvailability = {},
+  appointments: _appointments = [],
   bookedFollowUp = null,
   onScheduleFollowUp,
   initialData,
@@ -111,7 +112,7 @@ export function PatientConsultation({
   onClose,
   onCompleteConsultation,
 }: PatientConsultationProps) {
-  const findConsultationId = (payload: any, depth = 0): string | undefined => {
+  const findConsultationId = (payload: ApiAny, depth = 0): string | undefined => {
     if (!payload || depth > 4) return undefined;
     if (typeof payload.id === "string" && payload.id.length === 36) return payload.id;
     if (typeof payload.consultation_id === "string" && payload.consultation_id.length === 36) {
@@ -128,12 +129,12 @@ export function PatientConsultation({
   };
 
   const { state } = useAuth();
-  const isEditMode = !!(patient as any).isEditMode;
+  const isEditMode = !!(patient as ApiAny).isEditMode;
 
   const originalSessionsMap = React.useMemo(() => {
     const map: Record<string, number> = {};
     if (initialData?.consultationData?.treatmentPlans) {
-      initialData.consultationData.treatmentPlans.forEach((plan: any) => {
+      initialData.consultationData.treatmentPlans.forEach((plan: ApiAny) => {
         if (plan.id) {
           map[plan.id] = plan.sessions || 1;
         }
@@ -144,20 +145,20 @@ export function PatientConsultation({
 
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdConsultationId, setCreatedConsultationId] = useState<string | null>(null);
-  const [selectedExistingDirectPatientId, setSelectedExistingDirectPatientId] = useState<string | undefined>(
-    (patient as any).isDirect ? ((patient as any).patientId || (patient as any).patient_id || undefined) : undefined,
+  const [_selectedExistingDirectPatientId, setSelectedExistingDirectPatientId] = useState<string | undefined>(
+    (patient as ApiAny).isDirect ? ((patient as ApiAny).patientId || (patient as ApiAny).patient_id || undefined) : undefined,
   );
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"form" | "history">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [directPatientName, setDirectPatientName] = useState((patient as any).isDirect ? (patient.patientName || "") : "");
-  const [directCountryCode, setDirectCountryCode] = useState((patient as any).isDirect ? ((patient as any).country_code || "+91") : "+91");
-  const [directPatientPhone, setDirectPatientPhone] = useState((patient as any).isDirect ? (patient.phone || "") : "");
+  const [directPatientName, setDirectPatientName] = useState((patient as ApiAny).isDirect ? (patient.patientName || "") : "");
+  const [directCountryCode, setDirectCountryCode] = useState((patient as ApiAny).isDirect ? ((patient as ApiAny).country_code || "+91") : "+91");
+  const [directPatientPhone, setDirectPatientPhone] = useState((patient as ApiAny).isDirect ? (patient.phone || "") : "");
   const [directDoctorId, setDirectDoctorId] = useState(
-    (patient as any).isDirect ? (patient.doctorId || "") : "",
+    (patient as ApiAny).isDirect ? (patient.doctorId || "") : "",
   );
   const [directPatientId, setDirectPatientId] = useState<string | undefined>(
-    (patient as any).isDirect ? ((patient as any).patientId || (patient as any).patient_id || undefined) : undefined
+    (patient as ApiAny).isDirect ? ((patient as ApiAny).patientId || (patient as ApiAny).patient_id || undefined) : undefined
   );
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -173,12 +174,12 @@ export function PatientConsultation({
     page: 1,
     limit: 100,
     search: debouncedSearch || undefined,
-    filters: { isDropdown: [true] as any },
+    filters: { isDropdown: [true] as ApiAny },
   }, {
     enabled: !!debouncedSearch.trim()
   });
 
-  const extractPatients = (data: any): any[] => {
+  const extractPatients = (data: ApiAny): ApiAny[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
     const target = data.responseObject !== undefined ? data.responseObject : data;
@@ -195,7 +196,7 @@ export function PatientConsultation({
 
   const apiPatients = React.useMemo(() => {
     const rawList = extractPatients(rawPatientsData);
-    return rawList.map((p: any) => ({
+    return rawList.map((p: ApiAny) => ({
       ...p,
       id: p.id || p.patient_id,
       name: p.name || p.full_name || p.patient_name || "",
@@ -213,7 +214,7 @@ export function PatientConsultation({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectPatient = (p: any) => {
+  const handleSelectPatient = (p: ApiAny) => {
     const pName = p.name || p.full_name || p.patient_name || "";
     const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
     
@@ -255,7 +256,7 @@ export function PatientConsultation({
   const renderPatientDropdown = () => {
     if (!focusedField) return null;
 
-    const searchTerm = focusedField === "name" 
+    const _searchTerm = focusedField === "name" 
       ? (directPatientName || "").toLowerCase().trim() 
       : (directPatientPhone || "").toLowerCase().trim();
 
@@ -282,7 +283,7 @@ export function PatientConsultation({
           </div>
         ) : filteredPatients.length > 0 ? (
           <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
-            {filteredPatients.map((p: any, idx: number) => {
+            {filteredPatients.map((p: ApiAny, idx: number) => {
               const pCode = p.country_code || p.countryCode || "+91";
               return (
                 <li
@@ -366,7 +367,7 @@ export function PatientConsultation({
       rawXrays: [] as File[],
       labFiles: [] as { name: string; url: string; type: string }[],
       selectedTeeth: [] as string[],
-      attachmentsList: [] as any[],
+      attachmentsList: [] as ApiAny[],
       removedAttachmentIds: [] as string[],
       treatmentPlans: initialData?.consultationData?.treatmentPlans || [
         {
@@ -394,7 +395,7 @@ export function PatientConsultation({
     initialData?.selectedSlot || null
   );
 
-  const patientDOB = patient.patientHistory?.dateOfBirth || (patient as any).dateOfBirth || "";
+  const patientDOB = patient.patientHistory?.dateOfBirth || (patient as ApiAny).dateOfBirth || "";
   const calculatedAge = React.useMemo(() => {
     if (!patientDOB) return null;
     try {
@@ -406,7 +407,7 @@ export function PatientConsultation({
         age--;
       }
       return age;
-    } catch (e) {
+    } catch (_e) {
       return null;
     }
   }, [patientDOB]);
@@ -421,6 +422,9 @@ export function PatientConsultation({
       followUpDate,
       selectedSlot,
     });
+  // `onDraftUpdate` is a parent callback that is not memoised; depending on it
+  // would push a draft on every render and re-render the parent in a loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultationData, toothChartState, followUpDoctorId, followUpDate, selectedSlot]);
 
   // Removed auto-sync useEffect between toothChartState and treatmentPlans as per user request to manage treatments manually.
@@ -461,30 +465,30 @@ export function PatientConsultation({
   const formDoctors = apiDoctors && apiDoctors.length > 0 ? apiDoctors : doctors;
 
   useEffect(() => {
-    if (!(patient as any).isDirect || !formDoctors?.length) return;
+    if (!(patient as ApiAny).isDirect || !formDoctors?.length) return;
 
     const loggedInUserId = state.user?.id || "";
     const loggedInUserRole = String(state.user?.role || "").toLowerCase();
-    const hasSelectedDoctor = formDoctors.some((d: any) => d.id === directDoctorId);
+    const hasSelectedDoctor = formDoctors.some((d: ApiAny) => d.id === directDoctorId);
 
     if (hasSelectedDoctor) return;
 
     if (loggedInUserRole === "doctor") {
-      const matchingDoctor = formDoctors.find((d: any) => d.id === loggedInUserId);
+      const matchingDoctor = formDoctors.find((d: ApiAny) => d.id === loggedInUserId);
       if (matchingDoctor) {
         setDirectDoctorId(matchingDoctor.id);
         return;
       }
     }
 
-    if (patient.doctorId && formDoctors.some((d: any) => d.id === patient.doctorId)) {
+    if (patient.doctorId && formDoctors.some((d: ApiAny) => d.id === patient.doctorId)) {
       setDirectDoctorId(patient.doctorId);
     }
   }, [patient, formDoctors, directDoctorId, state.user]);
 
   useEffect(() => {
     if (formDoctors && formDoctors.length > 0) {
-      const isValid = formDoctors.some((d: any) => d.id === followUpDoctorId);
+      const isValid = formDoctors.some((d: ApiAny) => d.id === followUpDoctorId);
       if (!isValid) {
         setFollowUpDoctorId(formDoctors[0].id);
       }
@@ -507,7 +511,7 @@ export function PatientConsultation({
     }
   }, [patient.id, patient.patientId, refetchConsultations]);
 
-  const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlotsQuery(
+  const { data: slotsData, isLoading: _isLoadingSlots } = useAvailableSlotsQuery(
     consultationData.followUpRequired ? followUpDoctorId : null,
     consultationData.followUpRequired ? followUpDate : null
   );
@@ -516,7 +520,7 @@ export function PatientConsultation({
 
   const availableSlots = React.useMemo(() => {
     if (!slotsData?.data?.slots) return [];
-    return slotsData.data.slots.map((s: any) => {
+    return slotsData.data.slots.map((s: ApiAny) => {
       const time24 = s.time;
       let time12 = time24;
       if (!time24.includes("AM") && !time24.includes("PM")) {
@@ -532,7 +536,7 @@ export function PatientConsultation({
 
   const handleScheduleFollowUp = () => {
     if (!onScheduleFollowUp) return;
-    const selDoctor = formDoctors.find((d: any) => d.id === followUpDoctorId);
+    const selDoctor = formDoctors.find((d: ApiAny) => d.id === followUpDoctorId);
     onScheduleFollowUp({
       patientName: patient.patientName,
       patientPhone: patient.phone,
@@ -559,7 +563,7 @@ export function PatientConsultation({
           consultationIdOverride ||
           createdConsultationId ||
           initialData?.id ||
-          (patient as any).consultationId ||
+          (patient as ApiAny).consultationId ||
           patient.id;
         // Only fetch if it looks like a valid UUID (36 chars)
         if (consultationId && consultationId.length === 36) {
@@ -576,8 +580,8 @@ export function PatientConsultation({
         type,
         patient: {
           ...patient,
-          gender: patient.patientHistory?.gender || (patient as any).gender || "-",
-          bloodGroup: patient.patientHistory?.bloodGroup || (patient as any).bloodGroup || (patient as any).blood_group || "-",
+          gender: patient.patientHistory?.gender || (patient as ApiAny).gender || "-",
+          bloodGroup: patient.patientHistory?.bloodGroup || (patient as ApiAny).bloodGroup || (patient as ApiAny).blood_group || "-",
         },
         consultationData: finalConsultationData,
         toothChartState,
@@ -589,7 +593,7 @@ export function PatientConsultation({
           consultationIdOverride ||
           createdConsultationId ||
           initialData?.id ||
-          (patient as any).consultationId ||
+          (patient as ApiAny).consultationId ||
           patient.id;
         if (!skipSendApi && cId && cId.length === 36 && !cId.startsWith("WALK-")) {
           await sendMutation.mutateAsync({ id: cId, type });
@@ -599,7 +603,7 @@ export function PatientConsultation({
       }
 
       toast.success("PDF Downloaded successfully!", { id: toastId });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to generate PDF", { id: toastId });
     }
   };
@@ -707,7 +711,7 @@ export function PatientConsultation({
     const urlToRemove = consultationData.images[index];
     if (urlToRemove && !urlToRemove.startsWith("blob:")) {
       const matched = consultationData.attachmentsList?.find(
-        (a: any) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
+        (a: ApiAny) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
       );
       if (matched?.id) {
         setConsultationData((prev) => ({
@@ -731,7 +735,7 @@ export function PatientConsultation({
     const urlToRemove = consultationData.xrayFiles[index];
     if (urlToRemove && !urlToRemove.startsWith("blob:")) {
       const matched = consultationData.attachmentsList?.find(
-        (a: any) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
+        (a: ApiAny) => a.file_url === urlToRemove || a.url === urlToRemove || a.path === urlToRemove
       );
       if (matched?.id) {
         setConsultationData((prev) => ({
@@ -751,7 +755,7 @@ export function PatientConsultation({
     }));
   };
 
-  const updateTreatmentPlan = (index: number, field: string, value: any) => {
+  const updateTreatmentPlan = (index: number, field: string, value: ApiAny) => {
     setConsultationData((prev) => {
       const updatedPlans = [...prev.treatmentPlans];
       updatedPlans[index] = { ...updatedPlans[index], [field]: value };
@@ -762,7 +766,7 @@ export function PatientConsultation({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if ((patient as any).isDirect) {
+    if ((patient as ApiAny).isDirect) {
       if (!directPatientName.trim()) {
         newErrors.directPatientName = "Patient name is required.";
       }
@@ -808,19 +812,19 @@ export function PatientConsultation({
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const selectedDoctor = formDoctors.find((d: any) => d.id === directDoctorId);
+      const selectedDoctor = formDoctors.find((d: ApiAny) => d.id === directDoctorId);
       
       let cleanedNotes = consultationData.consultationNotes || "";
-      cleanedNotes = cleanedNotes.replace(/(?:^|\n)\s*(?:\d+\.|[•\-])\s*$/, "").trimEnd();
+      cleanedNotes = cleanedNotes.replace(/(?:^|\n)\s*(?:\d+\.|[•-])\s*$/, "").trimEnd();
 
       const validPrescriptions = (consultationData.prescriptions || []).filter(
-        (p: any) => p.medicine && p.medicine.trim() !== ""
+        (p: ApiAny) => p.medicine && p.medicine.trim() !== ""
       );
 
       const mappedTreatmentPlans = consultationData.requiresTreatment
         ? (consultationData.treatmentPlans || [])
-            .filter((plan: any) => plan.procedure && plan.procedure.trim() !== "")
-            .map((plan: any) => {
+            .filter((plan: ApiAny) => plan.procedure && plan.procedure.trim() !== "")
+            .map((plan: ApiAny) => {
               let toothArray: string[] = [];
               if (Array.isArray(plan.tooth)) {
                 toothArray = plan.tooth;
@@ -841,8 +845,8 @@ export function PatientConsultation({
       const res = await onCompleteConsultation({
         id: patient.id,
         patientId: directPatientId || patient.patientId || patient.id,
-        patientName: patient.patientName || (patient as any).name || "",
-        patientPhone: patient.phone || (patient as any).patientPhone || "",
+        patientName: patient.patientName || (patient as ApiAny).name || "",
+        patientPhone: patient.phone || (patient as ApiAny).patientPhone || "",
         appointmentId: patient.appointmentId,
         ...consultationData,
         prescriptions: validPrescriptions,
@@ -851,8 +855,8 @@ export function PatientConsultation({
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
         consultationDate: new Date().toISOString(),
-        doctorId: (patient as any).isDirect ? directDoctorId : (patient.doctorId || "1"),
-        doctorName: (patient as any).isDirect
+        doctorId: (patient as ApiAny).isDirect ? directDoctorId : (patient.doctorId || "1"),
+        doctorName: (patient as ApiAny).isDirect
           ? (selectedDoctor?.name || "")
           : (patient.doctorName || "Dr. Sharma"),
         status: "completed",
@@ -862,14 +866,14 @@ export function PatientConsultation({
         directPatientName,
         directCountryCode,
         directPatientPhone,
-        isDirect: (patient as any).isDirect,
+        isDirect: (patient as ApiAny).isDirect,
       });
       const returnedConsultationId = findConsultationId(res);
       const completedConsultationId =
         returnedConsultationId ||
         createdConsultationId ||
         initialData?.id ||
-        (patient as any).consultationId ||
+        (patient as ApiAny).consultationId ||
         patient.id;
       if (completedConsultationId) {
         setCreatedConsultationId(String(completedConsultationId));
@@ -879,7 +883,7 @@ export function PatientConsultation({
       if (idToUse && !idToUse.startsWith("WALK-")) {
         refetchConsultations();
       }
-    } catch (error) {
+    } catch (_error) { /* refetch failed; `finally` clears the loading flag */
     } finally {
       setLoading(false);
     }
@@ -889,8 +893,8 @@ export function PatientConsultation({
     <Modal
       title={
         viewMode === "history"
-          ? `Previous Consultations: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
-          : `${(patient as any).isEditMode ? "Edit Consultation" : "Consultation"}: ${(patient as any).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+          ? `Previous Consultations: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+          : `${(patient as ApiAny).isEditMode ? "Edit Consultation" : "Consultation"}: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
       }
       subtitle={
         viewMode === "history"
@@ -973,7 +977,7 @@ export function PatientConsultation({
           />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {(patient as any).isDirect ? (
+            {(patient as ApiAny).isDirect ? (
               <div className="mx-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10" ref={dropdownRef}>
                 <div className="space-y-1 text-left relative">
                   <Label className="text-xs font-bold text-primary">Patient Name <span className="text-red-500">*</span></Label>
@@ -1085,7 +1089,7 @@ export function PatientConsultation({
               <div className="mx-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 gap-3">
                 <div>
                   <span className="text-xs font-bold text-muted-foreground">Patient Records:</span>
-                  <div className="text-sm font-black text-foreground">Phone: {formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</div>
+                  <div className="text-sm font-black text-foreground">Phone: {formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</div>
                 </div>
                 <Button
                   type="button"
@@ -1119,7 +1123,7 @@ export function PatientConsultation({
             />
 
             <TreatmentPlanning
-              patientId={directPatientId || (patient as any).patient_id || patient.patientId || patient.id}
+              patientId={directPatientId || (patient as ApiAny).patient_id || patient.patientId || patient.id}
               toothChartState={toothChartState}
               requiresTreatment={consultationData.requiresTreatment}
               treatmentPlans={consultationData.treatmentPlans}
@@ -1139,7 +1143,7 @@ export function PatientConsultation({
                 if (consultationData.treatmentCost === 0) {
                   setConsultationData((prev) => ({
                     ...prev,
-                    treatmentCost: "" as any,
+                    treatmentCost: "" as ApiAny,
                   }));
                 }
               }}

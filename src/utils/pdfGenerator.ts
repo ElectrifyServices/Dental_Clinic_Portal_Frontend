@@ -98,16 +98,103 @@ const DEFAULT_SAC_CODE = "999312";
 const PAGE_WIDTH_PX = 794;
 const PAGE_HEIGHT_PX = 1123;
 
+/**
+ * Backend PDF payloads arrive in several competing shapes (snake_case,
+ * camelCase, and nested `responseObject.data` wrappers) and this file resolves
+ * them through long `||` fallback chains. Pinning an exact interface would mean
+ * rewriting those chains, so the raw payload roots stay deliberately loose.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DynamicPayload = any;
+
+/** Patient summary passed in by the caller. Backend naming varies, so the
+ *  alternate spellings are declared optional rather than cast away. */
+interface PDFPatient {
+  id: string;
+  patientName: string;
+  phone?: string;
+  doctorName?: string;
+  treatmentType?: string;
+  patient_code?: string;
+  patientCode?: string;
+  country_code?: string;
+  countryCode?: string;
+  gender?: string;
+  date_of_birth?: string;
+  dob?: string;
+  bloodGroup?: string;
+}
+
+/** One entry of the tooth-chart findings list. */
+interface ToothFinding {
+  tooth_number?: number;
+  condition?: string | number;
+  other_condition?: string;
+}
+
+/** One planned/estimated treatment row. */
+interface TreatmentRow {
+  tooth_number?: string | number;
+  tooth?: string | number;
+  procedure?: string;
+  treatment_type?: string;
+  sessions?: unknown[] | number;
+  est_cost?: string | number;
+  cost?: string | number;
+}
+
+/** One prescription row. */
+interface PrescriptionRow {
+  medicine_id?: string;
+  medicine_name?: string;
+  medicineName?: string;
+  /** Either the medicine name itself or a nested medicine object. */
+  medicine?: DynamicPayload;
+  dosage?: string;
+  timing?: string;
+  frequency?: string;
+  duration?: string | number;
+  durationUnit?: string;
+  duration_type?: string;
+  qty?: string | number;
+}
+
+/** One treatment-session (visit) row. */
+interface SessionRow {
+  visit_number?: string | number;
+  visit_date?: string;
+  session_findings?: string;
+  findings?: string;
+  work_done?: string;
+}
+
+/** One invoice line item. */
+interface InvoiceItem {
+  item_type?: string;
+  description?: string;
+  hsn_code?: string;
+  hsnCode?: string;
+  total_amount?: string | number;
+  amount?: string | number;
+  billed_amount?: string | number;
+  discount_value?: string | number;
+  item_discount?: string | number;
+}
+
+/** A family/corporate member attached to a patient or invoice. */
+interface InvoiceMember {
+  id?: string;
+  member_id?: string;
+  memberId?: string;
+  patient_id?: string;
+  relationship_type?: string;
+  relationshipType?: string;
+}
+
 interface PDFGeneratorParams {
   type: PDFReportType;
-  patient: {
-    id: string;
-    patientName: string;
-    phone?: string;
-    doctorName?: string;
-    treatmentType?: string;
-  };
-  consultationData: any;
+  patient: PDFPatient;
+  consultationData: DynamicPayload;
   toothChartState?: Record<number, string>;
 }
 
@@ -128,9 +215,9 @@ async function waitForAssets(node: HTMLElement) {
       });
     }),
   );
-  if ((document as any).fonts?.ready) {
+  if (document.fonts?.ready) {
     try {
-      await (document as any).fonts.ready;
+      await document.fonts.ready;
     } catch {
       /* no-op */
     }
@@ -389,16 +476,6 @@ function makeOffscreenContainer(): HTMLDivElement {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
   return el;
-}
-
-/** Computes a whole-number age from a DOB string, if one is available. */
-function ageFromDOB(dob?: string): string | null {
-  if (!dob) return null;
-  const d = new Date(dob);
-  if (isNaN(d.getTime())) return null;
-  const diff = Date.now() - d.getTime();
-  const age = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
-  return age >= 0 ? String(age) : null;
 }
 
 /** New premium header: large curved brand-color panel top-left (pure CSS,
@@ -757,23 +834,11 @@ export const downloadConsultationPDF = async ({
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
 
-  // Safely extract doctor details from API payload structure (e.g. responseObject.data or directly)
-  let doctorObj: any = {};
-  if (consultationData.responseObject?.data?.doctor) {
-    doctorObj = consultationData.responseObject.data.doctor;
-  } else if (consultationData.data?.doctor) {
-    doctorObj = consultationData.data.doctor;
-  } else if (consultationData.doctor) {
-    doctorObj = consultationData.doctor;
-  } else if (consultationData.responseObject?.doctor) {
-    doctorObj = consultationData.responseObject.doctor;
-  }
-
   const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
   const specialization = T.DOCTOR_TITLE || "MDS Prosthodontist & Implantologist";
 
   // Safely extract patient details from API payload structure
-  let patientObj: any = {};
+  let patientObj: DynamicPayload = {};
   if (consultationData.responseObject?.data?.patient) {
     patientObj = consultationData.responseObject.data.patient;
   } else if (consultationData.data?.patient) {
@@ -790,20 +855,20 @@ export const downloadConsultationPDF = async ({
   const patientCode =
     patientObj?.patient_code ||
     patientObj?.patientCode ||
-    (patient as any).patient_code ||
-    (patient as any).patientCode;
+    patient.patient_code ||
+    patient.patientCode;
   const displayPatientId = isBlankMode
     ? ""
     : (patientCode || (patientId === "-" ? "-" : patientId.split("-")[0]));
   const rawPatientPhone = isBlankMode ? "" : (patientObj?.phone || patient.phone || "");
-  const patientCountryCode = isBlankMode ? "" : (patientObj?.country_code || patientObj?.countryCode || (patient as any).country_code || (patient as any).countryCode || "+91");
+  const patientCountryCode = isBlankMode ? "" : (patientObj?.country_code || patientObj?.countryCode || patient.country_code || patient.countryCode || "+91");
   const patientPhone = isBlankMode ? "" : (rawPatientPhone ? formatPhoneWithCountryCode(rawPatientPhone, patientCountryCode) : "-");
-  const patientGender = isBlankMode ? "" : (patientObj?.gender || (patient as any).gender || "-");
-  let patientDobRaw =
+  const patientGender = isBlankMode ? "" : (patientObj?.gender || patient.gender || "-");
+  const patientDobRaw =
     patientObj?.date_of_birth ||
     patientObj?.dob ||
-    (patient as any).date_of_birth ||
-    (patient as any).dob;
+    patient.date_of_birth ||
+    patient.dob;
   let patientDob = isBlankMode ? "" : "-";
   if (!isBlankMode && patientDobRaw) {
     try {
@@ -817,13 +882,13 @@ export const downloadConsultationPDF = async ({
       } else {
         patientDob = patientDobRaw;
       }
-    } catch (e) {
+    } catch {
       patientDob = patientDobRaw;
     }
   }
   const patientBloodGroup = isBlankMode ? "" : (
     patientObj?.blood_group ||
-    (patient as any).bloodGroup ||
+    patient.bloodGroup ||
     "-"
   ).replace("_", " ");
 
@@ -895,12 +960,14 @@ export const downloadConsultationPDF = async ({
     consultationData.data?.data?.tooth_findings ||
     [];
   if (Array.isArray(toothFindingsArray)) {
-    toothFindingsArray.forEach((finding: any) => {
-      if (finding.tooth_number && finding.condition) {
-        if (finding.condition === 'OTHER' && finding.other_condition) {
-          finalToothChart[finding.tooth_number] = finding.other_condition;
+    toothFindingsArray.forEach((finding: ToothFinding) => {
+      const toothNumber = finding.tooth_number;
+      const condition = finding.condition;
+      if (toothNumber && condition) {
+        if (condition === 'OTHER' && finding.other_condition) {
+          finalToothChart[toothNumber] = finding.other_condition;
         } else {
-          finalToothChart[finding.tooth_number] = typeof finding.condition === 'string' ? finding.condition.replace('_', ' ') : finding.condition;
+          finalToothChart[toothNumber] = typeof condition === 'string' ? condition.replace('_', ' ') : String(condition);
         }
       }
     });
@@ -925,7 +992,7 @@ export const downloadConsultationPDF = async ({
     consultationData.responseObject?.data?.prescriptions ||
     [];
   const filledPrescriptions = rawPrescriptions.filter(
-    (p: any) =>
+    (p: PrescriptionRow) =>
       p.medicine_id ||
       p.medicine_name ||
       p.medicineName ||
@@ -940,7 +1007,7 @@ export const downloadConsultationPDF = async ({
   );
   const hasTreatmentData = Boolean(
     consultationData.requiresTreatment || consultationData.requires_treatment,
-  ) || treatmentsArray.some((t: any) =>
+  ) || treatmentsArray.some((t: TreatmentRow) =>
       t && (
         t.procedure ||
         t.treatment_type ||
@@ -1073,7 +1140,7 @@ export const downloadConsultationPDF = async ({
 <tbody>
             ${treatmentsArray
           .map(
-            (t: any, i: number) => `
+            (t: TreatmentRow, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${(t.tooth_number || t.tooth) === "FM" ? "Full Mouth" : `#${t.tooth_number || t.tooth || "General"}`}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${t.procedure || t.treatment_type || "-"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1153,7 +1220,7 @@ ${isBlankMode
 <tbody>
           ${filledPrescriptions
           .map(
-            (p: any, i: number) => `
+            (p: PrescriptionRow, i: number) => `
 <tr style="border-bottom:1px solid #eef0f1; ${i % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${i + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
 <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine?.medicine_name || p.medicine_name || p.medicineName || (typeof p.medicine === "string" ? p.medicine : "") || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1249,7 +1316,7 @@ ${isBlankMode
   await renderContainerToPDF(pdfContainer, outputFileName);
 };
 
-export const downloadCompletedTreatmentPDF = async (treatment: any) => {
+export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) => {
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
@@ -1326,7 +1393,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
     <tbody>
       ${sessions
           .map(
-            (s: any, idx: number) => `
+            (s: SessionRow, idx: number) => `
         <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`Visit #${s.visit_number || idx + 1}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
           <td style="padding:0; vertical-align:middle;">${makeCellContent(`${s.visit_date ? new Date(s.visit_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"}`, "left", `font-size:12px; color:${T.INK_MUTED};`)}</td>
@@ -1369,7 +1436,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
     </thead>
     <tbody>
       ${prescriptions
-          .map((p: any, idx: number) => `
+          .map((p: PrescriptionRow, idx: number) => `
           <tr style="border-bottom:1px solid ${T.LINE}; ${idx % 2 === 0 ? "" : `background:#fafafa;`}" data-avoid-break="true">
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${idx + 1}`, "left", `font-size:12px; color:#93999e;`)}</td>
             <td style="padding:0; vertical-align:middle;">${makeCellContent(`${p.medicine?.name || p.medicine_name || p.medicineName || "N/A"}`, "left", `font-size:12px; font-weight:400; color:${T.INK};`)}</td>
@@ -1440,75 +1507,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 // Invoice / consolidated statement
 // ---------------------------------------------------------------------------
 
-const INK_BORDER = "#2d2d2d";
-const CELL_LINE = "#c8ccd0";
-const PANEL_BG = "#f2f2f2";
-
-function numberToWords(n: number): string {
-  const ONES = [
-    "",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen",
-  ];
-  const TENS = [
-    "",
-    "",
-    "Twenty",
-    "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety",
-  ];
-  if (n === 0) return "Zero";
-  if (n < 20) return ONES[n];
-  if (n < 100)
-    return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
-  if (n < 1000)
-    return (
-      ONES[Math.floor(n / 100)] +
-      " Hundred" +
-      (n % 100 ? " " + numberToWords(n % 100) : "")
-    );
-  if (n < 100000)
-    return (
-      numberToWords(Math.floor(n / 1000)) +
-      " Thousand" +
-      (n % 1000 ? " " + numberToWords(n % 1000) : "")
-    );
-  if (n < 10000000)
-    return (
-      numberToWords(Math.floor(n / 100000)) +
-      " Lakh" +
-      (n % 100000 ? " " + numberToWords(n % 100000) : "")
-    );
-  return (
-    numberToWords(Math.floor(n / 10000000)) +
-    " Crore" +
-    (n % 10000000 ? " " + numberToWords(n % 10000000) : "")
-  );
-}
-
-export const generateInvoicePDF = async (invoice: any, patient: any) => {
+export const generateInvoicePDF = async (invoice: DynamicPayload, patient: DynamicPayload) => {
   // The history API returns one invoice inside responseObject.data.invoices.
   invoice = invoice?.responseObject?.data?.invoices?.[0] || invoice;
   const pdfContainer = makeOffscreenContainer();
@@ -1520,7 +1519,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const targetMemberId = invoice.member_id || invoice.memberId || invoice.member?.id;
   const matchedMember = (Array.isArray(patient?.members) && targetMemberId)
-    ? patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId)
+    ? patient.members.find((m: InvoiceMember) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId)
     : null;
 
   const findPatientName = () => {
@@ -1545,7 +1544,6 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     patient?.patientCode;
   const displayPatientId = String(patientCode || patientIdValue || "").trim() || "N/A";
 
-  const invoiceNumber = invoice.invoice_number || invoice.id || "—";
   const invoiceDateValue = invoice.date || invoice.invoice_date;
   const invoiceDate = invoiceDateValue
     ? new Date(invoiceDateValue).toLocaleDateString("en-IN", {
@@ -1559,48 +1557,10 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
       year: "numeric",
     });
 
-  const rawPayments = invoice.invoice_payments || [];
-  const calculatedPaidAmount = rawPayments.reduce(
-    (sum: number, p: any) => sum + (Number(p.amount) || 0),
-    0,
-  );
-  const paidAmount =
-    invoice.paidAmount !== undefined
-      ? Number(invoice.paidAmount)
-      : calculatedPaidAmount;
   const discountAmount = Number(invoice.discountAmount || 0);
   const discountPct = Number(invoice.discount || 0);
-  const taxAmount = Number(invoice.taxAmount || 0);
-  const taxPct = Number(invoice.tax || 0);
   const grandTotal = Number(invoice.grand_total || 0);
 
-  const isMemberCheck =
-    invoice.isMemberInvoice ||
-    !!(
-      invoice.member_id ||
-      invoice.memberId ||
-      patient?.memberId ||
-      patient?.member_id
-    );
-
-  const gender =
-    matchedMember?.gender ||
-    patient?.gender ||
-    invoice.member?.gender ||
-    invoice.patient?.gender ||
-    "—";
-
-  const dobValue =
-    matchedMember?.dob ||
-    matchedMember?.date_of_birth ||
-    matchedMember?.dateOfBirth ||
-    patient?.dob ||
-    patient?.dateOfBirth ||
-    invoice.member?.dob ||
-    invoice.patient?.dob;
-
-  const age = patient?.age || ageFromDOB(dobValue) || "—";
-  const ageGender = age !== "—" || gender !== "—" ? `${age} / ${gender}` : "—";
 
   const phone =
     invoice.phone ||
@@ -1609,28 +1569,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     invoice.patient?.phone ||
     "—";
 
-  const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
-
   const statementDateFormatted = invoiceDate;
-
-  let dueDateFormatted = "";
-  if (invoice.dueDate) {
-    dueDateFormatted = new Date(invoice.dueDate).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  } else {
-    const baseDate = invoice.date ? new Date(invoice.date) : new Date();
-    const fallbackDueDate = new Date(
-      baseDate.getTime() + 6 * 24 * 60 * 60 * 1000,
-    );
-    dueDateFormatted = fallbackDueDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }
 
   const formatCurrency = (val: number) => {
     if (val % 1 === 0) {
@@ -1652,7 +1591,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
     </div>
   `, T);
 
-  const items: any[] = invoice.items || [];
+  const items: InvoiceItem[] = invoice.items || [];
 
   // Extract values for the right column from the single invoice response.
   const firstInvoiceNumber = invoice.invoice_number || "—";
@@ -1668,12 +1607,12 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
     if (Array.isArray(patient?.members) && patient.members.length > 0) {
       if (targetMemberId) {
-        const found = patient.members.find((m: any) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId);
+        const found = patient.members.find((m: InvoiceMember) => m.id === targetMemberId || m.member_id === targetMemberId || m.patient_id === targetMemberId);
         if (found?.member_id) return found.member_id;
         if (found?.memberId) return found.memberId;
       }
       
-      const selfMember = patient.members.find((m: any) => m?.relationship_type === "SELF" || m?.relationshipType === "SELF");
+      const selfMember = patient.members.find((m: InvoiceMember) => m?.relationship_type === "SELF" || m?.relationshipType === "SELF");
       if (selfMember?.member_id) return selfMember.member_id;
       if (selfMember?.memberId) return selfMember.memberId;
       if (selfMember?.id) return selfMember.id;
@@ -1702,14 +1641,8 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const memberId = String(findMemberId()).trim() || "N/A";
 
-  const rows: Array<[string, string, string, string]> = [
-    ["Name", patientName, "Date", firstItemDate],
-    ["Patient ID", displayPatientId, "Invoice No.", firstInvoiceNumber],
-    ["Member ID", memberId, "Phone", phone],
-  ];
-
   const itemsHtml = items
-    .map((item: any, i: number) => {
+    .map((item: InvoiceItem, i: number) => {
       const itemType = item.item_type || "Service";
       const formattedType =
         itemType.charAt(0).toUpperCase() +
@@ -1722,7 +1655,6 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
           : "";
 
       const hsnCode = item.hsn_code || item.hsnCode || DEFAULT_SAC_CODE;
-      const totalVal = Number(item.total_amount || item.amount || 0);
       const billedVal = Number(item.billed_amount || item.amount || 0);
       const discountPct = Number(item.discount_value || item.item_discount || 0);
       const displayDiscount = discountPct > 0 ? `${discountPct}%` : "—";
@@ -1826,7 +1758,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
               <tbody>
                 <tr>
                   <td style="padding:5px 0; font-size:12px; font-weight:400; vertical-align:middle;">Total Amount</td>
-                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px; vertical-align:middle;">${formatCurrency(items.reduce((s: number, it: any) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
+                  <td style="padding:5px 0; text-align:right; font-size:12px; font-weight:400; padding-right:10px; vertical-align:middle;">${formatCurrency(items.reduce((s: number, it: InvoiceItem) => s + Number(it.total_amount || it.amount || 0), 0))}</td>
                 </tr>
                 ${discountAmount > 0
       ? `

@@ -1,9 +1,10 @@
+import type { ApiAny } from "../types/api";
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useStaffQuery } from './staff/useStaffQuery';
 import { useDeleteStaffMutation } from './staff/useDeleteStaffMutation';
 import { useUpdateStaffStatusMutation } from './staff/useUpdateStaffStatusMutation';
-import { FILE_BASE_URL, getFileUrl } from '../services/apiClient';
+import { getFileUrl } from '../services/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function useStaffData(params?: { search?: string; role?: string; enabled?: boolean; page?: number; limit?: number; all?: boolean }) {
@@ -49,25 +50,25 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     queryClient.invalidateQueries({ queryKey: ['staff'] });
   }, [queryClient]);
 
-  const [emrRecords, setEmrRecords] = useLocalStorage<any[]>('emrRecords', []);
-  const [consentForms, setConsentForms] = useLocalStorage<any[]>('consentForms', []);
+  const [emrRecords, setEmrRecords] = useLocalStorage<ApiAny[]>('emrRecords', []);
+  const [consentForms, setConsentForms] = useLocalStorage<ApiAny[]>('consentForms', []);
 
   const staffMembers = useMemo(() => {
-    let rawStaffList: any[] = [];
+    let rawStaffList: ApiAny[] = [];
     if (Array.isArray(apiStaff)) {
       rawStaffList = apiStaff;
-    } else if (apiStaff && Array.isArray((apiStaff as any).data?.staffs)) {
-      rawStaffList = (apiStaff as any).data.staffs;
-    } else if (apiStaff && Array.isArray((apiStaff as any).data?.staff)) {
-      rawStaffList = (apiStaff as any).data.staff;
-    } else if (apiStaff && Array.isArray((apiStaff as any).data?.data)) {
-      rawStaffList = (apiStaff as any).data.data;
-    } else if (apiStaff && Array.isArray((apiStaff as any).data)) {
-      rawStaffList = (apiStaff as any).data;
-    } else if (apiStaff && Array.isArray((apiStaff as any).staffs)) {
-      rawStaffList = (apiStaff as any).staffs;
-    } else if (apiStaff && Array.isArray((apiStaff as any).responseObject?.data)) {
-      rawStaffList = (apiStaff as any).responseObject.data;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).data?.staffs)) {
+      rawStaffList = (apiStaff as ApiAny).data.staffs;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).data?.staff)) {
+      rawStaffList = (apiStaff as ApiAny).data.staff;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).data?.data)) {
+      rawStaffList = (apiStaff as ApiAny).data.data;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).data)) {
+      rawStaffList = (apiStaff as ApiAny).data;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).staffs)) {
+      rawStaffList = (apiStaff as ApiAny).staffs;
+    } else if (apiStaff && Array.isArray((apiStaff as ApiAny).responseObject?.data)) {
+      rawStaffList = (apiStaff as ApiAny).responseObject.data;
     }
 
     return rawStaffList.map(s => {
@@ -85,10 +86,10 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
       else normalizedRole = 'staff';
 
       // Construct documents array from API fields
-      const documents: any[] = [];
+      const documents: ApiAny[] = [];
       if (Array.isArray(s.files)) {
 
-        s.files.forEach((file: any) => {
+        s.files.forEach((file: ApiAny) => {
           let uiType = file.category || "Unknown";
           const cat = file.category?.toUpperCase() || "";
 
@@ -152,29 +153,29 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
   const handleDeleteStaff = async (id: string) => {
     try {
       await deleteStaffMutation({ id });
-    } catch (e) {
+    } catch (_e) { /* the mutation surfaces its own error toast */
     }
   };
 
   const handleUpdateStaffStatus = async (id: string, status: "ACTIVE" | "INACTIVE") => {
     try {
       await updateStatusMutation({ id, status });
-    } catch (e) {
+    } catch (_e) { /* the mutation surfaces its own error toast */
     }
   };
 
-  const handleSaveStaff = async (staff: any) => {
+  const handleSaveStaff = async (staff: ApiAny) => {
     const queryCache = queryClient.getQueryCache();
     const staffQueries = queryCache.findAll({ queryKey: ["staff"] });
 
     staffQueries.forEach((query) => {
-      queryClient.setQueryData(query.queryKey, (oldData: any) => {
+      queryClient.setQueryData(query.queryKey, (oldData: ApiAny) => {
         if (!oldData) return oldData;
 
-        let isArray = Array.isArray(oldData);
-        let rawStaffList = isArray ? oldData : (oldData?.data?.staffs || oldData?.data?.staff || oldData?.data?.data || oldData?.data || oldData?.staffs || oldData?.responseObject?.data || []);
+        const isArray = Array.isArray(oldData);
+        const rawStaffList = isArray ? oldData : (oldData?.data?.staffs || oldData?.data?.staff || oldData?.data?.data || oldData?.data || oldData?.staffs || oldData?.responseObject?.data || []);
 
-        const updatedList = rawStaffList.map((s: any) => {
+        const updatedList = rawStaffList.map((s: ApiAny) => {
           if (s.id === staff.id) {
             const updated = { ...s, ...staff };
             if (updated.personal_profile) {
@@ -202,7 +203,7 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     });
   };
 
-  const handleSaveEMR = (record: any) => {
+  const handleSaveEMR = (record: ApiAny) => {
     setEmrRecords(prev => {
       const existing = prev.find(r => r.id === record.id);
       const withId = { ...record, id: record.id || `EMR-${Date.now()}` };
@@ -214,7 +215,7 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
     setEmrRecords(prev => prev.filter(r => r.id !== id));
   };
 
-  const handleSaveConsentForm = (form: any) => {
+  const handleSaveConsentForm = (form: ApiAny) => {
     setConsentForms(prev => {
       const existing = prev.find(f => f.id === form.id);
       const withId = { ...form, id: form.id || `CONSENT-${Date.now()}` };
@@ -228,16 +229,16 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
 
   const totalItems = useMemo(() => {
     return (
-      (apiStaff as any)?.pagination?.total ||
-      (apiStaff as any)?.pagination?.total_items ||
-      (apiStaff as any)?.data?.pagination?.total ||
-      (apiStaff as any)?.data?.pagination?.total_items ||
-      (apiStaff as any)?.responseObject?.data?.pagination?.total ||
-      (apiStaff as any)?.responseObject?.data?.pagination?.total_items ||
-      (apiStaff as any)?.total ||
-      (apiStaff as any)?.total_elements ||
-      (apiStaff as any)?.totalElements ||
-      (apiStaff as any)?.count ||
+      (apiStaff as ApiAny)?.pagination?.total ||
+      (apiStaff as ApiAny)?.pagination?.total_items ||
+      (apiStaff as ApiAny)?.data?.pagination?.total ||
+      (apiStaff as ApiAny)?.data?.pagination?.total_items ||
+      (apiStaff as ApiAny)?.responseObject?.data?.pagination?.total ||
+      (apiStaff as ApiAny)?.responseObject?.data?.pagination?.total_items ||
+      (apiStaff as ApiAny)?.total ||
+      (apiStaff as ApiAny)?.total_elements ||
+      (apiStaff as ApiAny)?.totalElements ||
+      (apiStaff as ApiAny)?.count ||
       staffMembers.length ||
       0
     );
@@ -245,14 +246,14 @@ export function useStaffData(params?: { search?: string; role?: string; enabled?
 
   const totalPages = useMemo(() => {
     return (
-      (apiStaff as any)?.pagination?.totalPages ||
-      (apiStaff as any)?.pagination?.total_pages ||
-      (apiStaff as any)?.data?.pagination?.totalPages ||
-      (apiStaff as any)?.data?.pagination?.total_pages ||
-      (apiStaff as any)?.responseObject?.data?.pagination?.totalPages ||
-      (apiStaff as any)?.responseObject?.data?.pagination?.total_pages ||
-      (apiStaff as any)?.totalPages ||
-      (apiStaff as any)?.total_pages ||
+      (apiStaff as ApiAny)?.pagination?.totalPages ||
+      (apiStaff as ApiAny)?.pagination?.total_pages ||
+      (apiStaff as ApiAny)?.data?.pagination?.totalPages ||
+      (apiStaff as ApiAny)?.data?.pagination?.total_pages ||
+      (apiStaff as ApiAny)?.responseObject?.data?.pagination?.totalPages ||
+      (apiStaff as ApiAny)?.responseObject?.data?.pagination?.total_pages ||
+      (apiStaff as ApiAny)?.totalPages ||
+      (apiStaff as ApiAny)?.total_pages ||
       Math.max(1, Math.ceil(totalItems / limit))
     );
   }, [apiStaff, totalItems, limit]);

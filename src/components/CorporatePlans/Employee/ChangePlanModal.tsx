@@ -47,7 +47,7 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       refetch();
       setChangePlanEmp(null);
-    } catch (err) {
+    } catch (_err) { /* the mutation surfaces its own error toast */
     }
   };
 

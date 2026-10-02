@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React from 'react';
 import {
   Calendar, TrendingUp, Users, AlertTriangle, CreditCard, Building2,
@@ -19,7 +20,7 @@ import {
   usePatientRetention
 } from '../../hooks/dashboard/useDashboardAnalytics';
 
-const extractValue = (data: any): string | number => {
+const extractValue = (data: ApiAny): string | number => {
   if (data === null || data === undefined) return 0;
   if (typeof data === 'number' || typeof data === 'string') return data;
   if (typeof data === 'object') {
@@ -51,7 +52,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
   const { data: revenueTrend = [] } = useRevenueTrend();
 
   const mappedRevenueTrend = React.useMemo(() => {
-    let arr = revenueTrend as any;
+    let arr = revenueTrend as ApiAny;
     if (arr && typeof arr === 'object' && !Array.isArray(arr)) {
       if (Array.isArray(arr.data)) arr = arr.data;
       else if (Array.isArray(arr.items)) arr = arr.items;
@@ -61,7 +62,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
 
     if (!Array.isArray(arr)) return [];
 
-    return arr.map((d: any) => ({
+    return arr.map((d: ApiAny) => ({
       date: d.month || d.date || d.name || '',
       revenue: typeof d.invoiced === 'number' ? d.invoiced : (Number(d.revenue) || Number(d.invoiced) || 0),
       collected: typeof d.collected === 'number' ? d.collected : (Number(d.collected) || 0)

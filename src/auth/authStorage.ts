@@ -1,3 +1,4 @@
+import type { ApiAny } from "../types/api";
 import type { User } from "../types";
 import type { ThemeData } from "../contexts/ThemeContext";
 import Cookies from "js-cookie";
@@ -42,7 +43,7 @@ export const AuthStorage = {
     }
   },
 
-  saveCurrentUser: (user: any, remember: boolean) => {
+  saveCurrentUser: (user: ApiAny, remember: boolean) => {
     if (remember) {
       // Store in cookies (persistent)
       Cookies.set("current_user", JSON.stringify(user), { path: "/" });
@@ -59,7 +60,7 @@ export const AuthStorage = {
     try {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
-    } catch (error) {
+    } catch (_error) { /* stored JSON is corrupt - fall through to the null return below */
     }
 
     return null;
@@ -72,7 +73,7 @@ export const AuthStorage = {
     try {
       if (userFromCookie) return JSON.parse(userFromCookie);
       if (userFromSession) return JSON.parse(userFromSession);
-    } catch (error) {
+    } catch (_error) {
       AuthStorage.clear(); // Clear corrupt data
     }
 

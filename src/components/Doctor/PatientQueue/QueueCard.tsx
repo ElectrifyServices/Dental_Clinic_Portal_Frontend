@@ -1,18 +1,7 @@
+import type { ApiAny } from "../../../types/api";
 import { useState, useEffect } from "react";
-import {
-  User,
-  Clock,
-  Phone,
-  Stethoscope,
-  MessageSquare,
-  AlertTriangle,
-  FileText,
-  CheckCircle,
-  IndianRupee,
-  MessageCircle,
-} from "lucide-react";
+import { User, Clock, Stethoscope, MessageSquare, AlertTriangle, FileText, CheckCircle, IndianRupee, MessageCircle } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "@/services/apiClient";
 import { useModal } from "@/contexts/ModalContext";
@@ -59,13 +48,13 @@ function useWaitingTime(checkInTime: string) {
 }
 
 interface QueueCardProps {
-  patient: any;
-  fullPatient: any;
+  patient: ApiAny;
+  fullPatient: ApiAny;
   getStatusColor: (s: string) => string;
   getStatusIcon: (s: string) => JSX.Element;
   onUpdatePatientStatus: (id: string, s: string) => void;
-  onSelectPatient: (p: any) => void;
-  onEditConsultation?: (p: any) => void;
+  onSelectPatient: (p: ApiAny) => void;
+  onEditConsultation?: (p: ApiAny) => void;
 }
 
 export function QueueCard({
@@ -77,14 +66,14 @@ export function QueueCard({
   onSelectPatient,
   onEditConsultation,
 }: QueueCardProps) {
-  const waitingTime = useWaitingTime(patient.checkInTime);
+  const _waitingTime = useWaitingTime(patient.checkInTime);
   const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
-  const age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
+  const _age = fullPatient ? calcAge(fullPatient.dateOfBirth) : null;
   const gender = fullPatient?.gender || "";
   
   const [showAllAllergies, setShowAllAllergies] = useState(false);
   
-  const extractNames = (list: any, keyName: string) => {
+  const extractNames = (list: ApiAny, keyName: string) => {
     if (!list) return [];
     if (typeof list === 'string') return list.split('\n').filter(Boolean);
     if (Array.isArray(list)) {

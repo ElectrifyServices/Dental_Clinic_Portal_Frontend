@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React, { useState } from 'react';
@@ -9,7 +10,7 @@ interface SalaryPaymentModalProps {
   staffName: string;
   pendingAmount: number;
   onClose: () => void;
-  onSave: (paymentData: any) => void;
+  onSave: (paymentData: ApiAny) => void;
 }
 
 import { usePaySalaryMutation } from '../../hooks/staff/usePaySalaryMutation';
@@ -54,7 +55,7 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
         pending_dues: backendData.pending_dues,
         base_salary: backendData.base_salary,
       });
-    } catch (err: any) {
+    } catch (err: ApiAny) {
       let errMsg = "Failed to record salary payment.";
       const resData = err.response?.data || err;
 

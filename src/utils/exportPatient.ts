@@ -2,14 +2,21 @@ import apiClient from "../services/apiClient";
 import { parseApiResponse } from "../services/parseApiResponse";
 import { normalizePatient } from "../hooks/patients/usePatientDetailQuery";
 import logoImg from '../logo.png';
+/**
+ * Backend payloads for this area arrive in several competing shapes
+ * (snake_case, camelCase and nested wrappers) and are read through long `||`
+ * fallback chains, so the raw payload roots stay deliberately loose.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DynamicPayload = any;
 
 export const exportPatientReport = async (
   patientId: string
 ) => {
-  let patient: any = null;
+  let patient: DynamicPayload = null;
 
-  let dynamicBranding: any = null;
-  let dynamicTheme: any = null;
+  let dynamicBranding: DynamicPayload = null;
+  let dynamicTheme: DynamicPayload = null;
   try {
     const raw = localStorage.getItem("dental_theme");
     if (raw) {
@@ -17,7 +24,9 @@ export const exportPatientReport = async (
       dynamicBranding = parsed.branding || {};
       dynamicTheme = parsed.theme || {};
     }
-  } catch {}
+  } catch {
+    /* no stored theme - fall back to the built-in branding below */
+  }
 
   try {
     const res = await apiClient.request({ url: `/patient/${patientId}`, method: 'get' });
@@ -25,18 +34,19 @@ export const exportPatientReport = async (
     if (parsed.data) {
       patient = normalizePatient(parsed.data);
     }
-  } catch (err) {
+  } catch {
+    /* patient fetch failed - handled by the !patient guard below */
   }
 
   if (!patient) return;
 
   // 1. Fetch appointments
-  let patientAppointments: any[] = [];
+  let patientAppointments: DynamicPayload[] = [];
   try {
     const aptRes = await apiClient.request({ url: `/patient/appointment-history/${patientId}`, method: 'get' });
     const parsed = parseApiResponse(aptRes.data);
     const rawList = parsed.data || [];
-    patientAppointments = rawList.map((a: any) => ({
+    patientAppointments = rawList.map((a: DynamicPayload) => ({
       ...a,
       id: a.id,
       patientName: a.patient_name || a.patientName,
@@ -56,10 +66,12 @@ export const exportPatientReport = async (
       patientId: a.patient_id,
       duration: a.slot_duration_mins || a.duration || 15,
     }));
-  } catch (err) { }
+  } catch {
+    /* section fetch failed - the report renders without it */
+  }
 
   // 2. Fetch treatments
-  let patientTreatments: any[] = [];
+  let patientTreatments: DynamicPayload[] = [];
   try {
     const treatRes = await apiClient.request({
       url: `treatment/patient/list`,
@@ -68,7 +80,7 @@ export const exportPatientReport = async (
     });
     const parsed = parseApiResponse(treatRes.data);
     const rawList = parsed.data?.data || parsed.data || [];
-    patientTreatments = rawList.map((t: any) => ({
+    patientTreatments = rawList.map((t: DynamicPayload) => ({
       ...t,
       id: t.id,
       name: t.procedure || t.name || "",
@@ -78,10 +90,12 @@ export const exportPatientReport = async (
       status: (t.status || "planned").toLowerCase(),
       patientId: t.patient_id,
     }));
-  } catch (err) { }
+  } catch {
+    /* section fetch failed - the report renders without it */
+  }
 
   // 3. Fetch invoices
-  let patientInvoices: any[] = [];
+  let patientInvoices: DynamicPayload[] = [];
   try {
     const invRes = await apiClient.request({
       url: `/invoice/list`,
@@ -90,7 +104,7 @@ export const exportPatientReport = async (
     });
     const parsed = parseApiResponse(invRes.data);
     const rawList = parsed.data?.invoices || parsed.data || [];
-    patientInvoices = rawList.map((inv: any) => ({
+    patientInvoices = rawList.map((inv: DynamicPayload) => ({
       ...inv,
       id: inv.id,
       invoice_number: inv.invoice_number || inv.invoiceNumber || inv.id,
@@ -99,7 +113,9 @@ export const exportPatientReport = async (
       status: (inv.status || "").toLowerCase(),
       patientId: inv.patient_id,
     }));
-  } catch (err) { }
+  } catch {
+    /* section fetch failed - the report renders without it */
+  }
   const prescriptions = patient.prescriptionHistory || [];
 
   const allergiesList = patient.allergyNames?.length ? patient.allergyNames : patient.allergies;
@@ -408,7 +424,7 @@ export const exportPatientReport = async (
       ? `
               <div class="section">
                 <div class="section-title">Prescription History</div>
-                ${prescriptions.map((p: any) => `
+                ${prescriptions.map((p: DynamicPayload) => `
                   <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                       <span style="font-weight: 700; font-size: 11px;">${p.treatment}</span>
@@ -423,7 +439,7 @@ export const exportPatientReport = async (
                         </tr>
                       </thead>
                       <tbody>
-                        ${p.prescriptions.map((m: any) => `
+                        ${p.prescriptions.map((m: DynamicPayload) => `
                         <tr>
                           <td>${m.medicine}</td>
                           <td>${m.dosage}</td>

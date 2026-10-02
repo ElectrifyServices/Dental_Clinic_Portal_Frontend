@@ -1,21 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import React from "react";
-import {
-  User,
-  UserCheck,
-  UserX,
-  Download,
-  QrCode,
-  Phone,
-  Mail,
-  MapPin,
-  AlertTriangle,
-  Edit,
-  Trash2,
-  Calendar,
-  Eye,
-  UserPlus,
-  PowerOff,
-} from "lucide-react";
+import { User, UserCheck, UserX, Download, Phone, Mail, MapPin, AlertTriangle, Edit, Calendar, Eye, UserPlus, PowerOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -53,9 +38,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   patient,
   onView,
   onEdit,
-  onDelete,
+  onDelete: _onDelete,
   onExport,
-  onPrintBarcode,
+  onPrintBarcode: _onPrintBarcode,
   onToggleStatus,
   onToggleCategory,
 }) => {
@@ -72,7 +57,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     }
   };
 
-  const getStatusVariant = (status: string): any => {
+  const getStatusVariant = (status: string): ApiAny => {
     switch (status) {
       case "active":
         return "green";
@@ -184,7 +169,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             <SimpleTooltip content={`Phone: ${patient.phone || "N/A"}`}>
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-                <span className="font-bold truncate">{formatPhoneWithCountryCode(patient.phone, (patient as any).country_code)}</span>
+                <span className="font-bold truncate">{formatPhoneWithCountryCode(patient.phone, (patient as ApiAny).country_code)}</span>
               </div>
             </SimpleTooltip>
             <SimpleTooltip content={`Email: ${patient.email || "N/A"}`}>
@@ -214,7 +199,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           <div className="space-y-1">
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">MEDICAL HISTORY:</span>{" "}
-              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || (patient as any).medical_history?.join(", ") || "None"}
+              {patient.medicalHistoryNames?.join(", ") || patient.medicalHistory?.join(", ") || (patient as ApiAny).medical_history?.join(", ") || "None"}
             </p>
             <p className="text-[10px] font-medium text-orange-800 leading-tight">
               <span className="font-black">ALLERGIES:</span>{" "}
@@ -243,7 +228,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
           <div className="bg-purple-50/30 border border-purple-50 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-purple-600 leading-none mb-0.5">
-              ₹{(patient.outstandingBalance ?? (patient as any).total_pending_balance ?? (patient as any).totalPendingBalance ?? 0).toLocaleString()}
+              ₹{(patient.outstandingBalance ?? (patient as ApiAny).total_pending_balance ?? (patient as ApiAny).totalPendingBalance ?? 0).toLocaleString()}
             </p>
             <p className="text-[8px] font-black text-purple-800 uppercase tracking-wider">
               Balance
@@ -265,7 +250,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                 try {
                   const d = new Date(regVal);
                   return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : regVal;
-                } catch (e) {
+                } catch (_e) {
                   return regVal;
                 }
               })()}
@@ -283,7 +268,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
                 try {
                   const d = new Date(visitVal);
                   return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : visitVal;
-                } catch (e) {
+                } catch (_e) {
                   return visitVal;
                 }
               })()}

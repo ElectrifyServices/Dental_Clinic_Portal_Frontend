@@ -1,17 +1,8 @@
+import type { ApiAny } from "../../types/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
-import {
-  Search,
-  Clock,
-  Stethoscope,
-  CheckCircle,
-  AlertTriangle,
-  History,
-  UserPlus,
-  Users,
-  MessageCircle,
-} from "lucide-react";
+import { Search, Clock, Stethoscope, CheckCircle, AlertTriangle, History, UserPlus, Users } from "lucide-react";
 import { useModal } from "@/contexts/ModalContext";
 import ConsultationHistoryModal from "./ConsultationHistoryModal";
 import { DirectConsultationPopup } from "./DirectConsultationPopup";
@@ -51,11 +42,11 @@ interface PatientQueueProps {
     time?: string,
   ) => void;
   onRegisterNew: (name: string, phone: string) => void;
-  patients: any[];
-  doctors: any[];
-  appointments: any[];
-  doctorAvailability: any[];
-  onUpdateConsultation?: (consultation: any) => Promise<void>;
+  patients: ApiAny[];
+  doctors: ApiAny[];
+  appointments: ApiAny[];
+  doctorAvailability: ApiAny[];
+  onUpdateConsultation?: (consultation: ApiAny) => Promise<void>;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filterStatus: string;
@@ -69,7 +60,7 @@ interface PatientQueueProps {
 }
 
 export function PatientQueue({
-  doctorName,
+  doctorName: _doctorName,
   queuedPatients,
   onSelectPatient,
   onEditConsultation,
@@ -91,7 +82,7 @@ export function PatientQueue({
   onPerPageChange,
   onPageChange,
 }: PatientQueueProps) {
-  const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
+  const { setActiveModal: _setActiveModal, setWhatsappPhone: _setWhatsappPhone, setWhatsappPatientName: _setWhatsappPatientName } = useModal();
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [localFilterStatus, setLocalFilterStatus] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
@@ -128,7 +119,7 @@ export function PatientQueue({
     }
   };
 
-  const safe = (val: any) => (val || "").toString().toLowerCase();
+  const safe = (val: ApiAny) => (val || "").toString().toLowerCase();
 
   const filteredPatients = queuedPatients.filter((patient) => {
     const search = searchTerm.toLowerCase();

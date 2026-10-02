@@ -8,7 +8,7 @@ import { toast, PageHeader } from "../components/ui";
 export const PatientsPage: React.FC = () => {
   const {
     patients,
-    handleSavePatient, handleDeletePatient, handleUpdatePatientStatus,
+    handleDeletePatient, handleUpdatePatientStatus,
     patientSearch, setPatientSearch,
     patientStatus, setPatientStatus,
     patientCategory, setPatientCategory,
@@ -43,7 +43,7 @@ export const PatientsPage: React.FC = () => {
   };
 
   const handleDeletePatientWrapper = (id: string) => {
-    const p = patients.find((x: any) => x.id === id);
+    const p = patients.find((x) => x.id === id);
     confirmDelete(
       "Delete Patient",
       `Delete patient ${p?.name}? All history will be removed.`,
@@ -52,7 +52,7 @@ export const PatientsPage: React.FC = () => {
   };
 
   const handleToggleStatus = async (id: string, status: "active" | "inactive") => {
-    const p = patients.find((x: any) => x.id === id);
+    const p = patients.find((x) => x.id === id);
     if (p) {
       await handleUpdatePatientStatus(id, status === "active" ? "ACTIVE" : "INACTIVE");
       toast.success(`Patient marked as ${status}!`);

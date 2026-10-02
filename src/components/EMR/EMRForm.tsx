@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import React, { useMemo, useState, useEffect } from "react";
-import { Save, FileText, Camera, Upload, Loader2 } from "lucide-react";
+import { Save, FileText, Upload, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,9 +23,9 @@ import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
 
 interface EMRFormProps {
   onClose: () => void;
-  onSave: (record: any) => void;
-  record?: any;
-  patients: any[];
+  onSave: (record: ApiAny) => void;
+  record?: ApiAny;
+  patients: ApiAny[];
 }
 
 const RECORD_TYPE_OPTIONS = [
@@ -36,6 +37,34 @@ const RECORD_TYPE_OPTIONS = [
   { value: "BILLING_RECORD", label: "Billing Record" },
   { value: "APPOINTMENT_VISIT", label: "Appointment Visit" },
 ] as const;
+
+/** Digs the patient array out of whichever envelope the API used. */
+const extractPatients = (data: ApiAny): ApiAny[] => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.responseObject !== undefined) {
+    return extractPatients(data.responseObject);
+  }
+  if (typeof data === "object") {
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data.patients)) return data.patients;
+    if (data.data && typeof data.data === "object") {
+      const nested = extractPatients(data.data);
+      if (nested.length > 0) return nested;
+    }
+    if (data.patients && typeof data.patients === "object") {
+      const nested = extractPatients(data.patients);
+      if (nested.length > 0) return nested;
+    }
+    for (const key of Object.keys(data)) {
+      if (Array.isArray(data[key])) {
+        return data[key];
+      }
+    }
+  }
+  return [];
+};
+
 
 export function EMRForm({
   onClose,
@@ -62,34 +91,9 @@ export function EMRForm({
 
   const { data: rawPatientsData, isLoading: isPatientsLoading } = usePatientQuery({ 
     search: debouncedPatientSearch,
-    filters: { isDropdown: [true] as any } 
+    filters: { isDropdown: [true] as ApiAny } 
   });
   
-  const extractPatients = (data: any): any[] => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (data.responseObject !== undefined) {
-      return extractPatients(data.responseObject);
-    }
-    if (typeof data === "object") {
-      if (Array.isArray(data.data)) return data.data;
-      if (Array.isArray(data.patients)) return data.patients;
-      if (data.data && typeof data.data === "object") {
-        const nested = extractPatients(data.data);
-        if (nested.length > 0) return nested;
-      }
-      if (data.patients && typeof data.patients === "object") {
-        const nested = extractPatients(data.patients);
-        if (nested.length > 0) return nested;
-      }
-      for (const key of Object.keys(data)) {
-        if (Array.isArray(data[key])) {
-          return data[key];
-        }
-      }
-    }
-    return [];
-  };
 
   const apiPatients = useMemo(() => {
     const list = extractPatients(rawPatientsData);
@@ -98,7 +102,7 @@ export function EMRForm({
   }, [rawPatientsData, allPatients]);
 
   const form = useForm<EmrFormData>({
-    resolver: zodResolver(emrSchema) as any,
+    resolver: zodResolver(emrSchema) as ApiAny,
     defaultValues: {
       patientName: record?.patientName ?? "",
       type: record?.type ?? "CONSULTATION",
@@ -175,7 +179,7 @@ export function EMRForm({
                       isLoading={isPatientsLoading}
                        options={[
                         { label: "Select Patient", value: "none" },
-                        ...apiPatients.map((p: any) => {
+                        ...apiPatients.map((p: ApiAny) => {
                           const formattedPhone = p.phone ? (p.country_code ? `${p.country_code} ${p.phone}` : p.phone) : "";
                           return {
                             label: `${p.name} ${formattedPhone ? `(${formattedPhone})` : ""}`,
@@ -185,7 +189,7 @@ export function EMRForm({
                           };
                         })
                       ]}
-                      renderOption={(option: any) => {
+                      renderOption={(option: ApiAny) => {
                         if (option.value === "none") return <span className="truncate pr-2">{option.label}</span>;
                         const p = option.patient;
                         if (!p) return <span className="truncate pr-2">{option.label}</span>;
@@ -219,7 +223,7 @@ export function EMRForm({
                           </div>
                         );
                       }}
-                      renderValue={(option: any) => {
+                      renderValue={(option: ApiAny) => {
                         if (option.value === "none") return option.label;
                         const p = option.patient;
                         if (!p) return option.label;

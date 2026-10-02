@@ -6,9 +6,33 @@ import { useEMRListQuery } from "../hooks/emr/useEMRListQuery";
 import { useMemo, useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 
+/**
+ * The EMR list endpoint returns its rows under several different wrappers
+ * (`data`, `data.data`, `responseObject`, …) and each row's fields are
+ * snake_case or camelCase depending on the source, so rows are read loosely.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EmrRow = any;
+
+/** Query parameters sent to the EMR list endpoint. */
+interface EmrQueryParams {
+  page: number;
+  limit: number;
+  search?: string;
+  filters?: { record_type: string[] };
+}
+
+/** A staff member, narrowed to the fields this page reads. */
+interface StaffRow {
+  id: string;
+  name?: string;
+  role?: string;
+  originalRoleName?: string;
+}
+
 export function MedicalRecordsPage() {
   const { staffMembers } = useStaffData();
-  const { setActiveModal, setSelectedEMRRecord, showToast } = useModal();
+  const { setActiveModal, setSelectedEMRRecord } = useModal();
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -22,7 +46,7 @@ export function MedicalRecordsPage() {
     setPage(1);
   }, [debouncedSearch, typeFilter]);
 
-  const queryParams: any = { page, limit };
+  const queryParams: EmrQueryParams = { page, limit };
   if (debouncedSearch) {
     queryParams.search = debouncedSearch;
   }
@@ -35,22 +59,22 @@ export function MedicalRecordsPage() {
   const { data: rawEmrData } = useEMRListQuery(queryParams, { refetchOnMount: "always" });
 
   const emrRecords = useMemo(() => {
-    let rawList: any[] = [];
+    let rawList: EmrRow[] = [];
     if (Array.isArray(rawEmrData)) {
       rawList = rawEmrData;
-    } else if (rawEmrData && Array.isArray((rawEmrData as any).data?.data)) {
-      rawList = (rawEmrData as any).data.data;
-    } else if (rawEmrData && Array.isArray((rawEmrData as any).data)) {
-      rawList = (rawEmrData as any).data;
-    } else if (rawEmrData && Array.isArray((rawEmrData as any).responseObject?.data)) {
-      rawList = (rawEmrData as any).responseObject.data;
-    } else if (rawEmrData && Array.isArray((rawEmrData as any).responseObject)) {
-      rawList = (rawEmrData as any).responseObject;
+    } else if (rawEmrData && Array.isArray((rawEmrData as EmrRow).data?.data)) {
+      rawList = (rawEmrData as EmrRow).data.data;
+    } else if (rawEmrData && Array.isArray((rawEmrData as EmrRow).data)) {
+      rawList = (rawEmrData as EmrRow).data;
+    } else if (rawEmrData && Array.isArray((rawEmrData as EmrRow).responseObject?.data)) {
+      rawList = (rawEmrData as EmrRow).responseObject.data;
+    } else if (rawEmrData && Array.isArray((rawEmrData as EmrRow).responseObject)) {
+      rawList = (rawEmrData as EmrRow).responseObject;
     }
 
     // Group rawList by patient_id
-    const groups: { [key: string]: any[] } = {};
-    rawList.forEach((r: any) => {
+    const groups: { [key: string]: EmrRow[] } = {};
+    rawList.forEach((r: EmrRow) => {
       const patientId = r.patient_id || r.patient?.id || "unknown";
       if (!groups[patientId]) {
         groups[patientId] = [];
@@ -84,7 +108,7 @@ export function MedicalRecordsPage() {
       // Resolve last doctor
       let lastDoctorName = "-";
       if (latestRecord.created_by) {
-        const staff = staffMembers?.find((s: any) => s.id === latestRecord.created_by);
+        const staff = staffMembers?.find((s: StaffRow) => s.id === latestRecord.created_by);
         if (staff) {
           const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
           const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
@@ -114,13 +138,13 @@ export function MedicalRecordsPage() {
         content: latestRecord.content || "-",
         doctorName: lastDoctorName,
         attachments: Array.isArray(latestRecord.attachments)
-          ? latestRecord.attachments.map((file: any) => typeof file === "string" ? file : file.file_url || file.url)
+          ? latestRecord.attachments.map((file: EmrRow) => typeof file === "string" ? file : file.file_url || file.url)
           : [],
-        timeline: groupRecords.map((r: any) => {
-          let formattedItemDate = r.created_at || new Date().toISOString();
+        timeline: groupRecords.map((r: EmrRow) => {
+          const formattedItemDate = r.created_at || new Date().toISOString();
           let itemDoctor = "-";
           if (r.created_by) {
-            const staff = staffMembers?.find((s: any) => s.id === r.created_by);
+            const staff = staffMembers?.find((s: StaffRow) => s.id === r.created_by);
             if (staff) {
               const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
               const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
@@ -135,7 +159,7 @@ export function MedicalRecordsPage() {
             category: (r.record_type || "consultation").toLowerCase(),
             doctorName: itemDoctor,
             attachments: Array.isArray(r.attachments)
-              ? r.attachments.map((file: any) => typeof file === "string" ? file : file.file_url || file.url)
+              ? r.attachments.map((file: EmrRow) => typeof file === "string" ? file : file.file_url || file.url)
               : []
           };
         })
@@ -145,16 +169,16 @@ export function MedicalRecordsPage() {
 
   const totalItems = useMemo(() => {
     return (
-      (rawEmrData as any)?.pagination?.total ||
-      (rawEmrData as any)?.pagination?.total_items ||
-      (rawEmrData as any)?.data?.pagination?.total ||
-      (rawEmrData as any)?.data?.pagination?.total_items ||
-      (rawEmrData as any)?.responseObject?.data?.pagination?.total ||
-      (rawEmrData as any)?.responseObject?.data?.pagination?.total_items ||
-      (rawEmrData as any)?.total ||
-      (rawEmrData as any)?.total_elements ||
-      (rawEmrData as any)?.totalElements ||
-      (rawEmrData as any)?.count ||
+      (rawEmrData as EmrRow)?.pagination?.total ||
+      (rawEmrData as EmrRow)?.pagination?.total_items ||
+      (rawEmrData as EmrRow)?.data?.pagination?.total ||
+      (rawEmrData as EmrRow)?.data?.pagination?.total_items ||
+      (rawEmrData as EmrRow)?.responseObject?.data?.pagination?.total ||
+      (rawEmrData as EmrRow)?.responseObject?.data?.pagination?.total_items ||
+      (rawEmrData as EmrRow)?.total ||
+      (rawEmrData as EmrRow)?.total_elements ||
+      (rawEmrData as EmrRow)?.totalElements ||
+      (rawEmrData as EmrRow)?.count ||
       emrRecords.length ||
       0
     );
@@ -162,24 +186,24 @@ export function MedicalRecordsPage() {
 
   const totalPages = useMemo(() => {
     return (
-      (rawEmrData as any)?.pagination?.totalPages ||
-      (rawEmrData as any)?.pagination?.total_pages ||
-      (rawEmrData as any)?.data?.pagination?.totalPages ||
-      (rawEmrData as any)?.data?.pagination?.total_pages ||
-      (rawEmrData as any)?.responseObject?.data?.pagination?.totalPages ||
-      (rawEmrData as any)?.responseObject?.data?.pagination?.total_pages ||
-      (rawEmrData as any)?.totalPages ||
-      (rawEmrData as any)?.total_pages ||
+      (rawEmrData as EmrRow)?.pagination?.totalPages ||
+      (rawEmrData as EmrRow)?.pagination?.total_pages ||
+      (rawEmrData as EmrRow)?.data?.pagination?.totalPages ||
+      (rawEmrData as EmrRow)?.data?.pagination?.total_pages ||
+      (rawEmrData as EmrRow)?.responseObject?.data?.pagination?.totalPages ||
+      (rawEmrData as EmrRow)?.responseObject?.data?.pagination?.total_pages ||
+      (rawEmrData as EmrRow)?.totalPages ||
+      (rawEmrData as EmrRow)?.total_pages ||
       Math.max(1, Math.ceil(totalItems / limit))
     );
   }, [rawEmrData, totalItems, limit]);
 
   const onAddRecord = () => setActiveModal("emrForm");
-  const onViewRecord = (r: any) => {
+  const onViewRecord = (r: EmrRow) => {
     setSelectedEMRRecord(r);
     setActiveModal("emrViewer");
   };
-  const onExportRecord = async (r: any) => {
+  const onExportRecord = async (r: EmrRow) => {
     const timeline = r.timeline || [];
     await generateEMRPDF(r.patientName || "Patient", timeline, r.type);
   };

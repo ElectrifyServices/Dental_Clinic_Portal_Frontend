@@ -1,3 +1,4 @@
+import type { ApiRecord } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -8,7 +9,7 @@ export interface DeleteAppointmentVariables {
 export function useDeleteAppointmentMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, DeleteAppointmentVariables>({
+  return useApiMutation<ApiRecord, DeleteAppointmentVariables>({
     getEndpoint: (variables) => `/appointment/${variables.id}`,
     method: "delete",
     options: {

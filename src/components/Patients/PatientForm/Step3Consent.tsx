@@ -1,11 +1,11 @@
+import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import React from "react";
-import { ClipboardCheck, FileText, CheckCircle, ShieldCheck, PenTool, Image as ImageIcon, AlertTriangle, Camera, Upload, X } from "lucide-react";
+import { ClipboardCheck, PenTool, Image as ImageIcon, AlertTriangle, Camera, Upload } from "lucide-react";
 import { SignaturePad } from "../../Consent/SignaturePad";
 import { calculateAge } from "./utils";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { getFileUrl } from "../../../services/apiClient";
 
 const getSignatureSize = (dataUrl: string) => {
@@ -23,8 +23,8 @@ const getSignatureSize = (dataUrl: string) => {
 };
 
 interface Step3Props {
-  formData: any;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: ApiAny;
+  setFormData: React.Dispatch<React.SetStateAction<ApiAny>>;
   handleChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -136,7 +136,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                 <div className="p-0">
                   <SignaturePad
                     onSave={(dataUrl) =>
-                      setFormData((prev: any) => ({
+                      setFormData((prev: ApiAny) => ({
                         ...prev,
                         patientSignature: dataUrl,
                       }))
@@ -187,7 +187,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
                   <div className="p-0">
                     <SignaturePad
                       onSave={(dataUrl) =>
-                        setFormData((prev: any) => ({
+                        setFormData((prev: ApiAny) => ({
                           ...prev,
                           guardianSignature: dataUrl,
                         }))

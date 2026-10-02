@@ -1,16 +1,17 @@
+import type { ApiAny } from "../../types/api";
 import { useApiQuery } from "../useApiQuery";
 
 export interface BenefitUsageVariables {
   page?: number;
   limit?: number;
   search?: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, ApiAny>;
 }
 
-export function useBenefitUsageQuery(variables: BenefitUsageVariables, options?: any) {
+export function useBenefitUsageQuery(variables: BenefitUsageVariables, options?: ApiAny) {
   const enabled = options?.enabled ?? true;
 
-  return useApiQuery<any>({
+  return useApiQuery<ApiAny>({
     queryKey: ["benefit-usage", variables],
     endpoint: "/invoice/benefit-usage",
     method: "post",

@@ -96,6 +96,9 @@ export function GlobalSearch() {
     });
 
     return matched.slice(0, 8);
+  // `close` is declared below this memo, so naming it here would read it before
+  // initialisation; the callback only runs after render, where it is defined
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, navigate]);
 
   const close = useCallback(() => {
@@ -180,7 +183,7 @@ export function GlobalSearch() {
                 </div>
               )}
               <div className="pb-1.5">
-                {items.map((result, idx) => {
+                {items.map((result, _idx) => {
                   const globalIdx = results.findIndex((r) => r.id === result.id);
                   const Icon = result.icon;
                   return (

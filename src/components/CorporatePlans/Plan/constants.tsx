@@ -1,6 +1,7 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
 import { Percent, Tag, Gift, Star, CheckCircle, Settings2, Infinity as InfinityIcon, Sparkles, Zap, Baby } from 'lucide-react';
-import { PlanBenefitType, PlanBenefit, PlanCategory, CorporatePlanTier } from '../../../types';
+import { PlanBenefitType, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS } from '../../../utils/corporatePlan';
 
 export const BENEFIT_ICONS: Record<PlanBenefitType, React.ReactNode> = {
@@ -47,7 +48,7 @@ export const mkForm = () => {
     validTo: localNextYear,
     maxMembers: undefined as number | undefined,
     isActive: true, color: 'blue',
-    planCategory: '' as any,
+    planCategory: '' as ApiAny,
     annualFee: undefined as number | undefined,
     maxDependents: 0,
     planTier: undefined as CorporatePlanTier | undefined,

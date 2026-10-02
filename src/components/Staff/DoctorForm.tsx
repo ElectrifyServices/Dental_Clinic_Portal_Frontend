@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState, useRef } from "react";
 import {
   Save,
@@ -57,8 +58,8 @@ const normalizeCategoryToUiType = (category: string): string => {
 
 interface DoctorFormProps {
   onClose: () => void;
-  onSave: (doctor: any) => void;
-  doctor?: any;
+  onSave: (doctor: ApiAny) => void;
+  doctor?: ApiAny;
 }
 
 export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
@@ -95,13 +96,13 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   };
 
   const form = useForm<StaffFormData>({
-    resolver: zodResolver(staffSchema) as any,
+    resolver: zodResolver(staffSchema) as ApiAny,
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",
       phone: doctor?.phone ? doctor.phone.replace(/^\+\d+/, "").slice(-10) : "",
-      country_code: (doctor as any)?.country_code || (() => {
-        let rawPhone = doctor?.phone || "";
+      country_code: (doctor as ApiAny)?.country_code || (() => {
+        const rawPhone = doctor?.phone || "";
         if (rawPhone.startsWith("+")) {
           const codes = ["+91", "+1", "+44", "+971"];
           for (const c of codes) {
@@ -128,7 +129,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       ]),
       uniqueId: doctor?.uniqueId ?? `STAFF${Date.now().toString().slice(-6)}`,
       documents: Array.isArray(doctor?.files)
-        ? doctor.files.map((f: any) => ({
+        ? doctor.files.map((f: ApiAny) => ({
             id: f.id,
             type: normalizeCategoryToUiType(f.category),
             name: f.file_name,
@@ -159,7 +160,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const s = singleStaffData.data || singleStaffData;
  
         let normalizedRole = 'staff';
-        let rawRole = s.role?.name || s.role_id || s.role || 'staff';
+        const rawRole = s.role?.name || s.role_id || s.role || 'staff';
         if (rawRole.toLowerCase().includes('super')) normalizedRole = 'super_admin';
         else if (rawRole.toLowerCase().includes('admin')) normalizedRole = 'admin';
         else if (rawRole.toLowerCase().includes('doctor')) normalizedRole = 'doctor';
@@ -174,7 +175,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
               permissions = normalizePermissions(rawPerms);
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // Failed to parse permissions
         }
  
@@ -183,8 +184,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
  
         let rawPhone = s.phone || doctor.phone || "";
-        let parsedCountryCode = s.country_code || (doctor as any)?.country_code || "+91";
-        if (!s.country_code && !(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+        let parsedCountryCode = s.country_code || (doctor as ApiAny)?.country_code || "+91";
+        if (!s.country_code && !(doctor as ApiAny)?.country_code && rawPhone.startsWith("+")) {
           const codes = ["+91", "+1", "+44", "+971"];
           for (const c of codes) {
             if (rawPhone.startsWith(c)) {
@@ -196,7 +197,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         }
 
         const mappedDocuments = Array.isArray(s.files)
-          ? s.files.map((f: any) => ({
+          ? s.files.map((f: ApiAny) => ({
               id: f.id,
               type: normalizeCategoryToUiType(f.category),
               name: f.file_name,
@@ -210,7 +211,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           email: s.email || doctor.email || "",
           phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
           country_code: parsedCountryCode,
-          role: normalizedRole as any,
+          role: normalizedRole as ApiAny,
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
           confirmPassword: "",
@@ -235,8 +236,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         setRemovedFileIds([]);
       } else {
         let rawPhone = doctor.phone || "";
-        let parsedCountryCode = (doctor as any)?.country_code || "+91";
-        if (!(doctor as any)?.country_code && rawPhone.startsWith("+")) {
+        let parsedCountryCode = (doctor as ApiAny)?.country_code || "+91";
+        if (!(doctor as ApiAny)?.country_code && rawPhone.startsWith("+")) {
           const codes = ["+91", "+1", "+44", "+971"];
           for (const c of codes) {
             if (rawPhone.startsWith(c)) {
@@ -248,7 +249,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         }
 
         const mappedDoctorDocs = Array.isArray(doctor.files)
-          ? doctor.files.map((f: any) => ({
+          ? doctor.files.map((f: ApiAny) => ({
               id: f.id,
               type: normalizeCategoryToUiType(f.category),
               name: f.file_name,
@@ -329,7 +330,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
 
       const missingDocs = requiredList.filter(
-        reqDoc => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
+        reqDoc => !docs.some((uploadedDoc: ApiAny) => uploadedDoc.type === reqDoc)
       );
 
       if (missingDocs.length > 0) {
@@ -371,7 +372,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const requiredList = REQUIRED_DOCS[role] || REQUIRED_DOCS.assistant || [];
 
         const missingDocs = requiredList.filter(
-          (reqDoc) => !docs.some((uploadedDoc: any) => uploadedDoc.type === reqDoc)
+          (reqDoc) => !docs.some((uploadedDoc: ApiAny) => uploadedDoc.type === reqDoc)
         );
 
         if (missingDocs.length > 0) {
@@ -399,32 +400,32 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         try {
           const fallbackRoles = await fetchRolesList();
           currentApiRoles = fallbackRoles;
-        } catch (e) {
+        } catch (_e) {
           // Fallback role fetch failed
         }
       }
 
-      let rawRoles: any[] | null = null;
+      let rawRoles: ApiAny[] | null = null;
       if (Array.isArray(currentApiRoles)) {
         rawRoles = currentApiRoles;
-      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).roles)) {
-        rawRoles = (currentApiRoles as any).roles;
-      } else if (currentApiRoles && (currentApiRoles as any).data && Array.isArray((currentApiRoles as any).data.roles)) {
-        rawRoles = (currentApiRoles as any).data.roles;
-      } else if (currentApiRoles && Array.isArray((currentApiRoles as any).data)) {
-        rawRoles = (currentApiRoles as any).data;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as ApiAny).roles)) {
+        rawRoles = (currentApiRoles as ApiAny).roles;
+      } else if (currentApiRoles && (currentApiRoles as ApiAny).data && Array.isArray((currentApiRoles as ApiAny).data.roles)) {
+        rawRoles = (currentApiRoles as ApiAny).data.roles;
+      } else if (currentApiRoles && Array.isArray((currentApiRoles as ApiAny).data)) {
+        rawRoles = (currentApiRoles as ApiAny).data;
       }
 
       // Attempt to map by exact match
-      let roleObj = rawRoles?.find((r: any) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
+      let roleObj = rawRoles?.find((r: ApiAny) => r.name?.toLowerCase() === data.role.toLowerCase() || r.code?.toLowerCase() === data.role.toLowerCase());
 
       // If exact match fails, maybe it's mapping "super_admin" to "SUPER_ADMIN"
       if (!roleObj && data.role === "super_admin") {
-        roleObj = rawRoles?.find((r: any) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
+        roleObj = rawRoles?.find((r: ApiAny) => r.code?.toLowerCase() === "super_admin" || r.name?.toLowerCase().includes("super admin") || r.name?.toLowerCase() === "admin");
       }
 
       if (!roleObj) {
-        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r: any) => r.name).join(', ') : 'None fetched'}`);
+        throw new Error(`Role mapping failed. Selected: '${data.role}'. Available from API: ${rawRoles ? rawRoles.map((r: ApiAny) => r.name).join(', ') : 'None fetched'}`);
       }
 
       const roleId = roleObj.id || roleObj.role_id || roleObj.uuid;
@@ -433,18 +434,18 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         throw new Error(`Role found but ID is missing! Keys available: ${Object.keys(roleObj).join(', ')}`);
       }
 
-      let rawSpecs: any[] | null = null;
+      let rawSpecs: ApiAny[] | null = null;
       if (Array.isArray(apiSpecs)) {
         rawSpecs = apiSpecs;
-      } else if (apiSpecs && Array.isArray((apiSpecs as any).specializations)) {
-        rawSpecs = (apiSpecs as any).specializations;
-      } else if (apiSpecs && (apiSpecs as any).data && Array.isArray((apiSpecs as any).data.specializations)) {
-        rawSpecs = (apiSpecs as any).data.specializations;
-      } else if (apiSpecs && Array.isArray((apiSpecs as any).data)) {
-        rawSpecs = (apiSpecs as any).data;
+      } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).specializations)) {
+        rawSpecs = (apiSpecs as ApiAny).specializations;
+      } else if (apiSpecs && (apiSpecs as ApiAny).data && Array.isArray((apiSpecs as ApiAny).data.specializations)) {
+        rawSpecs = (apiSpecs as ApiAny).data.specializations;
+      } else if (apiSpecs && Array.isArray((apiSpecs as ApiAny).data)) {
+        rawSpecs = (apiSpecs as ApiAny).data;
       }
 
-      const specObj = rawSpecs?.find((s: any) => (typeof s === "string" ? s : s.name || "") === data.specialization);
+      const specObj = rawSpecs?.find((s: ApiAny) => (typeof s === "string" ? s : s.name || "") === data.specialization);
       const specId = specObj?.id || data.specialization;
 
       const formDataObj = new FormData();
@@ -513,7 +514,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         "Medical Fitness Certificate": "medical_fitness_certificate"
       };
 
-      data.documents?.forEach((doc: any) => {
+      data.documents?.forEach((doc: ApiAny) => {
         if (doc.file) {
           const fieldName = docTypeMapping[doc.type];
           // Only append if the backend explicitly supports this field name.
@@ -544,7 +545,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       // Strip large files/base64 before saving to local state
       const cleanData = { ...data };
       if (cleanData.documents) {
-        cleanData.documents = cleanData.documents.map((d: any) => ({
+        cleanData.documents = cleanData.documents.map((d: ApiAny) => ({
           type: d.type,
           name: d.name,
           size: d.size
@@ -570,7 +571,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         },
         timeSlots: doctor?.timeSlots || { duration: 30, bufferTime: 5 },
       });
-    } catch (error: any) {
+    } catch (error: ApiAny) {
 
       let errMsg = "Failed to save staff. Please check the details.";
 
@@ -600,7 +601,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     }
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ApiAny) => {
     const { name, value, type, checked } = e.target;
     let finalValue = type === "checkbox" ? checked : value;
     if (name === "profitPercentage") {
@@ -625,7 +626,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const current = form.getValues("documents") || [];
-      const filtered = current.filter((d: any) => d.type !== docType);
+      const filtered = current.filter((d: ApiAny) => d.type !== docType);
       form.setValue("documents", [
         ...filtered,
         { type: docType, name: file.name, url: reader.result, size: file.size, file },
@@ -634,11 +635,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     reader.readAsDataURL(file);
   };
 
-  const handleDocumentRemove = (fileObj: any) => {
+  const handleDocumentRemove = (fileObj: ApiAny) => {
     const current = form.getValues("documents") || [];
     form.setValue(
       "documents",
-      current.filter((d: any) => d !== fileObj && d.url !== fileObj.url),
+      current.filter((d: ApiAny) => d !== fileObj && d.url !== fileObj.url),
     );
     if (fileObj.id) {
       setRemovedFileIds((prev) => [...prev, fileObj.id]);
@@ -663,7 +664,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           <Step2Role
             formData={formData}
             onChange={(role) => {
-              form.setValue("role", role as any, { shouldValidate: true });
+              form.setValue("role", role as ApiAny, { shouldValidate: true });
               if (role === "super_admin") {
                 form.setValue(
                   "permissions",
@@ -784,7 +785,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
               onClick={
                 currentStep < 4 ? handleNextStep : form.handleSubmit(onSubmit, (errs) => {
                   const errorMsg = Object.values(errs)
-                    .map((err: any) => err.message)
+                    .map((err: ApiAny) => err.message)
                     .filter(Boolean)
                     .join(", ");
                   showToast(errorMsg || "Please fill all required fields correctly.", "error");

@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../../types/api";
 import React from 'react';
-import { TrendingUp, IndianRupee, Target, Zap, Download } from 'lucide-react';
+import { TrendingUp, IndianRupee, Target, Zap } from 'lucide-react';
 import { MetricCard, ContentCard } from '@/components/ui';
 import { DonutChart, RevenueAreaChart } from '../../Dashboard/Charts';
 import { Section, getFilterPayload } from './Shared';
@@ -17,15 +18,15 @@ import { downloadExcelFromBlob } from '../../../utils/export/exportHandler';
 export function RevenueSection({ period }: { period: string }) {
   const baseFilter = getFilterPayload(period);
 
-  const { data: totalRevenueData, isLoading: loadingTotal } = useTotalRevenueQuery(baseFilter);
-  const { data: avgDailyRevenueData, isLoading: loadingAvg } = useAvgDailyRevenueQuery(baseFilter);
-  const { data: collectionRateData, isLoading: loadingCol } = useCollectionRateQuery(baseFilter);
-  const { data: topProcedureData, isLoading: loadingTop } = useTopProcedureQuery(baseFilter);
+  const { data: totalRevenueData, isLoading: _loadingTotal } = useTotalRevenueQuery(baseFilter);
+  const { data: avgDailyRevenueData, isLoading: _loadingAvg } = useAvgDailyRevenueQuery(baseFilter);
+  const { data: collectionRateData, isLoading: _loadingCol } = useCollectionRateQuery(baseFilter);
+  const { data: topProcedureData, isLoading: _loadingTop } = useTopProcedureQuery(baseFilter);
   const { data: paymentModeData, isLoading: loadingMode } = useRevenueByPaymentModeQuery(baseFilter);
-  const { data: dailyRevenueData, isLoading: loadingDaily } = useDailyRevenueQuery(baseFilter);
+  const { data: dailyRevenueData, isLoading: _loadingDaily } = useDailyRevenueQuery(baseFilter);
 
   // We don't have the exact shape of responses, so we will try to safely extract values.
-  const extractVal = (data: any, fallback: string | number = 0) => {
+  const extractVal = (data: ApiAny, fallback: string | number = 0) => {
     if (data === null || data === undefined) return fallback;
     if (typeof data === 'number' || typeof data === 'string') return data;
     if (typeof data === 'object') {
@@ -33,7 +34,7 @@ export function RevenueSection({ period }: { period: string }) {
        const unnested = data.data ?? data;
        if (typeof unnested === 'object' && unnested !== null) {
           const vals = Object.values(unnested);
-          if (vals.length > 0) return vals[0] as any;
+          if (vals.length > 0) return vals[0] as ApiAny;
        }
        return unnested;
     }
@@ -49,7 +50,7 @@ export function RevenueSection({ period }: { period: string }) {
   const rawModes = Array.isArray(paymentModeData) ? paymentModeData : Array.isArray(paymentModeData?.data) ? paymentModeData.data : [];
   
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
-  const mappedModes = rawModes.map((m: any, i: number) => ({
+  const mappedModes = rawModes.map((m: ApiAny, i: number) => ({
     label: m.mode || m.paymentMode || m.name || m.label || m.method || `Mode ${i+1}`,
     value: Number(m.revenue || m.amount || m.value || m.percentage || m.count || 0),
     color: colors[i % colors.length]
@@ -57,13 +58,13 @@ export function RevenueSection({ period }: { period: string }) {
 
   // Daily Revenue mapping
   const rawDaily = Array.isArray(dailyRevenueData) ? dailyRevenueData : Array.isArray(dailyRevenueData?.data) ? dailyRevenueData.data : [];
-  const mappedDaily = rawDaily.map((d: any, i: number) => ({
+  const mappedDaily = rawDaily.map((d: ApiAny, i: number) => ({
     date: d.date || d.day || d.label || `Day ${i+1}`,
     revenue: Number(d.invoiced || d.totalInvoiced || d.revenue || 0),
     collected: Number(d.collected || d.totalCollected || d.amount || 0)
   }));
 
-  const onExport = async () => {
+  const _onExport = async () => {
     try {
       const response = await exportRevenueAnalytics(baseFilter);
       await downloadExcelFromBlob(response.data, `Revenue_Analytics_${period}.xlsx`);

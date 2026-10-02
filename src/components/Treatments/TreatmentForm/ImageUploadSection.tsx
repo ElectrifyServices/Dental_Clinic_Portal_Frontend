@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-﻿import React from 'react';
+import React from 'react';
 import { Camera, X, Plus } from 'lucide-react';
 
 interface ImageUploadSectionProps {

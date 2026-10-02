@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthStorage } from "../../auth/authStorage";
@@ -9,7 +10,7 @@ export interface DeleteConsultationVariables {
 export function useDeleteConsultationMutation() {
   const queryClient = useQueryClient();
 
-  return useApiMutation<any, DeleteConsultationVariables>({
+  return useApiMutation<ApiAny, DeleteConsultationVariables>({
     getEndpoint: (variables) => `/consultations/${variables.id}`,
     method: "delete",
     headers: () => {

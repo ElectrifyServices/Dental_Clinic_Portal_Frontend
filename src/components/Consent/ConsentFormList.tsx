@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import type { ApiAny } from "../../types/api";
 import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical } from "lucide-react";
 
 interface ConsentFormListProps {
-  forms: any[];
+  forms: ApiAny[];
   search: string;
   onSearchChange: (val: string) => void;
   onAddForm: () => void;
@@ -67,7 +67,7 @@ export function ConsentFormList({
     {
       key: "patient",
       header: "Patient",
-      render: (form: any) => (
+      render: (form: ApiAny) => (
         <>
           <div className="font-bold text-foreground text-sm">
             {form.patientName}
@@ -88,7 +88,7 @@ export function ConsentFormList({
     {
       key: "consentType",
       header: "Consent Type",
-      render: (form: any) => {
+      render: (form: ApiAny) => {
         const treatments = form.treatmentType?.split(", ").filter(Boolean) || [];
         return (
           <div className="flex flex-wrap gap-1.5 max-w-[280px]">
@@ -108,7 +108,7 @@ export function ConsentFormList({
     {
       key: "doctor",
       header: "Doctor",
-      render: (form: any) => (
+      render: (form: ApiAny) => (
         <div className="font-semibold text-muted-foreground text-sm">
           {form.doctorName}
         </div>
@@ -118,7 +118,7 @@ export function ConsentFormList({
     {
       key: "created",
       header: "Created",
-      render: (form: any) => (
+      render: (form: ApiAny) => (
         <div className="text-sm font-medium text-muted-foreground">
           {form.createdDate
             ? new Date(form.createdDate).toLocaleDateString("en-IN", {
@@ -134,7 +134,7 @@ export function ConsentFormList({
     {
       key: "signed",
       header: "Signed",
-      render: (form: any) => {
+      render: (form: ApiAny) => {
         const statusUpper = form.status?.toUpperCase() || "";
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         return (
@@ -156,7 +156,7 @@ export function ConsentFormList({
     {
       key: "status",
       header: "Status",
-      render: (form: any) => {
+      render: (form: ApiAny) => {
         const statusUpper = form.status?.toUpperCase() || "";
         const isSigned = statusUpper === "SIGNED" || statusUpper === "COMPLETED";
         const isDraft = statusUpper === "DRAFT";
@@ -180,7 +180,7 @@ export function ConsentFormList({
       key: "actions",
       header: "Actions",
       align: "right" as const,
-      render: (form: any) => (
+      render: (form: ApiAny) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors outline-none">

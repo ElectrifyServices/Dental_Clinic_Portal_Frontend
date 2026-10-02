@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useState, useMemo, useEffect } from "react";
 import { DoctorSidebar } from "./AppointmentCalendar/DoctorSidebar";
 import { CalendarGrid } from "./AppointmentCalendar/CalendarGrid";
@@ -19,17 +20,17 @@ interface Doctor {
 
 interface CalendarProps {
   onNewAppointment: (date?: Date) => void;
-  appointments?: any[];
+  appointments?: ApiAny[];
   doctors?: Doctor[];
   onBookAppointment?: (doctorId: string, date: Date, time: string) => void;
-  onEditAppointment?: (appointment: any) => void;
+  onEditAppointment?: (appointment: ApiAny) => void;
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
   selectedDoctorId?: string | null;
   setSelectedDoctorId?: (id: string | null) => void;
   selectedDate?: string;
   setSelectedDate?: (date: string) => void;
-  onDirectCheckIn?: (appointment: any) => void;
+  onDirectCheckIn?: (appointment: ApiAny) => void;
   checkingInApptId?: string | null;
   specialistPage?: number;
   setSpecialistPage?: (p: number) => void;
@@ -171,7 +172,8 @@ export function AppointmentCalendar({
     // Convert 12-hour time format (e.g., "10:00 AM") to 24-hour time format (e.g., "10:00") for internal logic.
     const convert12to24 = (time12: string) => {
       const [time, modifier] = time12.split(" ");
-      let [hours, minutes] = time.split(":");
+      const [rawHours, minutes] = time.split(":");
+      let hours = rawHours;
       if (hours === "12") {
         hours = "00";
       }

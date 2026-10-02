@@ -64,7 +64,7 @@ export function OfflineDetector() {
       } else {
         throw new Error("Server response invalid");
       }
-    } catch (error) {
+    } catch (_error) {
       setConnectionState("offline");
       setIsOffline(true);
       toast.error("Still offline. Please check your internet connection.");

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { useApiMutation } from "../useApiMutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModal } from "@/contexts/ModalContext";
@@ -19,7 +20,7 @@ export function useDeleteProcedureMutation() {
         queryClient.invalidateQueries({ queryKey: ["procedures"] });
         showToast("Procedure deleted successfully", "success");
       },
-      onError: (err: any) => {
+      onError: (err: ApiAny) => {
         showToast(err?.message || "Failed to delete procedure", "error");
       },
     },

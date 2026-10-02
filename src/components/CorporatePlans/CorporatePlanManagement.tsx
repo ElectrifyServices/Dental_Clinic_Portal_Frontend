@@ -1,5 +1,6 @@
+import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
-import { Plus, Zap, CreditCard } from 'lucide-react';
+import { Plus, CreditCard } from 'lucide-react';
 import { CorporatePlan, PlanCategory } from '../../types';
 import { Button, Loading, SearchInput, FilterTabs, Pagination, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
@@ -29,14 +30,14 @@ export function CorporatePlanManagement({
   search: propSearch, onSearchChange: propOnSearchChange,
   filter: propFilter, onFilterChange: propOnFilterChange,
   category: propCategory, onCategoryChange: propOnCategoryChange,
-  isLoading, onGoToRegister,
+  isLoading, onGoToRegister: _onGoToRegister,
 }: Props) {
   const { showToast, confirmDelete, showConfirm } = useModal();
   const deletePlanMutation = useDeleteCorporatePlanMutation();
   const updateStatusMutation = useUpdateCorporatePlanStatusMutation();
   const cfg = useFormConfig('corporate');
   const BENEFIT_LABELS: Record<string, string> = Object.fromEntries(
-    ((cfg as any).benefitTypes ?? []).map((b: any) => [b.value, b.label])
+    ((cfg as ApiAny).benefitTypes ?? []).map((b: ApiAny) => [b.value, b.label])
   );
 
   const [showForm, setShowForm] = useState(false);
@@ -85,7 +86,7 @@ export function CorporatePlanManagement({
         await deletePlanMutation.mutateAsync({ id });
         onDelete(id);
         showToast('Plan deleted');
-      } catch (err: any) {
+      } catch (err: ApiAny) {
         showToast(err?.response?.data?.message || err?.message || 'Failed to delete plan', 'error');
       }
     });
@@ -96,13 +97,9 @@ export function CorporatePlanManagement({
       'Update Status',
       `Are you sure you want to ${plan.isActive ? 'deactivate' : 'activate'} this plan?`,
       async () => {
-        try {
-          await updateStatusMutation.mutateAsync({ id: plan.id, status: plan.isActive ? 'INACTIVE' : 'ACTIVE' });
-          onToggle(plan.id);
-          showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'}`);
-        } catch (err: any) {
-          throw err;
-        }
+        await updateStatusMutation.mutateAsync({ id: plan.id, status: plan.isActive ? 'INACTIVE' : 'ACTIVE' });
+        onToggle(plan.id);
+        showToast(`Plan ${plan.isActive ? 'deactivated' : 'activated'}`);
       }
     );
   };
@@ -144,14 +141,14 @@ export function CorporatePlanManagement({
             <FilterTabs
               tabs={CATEGORY_TABS}
               active={categoryFilter}
-              onChange={(val) => setCategoryFilter(val as any)}
+              onChange={(val) => setCategoryFilter(val as ApiAny)}
             />
           </div>
           {/* Category Filter - Mobile */}
           <div className="block sm:hidden w-[130px] shrink-0">
             <Select
               value={categoryFilter}
-              onValueChange={(val) => setCategoryFilter(val as any)}
+              onValueChange={(val) => setCategoryFilter(val as ApiAny)}
             >
               <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
                 <SelectValue placeholder="Category" />
@@ -171,14 +168,14 @@ export function CorporatePlanManagement({
             <FilterTabs
               tabs={STATUS_TABS}
               active={filter}
-              onChange={(val) => setFilter(val as any)}
+              onChange={(val) => setFilter(val as ApiAny)}
             />
           </div>
           {/* Status Filter - Mobile */}
           <div className="block sm:hidden w-[110px] shrink-0">
             <Select
               value={filter}
-              onValueChange={(val) => setFilter(val as any)}
+              onValueChange={(val) => setFilter(val as ApiAny)}
             >
               <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
                 <SelectValue placeholder="Status" />

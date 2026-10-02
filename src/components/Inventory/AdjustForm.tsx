@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../types/api";
 import { Package, SlidersHorizontal } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,14 +19,14 @@ import {
 } from "@/lib/schemas/inventory.schema";
 
 interface AdjustFormProps {
-  item: any;
+  item: ApiAny;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: ApiAny) => void;
 }
 
 export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
   const form = useForm<AdjustFormData>({
-    resolver: zodResolver(adjustSchema) as any,
+    resolver: zodResolver(adjustSchema) as ApiAny,
     defaultValues: {
       quantity: 0,
       reference_id: "",

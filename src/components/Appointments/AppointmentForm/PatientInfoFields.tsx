@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { User, Search, Loader2 } from "lucide-react";
@@ -17,10 +18,10 @@ interface PatientInfoFieldsProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPhoneChange: (val: string) => void;
   onAcceptSuggestion: () => void;
-  errors?: any;
-  patients?: any[];
+  errors?: ApiAny;
+  patients?: ApiAny[];
   isLoadingPatients?: boolean;
-  onSelectPatient?: (name: string, phone: string, countryCode?: string, patientObj?: any) => void;
+  onSelectPatient?: (name: string, phone: string, countryCode?: string, patientObj?: ApiAny) => void;
 }
 
 export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
@@ -30,10 +31,10 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   onCountryCodeChange,
   isFollowUp,
   isConsulted,
-  suggestion,
+  suggestion: _suggestion,
   onChange,
   onPhoneChange,
-  onAcceptSuggestion,
+  onAcceptSuggestion: _onAcceptSuggestion,
   errors,
   patients = [],
   isLoadingPatients = false,
@@ -56,7 +57,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (p: any) => {
+  const handleSelect = (p: ApiAny) => {
     if (onSelectPatient) {
       const pName = p.name || p.full_name || p.patient_name || "";
       const rawPhone = p.phone || p.mobile || p.mobile_number || p.patient_phone || "";
@@ -88,7 +89,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   const Dropdown = () => {
     if (!focusedField || isFollowUp || isConsulted) return null;
 
-    const searchTerm = focusedField === "name" 
+    const _searchTerm = focusedField === "name" 
       ? (patientName || "").toLowerCase().trim() 
       : (patientPhone || "").toLowerCase().trim();
 
@@ -115,7 +116,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
           </div>
         ) : filteredPatients.length > 0 ? (
           <ul className="max-h-52 overflow-y-auto p-1 divide-y divide-border/20">
-            {filteredPatients.map((p: any, idx: number) => {
+            {filteredPatients.map((p: ApiAny, idx: number) => {
               const pCode = p.country_code || p.countryCode || "+91";
               return (
                 <li

@@ -1,3 +1,4 @@
+import type { ApiAny } from "../../../types/api";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
@@ -14,7 +15,7 @@ import { getConsultationReportAvailability } from "../../../utils/consultationRe
 interface CompletionViewProps {
   onDownloadPDF: (type: PDFReportType) => void;
   onClose: () => void;
-  record?: any;
+  record?: ApiAny;
 }
 
 export function CompletionView({
