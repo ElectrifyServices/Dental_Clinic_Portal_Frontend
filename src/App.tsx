@@ -9,7 +9,7 @@ import { SidebarProvider } from "./contexts/SidebarContext";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { LoginForm } from "./components/Auth/LoginForm";
 import { getParsedPermissions } from "./utils/permission";
-
+ 
 import { DashboardPage } from "./pages/DashboardPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { PatientsPage } from "./pages/PatientsPage";
