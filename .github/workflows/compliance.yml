@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  COMPONENT_NAME: SecurityDemo
-  COMPONENT_TYPE: backend
-  SYSTEM_NAME: Security Demo Platform
+  COMPONENT_NAME: DentalClinicFrontend
+  COMPONENT_TYPE: frontend
+  SYSTEM_NAME: Dental Clinic Portal
   DATA_CLASSIFICATION: confidential
 
 jobs:

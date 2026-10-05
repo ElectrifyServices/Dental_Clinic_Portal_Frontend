@@ -26,7 +26,7 @@ export interface ConsentFormRecord {
   [key: string]: ApiAny;
 }
 
-export function useConsentFormsQuery(params: ConsentFormsParams = {}) {
+export function useConsentFormsQuery(params: ConsentFormsParams = {}, options?: ApiAny) {
   const body: Record<string, ApiAny> = {
     page: params.page ?? 1,
     limit: params.limit ?? 100,

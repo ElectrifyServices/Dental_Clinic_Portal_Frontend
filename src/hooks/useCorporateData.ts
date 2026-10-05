@@ -2,7 +2,8 @@ import type { ApiAny } from "../types/api";
 import { useLocalStorage } from './useLocalStorage';
 import { demoCorporatePlans } from '../data/demoData';
 import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
-import { CorporatePlan } from '../types';
+import { CorporatePlan, PlanBenefitType } from '../types';
+import { mapProcedureLabelToKey } from '../constants/consent.constants';
 import { useMemo } from 'react';
 
 export function useCorporateData(params?: { search?: string; status?: string; planType?: string; enabled?: boolean; }) {

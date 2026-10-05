@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../../types/api";
 import React from 'react';
-import { Phone, Users, User, Building2, MoreHorizontal, Edit2, ArrowRightLeft, Trash2, MessageCircle, Activity } from 'lucide-react';
+import { Phone, Users, User, Building2, MoreHorizontal, Edit2, ArrowRightLeft, Trash2, MessageCircle, Activity, Ban, Wallet } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
 import {

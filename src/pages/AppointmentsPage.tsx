@@ -1,5 +1,5 @@
 import type { ApiAny } from "../types/api";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";

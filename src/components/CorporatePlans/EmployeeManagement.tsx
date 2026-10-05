@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity } from 'lucide-react';
+import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity, Ban, Wallet } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
 import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading } from '../ui';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';

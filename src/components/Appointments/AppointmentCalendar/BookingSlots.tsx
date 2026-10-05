@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../../types/api";
-import React from "react";
-import { CalendarCheck, Stethoscope, Check } from "lucide-react";
+import React, { useState } from "react";
+import { CalendarCheck, Stethoscope, Check, Ban } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BlockTimeModal } from "./BlockTimeModal";
 
