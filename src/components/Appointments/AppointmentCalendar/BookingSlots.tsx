@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { CalendarCheck, Stethoscope, Check, Ban } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BlockTimeModal } from "./BlockTimeModal";
-
+ 
 interface BookingSlotsProps {
   selectedDoctorId: string | null;
   selectedDoctorName?: string;
