@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { ApiAny } from "../../types/api";
 import React from "react";
 import { Download, FileText, Calendar, Stethoscope, Camera, Pill, Activity, CreditCard, FlaskConical, ScanLine, ClipboardList, Image as ImageIcon, ExternalLink, User } from "lucide-react";

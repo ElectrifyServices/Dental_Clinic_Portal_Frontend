@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Generic UI primitives — reusable across the entire application.
  * Import from '@/components/ui' in any component.

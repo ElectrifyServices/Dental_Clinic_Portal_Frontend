@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { ApiAny } from "../../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";

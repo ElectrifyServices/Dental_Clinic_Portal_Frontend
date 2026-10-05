@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
 import { Search, Check, ChevronDown, X } from "lucide-react";

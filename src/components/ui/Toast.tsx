@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Toaster as HotToaster, toast as hotToast, resolveValue } from "react-hot-toast";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";

@@ -48,8 +48,7 @@ export function ConsentPage() {
 
   useEffect(() => {
     refetch();
-  // refetch once on mount only
-  }, []);
+  }, [refetch]);
 
   const deleteMutation = useDeleteConsentFormMutation();
 
