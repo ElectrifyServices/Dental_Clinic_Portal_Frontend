@@ -6,7 +6,7 @@ import { formatPhoneWithCountryCode } from '../../../utils/phoneUtils';
 import {
   Button, PlanBadge,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem
-} from '../../ui';
+} from '../../ui'; 
 
 interface MemberCardProps {
   employee: CorporateEmployee;
