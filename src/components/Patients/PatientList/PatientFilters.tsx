@@ -34,9 +34,9 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
   onAddPatient,
 }) => {
   return (
-    <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-6 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0">
+    <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-6 w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden min-w-0">
       {/* Search Input takes remaining space */}
-      <div className="flex-grow min-w-[100px] max-w-md xl:max-w-full">
+      <div className="grow min-w-[100px] max-w-md xl:max-w-full">
         <SearchInput
           placeholder="Search by name, ID, phone or email..."
           value={searchTerm}

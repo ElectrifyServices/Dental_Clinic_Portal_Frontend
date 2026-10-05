@@ -797,7 +797,7 @@ export const DocumentsTab = ({
           {/* Full Screen Image Viewer Modal */}
           {selectedImage && (
             <div 
-              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
+              className="fixed inset-0 z-100 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
               onClick={() => setSelectedImage(null)}
             >
               <Button 

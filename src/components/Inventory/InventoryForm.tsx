@@ -176,7 +176,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Basic Info ─────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
+              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Basic Information</p>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -273,7 +273,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Stock Info ──────────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
+              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Stock Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -399,7 +399,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
               {Number(currentStock) <= Number(minStock) &&
                 Number(currentStock) > 0 && (
                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
                     <p className="text-xs font-bold text-amber-800 uppercase tracking-tight">
                       Warning: Item will reach critical level soon
                     </p>
@@ -411,7 +411,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           {/* ── Purchase Info ───────────────────────────────────────── */}
           <Card>
             <CardContent className="pt-6">
-              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
+              <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-px after:bg-border">Purchase Information</p>
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}

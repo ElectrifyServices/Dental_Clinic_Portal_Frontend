@@ -32,9 +32,9 @@ export const AppointmentActionMenu: React.FC<AppointmentActionMenuProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-[9998]" onClick={onClose} />
+      <div className="fixed inset-0 z-9998" onClick={onClose} />
       <div 
-        className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-xl w-52 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="fixed z-9999 bg-card rounded-2xl border border-border shadow-xl w-52 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{ top: pos.top, left: pos.left }}
       >
         <div className="p-1.5 space-y-0.5">

@@ -45,7 +45,7 @@ export function ConsultationHeader({
       <div className="sticky top-0 bg-card border-b border-border p-6 rounded-t-2xl z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mr-4">
+            <div className="w-16 h-16 bg-linear-to-r from-blue-100 to-cyan-100 rounded-2xl flex items-center justify-center mr-4">
               <Stethoscope className="w-8 h-8 text-primary" />
             </div>
             <div>

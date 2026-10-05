@@ -270,7 +270,7 @@ function SendView({
       {result && (
         <Card className="p-4 border-emerald-200 bg-emerald-50/50">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">
                 Queued for {result.queued ?? 0} recipient(s).

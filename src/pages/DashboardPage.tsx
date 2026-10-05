@@ -142,7 +142,7 @@ export const DashboardPage: React.FC = () => {
             />
           </div>
          
-          <Button onClick={handleAddPatient} className="gap-2 flex-shrink-0 shadow-sm w-full sm:w-auto">
+          <Button onClick={handleAddPatient} className="gap-2 shrink-0 shadow-sm w-full sm:w-auto">
             <UserPlus className="w-4 h-4" /> Add New Patient
           </Button>
         </div>

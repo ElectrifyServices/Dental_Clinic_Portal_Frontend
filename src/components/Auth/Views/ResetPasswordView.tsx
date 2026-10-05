@@ -115,7 +115,7 @@ export function ResetPasswordView() {
     return (
       <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
         <div className="w-20 h-20 mx-auto flex items-center justify-center mb-4 text-emerald-500">
-          <Check className="w-16 h-16 stroke-[3]" />
+          <Check className="w-16 h-16 stroke-3" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
           Password Reset Complete
@@ -184,7 +184,7 @@ export function ResetPasswordView() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.length ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                   {criteria.length ? (
-                    <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                   )}
@@ -192,7 +192,7 @@ export function ResetPasswordView() {
                 </div>
                 <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.uppercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                   {criteria.uppercase ? (
-                    <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                   )}
@@ -200,7 +200,7 @@ export function ResetPasswordView() {
                 </div>
                 <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.lowercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                   {criteria.lowercase ? (
-                    <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                   )}
@@ -208,7 +208,7 @@ export function ResetPasswordView() {
                 </div>
                 <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.number ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                   {criteria.number ? (
-                    <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                   )}
@@ -264,7 +264,7 @@ export function ResetPasswordView() {
         <Button
           type="submit"
           size="lg"
-          className="w-full mt-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
+          className="w-full mt-4 bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
           disabled={!isFormValid || isLoading}
           loading={isLoading}
         >

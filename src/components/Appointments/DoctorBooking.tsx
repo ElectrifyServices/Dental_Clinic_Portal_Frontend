@@ -369,7 +369,7 @@ export function DoctorBooking({
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <Button
             onClick={() => setSelectedSpecialty([])}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? "bg-slate-900 border-slate-900 text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
+            className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.length === 0 ? "bg-slate-900 border-slate-900 text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
           >
             All Departments
           </Button>
@@ -379,7 +379,7 @@ export function DoctorBooking({
               onClick={() =>
                 toggleFilter(selectedSpecialty, setSelectedSpecialty, s)
               }
-              className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
+              className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${selectedSpecialty.includes(s) ? "bg-primary border-primary text-white" : "bg-card border-border text-muted-foreground hover:border-border"}`}
             >
               {s}
             </Button>
@@ -395,7 +395,7 @@ export function DoctorBooking({
               className={`group relative p-3 rounded-[1.75rem] border-2 transition-all cursor-pointer flex items-center gap-4
                 ${selectedDoctorId === doctor.id ? "bg-primary/10 border-primary shadow-lg shadow-blue-100/50" : "bg-card border-border hover:border-primary/30 shadow-sm"}`}
             >
-              <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden flex-shrink-0 shadow-inner ring-4 ring-gray-50 group-hover:ring-blue-100 transition-all">
+              <div className="w-16 h-16 rounded-[1.25rem] overflow-hidden shrink-0 shadow-inner ring-4 ring-gray-50 group-hover:ring-blue-100 transition-all">
                 <img
                   src={doctor.image}
                   alt={doctor.name}
@@ -470,9 +470,9 @@ export function DoctorBooking({
           {selectedDoctor ? (
             <div className="flex flex-col h-full">
               {/* Header: Doctor Info */}
-              <div className="p-8 border-b border-border bg-gradient-to-br from-white to-gray-50/50">
+              <div className="p-8 border-b border-border bg-linear-to-br from-white to-gray-50/50">
                 <div className="flex items-center gap-5">
-                  <div className="w-20 h-20 rounded-[1.75rem] overflow-hidden shadow-xl ring-4 ring-blue-50 flex-shrink-0">
+                  <div className="w-20 h-20 rounded-[1.75rem] overflow-hidden shadow-xl ring-4 ring-blue-50 shrink-0">
                     <img
                       src={selectedDoctor.image}
                       alt={selectedDoctor.name}
@@ -578,7 +578,7 @@ export function DoctorBooking({
                       <Button
                         key={idx}
                         onClick={() => setSelectedDate(date)}
-                        className={`flex-shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
+                        className={`shrink-0 w-14 h-16 flex flex-col items-center justify-center rounded-2xl border-2 transition-all
                           ${
                             isSelected
                               ? "border-primary bg-primary text-white shadow-lg shadow-blue-100"
@@ -714,7 +714,7 @@ export function DoctorBooking({
                         selectedTime || undefined,
                       )
                     }
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
+                    className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 text-sm"
                   >
                     Confirm & Schedule
                     <ChevronRight className="w-5 h-5 font-bold" />

@@ -21,7 +21,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
   if (activePlans.length === 0) {
     return (
       <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-        <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <p className="text-sm text-amber-700">No active corporate plans. A Super Admin must create plans first from the Corporate Plans section.</p>
       </div>
     );
@@ -36,17 +36,17 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
         <Button type="button" onClick={() => setOpen(!open)}
           className="w-full flex items-center justify-between px-3.5 py-2.5 bg-card border border-border rounded-xl text-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary transition-all">
           <div className="flex items-center gap-2 min-w-0">
-            <Building2 className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+            <Building2 className="w-4 h-4 text-muted-foreground/60 shrink-0" />
             {selected ? (
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-semibold text-foreground truncate">{selected.name}</span>
-                <span className={`flex-shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded border ${cc?.bg} ${cc?.text} ${cc?.border}`}>{selected.code}</span>
+                <span className={`shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded border ${cc?.bg} ${cc?.text} ${cc?.border}`}>{selected.code}</span>
               </div>
             ) : (
               <span className="text-muted-foreground/60">Select a corporate plan (optional)</span>
             )}
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+          <div className="flex items-center gap-1 shrink-0 ml-2">
             {selected && (
               <Button type="button" onClick={e => { e.stopPropagation(); onChange('', '', ''); }}
                 className="p-0.5 hover:bg-muted rounded"><X className="w-3.5 h-3.5 text-muted-foreground/60" /></Button>
@@ -73,7 +73,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
                       <p className="text-xs text-muted-foreground mt-0.5">{plan.companyName}</p>
                       <p className="text-xs text-primary mt-0.5 truncate">{getPlanBenefitSummary(plan)}</p>
                     </div>
-                    {isSel && <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />}
+                    {isSel && <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
                   </Button>
                 );
               })}
@@ -98,7 +98,7 @@ export function CorporatePlanSelector({ plans, selectedPlanId, memberId, onChang
             <div className="space-y-1">
               {selected.benefits.map(b => (
                 <div key={b.id} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                  <div className={`w-1.5 h-1.5 rounded-full ${cc.dot} flex-shrink-0 mt-1`} />
+                  <div className={`w-1.5 h-1.5 rounded-full ${cc.dot} shrink-0 mt-1`} />
                   {b.description}
                 </div>
               ))}

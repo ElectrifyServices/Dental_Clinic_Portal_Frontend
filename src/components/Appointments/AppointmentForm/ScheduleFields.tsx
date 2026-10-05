@@ -267,7 +267,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                      `}
                     title={isBlocked ? "Slot blocked - overlaps existing booking" : slot.isPast ? "Time slot has passed" : `Select ${slot.time12}`}
                   >
-                    {isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0" />}
+                    {isSelected && <CheckCircle className="w-3 h-3 shrink-0" />}
                     {slot.time12} ({slot.appointmentCount})
                   </Button>
                 );

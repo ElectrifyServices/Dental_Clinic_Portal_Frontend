@@ -53,14 +53,14 @@ export function Toaster() {
           return (
             <div
               className={cn(
-                "relative flex items-center gap-3 w-80 p-4 rounded-xl border shadow-[0_10px_30px_rgba(15,23,42,0.08)] overflow-hidden outline-none pointer-events-auto transition-all duration-200 z-[9999] bg-white text-slate-800",
+                "relative flex items-center gap-3 w-80 p-4 rounded-xl border shadow-[0_10px_30px_rgba(15,23,42,0.08)] overflow-hidden outline-none pointer-events-auto transition-all duration-200 z-9999 bg-white text-slate-800",
                 t.visible ? "toast-enter" : "toast-exit",
                 isSuccess && "border-emerald-200 bg-[#f0fdf4]", // Solid light green background (no opacity bleed)
                 isError && "border-rose-200 bg-[#fff1f2]"       // Solid light red background (no opacity bleed)
               )}
             >
               {/* Icon */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 {isSuccess && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
                 {isError && <AlertCircle className="w-5 h-5 text-rose-600" />}
                 {!isSuccess && !isError && <Info className="w-5 h-5 text-primary" />}
@@ -74,7 +74,7 @@ export function Toaster() {
               {/* Close Button */}
               <button
                 onClick={() => hotToast.dismiss(t.id)}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-200/50 transition-colors flex-shrink-0"
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-200/50 transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

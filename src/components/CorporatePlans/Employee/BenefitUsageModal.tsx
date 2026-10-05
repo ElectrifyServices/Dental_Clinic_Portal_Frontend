@@ -139,7 +139,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[820px] p-0 overflow-hidden bg-background/95 backdrop-blur-sm border-white/20 shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/5 p-6 border-b border-border/50 relative overflow-hidden">
+        <div className="bg-linear-to-r from-blue-500/10 to-indigo-500/5 p-6 border-b border-border/50 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5">
             <Activity className="w-32 h-32 text-blue-600" />
           </div>
@@ -270,7 +270,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                               {/* Benefit Title & Badge */}
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                                  <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                                     {getBenefitIcon(benefit.benefit_type)}
                                   </div>
                                   <div>
@@ -282,7 +282,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                     </p>
                                   </div>
                                 </div>
-                                <div className="flex-shrink-0">
+                                <div className="shrink-0">
                                   {getBenefitBadge(benefit)}
                                 </div>
                               </div>
@@ -293,7 +293,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                   {/* Progress bar */}
                                   <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/40">
                                     <div
-                                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                                      className="h-full bg-linear-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
                                       style={{ width: `${percentUsed}%` }}
                                     />
                                   </div>
@@ -326,7 +326,7 @@ export const BenefitUsageModal: React.FC<BenefitUsageModalProps> = ({
                                     {benefit.by_patient.map((bp: ApiAny, bpIdx: number) => (
                                       <div
                                         key={bpIdx}
-                                        className="bg-slate-50/80 border border-slate-200/50 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-slate-700 w-full sm:w-[48%] flex-grow"
+                                        className="bg-slate-50/80 border border-slate-200/50 rounded-xl p-3 flex flex-col gap-1.5 text-xs text-slate-700 w-full sm:w-[48%] grow"
                                       >
                                         <div className="flex justify-between items-center">
                                           <span className="font-extrabold text-slate-800 text-sm">{getPatientName(bp.patient_id)}</span>

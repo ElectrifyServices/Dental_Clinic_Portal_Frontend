@@ -153,7 +153,7 @@ export function PatientQueue({
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <div className="w-2 h-2 bg-primary/100 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 <span className="text-sm font-bold text-primary">
                   {inConsultationCount} Consulting
                 </span>

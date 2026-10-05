@@ -374,7 +374,7 @@ export function CorporateManagement({
               className={`w-full bg-transparent outline-none text-sm font-bold border-b border-transparent focus:border-primary/50 pb-1 ${isDup ? "text-destructive" : "text-foreground"}`}
             />
             {isDup && (
-              <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce z-[60]">
+              <div className="absolute -top-8 left-0 bg-destructive text-white text-[10px] px-2 py-1 rounded shadow-lg font-black uppercase tracking-widest animate-bounce z-60">
                 Already Registered!
               </div>
             )}
@@ -1001,7 +1001,7 @@ export function CorporateManagement({
 
         {/* Employee List View Modal Overlay */}
         {viewingEmployeesPlanId && (
-          <div className="absolute inset-0 bg-card z-[60] flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="absolute inset-0 bg-card z-60 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-6 border-b border-border flex items-center justify-between bg-muted/50">
               <div className="flex items-center gap-4">
                 <Button
@@ -1045,7 +1045,7 @@ export function CorporateManagement({
                 </form>
 
                 {showSearchSuggestions && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-2xl border border-border z-[70] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-2xl shadow-2xl border border-border z-70 overflow-hidden animate-in fade-in slide-in-from-top-2">
                     {recentSearches.length > 0 && (
                       <div className="p-4 border-b border-border">
                         <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">

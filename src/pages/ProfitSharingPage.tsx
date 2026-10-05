@@ -232,7 +232,7 @@ export const ProfitSharingPage: React.FC = () => {
       {/* Visual Summary Hint */}
       {stats.totalRev > 0 && (
         <div className="bg-white rounded-2xl border border-border/50 p-5 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-          <div className="flex-shrink-0 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="shrink-0 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <PieChart className="w-8 h-8 text-primary" />
           </div>
           <div className="flex-1 space-y-2">

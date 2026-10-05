@@ -391,11 +391,11 @@ export function InvoiceList({
               createPortal(
                 <>
                   <div
-                    className="fixed inset-0 z-[9998]"
+                    className="fixed inset-0 z-9998"
                     onClick={() => setOpenMenuId(null)}
                   />
                   <div
-                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
@@ -566,11 +566,11 @@ export function InvoiceList({
               createPortal(
                 <>
                   <div
-                    className="fixed inset-0 z-[9998]"
+                    className="fixed inset-0 z-9998"
                     onClick={() => setOpenMenuId(null)}
                   />
                   <div
-                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">

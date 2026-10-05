@@ -319,7 +319,7 @@ export function TreatmentTableRow({
                   </div>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg z-[60]">
+                  <DropdownMenuSubContent className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg z-60">
                     {Array.from({ length: sessions.length || 1 }).map((_, i) => (
                       <DropdownMenuItem
                         key={i}

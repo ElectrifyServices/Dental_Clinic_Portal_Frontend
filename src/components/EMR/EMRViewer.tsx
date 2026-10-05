@@ -552,12 +552,12 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
       >
         <div className="space-y-6">
           {/* ── Patient Identity Card ── */}
-          <div className="relative overflow-hidden rounded-2xl border border-[#4e6e65]/15 bg-gradient-to-br from-[#4e6e65]/[0.08] via-[#4e6e65]/[0.03] to-transparent shadow-sm">
+          <div className="relative overflow-hidden rounded-2xl border border-[#4e6e65]/15 bg-linear-to-br from-[#4e6e65]/8 via-[#4e6e65]/3 to-transparent shadow-sm">
             <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#4e6e65]/[0.07] rounded-full" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-[#c9a24b]/[0.08] rounded-full" />
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-[#c9a24b]/8 rounded-full" />
             <div className="relative p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1 min-w-0 w-full">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4e6e65] to-[#33473f] flex items-center justify-center text-white text-xl font-black shadow-lg shadow-[#4e6e65]/25 flex-shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#4e6e65] to-[#33473f] flex items-center justify-center text-white text-xl font-black shadow-lg shadow-[#4e6e65]/25 shrink-0">
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -580,7 +580,7 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-6 sm:gap-8 flex-shrink-0 w-full sm:w-auto border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-8 border-[#4e6e65]/15">
+              <div className="flex gap-6 sm:gap-8 shrink-0 w-full sm:w-auto border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-8 border-[#4e6e65]/15">
                 <div className="text-center flex-1 sm:flex-initial">
                   <p className="text-2xl font-black text-[#4e6e65]">{filteredTimeline.length}</p>
                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Records</p>
@@ -645,7 +645,7 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                 return (
                   <div key={item.id || idx} className="relative group">
                     {/* Timeline Node (Floating Icon on the left line) */}
-                    <span className="absolute -left-[41px] sm:-left-[49px] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/85 shadow-sm ring-4 ring-card group-hover:scale-110 transition-transform duration-200">
+                    <span className="absolute left-[-41px] sm:left-[-49px] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/85 shadow-sm ring-4 ring-card group-hover:scale-110 transition-transform duration-200">
                       <div className={`flex h-6 w-6 items-center justify-center rounded-full ${meta.iconBg}`}>
                         {meta.icon}
                       </div>
@@ -673,7 +673,7 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                         </div>
 
                         {/* Date */}
-                        <div className="flex-shrink-0 flex items-center gap-1.5 sm:flex-col sm:items-end">
+                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:items-end">
                           <span className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-widest bg-muted/40 sm:bg-transparent px-2 py-0.5 sm:px-0 rounded-full">
                             {formattedDate}
                           </span>
@@ -704,16 +704,16 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                                   className="group/att flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 hover:border-[#4e6e65]/40 hover:bg-[#4e6e65]/5 transition-all text-xs font-semibold text-foreground"
                                 >
                                   {isImage ? (
-                                    <div className="w-8 h-8 rounded-md overflow-hidden border border-border/30 flex-shrink-0">
+                                    <div className="w-8 h-8 rounded-md overflow-hidden border border-border/30 shrink-0">
                                       <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
                                     </div>
                                   ) : (
-                                    <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                                    <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
                                       <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                                     </div>
                                   )}
                                   <span className="max-w-[120px] truncate">{att.name || `File ${aIdx + 1}`}</span>
-                                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover/att:text-[#4e6e65] flex-shrink-0" />
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover/att:text-[#4e6e65] shrink-0" />
                                 </button>
                               );
                             })}

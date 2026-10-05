@@ -72,7 +72,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
               ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
               : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
         >
-          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground/60 flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground/60 shrink-0">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
@@ -91,7 +91,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
                 ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
                 : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 shrink-0">
               <img
                 src={doctor.avatar || doctor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`}
                 alt={doctor.name}

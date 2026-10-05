@@ -154,7 +154,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
             ) : (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-amber-900">
                       Guardian Authorization

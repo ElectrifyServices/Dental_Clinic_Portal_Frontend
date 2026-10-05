@@ -69,12 +69,12 @@ export function Header() {
   };
 
   return (
-    <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center gap-4 sticky top-0 z-40 flex-shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
+    <header className="bg-card border-b border-border/60 px-4 sm:px-6 h-16 flex items-center gap-4 sticky top-0 z-40 shrink-0 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
       {/* ── Left ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Mobile logo */}
         <div className="flex lg:hidden items-center gap-2 group/logo cursor-pointer">
-          <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5 flex-shrink-0">
+          <div className="w-8 h-8 rounded-md bg-white border border-border/60 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5 shrink-0">
             <img src={themeData?.theme?.logo_url || logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
           <span className="font-bold text-foreground text-sm group-hover/logo:text-primary transition-colors hidden min-[400px]:block truncate max-w-[140px] sm:max-w-[200px]">
@@ -288,7 +288,7 @@ export function Header() {
         {/* <GlobalSearch /> */}
       </div>
       {/* ── Right ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
 
         {/* Notifications */}
         {/* <Popover>
@@ -351,7 +351,7 @@ export function Header() {
                         !n.isRead ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50",
                       ].join(" ")}
                     >
-                      <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${colorCls}`}>
+                      <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${colorCls}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -359,9 +359,9 @@ export function Header() {
                           <p className={`text-xs font-semibold leading-snug ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}>
                             {n.title}
                           </p>
-                          <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap flex-shrink-0">{n.time}</span>
+                          <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap shrink-0">{n.time}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed break-words">{n.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed wrap-break-word">{n.description}</p>
                       </div>
                     </div>
                   );
@@ -378,7 +378,7 @@ export function Header() {
               variant="ghost"
               className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-muted h-auto rounded-md"
             >
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold text-sm shrink-0">
                 {state.user?.name?.[0] ?? "U"}
               </div>
               <div className="hidden sm:block text-left">

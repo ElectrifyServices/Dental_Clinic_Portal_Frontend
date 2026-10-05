@@ -45,7 +45,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
   const isCoveredAsDependent = !!patient?.primaryMemberId && !planId;
 
   return (
-    <Card className="rounded-2xl p-5 border border-border shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
+    <Card className="rounded-2xl p-5 border border-border shadow-sm bg-linear-to-br from-primary/5 to-transparent">
       <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
         <Shield className="w-4 h-4 text-primary" />
         Plan & Coverage
@@ -54,7 +54,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
       {isCoveredAsDependent ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-            <Users className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <Users className="w-4 h-4 text-amber-600 shrink-0" />
             <div>
               <p className="text-xs font-bold text-amber-700">Covered as Dependent</p>
               <p className="text-[11px] text-amber-600">
@@ -67,7 +67,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
         <div className="space-y-3">
           {/* Plan header */}
           <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isIndividual ? 'bg-teal-100' : 'bg-blue-100'}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isIndividual ? 'bg-teal-100' : 'bg-blue-100'}`}>
               {isIndividual ? <Users className="w-5 h-5 text-teal-600" /> : <Building2 className="w-5 h-5 text-blue-600" />}
             </div>
             <div className="min-w-0">
@@ -86,7 +86,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
 
           {/* Validity */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-xl">
-            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
             <span>{plan.validFrom} — {plan.validTo}</span>
           </div>
 
@@ -113,7 +113,7 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
               <div className="space-y-1.5">
                 {dependents.map(dep => (
                   <div key={dep.id} className="flex items-center gap-2.5 bg-muted/30 rounded-xl px-3 py-2">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <User className="w-3 h-3 text-primary" />
                     </div>
                     <div>

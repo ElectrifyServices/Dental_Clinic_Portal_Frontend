@@ -817,7 +817,7 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-3 py-1">
                     {profilePic ? (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
@@ -837,7 +837,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 shrink-0">
                         {initial}
                       </div>
                     )}
@@ -868,7 +868,7 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-2">
                     {profilePic ? (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
@@ -889,7 +889,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
                         {initial}
                       </div>
                     )}
@@ -996,7 +996,7 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-3 py-1">
                     {profilePic ? (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
@@ -1016,7 +1016,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 shrink-0">
                         {initial}
                       </div>
                     )}
@@ -1045,7 +1045,7 @@ export function InvoiceForm({
                 return (
                   <div className="flex items-center gap-2">
                     {profilePic ? (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                         <img
                           src={profilePic}
                           alt={p.name}
@@ -1066,7 +1066,7 @@ export function InvoiceForm({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
                         {initial}
                       </div>
                     )}
@@ -1153,14 +1153,14 @@ export function InvoiceForm({
           <Card className="border-rose-100 bg-rose-50/50 shadow-none rounded-2xl overflow-hidden">
             <CardContent className="p-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm flex-shrink-0">
+                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600 shadow-sm shrink-0">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest truncate">
                     Outstanding Payment Detected
                   </p>
-                  <p className="text-xs font-bold text-rose-900 mt-0.5 break-words">
+                  <p className="text-xs font-bold text-rose-900 mt-0.5 wrap-break-word">
                     This patient has a pending balance of ₹
                     {outstandingBalance.toLocaleString()} from previous
                     invoices.
@@ -1250,7 +1250,7 @@ export function InvoiceForm({
           </div>
         ) : activeMembership ? (
           <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -1280,7 +1280,7 @@ export function InvoiceForm({
             )}
 
             {showMembershipSuggestions && formData.patientId && !activeMembership && !isCorporateBilling && (
-              <Card className="bg-gradient-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
+              <Card className="bg-linear-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <ShieldCheck className="w-5 h-5 text-purple-600" />

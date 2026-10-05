@@ -148,7 +148,7 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
                   transition={{ duration: 0.2 }}
                   className={`flex items-start gap-3 p-3 rounded-xl border ${cfg.bg}`}
                 >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.icon}`}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.icon}`}>
                     {ALERT_ICONS[alert.icon]}
                   </div>
                   <div className="flex-1 min-w-0">

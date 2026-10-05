@@ -242,10 +242,10 @@ export function HeatmapCell({ count, day, hour }: { count: number; day?: string;
   let badgeContent: React.ReactNode = <span className="w-1.5 h-1.5 rounded-full bg-slate-300/80" />;
 
   if (count >= 10) {
-    cellClass = "bg-gradient-to-br from-violet-600 via-indigo-600 to-indigo-700 text-white font-extrabold shadow-sm shadow-indigo-300/50 ring-2 ring-violet-400/40";
+    cellClass = "bg-linear-to-br from-violet-600 via-indigo-600 to-indigo-700 text-white font-extrabold shadow-sm shadow-indigo-300/50 ring-2 ring-violet-400/40";
     badgeContent = count;
   } else if (count >= 7) {
-    cellClass = "bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold shadow-2xs";
+    cellClass = "bg-linear-to-br from-indigo-500 to-blue-600 text-white font-bold shadow-2xs";
     badgeContent = count;
   } else if (count >= 4) {
     cellClass = "bg-blue-100/90 border border-blue-200 text-blue-800 font-bold hover:bg-blue-200/90";

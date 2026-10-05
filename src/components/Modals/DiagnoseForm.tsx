@@ -21,8 +21,8 @@ interface DiagnoseFormProps {
 
 export const DiagnoseForm: React.FC<DiagnoseFormProps> = ({ patient, onClose, onSubmit }) => {
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
-      <div className="bg-card rounded-[2rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-110 p-4">
+      <div className="bg-card rounded-4xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white">
         <div className="p-8 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
           <div>
             <h2 className="text-xl font-bold text-foreground">Clinical Diagnosis Form</h2>

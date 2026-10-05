@@ -105,7 +105,7 @@ export function QueueCard({
         {/* Patient Header */}
         <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-4 flex-wrap">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
+            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
               {patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar ? (
                 <img
                   src={getFileUrl(patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar)}
@@ -164,7 +164,7 @@ export function QueueCard({
             </div>
           </div>
           {/* Appointment time */}
-          <div className="text-right flex-shrink-0 pt-0.5">
+          <div className="text-right shrink-0 pt-0.5">
             <div className="text-sm font-black text-blue-600 mb-1">
               {patient.appointmentTime}
             </div>
@@ -191,13 +191,13 @@ export function QueueCard({
                 <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
               </span>
               {(!patient.treatmentType || patient.treatmentType.length <= 40) ? (
-                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
+                <span className="font-bold text-gray-900 text-right wrap-break-word max-w-[65%] leading-tight">
                   {patient.treatmentType || "N/A"}
                 </span>
               ) : null}
             </div>
             {patient.treatmentType && patient.treatmentType.length > 40 && (
-              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left wrap-break-word">
                 {patient.treatmentType}
               </div>
             )}
@@ -209,13 +209,13 @@ export function QueueCard({
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
               </span>
               {(!patient.specificTreatment || patient.specificTreatment.length <= 40) ? (
-                <span className="font-bold text-gray-900 text-right break-words max-w-[65%] leading-tight">
+                <span className="font-bold text-gray-900 text-right wrap-break-word max-w-[65%] leading-tight">
                   {patient.specificTreatment || "N/A"}
                 </span>
               ) : null}
             </div>
             {patient.specificTreatment && patient.specificTreatment.length > 40 && (
-              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left break-words">
+              <div className="text-xs text-gray-700 font-bold leading-normal bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 mt-1 text-left wrap-break-word">
                 {patient.specificTreatment}
               </div>
             )}
@@ -235,7 +235,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 wrap-break-word">
                 {patient.patientConcern}
               </div>
             </div>
@@ -246,7 +246,7 @@ export function QueueCard({
               <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Notes
               </div>
-              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 break-words">
+              <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 wrap-break-word">
                 {patient.appointmentNotes}
               </div>
             </div>

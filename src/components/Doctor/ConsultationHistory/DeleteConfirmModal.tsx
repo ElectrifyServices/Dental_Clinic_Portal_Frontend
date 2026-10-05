@@ -11,7 +11,7 @@ export function DeleteConfirmModal({
   onConfirm,
 }: DeleteConfirmModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-60 p-4 animate-in fade-in duration-300">
       <div className="bg-card rounded-xl max-w-sm w-full p-6 shadow-2xl animate-in zoom-in duration-200">
         <div className="flex items-center gap-3 text-destructive mb-4">
           <Trash2 className="w-5 h-5" />

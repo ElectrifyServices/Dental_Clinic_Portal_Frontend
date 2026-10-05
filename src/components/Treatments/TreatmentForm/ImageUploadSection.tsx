@@ -34,7 +34,7 @@ export function ImageUploadSection({ images, onUpload, onRemove }: ImageUploadSe
                   <Button
                     type="button"
                     onClick={() => onRemove(index)}
-                    className="absolute -top-1.5 -right-1.5 bg-destructive/100 text-white rounded-lg w-7 h-7 flex items-center justify-center shadow-lg hover:bg-destructive transition-all opacity-0 group-hover/img:opacity-100 scale-90 group-hover/img:scale-100"
+                    className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-lg w-7 h-7 flex items-center justify-center shadow-lg hover:bg-destructive transition-all opacity-0 group-hover/img:opacity-100 scale-90 group-hover/img:scale-100"
                   >
                     <X className="w-4 h-4" />
                   </Button>

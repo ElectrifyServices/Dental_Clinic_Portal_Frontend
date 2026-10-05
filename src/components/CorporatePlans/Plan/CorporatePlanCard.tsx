@@ -146,7 +146,7 @@ export function CorporatePlanCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-slate-400 text-[11px] mt-0.5 font-bold flex items-center gap-1 truncate cursor-help">
-                  {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />}
+                  {!isIndividual && <Building2 className="w-3.5 h-3.5 opacity-60 shrink-0" />}
                   <span className="truncate">{isIndividual ? 'Personal Membership' : plan.companyName}</span>
                 </p>
               </TooltipTrigger>
@@ -241,7 +241,7 @@ export function CorporatePlanCard({
                     key={b.id}
                     className="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-slate-200 shadow-xs hover:border-slate-200 transition-colors"
                   >
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${theme.bg} border border-current/10 text-xs`}>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${theme.bg} border border-current/10 text-xs`}>
                       {BENEFIT_ICONS[b.type]}
                     </div>
                     <div className="min-w-0 flex-1">

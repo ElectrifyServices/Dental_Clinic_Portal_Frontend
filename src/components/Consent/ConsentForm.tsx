@@ -471,7 +471,7 @@ export function ConsentForm({
                           return (
                             <div className="flex items-center gap-3 py-1">
                               {profilePic ? (
-                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                                   <img
                                     src={profilePic}
                                     alt={p.name}
@@ -490,7 +490,7 @@ export function ConsentForm({
                                   </div>
                                 </div>
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-black text-xs flex items-center justify-center border border-primary/20 shrink-0">
                                   {initial}
                                 </div>
                               )}
@@ -513,9 +513,9 @@ export function ConsentForm({
                           return (
                             <div className="flex items-center gap-2">
                               {profilePic ? (
-                                <img src={profilePic} alt={p.name} className="w-5 h-5 rounded-full object-cover border border-border flex-shrink-0" />
+                                <img src={profilePic} alt={p.name} className="w-5 h-5 rounded-full object-cover border border-border shrink-0" />
                               ) : (
-                                <div className="w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                <div className="w-5 h-5 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
                                   {initial}
                                 </div>
                               )}
@@ -560,7 +560,7 @@ export function ConsentForm({
                           return (
                             <div className="flex items-center gap-3 py-1">
                               {profilePic ? (
-                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                                   <img
                                     src={profilePic}
                                     alt={d.name}
@@ -579,7 +579,7 @@ export function ConsentForm({
                                   </div>
                                 </div>
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 font-black text-xs flex items-center justify-center border border-blue-500/20 flex-shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 font-black text-xs flex items-center justify-center border border-blue-500/20 shrink-0">
                                   {initial}
                                 </div>
                               )}
@@ -607,9 +607,9 @@ export function ConsentForm({
                           return (
                             <div className="flex items-center gap-2">
                               {profilePic ? (
-                                <img src={profilePic} alt={d.name} className="w-5 h-5 rounded-full object-cover border border-border flex-shrink-0" />
+                                <img src={profilePic} alt={d.name} className="w-5 h-5 rounded-full object-cover border border-border shrink-0" />
                               ) : (
-                                <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-500 font-bold text-[10px] flex items-center justify-center border border-blue-500/20 flex-shrink-0">
+                                <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-500 font-bold text-[10px] flex items-center justify-center border border-blue-500/20 shrink-0">
                                   {initial}
                                 </div>
                               )}
@@ -645,7 +645,7 @@ export function ConsentForm({
                               className={cn(
                                 "border rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all duration-200 bg-background cursor-pointer hover:border-primary/50",
                                 isChecked
-                                  ? "border-primary bg-primary/[0.02] shadow-sm ring-1 ring-primary/20"
+                                  ? "border-primary bg-primary/2 shadow-sm ring-1 ring-primary/20"
                                   : "border-border"
                               )}
                             >
@@ -724,7 +724,7 @@ export function ConsentForm({
                           const fileInput = document.getElementById("offline-consent-file-upload-step1");
                           fileInput?.click();
                         }}
-                        className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/[0.01] transition-all bg-background"
+                        className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/1 transition-all bg-background"
                       >
                         <input
                           id="offline-consent-file-upload-step1"

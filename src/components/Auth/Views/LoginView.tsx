@@ -135,7 +135,7 @@ export function LoginView({ setView }: LoginViewProps) {
           {/* Error */}
           {state.error && (
             <div className="flex items-start gap-2.5 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-[13px] leading-snug animate-in fade-in zoom-in-95">
-              <span className="mt-0.5 text-red-400 flex-shrink-0">⚠</span>
+              <span className="mt-0.5 text-red-400 shrink-0">⚠</span>
               <span>{state.error}</span>
             </div>
           )}
@@ -145,7 +145,7 @@ export function LoginView({ setView }: LoginViewProps) {
             type="submit"
             disabled={state.isLoading || form.formState.isSubmitting}
             size="lg"
-            className="w-full mt-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
+            className="w-full mt-4 bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11"
           >
             {state.isLoading || form.formState.isSubmitting ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

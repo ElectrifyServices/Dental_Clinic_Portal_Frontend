@@ -127,7 +127,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
             const colorClass = DOCTOR_COLORS[index % DOCTOR_COLORS.length];
             return (
               <div key={doc.id || index} className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl ${colorClass} flex items-center justify-center text-white font-black text-sm flex-shrink-0`}>
+                <div className={`w-9 h-9 rounded-xl ${colorClass} flex items-center justify-center text-white font-black text-sm shrink-0`}>
                   {doc.profilePictureUrl ? (
                     <img src={doc.profilePictureUrl} alt={doc.name} className="w-full h-full object-cover rounded-xl" />
                   ) : (
@@ -146,7 +146,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
                         style={{ width: `${doc.utilizationRate || 0}%` }}
                       />
                     </div>
-                    <span className="text-[9px] font-bold text-muted-foreground flex-shrink-0">
+                    <span className="text-[9px] font-bold text-muted-foreground shrink-0">
                       {doc.utilizationRate || 0}% util
                     </span>
                   </div>

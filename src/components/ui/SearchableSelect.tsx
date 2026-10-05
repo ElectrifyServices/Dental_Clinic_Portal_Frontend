@@ -181,7 +181,7 @@ export function SearchableSelect({
                         <span className="flex items-center gap-1.5 truncate">
                           <span>{getOptionLabel(foundOpt)}</span>
                           {isFree && (
-                            <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 flex-shrink-0">
+                            <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
                               Free
                             </span>
                           )}
@@ -197,7 +197,7 @@ export function SearchableSelect({
           <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className={cn("w-[var(--radix-popover-trigger-width)] p-1.5 min-w-[240px]", popoverClassName)}>
+      <PopoverContent align="start" className={cn("w-(--radix-popover-trigger-width) p-1.5 min-w-[240px]", popoverClassName)}>
         <div className="relative flex items-center border-b border-border pb-1.5 mb-1.5">
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
           <input
@@ -308,13 +308,13 @@ export function SearchableSelect({
                           <span className="truncate pr-2 flex items-center gap-1.5">
                             <span>{optLabel}</span>
                             {typeof opt === "object" && opt !== null && (opt.isFree || opt.is_free) && (
-                              <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 flex-shrink-0">
+                              <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
                                 Free
                               </span>
                             )}
                           </span>
                         )}
-                        {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
+                        {isSelected && <Check className="h-4 w-4 text-primary shrink-0 ml-2" />}
                       </button>
                       {onEditOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit || opt.isFree || opt.is_free)) && (
                         <button
@@ -325,7 +325,7 @@ export function SearchableSelect({
                             setEditingValue(optValue);
                             setEditInputValue(optLabel);
                           }}
-                          className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
+                          className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all duration-150 shrink-0 active:scale-90"
                           title="Edit"
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -340,7 +340,7 @@ export function SearchableSelect({
                             onDeleteOption(optValue);
                           }}
                           disabled={isDeletingValue === optValue}
-                          className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 flex-shrink-0 active:scale-90"
+                          className="p-1.5 mx-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150 shrink-0 active:scale-90"
                           title="Delete"
                         >
                           {isDeletingValue === optValue ? (

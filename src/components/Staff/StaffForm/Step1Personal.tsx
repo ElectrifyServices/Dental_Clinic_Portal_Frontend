@@ -204,7 +204,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.length ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.length ? (
-                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -212,7 +212,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.uppercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.uppercase ? (
-                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -220,7 +220,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.lowercase ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.lowercase ? (
-                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -228,7 +228,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                   </div>
                   <div className={`flex items-center gap-1.5 font-medium transition-colors ${criteria.number ? "text-emerald-600 font-semibold" : "text-rose-500 font-semibold"}`}>
                     {criteria.number ? (
-                      <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 stroke-3 text-emerald-600" />
                     ) : (
                       <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-500" />
                     )}
@@ -268,7 +268,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
             )}
             {formData.confirmPassword && passwordsMatch && (
               <p className="text-xs text-emerald-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1 flex items-center gap-1">
-                <Check className="w-3 h-3 stroke-[3] text-emerald-600" /> Passwords match
+                <Check className="w-3 h-3 stroke-3 text-emerald-600" /> Passwords match
               </p>
             )}
           </LabeledField>

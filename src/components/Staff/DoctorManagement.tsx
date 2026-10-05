@@ -172,11 +172,11 @@ export function DoctorManagement({
   const renderStaffMenu = (staff: UserType) => (
     <>
       <div
-        className="fixed inset-0 z-[9998]"
+        className="fixed inset-0 z-9998"
         onClick={() => setOpenMenuId(null)}
       />
       <div
-        className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
+        className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-1.5"
         style={{ top: menuPos.top, left: menuPos.left }}
       >
         <Button
@@ -259,10 +259,10 @@ export function DoctorManagement({
               src={staff.avatar}
               alt={staff.name}
               onError={() => setImgErrors(prev => ({ ...prev, [staff.id]: true }))}
-              className="w-10 h-10 rounded-2xl object-cover flex-shrink-0 border border-border shadow-sm bg-muted/20"
+              className="w-10 h-10 rounded-2xl object-cover shrink-0 border border-border shadow-sm bg-muted/20"
             />
           ) : (
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs flex-shrink-0 border border-primary/5">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs shrink-0 border border-primary/5">
               {getInitials(staff.name)}
             </div>
           )}
@@ -497,7 +497,7 @@ export function DoctorManagement({
                   className="group relative overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 bg-card/50 backdrop-blur-sm"
                 >
                   {/* Subtle top gradient */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary/40 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-5">
@@ -510,7 +510,7 @@ export function DoctorManagement({
                             className="w-16 h-16 rounded-2xl object-cover border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300 bg-muted/20"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">
+                          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-black text-xl border-4 border-card shadow-sm group-hover:scale-105 transition-transform duration-300">
                             {getInitials(staff.name)}
                           </div>
                         )}
@@ -572,14 +572,14 @@ export function DoctorManagement({
 
                     <div className="mt-5 space-y-3 border-t border-border/50 pt-5">
                       <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium truncate group-hover:text-foreground/80 transition-colors">
-                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-blue-500/20">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-blue-500/20">
                           <Mail className="w-3.5 h-3.5 text-blue-500" />
                         </div>
                         <span className="truncate">{staff.email}</span>
                       </div>
                       {staff.phone && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-emerald-500/20">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-emerald-500/20">
                             <Phone className="w-3.5 h-3.5 text-emerald-500" />
                           </div>
                           <span>{staff.phone.startsWith("+") ? staff.phone : `${(staff as ApiAny).country_code || "+91"} ${staff.phone}`}</span>
@@ -587,7 +587,7 @@ export function DoctorManagement({
                       )}
                       {(staff as ApiAny).experience && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium group-hover:text-foreground/80 transition-colors">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-amber-500/20">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-amber-500/20">
                             <Stethoscope className="w-3.5 h-3.5 text-amber-500" />
                           </div>
                           <span>{(staff as ApiAny).experience} Years Exp.</span>

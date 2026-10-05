@@ -1757,7 +1757,7 @@ export function TreatmentSessionManager({
                           })()}
                           value={nextSessionDraft.date}
                           onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value, time: "" }))}
-                          className="w-full !inline-flex items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          className="w-full inline-flex! items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                         />
                       </div>
 

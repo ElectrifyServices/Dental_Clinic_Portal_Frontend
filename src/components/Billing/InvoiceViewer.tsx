@@ -267,8 +267,8 @@ export function InvoiceViewer({
               className={`p-2 rounded-xl ${invoice.status === "paid"
                 ? "bg-emerald-500 text-white"
                 : invoice.status === "overdue"
-                  ? "bg-destructive/100 text-white"
-                  : "bg-primary/100 text-white"
+                  ? "bg-destructive text-white"
+                  : "bg-primary text-white"
                 }`}
             >
               <CreditCard className="w-5 h-5" />

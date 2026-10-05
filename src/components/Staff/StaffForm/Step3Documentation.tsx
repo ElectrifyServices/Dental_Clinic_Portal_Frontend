@@ -92,7 +92,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
                   {uploadedFiles.map((file: ApiAny, fIdx: number) => (
                     <div key={fIdx} className="flex items-center justify-between bg-card/60 p-2 rounded-xl border border-emerald-100 animate-in zoom-in-95 duration-300">
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span className="text-[10px] font-bold text-emerald-800 truncate max-w-[120px]" title={file.name}>{file.name}</span>
                       </div>
                       <div className="flex gap-1">
@@ -163,7 +163,7 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
       </div>
 
       <div className="p-5 bg-primary/50 border border-primary/20 rounded-2xl flex gap-4 shadow-sm">
-        <div className="w-12 h-12 bg-primary/100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-200">
+        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
           <Shield className="w-6 h-6 text-white" />
         </div>
         <div className="space-y-1">

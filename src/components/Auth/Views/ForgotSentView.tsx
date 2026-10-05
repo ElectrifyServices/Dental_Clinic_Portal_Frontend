@@ -16,7 +16,7 @@ export function ForgotSentView({ setView, resetEmail, setResetEmail }: ForgotSen
         <div className="w-24 h-24 flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-105 hover:rotate-3">
           <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
         </div>
-        <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-2">
+        <div className="w-12 h-12 bg-linear-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-2">
           <MailCheck className="w-6 h-6 text-indigo-600" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">

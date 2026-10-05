@@ -125,14 +125,14 @@ export function Sidebar() {
   return (
     <aside
       className={[
-        "relative hidden md:flex md:flex-col flex-shrink-0 z-30",
+        "relative hidden md:flex md:flex-col shrink-0 z-30",
         collapsed ? "md:w-[68px]" : "md:w-[260px]",
         "bg-white border-r border-border/60 shadow-[4px_0_24px_rgba(15,23,42,0.06)] h-screen sticky top-0",
         "transition-all duration-300 overflow-visible",
       ].join(" ")}
     >
       {/* Colorful top accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-indigo-500" />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-linear-to-r from-primary to-indigo-500" />
 
       {/* ── Collapse toggle ─────────────────────────────────────── */}
       <button
@@ -151,9 +151,9 @@ export function Sidebar() {
       </button>
 
       {/* ── Logo / Brand ────────────────────────────────────────── */}
-      <div className="flex items-center h-16 px-4 border-b border-border/60 flex-shrink-0 group/logo cursor-pointer mt-[3px]">
+      <div className="flex items-center h-16 px-4 border-b border-border/60 shrink-0 group/logo cursor-pointer mt-[3px]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-white border border-border/60 flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-200 transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
+          <div className="w-9 h-9 rounded-xl bg-white border border-border/60 flex items-center justify-center shrink-0 shadow-md shadow-slate-200 transition-transform duration-300 group-hover/logo:scale-110 group-hover/logo:rotate-3 overflow-hidden p-0.5">
             <img
               src={themeData?.theme?.logo_url || logo}
               alt="Logo"
@@ -204,15 +204,15 @@ export function Sidebar() {
                             ? "justify-center px-0 h-10 w-10 mx-auto"
                             : "h-10 px-3 gap-3",
                           isActive
-                            ? "text-primary font-bold bg-primary/[0.03] border-primary/40"
+                            ? "text-primary font-bold bg-primary/3 border-primary/40"
                             : "text-slate-600 hover:text-primary hover:bg-slate-50 border-slate-200/50",
                           // Vertical border mask
-                          "before:content-[''] before:absolute before:top-[5px] before:left-[-1px] before:w-[calc(100%+2px)] before:h-[calc(100%-10px)] before:bg-white before:transition-all before:duration-300 before:ease-in-out before:z-[1]",
+                          "before:content-[''] before:absolute before:top-[5px] before:-left-px before:w-[calc(100%+2px)] before:h-[calc(100%-10px)] before:bg-white before:transition-all before:duration-300 before:ease-in-out before:z-1",
                           isActive
                             ? "before:scale-y-0"
                             : "before:scale-y-100 group-hover/btn:before:scale-y-0",
                           // Horizontal border mask
-                          "after:content-[''] after:absolute after:left-[5px] after:top-[-1px] after:h-[calc(100%+2px)] after:w-[calc(100%-10px)] after:bg-white after:transition-all after:duration-300 after:ease-in-out after:z-[1]",
+                          "after:content-[''] after:absolute after:left-[5px] after:-top-px after:h-[calc(100%+2px)] after:w-[calc(100%-10px)] after:bg-white after:transition-all after:duration-300 after:ease-in-out after:z-1",
                           isActive
                             ? "after:scale-x-0"
                             : "after:scale-x-100 group-hover/btn:after:scale-x-0",
@@ -225,7 +225,7 @@ export function Sidebar() {
                           {/* Icon wrapper */}
                           <div
                             className={[
-                              "flex-shrink-0 flex items-center justify-center transition-all duration-150 z-10",
+                              "shrink-0 flex items-center justify-center transition-all duration-150 z-10",
                               !collapsed ? "w-7 h-7 rounded-lg" : "",
                               isActive && !collapsed
                                 ? "bg-primary/15"
@@ -266,9 +266,9 @@ export function Sidebar() {
       {/* This code will be useful in the future, so for now it's been commented out. */}
       {/* ── Bottom user chip ────────────────────────────────────── */}
       {/* {!collapsed ? (
-        <div className="px-3 py-3 border-t border-border/60 flex-shrink-0">
+        <div className="px-3 py-3 border-t border-border/60 shrink-0">
           <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-primary/5 border border-primary/10">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-sm shadow-primary/20">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-black shrink-0 shadow-sm shadow-primary/20">
               {state.user?.name?.[0] ?? "U"}
             </div>
             <div className="min-w-0 flex-1">
@@ -282,7 +282,7 @@ export function Sidebar() {
           </div>
         </div>
       ) : (
-        <div className="px-2 py-3 border-t border-border/60 flex-shrink-0 flex justify-center">
+        <div className="px-2 py-3 border-t border-border/60 shrink-0 flex justify-center">
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-black shadow-sm shadow-primary/20">
             {state.user?.name?.[0] ?? "U"}
           </div>

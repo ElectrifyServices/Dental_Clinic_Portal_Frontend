@@ -1,9 +1,386 @@
-@import "tw-animate-css";
-@import "@fontsource-variable/inter";
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* tw-animate-css defines its own @utility rules, so it must NOT be wrapped in
+   layer(...) - an @utility inside a layer is invalid in v4. */
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter' layer(base);
+
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: Inter var, Inter, system-ui, -apple-system, sans-serif;
+
+  --color-border: rgb(var(--border));
+  --color-input: rgb(var(--border));
+  --color-ring: rgb(var(--primary));
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-divider: rgb(var(--divider));
+
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --color-primary-hover: #4b5c57;
+
+  --color-secondary: rgb(var(--secondary));
+  --color-secondary-foreground: rgb(var(--secondary-foreground));
+
+  --color-ternary: rgb(var(--ternary));
+  --color-ternary-foreground: #ffffff;
+
+  --color-success: rgb(var(--success));
+  --color-success-foreground: #ffffff;
+
+  --color-warning: rgb(var(--warning));
+  --color-warning-foreground: #ffffff;
+
+  --color-destructive: rgb(var(--destructive));
+  --color-destructive-foreground: rgb(var(--destructive-foreground));
+
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+
+  --color-accent: rgb(var(--accent));
+  --color-accent-foreground: rgb(var(--accent-foreground));
+
+  --color-popover: rgb(var(--popover));
+  --color-popover-foreground: rgb(var(--popover-foreground));
+
+  --color-card: rgb(var(--card));
+  --color-card-foreground: rgb(var(--card-foreground));
+
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+  --radius-sm: var(--radius-sm);
+  --radius-modal: var(--radius-modal);
+
+  --shadow-card: 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-modal: 0 8px 32px rgba(16, 24, 40, 0.12);
+  --shadow-nav: 0 2px 8px rgba(95, 115, 109, 0.2);
+
+  --text-display: 2rem;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility btn-primary {
+  /* ─────────────────────────────────────────────────────────────────
+     BUTTONS
+  ───────────────────────────────────────────────────────────────── */
+  @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-primary-foreground
+           bg-primary rounded-md
+           hover:bg-primary-hover hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-xs hover:shadow-md hover:shadow-primary/10
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+}
+
+@utility btn-secondary {
+  @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-foreground
+           bg-card border border-border rounded-md
+           hover:bg-muted hover:border-border/80 hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-xs hover:shadow-md
+           disabled:opacity-50 disabled:transform-none;
+}
+
+@utility btn-danger {
+  @apply inline-flex items-center justify-center gap-2
+           h-10 px-4
+           text-sm font-semibold text-destructive-foreground
+           bg-destructive rounded-md
+           hover:opacity-95 hover:scale-[1.02] hover:-translate-y-0.5
+           active:scale-[0.98] active:translate-y-0
+           transition-all duration-200 ease-out
+           shadow-xs hover:shadow-md hover:shadow-destructive/10
+           disabled:opacity-50 disabled:transform-none;
+}
+
+@utility btn-icon {
+  @apply p-2 text-muted-foreground
+           hover:text-foreground hover:bg-muted hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
+}
+
+@utility btn-icon-blue {
+  @apply p-2 text-primary
+           hover:text-primary/80 hover:bg-primary/10 hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
+}
+
+@utility btn-icon-red {
+  @apply p-2 text-destructive
+           hover:text-destructive/80 hover:bg-destructive/10 hover:scale-105 active:scale-95
+           rounded-md transition-all duration-150 ease-out;
+}
+
+@utility card {
+  /* ─────────────────────────────────────────────────────────────────
+     CARDS
+  ───────────────────────────────────────────────────────────────── */
+  @apply bg-card rounded-lg border border-border shadow-card
+           transition-all duration-300 ease-out;
+}
+
+@utility card-hover {
+  @apply bg-card rounded-lg border border-border shadow-card
+           hover:shadow-card-hover hover:border-border/80 hover:-translate-y-1 hover:scale-[1.005]
+           transition-all duration-300 ease-out;
+}
+
+@utility kpi-card {
+  @apply bg-card rounded-lg border border-border p-6 shadow-card
+           hover:shadow-card-hover hover:-translate-y-1 hover:scale-[1.01]
+           transition-all duration-300 ease-out;
+}
+
+@utility form-input {
+  /* ─────────────────────────────────────────────────────────────────
+     FORMS
+  ───────────────────────────────────────────────────────────────── */
+  @apply w-full h-12 px-3 py-2
+           text-sm text-foreground
+           bg-card border border-border rounded-md
+           placeholder:text-muted-foreground
+           focus:outline-hidden focus:ring-4 focus:ring-primary/10 focus:border-primary
+           transition-all duration-200 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@utility form-label {
+  @apply block text-xs font-medium text-muted-foreground mb-1.5;
+}
+
+@utility form-section-label {
+  @apply block text-[11px] font-semibold text-muted-foreground
+           uppercase tracking-[1.5px] mb-3;
+}
+
+@utility page-title {
+  /* ─────────────────────────────────────────────────────────────────
+     PAGE LAYOUT
+  ───────────────────────────────────────────────────────────────── */
+  @apply text-2xl font-bold text-foreground leading-tight tracking-tight;
+}
+
+@utility page-subtitle {
+  @apply text-sm text-muted-foreground mt-0.5;
+}
+
+@utility page-header {
+  @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+}
+
+@utility data-table {
+  /* ─────────────────────────────────────────────────────────────────
+     TABLES
+  ───────────────────────────────────────────────────────────────── */
+  @apply w-full text-sm;
+
+  & thead tr {
+    @apply border-b-2 border-border bg-muted/60;
+  }
+
+  & thead th {
+    @apply px-4 py-3
+           text-left text-xs font-semibold text-muted-foreground
+           uppercase tracking-wide whitespace-nowrap
+           sticky top-0 z-10 bg-muted/95 backdrop-blur-xs;
+  }
+
+  & tbody tr {
+    @apply border-b border-divider
+           hover:bg-secondary/40
+           transition-all duration-150 ease-out;
+  }
+
+  & tbody tr:last-child {
+    @apply border-b-0;
+  }
+
+  & tbody td {
+    @apply px-4 py-3.5 text-sm font-normal text-foreground;
+  }
+}
+
+@utility badge {
+  /* ─────────────────────────────────────────────────────────────────
+     BADGES
+  ───────────────────────────────────────────────────────────────── */
+  @apply inline-flex items-center gap-1
+           px-2.5 py-0.5 rounded-full
+           text-xs font-semibold border;
+}
+
+@utility badge-green {
+  @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+}
+
+@utility badge-blue {
+  @apply bg-blue-50   text-blue-700   border-blue-200;
+}
+
+@utility badge-amber {
+  @apply bg-amber-50  text-amber-700  border-amber-200;
+}
+
+@utility badge-red {
+  @apply bg-red-50    text-red-700    border-red-200;
+}
+
+@utility badge-gray {
+  @apply bg-muted text-muted-foreground border-border;
+}
+
+@utility badge-violet {
+  @apply bg-violet-50 text-violet-700 border-violet-200;
+}
+
+@utility badge-indigo {
+  @apply bg-indigo-50 text-indigo-700 border-indigo-200;
+}
+
+@utility modal-overlay {
+  /* ─────────────────────────────────────────────────────────────────
+     MODALS
+  ───────────────────────────────────────────────────────────────── */
+  @apply fixed inset-0 bg-black/40 backdrop-blur-xs z-50
+           flex items-center justify-center p-4 overflow-y-auto;
+}
+
+@utility modal-box {
+  @apply bg-card rounded-modal shadow-modal my-6;
+}
+
+@utility modal-header {
+  @apply flex items-center justify-between px-6 py-4 border-b border-border;
+}
+
+@utility modal-title {
+  @apply text-lg font-semibold text-foreground;
+}
+
+@utility modal-body {
+  @apply p-6 space-y-4;
+}
+
+@utility modal-footer {
+  @apply flex justify-end gap-3 px-6 py-4 border-t border-border;
+}
+
+@utility filter-bar {
+  /* ─────────────────────────────────────────────────────────────────
+     FILTER BAR & TABS
+  ───────────────────────────────────────────────────────────────── */
+  @apply flex flex-wrap items-center gap-4
+           bg-card p-4 rounded-lg border border-border shadow-card;
+}
+
+@utility search-input {
+  @apply w-full pl-10 pr-4 py-2.5
+           text-sm border border-border rounded-md
+           bg-card text-foreground
+           placeholder:text-muted-foreground
+           focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary
+           transition-all;
+}
+
+@utility filter-tabs {
+  @apply flex items-center bg-muted p-1 rounded-md border border-border gap-0.5 overflow-x-auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility filter-tab {
+  @apply px-3 py-1.5 text-xs font-medium text-muted-foreground
+           rounded-sm hover:text-foreground hover:bg-card/60
+           transition-colors duration-150 shrink-0 whitespace-nowrap;
+}
+
+@utility filter-tab-active {
+  @apply px-3 py-1.5 text-xs font-semibold text-primary
+           bg-card shadow-xs rounded-sm border border-border/60 shrink-0 whitespace-nowrap;
+}
+
+@utility divider-horizontal {
+  /* ─────────────────────────────────────────────────────────────────
+     UTILITIES
+  ───────────────────────────────────────────────────────────────── */
+  @apply h-px w-full bg-divider my-6;
+}
+
+@utility glass-panel {
+  @apply bg-card/80 backdrop-blur-md border border-border/40 shadow-card;
+}
+
+@utility section-heading {
+  /* Section divider with label */
+  @apply flex items-center gap-3 mb-4;
+  &::before {
+    content: '';
+    @apply flex-1 h-px bg-divider;
+  }
+  &::after {
+    content: '';
+    @apply flex-1 h-px bg-divider;
+  }
+}
+
+@utility scrollbar-hide {
+  /* ── Scrollbars ─────────────────────────────────────────────── */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(152, 162, 179, 0.35);
+    border-radius: 8px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(152, 162, 179, 0.6);
+  }
+}
 
 @layer base {
   :root {
@@ -145,284 +522,16 @@
   p  { @apply text-sm font-normal text-foreground; }                /* 14px / 400 */
 }
 
-@layer components {
-  /* ─────────────────────────────────────────────────────────────────
-     BUTTONS
-  ───────────────────────────────────────────────────────────────── */
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           h-10 px-4
-           text-sm font-semibold text-primary-foreground
-           bg-primary rounded-md
-           hover:bg-primary-hover hover:scale-[1.02] hover:-translate-y-0.5
-           active:scale-[0.98] active:translate-y-0
-           transition-all duration-200 ease-out
-           shadow-sm hover:shadow-md hover:shadow-primary/10
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-           h-10 px-4
-           text-sm font-semibold text-foreground
-           bg-card border border-border rounded-md
-           hover:bg-muted hover:border-border/80 hover:scale-[1.02] hover:-translate-y-0.5
-           active:scale-[0.98] active:translate-y-0
-           transition-all duration-200 ease-out
-           shadow-sm hover:shadow-md
-           disabled:opacity-50 disabled:transform-none;
-  }
-
-  .btn-danger {
-    @apply inline-flex items-center justify-center gap-2
-           h-10 px-4
-           text-sm font-semibold text-destructive-foreground
-           bg-destructive rounded-md
-           hover:opacity-95 hover:scale-[1.02] hover:-translate-y-0.5
-           active:scale-[0.98] active:translate-y-0
-           transition-all duration-200 ease-out
-           shadow-sm hover:shadow-md hover:shadow-destructive/10
-           disabled:opacity-50 disabled:transform-none;
-  }
-
-  .btn-icon {
-    @apply p-2 text-muted-foreground
-           hover:text-foreground hover:bg-muted hover:scale-105 active:scale-95
-           rounded-md transition-all duration-150 ease-out;
-  }
-
-  .btn-icon-blue {
-    @apply p-2 text-primary
-           hover:text-primary/80 hover:bg-primary/10 hover:scale-105 active:scale-95
-           rounded-md transition-all duration-150 ease-out;
-  }
-
-  .btn-icon-red {
-    @apply p-2 text-destructive
-           hover:text-destructive/80 hover:bg-destructive/10 hover:scale-105 active:scale-95
-           rounded-md transition-all duration-150 ease-out;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     CARDS
-  ───────────────────────────────────────────────────────────────── */
-  .card {
-    @apply bg-card rounded-lg border border-border shadow-card
-           transition-all duration-300 ease-out;
-  }
-
-  .card-hover {
-    @apply bg-card rounded-lg border border-border shadow-card
-           hover:shadow-card-hover hover:border-border/80 hover:-translate-y-1 hover:scale-[1.005]
-           transition-all duration-300 ease-out;
-  }
-
-  .kpi-card {
-    @apply bg-card rounded-lg border border-border p-6 shadow-card
-           hover:shadow-card-hover hover:-translate-y-1 hover:scale-[1.01]
-           transition-all duration-300 ease-out;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     FORMS
-  ───────────────────────────────────────────────────────────────── */
-  .form-input {
-    @apply w-full h-12 px-3 py-2
-           text-sm text-foreground
-           bg-card border border-border rounded-md
-           placeholder:text-muted-foreground
-           focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary
-           transition-all duration-200 ease-out
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .form-label {
-    @apply block text-xs font-medium text-muted-foreground mb-1.5;
-  }
-
-  .form-section-label {
-    @apply block text-[11px] font-semibold text-muted-foreground
-           uppercase tracking-[1.5px] mb-3;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     PAGE LAYOUT
-  ───────────────────────────────────────────────────────────────── */
-  .page-title {
-    @apply text-2xl font-bold text-foreground leading-tight tracking-tight;
-  }
-
-  .page-subtitle {
-    @apply text-sm text-muted-foreground mt-0.5;
-  }
-
-  .page-header {
-    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     TABLES
-  ───────────────────────────────────────────────────────────────── */
-  .data-table {
-    @apply w-full text-sm;
-  }
-
-  .data-table thead tr {
-    @apply border-b-2 border-border bg-muted/60;
-  }
-
-  .data-table thead th {
-    @apply px-4 py-3
-           text-left text-xs font-semibold text-muted-foreground
-           uppercase tracking-wide whitespace-nowrap
-           sticky top-0 z-10 bg-muted/95 backdrop-blur-sm;
-  }
-
-  .data-table tbody tr {
-    @apply border-b border-divider
-           hover:bg-secondary/40
-           transition-all duration-150 ease-out;
-  }
-
-  .data-table tbody tr:last-child {
-    @apply border-b-0;
-  }
-
-  .data-table tbody td {
-    @apply px-4 py-3.5 text-sm font-normal text-foreground;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     BADGES
-  ───────────────────────────────────────────────────────────────── */
-  .badge {
-    @apply inline-flex items-center gap-1
-           px-2.5 py-0.5 rounded-full
-           text-xs font-semibold border;
-  }
-
-  .badge-green  { @apply bg-emerald-50 text-emerald-700 border-emerald-200; }
-  .badge-blue   { @apply bg-blue-50   text-blue-700   border-blue-200;   }
-  .badge-amber  { @apply bg-amber-50  text-amber-700  border-amber-200;  }
-  .badge-red    { @apply bg-red-50    text-red-700    border-red-200;    }
-  .badge-gray   { @apply bg-muted text-muted-foreground border-border;   }
-  .badge-violet { @apply bg-violet-50 text-violet-700 border-violet-200; }
-  .badge-indigo { @apply bg-indigo-50 text-indigo-700 border-indigo-200; }
-
-  /* ─────────────────────────────────────────────────────────────────
-     MODALS
-  ───────────────────────────────────────────────────────────────── */
-  .modal-overlay {
-    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-50
-           flex items-center justify-center p-4 overflow-y-auto;
-  }
-
-  .modal-box {
-    @apply bg-card rounded-modal shadow-modal my-6;
-  }
-
-  .modal-header {
-    @apply flex items-center justify-between px-6 py-4 border-b border-border;
-  }
-
-  .modal-title {
-    @apply text-lg font-semibold text-foreground;
-  }
-
-  .modal-body {
-    @apply p-6 space-y-4;
-  }
-
-  .modal-footer {
-    @apply flex justify-end gap-3 px-6 py-4 border-t border-border;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     FILTER BAR & TABS
-  ───────────────────────────────────────────────────────────────── */
-  .filter-bar {
-    @apply flex flex-wrap items-center gap-4
-           bg-card p-4 rounded-lg border border-border shadow-card;
-  }
-
-  .search-input {
-    @apply w-full pl-10 pr-4 py-2.5
-           text-sm border border-border rounded-md
-           bg-card text-foreground
-           placeholder:text-muted-foreground
-           focus:bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary
-           transition-all;
-  }
-
-  .filter-tabs {
-    @apply flex items-center bg-muted p-1 rounded-md border border-border gap-0.5 overflow-x-auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .filter-tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .filter-tab {
-    @apply px-3 py-1.5 text-xs font-medium text-muted-foreground
-           rounded-sm hover:text-foreground hover:bg-card/60
-           transition-colors duration-150 shrink-0 whitespace-nowrap;
-  }
-
-  .filter-tab-active {
-    @apply px-3 py-1.5 text-xs font-semibold text-primary
-           bg-card shadow-sm rounded-sm border border-border/60 shrink-0 whitespace-nowrap;
-  }
-
-  /* ─────────────────────────────────────────────────────────────────
-     UTILITIES
-  ───────────────────────────────────────────────────────────────── */
-  .divider-horizontal {
-    @apply h-px w-full bg-divider my-6;
-  }
-
-  .glass-panel {
-    @apply bg-card/80 backdrop-blur-md border border-border/40 shadow-card;
-  }
-
-  /* Section divider with label */
-  .section-heading {
-    @apply flex items-center gap-3 mb-4;
-  }
-  .section-heading::before,
-  .section-heading::after {
-    content: '';
-    @apply flex-1 h-px bg-divider;
-  }
+/* Global scrollbar styling. These are pseudo-element rules, not utility
+   classes, so in v4 they sit outside @layer. */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
+::-webkit-scrollbar-thumb {
+  background-color: rgba(152, 162, 179, 0.3);
+  border-radius: 8px;
 }
-
-@layer utilities {
-  /* ── Scrollbars ─────────────────────────────────────────────── */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-  .custom-scrollbar::-webkit-scrollbar       { width: 5px; height: 5px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(152, 162, 179, 0.35);
-    border-radius: 8px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(152, 162, 179, 0.6);
-  }
-
-  ::-webkit-scrollbar       { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
-  ::-webkit-scrollbar-thumb {
-    background-color: rgba(152, 162, 179, 0.3);
-    border-radius: 8px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(152, 162, 179, 0.55);
-  }
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(152, 162, 179, 0.55);
 }
 
 input[type="date"] {

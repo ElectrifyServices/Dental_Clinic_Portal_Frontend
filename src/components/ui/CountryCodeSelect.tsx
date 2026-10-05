@@ -326,7 +326,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-80 p-0 rounded-2xl shadow-modal border-border/80 z-[100] overflow-hidden flex flex-col">
+      <PopoverContent align="start" className="w-80 p-0 rounded-2xl shadow-modal border-border/80 z-100 overflow-hidden flex flex-col">
         {/* Sticky Search Header */}
         <div className="p-2.5 bg-muted/40 border-b border-border/60 sticky top-0 z-10 backdrop-blur-md shrink-0">
           <div className="relative flex items-center">

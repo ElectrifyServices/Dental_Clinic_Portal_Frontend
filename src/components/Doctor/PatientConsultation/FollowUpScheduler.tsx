@@ -201,7 +201,7 @@ export function FollowUpScheduler({
                           `}
                           title={isApiDisabled ? "This slot is blocked" : isInitiallyBooked ? `Currently Booked: ${slot.time12}` : `Select ${slot.time12}`}
                         >
-                          {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 flex-shrink-0 text-white" />)}
+                          {isApiDisabled ? "🔒 " : (isSelected && <CheckCircle className="w-3 h-3 shrink-0 text-white" />)}
                           {isApiDisabled ? slot.time12 : `${slot.time12} (${slot.appointmentCount})`}
                         </Button>
                       );

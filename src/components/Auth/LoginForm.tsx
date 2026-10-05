@@ -24,7 +24,7 @@ export function LoginForm() {
   return (
     <div className="min-h-screen flex bg-[#090d16] font-sans text-slate-100 selection:bg-indigo-500 selection:text-white">
       {/* ── Left Panel ─────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[48%] relative flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0c1427] via-[#1a1033] to-[#2d0918] border-r border-slate-800/60">
+      <div className="hidden lg:flex lg:w-[48%] relative flex-col justify-between overflow-hidden bg-linear-to-br from-[#0c1427] via-[#1a1033] to-[#2d0918] border-r border-slate-800/60">
         {/* Subtle grid texture */}
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -57,7 +57,7 @@ export function LoginForm() {
           <h2 className="text-[2.6rem] font-black text-white leading-[1.15] tracking-tight mb-5">
             Streamlined
             <br />
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-rose-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-400 via-indigo-300 to-rose-400 bg-clip-text text-transparent">
               Clinic & Enterprise
             </span> Operations
           </h2>
@@ -87,7 +87,7 @@ export function LoginForm() {
             },
           ].map((f, i) => (
             <div key={i} className="flex items-center gap-4 group/item cursor-default">
-              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 flex-shrink-0 transition-all group-hover/item:bg-white/10 group-hover/item:border-white/20 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 shrink-0 transition-all group-hover/item:bg-white/10 group-hover/item:border-white/20 shadow-sm">
                 {f.icon}
               </div>
               <div>

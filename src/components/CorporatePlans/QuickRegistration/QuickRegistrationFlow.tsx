@@ -149,7 +149,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
     const grad = GRADIENT_MAP[selectedPlan?.color ?? 'blue'];
     return (
       <div className="bg-white border border-border/60 rounded-2xl shadow-sm flex flex-col items-center justify-center py-24 gap-6">
-        <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${grad} flex items-center justify-center shadow-lg`}>
+        <div className={`w-24 h-24 rounded-3xl bg-linear-to-br ${grad} flex items-center justify-center shadow-lg`}>
           <CheckCircle className="w-12 h-12 text-white" />
         </div>
         <div className="text-center">
@@ -177,7 +177,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
       {/* ── Header + progress ──────────────────────────────────────────── */}
       <Card className="p-5 border-border/60 shadow-sm space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm shrink-0">
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
@@ -194,7 +194,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
         <div className="space-y-2.5">
           <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
+              className="absolute left-0 top-0 bottom-0 bg-linear-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -206,7 +206,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
               return (
                 <div key={s.num} className="flex flex-col items-center gap-1">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${done ? 'bg-emerald-500 text-white' :
-                      active ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm' :
+                      active ? 'bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-sm' :
                         'bg-muted text-muted-foreground/40'
                     }`}>
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
@@ -258,7 +258,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                       }`}
                   >
                     {/* Color swatch */}
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center flex-shrink-0`}>
+                    <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${grad} flex items-center justify-center shrink-0`}>
                       {isInd ? <User className="w-4 h-4 text-white" /> : <Building2 className="w-4 h-4 text-white" />}
                     </div>
 
@@ -266,7 +266,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-foreground truncate">{plan.name}</span>
-                        {TierIcon && <TierIcon className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
+                        {TierIcon && <TierIcon className="w-3 h-3 text-muted-foreground shrink-0" />}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] font-mono text-muted-foreground">{plan.code}</span>
@@ -284,14 +284,14 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
                     </div>
 
                     {/* Family info */}
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right shrink-0">
                       <span className="text-[10px] font-bold text-muted-foreground block">
                         {(plan.maxDependents ?? 0) === 0 ? 'Self Only' : `+${plan.maxDependents} family`}
                       </span>
                     </div>
 
                     {/* Selected indicator */}
-                    {selected && <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />}
+                    {selected && <CheckCircle className="w-5 h-5 text-primary shrink-0" />}
                   </button>
                 );
               })}
@@ -518,7 +518,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
             {selectedPlan && (() => {
               const grad = GRADIENT_MAP[selectedPlan.color] ?? GRADIENT_MAP.blue;
               return (
-                <div className={`relative rounded-2xl bg-gradient-to-br ${grad} p-4 text-white overflow-hidden`}>
+                <div className={`relative rounded-2xl bg-linear-to-br ${grad} p-4 text-white overflow-hidden`}>
                   <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/5" />
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Membership Plan</p>
                   <p className="text-lg font-black">{selectedPlan.name}</p>
@@ -582,7 +582,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="gap-2 rounded-xl px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 shadow-sm shadow-emerald-200"
+              className="gap-2 rounded-xl px-8 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 shadow-sm shadow-emerald-200"
             >
               {saving
                 ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

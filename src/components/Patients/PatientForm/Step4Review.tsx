@@ -110,7 +110,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
   return (
     <div className="space-y-4">
       <div className="text-center mb-3">
-        <div className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-4 border-white shadow-lg">
+        <div className="w-24 h-24 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-4 border-white shadow-lg">
           {formData.avatar ? (
             <img
               src={formData.avatar}
@@ -479,7 +479,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     {formData.consentFormUrl ? "ATTACHED" : "PENDING"}
                   </Badge>
                 </div>
-                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-[4.5rem] flex items-center justify-center">
+                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-18 flex items-center justify-center">
                   {(() => {
                     const consentFormUrl = formData.consentFormUrl;
                     const isValidForm = consentFormUrl && consentFormUrl !== "null" && consentFormUrl !== "undefined" && consentFormUrl !== "";
@@ -540,7 +540,7 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
                     {formData.patientSignature || formData.guardianSignature ? "SIGNED" : "PENDING"}
                   </Badge>
                 </div>
-                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-[4.5rem] flex items-center justify-center">
+                <div className="bg-card rounded-lg p-2 border border-secondary shadow-inner min-h-18 flex items-center justify-center">
                   {(() => {
                     const signature = formData.patientSignature || formData.guardianSignature;
                     const isValidSig = signature && signature !== "null" && signature !== "undefined" && signature !== "";

@@ -71,19 +71,19 @@ export const MemberCard: React.FC<MemberCardProps> = ({
       {/* Header: Profile, Name, Contact, Dropdown and Status */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(employee.name)} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
+          <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${avatarGrad(employee.name)} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}>
             {employee.name[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-foreground text-sm truncate">{employee.name}</h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
+              <Phone className="w-3.5 h-3.5 opacity-60 shrink-0" />
               <span>{formatPhoneWithCountryCode(employee.phone, (employee as ApiAny).country_code || (employee as ApiAny).countryCode)}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Status Toggle Button */}
           <Button
             onClick={async (ev) => {

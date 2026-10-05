@@ -190,7 +190,7 @@ export function SignaturePad({ onSave, defaultValue }: SignaturePadProps) {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
-          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-[2rem] transition-all ${mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
+          className={`w-full h-40 bg-card border-2 border-dashed border-border rounded-4xl transition-all ${mode === 'draw' ? 'cursor-crosshair active:border-primary/50' : 'cursor-default opacity-50'
             }`}
         />
 

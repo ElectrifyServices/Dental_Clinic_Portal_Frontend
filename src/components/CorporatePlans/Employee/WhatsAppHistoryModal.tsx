@@ -209,7 +209,7 @@ export const WhatsAppHistoryModal: React.FC<WhatsAppHistoryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-background/95 backdrop-blur-sm border-white/20 shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-6 border-b border-border/50 relative overflow-hidden">
+        <div className="bg-linear-to-r from-emerald-500/10 to-teal-500/5 p-6 border-b border-border/50 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5">
             <MessageCircle className="w-32 h-32" />
           </div>

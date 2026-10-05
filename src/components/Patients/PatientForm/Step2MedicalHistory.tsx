@@ -85,7 +85,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
   return (
     <div className="space-y-3">
       <div className="text-center mb-2">
-        <div className="w-12 h-12 bg-gradient-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+        <div className="w-12 h-12 bg-linear-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
           <Heart className="w-6 h-6 text-destructive" />
         </div>
         <h3 className="text-base font-bold text-foreground leading-none">Medical Information</h3>
@@ -424,7 +424,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
               return (
                 <div
                   key={index}
-                  className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 flex-shrink-0 flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                  className="relative group w-24 h-24 border rounded-xl overflow-hidden bg-muted/30 shrink-0 flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md transition-shadow"
                   onClick={() => fileUrl && openImageInNewTab(fileUrl, file.name)}
                 >
                   {isImage && fileUrl ? (
@@ -485,7 +485,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
       </div>
 
       <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
         <div>
           <h4 className="text-sm font-bold text-amber-900 mb-1">Important Medical Notice</h4>
           <p className="text-xs text-amber-800 leading-relaxed">

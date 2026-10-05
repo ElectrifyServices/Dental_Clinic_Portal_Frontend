@@ -164,7 +164,7 @@ export const PreviousBillsModal: React.FC<PreviousBillsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-6 flex-shrink-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
                     <div className="text-right">
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                         Amount

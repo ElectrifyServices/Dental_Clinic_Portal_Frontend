@@ -200,7 +200,7 @@ export function EMRForm({
                         return (
                           <div className="flex items-center gap-3 py-1">
                             {profilePic ? (
-                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                                 <img
                                   src={profilePic}
                                   alt={p.name}
@@ -208,7 +208,7 @@ export function EMRForm({
                                 />
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border border-primary/20 flex-shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border border-primary/20 shrink-0">
                                 {initial}
                               </div>
                             )}
@@ -234,7 +234,7 @@ export function EMRForm({
                         return (
                           <div className="flex items-center gap-2">
                             {profilePic ? (
-                              <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border flex-shrink-0 bg-muted">
+                              <div className="relative w-6 h-6 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
                                 <img
                                   src={profilePic}
                                   alt={p.name}
@@ -242,7 +242,7 @@ export function EMRForm({
                                 />
                               </div>
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 flex-shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold text-[10px] flex items-center justify-center border border-primary/20 shrink-0">
                                 {initial}
                               </div>
                             )}

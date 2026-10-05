@@ -253,7 +253,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         <div className="relative inline-block">
           <div
             onClick={() => setShowPhotoOptions(true)}
-            className="w-24 h-24 bg-gradient-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 relative group"
+            className="w-24 h-24 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 relative group"
           >
             {formData.avatar ? (
               <img
@@ -405,7 +405,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               className="mx-6 overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
             >
               <div className="flex items-center gap-3 px-4 py-3 bg-primary">
-                <ShieldCheck className="w-5 h-5 text-white flex-shrink-0" />
+                <ShieldCheck className="w-5 h-5 text-white shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white flex items-center gap-2">
                     Membership/Corporate Found

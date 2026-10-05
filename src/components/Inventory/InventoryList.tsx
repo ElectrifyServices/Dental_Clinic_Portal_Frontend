@@ -174,7 +174,7 @@ export function InventoryList({
             <div className="font-bold text-foreground flex items-center gap-2">
               {item.name}
               {isLow && (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               )}
             </div>
             {item.expiryDate && (
@@ -234,7 +234,7 @@ export function InventoryList({
             </div>
             <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
               <div
-                className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? "bg-emerald-500" : pct > 25 ? "bg-amber-500" : "bg-destructive/100"}`}
+                className={`h-1.5 rounded-full transition-all duration-500 ${pct > 50 ? "bg-emerald-500" : pct > 25 ? "bg-amber-500" : "bg-destructive"}`}
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -279,11 +279,11 @@ export function InventoryList({
               createPortal(
                 <>
                   <div
-                    className="fixed inset-0 z-[9998]"
+                    className="fixed inset-0 z-9998"
                     onClick={() => setOpenMenuId(null)}
                   />
                   <div
-                    className="fixed z-[9999] bg-card rounded-2xl border border-border shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed z-9999 bg-card rounded-2xl border border-border shadow-2xl w-40 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                     style={{ top: menuPos.top, left: menuPos.left }}
                   >
                     <div className="p-1.5 space-y-0.5">
@@ -293,7 +293,7 @@ export function InventoryList({
                           onRestock(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" /> Restock
                       </Button>
@@ -303,7 +303,7 @@ export function InventoryList({
                           onConsume(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-amber-500/10 rounded-xl flex items-center gap-2.5 text-amber-600 font-medium transition-colors"
                       >
                         <MinusCircle className="w-4 h-4" /> Consume
                       </Button>
@@ -313,7 +313,7 @@ export function InventoryList({
                           onAdjust(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-blue-500/10 rounded-xl flex items-center gap-2.5 text-blue-600 font-medium transition-colors"
                       >
                         <SlidersHorizontal className="w-4 h-4" /> Adjust
                       </Button>
@@ -323,7 +323,7 @@ export function InventoryList({
                           onViewHistory(item);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-foreground/5 rounded-xl flex items-center gap-2.5 text-foreground font-medium transition-colors"
                       >
                         <Clock className="w-4 h-4" /> History
                       </Button>
@@ -334,7 +334,7 @@ export function InventoryList({
                           onEditItem(item.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-primary/10 rounded-xl flex items-center gap-2.5 text-primary font-medium transition-colors"
                       >
                         <Edit className="w-4 h-4" /> Edit Item
                       </Button>
@@ -344,7 +344,7 @@ export function InventoryList({
                           onDeleteItem(item.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full !justify-start text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
+                        className="w-full justify-start! text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 text-destructive font-medium transition-colors"
                       >
                         <Trash2 className="w-4 h-4" /> Delete
                       </Button>
@@ -403,7 +403,7 @@ export function InventoryList({
 
       {lowCount > 0 && (
         <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl px-5 py-4 text-sm font-bold">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+          <AlertTriangle className="w-5 h-5 shrink-0" />
           <span>
             {lowCount} critical item{lowCount > 1 ? "s are" : " is"} below
             minimum stock level. Immediate restocking required.

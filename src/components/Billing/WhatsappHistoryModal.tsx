@@ -229,14 +229,14 @@ export function WhatsappHistoryModal({
       const isRead = s === "READ";
       const isDelivered = s === "DELIVERED" || isRead;
       return (
-        <StatusBadge variant="green" className="text-[9px] uppercase font-bold flex items-center gap-1 !bg-emerald-50 !text-emerald-700 !border-emerald-200">
+        <StatusBadge variant="green" className="text-[9px] uppercase font-bold flex items-center gap-1 bg-emerald-50! text-emerald-700! border-emerald-200!">
           {isRead ? "Read" : isDelivered ? "Delivered" : "Sent"}
           {isRead ? <CheckCheck className="w-3 h-3 text-sky-500" /> : <CheckCheck className="w-3 h-3 text-slate-400" />}
         </StatusBadge>
       );
     }
     return (
-      <StatusBadge variant="red" className="text-[9px] uppercase font-bold !bg-red-50 !text-red-700 !border-red-200" title={errorMsg}>
+      <StatusBadge variant="red" className="text-[9px] uppercase font-bold bg-red-50! text-red-700! border-red-200!" title={errorMsg}>
         Failed
       </StatusBadge>
     );
@@ -331,7 +331,7 @@ export function WhatsappHistoryModal({
       onClose={onClose}
       size="5xl" // Large width (5xl matches 64rem/1024px width) for beautiful display
       icon={<MessageCircle className="w-5 h-5 text-emerald-600" />}
-      bodyClassName="!p-0 !overflow-hidden flex flex-col flex-1 min-h-0"
+      bodyClassName="p-0! overflow-hidden! flex flex-col flex-1 min-h-0"
       footer={
         <div className="flex justify-between items-center w-full bg-muted/10">
           <Button variant="ghost" onClick={refetch} disabled={isRefreshing} className="gap-1.5 text-xs text-muted-foreground">
@@ -345,7 +345,7 @@ export function WhatsappHistoryModal({
     >
       <div className="flex flex-col flex-1 min-h-0 h-full p-3 xs:p-4 sm:p-6 space-y-3 sm:space-y-5">
         {/* Dynamic Statistics Cards */}
-        <div className="grid grid-cols-3 gap-1.5 xs:gap-2 sm:gap-4 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-1.5 xs:gap-2 sm:gap-4 shrink-0">
           <div className="bg-card border border-border/85 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex items-center justify-between shadow-sm min-w-0">
             <div className="space-y-0.5 min-w-0 flex-1">
               <span className="text-[8px] xs:text-[9.5px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
@@ -354,7 +354,7 @@ export function WhatsappHistoryModal({
               </span>
               <span className="text-base xs:text-lg sm:text-2xl font-black text-foreground block truncate">{stats.total}</span>
             </div>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0 hidden xs:flex">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0 hidden xs:flex">
               <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
@@ -367,7 +367,7 @@ export function WhatsappHistoryModal({
               </span>
               <span className="text-base xs:text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 block truncate">{getCountValue(successData)}</span>
             </div>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0 hidden xs:flex">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 hidden xs:flex">
               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
@@ -380,14 +380,14 @@ export function WhatsappHistoryModal({
               </span>
               <span className="text-base xs:text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400 block truncate">{getCountValue(failedData)}</span>
             </div>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 flex-shrink-0 hidden xs:flex">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0 hidden xs:flex">
               <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 bg-muted/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-border/80 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 bg-muted/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-border/80 shrink-0">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -464,7 +464,7 @@ export function WhatsappHistoryModal({
                     const hasErrorDetails = item.failure_reason || item.user_friendly_error || item.suggested_action;
                     const isExpanded = !!expandedLogs[item.id];
                     return (
-                      <div className="space-y-1.5 max-w-[280px] sm:max-w-[360px] whitespace-normal break-words">
+                      <div className="space-y-1.5 max-w-[280px] sm:max-w-[360px] whitespace-normal wrap-break-word">
                         <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 border border-indigo-100/50 px-1.5 py-0.5 rounded uppercase tracking-wider block w-max">
                           {getFriendlyTemplateName(item.template_name)}
                         </span>
@@ -494,7 +494,7 @@ export function WhatsappHistoryModal({
                             </Button>
 
                             {isExpanded && (
-                              <div className="mt-1.5 p-3 bg-red-50 dark:bg-rose-950/20 border border-red-100 dark:border-rose-900/30 rounded-xl space-y-2 text-[10.5px] sm:text-xs leading-relaxed w-full whitespace-normal break-words">
+                              <div className="mt-1.5 p-3 bg-red-50 dark:bg-rose-950/20 border border-red-100 dark:border-rose-900/30 rounded-xl space-y-2 text-[10.5px] sm:text-xs leading-relaxed w-full whitespace-normal wrap-break-word">
                                 {item.user_friendly_error && (
                                   <div className="text-rose-700 dark:text-rose-400 font-extrabold flex items-start gap-1.5">
                                     <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
@@ -507,7 +507,7 @@ export function WhatsappHistoryModal({
                                   </div>
                                 )}
                                 {item.suggested_action && (
-                                  <div className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/30 w-full whitespace-normal break-words mt-1">
+                                  <div className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/30 w-full whitespace-normal wrap-break-word mt-1">
                                     <span className="font-extrabold">Suggested Action:</span> {item.suggested_action}
                                   </div>
                                 )}
@@ -579,7 +579,7 @@ export function WhatsappHistoryModal({
               data={filteredNotifications}
               rowKey={(item) => item.id}
               footer={
-                <div className="py-4 px-6 border-t border-border bg-muted/30 flex-shrink-0">
+                <div className="py-4 px-6 border-t border-border bg-muted/30 shrink-0">
                   <Pagination
                     page={currentPage}
                     totalPages={totalPages || 1}
@@ -594,7 +594,7 @@ export function WhatsappHistoryModal({
           </div>
         ) : (
           <div className="text-center p-12 border border-dashed border-border rounded-2xl bg-muted/10 flex-1 flex flex-col justify-center items-center">
-            <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-3 flex-shrink-0" />
+            <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-3 shrink-0" />
             <p className="font-bold text-foreground text-sm">No notification logs found</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {searchQuery ? "No logs match your current search queries." : "No WhatsApp template logs have been recorded yet."}

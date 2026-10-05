@@ -404,7 +404,7 @@ export function EmployeeManagement({
       key: 'member', header: 'Member',
       render: (e: CorporateEmployee) => (
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${avatarGrad(e.name)} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
+          <div className={`w-9 h-9 rounded-xl bg-linear-to-br ${avatarGrad(e.name)} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}>
             {e.name[0]?.toUpperCase()}
           </div>
           <div>
@@ -585,7 +585,7 @@ export function EmployeeManagement({
             </div>
 
             {/* Row 2: Filter Tabs + Plan Select */}
-            <div className="flex items-center gap-2 w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex items-center gap-2 w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
               {/* Filter Tabs - Desktop only */}
               <div className="hidden sm:block shrink-0">
                 <FilterTabs
@@ -841,7 +841,7 @@ export function EmployeeManagement({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
                           onClick={async (ev) => {
                             ev.stopPropagation();

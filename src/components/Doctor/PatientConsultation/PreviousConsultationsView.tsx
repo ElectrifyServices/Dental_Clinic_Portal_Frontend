@@ -192,14 +192,14 @@ export function PreviousConsultationsView({
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-1 min-w-0 pr-4">
                     <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 w-full h-3 bg-primary/10" />
                         <span className="block text-lg font-black leading-none mt-1">{formatDate(c.created_at).split(',')[0].split(' ')[0]}</span>
                         <span className="block text-[9px] font-bold uppercase tracking-widest mt-0.5">{formatDate(c.created_at).split(',')[0].split(' ').slice(1).join(' ')}</span>
                       </div>
                     </div>
 
-                    <div className="hidden sm:block h-10 w-[1px] bg-border shrink-0" />
+                    <div className="hidden sm:block h-10 w-px bg-border shrink-0" />
 
                     <div className="flex flex-col gap-1.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -275,7 +275,7 @@ export function PreviousConsultationsView({
 
                 {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="p-7 pl-9 border-t border-border/40 bg-gradient-to-b from-muted/10 to-transparent space-y-8 animate-in slide-in-from-top-2 duration-300">
+                  <div className="p-7 pl-9 border-t border-border/40 bg-linear-to-b from-muted/10 to-transparent space-y-8 animate-in slide-in-from-top-2 duration-300">
                     
                     {/* Clinical Details Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

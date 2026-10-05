@@ -82,7 +82,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
                 key={p.id || i}
                 className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                   {p.name?.[0]?.toUpperCase() ?? "P"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -110,7 +110,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
                     )}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground flex-shrink-0 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
                   <Calendar className="w-2.5 h-2.5" />
                   {p.totalVisits || 0} visit{p.totalVisits !== 1 ? "s" : ""}
                 </div>

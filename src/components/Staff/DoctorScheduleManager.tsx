@@ -226,7 +226,7 @@ export function DoctorScheduleManager({
         <div className="flex flex-col gap-3 w-full">
           {saveError && (
             <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <AlertTriangle className="w-4 h-4 shrink-0" />
               <span className="font-medium">{saveError}</span>
             </div>
           )}
@@ -252,7 +252,7 @@ export function DoctorScheduleManager({
 
       {isScheduleError && !isScheduleLoading && (
         <div className="mb-4 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <AlertTriangle className="w-4 h-4 shrink-0" />
           <span className="font-medium">Could not load existing schedule. You can create a new one below.</span>
         </div>
       )}

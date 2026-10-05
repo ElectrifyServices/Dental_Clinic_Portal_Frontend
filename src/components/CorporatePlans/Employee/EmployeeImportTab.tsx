@@ -99,7 +99,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               Columns: name, country_code, phone, email, gender, plan_code, date_of_birth
             </p>
           </div>
-          <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="flex-shrink-0 gap-2">
+          <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="shrink-0 gap-2">
             <Download className="w-4 h-4" /> Template
           </Button>
         </div>

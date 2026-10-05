@@ -340,10 +340,10 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
     return (
       <div className="space-y-4" onClick={() => setShowPrintMenu(false)}>
         {/* Patient Header Card */}
-        <Card className="bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
+        <Card className="bg-linear-to-r from-blue-50/60 via-indigo-50/30 to-card border-border/70 rounded-xl shadow-sm">
           <CardContent className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4 shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100 overflow-hidden">
+              <div className="w-12 h-12 bg-linear-to-tr from-primary to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-100 overflow-hidden">
                 {fullRecord.patient?.profile_picture_url || fullRecord.patient?.avatar ? (
                   <img
                     src={getFileUrl(fullRecord.patient.profile_picture_url || fullRecord.patient.avatar)}
@@ -808,7 +808,7 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
         {/* Cost & Follow-up Badges */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {fullRecord.total_estimated_cost !== undefined && fullRecord.total_estimated_cost > 0 && (
-            <div className="bg-gradient-to-r from-emerald-50 to-white border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between shadow-sm">
+            <div className="bg-linear-to-r from-emerald-50 to-white border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between shadow-sm">
               <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5 uppercase tracking-wider">
                 <IndianRupee className="w-4.5 h-4.5 text-emerald-600" /> Total Procedure Fee
               </span>
@@ -816,8 +816,8 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
             </div>
           )}
           {fullRecord.is_follow_up && fullRecord.follow_up_date && !appointment && (
-            <div className="bg-gradient-to-r from-purple-50 to-white border border-purple-200 rounded-xl p-2.5 flex items-center gap-3 shadow-sm">
-              <Calendar className="w-4.5 h-4.5 text-purple-600 flex-shrink-0" />
+            <div className="bg-linear-to-r from-purple-50 to-white border border-purple-200 rounded-xl p-2.5 flex items-center gap-3 shadow-sm">
+              <Calendar className="w-4.5 h-4.5 text-purple-600 shrink-0" />
               <div>
                 <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest block mb-0.5">Follow-up Date</span>
                 <span className="text-base font-bold text-purple-900">{fmtShort(fullRecord.follow_up_date)}</span>

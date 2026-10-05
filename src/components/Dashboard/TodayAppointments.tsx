@@ -85,7 +85,7 @@ export function TodayAppointments({
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-8 ring-primary/5">
             <Calendar className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-sm font-black text-foreground mb-1 uppercase tracking-[0.1em]">
+          <h3 className="text-sm font-black text-foreground mb-1 uppercase tracking-widest">
             Schedule is clear
           </h3>
           <p className="text-[10px] text-muted-foreground text-center font-bold uppercase tracking-widest leading-relaxed">
@@ -102,7 +102,7 @@ export function TodayAppointments({
                   key={appt.id || i}
                   className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-all group"
                 >
-                  <div className="w-16 flex-shrink-0">
+                  <div className="w-16 shrink-0">
                     <span className="text-xs font-black text-primary tracking-tight">
                       {appt.time}
                     </span>
@@ -124,14 +124,14 @@ export function TodayAppointments({
                         {appt.treatmentType || appt.type}
                       </span>
                       {appt.patientPhone && (
-                        <span className="text-[10px] text-primary/60 font-mono tracking-tighter flex items-center gap-1 flex-shrink-0 opacity-60">
+                        <span className="text-[10px] text-primary/60 font-mono tracking-tighter flex items-center gap-1 shrink-0 opacity-60">
                           <Phone className="w-3 h-3" />
                           {appt.patientPhone}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest flex-shrink-0">
+                  <div className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest shrink-0">
                     {appt.duration || 15} MIN
                   </div>
                 </div>

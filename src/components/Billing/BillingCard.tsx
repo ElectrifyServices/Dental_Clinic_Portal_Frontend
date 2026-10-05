@@ -147,9 +147,9 @@ export const BillingCard: React.FC<BillingCardProps> = ({
       <div className="flex flex-nowrap items-start gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
-            className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarGrad(
+            className={`w-10 h-10 rounded-xl bg-linear-to-br ${avatarGrad(
               invoice.patientName
-            )} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}
+            )} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}
           >
             {invoice.patientName ? invoice.patientName[0]?.toUpperCase() : "P"}
           </div>
@@ -159,7 +159,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
             </h3>
             {invoice.phone && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 whitespace-nowrap">
-                <Phone className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />
+                <Phone className="w-3.5 h-3.5 opacity-60 shrink-0" />
                 <span>{invoice.phone}</span>
               </p>
             )}

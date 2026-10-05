@@ -87,7 +87,7 @@ export function KpiCard({ label, value, colorClass = "text-foreground", icon, su
           </p>
         )}
       </div>
-      {icon && <div className="text-muted-foreground/30 flex-shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
+      {icon && <div className="text-muted-foreground/30 shrink-0 ml-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/50">{icon}</div>}
     </div>
   );
 }
@@ -151,7 +151,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
         <DialogHeader className="sticky top-0 z-20 bg-card border-b border-border px-6 py-4 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0">
                 {icon}
               </div>
             )}
@@ -173,7 +173,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = "lg",
             {!hideCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -245,7 +245,7 @@ export function ContentCard({ title, subtitle, children, footer, icon, action, c
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border mb-0">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary flex-shrink-0">
+              <div className="w-9 h-9 bg-primary/10 rounded-md flex items-center justify-center text-primary shrink-0">
                 {icon}
               </div>
             )}
@@ -337,7 +337,7 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
           </div>
         </div>
         <div className={cn(
-          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-300",
+          "w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center shrink-0 transition-colors duration-300",
           variants[variant],
           interactive ? hoverVariants[variant] : "",
         )}>

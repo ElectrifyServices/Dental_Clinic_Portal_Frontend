@@ -381,7 +381,7 @@ export function AppointmentList({
             />
           </div>
         </div>
-        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start lg:self-auto flex-shrink-0">
+        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start lg:self-auto shrink-0">
           {TYPE_FILTERS.map((f) => (
             <Button
               variant="ghost"

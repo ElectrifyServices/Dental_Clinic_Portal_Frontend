@@ -119,7 +119,7 @@ export const CalendarIntegrationPage: React.FC = () => {
             ) : google?.status === "NEEDS_REAUTH" ? (
               <div className="space-y-4">
                 <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-amber-800">
                       Connection needs attention
@@ -128,7 +128,7 @@ export const CalendarIntegrationPage: React.FC = () => {
                       Your Google authorization expired or was revoked. Reconnect to resume syncing.
                     </p>
                     {google.last_sync_error && (
-                      <p className="text-[11px] text-amber-700/80 mt-1 break-words">
+                      <p className="text-[11px] text-amber-700/80 mt-1 wrap-break-word">
                         Last error: {google.last_sync_error}
                       </p>
                     )}
@@ -141,7 +141,7 @@ export const CalendarIntegrationPage: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm text-foreground">
-                  <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="font-medium truncate">{google?.external_account_email}</span>
                 </div>
 

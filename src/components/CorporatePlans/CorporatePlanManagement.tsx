@@ -135,7 +135,7 @@ export function CorporatePlanManagement({
         </div>
 
         {/* Filter Tabs / Select Container */}
-        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0">
           {/* Category Filter - Desktop */}
           <div className="hidden sm:block">
             <FilterTabs
@@ -231,7 +231,7 @@ export function CorporatePlanManagement({
           )}
         </div>
       ) : (
-        <div className="columns-1 md:columns-2 xl:columns-3 gap-5 [column-fill:_balance]">
+        <div className="columns-1 md:columns-2 xl:columns-3 gap-5 [column-fill:balance]">
           {paginatedData.map((plan, index) => (
             <div key={`${plan.id}-${index}`} className="break-inside-avoid mb-5">
               <CorporatePlanCard

@@ -153,7 +153,7 @@ export const CorporatePlansPage: React.FC = () => {
                   ${active ? TAB_ACCENT[key] : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"}`}
               >
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all ${
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                     active
                       ? TAB_ICON_ACTIVE[key]
                       : "bg-muted/50 border-border/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
