@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Wallet, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import {
   Modal, Button, LabeledField, Input,
@@ -32,7 +32,7 @@ function formatDate(iso: string): string {
 export function RecordRefundModal({ employee, onClose }: RecordRefundModalProps) {
   const { data: summaryResponse, isLoading } = useMembershipRefundSummaryQuery(employee.id);
   const summary = summaryResponse?.data;
-  const enrollments = summary?.enrollments || [];
+  const enrollments = useMemo(() => summary?.enrollments || [], [summary?.enrollments]);
 
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
@@ -54,6 +54,9 @@ export function RecordRefundModal({ employee, onClose }: RecordRefundModalProps)
     if (selected) {
       setAmount(selected.refund_remaining > 0 ? String(selected.refund_remaining) : "");
     }
+  // keyed on the enrollment id on purpose: depending on `selected` would overwrite the
+  // amount the user is typing whenever the refund data refreshes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.enrollment_id]);
 
   const recordRefund = useRecordMembershipRefundMutation();

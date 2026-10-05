@@ -147,6 +147,9 @@ export function InvoiceForm({
         patientPhone: missingPatientData.phone || missingPatientData.mobile || missingPatientData.patient_phone || "",
       });
     }
+  // setFormData is defined further down in this component and is rebuilt on every render,
+  // so listing it here would read it before it exists / re-run this effect in a loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missingPatientData, formData.patientName]);
 
   const selectedPatient = useMemo(() => {

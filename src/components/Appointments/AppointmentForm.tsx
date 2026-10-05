@@ -252,11 +252,7 @@ export function AppointmentForm({
     limit: 100,
     search: debouncedSearch || undefined,
     filters: { isDropdown: [true] as ApiAny },
-  });
-
-  useEffect(() => {
-    refetchPatients();
-  }, [refetchPatients]);
+  }, { refetchOnMount: 'always' });
 
   const apiPatients = useMemo(() => {
     let rawList: ApiAny[] = [];
