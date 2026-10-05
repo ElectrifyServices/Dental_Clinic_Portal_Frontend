@@ -156,6 +156,9 @@ function InlineSessionScheduler({
     } else if (apiDoctors.length > 0 && !selectedDoctorId) {
       setSelectedDoctorId(apiDoctors[0].id);
     }
+  // must not depend on selectedDoctorId: this effect writes it, so adding it would snap the
+  // choice back to doctorId every time the user picks a different doctor
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctorId, apiDoctors]);
 
   const activeDoctorId = selectedDoctorId || doctorId || (apiDoctors[0]?.id ?? "");
@@ -354,9 +357,8 @@ export function TreatmentSessionManager({
   useEffect(() => {
     if (treatmentId) {
       refetch();
-      refetchPlan();
     }
-  }, [treatmentId, refetch, refetchPlan]);
+  }, [treatmentId, refetch]);
 
   // ── The API wraps everything: responseObject.data.sessions[] + responseObject.data.prescriptions[]
   // useApiQuery returns the full axios/fetch response, so we unwrap accordingly.

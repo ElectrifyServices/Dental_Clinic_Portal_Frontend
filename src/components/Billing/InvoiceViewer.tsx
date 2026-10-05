@@ -40,15 +40,8 @@ export function InvoiceViewer({
   });
 
   const corporatePlan = useMemo(() => {
-    if (!corporatePlanId || !corporatePlansData) return null;
-    let plansArray: ApiAny[] = [];
-    const raw = corporatePlansData;
-    if (Array.isArray(raw)) {
-      plansArray = raw;
-    } else if (raw && Array.isArray((raw as ApiAny).data)) {
-      plansArray = (raw as ApiAny).data;
-    }
-    const found = plansArray.find((p: ApiAny) => p.id === corporatePlanId);
+    if (!corporatePlanId || !corporatePlanData) return null;
+    const found = (corporatePlanData as ApiAny).data || corporatePlanData;
     if (!found) return null;
     return {
       id: found.id,
