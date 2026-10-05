@@ -26,7 +26,7 @@ interface MemberCardProps {
   onCancelMembership: () => void;
   onRecordRefund: () => void;
 }
-
+ 
 // Avatar color cycling logic matching EmployeeManagement
 const AVATAR_COLORS = [
   'from-blue-500 to-blue-700',
