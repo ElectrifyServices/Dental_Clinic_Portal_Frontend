@@ -10,7 +10,7 @@ interface Doctor {
   image: string;
   avatar?: string;
 }
-
+ 
 interface DoctorSidebarProps {
   doctors: Doctor[];
   searchTerm: string;
