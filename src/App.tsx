@@ -94,7 +94,7 @@ function GuardedRoute({ path, element }: { path: string; element: React.ReactEle
     }
   }
   return element;
-}
+} 
   
 function ProtectedRoutes() {
   const { state } = useAuth();
