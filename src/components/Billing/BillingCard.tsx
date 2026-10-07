@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui";
- 
+
 interface Invoice {
   id: string;
   patientName: string;
