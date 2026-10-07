@@ -7,7 +7,7 @@ import { BlockTimeModal } from "./BlockTimeModal";
 interface BookingSlotsProps {
   selectedDoctorId: string | null;
   selectedDoctorName?: string;
-  /** "YYYY-MM-DD" — required to open Block Time */
+  /** "YYYY-MM-DD" */
   selectedDate?: string;
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;

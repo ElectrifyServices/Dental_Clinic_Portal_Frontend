@@ -28,7 +28,7 @@ interface Invoice {
 }
  
 interface BillingCardProps {
-  invoice: Invoice; // Grouped invoice record
+  invoice: Invoice;
   onView: (id: string) => void;
   onHistory: (invoice: Invoice) => void;
   onPay: (invoice: Invoice) => void;
