@@ -81,8 +81,8 @@ jobs:
         run: npm ci || npm install
         continue-on-error: true
 
-      # ── 8. Auto-generate systems config & waivers from env vars ───────────
-      - name: Generate systems config and waivers
+      # ── 8. Auto-generate systems config from env vars ──────────────────────
+      - name: Generate systems config
         run: |
           mkdir -p .compliance
           cat > .compliance/systems.json << EOF
@@ -99,40 +99,6 @@ jobs:
                 "type": "${{ env.COMPONENT_TYPE }}",
                 "path": "${{ github.workspace }}",
                 "owner": "${{ github.repository_owner }}"
-              }
-            ],
-            "waivers": [
-              {
-                "controlId": "SCAN-04",
-                "reason": "DAST scanning is not applicable for static frontend SPA; covered via backend API services",
-                "approvedBy": "Security Team",
-                "expiresAt": "2028-01-01"
-              },
-              {
-                "controlId": "AUTH-05",
-                "reason": "Frontend SPA session tokens verified via Semgrep; DAST scan handled at backend",
-                "approvedBy": "Security Team",
-                "expiresAt": "2028-01-01"
-              }
-            ]
-          }
-          EOF
-
-          cat > .compliance/waivers.json << EOF
-          {
-            "catalogVersion": "1.0",
-            "waivers": [
-              {
-                "controlId": "SCAN-04",
-                "reason": "DAST scanning is not applicable for static frontend SPA; covered via backend API services",
-                "approvedBy": "Security Team",
-                "expiresAt": "2028-01-01"
-              },
-              {
-                "controlId": "AUTH-05",
-                "reason": "Frontend SPA session tokens verified via Semgrep; DAST scan handled at backend",
-                "approvedBy": "Security Team",
-                "expiresAt": "2028-01-01"
               }
             ]
           }
@@ -155,15 +121,10 @@ jobs:
       - name: Generate compliance report
         id: report
         run: |
-          WAIVERS_FLAG=""
-          if node .compliance-engine/src/engine/adapter-runner.js report --help 2>&1 | grep -q -- '--waivers'; then
-            WAIVERS_FLAG="--waivers .compliance/waivers.json"
-          fi
           node .compliance-engine/src/engine/adapter-runner.js report \
             --profile     pr-gate \
             --system      .compliance/systems.json \
             --evidence    .compliance/evidence \
-            $WAIVERS_FLAG \
             --environment staging \
             --out         .compliance/reports
         continue-on-error: true
