@@ -26,9 +26,9 @@ interface Invoice {
   allInvoices?: Invoice[];
   is_edited?: boolean;
 }
-
+ 
 interface BillingCardProps {
-  invoice: Invoice; // Grouped invoice record
+  invoice: Invoice;
   onView: (id: string) => void;
   onHistory: (invoice: Invoice) => void;
   onPay: (invoice: Invoice) => void;
@@ -36,7 +36,7 @@ interface BillingCardProps {
   onDelete: (id: string, invoiceNumber?: string) => void;
   onWhatsapp?: (phone: string, name: string) => void;
 }
-
+ 
 const AVATAR_COLORS = [
   "from-blue-500 to-blue-700",
   "from-violet-500 to-purple-700",

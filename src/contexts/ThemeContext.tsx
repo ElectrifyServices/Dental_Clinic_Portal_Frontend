@@ -112,7 +112,7 @@ function applyThemeToDom(data: ThemeData): void {
     root.style.setProperty("--radius-lg", `${lgRem}rem`);
     root.style.setProperty("--radius-modal", `${modalRem}rem`);
   }
-
+ 
   // ── Dark mode ────────────────────────────────────────────────────────────
   if (typeof theme.config?.isDarkMode === "boolean") {
     if (theme.config.isDarkMode) {
