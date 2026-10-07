@@ -2,7 +2,7 @@ name: Compliance Evidence Gate
 
 on:
   pull_request:
-    branches: [main, develop, master]
+    branches: [main, develop, master, ci/code, test/security-ci]
   push:
     branches: [main, master]
   workflow_dispatch:
