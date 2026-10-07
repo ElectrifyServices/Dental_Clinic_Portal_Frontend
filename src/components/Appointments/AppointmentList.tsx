@@ -10,7 +10,7 @@ import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
 import { useModal } from "../../contexts/ModalContext";
-
+ 
 interface AppointmentListProps {
   appointments?: ApiAny[];
   onEditAppointment?: (id: string) => void;
