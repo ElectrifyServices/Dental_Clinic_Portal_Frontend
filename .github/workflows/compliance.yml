@@ -152,7 +152,7 @@ jobs:
             --component   "${{ env.COMPONENT_NAME }}" \
             --system      .compliance/systems.json \
             --output      .compliance/evidence \
-            --environment staging \
+            --environment local \
             --tools       zap \
             --target-url  http://host.docker.internal:4173
         continue-on-error: true
