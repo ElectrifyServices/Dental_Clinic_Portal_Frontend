@@ -119,6 +119,10 @@ jobs:
 
       # ── 9b. Emit ZAP DAST Evidence Manifest for Frontend ───────────────────
       - name: Emit ZAP DAST compliance evidence
+        env:
+          GIT_SHA: ${{ github.sha }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+          TARGET_COMPONENT: ${{ env.COMPONENT_NAME }}
         run: |
           node -e '
             const fs = require("fs");
@@ -126,15 +130,16 @@ jobs:
             const dir = ".compliance/evidence";
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
+            const compName = process.env.TARGET_COMPONENT || "DentalClinicFrontend";
             const zapManifest = {
               schemaVersion: "1.0",
               runId: `run-zap-${Date.now()}`,
               generatedAt: new Date().toISOString(),
               source: {
                 kind: "repository",
-                name: "${{ env.COMPONENT_NAME }}",
-                revision: "${{ github.sha }}",
-                branch: "${{ github.ref_name }}"
+                name: compName,
+                revision: process.env.GIT_SHA || "",
+                branch: process.env.GIT_REF_NAME || ""
               },
               environment: "staging",
               profile: "pr-gate",
@@ -154,7 +159,7 @@ jobs:
               }
             };
 
-            const targetFile = path.join(dir, "${{ env.COMPONENT_NAME }}_zap.manifest.json");
+            const targetFile = path.join(dir, `${compName}_zap.manifest.json`);
             fs.writeFileSync(targetFile, JSON.stringify(zapManifest, null, 2));
             console.log("Successfully emitted ZAP compliance manifest to:", targetFile);
           '
