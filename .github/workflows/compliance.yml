@@ -117,52 +117,50 @@ jobs:
             --environment staging
         continue-on-error: true
 
-      # ── 9b. Emit ZAP DAST Evidence Manifest for Frontend ───────────────────
-      - name: Emit ZAP DAST compliance evidence
-        env:
-          GIT_SHA: ${{ github.sha }}
-          GIT_REF_NAME: ${{ github.ref_name }}
-          TARGET_COMPONENT: ${{ env.COMPONENT_NAME }}
+      # ── 9b. Build + serve the app, then run a real OWASP ZAP DAST scan ──────
+      # GitHub-hosted runners ship Docker preinstalled, so this runs the same
+      # official ZAP image used for local testing — no secrets, no deployed
+      # URL needed. The app is built and served on this same runner, then
+      # scanned from inside the ZAP container via host.docker.internal.
+      - name: Build frontend for DAST scan
+        run: npm run build
+        continue-on-error: true
+
+      - name: Start preview server
         run: |
-          node -e '
-            const fs = require("fs");
-            const path = require("path");
-            const dir = ".compliance/evidence";
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          nohup npm run preview -- --port 4173 --strictPort > preview.log 2>&1 &
+          echo $! > preview.pid
+        continue-on-error: true
 
-            const compName = process.env.TARGET_COMPONENT || "DentalClinicFrontend";
-            const zapManifest = {
-              schemaVersion: "1.0",
-              runId: `run-zap-${Date.now()}`,
-              generatedAt: new Date().toISOString(),
-              source: {
-                kind: "repository",
-                name: compName,
-                revision: process.env.GIT_SHA || "",
-                branch: process.env.GIT_REF_NAME || ""
-              },
-              environment: "staging",
-              profile: "pr-gate",
-              tool: {
-                name: "zap",
-                version: "2.15.0",
-                mode: "ci"
-              },
-              toolOutcome: "PASS",
-              findings: [],
-              metrics: {
-                totalFindings: 0,
-                critical: 0,
-                high: 0,
-                medium: 0,
-                low: 0
-              }
-            };
+      - name: Wait for preview server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4173 > /dev/null; then
+              echo "Preview server is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Preview server did not become ready in time — ZAP will report this as an error."
+          cat preview.log || true
+        continue-on-error: true
 
-            const targetFile = path.join(dir, `${compName}_zap.manifest.json`);
-            fs.writeFileSync(targetFile, JSON.stringify(zapManifest, null, 2));
-            console.log("Successfully emitted ZAP compliance manifest to:", targetFile);
-          '
+      - name: Run OWASP ZAP DAST scan
+        run: |
+          node .compliance-engine/src/engine/adapter-runner.js scan \
+            --profile     full-compliance \
+            --component   "${{ env.COMPONENT_NAME }}" \
+            --system      .compliance/systems.json \
+            --output      .compliance/evidence \
+            --environment staging \
+            --tools       zap \
+            --target-url  http://host.docker.internal:4173
+        continue-on-error: true
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f preview.pid ]; then kill "$(cat preview.pid)" 2>/dev/null || true; fi
 
       # ── 10. Evaluate controls and generate full remediation report ──────────
       - name: Generate compliance report
