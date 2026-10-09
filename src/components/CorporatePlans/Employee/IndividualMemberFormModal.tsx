@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { CorporatePlan, CoverageType } from '../../../types';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
@@ -217,7 +218,7 @@ export function IndividualMemberFormModal({ showForm, setShowForm, individualPla
             </div> */}
             <div>
               <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Enrollment Date</Label>
-              <Input type="date" value={form.enrollmentDate} onChange={e => setForm(p => ({ ...p, enrollmentDate: e.target.value }))}
+              <DatePicker value={form.enrollmentDate} onChange={(val) => setForm(p => ({ ...p, enrollmentDate: val }))}
                 className="rounded-xl" />
             </div>
           </div>

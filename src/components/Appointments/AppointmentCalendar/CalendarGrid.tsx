@@ -3,6 +3,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { InternalScheduleState } from "@/hooks/staff/useDoctorScheduleQuery";
 
 interface CalendarGridProps {
@@ -79,11 +80,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold text-foreground tracking-tight">{getCalendarTitle()}</h2>
-            <input 
-              type="date" 
+            <DatePicker
               value={formattedSelectedDate}
-              onChange={handleDatePickerChange}
-              className="h-8 px-2 text-xs rounded-lg border border-border bg-muted/50 focus:outline-none focus:ring-1 focus:ring-primary"
+              onChange={(val) => handleDatePickerChange({ target: { value: val } } as React.ChangeEvent<HTMLInputElement>)}
+              className="h-8 w-auto px-2 text-xs rounded-lg bg-muted/50"
             />
           </div>
         <div className="flex items-center gap-2">

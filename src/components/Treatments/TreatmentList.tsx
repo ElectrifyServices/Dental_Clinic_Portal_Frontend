@@ -2,6 +2,7 @@ import type { ApiAny } from "../../types/api";
 import React, { useCallback, useRef, useState } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Search, Plus, Clock, CheckCircle, Calendar, Stethoscope, ChevronDown, ChevronUp, Filter, X, Loader2, FileText, Edit, Play, MoreVertical, Download, MessageCircle } from "lucide-react";
 import {
   Button,
@@ -858,13 +859,12 @@ export function TreatmentList({
 
               <div>
                 <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
-                <Input
-                  type="date"
-                  className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
+                <DatePicker
+                  className="w-full text-sm bg-muted/50"
                   value={advancedFilters.dateFrom?.toISOString().split("T")[0] ?? ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     handleAdvancedChange({
-                      dateFrom: e.target.value ? new Date(e.target.value) : undefined,
+                      dateFrom: val ? new Date(val) : undefined,
                     })
                   }
                 />
@@ -872,13 +872,12 @@ export function TreatmentList({
 
               <div>
                 <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
-                <Input
-                  type="date"
-                  className="w-full px-3 py-2 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-2 focus:ring-primary/10 outline-none"
+                <DatePicker
+                  className="w-full text-sm bg-muted/50"
                   value={advancedFilters.dateTo?.toISOString().split("T")[0] ?? ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     handleAdvancedChange({
-                      dateTo: e.target.value ? new Date(e.target.value) : undefined,
+                      dateTo: val ? new Date(val) : undefined,
                     })
                   }
                 />

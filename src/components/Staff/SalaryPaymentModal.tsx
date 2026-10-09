@@ -2,8 +2,9 @@ import type { ApiAny } from "../../types/api";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
 import React, { useState } from 'react';
-import { Save, IndianRupee, Calendar, ClipboardList, ChevronDown } from 'lucide-react';
+import { Save, IndianRupee, ClipboardList, ChevronDown } from 'lucide-react';
 import { Modal, Button, LabeledField, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui';
+import { DatePicker } from '@/components/ui/DatePicker';
 
 interface SalaryPaymentModalProps {
   staffId: string;
@@ -150,11 +151,8 @@ export function SalaryPaymentModal({ staffId, staffName, pendingAmount, onClose,
             </LabeledField>
 
             <LabeledField label="Payment Date" required>
-              <div className="relative">
-                <Calendar className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none" />
-              </div>
+              <DatePicker value={formData.date} onChange={(val) => setFormData({ ...formData, date: val })}
+                className="rounded-xl" />
             </LabeledField>
           </div>
 

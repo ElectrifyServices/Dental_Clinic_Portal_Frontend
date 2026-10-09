@@ -1,5 +1,5 @@
 import type { ApiAny } from "../../../types/api";
-import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
 import { SearchInput } from "@/components/ui";
@@ -133,18 +133,16 @@ export function HistoryList({
                 Date Range:
               </span>
               <div className="flex items-center gap-1.5">
-                <Input
-                  type="date"
+                <DatePicker
                   value={startDate}
-                  onChange={(e) => onStartDateChange(e.target.value)}
-                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
+                  onChange={(val) => onStartDateChange(val)}
+                  className="h-auto px-2.5 py-1 text-xs rounded-lg shadow-sm"
                 />
                 <span className="text-xs text-muted-foreground/60">to</span>
-                <Input
-                  type="date"
+                <DatePicker
                   value={endDate}
-                  onChange={(e) => onEndDateChange(e.target.value)}
-                  className="px-2.5 py-1 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
+                  onChange={(val) => onEndDateChange(val)}
+                  className="h-auto px-2.5 py-1 text-xs rounded-lg shadow-sm"
                 />
                 {(startDate || endDate) && (
                   <Button

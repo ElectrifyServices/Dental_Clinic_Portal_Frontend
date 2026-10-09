@@ -3,7 +3,8 @@ import { UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
-import { Button, FilterTabs, Input } from '@/components/ui';
+import { Button, FilterTabs } from '@/components/ui';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
 import { TodayAppointments } from '../components/Dashboard/TodayAppointments';
 import { RecentPatients } from '../components/Dashboard/RecentPatients';
@@ -118,17 +119,15 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-4 flex-wrap">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
-              <Input
-                type="date"
+              <DatePicker
                 value={customStart}
-                onChange={(e) => setCustomStart(e.target.value)}
+                onChange={(val) => setCustomStart(val)}
                 className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
               <span className="text-muted-foreground text-xs font-medium">to</span>
-              <Input
-                type="date"
+              <DatePicker
                 value={customEnd}
-                onChange={(e) => setCustomEnd(e.target.value)}
+                onChange={(val) => setCustomEnd(val)}
                 className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
               />
             </div>

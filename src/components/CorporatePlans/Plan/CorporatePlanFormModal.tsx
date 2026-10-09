@@ -1,5 +1,6 @@
 import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
@@ -554,21 +555,19 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
           {/* Dates + Max Members */}
           <div className="grid grid-cols-3 gap-4">
             <LabeledField label={<span>Start Date <span className="text-destructive font-bold">*</span></span>} error={errors.validFrom}>
-              <Input 
-                type="date" 
+              <DatePicker
                 min={!editing ? localToday : undefined}
-                value={form.validFrom} 
-                onChange={e => handleFormChange('validFrom', e.target.value)} 
-                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                value={form.validFrom}
+                onChange={(val) => handleFormChange('validFrom', val)}
+                className="rounded-xl"
               />
             </LabeledField>
             <LabeledField label={<span>End Date <span className="text-destructive font-bold">*</span></span>} error={errors.validTo}>
-              <Input 
-                type="date" 
+              <DatePicker
                 min={!editing ? localToday : undefined}
-                value={form.validTo} 
-                onChange={e => handleFormChange('validTo', e.target.value)} 
-                className="rounded-xl relative [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                value={form.validTo}
+                onChange={(val) => handleFormChange('validTo', val)}
+                className="rounded-xl"
               />
             </LabeledField>
             <LabeledField label={<span>Max Members <span className="text-destructive font-bold">*</span></span>} error={errors.maxMembers}>

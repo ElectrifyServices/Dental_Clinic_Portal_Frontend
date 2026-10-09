@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SearchableSelect, Button } from '@/components/ui';
-import { X, Eye, AlertTriangle, FileText, Upload, Calendar, Heart, ShieldCheck, User, History } from "lucide-react";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { X, Eye, AlertTriangle, FileText, Upload, Heart, ShieldCheck, User, History } from "lucide-react";
 import { useStep2MedicalHistory } from './useStep2MedicalHistory';
 
 export const openImageInNewTab = (src: string, title?: string) => {
@@ -311,17 +312,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           </div>
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Last Visit Date</Label>
-            <div className="relative">
-              <Input
-                type="date"
-                name="previousLastVisitDate"
-                value={formData.previousLastVisitDate}
-                onChange={handleChange}
-                className={`w-full h-10 px-4 border rounded-md focus:ring-2 focus:ring-primary bg-card text-sm pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10 ${validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : "border-input"}`}
-                max={new Date().toISOString().split("T")[0]}
-              />
-              <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
-            </div>
+            <DatePicker
+              value={formData.previousLastVisitDate}
+              onChange={(val) => handleChange({ target: { name: "previousLastVisitDate", value: val } } as ApiAny)}
+              max={new Date().toISOString().split("T")[0]}
+              className={validationErrors.previousLastVisitDate ? "border-destructive bg-destructive/5" : undefined}
+            />
             {validationErrors.previousLastVisitDate && (
               <p className="text-destructive text-[10px] mt-1 flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />

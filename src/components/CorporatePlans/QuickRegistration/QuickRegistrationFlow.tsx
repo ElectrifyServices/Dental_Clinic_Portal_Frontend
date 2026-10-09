@@ -1,8 +1,9 @@
 import type { ApiAny } from "../../../types/api";
 import React, { useState } from 'react';
-import { CheckCircle, ChevronRight, ChevronLeft, User, Users, Tag, Building2, Phone, Mail, Calendar, Zap, Sparkles, Shield, Star, Award } from 'lucide-react';
+import { CheckCircle, ChevronRight, ChevronLeft, User, Users, Tag, Building2, Phone, Mail, Zap, Sparkles, Shield, Star, Award } from 'lucide-react';
 import { CorporatePlan } from '../../../types';
 import { Button, Input, LabeledField, Card, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../ui';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { useCreateEmployeeMutation } from '../../../hooks/corporate/useCreateEmployeeMutation';
 import { useAddDependentMutation } from '../../../hooks/corporate/useAddDependentMutation';
 import { useModal } from '../../../contexts/ModalContext';
@@ -343,10 +344,7 @@ export function QuickRegistrationFlow({ plans, onRegistered }: QuickRegistration
               </LabeledField>
 
               <LabeledField label="Date of Birth">
-                <div className="relative">
-                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input type="date" value={memberDob} onChange={e => setMemberDob(e.target.value)} className="pl-10 rounded-xl" />
-                </div>
+                <DatePicker value={memberDob} onChange={(val) => setMemberDob(val)} className="rounded-xl" />
               </LabeledField>
 
               <LabeledField label="Gender">

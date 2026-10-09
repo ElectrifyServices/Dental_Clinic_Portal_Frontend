@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Calendar, Trash2, Clock, FileText } from "lucide-react";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface SessionPlannerSectionProps {
   sessions: ApiAny[];
@@ -125,17 +126,16 @@ export function SessionPlannerSection({
                     <Calendar className="w-3 h-3" />
                     Visit Date
                   </Label>
-                  <Input
-                    type="date"
+                  <DatePicker
                     value={session.scheduledDate || session.suggestedDate}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       onUpdateSession(session.id, {
-                        scheduledDate: e.target.value,
-                        visit_date: e.target.value,
+                        scheduledDate: val,
+                        visit_date: val,
                         isModified: true,
                       })
                     }
-                    className="w-full px-3 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background outline-none text-sm"
+                    className="w-full rounded-xl text-sm"
                     min={baseDate}
                     disabled={isCompleted}
                   />

@@ -3,8 +3,9 @@ import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import React from "react";
-import { Info, AlertCircle, Calendar, Tag, IndianRupee } from "lucide-react";
+import { Info, AlertCircle, Tag, IndianRupee } from "lucide-react";
 import { SearchableSelect } from "@/components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 interface BasicInfoSectionProps {
   formData: ApiAny;
   handleChange: (e: React.ChangeEvent<ApiAny>) => void;
@@ -213,16 +214,12 @@ export function BasicInfoSection({
         <Label className="text-xs font-black text-foreground uppercase tracking-widest">
           Start Date
         </Label>
-        <div className="relative">
-          <Input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="w-full pl-4 pr-10 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-semibold h-11 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-          />
-          <Calendar className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-        </div>
+        <DatePicker
+          name="date"
+          value={formData.date}
+          onChange={(val) => handleChange({ target: { name: "date", value: val } } as ApiAny)}
+          className="w-full rounded-xl text-sm font-semibold"
+        />
       </div>
 
       <div className="space-y-2">

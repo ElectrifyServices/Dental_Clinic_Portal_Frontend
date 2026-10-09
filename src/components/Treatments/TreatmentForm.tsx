@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import React from "react";
 import { Save, Stethoscope, CheckCircle, Loader2, Paperclip, Upload, FileText, X } from "lucide-react";
 import { Modal, Button, toast } from "@/components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { teeth } from "@/constants/treatment.constants";
 import { useCompleteTreatmentSessionMutation, useAddTreatmentSessionMutation } from "@/hooks/treatment/useTreatmentSessionHooks";
 import type { TreatmentFormProps } from "@/types/treatment.types";
@@ -721,8 +722,7 @@ export function TreatmentForm({
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
-                      <Input
-                        type="date"
+                      <DatePicker
                         min={(() => {
                           const today = new Date();
                           const year = today.getFullYear();
@@ -731,8 +731,8 @@ export function TreatmentForm({
                           return `${year}-${month}-${day}`;
                         })()}
                         value={nextSessionDraft.date}
-                        onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value }))}
-                        className="w-full inline-flex! items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        onChange={(val) => setNextSessionDraft(p => ({ ...p, date: val }))}
+                        className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
                       />
                     </div>
                     <div>

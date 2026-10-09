@@ -31,6 +31,7 @@ import {
   Loading,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 interface Invoice {
   id: string;
@@ -732,23 +733,19 @@ export function InvoiceList({
           )}
           {setStartDate && setEndDate && (
             <div className="flex items-center gap-1">
-              <input
-                type="date"
+              <DatePicker
                 value={startDate || ""}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                onChange={setStartDate}
                 placeholder="Start Date"
-                title="Start Date"
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted w-[115px]"
               />
               <span className="text-xs text-muted-foreground">-</span>
-              <input
-                type="date"
+              <DatePicker
                 min={startDate || ""}
                 value={endDate || ""}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted focus:outline-none focus:ring-1 focus:ring-primary w-[115px]"
+                onChange={setEndDate}
                 placeholder="End Date"
-                title="End Date"
+                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted w-[115px]"
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 import type { ApiAny } from "../../../types/api";
-import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Phone, Clock, Printer, Activity, Stethoscope, Pill, FileText,
@@ -892,15 +892,14 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                     <Label className="block text-[10px] font-black text-purple-700 uppercase tracking-widest mb-1">
                       Preferred Date
                     </Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={selectedDate}
-                      onChange={(e) => {
-                        setSelectedDate(e.target.value);
+                      onChange={(val) => {
+                        setSelectedDate(val);
                         setSelectedSlot("");
                       }}
                       min={new Date().toISOString().split("T")[0]}
-                      className="w-full h-10 px-3 bg-white border border-purple-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                      className="h-10 bg-white border-purple-200 rounded-lg font-semibold focus-visible:ring-purple-500/20"
                     />
                   </div>
                 </div>

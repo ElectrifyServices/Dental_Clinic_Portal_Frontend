@@ -1,7 +1,7 @@
 import type { ApiAny } from "../../../types/api";
 import React, { useState } from "react";
 import { FileText, Pill, Stethoscope, ChevronDown, Clock, ShieldAlert, AlertCircle, X, Filter, Activity } from "lucide-react";
-import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, Input } from "@/components/ui";
+import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, DatePicker } from "@/components/ui";
 import { downloadConsultationPDF } from "../../../utils/pdfGenerator";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
@@ -112,22 +112,20 @@ export function PreviousConsultationsView({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">From</span>
-              <Input
-                type="date"
+              <DatePicker
                 value={dateFrom}
                 max={dateTo || undefined}
-                onChange={(e) => onDateFromChange(e.target.value)}
+                onChange={(val) => onDateFromChange(val)}
                 className="w-auto h-auto px-3 py-1.5"
               />
             </div>
             <span className="text-muted-foreground text-xs font-bold">—</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-muted-foreground">To</span>
-              <Input
-                type="date"
+              <DatePicker
                 value={dateTo}
                 min={dateFrom || undefined}
-                onChange={(e) => onDateToChange(e.target.value)}
+                onChange={(val) => onDateToChange(val)}
                 className="w-auto h-auto px-3 py-1.5"
               />
             </div>

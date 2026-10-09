@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 import { Checkbox } from "@/components/ui/Checkbox";
 
@@ -268,16 +269,24 @@ export function FormDateInput<
   max,
 }: BaseFieldProps<TFieldValues, TName> & { min?: string; max?: string }) {
   return (
-    <FormInput
+    <FormField
       control={control}
       name={name}
-      label={label}
-      description={description}
-      className={className}
-      required={required}
-      type="date"
-      min={min}
-      max={max}
+      render={({ field }) => (
+        <FormItem className={className}>
+          {label && (
+            <FormLabel>
+              {label}
+              {required && <span className="text-destructive ml-0.5">*</span>}
+            </FormLabel>
+          )}
+          <FormControl>
+            <DatePicker value={field.value ?? ""} onChange={field.onChange} min={min} max={max} />
+          </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
+      )}
     />
   );
 }

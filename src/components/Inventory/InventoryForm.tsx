@@ -32,6 +32,7 @@ import { useInventoryCategoriesQuery } from "../../hooks/inventory/useInventoryC
 import { useCreateInventoryCategoryMutation } from "../../hooks/inventory/useCreateInventoryCategoryMutation";
 import { useDeleteInventoryCategoryMutation } from "../../hooks/inventory/useDeleteInventoryCategoryMutation";
 import { SearchableSelect } from "../ui/SearchableSelect";
+import { DatePicker } from "../ui/DatePicker";
 import { useState } from "react";
 
 interface InventoryFormProps {
@@ -387,7 +388,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                     <FormItem>
                       <FormLabel>Expiry Date</FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" />
+                        <DatePicker value={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

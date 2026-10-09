@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
   Select,
   SelectContent,
@@ -567,17 +568,12 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             <Calendar className="w-4 h-4 inline mr-2" />
             Date of Birth
           </Label>
-          <div className="relative">
-            <Input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth || ""}
-              onChange={handleChange}
-              max={new Date().toISOString().split("T")[0]}
-              className="focus:ring-primary w-full pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-            />
-            <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
-          </div>
+          <DatePicker
+            value={formData.dateOfBirth || ""}
+            onChange={(val) => handleChange({ target: { name: "dateOfBirth", value: val } } as ApiAny)}
+            max={new Date().toISOString().split("T")[0]}
+            placeholder="Select date of birth"
+          />
         </div>
 
         <div>
