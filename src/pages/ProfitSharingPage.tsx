@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { useTreatmentData } from "../hooks/useTreatmentData";
 import { useStaffData } from "../hooks/useStaffData";
-import { MetricCard, PageHeader, Card, Button, Input, DataTable } from "../components/ui";
+import { MetricCard, PageHeader, Card, Button, DataTable } from "../components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 type DateFilter = "thisMonth" | "lastMonth" | "custom";
 
@@ -175,22 +176,20 @@ export const ProfitSharingPage: React.FC = () => {
 
       {dateFilter === "custom" && (
         <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-border/60 shadow-sm animate-in slide-in-from-top-2 max-w-md">
-          <Input
-            type="date"
+          <DatePicker
             value={customRange.start}
-            onChange={(e) =>
-              setCustomRange({ ...customRange, start: e.target.value })
+            onChange={(val) =>
+              setCustomRange({ ...customRange, start: val })
             }
             className="w-full bg-slate-50/50"
           />
           <span className="text-muted-foreground/60 font-medium text-sm">
             to
           </span>
-          <Input
-            type="date"
+          <DatePicker
             value={customRange.end}
-            onChange={(e) =>
-              setCustomRange({ ...customRange, end: e.target.value })
+            onChange={(val) =>
+              setCustomRange({ ...customRange, end: val })
             }
             className="w-full bg-slate-50/50"
           />

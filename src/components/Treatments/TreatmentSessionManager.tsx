@@ -8,6 +8,7 @@ import {
   Percent, AlertCircle, CreditCard
 } from "lucide-react";
 import { Modal, Button, Label, Input, Textarea, Card, MetricCard, ConfirmModal } from "@/components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PrescriptionForm } from "../Doctor/PatientConsultation/PrescriptionForm";
 import { useAvailableSlotsQuery } from "../../hooks/appointments/useAvailableSlotsQuery";
@@ -234,11 +235,10 @@ function InlineSessionScheduler({
           <Label className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wider mb-1.5 block">
             Date
           </Label>
-          <Input
-            type="date"
+          <DatePicker
             value={draft.date}
             min={getTodayInputValue()}
-            onChange={(e) => onChange({ date: e.target.value, time: "" })}
+            onChange={(val) => onChange({ date: val, time: "" })}
             className="rounded-xl border-emerald-200 bg-white"
           />
         </div>
@@ -1748,8 +1748,7 @@ export function TreatmentSessionManager({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
-                        <Input
-                          type="date"
+                        <DatePicker
                           min={(() => {
                             const today = new Date();
                             const year = today.getFullYear();
@@ -1758,8 +1757,8 @@ export function TreatmentSessionManager({
                             return `${year}-${month}-${day}`;
                           })()}
                           value={nextSessionDraft.date}
-                          onChange={(e) => setNextSessionDraft(p => ({ ...p, date: e.target.value, time: "" }))}
-                          className="w-full inline-flex! items-center justify-between px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium cursor-pointer [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          onChange={(val) => setNextSessionDraft(p => ({ ...p, date: val, time: "" }))}
+                          className="w-full px-3 py-1.5 text-sm rounded-xl border focus:ring-2 focus:ring-emerald-200 bg-white font-medium"
                         />
                       </div>
 
@@ -2297,10 +2296,10 @@ export function TreatmentSessionManager({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
-                <Input type="date" value={newSession.date}
-                  onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                <DatePicker value={newSession.date}
+                  onChange={(val) => setNewSession({ ...newSession, date: val })}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
+                  className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20" />
               </div>
               <div>
                 <Label className="text-sm font-semibold block mb-2">Start Time</Label>

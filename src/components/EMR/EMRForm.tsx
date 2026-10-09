@@ -17,6 +17,7 @@ import {
   Textarea,
   SearchableSelect,
 } from "@/components/ui";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { useFormTitle, useSubmitLabel } from "../../hooks/useFormConfig";
 import { emrSchema, type EmrFormData } from "@/lib/schemas/emr.schema";
 import { usePatientQuery } from "@/hooks/patients/usePatientQuery";
@@ -307,7 +308,7 @@ export function EMRForm({
                     Date <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} type="date" />
+                    <DatePicker value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

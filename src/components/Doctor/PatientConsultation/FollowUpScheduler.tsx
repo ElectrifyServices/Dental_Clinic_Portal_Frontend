@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../../types/api";
 import { Label } from "@/components/ui/Label";
-import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/Button";
 import {
   Select,
@@ -134,10 +134,9 @@ export function FollowUpScheduler({
               <Label className="block text-[10px] font-bold text-blue-900 mb-2 uppercase tracking-widest">
                 Preferred Date
               </Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={followUpDate}
-                onChange={(e) => onDateChange(e.target.value)}
+                onChange={(val) => onDateChange(val)}
                 disabled={!!bookedFollowUp}
                 min={(() => {
                   const today = new Date();
@@ -146,7 +145,7 @@ export function FollowUpScheduler({
                   const day = String(today.getDate()).padStart(2, "0");
                   return `${year}-${month}-${day}`;
                 })()}
-                className="w-full px-4 py-2.5 bg-card border border-primary/30 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm disabled:bg-muted disabled:cursor-not-allowed"
+                className="rounded-xl border-primary/30 shadow-sm disabled:bg-muted"
               />
             </div>
           </div>

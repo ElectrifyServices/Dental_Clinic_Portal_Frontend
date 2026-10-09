@@ -4,6 +4,7 @@ import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Ste
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
@@ -356,24 +357,22 @@ export function AppointmentList({
             />
           </div>
           <div className="flex w-full sm:w-auto items-center gap-2">
-            <Input
-              type="date"
+            <DatePicker
               value={startDate || ""}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setSelectedDate?.(e.target.value);
+              onChange={(val) => {
+                setStartDate(val);
+                setSelectedDate?.(val);
                 setFilter("all");
                 setPage(1);
               }}
               className="h-10 rounded-2xl bg-card border-border w-36"
             />
             <span className="text-muted-foreground text-sm font-medium">to</span>
-            <Input
-              type="date"
+            <DatePicker
               value={endDate}
               min={startDate || ""}
-              onChange={(e) => {
-                setEndDate(e.target.value);
+              onChange={(val) => {
+                setEndDate(val);
                 setFilter("all");
                 setPage(1);
               }}

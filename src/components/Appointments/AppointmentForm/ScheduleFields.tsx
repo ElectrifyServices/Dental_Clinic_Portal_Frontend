@@ -4,6 +4,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui";
 import { Calendar, Clock, Loader2, CheckCircle, Stethoscope } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { useAvailableSlotsQuery } from "../../../hooks/appointments/useAvailableSlotsQuery";
 
 interface ScheduleFieldsProps {
@@ -156,18 +157,12 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
             Date
           </label>
-          <div className="relative">
-            <Input
-              type="date"
-              name="date"
-              value={date}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={onDateChange}
-              required
-              className="h-11 w-full rounded-xl border-border pl-3 pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-            />
-            <Calendar className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
-          </div>
+          <DatePicker
+            value={date}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(val) => onDateChange({ target: { name: "date", value: val } } as React.ChangeEvent<HTMLInputElement>)}
+            className="h-11 rounded-xl"
+          />
         </div>
 
         {/* Time — Select dropdown */}
@@ -191,7 +186,7 @@ export const ScheduleFields: React.FC<ScheduleFieldsProps> = ({
                   disabled={slot.disabled}
                   className="font-medium"
                 >
-                  {slot.time12} {slot.isBlocked ? "(Booked)" : slot.isPast ? "(Passed)" : ""}
+                  {slot.time12} {slot.isBlocked ? "(Blocked)" : slot.isPast ? "(Passed)" : ""}
                 </SelectItem>
               ))}
             </SelectContent>

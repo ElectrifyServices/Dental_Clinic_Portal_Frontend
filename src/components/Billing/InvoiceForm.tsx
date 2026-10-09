@@ -1,5 +1,6 @@
 import type { ApiAny } from "../../types/api";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { useMemo, useState, useEffect } from "react";
 import { getDependentByPatientId } from "../../hooks/corporate/dependentStorage";
 import { Save, Plus, User, DollarSign, Stethoscope, ClipboardList, IndianRupee, ShieldCheck } from "lucide-react";
@@ -7,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Invoice, InvoiceItem } from "../../types";
 import { computePlanDiscount } from "../../utils/corporatePlan";
-import { Modal, Button, Card, CardContent, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading } from "@/components/ui";
+import { Modal, Button, Card, CardContent, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Switch } from "@/components/ui";
 import { sanitizeNumericString } from "@/utils/inputUtils";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { PendingItems } from "./InvoiceForm/PendingItems";
@@ -1086,14 +1087,10 @@ export function InvoiceForm({
           </LabeledField>
 
           <LabeledField label="Invoice Date" required>
-            <Input
-              type="date"
+            <DatePicker
               value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
-              required
-              className="block w-full px-4 py-2 border rounded-xl text-sm"
+              onChange={(val) => setFormData({ ...formData, date: val })}
+              className="rounded-xl"
             />
           </LabeledField>
 

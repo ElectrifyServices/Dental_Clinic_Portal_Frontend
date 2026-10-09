@@ -1,6 +1,7 @@
 import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { useState, useRef, useEffect } from "react";
 import {
   Search,
@@ -8,7 +9,6 @@ import {
   MapPin,
   Clock,
   Star,
-  Calendar as CalendarIcon,
   ChevronRight,
   Stethoscope,
   ChevronLeft,
@@ -507,37 +507,32 @@ export function DoctorBooking({
                     </p>
                   </div>
                   <div className="flex gap-1.5 items-center">
-                    <div className="relative group">
-                      <Button variant="ghost" className="p-1.5 hover:bg-muted rounded-lg border border-border transition-all text-muted-foreground">
-                        <CalendarIcon className="w-3.5 h-3.5" />
-                        <Input
-                          type="date"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          min={new Date().toISOString().split("T")[0]}
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              const newDate = new Date(e.target.value);
-                              setSelectedDate(newDate);
-                              // Calculate index and scroll
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              const diffTime = Math.abs(
-                                newDate.getTime() - today.getTime(),
-                              );
-                              const diffDays = Math.ceil(
-                                diffTime / (1000 * 60 * 60 * 24),
-                              );
-                              const el = document.getElementById("date-strip");
-                              if (el)
-                                el.scrollTo({
-                                  left: diffDays * 64,
-                                  behavior: "smooth",
-                                }); // 64px is approx width of date card
-                            }
-                          }}
-                        />
-                      </Button>
-                    </div>
+                    <DatePicker
+                      value={`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(val) => {
+                        if (val) {
+                          const newDate = new Date(val);
+                          setSelectedDate(newDate);
+                          // Calculate index and scroll
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const diffTime = Math.abs(
+                            newDate.getTime() - today.getTime(),
+                          );
+                          const diffDays = Math.ceil(
+                            diffTime / (1000 * 60 * 60 * 24),
+                          );
+                          const el = document.getElementById("date-strip");
+                          if (el)
+                            el.scrollTo({
+                              left: diffDays * 64,
+                              behavior: "smooth",
+                            }); // 64px is approx width of date card
+                        }
+                      }}
+                      className="h-8 w-auto px-2 text-[10px] rounded-lg border-border text-muted-foreground"
+                    />
                     <div className="w-px h-4 bg-muted mx-0.5" />
                     <Button
                       onClick={() => {

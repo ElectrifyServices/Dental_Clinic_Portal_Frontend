@@ -6,6 +6,7 @@ import {
   Button,
   Label,
   Input,
+  DatePicker,
   ErrorState,
   Select,
   SelectContent,
@@ -252,19 +253,14 @@ export function DirectConsultationPopup({
               <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                 Consultation Date
               </Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-4 h-4" />
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  min={todayStr}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    setSelectedTime("");
-                  }}
-                  className="pl-9"
-                />
-              </div>
+              <DatePicker
+                value={selectedDate}
+                min={todayStr}
+                onChange={(val) => {
+                  setSelectedDate(val);
+                  setSelectedTime("");
+                }}
+              />
             </div>
           </div>
 
