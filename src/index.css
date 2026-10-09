@@ -354,7 +354,7 @@
     @apply flex-1 h-px bg-divider;
   }
 }
-
+ 
 @utility scrollbar-hide {
   /* ── Scrollbars ─────────────────────────────────────────────── */
   -ms-overflow-style: none;
