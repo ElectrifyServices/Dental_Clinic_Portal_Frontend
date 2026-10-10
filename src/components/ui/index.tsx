@@ -593,7 +593,7 @@ export function FilterTabs({ tabs, active, onChange }: FilterTabsProps) {
 
 // ─── LabeledField ─────────────────────────────────────────────────────────────
 interface LabeledFieldProps {
-  label: string;
+  label: React.ReactNode;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
