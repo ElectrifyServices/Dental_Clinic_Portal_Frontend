@@ -160,18 +160,20 @@ export function EMRList({
     : records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="space-y-3">
-      <PageHeader
-        title="Medical Records"
-        subtitle={`${totalRecordsCount} records across all patients`}
-        action={
-          <Button onClick={onAddRecord} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Record
-          </Button>
-        }
-      />
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0">
+        <PageHeader
+          title="Medical Records"
+          subtitle={`${totalRecordsCount} records across all patients`}
+          action={
+            <Button onClick={onAddRecord} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Record
+            </Button>
+          }
+        />
+      </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm shrink-0">
         <SearchInput
           value={search}
           onChange={onSearchChange}
@@ -194,28 +196,31 @@ export function EMRList({
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={paginatedRecords}
-        rowKey={(r) => r.id}
-        emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
-        emptyTitle="No records found"
-        emptySubtitle="Add a new EMR record to get started."
-        footer={
-          (displayTotalPages > 1 || onLimitChange !== undefined) ? (
-            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-              <Pagination
-                page={currentPage}
-                totalPages={displayTotalPages}
-                totalItems={displayTotalItems}
-                perPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onPerPageChange={onLimitChange}
-              />
-            </div>
-          ) : undefined
-        }
-      />
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+        <DataTable
+          className="flex-1 min-h-0"
+          columns={columns}
+          data={paginatedRecords}
+          rowKey={(r) => r.id}
+          emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
+          emptyTitle="No records found"
+          emptySubtitle="Add a new EMR record to get started."
+          footer={
+            (displayTotalPages > 1 || onLimitChange !== undefined) ? (
+              <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                <Pagination
+                  page={currentPage}
+                  totalPages={displayTotalPages}
+                  totalItems={displayTotalItems}
+                  perPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onPerPageChange={onLimitChange}
+                />
+              </div>
+            ) : undefined
+          }
+        />
+      </div>
     </div>
   );
 }

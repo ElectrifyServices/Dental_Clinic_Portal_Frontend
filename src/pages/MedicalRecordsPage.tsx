@@ -209,7 +209,7 @@ export function MedicalRecordsPage() {
   };
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden animate-in fade-in duration-500">
       <EMRList
         records={emrRecords}
         search={search}

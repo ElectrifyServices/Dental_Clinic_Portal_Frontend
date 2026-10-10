@@ -653,29 +653,31 @@ export function InvoiceList({
   const paginatedData = flatSortedInvoices;
 
   return (
-    <div className="space-y-3">
-      <PageHeader
-        title="Billing & Invoices"
-        subtitle={`${invoices.length} total invoices recorded`}
-        action={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => exportInvoices()}
-              loading={isExporting}
-              className="gap-2"
-            >
-              {!isExporting && <FileText className="w-4 h-4" />}
-              {isExporting ? "Exporting..." : "Export"}
-            </Button>
-            <Button onClick={onCreateInvoice} className="gap-2">
-              <Plus className="w-4 h-4" /> Create Invoice
-            </Button>
-          </div>
-        }
-      />
+    <div className="flex-1 min-h-0 flex flex-col gap-3">
+      <div className="shrink-0">
+        <PageHeader
+          title="Billing & Invoices"
+          subtitle={`${invoices.length} total invoices recorded`}
+          action={
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => exportInvoices()}
+                loading={isExporting}
+                className="gap-2"
+              >
+                {!isExporting && <FileText className="w-4 h-4" />}
+                {isExporting ? "Exporting..." : "Export"}
+              </Button>
+              <Button onClick={onCreateInvoice} className="gap-2">
+                <Plus className="w-4 h-4" /> Create Invoice
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
         <MetricCard
           label="Total Billed"
           value={`₹${formatIndianCurrency(totalBilled)}`}
@@ -697,7 +699,7 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm flex-wrap shrink-0">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -762,13 +764,15 @@ export function InvoiceList({
         </div>
       </div>
 
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
       {isLoading ? (
         <Loading type="spinner" text="Loading invoices..." className="py-20" />
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
             <DataTable
+          className="flex-1 min-h-0"
           columns={columns}
           data={paginatedData as ApiAny[]}
           rowKey={(inv) => inv.id}
@@ -776,35 +780,15 @@ export function InvoiceList({
           emptyTitle="No invoices found"
           emptySubtitle="Create your first invoice to get started."
           footer={
-            totalPages > 1 ? (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-6 border-t border-border/50 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
-                  <Select
-                    value={String(limit)}
-                    onValueChange={(val) => {
-                      onLimitChange?.(Number(val));
-                    }}
-                  >
-                    <SelectTrigger className="w-20 h-8 text-xs">
-                      <SelectValue placeholder="10" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5" className="text-xs">5</SelectItem>
-                      <SelectItem value="10" className="text-xs">10</SelectItem>
-                      <SelectItem value="20" className="text-xs">20</SelectItem>
-                      <SelectItem value="50" className="text-xs">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  totalItems={totalItems}
-                  perPage={limit}
-                  onPageChange={onPageChange}
-                />
-              </div>
+            totalItems > 0 ? (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                perPage={limit}
+                onPageChange={onPageChange}
+                onPerPageChange={onLimitChange}
+              />
             ) : undefined
           }
         />
@@ -838,36 +822,16 @@ export function InvoiceList({
               ))}
             </div>
 
-            {totalPages > 1 && (
+            {totalItems > 0 && (
               <div className="py-4 px-4 border border-border/50 bg-card rounded-2xl shadow-sm mt-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">Rows per page:</span>
-                    <Select
-                      value={String(limit)}
-                      onValueChange={(val) => {
-                        onLimitChange?.(Number(val));
-                      }}
-                    >
-                      <SelectTrigger className="w-20 h-8 text-xs">
-                        <SelectValue placeholder="10" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5" className="text-xs">5</SelectItem>
-                        <SelectItem value="10" className="text-xs">10</SelectItem>
-                        <SelectItem value="20" className="text-xs">20</SelectItem>
-                        <SelectItem value="50" className="text-xs">50</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    perPage={limit}
-                    onPageChange={onPageChange}
-                  />
-                </div>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  perPage={limit}
+                  onPageChange={onPageChange}
+                  onPerPageChange={onLimitChange}
+                />
               </div>
             )}
           </>
@@ -875,6 +839,7 @@ export function InvoiceList({
       </div>
       </>
       )}
+      </div>
 
       {payInvoice && (
         <InvoicePaymentModal

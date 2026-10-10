@@ -399,7 +399,7 @@ export function DoctorManagement({
   }, [search, roleFilter, statusFilter, itemsPerPage, setCurrentPage]);
 
   const paginationUI = displayTotalItems > 0 ? (
-    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl">
+    <div className="py-4 px-6 border-t border-border/50 bg-muted/20 mt-4 rounded-xl shrink-0">
       <Pagination
         page={currentPage}
         totalPages={displayTotalPages}
@@ -412,18 +412,20 @@ export function DoctorManagement({
   ) : null;
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Staff Directory"
-        subtitle={`Manage ${filtered.length} team members`}
-        action={
-          <Button onClick={onAddDoctor} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Staff Member
-          </Button>
-        }
-      />
+    <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+      <div className="shrink-0">
+        <PageHeader
+          title="Staff Directory"
+          subtitle={`Manage ${filtered.length} team members`}
+          action={
+            <Button onClick={onAddDoctor} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Staff Member
+            </Button>
+          }
+        />
+      </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
+      <div className="shrink-0 flex flex-col md:flex-row gap-4 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -458,20 +460,23 @@ export function DoctorManagement({
       </div>
 
       {isLoading ? (
-        <Card className="flex flex-col items-center justify-center py-24 rounded-2xl">
+        <Card className="flex flex-1 min-h-0 flex-col items-center justify-center py-24 rounded-2xl">
           <Loading type="spinner" text="Fetching staff directory..." />
         </Card>
       ) : viewMode === "list" ? (
-        <DataTable
-          columns={columns}
-          data={paginatedData}
-          rowKey={(s) => s.id}
-          emptyTitle="No staff members found"
-          emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
-          footer={paginationUI || undefined}
-        />
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+          <DataTable
+            className="flex-1 min-h-0"
+            columns={columns}
+            data={paginatedData}
+            rowKey={(s) => s.id}
+            emptyTitle="No staff members found"
+            emptyIcon={<User className="w-12 h-12 text-muted-foreground/30" />}
+            footer={paginationUI || undefined}
+          />
+        </div>
       ) : (
-        <>
+        <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
           <div className={
             collapsed
               ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
@@ -626,9 +631,9 @@ export function DoctorManagement({
               );
             })
           )}
+          </div>
+          {paginationUI}
         </div>
-        {paginationUI}
-        </>
       )}
     </div>
   );

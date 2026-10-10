@@ -373,8 +373,8 @@ export function EmployeeManagement({
     ];
 
     return (
-      <div className="p-4 bg-muted/20 border-l-2 border-primary/40">
-        <h4 className="text-sm font-semibold mb-3">Family Members ({emp.dependents.length})</h4>
+      <div className="p-3 bg-muted/20 border-l-2 border-primary/40">
+        <h4 className="text-sm font-semibold mb-2">Family Members ({emp.dependents.length})</h4>
         <DataTable
           columns={dependentColumns}
           data={emp.dependents}
@@ -551,41 +551,23 @@ export function EmployeeManagement({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
+    <div className="flex-1 min-h-0 flex flex-col gap-4">
       {tab === 'list' ? (
         <>
           {/* Controls Container */}
-          <div className="flex flex-col gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
-            {/* Row 1: Search + Action Buttons */}
-            <div className="flex items-center gap-2 w-full">
-              {/* Search Input */}
-              <div className="flex-1 min-w-0">
-                <SearchInput
-                  value={search}
-                  onChange={val => { setSearch(val); setPage(1); }}
-                  placeholder="Search by name, phone…"
-                  className="w-full"
-                />
-              </div>
-              {/* Action Buttons — always visible */}
-              <div className="flex items-center gap-2 shrink-0">
-                <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
-                  <Upload className="w-4 h-4" /> Import
-                </Button>
-                <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
-                  <Upload className="w-4 h-4" />
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
-                  <Plus className="w-4 h-4" /> Add Member
-                </Button>
-                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+          <div className="shrink-0 flex flex-col lg:flex-row lg:items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+            {/* Search Input */}
+            <div className="flex-1 min-w-0">
+              <SearchInput
+                value={search}
+                onChange={val => { setSearch(val); setPage(1); }}
+                placeholder="Search by name, phone…"
+                className="w-full"
+              />
             </div>
 
-            {/* Row 2: Filter Tabs + Plan Select */}
-            <div className="flex items-center gap-2 w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+            {/* Filter Tabs + Plan Select */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0">
               {/* Filter Tabs - Desktop only */}
               <div className="hidden sm:block shrink-0">
                 <FilterTabs
@@ -634,15 +616,33 @@ export function EmployeeManagement({
                 </Select>
               </div>
             </div>
+
+            {/* Action Buttons — always visible */}
+            <div className="flex items-center gap-2 shrink-0">
+              <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
+                <Upload className="w-4 h-4" /> Import
+              </Button>
+              <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
+                <Upload className="w-4 h-4" />
+              </Button>
+              <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
+                <Plus className="w-4 h-4" /> Add Member
+              </Button>
+              <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
           {employeesLoading ? (
             <Loading type="spinner" text="Loading members…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block">
+              <div className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
                 <DataTable
+                  className="flex-1 min-h-0"
                   columns={columns}
                   data={displayMembers}
                   rowKey={e => e.id}
@@ -731,6 +731,7 @@ export function EmployeeManagement({
               </div>
             </>
           )}
+          </div>
         </>
       ) : (
         <EmployeeImportTab
@@ -831,7 +832,7 @@ export function EmployeeManagement({
                 return (
                   <div
                     key={dep.id}
-                    className="p-3.5 bg-white rounded-2xl border border-border/60 space-y-2.5 shadow-sm"
+                    className="p-3 bg-white rounded-2xl border border-border/60 space-y-2 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <div className="min-w-0">
@@ -867,7 +868,7 @@ export function EmployeeManagement({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2.5">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-slate-100/50 pt-2">
                       <span className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 opacity-60" />
                         <span>{dep.phone ? formatPhoneWithCountryCode(dep.phone, dep.country_code || dep.countryCode) : '—'}</span>

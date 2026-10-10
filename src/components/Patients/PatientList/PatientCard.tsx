@@ -165,7 +165,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
 
           {/* Contact Info - Compact Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 mb-3">
             <SimpleTooltip content={`Phone: ${patient.phone || "N/A"}`}>
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground min-w-0 cursor-help">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
@@ -189,7 +189,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
 
         {/* Medical Alerts - Slimmed down */}
-        <div className="mb-4 p-2.5 bg-orange-50/50 border border-orange-100 rounded-xl">
+        <div className="mb-3 p-2.5 bg-orange-50/50 border border-orange-100 rounded-xl">
           <div className="flex items-center gap-1.5 mb-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-orange-600" />
             <span className="text-[10px] font-black text-orange-900 uppercase">
@@ -209,7 +209,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </div>
 
         {/* Stats Grid - Compact */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="bg-primary/30 border border-primary/10 rounded-xl p-2 text-center">
             <p className="text-sm sm:text-base font-black text-primary leading-none mb-0.5">
               {patient.total_visits !== undefined ? patient.total_visits : (patient.totalVisits || 0)}
@@ -236,14 +236,14 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        {/* Timeline Rows - Slimmer */}
-        <div className="space-y-1.5 mb-4">
-          <div className="flex items-center justify-between p-2 bg-primary/10 border border-primary/10 rounded-lg">
-            <div className="flex items-center gap-1.5 text-primary">
-              <UserPlus className="w-3.5 h-3.5" />
+        {/* Timeline Rows - Merged into a single compact row */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="p-2 bg-primary/10 border border-primary/10 rounded-lg min-w-0">
+            <div className="flex items-center gap-1.5 text-primary mb-1">
+              <UserPlus className="w-3.5 h-3.5 shrink-0" />
               <span className="text-[10px] font-bold">Registered</span>
             </div>
-            <span className="text-[10px] font-black text-foreground">
+            <span className="text-[10px] font-black text-foreground block truncate">
               {(() => {
                 const regVal = patient.created_at || patient.createdAt || patient.registeredDate;
                 if (!regVal) return "—";
@@ -256,12 +256,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               })()}
             </span>
           </div>
-          <div className="flex items-center justify-between p-2 bg-muted/50 border border-border rounded-lg">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Calendar className="w-3.5 h-3.5" />
+          <div className="p-2 bg-muted/50 border border-border rounded-lg min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
               <span className="text-[10px] font-bold">Last Visit</span>
             </div>
-            <span className="text-[10px] font-black text-foreground truncate ml-2 text-right">
+            <span className="text-[10px] font-black text-foreground block truncate">
               {(() => {
                 const visitVal = patient.last_visit_date || patient.lastVisit;
                 if (!visitVal) return "No visits yet";
@@ -276,7 +276,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        <div className="h-px bg-muted mb-4" />
+        <div className="h-px bg-muted mb-3" />
 
         {/* Action Footer - Responsive Wrapping */}
         <div className="flex flex-wrap items-center justify-between gap-2">

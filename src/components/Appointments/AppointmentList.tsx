@@ -299,7 +299,7 @@ export function AppointmentList({
   }, [totalPages, page]);
 
   const paginationFooter =
-    totalPages > 1 ? (
+    filtered.length > 0 ? (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-muted/20 border-t border-border">
         <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider shrink-0">
           Showing {(page - 1) * PER_PAGE + 1}–

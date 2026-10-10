@@ -50,15 +50,19 @@ interface PageHeaderProps {
 }
 export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-row items-center justify-between gap-0 mb-0">
+    <div className="flex flex-row flex-wrap items-center justify-between gap-y-3 gap-x-2 mb-0">
       <div className="flex-1 min-w-[120px]">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
         {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
       </div>
-      {children}
       {action && (
-        <div className="flex flex-row items-center justify-end gap-2 shrink-0">
+        <div className="flex flex-row items-center justify-end gap-2 shrink-0 order-2 md:order-3">
           {action}
+        </div>
+      )}
+      {children && (
+        <div className="order-3 md:order-2 w-full md:w-auto">
+          {children}
         </div>
       )}
     </div>
@@ -502,7 +506,6 @@ interface PaginationProps {
 }
 export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange, className }: PaginationProps) {
   if (totalItems === 0) return null;
-  if (totalPages <= 1 && !onPerPageChange) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(

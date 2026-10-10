@@ -46,8 +46,8 @@ export const PatientStats: React.FC<PatientStatsProps> = ({ patients }) => {
   return (
     <div className={
       collapsed
-        ? "grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6"
-        : "grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-2 gap-3 md:gap-6 mb-6"
+        ? "grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4"
+        : "grid grid-cols-2 xl:grid-cols-4 lg:grid-cols-2 gap-3 md:gap-6 mb-4"
     }>
       <MetricCard 
         label="Total Patients"

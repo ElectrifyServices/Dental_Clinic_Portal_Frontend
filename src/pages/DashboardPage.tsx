@@ -3,7 +3,7 @@ import { UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppointmentData } from '../hooks/useAppointmentData';
 import { useModal } from '../contexts/ModalContext';
-import { Button, FilterTabs } from '@/components/ui';
+import { Button, FilterTabs, PageHeader } from '@/components/ui';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { EnhancedDashboardStats } from '../components/Dashboard/DashboardStats';
 import { TodayAppointments } from '../components/Dashboard/TodayAppointments';
@@ -105,47 +105,41 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card/60 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/50 shadow-sm -mt-3 md:-mt-5">
-        <div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">
-            {greeting},{' '}
-            <span className="text-primary">{state.user?.name?.split(' ')[0] ?? 'Doctor'}</span>
-          </h1>
-          <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-            {day} · Here's your clinic overview
-          </p>
-        </div>
-       
-        <div className="flex items-center gap-4 flex-wrap">
+      <PageHeader
+        title={`${greeting}, ${state.user?.name?.split(' ')[0] ?? 'Doctor'}`}
+        subtitle={`${day} · Here's your clinic overview`}
+        action={
+          <Button onClick={handleAddPatient} className="gap-1.5 shrink-0 shadow-sm">
+            <UserPlus className="w-4 h-4" /> Add Patient
+          </Button>
+        }
+      >
+        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
               <DatePicker
                 value={customStart}
                 onChange={(val) => setCustomStart(val)}
-                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
+                className="h-9 w-auto text-xs px-2 py-1"
               />
               <span className="text-muted-foreground text-xs font-medium">to</span>
               <DatePicker
                 value={customEnd}
                 onChange={(val) => setCustomEnd(val)}
-                className="h-9 w-auto text-xs px-2 py-1 bg-white/50"
+                className="h-9 w-auto text-xs px-2 py-1"
               />
             </div>
           )}
-         
-          <div className="bg-white/50 rounded-lg p-1 border border-border/50 max-w-full">
+
+          <div className="bg-muted/50 rounded-lg p-1 border border-border/50 max-w-full">
             <FilterTabs
               tabs={PERIODS}
               active={period}
               onChange={setPeriod}
             />
           </div>
-         
-          <Button onClick={handleAddPatient} className="gap-2 shrink-0 shadow-sm w-full sm:w-auto">
-            <UserPlus className="w-4 h-4" /> Add New Patient
-          </Button>
         </div>
-      </div>
+      </PageHeader>
 
       {/* ── KPI Grid + Revenue Chart + Goal ────────────────────────────── */}
       <EnhancedDashboardStats period={period} customStart={customStart} customEnd={customEnd} />

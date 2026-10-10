@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const appointmentSchema = z.object({
-  patientName: z.string().min(2, 'Patient name is required'),
+  patientName: z.string().trim().min(2, 'Patient name is required'),
   country_code: z.string().optional().default('+91'),
-  patientPhone: z.string().min(1, 'Phone number is required'),
+  patientPhone: z.string().trim().min(1, 'Phone number is required'),
   doctorId: z.string().min(1, 'Doctor is required'),
   doctorName: z.string(),
   date: z.string().min(1, "Date is required"),

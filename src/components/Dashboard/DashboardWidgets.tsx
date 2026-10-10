@@ -51,8 +51,8 @@ export function AppointmentStatusWidget({ period = 'today', customStart, customE
   const periodLabel = period === 'today' ? "Today's Status" : period === 'week' ? "This Week's Status" : period === 'month' ? "This Month's Status" : period === 'year' ? "This Year's Status" : "Custom Period Status";
 
   return (
-    <Card className="p-5 shadow-card h-full">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">
+    <Card className="p-4 shadow-card h-full">
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">
         {periodLabel}
       </p>
       <div className="flex items-center gap-4">
@@ -108,7 +108,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
 
   return (
     <Card className="flex flex-col shadow-card h-full overflow-hidden">
-      <div className="p-5 border-b border-border/50">
+      <div className="p-4 border-b border-border/50">
         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" /> Doctor Performance · {periodLabel}
         </p>
@@ -121,7 +121,7 @@ export function DoctorPerformanceWidget({ period = 'today', customStart, customE
           className="w-full max-w-none"
         />
       </div>
-      <div className="flex-1 p-5 space-y-4">
+      <div className="flex-1 p-4 space-y-4">
         {doctors && doctors.length > 0 ? (
           doctors.map((doc: ApiAny, index: number) => {
             const colorClass = DOCTOR_COLORS[index % DOCTOR_COLORS.length];

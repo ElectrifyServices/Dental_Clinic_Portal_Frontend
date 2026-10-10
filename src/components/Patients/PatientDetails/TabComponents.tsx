@@ -139,12 +139,12 @@ export const AppointmentsTab = ({
   patientAppointments: ApiAny[];
   getStatusColor: (s: string) => string;
 }) => (
-  <div className="space-y-4">
+  <div className="space-y-3">
     <h3 className="text-lg font-bold text-foreground">Appointment History</h3>
     {patientAppointments.map((appointment) => (
       <Card
         key={appointment.id}
-        className="bg-card rounded-2xl p-6 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
+        className="bg-card rounded-2xl p-4 border border-border flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300"
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start">
@@ -218,7 +218,7 @@ export const TreatmentsTab = ({
 
   if (patientTreatments.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <h3 className="text-lg font-bold text-foreground">Treatment Journey</h3>
         <EmptyState
           icon={Stethoscope}
@@ -230,7 +230,7 @@ export const TreatmentsTab = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h3 className="text-lg font-bold text-foreground">Treatment Journey</h3>
       {hasInProgress && (
         <div>
@@ -374,11 +374,11 @@ export const BillingTab = ({
   getStatusColor: (s: string) => string;
   handleSendReminder: () => void;
 }) => (
-  <div className="space-y-4">
+  <div className="space-y-3">
     <div className="flex items-center justify-between">
       <h3 className="text-lg font-bold text-foreground">Billing History</h3>
       {patient.outstandingBalance > 0 && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
           <div className="flex items-center justify-between gap-6">
             <div>
               <p className="font-semibold text-red-900">Outstanding Balance</p>
@@ -400,7 +400,7 @@ export const BillingTab = ({
     {patientInvoices.map((invoice) => (
       <Card
         key={invoice.id}
-        className="bg-card rounded-2xl p-6 border border-border shadow-sm"
+        className="bg-card rounded-2xl p-4 border border-border shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -541,16 +541,16 @@ export const PrescriptionsTab = ({
         return (
           <Card
             key={recordId}
-            className="bg-card rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 mb-4 overflow-hidden"
+            className="bg-card rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 mb-3 overflow-hidden"
           >
             {/* Header section - click to expand/collapse */}
-            <div 
+            <div
               onClick={() => toggleCard(recordId)}
-              className="flex items-center justify-between gap-4 p-5 cursor-pointer hover:bg-muted/30 transition-colors select-none"
+              className="flex items-center justify-between gap-4 p-4 cursor-pointer hover:bg-muted/30 transition-colors select-none"
             >
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mt-1 shadow-sm border border-primary/10">
-                  <Pill className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mt-1 shadow-sm border border-primary/10">
+                  <Pill className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -592,8 +592,8 @@ export const PrescriptionsTab = ({
 
             {/* Medicine details dropdown content */}
             {isExpanded && (
-              <div className="p-5 pt-0 border-t border-border/40 bg-card space-y-3">
-                <div className="pt-4 space-y-3 animate-in fade-in duration-200">
+              <div className="p-4 pt-0 border-t border-border/40 bg-card space-y-3">
+                <div className="pt-3 space-y-3 animate-in fade-in duration-200">
                   {prescriptionsList.map((prescription: ApiAny, index: number) => {
                     const medicineName =
                       prescription.medicine_name ||
@@ -612,7 +612,7 @@ export const PrescriptionsTab = ({
                     return (
                       <div
                         key={index}
-                        className="bg-muted/45 hover:bg-muted/65 transition-colors rounded-2xl p-4 border border-border/40"
+                        className="bg-muted/45 hover:bg-muted/65 transition-colors rounded-2xl p-3 border border-border/40"
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                           <div className="space-y-1">
@@ -737,23 +737,23 @@ export const DocumentsTab = ({
 
   return (
     <div>
-      <h3 className="text-lg font-bold text-foreground mb-6">
+      <h3 className="text-lg font-bold text-foreground mb-3">
         Patient Documents & Images
       </h3>
-      
+
       {isLoading ? (
         <Loading type="spinner" text="Loading documents & images..." />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {documents.map((doc: ApiAny, index: number) => {
               const docUrl = doc.url || doc.document_url || doc.file_url;
               const docName = doc.file_name || doc.name || doc.document_name || "Document";
-              
+
               return (
                 <Card
                   key={doc.id || index}
-                  className="bg-card rounded-2xl p-6 border border-border hover:shadow-lg transition-all duration-200 shadow-sm cursor-pointer"
+                  className="bg-card rounded-2xl p-4 border border-border hover:shadow-lg transition-all duration-200 shadow-sm cursor-pointer"
                   onClick={() => {
                     if (docUrl) setSelectedImage(docUrl);
                   }}
@@ -838,8 +838,8 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-border pb-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between border-b border-border pb-3">
         <div>
           <h3 className="text-xl font-bold text-foreground">Family Members</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -852,15 +852,15 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {familyMembers.map((member) => (
           <Card
             key={member.id}
-            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
+            className="bg-card rounded-2xl p-4 border border-border hover:shadow-md transition-all group shadow-sm"
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-lg shadow-sm">
                   {member.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
@@ -884,7 +884,7 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4 border-t border-border pt-4">
+            <div className="grid grid-cols-2 gap-3 mt-3 border-t border-border pt-3">
               <div className="bg-muted rounded-xl p-2.5">
                 <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
                   <User className="w-3 h-3" /> Age

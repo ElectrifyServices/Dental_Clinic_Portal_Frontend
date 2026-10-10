@@ -76,9 +76,9 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-2xl border border-border">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-sm">
             {changePlanEmp.name[0]?.toUpperCase()}
           </div>
           <div>
@@ -88,8 +88,8 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl">
+        <div className="grid grid-cols-1 gap-3">
+          <div className="p-3 bg-primary/10 border border-primary/20 rounded-2xl">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Current Active Plan</span>
               <Badge variant="blue" className="text-[8px]">ACTIVE</Badge>
@@ -117,7 +117,7 @@ export function ChangePlanModal({ changePlanEmp, setChangePlanEmp, activePlans, 
           </LabeledField>
         </div>
 
-        <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex gap-3">
+        <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-2xl flex gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
           <p className="text-[11px] text-amber-900/80 font-bold leading-relaxed">
             This change is immediate. The employee's clinical records and future invoices will automatically reflect the benefits and discounts associated with the new plan.

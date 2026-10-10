@@ -205,18 +205,20 @@ export function ConsentFormList({
   ];
 
   return (
-    <div className="space-y-3">
-      <PageHeader
-        title="Consent Forms"
-        subtitle={`${forms.length} authorized consent documents on record`}
-        action={
-          <Button onClick={onAddForm} className="gap-2">
-            <Plus className="w-4 h-4" /> New Consent Form
-          </Button>
-        }
-      />
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0">
+        <PageHeader
+          title="Consent Forms"
+          subtitle={`${forms.length} authorized consent documents on record`}
+          action={
+            <Button onClick={onAddForm} className="gap-2">
+              <Plus className="w-4 h-4" /> New Consent Form
+            </Button>
+          }
+        />
+      </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4 shrink-0">
         <div className="flex-1">
           <SearchInput
             placeholder="Search by patient or treatment type…"
@@ -297,53 +299,56 @@ export function ConsentFormList({
         </div>
       </div>
 
-      {isLoading && forms.length === 0 ? (
-        <div className="py-20 bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center text-center">
-          <Loading type="spinner" text="Fetching consent documents..." />
-        </div>
-      ) : forms.length === 0 ? (
-        <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
-          <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
-          <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
-            No consent forms found
-          </h3>
-          <p className="text-xs text-muted-foreground mt-2 font-medium">
-            Authorized forms will appear here once created.
-          </p>
-        </div>
-      ) : (
-        <div className="relative">
-          {isLoading && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-3xl">
-              <Loading type="spinner" text="Updating list..." />
-            </div>
-          )}
-          <ContentCard
-            bodyClassName="p-0 overflow-hidden"
-            className="rounded-3xl border-border/50"
-          >
-            <DataTable
-              columns={columns}
-              data={forms}
-              rowKey={(row) => row.id}
-              footer={
-                totalItems > 0 ? (
-                  <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-                    <Pagination
-                      page={page}
-                      totalPages={totalPages}
-                      totalItems={totalItems}
-                      perPage={limit}
-                      onPageChange={onPageChange}
-                      onPerPageChange={onPerPageChange}
-                    />
-                  </div>
-                ) : undefined
-              }
-            />
-          </ContentCard>
-        </div>
-      )}
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+        {isLoading && forms.length === 0 ? (
+          <div className="py-20 bg-card rounded-[2.5rem] border border-border flex flex-col items-center justify-center text-center">
+            <Loading type="spinner" text="Fetching consent documents..." />
+          </div>
+        ) : forms.length === 0 ? (
+          <div className="py-20 bg-card rounded-[2.5rem] border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
+            <Shield className="w-16 h-16 text-muted-foreground/10 mb-6" />
+            <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">
+              No consent forms found
+            </h3>
+            <p className="text-xs text-muted-foreground mt-2 font-medium">
+              Authorized forms will appear here once created.
+            </p>
+          </div>
+        ) : (
+          <div className="relative flex-1 min-h-0 flex flex-col">
+            {isLoading && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-3xl">
+                <Loading type="spinner" text="Updating list..." />
+              </div>
+            )}
+            <ContentCard
+              bodyClassName="flex-1 p-0 overflow-auto"
+              className="rounded-3xl border-border/50 flex-1 min-h-0"
+            >
+              <DataTable
+                className="flex-1 min-h-0"
+                columns={columns}
+                data={forms}
+                rowKey={(row) => row.id}
+                footer={
+                  totalItems > 0 ? (
+                    <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                      <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        perPage={limit}
+                        onPageChange={onPageChange}
+                        onPerPageChange={onPerPageChange}
+                      />
+                    </div>
+                  ) : undefined
+                }
+              />
+            </ContentCard>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
