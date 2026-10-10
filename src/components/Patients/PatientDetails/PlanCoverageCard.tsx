@@ -45,8 +45,8 @@ export const PlanCoverageCard: React.FC<PlanCoverageCardProps> = ({ patient }) =
   const isCoveredAsDependent = !!patient?.primaryMemberId && !planId;
 
   return (
-    <Card className="rounded-2xl p-5 border border-border shadow-sm bg-linear-to-br from-primary/5 to-transparent">
-      <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+    <Card className="rounded-2xl p-4 border border-border shadow-sm bg-linear-to-br from-primary/5 to-transparent">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <Shield className="w-4 h-4 text-primary" />
         Plan & Coverage
       </h3>

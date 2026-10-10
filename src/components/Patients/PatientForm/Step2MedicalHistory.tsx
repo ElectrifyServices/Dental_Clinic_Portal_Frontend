@@ -86,28 +86,43 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
 
   return (
     <div className="space-y-3">
-      <div className="text-center mb-2">
-        <div className="w-12 h-12 bg-linear-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-          <Heart className="w-6 h-6 text-destructive" />
+      <div className="text-center mb-1">
+        <div className="w-10 h-10 bg-linear-to-r from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-1.5">
+          <Heart className="w-5 h-5 text-destructive" />
         </div>
         <h3 className="text-base font-bold text-foreground leading-none">Medical Information</h3>
         <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">Allergies</p>
       </div>
 
-      <div>
-        <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
-          Referred By
-        </Label>
-        <Input
-          type="text"
-          name="referredBy"
-          value={formData.referredBy}
-          onChange={handleChange}
-          placeholder="Doctor name or referral source"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        <div>
+          <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+            Referred By
+          </Label>
+          <Input
+            type="text"
+            name="referredBy"
+            value={formData.referredBy}
+            onChange={handleChange}
+            placeholder="Doctor name or referral source"
+          />
+        </div>
+        <div>
+          <Label className="block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">
+            Habits
+          </Label>
+          <Textarea
+            name="habit"
+            value={formData.habit}
+            onChange={handleChange}
+            rows={1}
+            className="w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary border-input bg-card resize-y min-h-10"
+            placeholder="E.g. Smoking, Tobacco chewing, Alcohol consumption, etc."
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         <div>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Heart className="w-4 h-4 inline mr-2 text-red-500" />
@@ -214,20 +229,6 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3 mt-4">
-        <Label className="block text-sm font-semibold text-muted-foreground mb-1">
-          Habits
-        </Label>
-        <Textarea
-          name="habit"
-          value={formData.habit}
-          onChange={handleChange}
-          rows={2}
-          className="w-full px-4 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary border-input bg-card"
-          placeholder="E.g. Smoking, Tobacco chewing, Alcohol consumption, etc."
-        />
-      </div>
-
       {matchedCorporateEmp && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
@@ -245,14 +246,14 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </Card>
       )}
 
-      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-border rounded-2xl p-3 shadow-sm space-y-2">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <User className="w-5 h-5 text-primary" />
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <User className="w-4 h-4 text-primary" />
             Previous Dentist / Doctor Details
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">Previous Doctor Name</Label>
             <Input
@@ -383,7 +384,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-border rounded-2xl p-3 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -396,12 +397,12 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
           name="pastDentalHistory"
           value={formData.pastDentalHistory}
           onChange={handleChange}
-          rows={3}
+          rows={2}
           className="w-full px-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Previous dental treatments, issues, or positive/negative experiences"
         />
-        <Label className="border-2 border-dashed border-input rounded-md p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
-          <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2 group-hover:text-primary transition-colors" />
+        <Label className="border-2 border-dashed border-input rounded-md p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/20 transition-all block group">
+          <Upload className="w-6 h-6 text-muted-foreground/60 mx-auto mb-1.5 group-hover:text-primary transition-colors" />
           <p className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Upload Clinical Images / X-rays</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1">Select multiple files (JPEG, PNG, DICOM) - Max 5MB per file</p>
           <Input
@@ -481,7 +482,7 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
         )}
       </div>
 
-      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+      <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
         <div>
           <h4 className="text-sm font-bold text-amber-900 mb-1">Important Medical Notice</h4>

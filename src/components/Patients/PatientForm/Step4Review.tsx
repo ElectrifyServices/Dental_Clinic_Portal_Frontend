@@ -108,9 +108,9 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-3">
-        <div className="w-24 h-24 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden border-4 border-white shadow-lg">
+    <div className="space-y-3">
+      <div className="text-center mb-1">
+        <div className="w-14 h-14 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center mx-auto mb-1.5 overflow-hidden border-4 border-white shadow-lg">
           {formData.avatar ? (
             <img
               src={formData.avatar}
@@ -118,20 +118,20 @@ export const Step4Review: React.FC<Step4Props> = ({ formData, isCheckIn, corpora
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
-            <User className="w-12 h-12 text-primary" />
+            <User className="w-7 h-7 text-primary" />
           )}
         </div>
-        <h3 className="text-xl font-bold text-foreground">
+        <h3 className="text-base font-bold text-foreground leading-none">
           {isCheckIn ? "Verify & Confirm Check-in" : "Review & Finalize"}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">
           {isCheckIn
             ? "Review patient history and details before checking in"
             : "Please review all information before saving"}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <div className="space-y-4">
           <Card className="border-secondary bg-card shadow-sm overflow-hidden">
           <CardContent className="p-4">

@@ -1,5 +1,5 @@
 import type { ApiAny } from "../../types/api";
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
@@ -161,18 +161,18 @@ export function AppointmentList({
           ptNameRaw && ptNameRaw !== "[object Object]" ? ptNameRaw : "?"
         );
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-primary font-bold shadow-sm uppercase">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-secondary rounded-lg flex items-center justify-center text-primary font-bold text-xs shadow-xs uppercase shrink-0">
               {patientName.charAt(0)}
             </div>
-            <div>
+            <div className="min-w-0">
               <div 
-                className="font-semibold text-foreground leading-tight mb-0.5 capitalize truncate max-w-[150px]" 
+                className="font-semibold text-foreground text-xs leading-tight mb-0.5 capitalize truncate max-w-[150px]" 
                 title={patientName}
               >
                 {patientName}
               </div>
-              <div className="text-[10px] text-muted-foreground font-medium">
+              <div className="text-[9.5px] text-muted-foreground font-medium">
                 {formatPhoneWithCountryCode(a.patientPhone || a.phone, a.country_code)}
               </div>
             </div>
@@ -192,15 +192,15 @@ export function AppointmentList({
           doctorName = doctorName.replace(/^(Dr\.\s+|Dr\s+)/i, "");
         }
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Stethoscope className="w-4 h-4 text-muted-foreground/60" />
+          <div className="flex items-center gap-2">
+            <div className="w-6.5 h-6.5 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/60" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="font-semibold text-foreground text-xs">
                 Dr. {doctorName}
               </div>
-              <div className="text-[10px] text-muted-foreground/60 mt-0.5">
+              <div className="text-[9.5px] text-muted-foreground/70 mt-0.5 truncate">
                 {a.treatmentType || a.type}
               </div>
             </div>
@@ -212,9 +212,9 @@ export function AppointmentList({
       key: "schedule",
       header: "Schedule",
       render: (a: ApiAny) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
-            <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/60" />
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1.5 text-muted-foreground font-medium text-xs">
+            <CalendarIcon className="w-3 h-3 text-muted-foreground/60" />
             {a.date
               ? new Date(a.date).toLocaleDateString("en-IN", {
                   day: "2-digit",
@@ -222,10 +222,10 @@ export function AppointmentList({
                 })
               : "—"}
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <div className="flex items-center gap-1 text-[9.5px] text-muted-foreground/70">
+            <Clock className="w-3 h-3 text-muted-foreground/40" />
             {formatTime(a.time)}{" "}
-            <span className="text-muted-foreground/40 mx-1">•</span>{" "}
+            <span className="text-muted-foreground/40 mx-0.5">•</span>{" "}
             {a.duration || 15} min
           </div>
         </div>
@@ -236,7 +236,7 @@ export function AppointmentList({
       header: "Total Fee",
       align: "right" as const,
       render: (a: ApiAny) => (
-        <div className="font-semibold text-foreground text-sm">
+        <div className="font-semibold text-foreground text-xs sm:text-sm">
           ₹{(a.fee || 0).toLocaleString()}
         </div>
       ),
@@ -254,7 +254,7 @@ export function AppointmentList({
             ] ||
             "gray"
           }
-          className="text-[10px] px-3 py-0.5 font-medium"
+          className="text-[9.5px] px-2.5 py-0.5 font-medium"
         >
           {String(a.status || "")
             .replace("_", " ")
@@ -271,7 +271,7 @@ export function AppointmentList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-xl transition-all"
+            className="h-7.5 w-7.5 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded-lg transition-all"
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -285,67 +285,85 @@ export function AppointmentList({
               setOpenMenuId(a.id === openMenuId ? null : a.id);
             }}
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical className="w-3.5 h-3.5" />
           </Button>
         </div>
       ),
     },
   ];
 
+  const visiblePages = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+      (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2
+    );
+  }, [totalPages, page]);
+
   const paginationFooter =
     totalPages > 1 ? (
-      <div className="flex items-center justify-between px-8 py-5 bg-muted/30 border-t border-border">
-        <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-muted/20 border-t border-border">
+        <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider shrink-0">
           Showing {(page - 1) * PER_PAGE + 1}–
           {Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}{" "}
           entries
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0 max-w-full overflow-x-auto">
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-xl border-border"
+            className="h-7 w-7 rounded-lg border-border shrink-0"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
+            aria-label="Previous page"
           >
-            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+            <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
           </Button>
-          <div className="flex gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                variant={p === page ? "default" : "ghost"}
-                key={p}
-                onClick={() => setPage(p)}
-                className={`w-8 h-8 text-xs rounded-xl font-semibold transition-all ${
-                  p === page
-                    ? "bg-primary text-white shadow-md hover:bg-primary/90"
-                    : "text-muted-foreground/60 hover:bg-muted"
-                }`}
-              >
-                {p}
-              </Button>
-            ))}
+          <div className="flex items-center gap-1">
+            {visiblePages.map((p, i) => {
+              const prev = visiblePages[i - 1];
+              return (
+                <React.Fragment key={p}>
+                  {prev && p - prev > 1 && (
+                    <span className="w-5 text-center text-xs text-muted-foreground/60 select-none">
+                      …
+                    </span>
+                  )}
+                  <Button
+                    variant={p === page ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setPage(p)}
+                    className={`w-7 h-7 text-xs rounded-lg font-semibold transition-all shrink-0 ${
+                      p === page
+                        ? "bg-primary text-white shadow-xs hover:bg-primary/90"
+                        : "text-muted-foreground/60 hover:bg-muted"
+                    }`}
+                  >
+                    {p}
+                  </Button>
+                </React.Fragment>
+              );
+            })}
           </div>
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-xl border-border"
+            className="h-7 w-7 rounded-lg border-border shrink-0"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            aria-label="Next page"
           >
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
           </Button>
         </div>
       </div>
     ) : undefined;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2.5 sm:space-y-3">
       {/* Filters row */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-card/30 p-3 rounded-2xl border border-border/40">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+      <div className="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-2.5 bg-card/60 p-2 sm:p-2.5 rounded-xl border border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search patient, treatment or doctor..."
               value={searchTerm}
@@ -353,10 +371,10 @@ export function AppointmentList({
                 setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="pl-10 h-10 rounded-2xl bg-card border-border"
+              className="pl-8 h-8.5 sm:h-9 rounded-xl bg-card border-border text-xs"
             />
           </div>
-          <div className="flex w-full sm:w-auto items-center gap-2">
+          <div className="flex w-full sm:w-auto items-center gap-1.5">
             <DatePicker
               value={startDate || ""}
               onChange={(val) => {
@@ -365,9 +383,9 @@ export function AppointmentList({
                 setFilter("all");
                 setPage(1);
               }}
-              className="h-10 rounded-2xl bg-card border-border w-36"
+              className="h-8.5 sm:h-9 rounded-xl bg-card border-border w-28 sm:w-32 text-xs"
             />
-            <span className="text-muted-foreground text-sm font-medium">to</span>
+            <span className="text-muted-foreground text-xs font-medium">to</span>
             <DatePicker
               value={endDate}
               min={startDate || ""}
@@ -376,11 +394,11 @@ export function AppointmentList({
                 setFilter("all");
                 setPage(1);
               }}
-              className="h-10 rounded-2xl bg-card border-border w-36"
+              className="h-8.5 sm:h-9 rounded-xl bg-card border-border w-28 sm:w-32 text-xs"
             />
           </div>
         </div>
-        <div className="flex bg-muted p-1 rounded-2xl border border-border self-start lg:self-auto shrink-0">
+        <div className="flex bg-muted p-0.5 rounded-xl border border-border self-start lg:self-auto shrink-0">
           {TYPE_FILTERS.map((f) => (
             <Button
               variant="ghost"
@@ -400,9 +418,9 @@ export function AppointmentList({
                   setEndDate("");
                 }
               }}
-              className={`px-5 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all h-9 ${
+              className={`px-3 sm:px-3.5 py-1 rounded-lg text-[9.5px] font-bold uppercase tracking-wider transition-all h-7 sm:h-7.5 ${
                 filter === f.id
-                  ? "bg-card text-primary shadow-sm ring-1 ring-black/5 hover:bg-card"
+                  ? "bg-card text-primary shadow-xs ring-1 ring-black/5 hover:bg-card"
                   : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
               }`}
             >
@@ -414,10 +432,11 @@ export function AppointmentList({
 
       {/* Table */}
       <DataTable
+        compact
         columns={columns}
         data={paginated}
         rowKey={(a) => a.id}
-        emptyIcon={<Clock className="w-6 h-6" />}
+        emptyIcon={<Clock className="w-5 h-5" />}
         emptyTitle="No records found"
         footer={paginationFooter}
       />

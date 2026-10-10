@@ -363,7 +363,7 @@ export function PatientDetails({
       }
     >
       {isIncompletePatient && (
-        <div className="bg-orange-500/10 border-2 border-orange-500/20 text-orange-600 rounded-xl p-3 mb-6 flex items-start gap-3 animate-pulse">
+        <div className="bg-orange-500/10 border-2 border-orange-500/20 text-orange-600 rounded-xl p-3 mb-4 flex items-start gap-3 animate-pulse">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-bold uppercase tracking-wide">Incomplete Patient Profile</p>
@@ -371,7 +371,7 @@ export function PatientDetails({
           </div>
         </div>
       )}
-      <div className="space-y-8">
+      <div className="space-y-4">
         <Tabs value={activeTab} onValueChange={(val: ApiAny) => setActiveTab(val)}>
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide">
             {tabs.map((tab) => {
@@ -389,7 +389,7 @@ export function PatientDetails({
             })}
           </TabsList>
 
-          <div className="min-h-[60vh] mt-6">
+          <div className="min-h-[60vh] mt-4">
             <TabsContent value="overview" className="m-0 focus-visible:outline-none">
               <OverviewTab
                 patient={patient}

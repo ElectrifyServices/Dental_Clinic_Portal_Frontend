@@ -22,10 +22,10 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
   checkingInApptId,
 }) => {
   return (
-    <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <CalendarIcon className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-bold text-foreground">
+    <div className="bg-card rounded-2xl border border-border p-2.5 sm:p-3 shadow-xs flex-1 flex flex-col overflow-hidden min-h-[160px]">
+      <div className="flex items-center gap-1.5 mb-2">
+        <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+        <h3 className="text-xs font-bold text-foreground">
           {selectedDate.toLocaleDateString("en-IN", {
             weekday: "short",
             month: "short",
@@ -34,41 +34,41 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
         </h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+      <div className="flex-1 overflow-y-auto space-y-1.5 custom-scrollbar pr-0.5">
         {appointments.length > 0 ? (
           appointments.map((apt, index) => (
             <div
               key={index}
               onClick={() => onEditAppointment?.(apt)}
-              className="p-4 bg-muted/50 hover:bg-secondary/50 rounded-2xl border border-border hover:border-primary/20 transition-all cursor-pointer group"
+              className="p-2 sm:p-2.5 bg-muted/40 hover:bg-secondary/40 rounded-xl border border-border hover:border-primary/20 transition-all cursor-pointer group"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9.5px] font-bold text-primary flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {formatTime(apt.time)}
                 </span>
                 <Badge
                   variant={apt.status === "checked-in" ? "green" : "blue"}
-                  className="text-[8px] uppercase tracking-wider"
+                  className="text-[7.5px] uppercase tracking-wider px-1.5 py-0.5"
                 >
                   {apt.status || "Booked"}
                 </Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground/60 font-bold text-xs group-hover:text-primary transition-colors">
+              <div className="flex items-center gap-2">
+                <div className="w-6.5 h-6.5 rounded-lg bg-card border border-border flex items-center justify-center text-muted-foreground/60 font-bold text-[10px] group-hover:text-primary transition-colors shrink-0">
                   {(apt.patientName || "?").charAt(0)}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold text-foreground truncate tracking-tight">
                     {apt.patientName}
                   </p>
-                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-medium">
+                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground/70 font-medium">
                     <Stethoscope className="w-2.5 h-2.5" />
                     <span className="truncate">
                       {apt.treatment || "Consultation"}
                     </span>
                   </div>
-                  <p className="text-[8px] font-bold text-primary/60 mt-1 uppercase tracking-tighter">
+                  <p className="text-[7.5px] font-bold text-primary/70 mt-0.5 uppercase tracking-tighter">
                     {apt.duration || 15} mins duration
                   </p>
                 </div>
@@ -77,7 +77,7 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
               {onDirectCheckIn && !['completed', 'cancelled', 'checked-in', 'no-show'].includes(apt.status) && (() => {
                 const isCheckingIn = checkingInApptId === apt.id;
                 return (
-                  <div className="mt-3 pt-3 border-t border-border/50 flex justify-end">
+                  <div className="mt-2 pt-1.5 border-t border-border/50 flex justify-end">
                     <Button
                       variant="ghost"
                       onClick={(e) => {
@@ -85,12 +85,12 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                         onDirectCheckIn(apt);
                       }}
                       disabled={isCheckingIn}
-                      className="h-7 px-3 text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg gap-1.5"
+                      className="h-6 px-2 text-[9px] font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg gap-1"
                     >
                       {isCheckingIn ? (
-                        <span className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="w-2.5 h-2.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <UserCheck className="w-3 h-3" />
+                        <UserCheck className="w-2.5 h-2.5" />
                       )}
                       {isCheckingIn ? "Checking in..." : "Direct check-in"}
                     </Button>
@@ -100,9 +100,9 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
             </div>
           ))
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-30">
-            <CalendarIcon className="w-10 h-10 text-muted-foreground/20 mb-2" />
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-5 opacity-40">
+            <CalendarIcon className="w-7 h-7 text-muted-foreground/30 mb-1" />
+            <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">
               No entries
             </p>
           </div>

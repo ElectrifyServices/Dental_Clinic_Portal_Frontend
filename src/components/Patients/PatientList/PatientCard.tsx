@@ -104,9 +104,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   return (
     <TooltipProvider>
       <Card className={`bg-card shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-fit ${isIncompletePatient ? "border-2 border-orange-500/60 shadow-orange-500/10" : "border-border"}`}>
-        <CardContent className="p-4 sm:p-5">
+        <CardContent className="p-3 sm:p-4">
           {/* Header Section - More compact */}
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4 min-w-0 w-full">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-3 min-w-0 w-full">
             <div className="flex gap-3 min-w-0 w-full">
               <SimpleTooltip content="Patient Avatar">
                 <div className="relative shrink-0 cursor-help">

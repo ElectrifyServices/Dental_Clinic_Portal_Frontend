@@ -325,31 +325,32 @@ export function AppointmentForm({
       title={formTitle}
       subtitle={isFollowUp ? "Schedule next visit" : "Complete booking details"}
       onClose={onClose}
-      size="5xl"
-      icon={<Calendar className="w-5 h-5" />}
+      size="4xl"
+      compact={true}
+      icon={<Calendar className="w-4 h-4" />}
       footer={
         <div className="flex justify-between items-center w-full">
           <Button
             variant="ghost"
             onClick={onClose}
-            className="text-muted-foreground"
+            className="h-8.5 px-4 text-xs font-semibold text-muted-foreground"
           >
             Cancel
           </Button>
           {appointment?.status !== "checked-in" && appointment?.status?.toLowerCase() !== "completed" && (
             <Button
               onClick={form.handleSubmit(onSubmit)}
-              className="px-10 shadow-lg"
+              className="h-8.5 px-6 rounded-xl text-xs font-semibold shadow-md"
             >
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-3.5 h-3.5 mr-1.5" />
               {submitLabel}
             </Button>
           )}
         </div>
       }
     >
-      <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
-        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-3 border-none p-0 m-0">
+      <form className="space-y-2 sm:space-y-2.5" onSubmit={form.handleSubmit(onSubmit)}>
+        <fieldset disabled={appointment?.status === "checked-in" || appointment?.status?.toLowerCase() === "completed"} className="space-y-2 sm:space-y-2.5 border-none p-0 m-0">
           <PatientInfoFields
             patientName={formData.patientName}
             patientPhone={formData.patientPhone ?? ""}

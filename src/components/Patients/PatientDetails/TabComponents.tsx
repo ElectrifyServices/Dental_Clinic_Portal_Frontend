@@ -29,10 +29,10 @@ const EmptyState = ({
 
 // --- Medical Info Tab ---
 export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
     {/* Medical History */}
-    <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm">
-      <h3 className="text-lg font-bold text-primary mb-4 flex items-center">
+    <Card className="lg:col-span-1 bg-primary/5 rounded-2xl p-4 border border-primary/20 shadow-sm">
+      <h3 className="text-lg font-bold text-primary mb-3 flex items-center">
         <Heart className="w-5 h-5 mr-2 text-red-500" /> Medical History
       </h3>
       <div className="space-y-3">
@@ -42,7 +42,7 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
             return (
               <div
                 key={index}
-                className="bg-card rounded-xl p-4 border border-primary/10 shadow-sm animate-in fade-in duration-200"
+                className="bg-card rounded-xl p-3 border border-primary/10 shadow-sm animate-in fade-in duration-200"
               >
                 <div className="flex items-center">
                   <Heart className="w-4 h-4 text-red-500 mr-2" />
@@ -61,8 +61,8 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
     </Card>
 
     {/* Allergies */}
-    <Card className="lg:col-span-1 bg-destructive/5 rounded-2xl p-6 border border-destructive/20 shadow-sm">
-      <h3 className="text-lg font-bold text-red-900 mb-4 flex items-center">
+    <Card className="lg:col-span-1 bg-destructive/5 rounded-2xl p-4 border border-destructive/20 shadow-sm">
+      <h3 className="text-lg font-bold text-red-900 mb-3 flex items-center">
         <AlertTriangle className="w-5 h-5 mr-2" /> Allergies & Alerts
       </h3>
       <div className="space-y-3">
@@ -72,7 +72,7 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
             return (
               <div
                 key={index}
-                className="bg-card rounded-xl p-4 border border-destructive/20 shadow-sm animate-in fade-in duration-200"
+                className="bg-card rounded-xl p-3 border border-destructive/20 shadow-sm animate-in fade-in duration-200"
               >
                 <div className="flex items-center">
                   <AlertTriangle className="w-4 h-4 text-destructive mr-2" />
@@ -89,27 +89,27 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
         )}
       </div>
     </Card>
-    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-6 border border-border shadow-sm">
-      <h3 className="text-lg font-bold text-foreground mb-4">
+    <Card className="lg:col-span-2 bg-muted/50 rounded-2xl p-4 border border-border shadow-sm">
+      <h3 className="text-lg font-bold text-foreground mb-3">
         Additional Information
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {patient.bloodGroup && (
-          <div className="bg-card rounded-xl p-4 text-center border border-border">
+          <div className="bg-card rounded-xl p-3 text-center border border-border">
             <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Blood Group</p>
             <p className="font-bold text-destructive">{patient.bloodGroup}</p>
           </div>
         )}
         {patient.occupation && (
-          <div className="bg-card rounded-xl p-4 text-center border border-border">
+          <div className="bg-card rounded-xl p-3 text-center border border-border">
             <User className="w-6 h-6 text-blue-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Occupation</p>
             <p className="font-medium text-foreground">{patient.occupation}</p>
           </div>
         )}
         {patient.maritalStatus && (
-          <div className="bg-card rounded-xl p-4 text-center border border-border">
+          <div className="bg-card rounded-xl p-3 text-center border border-border">
             <User className="w-6 h-6 text-green-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Marital Status</p>
             <p className="font-medium text-foreground capitalize">
@@ -118,7 +118,7 @@ export const MedicalInfoTab = ({ patient }: { patient: ApiAny }) => (
           </div>
         )}
         {patient.insuranceProvider && (
-          <div className="bg-card rounded-xl p-4 text-center border border-border">
+          <div className="bg-card rounded-xl p-3 text-center border border-border">
             <CreditCard className="w-6 h-6 text-purple-500 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Insurance</p>
             <p className="font-medium text-foreground">

@@ -248,34 +248,34 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Avatar moved to Step 3 */}
       <div className="text-center">
         <div className="relative inline-block">
           <div
             onClick={() => setShowPhotoOptions(true)}
-            className="w-24 h-24 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 relative group"
+            className="w-16 h-16 bg-linear-to-r from-secondary to-ternary/20 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 relative group"
           >
             {formData.avatar ? (
               <img
                 src={formData.avatar}
                 alt="Avatar"
-                className="w-24 h-24 object-cover rounded-full"
+                className="w-16 h-16 object-cover rounded-full"
               />
             ) : (
-              <User className="w-12 h-12 text-primary" />
+              <User className="w-8 h-8 text-primary" />
             )}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
-              <Camera className="w-6 h-6 text-white" />
+              <Camera className="w-5 h-5 text-white" />
             </div>
           </div>
           <Button
             type="button"
             onClick={() => setShowPhotoOptions(true)}
-            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white h-auto"
+            className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full cursor-pointer hover:bg-primary/90 transition-all duration-200 shadow-lg border-2 border-white h-auto"
             title="Update photo"
           >
-            <Camera className="w-4 h-4" />
+            <Camera className="w-3.5 h-3.5" />
           </Button>
           <input
             ref={fileInputRef}
@@ -288,7 +288,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             className="hidden"
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-[11px] text-muted-foreground mt-1">
           Click to update photo (Max 2MB)
         </p>
       </div>
@@ -403,7 +403,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           return (
             <Card
               onClick={acceptCorporateEmployee}
-              className="mx-6 overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
+              className="overflow-hidden border-secondary bg-secondary/30 cursor-pointer hover:bg-secondary/40 select-none shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.01] hover:border-primary/50 active:scale-[0.99]"
             >
               <div className="flex items-center gap-3 px-4 py-3 bg-primary">
                 <ShieldCheck className="w-5 h-5 text-white shrink-0" />
@@ -463,7 +463,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative" ref={dropdownRef}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative" ref={dropdownRef}>
         <div className="space-y-1 relative">
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
@@ -686,7 +686,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
       {/* Membership Plan Selection */}
       {!matchedCorporateEmp && (
-        <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+        <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
           <Label className="block text-sm font-bold text-primary flex items-center gap-2">
             <ShieldCheck className="w-4 h-4" />
             Enroll in a Membership Plan (Optional)
@@ -815,13 +815,13 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           name="address"
           value={formData.address || ""}
           onChange={handleChange}
-          rows={3}
+          rows={2}
           className="w-full px-4 py-3 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm"
           placeholder="Enter complete address"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             Occupation
@@ -918,9 +918,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         })()}
       </div>
 
-
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />

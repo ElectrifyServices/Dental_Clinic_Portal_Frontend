@@ -98,7 +98,7 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
     const filteredPatients = patients.slice(0, 10);
 
     return (
-      <div className="absolute top-[72px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
+      <div className="absolute top-[56px] left-0 w-full z-50 bg-card border border-border/80 rounded-xl shadow-modal overflow-hidden">
         <div className="p-2 bg-muted/40 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-primary" /> Select existing patient or keep typing to add new
@@ -151,20 +151,20 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
   };
 
   return (
-    <section className="space-y-3 relative" ref={dropdownRef}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
-          <User className="w-4 h-4 text-primary" />
+    <section className="space-y-2 relative" ref={dropdownRef}>
+      <div className="flex items-center gap-1.5 mb-1">
+        <div className="w-5 h-5 rounded-md bg-secondary flex items-center justify-center">
+          <User className="w-3 h-3 text-primary" />
         </div>
-        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+        <h4 className="text-[10px] font-bold text-foreground uppercase tracking-wider">
           Patient Information
         </h4>
         <div className="flex-1 h-px bg-muted ml-2" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="space-y-1.5 relative">
-          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5">
+        <div className="space-y-1 relative">
+          <Label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider ml-0.5">
             Patient Name <span className="text-destructive">*</span>
           </Label>
           <div className="relative">
@@ -183,28 +183,28 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
               autoComplete="off"
               disabled={isFollowUp || isConsulted}
               placeholder="Search or enter name"
-              className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
+              className="h-8.5 sm:h-9 text-xs rounded-xl bg-muted/40 border-border focus:bg-card"
             />
           </div>
           {focusedField === "name" && <Dropdown />}
           {errors?.patientName && (
-            <p className="text-[10px] text-destructive font-bold mt-1 ml-1 uppercase tracking-wider">
+            <p className="text-[9.5px] text-destructive font-bold mt-0.5 ml-1 uppercase tracking-wider">
               {errors.patientName.message}
             </p>
           )}
         </div>
-        <div className="space-y-1.5 relative">
-          <Label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider ml-1">
+        <div className="space-y-1 relative">
+          <Label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider ml-0.5">
             Phone Number <span className="text-destructive">*</span>
           </Label>
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <CountryCodeSelect
               value={countryCode}
               onChange={(val) => {
                 onCountryCodeChange?.(val);
               }}
               disabled={isFollowUp || isConsulted}
-              className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card"
+              className="h-8.5 sm:h-9 text-xs rounded-xl bg-muted/40 border-border focus:bg-card"
             />
             <Input
               name="patientPhone"
@@ -220,12 +220,12 @@ export const PatientInfoFields: React.FC<PatientInfoFieldsProps> = ({
               autoComplete="off"
               disabled={isFollowUp || isConsulted}
               placeholder={phonePlaceholder}
-              className="h-11 rounded-xl bg-muted/50 border-border focus:bg-card flex-1"
+              className="h-8.5 sm:h-9 text-xs rounded-xl bg-muted/40 border-border focus:bg-card flex-1"
             />
           </div>
           {focusedField === "phone" && <Dropdown />}
           {errors?.patientPhone && (
-            <p className="text-[10px] text-destructive font-bold mt-1 ml-1 uppercase tracking-wider">
+            <p className="text-[9.5px] text-destructive font-bold mt-0.5 ml-1 uppercase tracking-wider">
               {errors.patientPhone.message}
             </p>
           )}
