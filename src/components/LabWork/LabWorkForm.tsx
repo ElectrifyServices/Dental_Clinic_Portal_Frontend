@@ -2,7 +2,7 @@ import type { ApiAny } from "../../types/api";
 import { useMemo, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FlaskConical, Paperclip, Upload, X, FileText } from "lucide-react";
+import { FlaskConical, Paperclip, Upload, X, FileText, Eye, ExternalLink } from "lucide-react";
 import {
   Modal,
   Button,
@@ -40,6 +40,36 @@ function formatFileSize(bytes?: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileTypeConfig(fileName: string) {
+  const ext = (fileName.split(".").pop() || "").toLowerCase();
+  if (ext === "pdf") {
+    return {
+      label: "PDF",
+      badgeClass: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800",
+      iconBg: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400",
+    };
+  }
+  if (["jpg", "jpeg", "png", "webp", "gif", "svg"].includes(ext)) {
+    return {
+      label: ext.toUpperCase(),
+      badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800",
+      iconBg: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400",
+    };
+  }
+  if (["doc", "docx"].includes(ext)) {
+    return {
+      label: "DOC",
+      badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800",
+      iconBg: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+    };
+  }
+  return {
+    label: ext ? ext.toUpperCase() : "FILE",
+    badgeClass: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700",
+    iconBg: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  };
 }
 
 export interface LabWorkFormSaveData extends LabWorkFormData {
@@ -300,6 +330,91 @@ function LabWorkFormContent({
     setExistingAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const promptRemoveStagedFile = (index: number, fileName: string) => {
+    confirmDelete(
+      "Remove Document",
+      `Are you sure you want to remove "${fileName}" from this lab work?`,
+      () => {
+        removeStagedFile(index);
+        toast.success("Document removed");
+      }
+    );
+  };
+
+  const promptRemoveExistingAttachment = (id: string, fileName: string) => {
+    confirmDelete(
+      "Remove Document",
+      `Are you sure you want to remove "${fileName}" from this lab work?`,
+      () => {
+        removeExistingAttachment(id);
+        toast.success("Document removed");
+      }
+    );
+  };
+
+  const [previewFile, setPreviewFile] = useState<{
+    url: string;
+    name: string;
+    size?: number;
+    type?: string;
+    isBlob?: boolean;
+  } | null>(null);
+
+  const handlePreviewExisting = (att: LabWorkAttachment) => {
+    const url = getFileUrl(att.file_url);
+    const ext = (att.file_name.split(".").pop() || "").toLowerCase();
+    setPreviewFile({
+      url,
+      name: att.file_name,
+      size: att.file_size,
+      type: ext,
+      isBlob: false,
+    });
+  };
+
+  const handlePreviewRawFile = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    setPreviewFile({
+      url,
+      name: file.name,
+      size: file.size,
+      type: ext,
+      isBlob: true,
+    });
+  };
+
+  const handleClosePreview = () => {
+    if (previewFile?.isBlob && previewFile.url) {
+      URL.revokeObjectURL(previewFile.url);
+    }
+    setPreviewFile(null);
+  };
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length === 0) return;
+    const current = (form.getValues("rawFiles") || []) as File[];
+    form.setValue("rawFiles", [...current, ...files]);
+  };
+
   const handleSubmit = (data: LabWorkFormData) => {
     const selectedLab = apiLabNames.find((l: ApiAny) => (typeof l === "string" ? l : l.name) === data.labName);
     const labNameId = selectedLab && typeof selectedLab === "object" ? selectedLab.id : "";
@@ -313,7 +428,8 @@ function LabWorkFormContent({
   const rawFiles = (formData.rawFiles || []) as File[];
 
   return (
-    <Modal
+    <>
+      <Modal
       title={labWork ? "Edit Lab Work" : "Add Lab Work"}
       onClose={onClose}
       size="5xl"
@@ -536,66 +652,142 @@ function LabWorkFormContent({
           rows={3}
         />
 
-        <div>
-          <Label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-            Documents
-          </Label>
-          <div className="space-y-2">
-            {existingAttachments.map((att) => (
-              <div
-                key={att.id}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-border bg-muted/30"
-              >
-                <a
-                  href={getFileUrl(att.file_url)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 min-w-0 text-primary hover:underline"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span className="text-xs font-semibold truncate">{att.file_name}</span>
-                  {att.file_size && (
-                    <span className="text-[10px] text-muted-foreground shrink-0">
-                      ({formatFileSize(att.file_size)})
-                    </span>
-                  )}
-                </a>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeExistingAttachment(att.id)}
-                  className="w-6 h-6 text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <Label className="block text-xs font-semibold text-foreground">
+              Documents & Prescriptions
+            </Label>
+            {(existingAttachments.length + rawFiles.length) > 0 && (
+              <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {existingAttachments.length + rawFiles.length} {(existingAttachments.length + rawFiles.length) === 1 ? "file attached" : "files attached"}
+              </span>
+            )}
+          </div>
 
-            {rawFiles.map((file, index) => (
-              <div
-                key={`${file.name}-${index}`}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-border bg-muted/30"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Paperclip className="w-4 h-4 shrink-0 text-muted-foreground" />
-                  <span className="text-xs font-semibold truncate">{file.name}</span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    ({formatFileSize(file.size)})
-                  </span>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeStagedFile(index)}
-                  className="w-6 h-6 text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))}
+          {/* List of attachments */}
+          {(existingAttachments.length + rawFiles.length) > 0 && (
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+              {existingAttachments.map((att) => {
+                const cfg = getFileTypeConfig(att.file_name);
+                return (
+                  <div
+                    key={att.id}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-all shadow-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg.iconBg} font-black text-[10px]`}>
+                        {cfg.label}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground truncate" title={att.file_name}>
+                          {att.file_name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {att.file_size ? (
+                            <span className="text-[10px] text-muted-foreground font-medium">
+                              {formatFileSize(att.file_size)}
+                            </span>
+                          ) : null}
+                          <span className="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800">
+                            Saved
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreviewExisting(att)}
+                        className="h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg gap-1.5"
+                        title="Preview document"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Preview</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => promptRemoveExistingAttachment(att.id, att.file_name)}
+                        className="w-7 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                        title="Remove document"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {rawFiles.map((file, index) => {
+                const cfg = getFileTypeConfig(file.name);
+                return (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/30 transition-all shadow-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg.iconBg} font-black text-[10px]`}>
+                        {cfg.label}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground truncate" title={file.name}>
+                          {file.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {formatFileSize(file.size)}
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800">
+                            New
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreviewRawFile(file)}
+                        className="h-7 px-2.5 text-xs font-semibold text-primary hover:bg-primary/10 rounded-lg gap-1.5"
+                        title="Preview document"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Preview</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => promptRemoveStagedFile(index, file.name)}
+                        className="w-7 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                        title="Remove document"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Upload Dropzone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative border-2 border-dashed rounded-xl transition-all ${
+              isDragging
+                ? "border-primary bg-primary/5 scale-[1.005]"
+                : "border-border hover:border-primary/50 hover:bg-muted/20"
+            }`}
+          >
             <Input
               type="file"
               multiple
@@ -606,14 +798,90 @@ function LabWorkFormContent({
             />
             <Label
               htmlFor="labwork-document-upload"
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 cursor-pointer text-xs font-bold transition-colors"
+              className="flex flex-col items-center justify-center gap-1.5 p-4 cursor-pointer text-center select-none"
             >
-              <Upload className="w-4 h-4" /> Upload Document (PDF, image, doc)
+              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-transform hover:scale-105">
+                <Upload className="w-4.5 h-4.5" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-foreground">
+                  Click to browse or drag & drop documents
+                </p>
+                <p className="text-[11px] text-muted-foreground font-normal">
+                  Supports PDF, JPG, PNG, DOC, DOCX up to 10MB
+                </p>
+              </div>
             </Label>
           </div>
         </div>
       </form>
       </Form>
     </Modal>
+
+    {previewFile && (
+      <Modal
+        title={previewFile.name}
+        subtitle={previewFile.size ? `Size: ${formatFileSize(previewFile.size)}` : undefined}
+        onClose={handleClosePreview}
+        size="4xl"
+        icon={<FileText className="w-4 h-4 text-primary" />}
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <a
+              href={previewFile.url}
+              target="_blank"
+              rel="noreferrer"
+              download={previewFile.name}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Open in New Tab / Download
+            </a>
+            <Button variant="outline" size="sm" onClick={handleClosePreview}>
+              Close
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-center justify-center p-2 min-h-[50vh] max-h-[72vh] overflow-auto">
+          {["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(previewFile.type || "") ? (
+            <div className="flex flex-col items-center justify-center w-full">
+              <img
+                src={previewFile.url}
+                alt={previewFile.name}
+                className="max-w-full max-h-[65vh] object-contain rounded-xl shadow-md border border-border"
+              />
+            </div>
+          ) : previewFile.type === "pdf" ? (
+            <iframe
+              src={previewFile.url}
+              className="w-full h-[65vh] rounded-xl border border-border shadow-inner bg-white"
+              title={previewFile.name}
+            />
+          ) : (
+            <div className="text-center py-12 px-4 max-w-sm">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                <FileText className="w-8 h-8" />
+              </div>
+              <h4 className="text-sm font-bold text-foreground mb-1 truncate">
+                {previewFile.name}
+              </h4>
+              <p className="text-xs text-muted-foreground mb-4">
+                Preview is not directly viewable in browser for .{previewFile.type} files.
+              </p>
+              <a
+                href={previewFile.url}
+                target="_blank"
+                rel="noreferrer"
+                download={previewFile.name}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-sm"
+              >
+                <ExternalLink className="w-4 h-4" /> Download / Open File
+              </a>
+            </div>
+          )}
+        </div>
+      </Modal>
+    )}
+    </>
   );
 }
