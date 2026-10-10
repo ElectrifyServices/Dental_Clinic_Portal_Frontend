@@ -58,8 +58,8 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
         />
       </div>
       {patients.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-primary/5">
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 ring-8 ring-primary/5">
             <User className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-[15px] font-bold text-foreground mb-1 uppercase tracking-tight">
@@ -80,7 +80,7 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
             {patients.map((p: ApiAny, i: number) => (
               <div
                 key={p.id || i}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
               >
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                   {p.name?.[0]?.toUpperCase() ?? "P"}

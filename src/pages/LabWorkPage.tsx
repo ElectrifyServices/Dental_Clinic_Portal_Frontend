@@ -169,34 +169,36 @@ export const LabWorkPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <LabWorkList
-        labWorks={labWorks}
-        groupBy={groupBy}
-        setGroupBy={setGroupBy}
-        isLoading={isLabWorksLoading}
-        onAdd={() => setFormMode("add")}
-        onView={(id) => {
-          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
-          setViewingLabWorkId(id);
-        }}
-        onEdit={(id) => {
-          queryClient.invalidateQueries({ queryKey: ["labWork", id] });
-          setActiveLabWorkId(id);
-          setFormMode("edit");
-        }}
-        onDelete={(id, label) =>
-          confirmDelete("Delete Lab Work", `Delete lab work entry ${label || id}?`, () => handleDeleteLabWork(id))
-        }
-        onUpdateStatus={handleStatusChange}
-        search={searchInput}
-        setSearch={setSearchInput}
-        status={status}
-        setStatus={setStatus}
-      />
+    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <LabWorkList
+          labWorks={labWorks}
+          groupBy={groupBy}
+          setGroupBy={setGroupBy}
+          isLoading={isLabWorksLoading}
+          onAdd={() => setFormMode("add")}
+          onView={(id) => {
+            queryClient.invalidateQueries({ queryKey: ["labWork", id] });
+            setViewingLabWorkId(id);
+          }}
+          onEdit={(id) => {
+            queryClient.invalidateQueries({ queryKey: ["labWork", id] });
+            setActiveLabWorkId(id);
+            setFormMode("edit");
+          }}
+          onDelete={(id, label) =>
+            confirmDelete("Delete Lab Work", `Delete lab work entry ${label || id}?`, () => handleDeleteLabWork(id))
+          }
+          onUpdateStatus={handleStatusChange}
+          search={searchInput}
+          setSearch={setSearchInput}
+          status={status}
+          setStatus={setStatus}
+        />
+      </div>
 
       {pagination && pagination.total > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 shrink-0">
           <Pagination
             page={page}
             totalPages={pagination.totalPages}

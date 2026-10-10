@@ -689,7 +689,7 @@ export function CorporateManagement({
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as ApiAny)}>
           <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
@@ -700,10 +700,10 @@ export function CorporateManagement({
 
         <div className="min-h-[500px]">
           {activeTab === "plans" ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {!showPlanForm ? (
                 <>
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-black text-foreground uppercase tracking-widest">
                       Active Corporate Plans
                     </h3>
@@ -719,7 +719,7 @@ export function CorporateManagement({
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {corporatePlans.map((plan) => (
                       <ContentCard
                         key={plan.id}
@@ -756,7 +756,7 @@ export function CorporateManagement({
                           </Button>
                         }
                       >
-                        <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="grid grid-cols-2 gap-3 mb-3">
                           <div className="bg-muted p-2 rounded-xl border border-border">
                             <p className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest">
                               Discount
@@ -792,8 +792,8 @@ export function CorporateManagement({
                       </ContentCard>
                     ))}
                     {corporatePlans.length === 0 && (
-                      <div className="col-span-full py-20 text-center bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center">
-                        <Building2 className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                      <div className="col-span-full py-14 text-center bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center">
+                        <Building2 className="w-10 h-10 text-muted-foreground/30 mb-3" />
                         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
                           No plans created
                         </h3>
@@ -821,8 +821,8 @@ export function CorporateManagement({
                     </Button>
                   }
                 >
-                  <form onSubmit={handleAddPlan} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <form onSubmit={handleAddPlan} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
                         <Label className="block text-[10px] font-black text-muted-foreground mb-2 uppercase tracking-widest">
                           Company Name
@@ -873,11 +873,11 @@ export function CorporateManagement({
                         <Gift className="w-5 h-5 ml-auto text-primary/40" />
                       </div>
                     </div>
-                    <div className="border-t border-border pt-6">
-                      <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-4">
+                    <div className="border-t border-border pt-4">
+                      <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
                         Contact Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Input
                           name="contactPerson"
                           defaultValue={editingPlan?.contactPerson}
@@ -895,11 +895,11 @@ export function CorporateManagement({
                           type="email"
                           defaultValue={editingPlan?.email}
                           placeholder="Email Address"
-                          className="w-full md:col-span-2 px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+                          className="w-full px-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm"
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 pt-6">
+                    <div className="flex gap-4 pt-4">
                       <Button
                         variant="outline"
                         type="button"
@@ -917,7 +917,7 @@ export function CorporateManagement({
               )}
             </div>
           ) : (
-            <div className="space-y-6 max-w-5xl mx-auto">
+            <div className="space-y-4 max-w-5xl mx-auto">
               <ContentCard
                 title="Bulk Employee Upload"
                 subtitle="Quickly add multiple employees to a corporate plan"
@@ -949,7 +949,7 @@ export function CorporateManagement({
                   </div>
                 }
               >
-                <div className="mb-6">
+                <div className="mb-4">
                   <Label className="block text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-3">
                     Target Corporate Plan
                   </Label>
@@ -976,7 +976,7 @@ export function CorporateManagement({
 
                 <Button
                   onClick={handleBulkAddRow}
-                  className="mt-6 w-full py-4 border-2 border-dashed border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
+                  className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-2xl text-[10px] font-black text-muted-foreground uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Add Another Row
@@ -1002,7 +1002,7 @@ export function CorporateManagement({
         {/* Employee List View Modal Overlay */}
         {viewingEmployeesPlanId && (
           <div className="absolute inset-0 bg-card z-60 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-6 border-b border-border flex items-center justify-between bg-muted/50">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/50">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => setViewingEmployeesPlanId(null)}
@@ -1092,7 +1092,7 @@ export function CorporateManagement({
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4">
               <DataTable
                 columns={employeeColumns}
                 data={filteredEmployees}

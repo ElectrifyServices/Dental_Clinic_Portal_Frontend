@@ -118,8 +118,8 @@ export function SmartAlerts({ period = 'today', customStart: _customStart, custo
   const periodLabel = period === 'today' ? "Today's" : period === 'week' ? "This Week's" : period === 'month' ? "This Month's" : period === 'year' ? "This Year's" : "Custom Period";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-card h-full flex flex-col">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
+    <div className="bg-card border border-border rounded-xl p-4 shadow-card h-full flex flex-col">
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2 shrink-0">
         <AlertTriangle className="w-4 h-4 text-amber-500" />
         {periodLabel} Smart Alerts
         {alerts.length > 0 && (

@@ -81,8 +81,8 @@ export function TodayAppointments({
         />
       </div>
       {appointments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-8 ring-primary/5">
+        <div className="flex flex-col items-center justify-center py-14 px-4">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-8 ring-primary/5">
             <Calendar className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-sm font-black text-foreground mb-1 uppercase tracking-widest">
@@ -100,7 +100,7 @@ export function TodayAppointments({
               return (
                 <div
                   key={appt.id || i}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-all group"
                 >
                   <div className="w-16 shrink-0">
                     <span className="text-xs font-black text-primary tracking-tight">

@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List } from "lucide-react";
 import {
   Button,
   SearchInput,
@@ -19,7 +19,6 @@ interface PatientFiltersProps {
   setFilterCategory: (val: string) => void;
   viewMode: "grid" | "table";
   setViewMode: (mode: "grid" | "table") => void;
-  onAddPatient: () => void;
 }
 
 export const PatientFilters: React.FC<PatientFiltersProps> = ({
@@ -31,10 +30,9 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
   setFilterCategory,
   viewMode,
   setViewMode,
-  onAddPatient,
 }) => {
   return (
-    <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-6 w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden min-w-0">
+    <div className="flex flex-row items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm mb-4 w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden min-w-0">
       {/* Search Input takes remaining space */}
       <div className="grow min-w-[100px] max-w-md xl:max-w-full">
         <SearchInput
@@ -99,15 +97,6 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
           <List className="w-3.5 h-3.5" />
         </Button>
       </div>
-
-      {/* Add Button */}
-      <Button
-        onClick={onAddPatient}
-        className="gap-1.5 h-9 px-3 shadow-lg shadow-primary/10 shrink-0 justify-center font-bold text-xs"
-      >
-        <Plus className="w-3.5 h-3.5" />
-        <span>Add Patient</span>
-      </Button>
     </div>
   );
 };

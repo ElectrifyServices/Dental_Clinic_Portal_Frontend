@@ -367,18 +367,20 @@ export function InventoryList({
   }, [currentPage, totalPages]);
 
   return (
-    <div className="space-y-3">
-      <PageHeader
-        title="Inventory Management"
-        subtitle={`${totalItems} total items in stock`}
-        action={
-          <Button onClick={onAddItem} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Item
-          </Button>
-        }
-      />
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+      <div className="shrink-0">
+        <PageHeader
+          title="Inventory Management"
+          subtitle={`${totalItems} total items in stock`}
+          action={
+            <Button onClick={onAddItem} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Item
+            </Button>
+          }
+        />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="shrink-0 grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           label="Total Items"
           value={summaryData?.total_items || 0}
@@ -402,7 +404,7 @@ export function InventoryList({
       </div>
 
       {lowCount > 0 && (
-        <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl px-5 py-4 text-sm font-bold">
+        <div className="shrink-0 flex items-center gap-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl px-5 py-4 text-sm font-bold">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <span>
             {lowCount} critical item{lowCount > 1 ? "s are" : " is"} below
@@ -411,7 +413,7 @@ export function InventoryList({
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="shrink-0 flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -478,28 +480,31 @@ export function InventoryList({
         })()}
       </div>
 
-      <DataTable
-        columns={columns}
-        data={paginatedData}
-        rowKey={(item) => item.id}
-        emptyIcon={<Package className="w-12 h-12 text-muted-foreground/40" />}
-        emptyTitle="No inventory items found"
-        emptySubtitle="Add your first medical supply to track stock levels."
-        footer={
-          totalItems > 0 ? (
-            <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-              <Pagination
-                page={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                perPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onPerPageChange={setItemsPerPage}
-              />
-            </div>
-          ) : undefined
-        }
-      />
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+        <DataTable
+          className="flex-1 min-h-0"
+          columns={columns}
+          data={paginatedData}
+          rowKey={(item) => item.id}
+          emptyIcon={<Package className="w-12 h-12 text-muted-foreground/40" />}
+          emptyTitle="No inventory items found"
+          emptySubtitle="Add your first medical supply to track stock levels."
+          footer={
+            totalItems > 0 ? (
+              <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
+                <Pagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  perPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onPerPageChange={setItemsPerPage}
+                />
+              </div>
+            ) : undefined
+          }
+        />
+      </div>
     </div>
   );
 }

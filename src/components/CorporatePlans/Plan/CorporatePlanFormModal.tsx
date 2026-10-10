@@ -387,7 +387,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       subtitle={editing ? `Editing "${form.name}"` : 'Set up a new membership plan for your clinic'}
       onClose={() => setShowForm(false)}
       size="5xl"
-      bodyClassName="p-4 sm:p-5"
+      bodyClassName="p-3 sm:p-4"
       icon={<Award className="w-4 h-4" />}
       footer={
         <div className="flex flex-col gap-3 w-full">
@@ -724,7 +724,7 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             {form.benefits.map((b, idx) => {
               const isExpanded = expandedBenefits[idx] !== false;
               return (
-                <div key={b.id} className="relative border border-border rounded-xl p-3.5 sm:p-4 bg-muted/10 hover:bg-muted/15 transition-all">
+                <div key={b.id} className="relative border border-border rounded-xl p-3 sm:p-3.5 bg-muted/10 hover:bg-muted/15 transition-all">
                   <div 
                     className="absolute -top-2.5 left-4 px-2.5 py-0.5 bg-card border border-border rounded-full text-[9px] font-black text-primary uppercase tracking-widest cursor-pointer select-none"
                     onClick={(e) => toggleBenefit(idx, e)}

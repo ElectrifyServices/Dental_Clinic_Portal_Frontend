@@ -120,10 +120,10 @@ export function CorporatePlanManagement({
   ] as { value: 'all' | 'active' | 'inactive'; label: string }[];
 
   return (
-    <div className="space-y-5">
+    <div className="flex-1 min-h-0 flex flex-col gap-4">
 
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+      <div className="shrink-0 flex flex-col lg:flex-row items-stretch lg:items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
         {/* Search Input */}
         <div className="flex-1 min-w-0">
           <SearchInput
@@ -200,57 +200,59 @@ export function CorporatePlanManagement({
         </div>
       </div>
 
-      {/* ── Results count ────────────────────────────────────────────────── */}
-      {!isLoading && plans.length > 0 && (
-        <p className="text-xs text-muted-foreground font-medium">
-          Showing <span className="font-bold text-foreground">{filtered.length}</span> of {plans.length} plans
-          {search && <> matching "<span className="text-primary">{search}</span>"</>}
-        </p>
-      )}
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto gap-4">
+        {/* ── Results count ────────────────────────────────────────────────── */}
+        {!isLoading && plans.length > 0 && (
+          <p className="text-xs text-muted-foreground font-medium shrink-0">
+            Showing <span className="font-bold text-foreground">{filtered.length}</span> of {plans.length} plans
+            {search && <> matching "<span className="text-primary">{search}</span>"</>}
+          </p>
+        )}
 
-      {/* ── Plan grid ────────────────────────────────────────────────────── */}
-      {isLoading ? (
-        <Loading type="spinner" text="Loading membership plans…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-28 gap-5 bg-muted/20 rounded-2xl border-2 border-dashed border-border/60">
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-            <CreditCard className="w-8 h-8 text-muted-foreground/30" />
-          </div>
-          <div className="text-center">
-            <p className="font-bold text-foreground text-sm">
-              {search ? 'No plans match your search' : 'No membership plans yet'}
-            </p>
-            <p className="text-muted-foreground text-xs mt-1">
-              {search ? 'Try a different search term' : 'Create your first plan to start enrolling members'}
-            </p>
-          </div>
-          {!search && (
-            <Button onClick={openNew} className="gap-2">
-              <Plus className="w-4 h-4" /> Create First Plan
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="columns-1 md:columns-2 xl:columns-3 gap-5 [column-fill:balance]">
-          {paginatedData.map((plan, index) => (
-            <div key={`${plan.id}-${index}`} className="break-inside-avoid mb-5">
-              <CorporatePlanCard
-                plan={plan}
-                BENEFIT_LABELS={BENEFIT_LABELS}
-                isUpdatingStatus={updateStatusMutation.isPending}
-                onEdit={openEdit}
-                onDelete={handleDelete}
-                onToggle={() => handleToggle(plan)}
-                expanded={expandedPlanId === plan.id}
-                onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
-              />
+        {/* ── Plan grid ────────────────────────────────────────────────────── */}
+        {isLoading ? (
+          <Loading type="spinner" text="Loading membership plans…" className="py-28 bg-muted/20 rounded-2xl border border-dashed border-border" />
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-28 gap-5 bg-muted/20 rounded-2xl border-2 border-dashed border-border/60 flex-1">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+              <CreditCard className="w-8 h-8 text-muted-foreground/30" />
             </div>
-          ))}
-        </div>
-      )}
+            <div className="text-center">
+              <p className="font-bold text-foreground text-sm">
+                {search ? 'No plans match your search' : 'No membership plans yet'}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">
+                {search ? 'Try a different search term' : 'Create your first plan to start enrolling members'}
+              </p>
+            </div>
+            {!search && (
+              <Button onClick={openNew} className="gap-2">
+                <Plus className="w-4 h-4" /> Create First Plan
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [column-fill:balance] flex-1">
+            {paginatedData.map((plan, index) => (
+              <div key={`${plan.id}-${index}`} className="break-inside-avoid mb-4">
+                <CorporatePlanCard
+                  plan={plan}
+                  BENEFIT_LABELS={BENEFIT_LABELS}
+                  isUpdatingStatus={updateStatusMutation.isPending}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onToggle={() => handleToggle(plan)}
+                  expanded={expandedPlanId === plan.id}
+                  onToggleExpand={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {!isLoading && filtered.length > 0 && (
-        <div className="py-4 px-6 border border-border/50 bg-card rounded-2xl shadow-sm mt-6">
+        <div className="shrink-0 py-3 px-4 border border-border/50 bg-card rounded-2xl shadow-sm">
           <Pagination
             page={currentPage}
             totalPages={totalPages}

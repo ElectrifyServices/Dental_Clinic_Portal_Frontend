@@ -1,7 +1,7 @@
 import type { ApiAny } from "../types/api";
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, LayoutGrid, ListFilter } from "lucide-react";
+import { AlertTriangle, LayoutGrid, ListFilter, UserX } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";

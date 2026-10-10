@@ -39,7 +39,7 @@ export const BillingPage: React.FC = () => {
   const { setActiveModal, setSelectedItemId, confirmDelete } = useModal();
 
   return (
-    <div className="space-y-6">
+    <div className="flex h-full min-h-0 flex-col">
       <InvoiceList
         invoices={invoices}
         isLoading={isInvoicesLoading}

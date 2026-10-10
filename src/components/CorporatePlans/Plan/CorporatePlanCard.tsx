@@ -74,9 +74,9 @@ export function CorporatePlanCard({
         className={`group relative border border-slate-200 flex flex-col transition-all duration-300 border-t-4 ${theme.border} ${expanded ? 'z-20 shadow-lg rounded-t-3xl rounded-b-none' : 'z-10 rounded-3xl'
           }`}
       >
-        <div className="p-5 flex-1 flex flex-col">
+        <div className="p-4 flex-1 flex flex-col">
           {/* Top row: type icon + status + menu */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className={`w-9 h-9 rounded-xl ${theme.bg} flex items-center justify-center border border-current/10`}>
               {isIndividual
                 ? <User className="w-4.5 h-4.5" />
@@ -180,7 +180,7 @@ export function CorporatePlanCard({
 
 
           {/* Stats Section */}
-          <div className="grid grid-cols-3 py-3 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
+          <div className="grid grid-cols-3 py-2.5 px-1 mt-auto gap-2 bg-slate-50/50 rounded-2xl border border-slate-200/60 text-center">
             <div>
               <span className="block text-xs font-black text-slate-700 leading-none">
                 {plan.currentMembers}{plan.maxMembers ? `/${plan.maxMembers}` : ''}
@@ -215,7 +215,7 @@ export function CorporatePlanCard({
         <Button
           variant="ghost"
           onClick={onToggleExpand}
-          className={`w-full flex items-center justify-center gap-1 py-2.5 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-200 h-auto transition-colors active:scale-100 ${expanded
+          className={`w-full flex items-center justify-center gap-1 py-2 text-[9px] font-extrabold uppercase tracking-widest border-t border-slate-200 h-auto transition-colors active:scale-100 ${expanded
               ? 'text-primary bg-primary/5 hover:bg-primary/10 rounded-none'
               : 'text-slate-400 hover:text-primary hover:bg-slate-50/80 rounded-b-[22px]'
             }`}
@@ -235,7 +235,7 @@ export function CorporatePlanCard({
               transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-20 pt-2 bg-white border-t border-slate-200 rounded-b-[22px] space-y-2">
+              <div className="px-4 pb-4 pt-2 bg-white border-t border-slate-200 rounded-b-[22px] space-y-2">
                 {plan.benefits.map(b => (
                   <div
                     key={b.id}

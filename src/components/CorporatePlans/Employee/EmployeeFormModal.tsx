@@ -822,7 +822,7 @@ export function EmployeeFormModal({
         </div>
       }
     >
-      <div className="space-y-6 relative min-h-[200px]">
+      <div className="space-y-4 relative min-h-[200px]">
         {isFetching && (
           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center z-50 rounded-2xl transition-all duration-300">
             <Loading type="spinner" text="Loading employee details from API..." />
@@ -830,7 +830,7 @@ export function EmployeeFormModal({
         )}
         {/* Personal Details Card */}
         <ContentCard title="Personal Details" className="bg-card/50 overflow-visible" bodyClassName="overflow-visible">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative pb-2" ref={dropdownRef}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative pb-2" ref={dropdownRef}>
             {/* Full Name Input with Search Dropdown */}
             <div className="space-y-1.5 relative text-left">
               <Label className="text-xs font-bold text-primary">
@@ -896,11 +896,11 @@ export function EmployeeFormModal({
           </div>
         </ContentCard>
 
-        {/* Membership & Coverage Details Side-by-Side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Membership & Coverage Details */}
+        <div className="space-y-3">
           <ContentCard
             title="Membership Plan"
-            className="bg-card/50 flex flex-col md:col-span-2"
+            className="bg-card/50 flex flex-col"
             bodyClassName="flex-1 flex flex-col justify-center"
           >
             <div className="space-y-3 w-full">
@@ -913,7 +913,7 @@ export function EmployeeFormModal({
                   No active membership plans available.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
                   {planOptions.map((opt) => {
                     const isSelected = form.corporatePlanId === opt.value;
                     const _isExpanded = !!expandedBenefits[opt.value];
@@ -1022,7 +1022,7 @@ export function EmployeeFormModal({
           {eligibilitySection && (
             <ContentCard
               title={eligibilitySection.title}
-              className="bg-card/50 flex flex-col md:col-span-1"
+              className="bg-card/50 flex flex-col"
               bodyClassName="flex-1 flex flex-col justify-center"
             >
               <SectionRenderer
@@ -1039,7 +1039,7 @@ export function EmployeeFormModal({
         {/* Dependents — only shown when plan allows dependents */}
         {maxDependents > 0 && (
           <div className="bg-card/50 rounded-2xl border border-border/80 shadow-sm overflow-hidden">
-            <div className="p-5 space-y-4">
+            <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
@@ -1099,11 +1099,11 @@ export function EmployeeFormModal({
 
               {/* Pending (not yet saved) dependents */}
               {pendingDependents.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {pendingDependents.map((dep, index) => (
                     <div
                       key={dep.tempId}
-                      className="border border-primary/20 bg-white rounded-2xl p-4 shadow-sm space-y-3"
+                      className="border border-primary/20 bg-white rounded-2xl p-3 shadow-sm space-y-3"
                     >
                       <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
                         Dependent{" "}
@@ -1198,11 +1198,11 @@ export function EmployeeFormModal({
 
               {/* Add dependent inline form */}
               {showAddDepForm && (
-                <div className="border border-primary/20 bg-primary/5 rounded-2xl p-4 space-y-3">
+                <div className="border border-primary/20 bg-primary/5 rounded-2xl p-3 space-y-3">
                   <Label className="text-[10px] font-black text-primary uppercase tracking-widest">
                     {editingDepId ? "Edit Family Member" : "Add Family Member"}
                   </Label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                         Name *
@@ -1240,7 +1240,7 @@ export function EmployeeFormModal({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="relative text-left">
+                    <div className="sm:col-span-2 relative text-left">
                       <Label className="text-[10px] font-semibold text-muted-foreground mb-1 block">
                         Phone
                       </Label>

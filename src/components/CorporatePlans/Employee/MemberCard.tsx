@@ -67,7 +67,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   const isLocked = isExpired || isCancelled;
 
   return (
-    <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
+    <div className="bg-white border border-slate-200 rounded-3xl p-3 shadow-sm hover:shadow-md transition-all space-y-3">
       {/* Header: Profile, Name, Contact, Dropdown and Status */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           {/* Actions Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
@@ -157,9 +157,9 @@ export const MemberCard: React.FC<MemberCardProps> = ({
       </div>
 
       {/* Details Stack */}
-      <div className="space-y-3 pt-1 text-xs">
+      <div className="space-y-2.5 pt-1 text-xs">
         {/* Plan Row: Full width to prevent narrow wrapping */}
-        <div className="flex flex-col gap-1.5 pb-2.5 border-b border-slate-100/80">
+        <div className="flex flex-col gap-1.5 pb-2 border-b border-slate-100/80">
           <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wide">Plan</span>
           <div className="min-w-0">
             {plan ? (
@@ -173,7 +173,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
         </div>
 
         {/* Type & Coverage Grid: Safe from wrapping overflow */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wide">Type</span>
             <div>
@@ -206,7 +206,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
 
       {/* Family Dependents Section if exists */}
       {employee.dependents && employee.dependents.length > 0 && (
-        <div className="border-t border-slate-100/80 pt-3">
+        <div className="border-t border-slate-100/80 pt-2.5">
           <Button
             variant="ghost"
             onClick={onToggleExpand}

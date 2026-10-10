@@ -114,7 +114,7 @@ export function ConsentPage() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <ConsentFormList
         forms={mappedForms}
         search={search}
