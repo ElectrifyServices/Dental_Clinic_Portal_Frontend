@@ -227,12 +227,12 @@ export const AppointmentsPage: React.FC = () => {
         title="Appointments"
         subtitle="Schedule and manage patient visits"
       >
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl sm:rounded-2xl shrink-0">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center justify-between gap-1 bg-muted/50 p-1 rounded-xl shrink-0">
             <Button
               variant="ghost"
               onClick={() => setViewMode("calendar")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "calendar" ? "bg-card text-primary shadow-xs hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="truncate">Calendar</span>
@@ -240,7 +240,7 @@ export const AppointmentsPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => setViewMode("list")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-sm hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "list" ? "bg-card text-primary shadow-xs hover:bg-card/90" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
             >
               <ListFilter className="w-3.5 h-3.5" />
               <span className="truncate">List View ({listCount})</span>
@@ -248,7 +248,7 @@ export const AppointmentsPage: React.FC = () => {
             <Button
               variant="ghost"
               onClick={() => setViewMode("no-show")}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-sm hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === "no-show" ? "bg-destructive/10 text-destructive shadow-xs hover:bg-destructive/20" : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"}`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
               <span className="truncate">No Show ({noShowCount})</span>

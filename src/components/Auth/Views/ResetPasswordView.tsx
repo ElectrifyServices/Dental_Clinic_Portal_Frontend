@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { Button, Loading, toast } from "@/components/ui";
-import { Lock, Eye, EyeOff, Check } from "lucide-react";
+import { Lock, Eye, EyeOff, Check, ArrowRight } from "lucide-react";
 const logoImg = "/Portal_logo.png";
 import { useResetPasswordMutation } from "@/hooks/auth/useResetPasswordMutation";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -99,10 +99,12 @@ export function ResetPasswordView() {
               setToken(manualTokenInput.trim());
             }
           }} 
-          className="w-full mb-2"
+          size="lg"
+          className="w-full mb-2 bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11 flex items-center justify-center gap-1.5"
           disabled={!manualTokenInput.trim()}
         >
-          Verify Token
+          <span>Verify Token</span>
+          <ArrowRight className="w-4 h-4 ml-1" />
         </Button>
         <Button variant="ghost" onClick={() => navigate("/login")} className="w-full">
           Back to Login
@@ -123,8 +125,13 @@ export function ResetPasswordView() {
         <p className="text-slate-500 text-sm mb-8 font-medium">
           Your password has been successfully updated. You can now login with your new password.
         </p>
-        <Button onClick={() => navigate("/login")} className="w-full" size="lg">
-          Go to Login
+        <Button
+          onClick={() => navigate("/login")}
+          size="lg"
+          className="w-full bg-linear-to-r from-blue-600 via-indigo-600 to-rose-600 hover:from-blue-700 hover:via-indigo-700 hover:to-rose-700 text-white font-extrabold shadow-lg shadow-indigo-600/25 transition-all rounded-xl h-11 flex items-center justify-center gap-1.5"
+        >
+          <span>Go to Login</span>
+          <ArrowRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
     );

@@ -47,21 +47,21 @@ export const Step3Consent: React.FC<Step3Props> = ({
   const isPdf = typeof consentUrl === "string" && (consentUrl.toLowerCase().includes(".pdf") || consentUrl.startsWith("data:application/pdf"));
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-3">
-        <h3 className="text-xl font-bold text-foreground">
-          Patient Consent & Declaration
+    <div className="space-y-3">
+      <div className="text-center mb-1">
+        <h3 className="text-base font-bold text-foreground leading-none">
+          Patient Consent &amp; Declaration
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[10px] text-primary/60 mt-1 uppercase font-bold tracking-widest">
           Please review and confirm the following statements
         </p>
       </div>
 
       <Card className="border border-border bg-card shadow-sm rounded-2xl">
-        <CardContent className="p-4 space-y-4">
-          
+        <CardContent className="p-3 space-y-3">
+
           {/* Consent Form Section */}
-          <div className="border border-border rounded-xl p-3.5 bg-card shadow-sm">
+          <div className="border border-border rounded-xl p-3 bg-card shadow-sm">
             <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
               <Camera className="w-4 h-4 text-primary" />
               Offline Patient Registration Form
@@ -126,7 +126,7 @@ export const Step3Consent: React.FC<Step3Props> = ({
           </div>
 
           {/* Signature Section */}
-          <div className="border border-border rounded-xl p-3.5 bg-card shadow-sm">
+          <div className="border border-border rounded-xl p-3 bg-card shadow-sm">
             {!isMinor ? (
               <div>
                 <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">

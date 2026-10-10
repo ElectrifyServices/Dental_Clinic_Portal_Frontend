@@ -46,38 +46,38 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
   }, [doctors, selectedDoctorId, setSelectedDoctorId]);
 
   return (
-    <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden h-[450px] xl:h-full">
-      <div className="p-5 border-b border-border bg-muted/30">
-        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <Stethoscope className="w-4 h-4 text-primary" />
+    <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-xs flex flex-col overflow-hidden h-[360px] sm:h-[400px] xl:h-full">
+      <div className="p-2.5 sm:p-3 border-b border-border bg-muted/20">
+        <h3 className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+          <Stethoscope className="w-3.5 h-3.5 text-primary" />
           Select Specialist
         </h3>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
           <Input
             placeholder="Search experts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-card rounded-2xl text-xs h-10"
+            className="pl-8 bg-card rounded-xl text-xs h-8 sm:h-8.5"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1.5 custom-scrollbar">
         <Button
           variant="ghost"
           onClick={() => setSelectedDoctorId(null)}
-          className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto active:scale-[0.98]
+          className={`w-full p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-start gap-2.5 text-left h-auto active:scale-[0.98]
             ${selectedDoctorId === null 
-              ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
+              ? "bg-primary/10 border-primary text-primary shadow-xs hover:bg-primary/20" 
               : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
         >
-          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground/60 shrink-0">
-            <CalendarIcon className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground/60 shrink-0">
+            <CalendarIcon className="w-4 h-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-bold text-foreground">All Appointments</p>
-            <p className="text-[10px] text-muted-foreground/60 font-medium tracking-tight">View combined schedule</p>
+            <p className="text-[9.5px] text-muted-foreground/70 font-medium tracking-tight">View combined schedule</p>
           </div>
         </Button>
 
@@ -86,12 +86,12 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
             variant="ghost"
             key={doctor.id}
             onClick={() => setSelectedDoctorId(doctor.id)}
-            className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center justify-start gap-3 text-left h-auto active:scale-[0.98]
+            className={`w-full p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-start gap-2.5 text-left h-auto active:scale-[0.98]
               ${selectedDoctorId === doctor.id 
-                ? "bg-primary/10 border-primary text-primary shadow-sm hover:bg-primary/20" 
+                ? "bg-primary/10 border-primary text-primary shadow-xs hover:bg-primary/20" 
                 : "bg-card border-transparent hover:border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gray-50 shrink-0">
+            <div className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-border shrink-0">
               <img
                 src={doctor.avatar || doctor.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random`}
                 alt={doctor.name}
@@ -103,7 +103,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{doctor.name}</p>
-              <p className="text-[10px] text-primary font-bold truncate">{doctor.specialization}</p>
+              <p className="text-[10px] text-primary font-semibold truncate">{doctor.specialization}</p>
             </div>
           </Button>
         ))}
@@ -117,6 +117,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
           perPage={perPage}
           onPageChange={onPageChange}
           onPerPageChange={onPerPageChange}
+          className="px-2.5 py-1.5 text-xs"
         />
       </div>
     </div>

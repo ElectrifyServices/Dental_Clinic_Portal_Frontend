@@ -214,8 +214,8 @@ export function PatientForm({
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-border px-2">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-border px-2">
           {[
             { num: 1, label: "Basic Info" },
             { num: 2, label: "Medical History" },
@@ -296,7 +296,7 @@ export function PatientForm({
         </form>
 
         {isFormInvalid && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-1.5">
             <div className="flex items-center gap-3 text-amber-800 font-bold text-sm">
               <AlertTriangle className="w-5 h-5 text-amber-600 animate-pulse" />
               <span>Missing Required Fields:</span>
@@ -310,7 +310,7 @@ export function PatientForm({
         )}
 
         {formErrors.submit && (
-          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive" />
             <p className="text-sm text-destructive font-medium">
               {formErrors.submit}

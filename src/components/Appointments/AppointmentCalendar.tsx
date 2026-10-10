@@ -204,7 +204,7 @@ export function AppointmentCalendar({
   }, [availableSlotsResponse, selectedDateObj]);
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:h-[calc(100vh-280px)] xl:overflow-hidden">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-2.5 lg:gap-3 xl:h-[calc(100vh-275px)] xl:overflow-hidden">
       <DoctorSidebar
         doctors={doctors}
         searchTerm={currentSearch}
@@ -240,7 +240,7 @@ export function AppointmentCalendar({
         onRefetchSlots={() => refetchAvailableSlots()}
       />
 
-      <div className="xl:col-span-3 flex flex-col gap-6 overflow-hidden xl:h-full">
+      <div className="xl:col-span-3 flex flex-col gap-2.5 lg:gap-3 overflow-hidden xl:h-full">
         <DayAgenda
           selectedDate={selectedDateObj}
           appointments={appointments.filter((a) => {
