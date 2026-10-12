@@ -230,20 +230,20 @@ export function PatientList({
             onToggleCategory={handleToggleCategory}
           />
         )}
-      </div>
 
-      {(displayTotalItems > 0) && onPageChange && (
-        <div className="mt-4 shrink-0">
-          <Pagination
-            page={currentPage}
-            totalPages={displayTotalPages}
-            totalItems={displayTotalItems}
-            perPage={limit}
-            onPageChange={onPageChange}
-            onPerPageChange={onLimitChange}
-          />
-        </div>
-      )}
+        {(displayTotalItems > 0) && onPageChange && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <Pagination
+              page={currentPage}
+              totalPages={displayTotalPages}
+              totalItems={displayTotalItems}
+              perPage={limit}
+              onPageChange={onPageChange}
+              onPerPageChange={onLimitChange}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

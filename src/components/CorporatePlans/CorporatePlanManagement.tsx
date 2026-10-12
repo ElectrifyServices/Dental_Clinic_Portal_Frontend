@@ -249,20 +249,20 @@ export function CorporatePlanManagement({
             ))}
           </div>
         )}
-      </div>
 
-      {!isLoading && filtered.length > 0 && (
-        <div className="shrink-0 py-3 px-4 border border-border/50 bg-card rounded-2xl shadow-sm">
-          <Pagination
-            page={currentPage}
-            totalPages={totalPages}
-            totalItems={filtered.length}
-            perPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onPerPageChange={handlePerPageChange}
-          />
-        </div>
-      )}
+        {!isLoading && filtered.length > 0 && (
+          <div className="py-3 px-4 border border-border/50 bg-card rounded-2xl shadow-sm">
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              perPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onPerPageChange={handlePerPageChange}
+            />
+          </div>
+        )}
+      </div>
 
       <CorporatePlanFormModal
         showForm={showForm}

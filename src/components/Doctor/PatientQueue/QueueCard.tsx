@@ -101,11 +101,11 @@ export function QueueCard({
 
   return (
     <Card className="hover:shadow-md hover:border-gray-200 transition-all duration-300 rounded-2xl border border-gray-100 bg-white overflow-hidden">
-      <CardContent className="p-5 flex flex-col h-full space-y-4">
+      <CardContent className="p-4 flex flex-col h-full space-y-3">
         {/* Patient Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-4 flex-wrap">
+        <div className="flex items-start justify-between gap-3 border-b border-gray-50 pb-3 flex-wrap">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-12 h-12 bg-blue-50/70 rounded-xl flex items-center justify-center shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
+            <div className="w-10 h-10 bg-blue-50/70 rounded-xl flex items-center justify-center shrink-0 text-blue-500 border border-blue-100/50 overflow-hidden">
               {patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar ? (
                 <img
                   src={getFileUrl(patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar)}
@@ -122,7 +122,7 @@ export function QueueCard({
                 />
               ) : null}
               <User
-                className="w-5.5 h-5.5 placeholder-icon"
+                className="w-5 h-5 placeholder-icon"
                 style={{
                   display: (patient.profile_picture_url || fullPatient?.profile_picture_url || fullPatient?.avatar) ? 'none' : 'block'
                 }}
@@ -175,8 +175,8 @@ export function QueueCard({
         </div>
 
         {/* Contact & Concern */}
-        <div className="space-y-2.5 text-sm">
-          <div className="flex items-start justify-between py-0.5 gap-2">
+        <div className="space-y-2 text-sm">
+          <div className="flex items-start justify-between gap-2">
             <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
               <Clock className="w-3.5 h-3.5 mr-2 text-gray-400" /> Slot Duration
             </span>
@@ -185,7 +185,7 @@ export function QueueCard({
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 py-0.5">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
                 <Stethoscope className="w-3.5 h-3.5 mr-2 text-gray-400" /> Treatment Type
@@ -203,7 +203,7 @@ export function QueueCard({
             )}
           </div>
 
-          <div className="flex flex-col gap-1 py-0.5">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
                 <FileText className="w-3.5 h-3.5 mr-2 text-gray-400" /> Specific Treatment
@@ -221,7 +221,7 @@ export function QueueCard({
             )}
           </div>
 
-          <div className="flex items-start justify-between py-0.5 gap-2">
+          <div className="flex items-start justify-between gap-2">
             <span className="flex items-center text-gray-500 text-xs font-semibold shrink-0">
               <IndianRupee className="w-3.5 h-3.5 mr-2 text-gray-400" /> Cost
             </span>
@@ -231,8 +231,8 @@ export function QueueCard({
           </div>
 
           {patient.patientConcern && (
-            <div className="border-t border-gray-50 pt-2.5 mt-1">
-              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1.5">
+            <div className="border-t border-gray-50 pt-2">
+              <div className="flex items-center text-gray-500 text-xs font-semibold mb-1">
                 <MessageSquare className="w-3.5 h-3.5 mr-2 text-gray-400" /> Patient Concern
               </div>
               <div className="text-xs text-gray-700 font-semibold leading-relaxed bg-gray-50/60 p-2.5 rounded-xl border border-gray-100 max-h-24 overflow-y-auto scrollbar-thin pr-1 wrap-break-word">

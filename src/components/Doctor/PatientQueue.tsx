@@ -139,7 +139,7 @@ export function PatientQueue({
   ).length;
 
   return (
-    <div className="h-full flex flex-col gap-6 min-h-0">
+    <div className="flex flex-col gap-3">
       {/* Header */}
       <PageHeader
         title="Consultation Queue"
@@ -164,7 +164,7 @@ export function PatientQueue({
       />
 
       {/* Filters */}
-      <div className="flex flex-col xl:flex-row xl:items-center gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
+      <div className="flex flex-col xl:flex-row xl:items-center gap-3 bg-card p-3 rounded-2xl border border-border shadow-sm shrink-0">
         <div className="relative flex-1 group w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
           <Input
@@ -232,58 +232,56 @@ export function PatientQueue({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col">
-        {filteredPatients.length > 0 ? (
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 pb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-              {filteredPatients.map((patient) => {
-                const fullPatient = patients.find(
-                  (p) =>
-                    p.phone === patient.patientPhone ||
-                    p.name === patient.patientName,
-                );
-                return (
-                  <QueueCard
-                    key={patient.id}
-                    patient={patient}
-                    fullPatient={fullPatient}
-                    getStatusColor={getStatusColor}
-                    getStatusIcon={getStatusIcon}
-                    onUpdatePatientStatus={onUpdatePatientStatus}
-                    onSelectPatient={onSelectPatient}
-                    onEditConsultation={onEditConsultation}
-                  />
-                );
-              })}
-            </div>
+      {filteredPatients.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPatients.map((patient) => {
+              const fullPatient = patients.find(
+                (p) =>
+                  p.phone === patient.patientPhone ||
+                  p.name === patient.patientName,
+              );
+              return (
+                <QueueCard
+                  key={patient.id}
+                  patient={patient}
+                  fullPatient={fullPatient}
+                  getStatusColor={getStatusColor}
+                  getStatusIcon={getStatusIcon}
+                  onUpdatePatientStatus={onUpdatePatientStatus}
+                  onSelectPatient={onSelectPatient}
+                  onEditConsultation={onEditConsultation}
+                />
+              );
+            })}
           </div>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 bg-card rounded-2xl border border-border shadow-sm min-h-[300px]">
-            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-10 h-10 text-muted-foreground/50" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-1">No patients found</h3>
-            <p className="text-sm text-muted-foreground max-w-sm text-center px-6">
-              {searchTerm || filterStatus !== "ALL"
-                ? "Try adjusting your search criteria or filters."
-                : "Patients will appear here once they check in for their appointments."}
-            </p>
-          </div>
-        )}
 
-        {filteredPatients.length > 0 && onPageChange && (
-          <div className="mt-4 flex justify-end shrink-0 pt-4 border-t border-border">
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              totalItems={totalItems}
-              perPage={perPage}
-              onPageChange={onPageChange}
-              onPerPageChange={onPerPageChange}
-            />
+          {onPageChange && (
+            <div className="flex justify-end pt-4 border-t border-border">
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                perPage={perPage}
+                onPageChange={onPageChange}
+                onPerPageChange={onPerPageChange}
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 bg-card rounded-2xl border border-border shadow-sm min-h-[300px]">
+          <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-10 h-10 text-muted-foreground/50" />
           </div>
-        )}
-      </div>
+          <h3 className="text-lg font-bold text-foreground mb-1">No patients found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm text-center px-6">
+            {searchTerm || filterStatus !== "ALL"
+              ? "Try adjusting your search criteria or filters."
+              : "Patients will appear here once they check in for their appointments."}
+          </p>
+        </div>
+      )}
 
       {showDirectPopup && (
         <DirectConsultationPopup

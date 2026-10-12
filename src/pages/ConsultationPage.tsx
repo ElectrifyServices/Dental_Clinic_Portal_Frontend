@@ -392,7 +392,7 @@ export const ConsultationPage: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col">
+    <div className="space-y-3">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
