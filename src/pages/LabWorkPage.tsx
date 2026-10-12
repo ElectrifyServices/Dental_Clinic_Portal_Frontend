@@ -194,21 +194,20 @@ export const LabWorkPage: React.FC = () => {
           setSearch={setSearchInput}
           status={status}
           setStatus={setStatus}
+          footer={
+            pagination && pagination.total > 0 ? (
+              <Pagination
+                page={page}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.total}
+                perPage={limit}
+                onPageChange={setPage}
+                onPerPageChange={setLimit}
+              />
+            ) : undefined
+          }
         />
       </div>
-
-      {pagination && pagination.total > 0 && (
-        <div className="mt-4 shrink-0">
-          <Pagination
-            page={page}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.total}
-            perPage={limit}
-            onPageChange={setPage}
-            onPerPageChange={setLimit}
-          />
-        </div>
-      )}
 
       {formMode && (
         <LabWorkForm

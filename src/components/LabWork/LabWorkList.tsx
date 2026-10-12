@@ -50,6 +50,7 @@ interface LabWorkListProps {
   setStatus: (val: string) => void;
   groupBy: "patient" | "lab";
   setGroupBy: (val: "patient" | "lab") => void;
+  footer?: React.ReactNode;
 }
 
 const STATUS_META: Record<LabWorkStatus, { label: string; variant: "blue" | "amber" | "green" | "red" }> = {
@@ -88,6 +89,7 @@ export function LabWorkList({
   setStatus,
   groupBy,
   setGroupBy,
+  footer,
 }: LabWorkListProps) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
@@ -411,6 +413,7 @@ export function LabWorkList({
           })}
         </div>
       )}
+      {footer && <div className="mt-4">{footer}</div>}
       </div>
     </div>
   );

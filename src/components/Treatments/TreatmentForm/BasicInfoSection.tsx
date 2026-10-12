@@ -64,7 +64,7 @@ export function BasicInfoSection({
   }, [procedures, formData.procedure]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="space-y-2">
         <Label className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-primary" />
@@ -200,7 +200,7 @@ export function BasicInfoSection({
       </div>
 
       {isFreeProcedure && (
-        <div className="md:col-span-3 p-3.5 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="md:col-span-3 p-3 bg-emerald-50/70 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
           <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
@@ -277,89 +277,91 @@ export function BasicInfoSection({
         );
       })()}
 
-      <div className="space-y-2">
-        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
-          Status
-        </Label>
-        <SearchableSelect
-          value={formData.status}
-          onChange={(val) => handleChange({ target: { name: "status", value: val } } as ApiAny)}
-          options={[
-            { label: "Planned", value: "planned" },
-            { label: "In Progress", value: "in-progress" },
-            { label: "Completed", value: "completed" },
-            { label: "Cancelled", value: "cancelled" },
-          ]}
-          placeholder="Select Status"
-        />
-      </div>
+      <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label className="text-xs font-black text-foreground uppercase tracking-widest">
+            Status
+          </Label>
+          <SearchableSelect
+            value={formData.status}
+            onChange={(val) => handleChange({ target: { name: "status", value: val } } as ApiAny)}
+            options={[
+              { label: "Planned", value: "planned" },
+              { label: "In Progress", value: "in-progress" },
+              { label: "Completed", value: "completed" },
+              { label: "Cancelled", value: "cancelled" },
+            ]}
+            placeholder="Select Status"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs font-black text-foreground uppercase tracking-widest">
-          Assigned Doctor
-          <span className="text-red-500 ml-1">*</span>
-        </Label>
-        <SearchableSelect
-          value={formData.doctorId}
-          displayValue={formData.doctorName}
-          onChange={(val) => {
-            const selectedDoc = doctors.find((d) => d.id === val);
-            handleChange({ target: { name: "doctorId", value: val } } as ApiAny);
-            handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as ApiAny);
-          }}
-          disabled={isEdit}
-          options={doctors.map((doc) => ({
-            label: doc.name,
-            value: doc.id,
-            phone: doc.phone,
-            country_code: doc.country_code,
-            avatar: doc.avatar || doc.image || "",
-            specialization: doc.specialization,
-            searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
-          }))}
-          onSearchChange={onDoctorSearch}
-          renderOption={(doc: ApiAny) => (
-            <div className="flex items-center gap-3 py-1">
-              {doc.avatar ? (
-                <img
-                  src={doc.avatar}
-                  alt={doc.label}
-                  className="w-8 h-8 rounded-full object-cover border border-border"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                  {doc.label.charAt(0)}
+        <div className="space-y-2">
+          <Label className="text-xs font-black text-foreground uppercase tracking-widest">
+            Assigned Doctor
+            <span className="text-red-500 ml-1">*</span>
+          </Label>
+          <SearchableSelect
+            value={formData.doctorId}
+            displayValue={formData.doctorName}
+            onChange={(val) => {
+              const selectedDoc = doctors.find((d) => d.id === val);
+              handleChange({ target: { name: "doctorId", value: val } } as ApiAny);
+              handleChange({ target: { name: "doctorName", value: selectedDoc ? selectedDoc.name : "" } } as ApiAny);
+            }}
+            disabled={isEdit}
+            options={doctors.map((doc) => ({
+              label: doc.name,
+              value: doc.id,
+              phone: doc.phone,
+              country_code: doc.country_code,
+              avatar: doc.avatar || doc.image || "",
+              specialization: doc.specialization,
+              searchLabel: `${doc.name} ${doc.country_code ? doc.country_code + " " : ""}${doc.phone || ""}`
+            }))}
+            onSearchChange={onDoctorSearch}
+            renderOption={(doc: ApiAny) => (
+              <div className="flex items-center gap-3 py-1">
+                {doc.avatar ? (
+                  <img
+                    src={doc.avatar}
+                    alt={doc.label}
+                    className="w-8 h-8 rounded-full object-cover border border-border"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                    {doc.label.charAt(0)}
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-foreground text-xs">{doc.label}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone ? (doc.country_code ? `${doc.country_code} ${doc.phone}` : doc.phone) : "No phone"}
+                  </span>
                 </div>
-              )}
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-foreground text-xs">{doc.label}</span>
-                <span className="text-[10px] text-muted-foreground">
-                  {doc.specialization ? `${doc.specialization} • ` : ""}{doc.phone ? (doc.country_code ? `${doc.country_code} ${doc.phone}` : doc.phone) : "No phone"}
-                </span>
               </div>
-            </div>
+            )}
+            renderValue={(option: ApiAny) => (
+              <div className="flex items-center gap-2">
+                {option.avatar ? (
+                  <img
+                    src={option.avatar}
+                    alt={option.label}
+                    className="w-5 h-5 rounded-full object-cover border border-border"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                    {option.label.charAt(0)}
+                  </div>
+                )}
+                <span className="font-bold text-foreground">{option.label}</span>
+              </div>
+            )}
+            placeholder="Select Doctor"
+          />
+          {doctorError && (
+            <p className="text-xs font-medium text-red-500 mt-1">{doctorError}</p>
           )}
-          renderValue={(option: ApiAny) => (
-            <div className="flex items-center gap-2">
-              {option.avatar ? (
-                <img
-                  src={option.avatar}
-                  alt={option.label}
-                  className="w-5 h-5 rounded-full object-cover border border-border"
-                />
-              ) : (
-                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
-                  {option.label.charAt(0)}
-                </div>
-              )}
-              <span className="font-bold text-foreground">{option.label}</span>
-            </div>
-          )}
-          placeholder="Select Doctor"
-        />
-        {doctorError && (
-          <p className="text-xs font-medium text-red-500 mt-1">{doctorError}</p>
-        )}
+        </div>
       </div>
     </div>
   );

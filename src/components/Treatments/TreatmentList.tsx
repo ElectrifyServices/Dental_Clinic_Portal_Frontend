@@ -359,6 +359,7 @@ function ExpandedTreatmentRow({
         const isPlanned = normalizeStatus(plan.status) === "planned";
 
         return (
+          <div onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 rounded-xl p-0 text-muted-foreground hover:bg-muted">
@@ -411,15 +412,21 @@ function ExpandedTreatmentRow({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-44 p-1.5 rounded-2xl bg-white border border-border shadow-lg">
-                    {Array.from({ length: plan.sessions?.length || plan.total_sessions || plan.totalSessions || 1 }).map((_, i) => (
-                      <DropdownMenuItem
-                        key={i}
-                        onClick={() => onSendWhatsApp(plan.id, i + 1, plan.sessions?.[i]?.id)}
-                        className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer"
-                      >
-                        Session {i + 1}
-                      </DropdownMenuItem>
-                    ))}
+                    {Array.from({ length: plan.sessions?.length || plan.total_sessions || plan.totalSessions || 1 }).map((_, i) => {
+                      const session = plan.sessions?.[i];
+                      const isSessionCompleted = normalizeStatus(session?.status) === "completed";
+                      return (
+                        <DropdownMenuItem
+                          key={i}
+                          disabled={!isSessionCompleted}
+                          onClick={() => onSendWhatsApp(plan.id, i + 1, session?.id)}
+                          title={!isSessionCompleted ? "Session must be completed before sending via WhatsApp" : undefined}
+                          className="px-3.5 py-2 text-xs font-bold hover:bg-muted rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        >
+                          Session {i + 1}
+                        </DropdownMenuItem>
+                      );
+                    })}
                     <div className="h-px bg-muted my-1" />
                     <DropdownMenuItem
                       onClick={() => onSendWhatsApp(plan.id, 'all')}
@@ -470,6 +477,7 @@ function ExpandedTreatmentRow({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         );
       },
     },
@@ -482,8 +490,10 @@ function ExpandedTreatmentRow({
           columns={expandedColumns}
           data={plans}
           rowKey={(plan) => plan.id}
-          rowClassName={() => "bg-white"}
+          rowClassName={() => "bg-white cursor-pointer"}
+          onRowClick={(plan: ApiAny) => onViewTreatment(plan.id)}
           disableRowAnimation
+          compact
           className="rounded-2xl border border-border bg-card shadow-none transition-none [&_.data-table]:min-w-[980px]"
           scrollClassName="overflow-x-auto overflow-y-visible touch-pan-x [-webkit-overflow-scrolling:touch]"
         />
@@ -903,6 +913,7 @@ export function TreatmentList({
                 className="rounded-none border-0 shadow-none [&_.data-table]:min-w-[760px] sm:[&_.data-table]:min-w-[880px]"
                 scrollClassName="overflow-visible"
                 disableRowAnimation
+                compact
                 columns={columns}
                 data={treatments}
                 rowKey={(row) => row.id}

@@ -24,7 +24,8 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
 
   const handleFile = async (file: File) => {
     setImporting(true);
-    const { rows, errors } = await parseXlsx(file, activePlans);
+    const targetPlans = activePlans && activePlans.length > 0 ? activePlans : plans;
+    const { rows, errors } = await parseXlsx(file, targetPlans);
     setImportRows(rows);
     setImportErrors(errors);
     setImporting(false);
@@ -98,8 +99,19 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
             <p className="text-xs text-muted-foreground">
               Columns: name, country_code, phone, email, gender, plan_code, date_of_birth
             </p>
+            {(activePlans?.length > 0 || plans?.length > 0) && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Available plan code{(activePlans?.length > 0 ? activePlans : plans).length > 1 ? 's' : ''}:{" "}
+                <span className="font-semibold text-foreground">
+                  {(activePlans?.length > 0 ? activePlans : plans)
+                    .map((p) => p.code)
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+              </p>
+            )}
           </div>
-          <Button onClick={() => downloadTemplate(activePlans)} variant="outline" className="shrink-0 gap-2">
+          <Button onClick={() => downloadTemplate(activePlans && activePlans.length > 0 ? activePlans : plans)} variant="outline" className="shrink-0 gap-2">
             <Download className="w-4 h-4" /> Template
           </Button>
         </div>
@@ -150,7 +162,7 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
               },
             ]}
             data={importRows as CorporateEmployee[]}
-            rowKey={(_, i) => String(i)}
+            rowKey={(r, i) => r.id || `emp-${i}`}
           />
         </div>
       )}

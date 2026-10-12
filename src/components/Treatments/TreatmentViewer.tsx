@@ -282,15 +282,15 @@ export function TreatmentViewer({
         </div>
       }
     >
-      <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
           <ContentCard
             title="Patient Overview"
             icon={<User className="w-5 h-5" />}
             className="bg-primary/5 border-primary/10"
           >
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Name
                 </span>
@@ -298,7 +298,7 @@ export function TreatmentViewer({
                   {treatment.patient?.name}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Phone
                 </span>
@@ -306,7 +306,7 @@ export function TreatmentViewer({
                   {treatment.patient?.phone || "—"}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-1.5">
                 <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
                   Tooth
                 </span>
@@ -330,8 +330,8 @@ export function TreatmentViewer({
             icon={<Calendar className="w-5 h-5" />}
             className="bg-emerald-50/50 border-emerald-100"
           >
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-1.5">
                 <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                   Treatment Date
                 </span>
@@ -343,7 +343,7 @@ export function TreatmentViewer({
                   })}
                 </span>
               </div>
-              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+              <div className="flex justify-between items-center border-b border-emerald-100/50 pb-1.5">
                 <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                   Next Visit
                 </span>
@@ -396,8 +396,8 @@ export function TreatmentViewer({
                 icon={<IndianRupee className="w-5 h-5" />}
                 className="bg-indigo-50/50 border-indigo-100"
               >
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                     <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                       Estimated Cost
                     </span>
@@ -406,7 +406,7 @@ export function TreatmentViewer({
                     </span>
                   </div>
                   {discountVal > 0 && (
-                    <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                    <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                       <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                         Discount ({discountVal}%)
                       </span>
@@ -417,7 +417,7 @@ export function TreatmentViewer({
                   )}
                   {membershipBenefits && (
                     <>
-                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                      <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                         <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                           Membership
                         </span>
@@ -426,7 +426,7 @@ export function TreatmentViewer({
                         </Badge>
                       </div>
                       {membershipDiscount > 0 && (
-                        <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                        <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                           <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                             Member Savings
                           </span>
@@ -437,7 +437,7 @@ export function TreatmentViewer({
                       )}
                     </>
                   )}
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                     <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest">
                       Final Cost
                     </span>
@@ -445,7 +445,7 @@ export function TreatmentViewer({
                       ₹{finalCost.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-2">
+                  <div className="flex justify-between items-center border-b border-indigo-100/50 pb-1.5">
                     <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest">
                       Total Paid Amount
                     </span>
@@ -473,9 +473,9 @@ export function TreatmentViewer({
             icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
             className="bg-indigo-50/20 border-indigo-100"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Plan Details</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Plan Details</p>
                 <div className="bg-card p-3 rounded-xl border border-indigo-100/50 flex justify-between items-center">
                   <div>
                     <h4 className="text-sm font-bold text-indigo-900">{treatment.membership_benefits.plan_name}</h4>
@@ -487,12 +487,12 @@ export function TreatmentViewer({
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Benefit Summary</p>
-                <div className="space-y-2">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Benefit Summary</p>
+                <div className="space-y-1.5">
                   {(treatment.membership_benefits.benefits || []).map((benefit: ApiAny, idx: number) => {
                     const isFlatDiscount = benefit.type === "FLAT_DISCOUNT";
                     return (
-                      <div key={idx} className="flex items-start justify-between p-2.5 bg-card rounded-xl border border-indigo-50/80 text-xs">
+                      <div key={idx} className="flex items-start justify-between p-2 bg-card rounded-xl border border-indigo-50/80 text-xs">
                         <div className="flex-1 pr-4">
                           <span className="font-bold text-foreground">{benefit.benifit_label}</span>
                           {!isFlatDiscount && benefit.allocationCount != null && (
@@ -518,7 +518,7 @@ export function TreatmentViewer({
               </div>
             </div>
             {treatment.reason && (
-              <div className="mt-4 p-3 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed">
+              <div className="mt-3 p-3 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 leading-relaxed">
                 <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Reason for Complimentary Treatment</p>
                 {treatment.reason}
               </div>
@@ -528,7 +528,7 @@ export function TreatmentViewer({
 
         {/* Sessions Section */}
         {treatment.sessions?.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-500" /> 
@@ -547,7 +547,7 @@ export function TreatmentViewer({
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {treatment.sessions
                 .sort(
                   (a: ApiAny, b: ApiAny) =>
@@ -565,8 +565,8 @@ export function TreatmentViewer({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-black text-primary">
                             {session.visit_number}
                           </div>
                           <div className="flex-1">
@@ -579,7 +579,7 @@ export function TreatmentViewer({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-11">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 ml-9">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                             <div>
@@ -637,7 +637,7 @@ export function TreatmentViewer({
                           session.paid_amount ||
                           session.payment_method ||
                           session.attachments?.length > 0) && (
-                          <div className="mt-4 ml-11 p-3 bg-muted/30 rounded-lg border border-border/50">
+                          <div className="mt-3 ml-9 p-2.5 bg-muted/30 rounded-lg border border-border/50">
                             {session.work_done && (
                               <div className="mb-2">
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
@@ -663,7 +663,7 @@ export function TreatmentViewer({
                               </div>
                             )}
                             {(session.paid_amount != null || session.payment_method) && (
-                              <div className="mb-2 flex gap-4 border-t border-border/50 pt-2 mt-2">
+                              <div className="mb-2 flex gap-3 border-t border-border/50 pt-2 mt-2">
                                 {session.paid_amount != null && Number(session.paid_amount) > 0 && (
                                   <div>
                                     <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
@@ -687,7 +687,7 @@ export function TreatmentViewer({
                               </div>
                             )}
                             {session.attachments?.length > 0 && (
-                              <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-3 pt-3 border-t border-border/50" : ""}>
+                              <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-2 pt-2 border-t border-border/50" : ""}>
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
                                   <Paperclip className="w-3.5 h-3.5 text-emerald-600" />
                                   Attachments
@@ -752,18 +752,18 @@ export function TreatmentViewer({
           icon={<FileText className="w-5 h-5 text-primary" />}
           className="border-border/50"
         >
-          <div className="bg-muted/30 rounded-2xl p-6 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="bg-muted/30 rounded-2xl p-3 border border-border/50 text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">
             {treatment.clinical_notes ||
               "No detailed clinical notes provided for this treatment plan."}
           </div>
         </ContentCard>
 
         {treatment.prescriptions?.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
               <Pill className="w-4 h-4 text-emerald-500" /> Prescribed Medications
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {treatment.prescriptions.map((p: ApiAny) => {
                 const medName = p.medicine?.name || p.medicine_name || p.medicineName || "Medicine";
                 const dosageText = p.dosage ? `Dosage: ${p.dosage}` : undefined;
@@ -775,11 +775,11 @@ export function TreatmentViewer({
                     className="bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200 transition-colors"
                   >
                     {p.medicine?.description && (
-                      <p className="text-xs text-muted-foreground -mt-1 mb-3 italic">
+                      <p className="text-xs text-muted-foreground -mt-1 mb-2 italic">
                         {p.medicine.description}
                       </p>
                     )}
-                    <div className="grid grid-cols-2 gap-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="grid grid-cols-2 gap-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3 text-emerald-400" /> {p.timing}
                       </div>
@@ -795,7 +795,7 @@ export function TreatmentViewer({
                       </div>
                     </div>
                     {p.instructions && (
-                      <div className="mt-3 pt-3 border-t border-emerald-100/50">
+                      <div className="mt-2 pt-2 border-t border-emerald-100/50">
                         <p className="text-xs text-muted-foreground">
                           <span className="font-bold">Instructions:</span> {p.instructions}
                         </p>

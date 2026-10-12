@@ -54,8 +54,6 @@ export function PrescriptionSection({
 
   const medicinesList = React.useMemo(() => {
     if (!rawMedicines) return [];
-    // Debug: remove after confirming correct shape
-    console.log("[PrescriptionSection] rawMedicines:", rawMedicines);
     let list: ApiAny[] = [];
     if (Array.isArray(rawMedicines)) {
       list = rawMedicines;
@@ -80,7 +78,6 @@ export function PrescriptionSection({
     } else if (rawMedicines && Array.isArray((rawMedicines as ApiAny).results)) {
       list = (rawMedicines as ApiAny).results;
     }
-    console.log("[PrescriptionSection] resolved medicinesList:", list);
     return list;
   }, [rawMedicines]);
 
@@ -90,7 +87,6 @@ export function PrescriptionSection({
       // Always prefer the UUID field; never fall back to name string
       value: m.id || m._id || m.uuid || m.medicine_id || m.value || (typeof m === "string" ? m : ""),
     }));
-    console.log("[PrescriptionSection] selectOptions sample:", opts.slice(0, 3));
     return opts;
   }, [medicinesList]);
 
@@ -144,7 +140,7 @@ export function PrescriptionSection({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-foreground flex items-center">
           <Pill className="w-5 h-5 mr-2 text-emerald-600" />
           Prescriptions
@@ -159,11 +155,11 @@ export function PrescriptionSection({
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {prescriptions.map((prescription) => (
           <div
             key={prescription.id}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm animate-in fade-in zoom-in duration-200"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm animate-in fade-in zoom-in duration-200"
           >
             <div className="col-span-1 sm:col-span-2">
               <Label className="block text-xs font-bold text-emerald-700 mb-1.5 uppercase tracking-wider">

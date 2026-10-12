@@ -31,11 +31,11 @@ export function SessionPlannerSection({
   onCompleteSessionTrigger,
 }: SessionPlannerSectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-primary" />
+          <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+            <Calendar className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-foreground">
@@ -58,14 +58,14 @@ export function SessionPlannerSection({
         */}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
         {sessions.map((session, index) => {
           const isCompleted = session.status === "completed" || session.status === "COMPLETED";
           return (
             <div
               key={session.id}
-              className={`p-5 rounded-2xl border transition-all hover:shadow-md relative group ${
+              className={`p-4 rounded-2xl border transition-all hover:shadow-md relative group ${
                 isCompleted
                   ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
                   : session.status === "in-progress"
@@ -346,7 +346,7 @@ export function SessionPlannerSection({
 
       {/* Summary Section */}
       {sessions.length > 0 && (
-        <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+        <div className="bg-primary/5 p-3 rounded-xl border border-primary/10">
           <div className="flex justify-between items-center text-sm">
             <span className="font-semibold text-foreground">Total Sessions:</span>
             <span className="font-bold text-primary">{sessions.length}</span>

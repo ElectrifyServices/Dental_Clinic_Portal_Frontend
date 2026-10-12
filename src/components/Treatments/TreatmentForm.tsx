@@ -499,8 +499,8 @@ export function TreatmentForm({
         </div>
       }
     >
-      <form className="space-y-8 py-2">
-        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
+      <form className="space-y-4 py-2">
+        <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border">
           <BasicInfoSection
             formData={formData}
             handleChange={handleChange}
@@ -524,7 +524,7 @@ export function TreatmentForm({
 
         <div className="h-px bg-border/50" />
 
-        <div className="bg-muted/30 p-6 rounded-2xl border border-border">
+        <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border">
           <SessionPlannerSection
             sessions={treatmentSessions}
             onAddSession={addSession}
@@ -535,8 +535,8 @@ export function TreatmentForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border h-full">
             <PrescriptionSection
               prescriptions={prescriptions}
               onAddPrescription={addPrescription}
@@ -544,16 +544,16 @@ export function TreatmentForm({
               onUpdatePrescription={updatePrescription}
             />
           </div>
-          <div className="bg-muted/30 p-6 rounded-2xl border border-border h-full">
-            <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="bg-muted/30 p-3 md:p-4 rounded-2xl border border-border h-full flex flex-col">
+            <Label className="text-xs font-black text-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
               Clinical Case Notes
             </Label>
             <Textarea
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              rows={6}
-              className="w-full px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
+              rows={5}
+              className="w-full flex-1 px-4 py-3 border border-border rounded-xl bg-background focus:ring-2 focus:ring-primary/20 outline-none text-sm font-medium resize-none"
               placeholder="Enter detailed treatment observations, history, and special instructions..."
             />
           </div>
@@ -634,21 +634,21 @@ export function TreatmentForm({
             </div>
           }
         >
-          <div className="space-y-4 text-left">
+          <div className="space-y-3 text-left">
             <div>
-              <Label className="text-sm font-semibold block mb-2">Work Done <span className="text-red-500">*</span></Label>
-              <Textarea rows={3} placeholder="Describe the procedures performed..." value={completeForm.work_done}
+              <Label className="text-sm font-semibold block mb-1.5">Work Done <span className="text-red-500">*</span></Label>
+              <Textarea rows={2} placeholder="Describe the procedures performed..." value={completeForm.work_done}
                 onChange={(e) => setCompleteForm(p => ({ ...p, work_done: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
             </div>
             <div>
-              <Label className="text-sm font-semibold block mb-2">Clinical Findings <span className="text-red-500">*</span></Label>
-              <Textarea rows={3} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
+              <Label className="text-sm font-semibold block mb-1.5">Clinical Findings <span className="text-red-500">*</span></Label>
+              <Textarea rows={2} placeholder="Observations, measurements, patient response..." value={completeForm.session_findings}
                 onChange={(e) => setCompleteForm(p => ({ ...p, session_findings: e.target.value }))}
                 className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-emerald-200 outline-none resize-none" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
               <div>
                 <Label className="text-sm font-semibold block mb-2">Discount Type</Label>
                 <select
@@ -690,8 +690,8 @@ export function TreatmentForm({
               </div>
             </div>
 
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="border-t pt-3 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
                 <input
                   type="checkbox"
                   id="create-invoice"
@@ -704,7 +704,7 @@ export function TreatmentForm({
                 </Label>
               </div>
 
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-2">
                 <input
                   type="checkbox"
                   id="schedule-next-session"
@@ -718,10 +718,10 @@ export function TreatmentForm({
               </div>
 
               {scheduleNext && (
-                <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-muted/30 p-3 rounded-2xl border border-border space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold block mb-2">Next Session Date</Label>
+                      <Label className="text-xs font-semibold block mb-1.5">Next Session Date</Label>
                       <DatePicker
                         min={(() => {
                           const today = new Date();
@@ -804,7 +804,7 @@ export function TreatmentForm({
                 <Paperclip className="w-4 h-4 text-emerald-600" />
                 <Label className="text-sm font-semibold">Attachments</Label>
               </div>
-              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
+              <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-3">
                 <Input
                   id="form-session-attachments"
                   type="file"
@@ -814,9 +814,9 @@ export function TreatmentForm({
                 />
                 <Label
                   htmlFor="form-session-attachments"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-5 text-center transition-colors hover:bg-emerald-50"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-4 text-center transition-colors hover:bg-emerald-50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
                     <Upload className="w-5 h-5" />
                   </div>
                   <div>
