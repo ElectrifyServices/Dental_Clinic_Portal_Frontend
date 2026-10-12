@@ -3,6 +3,7 @@ import { useModal } from "../contexts/ModalContext";
 import { EMRList } from "../components/EMR/EMRList";
 import { generateEMRPDF } from "../components/EMR/EMRViewer";
 import { useEMRListQuery } from "../hooks/emr/useEMRListQuery";
+import apiClient from "../services/apiClient";
 import { useMemo, useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -116,7 +117,13 @@ export function MedicalRecordsPage() {
         }
       }
 
-      const patientName = latestRecord.patient?.name || "-";
+      const patientObj = groupRecords.find((r: EmrRow) => r.patient && (r.patient.name || r.patient.phone || r.patient.patient_code || r.patient.patientCode))?.patient || latestRecord.patient || {};
+      const patientName = patientObj.name || latestRecord.patient?.name || "-";
+      const patientPhone = patientObj.phone || patientObj.mobile || latestRecord.patient_phone || "-";
+      const patientCode = patientObj.patient_code || patientObj.patientCode || latestRecord.patient_code || null;
+      const patientGender = patientObj.gender || latestRecord.patient_gender || null;
+      const patientDob = patientObj.date_of_birth || latestRecord.patient_dob || null;
+      const patientCountryCode = patientObj.country_code || "+91";
 
       // Format latest record type
       const latestRecordTypeFormatted = latestRecord.record_type
@@ -127,6 +134,21 @@ export function MedicalRecordsPage() {
         id: latestRecord.id,
         patientId: patientId,
         patientName: patientName,
+        phone: patientPhone,
+        country_code: patientCountryCode,
+        patientCode: patientCode,
+        patient_code: patientCode,
+        gender: patientGender,
+        date_of_birth: patientDob,
+        patient: {
+          ...patientObj,
+          id: patientId,
+          name: patientName,
+          phone: patientPhone,
+          patient_code: patientCode,
+          gender: patientGender,
+          date_of_birth: patientDob,
+        },
         latestRecordTitle: latestRecordTypeFormatted,
         totalRecords: groupRecords.length,
         lastDoctorName: lastDoctorName,
@@ -204,12 +226,86 @@ export function MedicalRecordsPage() {
     setActiveModal("emrViewer");
   };
   const onExportRecord = async (r: EmrRow) => {
-    const timeline = r.timeline || [];
-    await generateEMRPDF(r.patientName || "Patient", timeline, r.type);
+    let timeline = r.timeline || [];
+    let patientData: ApiAny = r.patient || {
+      id: r.patientId,
+      name: r.patientName,
+      phone: r.phone,
+      patient_code: r.patientCode || r.patient_code,
+      gender: r.gender,
+      date_of_birth: r.date_of_birth,
+    };
+
+    try {
+      const res = await apiClient.post("/medicalRecord/list", {
+        all: true,
+        page: 1,
+        limit: 1000,
+        filters: { patient_id: [r.patientId] },
+      });
+      const raw =
+        res?.data?.data?.data ||
+        res?.data?.data ||
+        res?.data?.responseObject?.data ||
+        res?.data?.responseObject ||
+        [];
+      if (Array.isArray(raw) && raw.length > 0) {
+        timeline = raw.map((item: EmrRow) => ({
+          id: item.id,
+          title: item.title || "-",
+          content: item.content || "-",
+          date: item.created_at || item.date || new Date().toISOString(),
+          category: (item.record_type || item.type || "consultation").toLowerCase(),
+          doctorName: item.doctor?.name || item.doctorName || r.lastDoctorName || "-",
+          attachments: Array.isArray(item.attachments)
+            ? item.attachments.map((file: EmrRow) =>
+                typeof file === "string" ? file : file.file_url || file.url
+              )
+            : [],
+        }));
+      }
+    } catch (e) {
+      console.warn("Failed to fetch full timeline for PDF export", e);
+    }
+
+    try {
+      const pRes = await apiClient.get(`/patient/${r.patientId}`);
+      const p = pRes?.data?.responseObject?.data || pRes?.data?.data || pRes?.data;
+      if (p && (p.id || p.name)) {
+        patientData = {
+          ...patientData,
+          ...p,
+          patient_code: p.patient_code || p.patientCode || patientData.patient_code,
+          phone: p.phone || p.mobile || patientData.phone,
+          date_of_birth: p.date_of_birth || p.dateOfBirth || patientData.date_of_birth,
+          gender: p.gender || patientData.gender,
+        };
+      }
+    } catch (e) {
+      console.warn("Failed to fetch patient details for PDF export", e);
+    }
+
+    await generateEMRPDF(
+      patientData.name || r.patientName || "Patient",
+      timeline,
+      r.type,
+      null,
+      {
+        id: r.patientId,
+        patientName: patientData.name || r.patientName,
+        name: patientData.name || r.patientName,
+        phone: patientData.phone || patientData.mobile || r.phone,
+        country_code: patientData.country_code || patientData.countryCode || "+91",
+        patient_code: patientData.patient_code || patientData.patientCode || r.patientCode,
+        gender: patientData.gender || r.gender,
+        date_of_birth: patientData.date_of_birth || r.date_of_birth,
+        doctorName: r.lastDoctorName,
+      }
+    );
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden animate-in fade-in duration-500">
+    <div className="animate-in fade-in duration-500">
       <EMRList
         records={emrRecords}
         search={search}

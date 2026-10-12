@@ -1,21 +1,35 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ApiAny } from "../../types/api";
-import React from "react";
-import { Download, FileText, Calendar, Stethoscope, Camera, Pill, Activity, CreditCard, FlaskConical, ScanLine, ClipboardList, Image as ImageIcon, ExternalLink, User } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import {
+  Download,
+  FileText,
+  Calendar,
+  Stethoscope,
+  Camera,
+  Pill,
+  CreditCard,
+  FlaskConical,
+  ScanLine,
+  ClipboardList,
+  ExternalLink,
+  Phone,
+  LayoutList,
+  Clock,
+  Layers,
+} from "lucide-react";
 import {
   Modal,
   Badge,
   Button,
-  FilterTabs,
-  Input,
+  DataTable,
+  SearchInput,
   Loading,
 } from "@/components/ui";
 import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
+import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useTheme } from "../../contexts/ThemeContext";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import logoImg from "../../logo.png";
+import { downloadMedicalRecordPDF } from "../../utils/pdfGenerator";
 
 interface EMRViewerProps {
   record: ApiAny;
@@ -106,7 +120,7 @@ const getCategoryMeta = (category: string) => {
     .replace(/\s+/g, "_");
   return (
     CATEGORY_META[key] || {
-      label: category || "Record",
+      label: category ? category.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "Record",
       color: "text-primary",
       bg: "bg-primary/5",
       border: "border-l-primary",
@@ -117,224 +131,27 @@ const getCategoryMeta = (category: string) => {
   );
 };
 
-const TIMELINE_FILTERS = [
-  { key: "all", label: "All History" },
-  { key: "CONSULTATION", label: "Consultation" },
-  { key: "PRESCRIPTION", label: "Prescription" },
-  { key: "LAB_REPORT", label: "Lab Report" },
-  { key: "X_RAY", label: "X-Ray" },
-  { key: "TREATMENT_NOTE", label: "Treatment Note" },
-  { key: "BILLING_RECORD", label: "Billing Record" },
-  { key: "APPOINTMENT_VISIT", label: "Appointment Visit" },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
-// PDF Generator — uses jsPDF + html2canvas, same as consultation
+// PDF Generator — unified clinic letterhead, details grid & brand footer
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateEMRPDF(
   patientName: string,
   timeline: ApiAny[],
   recordType?: string,
-  logoUrl?: string | null
+  logoUrl?: string | null,
+  patientData?: ApiAny
 ) {
-  const now = new Date();
-  const dateStr = now.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+  await downloadMedicalRecordPDF({
+    patientName,
+    timeline,
+    recordType,
+    logoUrl,
+    patient: patientData,
   });
-
-  // Build records rows HTML
-  const rowsHtml = timeline
-    .map(
-      (item: ApiAny, idx: number) => `
-    <tr style="background: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"}; page-break-inside: avoid;">
-      <td style="padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; width: 25%;">
-        <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px;">
-          ${(item.category || "record").replace(/_/g, " ")}
-        </div>
-        <div style="font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4;">${item.title || "—"}</div>
-      </td>
-      <td style="padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; width: 18%; white-space: nowrap;">
-        <div style="font-size: 12px; font-weight: 600; color: #334155;">
-          ${item.date ? new Date(item.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-        </div>
-        ${item.doctorName && item.doctorName !== "-" && item.doctorName !== "—"
-          ? `<div style="font-size: 10px; color: #64748b; margin-top: 3px;">${item.doctorName}</div>`
-          : ""}
-      </td>
-      <td style="padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top;">
-        <div style="font-size: 12px; color: #334155; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">
-          ${item.content && item.content !== "—" ? item.content : '<span style="color:#94a3b8; font-style:italic;">No content recorded.</span>'}
-        </div>
-        ${item.attachments && item.attachments.length > 0
-          ? `<div style="margin-top: 6px; font-size: 10px; color: #2563eb; font-weight: 700;">${item.attachments.length} attachment(s)</div>`
-          : ""}
-      </td>
-    </tr>
-  `
-    )
-    .join("");
-
-  const htmlContent = `
-  <div style="width:794px; background:#fff; margin:0; padding:0; color:#1f2937; display:flex; flex-direction:column; min-height:1123px; box-sizing:border-box; font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-
-    <!-- HEADER: Logo + Patient Info -->
-    <div style="padding: 25px 40px 15px; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center;">
-        <img src="${logoUrl || logoImg}" style="height: 80px; width: auto; object-fit: contain;" crossorigin="anonymous" />
-      </div>
-      <div style="text-align: right;">
-        <div style="font-size: 16px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${patientName}</div>
-        <div style="font-size: 12px; font-weight: 600; color: #334155; margin-top: 4px;">Total Records: ${timeline.length}</div>
-        ${recordType ? `<div style="font-size: 11px; font-weight: 500; color: #475569; margin-top: 2px;">Primary Type: ${recordType.replace(/[-_]/g, " ").toUpperCase()}</div>` : ""}
-      </div>
-    </div>
-
-    <!-- TITLE BAR -->
-    <div style="padding: 10px 40px; background:#f8fafc; border-bottom: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-size:12px; font-weight:900; color:#1e3a8a; text-transform:uppercase; letter-spacing:1px;">Complete Electronic Medical History</div>
-      <div style="text-align:right; font-size:11px; color:#475569; font-weight:500;">
-        <span><strong>Generated:</strong> ${dateStr}</span>
-      </div>
-    </div>
-
-    <!-- CLINIC INFO BAR -->
-    <div style="padding: 14px 40px;">
-      <div style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; padding:12px 18px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px;">
-        <div style="flex:1; padding-right:10px; border-right: 1px solid #e2e8f0;">
-          <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:2px;">Record Summary</div>
-          <div style="font-size:13px; font-weight:800; color:#0f172a;">${timeline.length} Medical Record${timeline.length !== 1 ? "s" : ""}</div>
-          <div style="font-size:11px; font-weight:500; color:#475569; margin-top:2px;">${[...new Set(timeline.map((t: ApiAny) => (t.category || "").replace(/_/g, " ")))].filter(Boolean).join(", ") || "Various Categories"}</div>
-        </div>
-        <div style="flex:1; padding-left:18px;">
-          <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:2px;">Clinic</div>
-          <div style="font-size:13px; font-weight:700; color:#0f172a;">Opal Smiles Dental Studio</div>
-          <div style="font-size:11px; font-weight:500; color:#475569; margin-top:2px;">Dental &amp; Facial Aesthetics</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RECORDS TABLE -->
-    <div style="padding: 5px 40px 20px;">
-      <div style="font-size:11px; font-weight:850; color:#1e3a8a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; border-bottom:1.5px solid #e2e8f0; padding-bottom:6px;">
-        Medical History Timeline — ${timeline.length} Record${timeline.length !== 1 ? "s" : ""}
-      </div>
-      <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <thead>
-          <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
-            <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Record Type &amp; Title</th>
-            <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Date &amp; Doctor</th>
-            <th style="padding:10px 14px; text-align:left; font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Clinical Notes / Content</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml || `<tr><td colspan="3" style="padding:24px; text-align:center; color:#94a3b8; font-style:italic;">No records found.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- FOOTER — identical to consultation -->
-    <div style="margin-top: auto;">
-      <div style="padding: 0 40px 20px;">
-        <div style="display:flex; justify-content:flex-end; align-items:flex-end; padding-top:20px;">
-          <div style="text-align:center;">
-            <div style="width:200px; border-bottom:1px solid #cbd5e1; margin-bottom:8px;"></div>
-            <div style="font-size:13px; font-weight:800; color:#0f172a;">Opal Smiles Dental Studio</div>
-            <div style="font-size:11px; color:#475569; font-weight:500;">Authorized Signatory</div>
-            <div style="font-size:10px; color:#64748b; margin-top:2px;">(Seal)</div>
-          </div>
-        </div>
-      </div>
-      <div style="background:#ffffff; padding:15px 40px 30px 40px; color:#0f172a; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 -4px 10px rgba(0,0,0,0.03); border-top: 1px solid #f1f5f9;">
-        <div style="flex: 1; display:flex; flex-direction:column; gap:4px;">
-          <div style="font-size:11px; font-weight:700;">104, Unicus Shyamal, Shyamal Cross Road, Satellite, Ahmedabad, Gujarat – 380 015</div>
-          <div style="font-size:11px; font-weight:600; color:#475569;">Phone: +91 99981 93256 | Email: hello@opalsmiles.in</div>
-          <div style="font-size:11px; font-weight:600; color:#475569;">Mon–Sat: 10:00 AM – 8:00 PM | Emergency: 24 / 7</div>
-          <div style="font-size:11px; font-weight:600; color:#475569;">Instagram: "opalsmiles_dental"</div>
-        </div>
-        <div style="width: 60px; height: 60px; background: white; padding: 2px; border-radius: 4px; border:1px solid #cbd5e1;">
-          <img src="/opalsmiles-qr.png" style="width: 100%; height: 100%; object-fit: contain;" crossorigin="anonymous" onerror="this.style.display='none'" />
-        </div>
-      </div>
-    </div>
-
-  </div>`;
-
-  // Create off-screen container
-  const pdfContainer = document.createElement("div");
-  pdfContainer.style.cssText = `
-    position: absolute; left: -9999px; top: 0;
-    width: 794px; background: white;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  `;
-  pdfContainer.innerHTML = htmlContent;
-  document.body.appendChild(pdfContainer);
-
-  // Wait for images to load
-  const images = Array.from(pdfContainer.getElementsByTagName("img"));
-  await Promise.all(
-    images.map((img) => {
-      if (img.complete) return Promise.resolve();
-      return new Promise((resolve) => {
-        img.onload = resolve;
-        img.onerror = resolve;
-      });
-    })
-  );
-
-  // Pad to A4 multiple
-  const currentHeight = pdfContainer.offsetHeight;
-  const remainder = currentHeight % 1123;
-  if (remainder !== 0) {
-    pdfContainer.style.height = currentHeight + (1123 - remainder) + "px";
-  }
-
-  try {
-    const canvas = await html2canvas(pdfContainer, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      width: 794,
-      windowWidth: 794,
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setLineWidth(1);
-    pdf.rect(10, 10, pdfWidth - 20, pdfHeight - 20);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 10) {
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      pdf.setDrawColor(200, 200, 200);
-      pdf.setLineWidth(1);
-      pdf.rect(10, 10, pdfWidth - 20, pdfHeight - 20);
-      heightLeft -= pdfHeight;
-    }
-
-    const safeName = patientName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-    pdf.save(`emr_${safeName}_${now.toISOString().split("T")[0]}.pdf`);
-  } finally {
-    document.body.removeChild(pdfContainer);
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Attachment Viewer Component
+// Attachment Lightbox Preview
 // ─────────────────────────────────────────────────────────────────────────────
 function AttachmentPreview({
   url,
@@ -347,89 +164,100 @@ function AttachmentPreview({
 }) {
   const ext = (url.split(".").pop() || "").toLowerCase();
   const isImage = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
-  const isPdf = ext === "pdf";
 
   return (
-    <Modal
-      title={fileName || "Attachment"}
-      onClose={onClose}
-      size="3xl"
-      icon={<ImageIcon className="w-4 h-4 text-primary" />}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      onClick={onClose}
     >
-      <div className="flex items-center justify-center p-4 min-h-[50vh]">
-        {isImage ? (
-          <img
-            src={url}
-            alt={fileName || "Attachment"}
-            className="max-w-full max-h-[70vh] object-contain rounded-lg shadow"
-          />
-        ) : isPdf ? (
-          <iframe
-            src={url}
-            className="w-full h-[70vh] rounded-lg border-0"
-            title={fileName || "PDF Attachment"}
-          />
-        ) : (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground font-semibold mb-4">
-              Preview not available for this file type
-            </p>
+      <div
+        className="relative max-w-4xl max-h-[90vh] bg-card rounded-2xl overflow-hidden shadow-2xl border border-border flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/40">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-foreground truncate max-w-md">
+              {fileName || "Attachment Preview"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
             <a
               href={url}
+              download={fileName || "attachment"}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Open full file"
             >
-              <ExternalLink className="w-4 h-4" /> Download / Open File
+              <ExternalLink className="w-4 h-4" />
             </a>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm font-bold px-2.5"
+            >
+              ✕
+            </button>
           </div>
-        )}
+        </div>
+        <div className="overflow-auto p-4 flex items-center justify-center min-h-[300px]">
+          {isImage ? (
+            <img src={url} alt={fileName || "Attachment"} className="max-h-[75vh] w-auto object-contain rounded-lg" />
+          ) : (
+            <div className="text-center p-8">
+              <FileText className="w-16 h-16 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-foreground mb-1">{fileName}</p>
+              <p className="text-xs text-muted-foreground mb-4">This file type cannot be previewed directly.</p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                download
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-xl hover:bg-primary/90 transition-all shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" /> Download File
+              </a>
+            </div>
+          )}
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main EMR Viewer Component
 // ─────────────────────────────────────────────────────────────────────────────
-/**
- * Guards the null case before any hook runs. The hooks below read `record`
- * unconditionally, so they live in their own component that is only mounted
- * once there is a record to show - a bare early return above them would make
- * React see a different number of hooks between renders.
- */
 export function EMRViewer({ record, onClose }: EMRViewerProps) {
   if (!record) return null;
   return <EMRViewerContent record={record} onClose={onClose} />;
 }
 
 function EMRViewerContent({ record, onClose }: EMRViewerProps) {
-  const { themeData } = useTheme();
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [viewMode, setViewMode] = useState<"table" | "timeline">("table");
+  const [_isDownloading, _setIsDownloading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string | undefined>(undefined);
 
-  const [search, setSearch] = React.useState("");
-  const [activeTab, setActiveTab] = React.useState("all");
-  const [isDownloading, setIsDownloading] = React.useState(false);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [previewFileName, setPreviewFileName] = React.useState<string | undefined>(undefined);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const debouncedSearch = useDebounce(search, 500);
+  const effectivePatientId = record.patientId || record.patient_id || record.patient?.id || "";
+  const { data: patientDetail } = usePatientDetailQuery(effectivePatientId, !!effectivePatientId);
 
   const queryParams: ApiAny = {
+    all: true,
     page: 1,
     limit: 1000,
-    filters: { patient_id: record.patientId },
+    filters: { patient_id: [effectivePatientId] },
   };
-  if (debouncedSearch) queryParams.search = debouncedSearch;
-  if (activeTab && activeTab !== "all") {
-    queryParams.filters.record_type = [activeTab.toUpperCase()];
-  }
 
   const { data: apiListData, isLoading } = useEMRListQuery(queryParams, {
     refetchOnMount: "always",
   });
 
-  const detailedRecord = React.useMemo(() => {
+  const detailedRecord = useMemo(() => {
     let rawList: ApiAny[] = [];
     if (apiListData) {
       if (Array.isArray(apiListData)) rawList = apiListData;
@@ -439,56 +267,313 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
       else if (Array.isArray((apiListData as ApiAny).responseObject)) rawList = (apiListData as ApiAny).responseObject;
     }
 
-    const latestItem = rawList[0] || record;
+    const effectiveList = rawList.length > 0 ? rawList : (record.timeline || []);
+    const latestItem = effectiveList[0] || record;
 
-    // Extract attachments properly (objects with file_url)
+    const patientObj =
+      effectiveList.find(
+        (item: ApiAny) =>
+          item.patient && (item.patient.phone || item.patient.patient_code || item.patient.patientCode)
+      )?.patient ||
+      latestItem.patient ||
+      record.patient ||
+      {};
+
+    const patientName = patientDetail?.name || patientObj?.name || record.patientName || "—";
+    const patientId = patientDetail?.id || patientObj?.id || record.patientId || "—";
+    const patientCode =
+      patientDetail?.patient_code ||
+      patientDetail?.patientCode ||
+      patientObj?.patient_code ||
+      patientObj?.patientCode ||
+      record.patient_code ||
+      record.patientCode ||
+      null;
+    const phone =
+      patientDetail?.phone ||
+      patientObj?.phone ||
+      record.phone ||
+      "—";
+    const gender = patientDetail?.gender || patientObj?.gender || record.gender;
+    const dateOfBirth =
+      patientDetail?.dateOfBirth ||
+      patientDetail?.date_of_birth ||
+      patientObj?.date_of_birth ||
+      record.date_of_birth;
+    const countryCode =
+      patientDetail?.country_code ||
+      patientDetail?.countryCode ||
+      patientObj?.country_code ||
+      "+91";
+
     const extractAttachments = (item: ApiAny) => {
       const atts = item.attachments;
       if (!Array.isArray(atts)) return [];
-      return atts.map((a: ApiAny) => {
-        if (typeof a === "string") return { url: a, name: a.split("/").pop() || "File" };
-        return {
-          url: a.file_url || a.url || a.file_path || "",
-          name: a.file_name || a.name || (a.file_url || "").split("/").pop() || "File",
-          type: a.file_type || a.type || "",
-          size: a.file_size || a.size,
-        };
-      }).filter((a: ApiAny) => a.url);
+      return atts
+        .map((a: ApiAny) => {
+          if (typeof a === "string") return { url: a, name: a.split("/").pop() || "File" };
+          return {
+            url: a.file_url || a.url || a.file_path || "",
+            name: a.file_name || a.name || (a.file_url || "").split("/").pop() || "File",
+            type: a.file_type || a.type || "",
+            size: a.file_size || a.size,
+          };
+        })
+        .filter((a: ApiAny) => a.url);
     };
 
     return {
       ...record,
-      patientName: latestItem.patient?.name || record.patientName || "—",
+      patientName,
+      patientId,
+      patientCode,
+      phone,
+      gender,
+      date_of_birth: dateOfBirth,
+      country_code: countryCode,
+      patient: {
+        ...patientObj,
+        ...patientDetail,
+        id: patientId,
+        name: patientName,
+        phone,
+        patient_code: patientCode,
+      },
       date: latestItem.created_at || latestItem.date || record.date || new Date().toISOString(),
       type: (latestItem.record_type || latestItem.type || record.type || "consultation").toLowerCase(),
       title: latestItem.title || record.title || "—",
       content: latestItem.content || record.content || "—",
-      doctorName: latestItem.doctor?.name || record.doctorName || "—",
-      attachments: extractAttachments(latestItem).length > 0
-        ? extractAttachments(latestItem)
-        : extractAttachments(record),
-      timeline: rawList.map((item: ApiAny) => ({
+      doctorName: latestItem.doctor?.name || record.doctorName || record.lastDoctorName || "—",
+      timeline: effectiveList.map((item: ApiAny) => ({
         id: item.id,
-        title: item.title || "N/A",
-        content: item.content || "N/A",
+        title: item.title || "Record Entry",
+        content: item.content || "—",
         date: item.created_at || item.date || new Date().toISOString(),
         category: (item.record_type || item.type || "consultation").toLowerCase(),
-        doctorName: item.doctor?.name || item.doctorName || record.doctorName || "N/A",
+        doctorName: item.doctor?.name || item.doctorName || record.doctorName || "—",
         attachments: extractAttachments(item),
       })),
     };
-  }, [apiListData, record]);
+  }, [apiListData, record, patientDetail]);
 
-  const filteredTimeline = React.useMemo(() => detailedRecord.timeline || [], [detailedRecord.timeline]);
+  const allTimeline = useMemo(() => detailedRecord.timeline || [], [detailedRecord.timeline]);
 
-  const handleDownload = async () => {
-    setIsDownloading(true);
+  // Dynamic counts for each category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: allTimeline.length };
+    allTimeline.forEach((t: ApiAny) => {
+      const key = (t.category || "consultation").toLowerCase().replace(/[-_\s]+/g, "");
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }, [allTimeline]);
+
+  const categoryTabs = useMemo(
+    () =>
+      [
+        { key: "all", label: "All History", count: allTimeline.length, icon: <Layers className="w-3.5 h-3.5" /> },
+        { key: "appointment_visit", label: "Visits", count: categoryCounts["appointmentvisit"] || 0, icon: <Calendar className="w-3.5 h-3.5" /> },
+        { key: "consultation", label: "Consultations", count: categoryCounts["consultation"] || 0, icon: <Stethoscope className="w-3.5 h-3.5" /> },
+        { key: "prescription", label: "Prescriptions", count: categoryCounts["prescription"] || 0, icon: <Pill className="w-3.5 h-3.5" /> },
+        { key: "treatment_note", label: "Treatment Notes", count: categoryCounts["treatmentnote"] || 0, icon: <ClipboardList className="w-3.5 h-3.5" /> },
+        { key: "billing_record", label: "Billing & Invoices", count: categoryCounts["billingrecord"] || 0, icon: <CreditCard className="w-3.5 h-3.5" /> },
+        { key: "lab_report", label: "Lab Reports", count: categoryCounts["labreport"] || 0, icon: <FlaskConical className="w-3.5 h-3.5" /> },
+        { key: "x_ray", label: "X-Rays", count: categoryCounts["xray"] || 0, icon: <ScanLine className="w-3.5 h-3.5" /> },
+      ].filter((tab) => tab.key === "all" || tab.count > 0),
+    [allTimeline.length, categoryCounts]
+  );
+
+  // Filtered entries by category and search
+  const filteredTimeline = useMemo(() => {
+    let list = allTimeline;
+    if (activeCategory !== "all") {
+      const normActive = activeCategory.toLowerCase().replace(/[-_\s]+/g, "");
+      list = list.filter((item: ApiAny) => {
+        const normCat = (item.category || "").toLowerCase().replace(/[-_\s]+/g, "");
+        return normCat === normActive;
+      });
+    }
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase().trim();
+      list = list.filter(
+        (item: ApiAny) =>
+          (item.title && item.title.toLowerCase().includes(q)) ||
+          (item.content && item.content.toLowerCase().includes(q)) ||
+          (item.doctorName && item.doctorName.toLowerCase().includes(q)) ||
+          (item.category && item.category.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [allTimeline, activeCategory, debouncedSearch]);
+
+  // Grouped by month/year for timeline view
+  const groupedTimeline = useMemo(() => {
+    const groups: { monthYear: string; items: ApiAny[] }[] = [];
+    const map: Record<string, ApiAny[]> = {};
+
+    filteredTimeline.forEach((item: ApiAny) => {
+      let key = "Earlier Records";
+      if (item.date) {
+        try {
+          const d = new Date(item.date);
+          if (!isNaN(d.getTime())) {
+            key = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          }
+        } catch {
+          key = "Records";
+        }
+      }
+      if (!map[key]) {
+        map[key] = [];
+        groups.push({ monthYear: key, items: map[key] });
+      }
+      map[key].push(item);
+    });
+
+    return groups;
+  }, [filteredTimeline]);
+
+  // Download PDF (currently commented out in UI)
+  const _handleDownload = async () => {
+    _setIsDownloading(true);
     try {
-      await generateEMRPDF(detailedRecord.patientName, filteredTimeline, detailedRecord.type, themeData?.theme?.logo_url);
+      const patientPhone =
+        (patientDetail?.phone && patientDetail.phone !== "—" ? patientDetail.phone : null) ||
+        (detailedRecord.phone && detailedRecord.phone !== "—" ? detailedRecord.phone : undefined);
+
+      await generateEMRPDF(
+        detailedRecord.patientName,
+        allTimeline,
+        detailedRecord.type,
+        null,
+        {
+          id: detailedRecord.patientId || detailedRecord.patient?.id,
+          patientName: detailedRecord.patientName,
+          name: detailedRecord.patientName,
+          phone: patientPhone,
+          country_code: detailedRecord.country_code || patientDetail?.country_code || "+91",
+          gender: detailedRecord.gender || patientDetail?.gender,
+          date_of_birth: detailedRecord.date_of_birth || patientDetail?.dateOfBirth,
+          patient_code: displayPatientCode,
+          patientCode: displayPatientCode,
+        }
+      );
     } finally {
-      setIsDownloading(false);
+      _setIsDownloading(false);
     }
   };
+
+  // Structured Columns for Table View
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: "date",
+        header: "Date & Time",
+        className: "w-[130px]",
+        render: (item: ApiAny) => {
+          const d = item.date ? new Date(item.date) : null;
+          const valid = d && !isNaN(d.getTime());
+          return (
+            <div className="whitespace-nowrap">
+              <span className="font-bold text-xs text-foreground block">
+                {valid ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium block">
+                {valid ? d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "category",
+        header: "Type",
+        className: "w-[160px]",
+        render: (item: ApiAny) => {
+          const meta = getCategoryMeta(item.category);
+          return (
+            <Badge
+              variant={meta.variant}
+              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 inline-flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <span className="[&_svg]:w-3 [&_svg]:h-3">{meta.icon}</span>
+              {meta.label}
+            </Badge>
+          );
+        },
+      },
+      {
+        key: "title",
+        header: "Title & Doctor",
+        className: "w-[240px]",
+        render: (item: ApiAny) => {
+          const doc =
+            item.doctorName && item.doctorName !== "—" && item.doctorName !== "N/A"
+              ? item.doctorName.toLowerCase().startsWith("dr")
+                ? item.doctorName
+                : `Dr. ${item.doctorName}`
+              : null;
+          return (
+            <div className="min-w-0 pr-2">
+              <span className="font-bold text-xs text-foreground block truncate">
+                {item.title || "Record Entry"}
+              </span>
+              {doc ? (
+                <span className="text-[11px] text-muted-foreground font-medium inline-flex items-center gap-1 mt-0.5">
+                  <Stethoscope className="w-3 h-3 text-primary/70 shrink-0" /> {doc}
+                </span>
+              ) : (
+                <span className="text-[11px] text-muted-foreground/50 italic">—</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        key: "content",
+        header: "Clinical Notes & Observations",
+        render: (item: ApiAny) => {
+          const hasContent = item.content && item.content !== "—" && item.content !== "N/A";
+          if (!hasContent) {
+            return <span className="text-muted-foreground/40 italic text-xs">No clinical notes recorded</span>;
+          }
+          return (
+            <div className="text-xs text-foreground/85 leading-relaxed font-normal bg-muted/20 border-l-2 border-primary/40 pl-2.5 py-1 pr-2 rounded-r">
+              {item.content}
+            </div>
+          );
+        },
+      },
+      {
+        key: "attachments",
+        header: "Files",
+        align: "center" as const,
+        className: "w-[110px]",
+        render: (item: ApiAny) => {
+          const count = Array.isArray(item.attachments) ? item.attachments.length : 0;
+          if (count === 0) {
+            return <span className="text-muted-foreground/30 text-xs">—</span>;
+          }
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                const first = item.attachments[0];
+                setPreviewUrl(first.url || first);
+                setPreviewFileName(first.name || "Attachment");
+              }}
+              className="h-6 text-[10px] font-bold gap-1 px-2 text-primary border-primary/30 hover:bg-primary/5 hover:border-primary"
+            >
+              <Camera className="w-3 h-3" /> {count} File{count > 1 ? "s" : ""}
+            </Button>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   if (isLoading && !apiListData) {
     return (
@@ -497,7 +582,7 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
         subtitle="Loading Complete Electronic Medical History..."
         onClose={onClose}
         size="5xl"
-        icon={<FileText className="w-5 h-5" />}
+        icon={<FileText className="w-5 h-5 text-primary" />}
       >
         <Loading type="spinner" text="Fetching medical records..." className="py-20" />
       </Modal>
@@ -512,232 +597,342 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
     .toUpperCase();
 
   const categoryMeta = getCategoryMeta(detailedRecord.type);
+  const formattedLastDate = detailedRecord.date
+    ? new Date(detailedRecord.date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
+  const displayPhone =
+    (patientDetail?.phone && patientDetail.phone !== "—" ? patientDetail.phone : null) ||
+    (detailedRecord.phone && detailedRecord.phone !== "—" ? detailedRecord.phone : null);
+
+  const rawPatientCode =
+    patientDetail?.patient_code ||
+    patientDetail?.patientCode ||
+    detailedRecord.patientCode ||
+    detailedRecord.patient_code;
+
+  const displayPatientCode =
+    rawPatientCode ||
+    (detailedRecord.patientId && detailedRecord.patientId !== "—"
+      ? detailedRecord.patientId.split("-")[0]
+      : null);
 
   return (
     <>
-      {/* Attachment Lightbox */}
+      {/* Lightbox Preview */}
       {previewUrl && (
         <AttachmentPreview
           url={previewUrl}
           fileName={previewFileName}
-          onClose={() => { setPreviewUrl(null); setPreviewFileName(undefined); }}
+          onClose={() => {
+            setPreviewUrl(null);
+            setPreviewFileName(undefined);
+          }}
         />
       )}
 
       <Modal
         title={detailedRecord.patientName}
-        subtitle="Complete Electronic Medical History"
+        subtitle="Complete Electronic Medical History & Records"
         onClose={onClose}
         size="5xl"
         icon={<FileText className="w-5 h-5 text-primary" />}
         footer={
           <div className="flex items-center justify-between w-full">
             <p className="text-xs text-muted-foreground font-semibold hidden sm:block">
-              {filteredTimeline.length} record{filteredTimeline.length !== 1 ? "s" : ""} found
+              Showing {filteredTimeline.length} of {allTimeline.length} total records
             </p>
-            <div className="flex gap-3 ml-auto">
-              <Button variant="outline" onClick={onClose}>Close Record</Button>
-              <Button onClick={handleDownload} className="gap-2" disabled={isDownloading}>
+            <div className="flex gap-2.5 ml-auto">
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Close Record
+              </Button>
+              {/* <Button size="sm" onClick={handleDownload} className="gap-2" disabled={isDownloading}>
                 {isDownloading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Generating PDF...
                   </>
                 ) : (
-                  <><Download className="w-4 h-4" /> Download Record</>
+                  <>
+                    <Download className="w-3.5 h-3.5" /> Download Record
+                  </>
                 )}
-              </Button>
+              </Button> */}
             </div>
           </div>
         }
       >
-        <div className="space-y-6">
-          {/* ── Patient Identity Card ── */}
-          <div className="relative overflow-hidden rounded-2xl border border-[#4e6e65]/15 bg-linear-to-br from-[#4e6e65]/8 via-[#4e6e65]/3 to-transparent shadow-sm">
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#4e6e65]/[0.07] rounded-full" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-[#c9a24b]/8 rounded-full" />
-            <div className="relative p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1 min-w-0 w-full">
-                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#4e6e65] to-[#33473f] flex items-center justify-center text-white text-xl font-black shadow-lg shadow-[#4e6e65]/25 shrink-0">
+        <div className="space-y-4">
+          {/* ── 1. Executive Patient Card ── */}
+          <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-2xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Left: Avatar & Meta */}
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/20 shrink-0">
                   {initials}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-xl font-black text-foreground tracking-tight mb-1">
-                    {detailedRecord.patientName}
-                  </h2>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Last Record:{" "}
-                      {new Date(detailedRecord.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </div>
-                    <Badge variant={categoryMeta.variant} className="text-[9px] font-black uppercase tracking-widest px-2.5 h-5">
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="text-lg font-bold text-foreground leading-tight tracking-tight">
+                      {detailedRecord.patientName}
+                    </h3>
+                    {displayPatientCode && (
+                      <Badge variant="blue" className="text-[10px] font-semibold px-2 py-0.5">
+                        Code: {displayPatientCode}
+                      </Badge>
+                    )}
+                    <Badge variant={categoryMeta.variant} className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
                       {(detailedRecord.type || "consultation").replace(/[-_]/g, " ").toUpperCase()}
                     </Badge>
                   </div>
-                </div>
-              </div>
-              <div className="flex gap-6 sm:gap-8 shrink-0 w-full sm:w-auto border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-8 border-[#4e6e65]/15">
-                <div className="text-center flex-1 sm:flex-initial">
-                  <p className="text-2xl font-black text-[#4e6e65]">{filteredTimeline.length}</p>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Records</p>
-                </div>
-                <div className="text-center flex-1 sm:flex-initial">
-                  <p className="text-2xl font-black text-[#c9a24b]">
-                    {new Set(filteredTimeline.map((t: ApiAny) => t.category)).size}
-                  </p>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Categories</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Search + Filter ── */}
-          <div className="space-y-3">
-            <div className="relative">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-              </svg>
-              <Input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search in clinical notes, procedures..."
-                className="pl-10 h-10"
-              />
-            </div>
-            <div className="overflow-x-auto pb-1 -mx-2 px-2">
-              <FilterTabs tabs={TIMELINE_FILTERS} active={activeTab} onChange={setActiveTab} />
-            </div>
-          </div>
-
-          {/* ── Medical History Section Header ── */}
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2.5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-              <div className="w-7 h-7 rounded-lg bg-[#4e6e65]/10 flex items-center justify-center">
-                <Activity className="w-3.5 h-3.5 text-[#4e6e65]" />
-              </div>
-              Medical History
-            </h3>
-            {filteredTimeline.length > 0 && (
-              <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest px-3 h-6">
-                {filteredTimeline.length} Records
-              </Badge>
-            )}
-          </div>
-
-          {/* ── Timeline ── */}
-          {filteredTimeline.length > 0 ? (
-            <div className="relative border-l-2 border-border/80 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-6">
-              {filteredTimeline.map((item: ApiAny, idx: number) => {
-                const meta = getCategoryMeta(item.category);
-                const formattedDate = item.date
-                  ? new Date(item.date).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                  : "N/A";
-
-                return (
-                  <div key={item.id || idx} className="relative group">
-                    {/* Timeline Node (Floating Icon on the left line) */}
-                    <span className="absolute left-[-41px] sm:left-[-49px] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/85 shadow-sm ring-4 ring-card group-hover:scale-110 transition-transform duration-200">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded-full ${meta.iconBg}`}>
-                        {meta.icon}
-                      </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground font-medium">
+                    {displayPhone && (
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-muted-foreground/70" /> {displayPhone}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" /> Last Visit: {formattedLastDate}
                     </span>
+                    {detailedRecord.doctorName && detailedRecord.doctorName !== "—" && (
+                      <span className="flex items-center gap-1.5">
+                        <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/70" /> Dr: {detailedRecord.doctorName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                    {/* Timeline Content Card */}
-                    <div className="bg-card border border-border/60 hover:border-[#4e6e65]/30 rounded-2xl hover:shadow-md transition-all duration-300 p-4 sm:p-5">
-                      {/* Top Row: Title, Category & Date */}
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 mb-3.5">
-                        <div className="min-w-0">
-                          <h4 className="font-extrabold text-sm sm:text-base text-foreground tracking-tight leading-snug mb-1">
-                            {item.title || "N/A"}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant={meta.variant} className="text-[8px] font-black uppercase tracking-widest px-2 h-5 inline-flex items-center">
-                              {meta.label}
-                            </Badge>
-                            {item.doctorName && item.doctorName !== "—" && item.doctorName !== "N/A" && (
-                              <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1.5 bg-muted/40 px-2 py-0.5 rounded-full">
-                                <User className="w-3 h-3 text-muted-foreground/60" />
-                                Dr. {item.doctorName}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+              {/* Right: Summary Counters */}
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
+                <div className="bg-muted/40 border border-border/60 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
+                  <p className="text-base font-black text-foreground leading-none">{allTimeline.length}</p>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Records</p>
+                </div>
+                <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
+                  <p className="text-base font-black text-teal-700 leading-none">{categoryCounts["appointmentvisit"] || 0}</p>
+                  <p className="text-[9px] text-teal-600/90 font-bold uppercase tracking-wider mt-1">Visits</p>
+                </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
+                  <p className="text-base font-black text-blue-700 leading-none">{categoryCounts["consultation"] || 0}</p>
+                  <p className="text-[9px] text-blue-600/90 font-bold uppercase tracking-wider mt-1">Consults</p>
+                </div>
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
+                  <p className="text-base font-black text-purple-700 leading-none">{categoryCounts["billingrecord"] || 0}</p>
+                  <p className="text-[9px] text-purple-600/90 font-bold uppercase tracking-wider mt-1">Billing</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                        {/* Date */}
-                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:items-end">
-                          <span className="text-[10px] sm:text-xs font-black text-muted-foreground uppercase tracking-widest bg-muted/40 sm:bg-transparent px-2 py-0.5 sm:px-0 rounded-full">
-                            {formattedDate}
-                          </span>
-                        </div>
-                      </div>
+          {/* ── 2. Toolbar: Search + View Switcher ── */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search clinical notes, diagnosis, procedures, doctor…"
+              className="w-full sm:flex-1 max-w-lg"
+            />
 
-                      {/* Clinical Content */}
-                      {item.content && item.content !== "—" && item.content !== "N/A" && (
-                        <div className="text-xs sm:text-sm text-muted-foreground/90 leading-relaxed font-medium bg-muted/20 border border-border/30 rounded-xl p-3 sm:p-4 whitespace-pre-wrap">
-                          {item.content}
-                        </div>
-                      )}
+            {/* View Mode Switcher */}
+            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/70 shrink-0 self-end sm:self-center gap-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === "table"
+                    ? "bg-card text-primary shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span>Table View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("timeline")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === "timeline"
+                    ? "bg-card text-primary shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Timeline</span>
+              </button>
+            </div>
+          </div>
 
-                      {/* ── Attachments ── */}
-                      {item.attachments && item.attachments.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-border/40">
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <Camera className="w-3 h-3 text-[#4e6e65]" /> Attachments ({item.attachments.length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {item.attachments.map((att: ApiAny, aIdx: number) => {
-                              const ext = (att.url?.split(".").pop() || "").toLowerCase();
-                              const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
-                              return (
-                                <button
-                                  key={aIdx}
-                                  onClick={() => { setPreviewUrl(att.url); setPreviewFileName(att.name); }}
-                                  className="group/att flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 hover:border-[#4e6e65]/40 hover:bg-[#4e6e65]/5 transition-all text-xs font-semibold text-foreground"
-                                >
-                                  {isImage ? (
-                                    <div className="w-8 h-8 rounded-md overflow-hidden border border-border/30 shrink-0">
-                                      <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
-                                    </div>
-                                  ) : (
-                                    <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                      <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                                    </div>
+          {/* ── 3. Category Filter Pills with Live Counts ── */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+            {categoryTabs.map((tab) => {
+              const isActive = activeCategory === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveCategory(tab.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-card border-border/70 text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="[&_svg]:w-3 [&_svg]:h-3">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── 4. Content Area: Table View OR Timeline View ── */}
+          {filteredTimeline.length > 0 ? (
+            viewMode === "table" ? (
+              /* ── TABLE VIEW (Default) ── */
+              <div className="border border-border/80 rounded-xl overflow-hidden shadow-2xs">
+                <DataTable
+                  compact
+                  columns={tableColumns}
+                  data={filteredTimeline}
+                  rowKey={(r) => r.id}
+                  emptyIcon={<FileText className="w-10 h-10 text-muted-foreground/40" />}
+                  emptyTitle="No records found"
+                  emptySubtitle="Try adjusting your filter or search."
+                />
+              </div>
+            ) : (
+              /* ── TIMELINE VIEW (Chronological by Month) ── */
+              <div className="space-y-6 pt-1 max-h-[550px] overflow-y-auto pr-1">
+                {groupedTimeline.map((group) => (
+                  <div key={group.monthYear} className="space-y-3">
+                    {/* Month Section Anchor */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                        {group.monthYear}
+                      </span>
+                      <div className="h-px bg-border/60 flex-1" />
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        {group.items.length} {group.items.length === 1 ? "record" : "records"}
+                      </span>
+                    </div>
+
+                    {/* Events List */}
+                    <div className="relative border-l-2 border-border/60 ml-3.5 pl-5 space-y-3">
+                      {group.items.map((item: ApiAny, idx: number) => {
+                        const meta = getCategoryMeta(item.category);
+                        const d = item.date ? new Date(item.date) : null;
+                        const formattedDate =
+                          d && !isNaN(d.getTime())
+                            ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                            : "—";
+
+                        return (
+                          <div key={item.id || idx} className="relative group">
+                            {/* Node Icon */}
+                            <span className="absolute -left-[29px] top-3 flex h-6 w-6 items-center justify-center rounded-full bg-card border border-border shadow-xs">
+                              <div
+                                className={`flex h-4.5 w-4.5 items-center justify-center rounded-full ${meta.iconBg} [&_svg]:w-3 [&_svg]:h-3`}
+                              >
+                                {meta.icon}
+                              </div>
+                            </span>
+
+                            {/* Event Card */}
+                            <div className="bg-card border border-border/80 hover:border-primary/40 rounded-xl p-3.5 shadow-2xs transition-all">
+                              {/* Card Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/40">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge
+                                    variant={meta.variant}
+                                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5"
+                                  >
+                                    {meta.label}
+                                  </Badge>
+                                  <span className="font-bold text-sm text-foreground">
+                                    {item.title || "Record Entry"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                  {item.doctorName && item.doctorName !== "—" && (
+                                    <span className="flex items-center gap-1 font-medium">
+                                      <Stethoscope className="w-3.5 h-3.5 text-primary/70" />
+                                      {item.doctorName.toLowerCase().startsWith("dr")
+                                        ? item.doctorName
+                                        : `Dr. ${item.doctorName}`}
+                                    </span>
                                   )}
-                                  <span className="max-w-[120px] truncate">{att.name || `File ${aIdx + 1}`}</span>
-                                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover/att:text-[#4e6e65] shrink-0" />
-                                </button>
-                              );
-                            })}
+                                  <span className="font-semibold text-foreground/80">{formattedDate}</span>
+                                </div>
+                              </div>
+
+                              {/* Clinical Notes Block */}
+                              {item.content && item.content !== "—" && item.content !== "N/A" && (
+                                <div className="mt-2 text-xs text-foreground/85 leading-relaxed bg-muted/20 border border-border/40 rounded-lg p-2.5 whitespace-pre-wrap">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                                    Clinical Notes:
+                                  </span>
+                                  {item.content}
+                                </div>
+                              )}
+
+                              {/* Attachments */}
+                              {item.attachments && item.attachments.length > 0 && (
+                                <div className="mt-2.5 pt-2 border-t border-border/40 flex flex-wrap gap-2 items-center">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                    <Camera className="w-3 h-3 text-primary" /> Attachments:
+                                  </span>
+                                  {item.attachments.map((att: ApiAny, aIdx: number) => (
+                                    <button
+                                      key={aIdx}
+                                      type="button"
+                                      onClick={() => {
+                                        setPreviewUrl(att.url);
+                                        setPreviewFileName(att.name);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-border/60 hover:bg-primary/5 hover:border-primary/40 text-xs font-semibold text-foreground transition-all"
+                                    >
+                                      <FileText className="w-3.5 h-3.5 text-primary" />
+                                      <span className="max-w-[120px] truncate">{att.name || `File ${aIdx + 1}`}</span>
+                                      <ExternalLink className="w-3 h-3 text-muted-foreground/60" />
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center bg-muted/10 rounded-2xl border-2 border-dashed border-border/40">
               <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
                 <FileText className="w-7 h-7 text-muted-foreground/30" />
               </div>
               <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">No records found</h3>
-              <p className="text-xs text-muted-foreground/60 font-medium">Try adjusting your filters or search query.</p>
-              {(search || activeTab !== "all") && (
+              <p className="text-xs text-muted-foreground/60 font-medium">Try adjusting your category filter or search query.</p>
+              {(search || activeCategory !== "all") && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setSearch(""); setActiveTab("all"); }}
+                  onClick={() => {
+                    setSearch("");
+                    setActiveCategory("all");
+                  }}
                   className="mt-4 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5"
                 >
                   Clear All Filters

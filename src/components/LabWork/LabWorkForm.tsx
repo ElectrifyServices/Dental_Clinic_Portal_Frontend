@@ -2,7 +2,7 @@ import type { ApiAny } from "../../types/api";
 import { useMemo, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FlaskConical, Paperclip, Upload, X, FileText, Eye, ExternalLink } from "lucide-react";
+import { FlaskConical, Upload, X, FileText, Eye, ExternalLink } from "lucide-react";
 import {
   Modal,
   Button,

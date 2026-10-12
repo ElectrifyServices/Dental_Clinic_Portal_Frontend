@@ -43,13 +43,13 @@ export function validatePhone(
     const valid = isValidPhoneNumber(phone, iso);
     if (!valid) {
       const example = getExampleNumber(iso, examples);
-      const exampleNational = example
-        ? example.formatNational()
+      const exampleStr = example
+        ? example.formatInternational().replace(/^\+\d+\s*/, '') || example.formatNational()
         : "";
       return {
         isValid: false,
-        errorMessage: exampleNational
-          ? `Invalid phone number for selected country (e.g. ${exampleNational})`
+        errorMessage: exampleStr
+          ? `Invalid phone number for selected country (e.g. ${exampleStr})`
           : "Invalid phone number for selected country",
       };
     }
@@ -74,7 +74,9 @@ export function getPhonePlaceholder(countryIso: string): string {
   const iso = (countryIso || "IN").toUpperCase() as CountryCode;
   try {
     const example = getExampleNumber(iso, examples);
-    return example ? example.formatNational() : "Phone number";
+    if (!example) return "Phone number";
+    const intl = example.formatInternational().replace(/^\+\d+\s*/, "");
+    return intl || example.formatNational() || "Phone number";
   } catch {
     return "Phone number";
   }
@@ -83,15 +85,16 @@ export function getPhonePlaceholder(countryIso: string): string {
 /**
  * Returns the maximum number of digits for the national phone number of a country.
  * Used to set maxLength on <input> fields dynamically.
- * e.g. India = 10, UK = 10, Iceland = 7
+ * e.g. India = 10, UK = 10, Iceland = 7, UAE = 10 (with trunk 0) / 9 (without)
  */
 export function getPhoneMaxLength(countryIso: string): number {
   const iso = (countryIso || "IN").toUpperCase() as CountryCode;
   try {
     const example = getExampleNumber(iso, examples);
     if (example) {
-      // nationalNumber is the digits-only national number
-      return example.nationalNumber.length;
+      const nationalFormatDigits = example.formatNational().replace(/\D/g, "").length;
+      const nationalNumberDigits = example.nationalNumber.length;
+      return Math.max(nationalFormatDigits, nationalNumberDigits);
     }
     return 15; // safe fallback
   } catch {
@@ -136,6 +139,49 @@ export function isoFromDialingCode(dialingCode: string): string {
   if (!dialingCode) return "IN";
   const found = COUNTRY_CODES_LIST.find((c) => c.code === dialingCode);
   return found ? found.country : "IN";
+}
+
+/**
+ * Splits a stored or raw phone string into its country dialing code (e.g. "+91")
+ * and national phone number (digits only), matching against known COUNTRY_CODES_LIST.
+ * Never truncates with .slice(-10).
+ */
+export function parsePhoneAndCountryCode(
+  phone?: string | null,
+  explicitCountryCode?: string | null
+): { countryCode: string; nationalPhone: string } {
+  let raw = (phone || "").trim();
+  let countryCode = (explicitCountryCode || "").trim();
+
+  if (countryCode && !countryCode.startsWith("+")) {
+    countryCode = `+${countryCode}`;
+  }
+
+  if (raw.startsWith("+")) {
+    // Sort descending by code length so +1268 matches before +1
+    const sorted = [...COUNTRY_CODES_LIST].sort((a, b) => b.code.length - a.code.length);
+    for (const item of sorted) {
+      if (raw.startsWith(item.code)) {
+        if (!countryCode) {
+          countryCode = item.code;
+        }
+        raw = raw.slice(item.code.length).trim();
+        break;
+      }
+    }
+  } else if (countryCode && raw.startsWith(countryCode.replace(/^\+/, ""))) {
+    const digitsOnlyCode = countryCode.replace(/^\+/, "");
+    if (raw.length > digitsOnlyCode.length) {
+      raw = raw.slice(digitsOnlyCode.length).trim();
+    }
+  }
+
+  const nationalPhone = sanitizePhoneInput(raw);
+
+  return {
+    countryCode: countryCode || "+91",
+    nationalPhone,
+  };
 }
 
 // ────────────────────────────────────────────────────────────────

@@ -29,6 +29,7 @@ import {
   staffStep2Fields,
   staffStep3Fields,
 } from "@/lib/schemas/staff.schema";
+import { parsePhoneAndCountryCode } from "@/utils/phoneUtils";
 import { useCreateStaffMutation } from "../../hooks/staff/useCreateStaffMutation";
 import { useUpdateStaffMutation } from "../../hooks/staff/useUpdateStaffMutation";
 import { useRolesQuery, fetchRolesList } from "@/hooks/roles/useRolesQuery";
@@ -95,24 +96,18 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     });
   };
 
+  const initialPhoneInfo = parsePhoneAndCountryCode(
+    doctor?.phone,
+    (doctor as ApiAny)?.country_code
+  );
+
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema) as ApiAny,
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",
-      phone: doctor?.phone ? doctor.phone.replace(/^\+\d+/, "").slice(-10) : "",
-      country_code: (doctor as ApiAny)?.country_code || (() => {
-        const rawPhone = doctor?.phone || "";
-        if (rawPhone.startsWith("+")) {
-          const codes = ["+91", "+1", "+44", "+971"];
-          for (const c of codes) {
-            if (rawPhone.startsWith(c)) {
-              return c;
-            }
-          }
-        }
-        return "+91";
-      })(),
+      phone: initialPhoneInfo.nationalPhone,
+      country_code: initialPhoneInfo.countryCode,
       role: doctor?.role ?? "doctor",
       specialization: doctor?.specialization ?? "",
       password: "",
@@ -182,19 +177,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         const profile = s.personal_profile || {};
         const exp = profile.experience_years !== undefined ? String(profile.experience_years) : '';
         const sal = profile.monthly_salary !== undefined ? String(profile.monthly_salary) : '';
- 
-        let rawPhone = s.phone || doctor.phone || "";
-        let parsedCountryCode = s.country_code || (doctor as ApiAny)?.country_code || "+91";
-        if (!s.country_code && !(doctor as ApiAny)?.country_code && rawPhone.startsWith("+")) {
-          const codes = ["+91", "+1", "+44", "+971"];
-          for (const c of codes) {
-            if (rawPhone.startsWith(c)) {
-              parsedCountryCode = c;
-              rawPhone = rawPhone.slice(c.length);
-              break;
-            }
-          }
-        }
+
+        const staffPhoneInfo = parsePhoneAndCountryCode(
+          s.phone || doctor.phone,
+          s.country_code || (doctor as ApiAny)?.country_code
+        );
 
         const mappedDocuments = Array.isArray(s.files)
           ? s.files.map((f: ApiAny) => ({
@@ -209,8 +196,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         form.reset({
           name: s.name || doctor.name || "",
           email: s.email || doctor.email || "",
-          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
-          country_code: parsedCountryCode,
+          phone: staffPhoneInfo.nationalPhone,
+          country_code: staffPhoneInfo.countryCode,
           role: normalizedRole as ApiAny,
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
@@ -235,18 +222,10 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         });
         setRemovedFileIds([]);
       } else {
-        let rawPhone = doctor.phone || "";
-        let parsedCountryCode = (doctor as ApiAny)?.country_code || "+91";
-        if (!(doctor as ApiAny)?.country_code && rawPhone.startsWith("+")) {
-          const codes = ["+91", "+1", "+44", "+971"];
-          for (const c of codes) {
-            if (rawPhone.startsWith(c)) {
-              parsedCountryCode = c;
-              rawPhone = rawPhone.slice(c.length);
-              break;
-            }
-          }
-        }
+        const docPhoneInfo = parsePhoneAndCountryCode(
+          doctor.phone,
+          (doctor as ApiAny)?.country_code
+        );
 
         const mappedDoctorDocs = Array.isArray(doctor.files)
           ? doctor.files.map((f: ApiAny) => ({
@@ -261,8 +240,8 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
         form.reset({
           name: doctor.name ?? "",
           email: doctor.email ?? "",
-          phone: rawPhone.replace(/^\+\d+/, "").slice(-10),
-          country_code: parsedCountryCode,
+          phone: docPhoneInfo.nationalPhone,
+          country_code: docPhoneInfo.countryCode,
           role: doctor.role ?? "doctor",
           specialization: doctor.specialization ?? "",
           password: "",
@@ -453,7 +432,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       formDataObj.append("email", data.email);
       if (data.password) formDataObj.append("password", data.password);
       if (data.phone) formDataObj.append("phone", data.phone);
-      if (data.country_code) formDataObj.append("country_code", data.country_code);
+      formDataObj.append("country_code", data.country_code || "+91");
 
       // Pass the mapped UUID instead of name
       formDataObj.append("role_id", roleId);
@@ -610,8 +589,11 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     form.setValue(
       name as keyof StaffFormData,
       finalValue,
-      { shouldValidate: true },
+      { shouldValidate: name !== "phone" },
     );
+    if (name === "phone") {
+      form.clearErrors("phone");
+    }
   };
 
   const handlePermissionChange = (id: string, checked: boolean) => {
