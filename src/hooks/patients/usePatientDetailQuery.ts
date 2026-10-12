@@ -35,8 +35,10 @@ export function normalizePatient(payload: ApiAny) {
     avatar: p.profile_picture_url || p.profile_picture || p.avatar || '',
     age: p.age || p.dob || '',
     gender: p.gender ? p.gender.toLowerCase() : '',
-    
-    // Mapped fields for usePatientForm
+    patient_code: p.patient_code || p.patientCode || '',
+    patientCode: p.patient_code || p.patientCode || '',
+    country_code: p.country_code || p.countryCode || '+91',
+    date_of_birth: p.date_of_birth || p.dateOfBirth || '',
     dateOfBirth: p.date_of_birth || p.dateOfBirth || '',
     bloodGroup: REVERSE_BLOOD_GROUP_MAP[p.blood_group] || p.blood_group || p.bloodGroup || '',
     maritalStatus: p.marital_status ? p.marital_status.toLowerCase() : '',

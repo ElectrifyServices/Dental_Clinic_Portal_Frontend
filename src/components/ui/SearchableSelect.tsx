@@ -2,6 +2,7 @@ import type { ApiAny } from "../../types/api";
 import * as React from "react";
 import { Search, Check, X, Plus, ChevronDown, Trash2, Edit } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "./Popover";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./Tooltip";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
@@ -154,52 +155,88 @@ export function SearchableSelect({
     }
   };
 
+  const selectedLabel = React.useMemo(() => {
+    if (isLoading) return "Loading...";
+    if (isMulti) {
+      return Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder;
+    }
+    const foundOpt = options.find((opt) => getOptionValue(opt) === value);
+    if (foundOpt) {
+      return getOptionLabel(foundOpt);
+    }
+    if (typeof displayValue === "string") return displayValue;
+    if (value && value !== "none" && typeof value === "string") return value;
+    return placeholder;
+  }, [value, options, isLoading, isMulti, placeholder, displayValue]);
+
+  const hasSelectedValue = Boolean(
+    value &&
+    value !== "none" &&
+    (!Array.isArray(value) || value.length > 0) &&
+    selectedLabel &&
+    selectedLabel !== placeholder
+  );
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          type="button"
-          disabled={disabled || isLoading}
-          className={cn(
-            "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm hover:border-border/80 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer transition-all duration-200 ease-out",
-            !value && "text-muted-foreground",
-            className
-          )}
-        >
-          <div className="flex-1 truncate pr-2 text-left">
-            {isLoading
-              ? "Loading..."
-              : isMulti
-                ? (Array.isArray(value) && value.length > 0 ? `${value.length} selected` : placeholder)
-                : (() => {
-                    const foundOpt = options.find(opt => getOptionValue(opt) === value);
-                    if (foundOpt) {
-                      if (renderValue) return renderValue(foundOpt);
-                      const isFree = typeof foundOpt === "object" && foundOpt !== null && (foundOpt.isFree || foundOpt.is_free);
-                      return (
-                        <span className="flex items-center gap-1.5 truncate">
-                          <span>{getOptionLabel(foundOpt)}</span>
-                          {isFree && (
-                            <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
-                              Free
-                            </span>
-                          )}
-                        </span>
-                      );
-                    }
-                    // If value exists but option not found in list (loading / no match), show displayValue or placeholder
-                    if (displayValue) return displayValue;
-                    if (value && value !== "none") return value;
-                    return placeholder;
-                  })()}
-          </div>
-          <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className={cn("w-(--radix-popover-trigger-width) p-1.5 min-w-[240px]", popoverClassName)}>
-        <div className="relative flex items-center border-b border-border pb-1.5 mb-1.5">
-          <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+    <TooltipProvider delayDuration={200}>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            type="button"
+            disabled={disabled || isLoading}
+            className={cn(
+              "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm hover:border-border/80 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer transition-all duration-200 ease-out min-w-0 overflow-hidden",
+              !value && "text-muted-foreground",
+              className
+            )}
+          >
+            {hasSelectedValue ? (
+              <Tooltip delayDuration={200} open={isOpen ? false : undefined}>
+                <TooltipTrigger asChild>
+                  <div className="flex-1 min-w-0 truncate pr-2 text-left">
+                    {isMulti
+                      ? selectedLabel
+                      : (() => {
+                          const foundOpt = options.find((opt) => getOptionValue(opt) === value);
+                          if (foundOpt) {
+                            if (renderValue) return renderValue(foundOpt);
+                            const isFree =
+                              typeof foundOpt === "object" &&
+                              foundOpt !== null &&
+                              (foundOpt.isFree || foundOpt.is_free);
+                            return (
+                              <span className="flex items-center gap-1.5 truncate">
+                                <span className="truncate">{getOptionLabel(foundOpt)}</span>
+                                {isFree && (
+                                  <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
+                                    Free
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          }
+                          if (displayValue) return displayValue;
+                          if (value && value !== "none") return value;
+                          return placeholder;
+                        })()}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="z-[100] max-w-sm break-all text-xs font-semibold">
+                  {selectedLabel}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <div className="flex-1 min-w-0 truncate pr-2 text-left">
+                {isLoading ? "Loading..." : placeholder}
+              </div>
+            )}
+            <ChevronDown className="h-4 w-4 opacity-50 ml-2 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className={cn("w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-1.5 min-w-[240px] overflow-hidden", popoverClassName)}>
+        <div className="relative flex items-center border-b border-border pb-1.5 mb-1.5 min-w-0 w-full">
+          <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground shrink-0" />
           <input
             type="text"
             name="search-query"
@@ -214,7 +251,7 @@ export function SearchableSelect({
               setSearchQuery(val);
               onSearchChange?.(val);
             }}
-            className="w-full pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground transition-all duration-200 focus:pl-10"
+            className="w-full min-w-0 pl-9 pr-7 py-2 bg-transparent text-sm outline-none placeholder:text-muted-foreground transition-all duration-200 focus:pl-10"
           />
           {searchQuery && (
             <button
@@ -223,7 +260,7 @@ export function SearchableSelect({
                 setSearchQuery("");
                 onSearchChange?.("");
               }}
-              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-all duration-150"
+              className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted outline-none transition-all duration-150 shrink-0"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -231,7 +268,7 @@ export function SearchableSelect({
         </div>
 
         <div 
-          className="max-h-[250px] overflow-y-auto space-y-0.5 custom-scrollbar"
+          className="max-h-[250px] overflow-y-auto overflow-x-hidden space-y-0.5 custom-scrollbar min-w-0 w-full"
           onWheelCapture={(e) => e.stopPropagation()}
           onTouchMoveCapture={(e) => e.stopPropagation()}
         >
@@ -246,12 +283,12 @@ export function SearchableSelect({
                 <div
                   key={optValue || i}
                   className={cn(
-                    "w-full flex items-center justify-between group text-xs font-semibold hover:bg-muted/70 rounded-lg transition-all duration-150 active:scale-[0.99]",
+                    "w-full min-w-0 flex items-center justify-between group text-xs font-semibold hover:bg-muted/70 rounded-lg transition-all duration-150 active:scale-[0.99]",
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"
                   )}
                 >
                   {editingValue === optValue ? (
-                    <div className="flex-1 flex items-center gap-1.5 px-3 py-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex-1 min-w-0 flex items-center gap-1.5 px-3 py-1" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="text"
                         value={editInputValue}
@@ -262,7 +299,7 @@ export function SearchableSelect({
                           }
                           setEditInputValue(val);
                         }}
-                        className="flex-1 px-2 py-1 text-xs border border-primary rounded-lg bg-card outline-none"
+                        className="flex-1 min-w-0 px-2 py-1 text-xs border border-primary rounded-lg bg-card outline-none"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -275,7 +312,7 @@ export function SearchableSelect({
                       <button
                         type="button"
                         onClick={() => handleSaveEdit(optValue)}
-                        className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        className="p-1 text-green-600 hover:bg-green-50 rounded shrink-0"
                         title="Save"
                       >
                         <Check className="h-3.5 w-3.5" />
@@ -283,7 +320,7 @@ export function SearchableSelect({
                       <button
                         type="button"
                         onClick={() => setEditingValue(null)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded shrink-0"
                         title="Cancel"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -291,31 +328,38 @@ export function SearchableSelect({
                     </div>
                   ) : (
                     <>
-                      <button
-                        type="button"
-                        disabled={typeof opt === "object" && opt !== null ? !!opt.disabled : false}
-                        onClick={() => handleSelect(optValue)}
-                        className={cn(
-                          "flex-1 text-left flex items-center justify-between px-3 py-2 outline-none transition-colors duration-150",
-                          typeof opt === "object" && opt !== null && opt.disabled
-                            ? "cursor-not-allowed opacity-40 bg-muted/20"
-                            : "cursor-pointer bg-transparent"
-                        )}
-                      >
-                        {renderOption ? (
-                          renderOption(opt)
-                        ) : (
-                          <span className="truncate pr-2 flex items-center gap-1.5">
-                            <span>{optLabel}</span>
-                            {typeof opt === "object" && opt !== null && (opt.isFree || opt.is_free) && (
-                              <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
-                                Free
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={typeof opt === "object" && opt !== null ? !!opt.disabled : false}
+                            onClick={() => handleSelect(optValue)}
+                            className={cn(
+                              "flex-1 min-w-0 text-left flex items-center justify-between px-3 py-2 outline-none transition-colors duration-150",
+                              typeof opt === "object" && opt !== null && opt.disabled
+                                ? "cursor-not-allowed opacity-40 bg-muted/20"
+                                : "cursor-pointer bg-transparent"
+                            )}
+                          >
+                            {renderOption ? (
+                              renderOption(opt)
+                            ) : (
+                              <span className="truncate pr-2 flex items-center gap-1.5 min-w-0 flex-1">
+                                <span className="truncate">{optLabel}</span>
+                                {typeof opt === "object" && opt !== null && (opt.isFree || opt.is_free) && (
+                                  <span className="bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border border-green-200/50 shrink-0">
+                                    Free
+                                  </span>
+                                )}
                               </span>
                             )}
-                          </span>
-                        )}
-                        {isSelected && <Check className="h-4 w-4 text-primary shrink-0 ml-2" />}
-                      </button>
+                            {isSelected && <Check className="h-4 w-4 text-primary shrink-0 ml-2" />}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="z-[100] max-w-sm break-all text-xs font-semibold">
+                          {optLabel}
+                        </TooltipContent>
+                      </Tooltip>
                       {onEditOption && optValue !== "none" && optValue !== "" && !(typeof opt === "object" && opt !== null && (opt.fromPlanBenefit || opt.from_plan_benefit || opt.isFree || opt.is_free)) && (
                         <button
                           type="button"
@@ -363,21 +407,30 @@ export function SearchableSelect({
         </div>
 
         {onCreateOption && !exactMatchExists && searchQuery.trim().length >= 2 && (
-          <div className="border-t border-border/60 mt-1.5 pt-1.5 px-0.5">
-            <button
-              type="button"
-              disabled={isCreating}
-              onClick={handleCreate}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/20 text-primary font-semibold text-xs cursor-pointer transition-all disabled:opacity-50"
-            >
-              <span className="flex items-center gap-1.5">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{createLabel} "{searchQuery.trim()}"</span>
-              </span>
-            </button>
+          <div className="border-t border-border/60 mt-1.5 pt-1.5 px-0.5 w-full min-w-0">
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isCreating}
+                  onClick={handleCreate}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/20 text-primary font-semibold text-xs cursor-pointer transition-all disabled:opacity-50 min-w-0 text-left overflow-hidden"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    <span className="font-normal opacity-80">{createLabel}</span>{" "}
+                    <span className="font-bold">"{searchQuery.trim()}"</span>
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="z-[100] max-w-sm break-all text-xs font-semibold">
+                {createLabel} "{searchQuery.trim()}"
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
       </PopoverContent>
     </Popover>
+  </TooltipProvider>
   );
 }

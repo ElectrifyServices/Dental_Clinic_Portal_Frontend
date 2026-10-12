@@ -6,7 +6,7 @@ import { User, Mail, Phone, Upload, Eye, EyeOff, Check, AlertTriangle } from 'lu
 import { LabeledField } from '@/components/ui';
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
-import { getPhonePlaceholder } from "@/utils/phoneUtils";
+import { getPhonePlaceholder, isoFromDialingCode, getPhoneMaxLength } from "@/utils/phoneUtils";
 
 interface Step1Props {
   formData: ApiAny;
@@ -125,10 +125,11 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           </div>
         </LabeledField>
 
-        <LabeledField label="Email Address" error={errors.email?.message}>
+        <LabeledField label="Email Address" required error={errors.email?.message}>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input type="email" name="email" value={formData.email} onChange={onChange}
+              required
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.email ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="sameer@clinic.com" />
           </div>
@@ -141,6 +142,11 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 value={formData.country_code || "+91"}
                 onChange={(val) => {
                   onChange({ target: { name: "country_code", value: val } });
+                  const newIso = isoFromDialingCode(val);
+                  const newMax = getPhoneMaxLength(newIso);
+                  if (formData.phone && formData.phone.length > newMax) {
+                    onChange({ target: { name: "phone", value: formData.phone.slice(0, newMax) } });
+                  }
                   clearPhoneError();
                 }}
                 className="h-11 rounded-xl"

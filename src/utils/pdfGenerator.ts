@@ -1527,6 +1527,325 @@ export const downloadCompletedTreatmentPDF = async (treatment: DynamicPayload) =
 };
 
 // ---------------------------------------------------------------------------
+// Medical Record / EMR History PDF
+// ---------------------------------------------------------------------------
+
+export interface MedicalRecordPDFItem {
+  id?: string;
+  title?: string;
+  content?: string;
+  date?: string;
+  category?: string;
+  doctorName?: string;
+  attachments?: DynamicPayload[];
+}
+
+export interface MedicalRecordPDFParams {
+  patientName: string;
+  patient?: {
+    id?: string;
+    patientName?: string;
+    name?: string;
+    phone?: string;
+    gender?: string;
+    date_of_birth?: string;
+    dob?: string;
+    patient_code?: string;
+    patientCode?: string;
+    country_code?: string;
+    countryCode?: string;
+    blood_group?: string;
+    bloodGroup?: string;
+    doctorName?: string;
+  };
+  recordType?: string;
+  timeline: MedicalRecordPDFItem[];
+  logoUrl?: string | null;
+}
+
+export const downloadMedicalRecordPDF = async ({
+  patientName,
+  patient = {},
+  recordType,
+  timeline = [],
+  logoUrl,
+}: MedicalRecordPDFParams) => {
+  const pdfContainer = makeOffscreenContainer();
+  const T = getBrandingTokens();
+  if (logoUrl) {
+    T.LOGO_URL = logoUrl;
+  }
+
+  const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
+  const specialization = T.DOCTOR_TITLE || "MDS Prosthodontist & Implantologist";
+
+  const resolvedPatientName = patientName || patient?.name || patient?.patientName || "Patient";
+  const patientId = patient?.id || "—";
+  const patientCode = patient?.patient_code || patient?.patientCode || patient?.code;
+  const displayPatientCode = patientCode || (patientId === "—" ? "—" : patientId.split("-")[0]);
+
+  const rawPhone =
+    patient?.phone ||
+    patient?.mobile ||
+    patient?.patientPhone ||
+    patient?.patient_phone ||
+    "";
+  const countryCode = patient?.country_code || patient?.countryCode || "+91";
+  const displayPhone =
+    rawPhone && rawPhone !== "—" && rawPhone !== "-"
+      ? formatPhoneWithCountryCode(rawPhone, countryCode)
+      : "—";
+
+  const rawGender = patient?.gender || "";
+  let displayGender = "—";
+  if (rawGender && rawGender !== "—" && rawGender !== "-") {
+    displayGender = rawGender.charAt(0).toUpperCase() + rawGender.slice(1).toLowerCase();
+  }
+
+  const rawDob = patient?.date_of_birth || patient?.dateOfBirth || patient?.dob;
+  let displayDob = "—";
+  if (rawDob && rawDob !== "—" && rawDob !== "-") {
+    try {
+      const d = new Date(rawDob);
+      if (!isNaN(d.getTime())) {
+        displayDob = d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      } else {
+        displayDob = String(rawDob);
+      }
+    } catch {
+      displayDob = String(rawDob);
+    }
+  }
+
+  let dobGenderCombined = "—";
+  if (displayDob !== "—" && displayGender !== "—") {
+    dobGenderCombined = `${displayDob} / ${displayGender}`;
+  } else if (displayDob !== "—") {
+    dobGenderCombined = displayDob;
+  } else if (displayGender !== "—") {
+    dobGenderCombined = displayGender;
+  }
+
+  const now = new Date();
+  const generatedDateStr = now.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const formattedRecordType = recordType
+    ? recordType.replace(/[-_]/g, " ").toUpperCase()
+    : "COMPLETE MEDICAL HISTORY";
+
+  const categories = [...new Set(timeline.map((t) => (t.category || "record").replace(/[-_]/g, " ").trim()))].filter(Boolean);
+  const categoriesCount = categories.length;
+
+  const formatDoctorName = (rawDoc?: string | null) => {
+    if (!rawDoc) return "—";
+    const trimmed = rawDoc.trim();
+    if (
+      !trimmed ||
+      trimmed === "-" ||
+      trimmed === "—" ||
+      trimmed === "N/A" ||
+      trimmed === "null" ||
+      trimmed === "undefined" ||
+      /^dr\.?\s*[-—]?$/i.test(trimmed)
+    ) {
+      return "—";
+    }
+    if (/^dr\.?\s+/i.test(trimmed)) {
+      return trimmed.replace(/^dr\.?\s+/i, "Dr. ");
+    }
+    return `Dr. ${trimmed}`;
+  };
+
+  const getHeader = () =>
+    getLetterhead(
+      `
+<div style="font-size: 12px; font-weight: 500; color: ${T.INK}; text-transform: uppercase; letter-spacing: 0.5px;">${resolvedPatientName}</div>
+<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 4px;">Patient Code: ${displayPatientCode}</div>
+<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px;">Phone: ${displayPhone}</div>
+${dobGenderCombined !== "—" ? `<div style="font-size: 11px; font-weight: 400; color: ${T.INK_MUTED}; margin-top: 2px;">DOB / Gender: ${dobGenderCombined}</div>` : ""}
+      `,
+      T,
+    );
+
+  const getPatientSummary = () => `
+<div style="padding: 10px 40px 14px 40px; background:${T.PANEL}; border-bottom: 1px solid ${T.LINE}; display:flex; justify-content:space-between; align-items:center;">
+  <div style="font-size:12px; font-weight:700; color:${T.BRAND}; text-transform:uppercase; letter-spacing:1px; font-family:'Inter', sans-serif;">
+    COMPLETE ELECTRONIC MEDICAL RECORD (EMR)
+  </div>
+  <div style="text-align:right; font-size:11px; color:${T.INK_MUTED}; font-weight:500;">
+    <span>Generated: ${generatedDateStr}</span>
+  </div>
+</div>
+<div style="padding: 0 40px;">
+  ${detailsGrid(
+    [
+      ["Patient Name", resolvedPatientName, "Patient Code", displayPatientCode],
+      ["Contact Phone", displayPhone, "DOB / Gender", dobGenderCombined],
+      ["Total Records", `${timeline.length} Entry(s)`, "Report Scope", formattedRecordType],
+    ],
+    T,
+  )}
+</div>
+  `;
+
+  const rowsHtml =
+    timeline.length > 0
+      ? timeline
+          .map((item, idx) => {
+            let itemDate = "—";
+            let itemTime = "";
+            if (item.date) {
+              try {
+                const d = new Date(item.date);
+                if (!isNaN(d.getTime())) {
+                  itemDate = d.toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  itemTime = d.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                }
+              } catch {
+                itemDate = item.date;
+              }
+            }
+
+            const rawCat = (item.category || "record").replace(/[-_]/g, " ").trim();
+            const categoryLabel = rawCat.replace(/\b\w/g, (c) => c.toUpperCase());
+            const rawTitle = (item.title || "").trim();
+
+            const normTitle = rawTitle.toLowerCase().replace(/[-_\s]+/g, "");
+            const normCat = rawCat.toLowerCase().replace(/[-_\s]+/g, "");
+            const isRedundantTitle =
+              !rawTitle ||
+              rawTitle === "—" ||
+              rawTitle === "-" ||
+              normTitle === normCat ||
+              normTitle === "recordentry" ||
+              normTitle === "appointmentvisit";
+
+            let cleanTitle = rawTitle;
+            if (!isRedundantTitle) {
+              cleanTitle = cleanTitle
+                .replace(new RegExp(`^${categoryLabel}\\s*[-–:]?\\s*`, "i"), "")
+                .replace(new RegExp(`^${rawCat.split(" ")[0]}\\s*[-–:]?\\s*`, "i"), "")
+                .trim();
+              if (!cleanTitle) cleanTitle = rawTitle;
+            }
+
+            const doctorName = formatDoctorName(item.doctorName);
+
+            const rawContent = (item.content || "").trim();
+            const hasContent =
+              rawContent &&
+              rawContent !== "—" &&
+              rawContent !== "-" &&
+              rawContent !== "N/A" &&
+              rawContent !== "null";
+            const contentText = hasContent
+              ? rawContent
+              : '<span style="color:#94a3b8; font-style:italic; font-size:10.5px;">No clinical notes recorded</span>';
+
+            const attachmentsCount = Array.isArray(item.attachments) ? item.attachments.length : 0;
+
+            return `
+<tr style="border-bottom:1px solid #eef0f1; ${idx % 2 === 0 ? "background:#ffffff;" : `background:${T.PANEL};`}" data-avoid-break="true">
+  <td style="padding:10px 12px; vertical-align:top; width:16%;">
+    <div style="font-size:11px; font-weight:700; color:${T.INK}; white-space:nowrap;">${itemDate}</div>
+    ${itemTime ? `<div style="font-size:10px; color:${T.INK_MUTED}; margin-top:2px; font-weight:500;">${itemTime}</div>` : ""}
+  </td>
+  <td style="padding:10px 12px; vertical-align:top; width:26%;">
+    <span style="display:inline-flex; align-items:center; justify-content:center; font-size:8.5px; font-weight:700; line-height:1; color:${T.BRAND}; text-transform:uppercase; letter-spacing:0.4px; background:${T.PANEL}; border:1px solid ${T.LINE}; border-radius:4px; padding:3.5px 7px; margin-bottom:${isRedundantTitle ? "0" : "4px"}; vertical-align:middle; box-sizing:border-box;">
+      ${categoryLabel}
+    </span>
+    ${!isRedundantTitle ? `<div style="font-size:11px; font-weight:600; color:${T.INK}; line-height:1.35;">${cleanTitle}</div>` : ""}
+  </td>
+  <td style="padding:10px 12px; vertical-align:top; width:20%;">
+    <div style="font-size:11px; font-weight:500; color:${T.INK_MUTED};">${doctorName}</div>
+  </td>
+  <td style="padding:10px 12px; vertical-align:top; width:38%;">
+    <div style="font-size:11px; line-height:1.55; color:${T.INK}; word-break:break-word; white-space:pre-wrap;">${contentText}</div>
+    ${
+      attachmentsCount > 0
+        ? `<div style="margin-top:4px; font-size:10px; font-weight:600; color:${T.BRAND};">📎 ${attachmentsCount} Attachment(s)</div>`
+        : ""
+    }
+  </td>
+</tr>
+            `;
+          })
+          .join("")
+      : `
+<tr>
+  <td colspan="4" style="padding:24px; text-align:center; color:#94a3b8; font-style:italic;">
+    No medical history records found for this patient.
+  </td>
+</tr>
+      `;
+
+  const getTimelineSection = () => `
+<div style="padding: 16px 40px 12px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1.5px solid ${T.LINE}; padding-bottom:6px;">
+    <div style="font-size:11px; font-weight:700; color:${T.BRAND}; text-transform:uppercase; letter-spacing:0.8px;">
+      Medical History Timeline (${timeline.length} Record${timeline.length !== 1 ? "s" : ""})
+    </div>
+    <div style="font-size:10px; font-weight:600; color:${T.INK_MUTED};">
+      ${categoriesCount} Categories
+    </div>
+  </div>
+  <table style="width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px; border:1px solid ${T.LINE};">
+    <thead>
+      <tr style="background:${T.PANEL}; border-bottom:2px solid ${T.LINE};">
+        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:16%;">Date</th>
+        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:26%;">Category &amp; Title</th>
+        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:20%;">Attending Doctor</th>
+        <th style="padding:8px 12px; text-align:left; font-size:10px; font-weight:700; color:${T.INK}; text-transform:uppercase; letter-spacing:0.4px; width:38%;">Clinical Notes / Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
+</div>
+  `;
+
+  const getFooter = () =>
+    getBrandFooter(
+      `
+<div style="text-align:center;">
+  <div style="width:200px; border-bottom:1px solid ${T.LINE}; margin-bottom:8px;"></div>
+  <div style="font-size:12px; font-weight:600; color:${T.INK};">${displayDoctorName}</div>
+  <div style="font-size:11px; color:${T.INK_MUTED}; font-weight:400;">${specialization}</div>
+  <div style="font-size:10px; color:#93999e; margin-top:2px;">Authorized Signatory / Clinic Seal</div>
+</div>
+      `,
+      false,
+      T,
+    );
+
+  let htmlContent = `<div style="width:794px; background:#fff; margin:0; padding:0; font-family: 'Inter', sans-serif; color:${T.INK}; display:flex; flex-direction:column; min-height:auto; box-sizing:border-box;"><div data-header="true"><div style="height:20px; background:${T.BRAND}; width:100%;"></div>${getHeader()}</div>`;
+  htmlContent += getPatientSummary() + getTimelineSection() + getFooter() + "</div>";
+
+  pdfContainer.innerHTML = htmlContent;
+
+  const safePatient = resolvedPatientName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  const outputFileName = `Medical_Record_${safePatient}_${now.toISOString().split("T")[0]}.pdf`;
+
+  await renderContainerToPDF(pdfContainer, outputFileName);
+};
+
+// ---------------------------------------------------------------------------
 // Invoice / consolidated statement
 // ---------------------------------------------------------------------------
 

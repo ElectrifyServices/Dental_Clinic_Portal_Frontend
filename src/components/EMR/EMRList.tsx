@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
-import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText } from 'lucide-react';
+import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download as _Download, FileText } from 'lucide-react';
 import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 interface EMRRecord {
@@ -81,7 +81,7 @@ export function EMRList({
   onTypeFilterChange,
   onAddRecord,
   onViewRecord,
-  onExportRecord,
+  onExportRecord: _onExportRecord,
   page,
   onPageChange,
   limit,
@@ -136,32 +136,30 @@ export function EMRList({
           <Button variant="outline" size="icon-sm" onClick={() => onViewRecord(r)} title="View Record">
             <Eye className="w-4 h-4 text-primary" />
           </Button>
-          <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Download Medical History PDF">
+          {/* <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Download Medical History PDF">
             <Download className="w-4 h-4 text-muted-foreground hover:text-primary" />
-          </Button>
+          </Button> */}
         </div>
       )
     }
   ];
 
-  const totalRecordsCount = records.reduce((sum, r) => sum + (r.totalRecords || 1), 0);
-
-  const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const itemsPerPage = limit ?? 10;
-  
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const currentPage = page !== undefined ? page : localCurrentPage;
   const setCurrentPage = onPageChange || setLocalCurrentPage;
 
-  const displayTotalPages = totalPages !== undefined ? totalPages : Math.ceil(records.length / itemsPerPage);
   const displayTotalItems = totalItems !== undefined ? totalItems : records.length;
+  const displayTotalPages = totalPages !== undefined ? totalPages : Math.ceil(records.length / itemsPerPage);
+  const totalRecordsCount = displayTotalItems;
 
   const paginatedRecords = (page !== undefined && limit !== undefined)
     ? records
     : records.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
+    <div className="space-y-4">
+      <div>
         <PageHeader
           title="Medical Records"
           subtitle={`${totalRecordsCount} records across all patients`}
@@ -173,21 +171,21 @@ export function EMRList({
         />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm shrink-0">
+      <div className="flex flex-col md:flex-row gap-3 items-center bg-card p-3 sm:p-3.5 rounded-2xl border border-border shadow-xs">
         <SearchInput
           value={search}
           onChange={onSearchChange}
           placeholder="Search by patient, title or content…"
           className="w-full md:flex-1"
         />
-        <div className="w-full md:w-[240px] shrink-0">
+        <div className="w-full md:w-[220px] shrink-0">
           <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-            <SelectTrigger className="w-full h-11 bg-card border-border rounded-xl font-medium">
+            <SelectTrigger className="w-full h-10 bg-card border-border rounded-xl font-medium text-xs">
               <SelectValue placeholder="Filter by Type" />
             </SelectTrigger>
             <SelectContent>
               {TYPE_FILTERS.map((f) => (
-                <SelectItem key={f.key} value={f.key} className="font-medium">
+                <SelectItem key={f.key} value={f.key} className="font-medium text-xs">
                   {f.label}
                 </SelectItem>
               ))}
@@ -196,31 +194,29 @@ export function EMRList({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
-        <DataTable
-          className="flex-1 min-h-0"
-          columns={columns}
-          data={paginatedRecords}
-          rowKey={(r) => r.id}
-          emptyIcon={<FileText className="w-12 h-12 text-muted-foreground/40" />}
-          emptyTitle="No records found"
-          emptySubtitle="Add a new EMR record to get started."
-          footer={
-            (displayTotalPages > 1 || onLimitChange !== undefined) ? (
-              <div className="py-4 px-6 border-t border-border/50 bg-muted/20">
-                <Pagination
-                  page={currentPage}
-                  totalPages={displayTotalPages}
-                  totalItems={displayTotalItems}
-                  perPage={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                  onPerPageChange={onLimitChange}
-                />
-              </div>
-            ) : undefined
-          }
-        />
-      </div>
+      <DataTable
+        compact
+        columns={columns}
+        data={paginatedRecords}
+        rowKey={(r) => r.id}
+        emptyIcon={<FileText className="w-10 h-10 text-muted-foreground/40" />}
+        emptyTitle="No records found"
+        emptySubtitle="Add a new EMR record to get started."
+        footer={
+          (displayTotalPages > 1 || onLimitChange !== undefined) ? (
+            <div className="py-3 px-6 border-t border-border/50 bg-muted/20">
+              <Pagination
+                page={currentPage}
+                totalPages={displayTotalPages}
+                totalItems={displayTotalItems}
+                perPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onPerPageChange={onLimitChange}
+              />
+            </div>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

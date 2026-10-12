@@ -56,11 +56,11 @@ function Calendar({
       captionLayout={captionLayout}
       startMonth={startMonth}
       endMonth={endMonth}
-      className={cn("p-1", className)}
+      className={cn("p-2", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row gap-2",
+        months: "flex flex-col sm:flex-row gap-3",
         month: "flex flex-col gap-3",
-        month_caption: "flex justify-center pt-1 relative items-center w-full",
+        month_caption: "flex justify-center pt-1.5 pb-1 relative items-center w-full",
         caption_label: "text-sm font-semibold text-foreground",
         dropdowns: "flex items-center gap-1.5",
         nav: "flex items-center justify-between absolute inset-x-0 top-0.5 z-10",
@@ -73,10 +73,10 @@ function Calendar({
           "size-7 bg-transparent p-0 text-muted-foreground hover:text-foreground"
         ),
         month_grid: "w-full border-collapse",
-        weekdays: "flex",
-        weekday: "text-muted-foreground rounded-md w-9 font-semibold text-[11px] uppercase tracking-wide",
-        week: "flex w-full mt-1",
-        day: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+        weekdays: "flex gap-2",
+        weekday: "text-muted-foreground rounded-md w-9 text-center font-semibold text-[11px] uppercase tracking-wide",
+        week: "flex w-full mt-2 gap-2",
+        day: "size-9 p-0 text-center text-sm relative flex items-center justify-center focus-within:relative focus-within:z-20",
         day_button: cn(
           "size-9 rounded-md p-0 font-medium text-foreground transition-colors duration-150",
           "hover:bg-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary"
