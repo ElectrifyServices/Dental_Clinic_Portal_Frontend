@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Trash2, CheckCircle, Users, Banknote, Award, User } from 'lucide-react';
 import { CorporatePlan, PlanBenefit, CorporatePlanTier } from '../../../types';
 import { TREATMENT_LABELS, PLAN_COLORS } from '../../../utils/corporatePlan';
-import { Modal, Button, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
+import { Modal, Button, ConfirmModal, LabeledField, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, Loading, Textarea } from '../../ui';
 import { mkForm, mkBenefit, autoDesc } from './constants';
 import { useFormConfig } from '../../../hooks/useFormConfig';
 import { useCreateCorporatePlanMutation } from '../../../hooks/corporate/useCreateCorporatePlanMutation';
@@ -68,6 +68,55 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const [form, setForm] = useState(mkForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [coveragePreset, setCoveragePreset] = useState<CoveragePreset>('self');
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const checkHasUnsavedChanges = (): boolean => {
+    if (!editing) {
+      const hasEntered = Boolean(
+        form.name?.trim() ||
+        form.code?.trim() ||
+        form.companyName?.trim() ||
+        form.description?.trim() ||
+        form.planCategory ||
+        form.maxMembers !== undefined ||
+        form.annualFee !== undefined ||
+        form.contactName?.trim() ||
+        form.contactPhone?.trim() ||
+        form.contactEmail?.trim() ||
+        form.maxDependents > 0 ||
+        form.benefits.length > 1 ||
+        form.benefits[0]?.type !== 'flat_discount' ||
+        form.benefits[0]?.value !== 20
+      );
+      if (hasEntered) return true;
+    } else {
+      if (
+        form.name !== editing.name ||
+        form.code !== editing.code ||
+        form.companyName !== editing.companyName ||
+        form.description !== (editing.description || '') ||
+        form.planCategory !== (editing.planCategory || 'corporate') ||
+        form.annualFee !== editing.annualFee ||
+        form.maxMembers !== editing.maxMembers ||
+        form.maxDependents !== (editing.maxDependents ?? 0) ||
+        (form.contactName || '') !== ((editing as ApiAny).contactName || '') ||
+        (form.contactPhone || '') !== ((editing as ApiAny).contactPhone || '') ||
+        (form.contactEmail || '') !== ((editing as ApiAny).contactEmail || '')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleRequestClose = () => {
+    if (showExitConfirm) return;
+    if (checkHasUnsavedChanges()) {
+      setShowExitConfirm(true);
+    } else {
+      setShowForm(false);
+    }
+  };
 
   const { phoneError, handlePhoneChange: handleCorporatePhoneChange, validateOnSubmit: validatePhone, maxLength, countryIso, clearPhoneError } = usePhoneValidation({
     dialingCode: form.contactCountryCode || "+91",
@@ -382,23 +431,24 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
   const isSaving = createPlanMutation.isPending || updatePlanMutation.isPending;
 
   return (
-    <Modal
-      title={editing ? 'Edit Membership Plan' : 'Create Membership Plan'}
-      subtitle={editing ? `Editing "${form.name}"` : 'Set up a new membership plan for your clinic'}
-      onClose={() => setShowForm(false)}
-      size="5xl"
-      bodyClassName="p-3 sm:p-4"
-      icon={<Award className="w-4 h-4" />}
-      footer={
-        <div className="flex flex-col gap-3 w-full">
-          {errors.submit && (
-            <p className="text-destructive text-xs font-semibold px-4 py-2.5 bg-destructive/5 rounded-xl border border-destructive/20">
-              {errors.submit}
-            </p>
-          )}
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="gap-2" disabled={isSaving}>
+    <>
+      <Modal
+        title={editing ? 'Edit Membership Plan' : 'Create Membership Plan'}
+        subtitle={editing ? `Editing "${form.name}"` : 'Set up a new membership plan for your clinic'}
+        onClose={handleRequestClose}
+        size="5xl"
+        bodyClassName="p-3 sm:p-4"
+        icon={<Award className="w-4 h-4" />}
+        footer={
+          <div className="flex flex-col gap-3 w-full">
+            {errors.submit && (
+              <p className="text-destructive text-xs font-semibold px-4 py-2.5 bg-destructive/5 rounded-xl border border-destructive/20">
+                {errors.submit}
+              </p>
+            )}
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={handleRequestClose}>Cancel</Button>
+              <Button onClick={handleSave} className="gap-2" disabled={isSaving}>
               {isSaving
                 ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 : <><CheckCircle className="w-4 h-4" /> {editing ? 'Save Changes' : 'Create Plan'}</>
@@ -890,5 +940,21 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
         </section>
       </div>
     </Modal>
+
+    {showExitConfirm && (
+      <ConfirmModal
+        title="Unsaved Changes"
+        message="You have unsaved changes in this membership plan form. Are you sure you want to close without saving? All the entered details will be lost."
+        confirmLabel="Discard & Exit"
+        cancelLabel="Keep Editing"
+        variant="danger"
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          setShowForm(false);
+        }}
+        onCancel={() => setShowExitConfirm(false)}
+      />
+    )}
+  </>
   );
 }

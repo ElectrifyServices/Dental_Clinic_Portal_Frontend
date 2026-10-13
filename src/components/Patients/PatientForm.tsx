@@ -9,7 +9,7 @@ import { Step4Review } from "./PatientForm/Step4Review";
 import { useCorporatePlansQuery } from "@/hooks/corporate/useCorporatePlansQuery";
 import { useMedicalHistoriesQuery } from "@/hooks/patients/useMedicalHistoriesQuery";
 import { useAllergiesQuery } from "@/hooks/patients/useAllergiesQuery";
-import { Button, Modal } from "@/components/ui";
+import { Button, Modal, ConfirmModal } from "@/components/ui";
 
 interface PatientFormProps {
   onClose: () => void;
@@ -101,6 +101,59 @@ export function PatientForm({
     }
   }, [patient]);
 
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const checkHasUnsavedChanges = (): boolean => {
+    if (step > 1) return true;
+    if (selectedMedicalHistory.length > 0 && (!patient || selectedMedicalHistory.length !== (patient?.medicalHistories?.length ?? 0))) return true;
+    if (selectedAllergies.length > 0 && (!patient || selectedAllergies.length !== (patient?.allergies?.length ?? 0))) return true;
+
+    if (!patient) {
+      const hasEnteredDetails = Boolean(
+        formData.name?.trim() ||
+        formData.phone?.trim() ||
+        formData.email?.trim() ||
+        formData.dateOfBirth ||
+        formData.gender ||
+        formData.bloodGroup ||
+        formData.address?.trim() ||
+        formData.occupation?.trim() ||
+        formData.maritalStatus ||
+        formData.corporatePlanId ||
+        formData.avatar ||
+        formData.rawAvatarFile ||
+        formData.patientSignature ||
+        formData.rawConsentFormFile ||
+        (formData.dentalFiles && formData.dentalFiles.length > 0) ||
+        (formData.rawDentalFiles && formData.rawDentalFiles.length > 0)
+      );
+      if (hasEnteredDetails) return true;
+    } else {
+      if (
+        formData.name !== (patient.name || patient.full_name || "") ||
+        formData.phone !== (patient.phone || patient.mobile || "") ||
+        formData.email !== (patient.email || "") ||
+        formData.address !== (patient.address || "") ||
+        formData.occupation !== (patient.occupation || "") ||
+        formData.rawAvatarFile ||
+        formData.rawConsentFormFile ||
+        (formData.rawDentalFiles && formData.rawDentalFiles.length > 0)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleRequestClose = () => {
+    if (showExitConfirm) return;
+    if (checkHasUnsavedChanges()) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
 
 
   const requiredErrors: string[] = [];
@@ -159,26 +212,27 @@ export function PatientForm({
   };
 
   return (
-    <Modal
-      title={
-        patient && patient.id
-          ? "Edit Patient Information"
-          : "New Patient Registration"
-      }
-      subtitle="Complete patient registration"
-      onClose={onClose}
-      size="5xl"
-      icon={<Calendar className="w-5 h-5" />}
-      footer={
-        <div className="flex justify-between items-center w-full">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={step === 1 ? onClose : () => handlePrevious(step, setStep)}
-            className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
-          >
-            {step === 1 ? "Cancel" : "Previous Step"}
-          </Button>
+    <>
+      <Modal
+        title={
+          patient && patient.id
+            ? "Edit Patient Information"
+            : "New Patient Registration"
+        }
+        subtitle="Complete patient registration"
+        onClose={handleRequestClose}
+        size="5xl"
+        icon={<Calendar className="w-5 h-5" />}
+        footer={
+          <div className="flex justify-between items-center w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={step === 1 ? handleRequestClose : () => handlePrevious(step, setStep)}
+              className="text-foreground border-gray-300 bg-white hover:bg-muted/50 shadow-sm font-bold"
+            >
+              {step === 1 ? "Cancel" : "Previous Step"}
+            </Button>
 
           <div className="flex gap-3">
             {step < 4 ? (
@@ -319,5 +373,21 @@ export function PatientForm({
         )}
       </div>
     </Modal>
+
+    {showExitConfirm && (
+      <ConfirmModal
+        title="Unsaved Changes"
+        message="You have unsaved changes in this patient form. Are you sure you want to close without saving? All the entered details will be lost."
+        confirmLabel="Discard & Exit"
+        cancelLabel="Keep Editing"
+        variant="danger"
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          onClose();
+        }}
+        onCancel={() => setShowExitConfirm(false)}
+      />
+    )}
+  </>
   );
 }

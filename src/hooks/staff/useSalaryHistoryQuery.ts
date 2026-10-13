@@ -6,8 +6,12 @@ export function useSalaryHistoryQuery(staffId: string | undefined) {
     queryKey: ["salaryHistory", staffId],
     endpoint: `/staffPaymentHistory/${staffId}`,
     method: "post",
+    data: {},
     options: {
       enabled: !!staffId,
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
     },
   });
 }

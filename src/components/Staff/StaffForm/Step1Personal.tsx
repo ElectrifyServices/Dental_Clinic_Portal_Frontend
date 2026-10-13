@@ -110,6 +110,10 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
         </div>
       </div>
 
+      {/* Hidden dummy fields to prevent aggressive browser password autofill */}
+      <input type="text" name="fake_username_remembered" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="username" />
+      <input type="password" name="fake_password_remembered" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="current-password" />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <LabeledField label="Full Name" required error={errors.name?.message}>
           <div className="relative">
@@ -119,6 +123,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 e.target.value = e.target.value.replace(/\d/g, "");
                 onChange(e);
               }}
+              autoComplete="off"
               required
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.name ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="e.g. Dr. Sameer Khan" />
@@ -129,6 +134,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input type="email" name="email" value={formData.email} onChange={onChange}
+              autoComplete="off"
               required
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.email ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="sameer@clinic.com" />
@@ -156,6 +162,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 <Input type="tel" name="phone" value={formData.phone}
                   onChange={handlePhoneChange}
                   maxLength={maxLength}
+                  autoComplete="off"
                   required
                   className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${(errors.phone || phoneError) ? 'border-destructive ring-destructive/20' : ''}`}
                   placeholder={phonePlaceholder} />
@@ -179,6 +186,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 name="password"
                 value={formData.password}
                 onChange={onChange}
+                autoComplete="new-password"
                 required
                 className={`w-full px-4 pr-24 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"
@@ -252,6 +260,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={onChange}
+                autoComplete="new-password"
                 required
                 className={`w-full px-4 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"

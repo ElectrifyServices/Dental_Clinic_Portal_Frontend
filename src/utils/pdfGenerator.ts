@@ -1983,6 +1983,13 @@ export const generateInvoicePDF = async (invoice: DynamicPayload, patient: Dynam
 
   const memberId = String(findMemberId()).trim() || "N/A";
 
+  const hasDiscount =
+    discountAmount > 0 ||
+    discountPct > 0 ||
+    items.some(
+      (it: InvoiceItem) => Number(it.discount_value || it.item_discount || 0) > 0,
+    );
+
   const itemsHtml = items
     .map((item: InvoiceItem, i: number) => {
       const itemType = item.item_type || "Service";
