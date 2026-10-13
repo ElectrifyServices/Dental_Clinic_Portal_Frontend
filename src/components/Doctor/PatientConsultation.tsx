@@ -5,7 +5,7 @@ import {
   downloadConsultationPDF,
   PDFReportType,
 } from "../../utils/pdfGenerator";
-import { Modal, Button, Input, Label } from "@/components/ui";
+import { Modal, Button, ConfirmModal, Input, Label } from "@/components/ui";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 import { formatPhoneWithCountryCode, isoFromDialingCode, getPhoneMaxLength, getPhonePlaceholder, sanitizePhoneInput } from "../../utils/phoneUtils";
@@ -394,6 +394,65 @@ export function PatientConsultation({
   const [selectedSlot, setSelectedSlot] = useState<string | null>(
     initialData?.selectedSlot || null
   );
+
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const checkHasUnsavedChanges = (): boolean => {
+    if (isCompleted) return false;
+
+    // Check tooth chart
+    if (toothChartState && Object.keys(toothChartState).length > 0) return true;
+
+    // Check uploaded files/images
+    if (consultationData.rawImages && consultationData.rawImages.length > 0) return true;
+    if (consultationData.rawXrays && consultationData.rawXrays.length > 0) return true;
+    if (consultationData.images && consultationData.images.length > (initialData?.consultationData?.images?.length || 0)) return true;
+
+    // Check direct patient info
+    if ((patient as ApiAny).isDirect && (directPatientName.trim() || directPatientPhone.trim())) {
+      return true;
+    }
+
+    // Check text fields
+    if (
+      consultationData.observations?.trim() ||
+      consultationData.diagnosis?.trim() ||
+      consultationData.treatmentPlan?.trim() ||
+      consultationData.recommendations?.trim() ||
+      consultationData.consultationNotes?.trim() ||
+      consultationData.bp?.trim() ||
+      consultationData.height?.trim() ||
+      consultationData.weight?.trim() ||
+      consultationData.tests?.trim()
+    ) {
+      return true;
+    }
+
+    // Check prescriptions
+    if (consultationData.prescriptions?.some((p: ApiAny) => p.medicine?.trim())) {
+      return true;
+    }
+
+    // Check treatment plans
+    if (consultationData.treatmentPlans?.some((p: ApiAny) => p.tooth?.trim() || p.procedure?.trim())) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleRequestClose = () => {
+    if (isCompleted) {
+      onClose();
+      return;
+    }
+    if (showExitConfirm) return;
+    if (checkHasUnsavedChanges()) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
 
   const patientDOB = patient.patientHistory?.dateOfBirth || (patient as ApiAny).dateOfBirth || "";
   const calculatedAge = React.useMemo(() => {
@@ -890,48 +949,49 @@ export function PatientConsultation({
   };
 
   return (
-    <Modal
-      title={
-        viewMode === "history"
-          ? `Previous Consultations: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
-          : `${(patient as ApiAny).isEditMode ? "Edit Consultation" : "Consultation"}: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
-      }
-      subtitle={
-        viewMode === "history"
-          ? "Complete dental checkup records and prescription history"
-          : undefined
-      }
-      onClose={onClose}
-      size="5xl"
-      icon={
-        viewMode === "history" ? (
-          <History className="w-5 h-5 text-primary" />
-        ) : (
-          <CheckCircle className="w-5 h-5 text-primary" />
-        )
-      }
-      footer={
-        isCompleted ? null : viewMode === "history" ? (
-          <div className="flex justify-between items-center w-full">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setViewMode("form")}
-              className="gap-2 font-bold"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back to Consultation
-            </Button>
-          </div>
-        ) : (
-          <div className="flex justify-end space-x-4 w-full">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="text-muted-foreground"
-            >
-              Cancel
-            </Button>
+    <>
+      <Modal
+        title={
+          viewMode === "history"
+            ? `Previous Consultations: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+            : `${(patient as ApiAny).isEditMode ? "Edit Consultation" : "Consultation"}: ${(patient as ApiAny).isDirect ? (directPatientName || "New Patient") : patient.patientName}`
+        }
+        subtitle={
+          viewMode === "history"
+            ? "Complete dental checkup records and prescription history"
+            : undefined
+        }
+        onClose={handleRequestClose}
+        size="5xl"
+        icon={
+          viewMode === "history" ? (
+            <History className="w-5 h-5 text-primary" />
+          ) : (
+            <CheckCircle className="w-5 h-5 text-primary" />
+          )
+        }
+        footer={
+          isCompleted ? null : viewMode === "history" ? (
+            <div className="flex justify-between items-center w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViewMode("form")}
+                className="gap-2 font-bold"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Consultation
+              </Button>
+            </div>
+          ) : (
+            <div className="flex justify-end space-x-4 w-full">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleRequestClose}
+                className="text-muted-foreground"
+              >
+                Cancel
+              </Button>
             <Button
               type="submit"
               disabled={loading}
@@ -1195,5 +1255,21 @@ export function PatientConsultation({
         )}
       </div>
     </Modal>
+
+    {showExitConfirm && (
+      <ConfirmModal
+        title="Unsaved Changes"
+        message="You have unsaved changes in this consultation. Are you sure you want to close without saving? All the entered details will be lost."
+        confirmLabel="Discard & Exit"
+        cancelLabel="Keep Editing"
+        variant="danger"
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          onClose();
+        }}
+        onCancel={() => setShowExitConfirm(false)}
+      />
+    )}
+  </>
   );
 }

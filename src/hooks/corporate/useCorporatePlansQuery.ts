@@ -18,6 +18,7 @@ export interface CorporatePlansParams {
   planType?: string;
   staleTime?: number;
   refetchOnMount?: boolean | 'always';
+  filters?: Record<string, ApiAny>;
 }
 
 export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
@@ -31,8 +32,10 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     body.search = params.search;
   }
 
-  if (params.status && params.status !== "ALL" || params.planType && params.planType !== "ALL") {
-    body.filters = {};
+  if (params.filters || (params.status && params.status !== "ALL") || (params.planType && params.planType !== "ALL")) {
+    body.filters = {
+      ...(params.filters || {}),
+    };
     if (params.status && params.status !== "ALL") {
       body.filters.status = [params.status];
     }

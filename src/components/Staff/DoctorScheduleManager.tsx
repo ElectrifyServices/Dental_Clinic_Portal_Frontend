@@ -2,7 +2,7 @@ import type { ApiAny } from "../../types/api";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
 import { useState, useEffect } from "react";
-import { Save, Clock, Calendar, AlertTriangle, Loader2 } from "lucide-react";
+import { Save, Clock, Calendar, AlertTriangle, Loader2, X } from "lucide-react";
 import { Modal, Button, LabeledField, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, HourMinPicker } from "@/components/ui";
 import {
   useCreateDoctorScheduleMutation,
@@ -128,17 +128,19 @@ export function DoctorScheduleManager({
 
   // ── Start time handler ──
   const handleStartTimeChange = (dayKey: string, newStart: string) => {
+    const val = typeof newStart === "string" && (newStart === "empty" || newStart.includes("empty")) ? "" : newStart;
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], startTime: newStart },
+      [dayKey]: { ...prev[dayKey], startTime: val },
     }));
   };
 
   // ── End time handler ──
   const handleEndTimeChange = (dayKey: string, newEnd: string) => {
+    const val = typeof newEnd === "string" && (newEnd === "empty" || newEnd.includes("empty")) ? "" : newEnd;
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], endTime: newEnd },
+      [dayKey]: { ...prev[dayKey], endTime: val },
     }));
   };
 
@@ -149,9 +151,13 @@ export function DoctorScheduleManager({
 
   // ── Generic day field handler (isWorking, breakStart, breakEnd) ───────────
   const handleDayChange = (dayKey: string, field: string, value: ApiAny) => {
+    let sanitizedVal = value;
+    if (typeof value === "string" && (value === "empty" || value.includes("empty"))) {
+      sanitizedVal = "";
+    }
     setSchedule((prev) => ({
       ...prev,
-      [dayKey]: { ...prev[dayKey], [field]: value },
+      [dayKey]: { ...prev[dayKey], [field]: sanitizedVal },
     }));
   };
 
@@ -183,18 +189,34 @@ export function DoctorScheduleManager({
   const handleSave = async () => {
     setSaveError(null);
 
+    const isValidTime = (t?: string | null) =>
+      Boolean(t && typeof t === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(t.trim().slice(0, 5)));
+
     // Validate that all checked working days have start/end times and complete break times if configured
     for (const [dayKey, day] of Object.entries(schedule)) {
       if (day.isWorking) {
         const capitalizedDay = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
         
-        if (!day.startTime || !day.endTime) {
+        if (!isValidTime(day.startTime) || !isValidTime(day.endTime)) {
           setSaveError(`Please select both Start Time and End Time for ${capitalizedDay}.`);
           return;
         }
-        
-        if ((day.breakStart && !day.breakEnd) || (!day.breakStart && day.breakEnd)) {
+
+        if (timeToMins(day.startTime) >= timeToMins(day.endTime)) {
+          setSaveError(`End Time must be after Start Time for ${capitalizedDay}.`);
+          return;
+        }
+
+        const hasBreakStart = isValidTime(day.breakStart);
+        const hasBreakEnd = isValidTime(day.breakEnd);
+
+        if ((hasBreakStart && !hasBreakEnd) || (!hasBreakStart && hasBreakEnd)) {
           setSaveError(`Please configure both Break Start and Break End times for ${capitalizedDay}, or clear both.`);
+          return;
+        }
+
+        if (hasBreakStart && hasBreakEnd && timeToMins(day.breakStart!) >= timeToMins(day.breakEnd!)) {
+          setSaveError(`Break End must be after Break Start for ${capitalizedDay}.`);
           return;
         }
       }
@@ -419,21 +441,38 @@ export function DoctorScheduleManager({
                         )}
 
                         {/* Row 2: Break Start / Break End */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <LabeledField label="Break Start (optional)">
-                            <HourMinPicker
-                              value={daySchedule?.breakStart ?? ""}
-                              onChange={(val) => handleDayChange(day.key, "breakStart", val)}
-                              optional
-                            />
-                          </LabeledField>
-                          <LabeledField label="Break End (optional)">
-                            <HourMinPicker
-                              value={daySchedule?.breakEnd ?? ""}
-                              onChange={(val) => handleDayChange(day.key, "breakEnd", val)}
-                              optional
-                            />
-                          </LabeledField>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-muted-foreground">Break Timing (optional)</span>
+                            {(daySchedule?.breakStart || daySchedule?.breakEnd) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleDayChange(day.key, "breakStart", "");
+                                  handleDayChange(day.key, "breakEnd", "");
+                                }}
+                                className="text-[10px] text-muted-foreground hover:text-destructive font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <X className="w-3 h-3" /> Clear Break
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <LabeledField label="Break Start">
+                              <HourMinPicker
+                                value={daySchedule?.breakStart ?? ""}
+                                onChange={(val) => handleDayChange(day.key, "breakStart", val)}
+                                optional
+                              />
+                            </LabeledField>
+                            <LabeledField label="Break End">
+                              <HourMinPicker
+                                value={daySchedule?.breakEnd ?? ""}
+                                onChange={(val) => handleDayChange(day.key, "breakEnd", val)}
+                                optional
+                              />
+                            </LabeledField>
+                          </div>
                         </div>
 
                         {/* Notice for invalid break range */}

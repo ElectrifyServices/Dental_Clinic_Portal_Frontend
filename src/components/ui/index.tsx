@@ -145,7 +145,19 @@ const MODAL_SIZES: Record<string, string> = {
   "7xl": "max-w-7xl",
 };
 
-export function Modal({ title, subtitle, onClose, children, footer, size = "lg", icon, bodyClassName, headerRight, hideCloseButton, compact = false }: ModalProps) {
+export function Modal({
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  size = "lg",
+  icon,
+  bodyClassName,
+  headerRight,
+  hideCloseButton,
+  compact = false,
+}: ModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -217,12 +229,22 @@ interface ConfirmModalProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   variant?: "danger" | "primary";
   isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
-export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant = "danger", isLoading = false, onConfirm, onCancel }: ConfirmModalProps) {
+export function ConfirmModal({
+  title,
+  message,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  variant = "danger",
+  isLoading = false,
+  onConfirm,
+  onCancel,
+}: ConfirmModalProps) {
   return (
     <Modal
       title={title}
@@ -231,8 +253,14 @@ export function ConfirmModal({ title, message, confirmLabel = "Confirm", variant
       icon={<AlertTriangle className={cn("w-4 h-4 animate-pulse", variant === "danger" ? "text-destructive" : "text-primary")} />}
       footer={
         <>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
-          <Button variant={variant === "danger" ? "destructive" : "default"} onClick={onConfirm} disabled={isLoading}>
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant={variant === "danger" ? "destructive" : "default"}
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

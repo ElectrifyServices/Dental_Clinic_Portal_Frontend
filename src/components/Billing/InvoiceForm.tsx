@@ -97,7 +97,9 @@ export function InvoiceForm({
   const { data: rawCorporatePlansList } = useCorporatePlansQuery({
     enabled: isCorporateBilling,
     search: patientSearchQuery || undefined,
-    filters: { isDropdown: [true] as ApiAny },
+    planType: "COMPANY",
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const apiCorporatePlans = useMemo(() => {
@@ -109,7 +111,13 @@ export function InvoiceForm({
     } else if (target && typeof target === "object") {
       list = target.data?.data?.data || target.data?.data || target.data || target.plans || target.data?.plans || [];
     }
-    return list.filter((p: ApiAny) => p.status === "ACTIVE" || p.isActive !== false);
+    return list.filter((p: ApiAny) => {
+      const isActive = p.status === "ACTIVE" || p.isActive !== false;
+      const type = (p.plan_type || p.planType || "").toUpperCase();
+      const category = (p.planCategory || "").toLowerCase();
+      const isCorporate = type === "COMPANY" || category === "corporate" || (!type && category !== "individual");
+      return isActive && isCorporate;
+    });
   }, [rawCorporatePlansList]);
   const apiPatients = useMemo(() => {
     if (!rawPatientsData) return [];
@@ -739,7 +747,26 @@ export function InvoiceForm({
               value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                const p = apiPatients.find((p: ApiAny) => p.id === val);
+                let mappedP: ApiAny;
+                if (isCorporateBilling) {
+                  const cpRaw = apiCorporatePlans.find((cp: ApiAny) => cp.id === val);
+                  if (cpRaw) {
+                    const rawCc = cpRaw.contact_country_code || cpRaw.country_code || "+91";
+                    const formattedCc = rawCc.startsWith("+") ? rawCc : `+${rawCc}`;
+                    const rawPhone = cpRaw.contact_phone || cpRaw.phone || "";
+                    const fullPhone = rawPhone ? (rawPhone.startsWith("+") ? rawPhone : `${formattedCc} ${rawPhone}`) : "";
+                    mappedP = {
+                      ...cpRaw,
+                      id: cpRaw.id,
+                      name: cpRaw.company_name || cpRaw.plan_name,
+                      phone: fullPhone,
+                      country_code: formattedCc,
+                    };
+                  }
+                } else {
+                  mappedP = apiPatients.find((p: ApiAny) => p.id === val);
+                }
+                const p = mappedP;
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(
@@ -903,8 +930,8 @@ export function InvoiceForm({
                   </div>
                 );
               }}
-              placeholder="Select Patient"
-              searchPlaceholder="Search Patient..."
+              placeholder={isCorporateBilling ? "Select Company" : "Select Patient"}
+              searchPlaceholder={isCorporateBilling ? "Search Company..." : "Search Patient..."}
               className="w-full bg-white"
             />
           </LabeledField>
@@ -914,7 +941,26 @@ export function InvoiceForm({
               value={formData.patientId || "none"}
               onChange={(val) => {
                 if (val === "none") return;
-                const p = apiPatients.find((p: ApiAny) => p.id === val);
+                let mappedP: ApiAny;
+                if (isCorporateBilling) {
+                  const cpRaw = apiCorporatePlans.find((cp: ApiAny) => cp.id === val);
+                  if (cpRaw) {
+                    const rawCc = cpRaw.contact_country_code || cpRaw.country_code || "+91";
+                    const formattedCc = rawCc.startsWith("+") ? rawCc : `+${rawCc}`;
+                    const rawPhone = cpRaw.contact_phone || cpRaw.phone || "";
+                    const fullPhone = rawPhone ? (rawPhone.startsWith("+") ? rawPhone : `${formattedCc} ${rawPhone}`) : "";
+                    mappedP = {
+                      ...cpRaw,
+                      id: cpRaw.id,
+                      name: cpRaw.company_name || cpRaw.plan_name,
+                      phone: fullPhone,
+                      country_code: formattedCc,
+                    };
+                  }
+                } else {
+                  mappedP = apiPatients.find((p: ApiAny) => p.id === val);
+                }
+                const p = mappedP;
                 const cp =
                   p?.corporatePlanId || p?.companyId
                     ? corporatePlans.find(

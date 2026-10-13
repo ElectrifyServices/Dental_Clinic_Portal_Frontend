@@ -486,6 +486,7 @@ export function TreatmentSessionManager({
 
   const [prescriptions, setPrescriptions] = useState<ApiAny[]>([]);
   const [sessionAttachments, setSessionAttachments] = useState<File[]>([]);
+  const [noteListMode, setNoteListMode] = useState<"NUMBERED" | "BULLET">("NUMBERED");
 
   const handleNoteListModeChange = (newMode: "NUMBERED" | "BULLET") => {
     setNoteListMode(newMode);

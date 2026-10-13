@@ -1,7 +1,7 @@
 import type { ApiAny } from "../../../types/api";
 import React, { useState, useEffect } from "react";
 import { User, CheckCircle, Trash2 } from "lucide-react";
-import { Modal, Button, SectionRenderer, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ContentCard, Loading } from "../../ui";
+import { Modal, Button, ConfirmModal, SectionRenderer, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ContentCard, Loading } from "../../ui";
 import { CorporateEmployee, CorporatePlan, CoverageType } from "../../../types";
 import { useFormConfig } from "../../../hooks/useFormConfig";
 import { useCreateEmployeeMutation } from "../../../hooks/corporate/useCreateEmployeeMutation";
@@ -80,6 +80,50 @@ export function EmployeeFormModal({
   const [pendingDependents, setPendingDependents] = useState<
     PendingDependent[]
   >([]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const checkHasUnsavedChanges = (): boolean => {
+    if (pendingDependents.length > 0) return true;
+    if (!editEmp) {
+      const hasEntered = Boolean(
+        form.name?.trim() ||
+        form.phone?.trim() ||
+        form.email?.trim() ||
+        form.employeeId?.trim() ||
+        form.dateOfBirth ||
+        form.designation?.trim() ||
+        form.department?.trim() ||
+        form.companyName?.trim() ||
+        form.corporatePlanId ||
+        (form.coverageType && form.coverageType !== "self")
+      );
+      if (hasEntered) return true;
+    } else {
+      if (
+        form.name !== (editEmp.name || '') ||
+        form.phone !== (editEmp.phone || '') ||
+        form.email !== (editEmp.email || '') ||
+        form.employeeId !== (editEmp.employeeId || '') ||
+        form.designation !== (editEmp.designation || '') ||
+        form.department !== (editEmp.department || '') ||
+        form.companyName !== (editEmp.companyName || '') ||
+        form.corporatePlanId !== (editEmp.corporatePlanId || '') ||
+        form.coverageType !== (editEmp.coverageType || 'self')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleRequestClose = () => {
+    if (showExitConfirm) return;
+    if (checkHasUnsavedChanges()) {
+      setShowExitConfirm(true);
+    } else {
+      setShowForm(false);
+    }
+  };
   const [showAddDepForm, setShowAddDepForm] = useState(false);
   const [addDepForm, setAddDepForm] =
     useState<PendingDependent>(EMPTY_PENDING());
@@ -778,26 +822,27 @@ export function EmployeeFormModal({
     totalDependents >= maxDependents && maxDependents > 0;
 
   return (
-    <Modal
-      title={
-        editEmp
-          ? (empCfgAny.title?.edit ?? "Edit Member")
-          : (empCfgAny.title?.create ?? "Add Member")
-      }
-      onClose={() => setShowForm(false)}
-      size="3xl"
-      icon={<User className="w-4 h-4" />}
-      footer={
-        <div className="flex flex-col gap-3 w-full">
-          {formErrors.submit && (
-            <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
-              {formErrors.submit}
-            </p>
-          )}
-          <div className="flex justify-end gap-3 w-full">
-            <Button variant="outline" onClick={() => setShowForm(false)}>
-              Cancel
-            </Button>
+    <>
+      <Modal
+        title={
+          editEmp
+            ? (empCfgAny.title?.edit ?? "Edit Member")
+            : (empCfgAny.title?.create ?? "Add Member")
+        }
+        onClose={handleRequestClose}
+        size="3xl"
+        icon={<User className="w-4 h-4" />}
+        footer={
+          <div className="flex flex-col gap-3 w-full">
+            {formErrors.submit && (
+              <p className="text-red-500 text-xs font-bold text-left px-4 py-2.5 bg-red-50 rounded-xl border border-red-200">
+                {formErrors.submit}
+              </p>
+            )}
+            <div className="flex justify-end gap-3 w-full">
+              <Button variant="outline" onClick={handleRequestClose}>
+                Cancel
+              </Button>
             <Button
               onClick={handleSave}
               className="gap-2 shadow-lg shadow-primary/10"
@@ -1322,5 +1367,21 @@ export function EmployeeFormModal({
         </div> */}
       </div>
     </Modal>
+
+    {showExitConfirm && (
+      <ConfirmModal
+        title="Unsaved Changes"
+        message="You have unsaved changes in this member form. Are you sure you want to close without saving? All the entered details will be lost."
+        confirmLabel="Discard & Exit"
+        cancelLabel="Keep Editing"
+        variant="danger"
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          setShowForm(false);
+        }}
+        onCancel={() => setShowExitConfirm(false)}
+      />
+    )}
+  </>
   );
 }
