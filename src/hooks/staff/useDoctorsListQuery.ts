@@ -59,7 +59,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
     }
 
     return rawList
-      .filter((s) => s && typeof s === "object")
+      .filter((s) => s && typeof s === "object" && s.status !== "INACTIVE")
       .map((s) => {
         return {
           id: s.id,
@@ -72,37 +72,54 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | Ap
           qualification: s.personal_profile?.qualification || s.qualification || "",
           location: s.personal_profile?.department || s.department || "Main Clinic",
           image: getFileUrl(s.profile_picture_url) || getFileUrl(s.profile_picture) || getFileUrl(s.avatar) || "",
+          isActive: s.status !== "INACTIVE",
         };
       });
   }, [query.data]);
 
-  const total = useMemo(() => {
-    const apiData = query.data;
+  const paginationObj = useMemo(() => {
+    const apiData = query.data as ApiAny;
     return (
+      apiData?.responseObject?.pagination ||
+      apiData?.pagination ||
+      apiData?.data?.pagination ||
+      apiData?.responseObject?.data?.pagination ||
+      null
+    );
+  }, [query.data]);
+
+  const total = useMemo(() => {
+    const apiData = query.data as ApiAny;
+    const fromPagination =
+      paginationObj?.total_items ??
+      paginationObj?.totalItems ??
+      paginationObj?.total;
+
+    if (fromPagination !== undefined && fromPagination !== null && !isNaN(Number(fromPagination))) {
+      return Number(fromPagination);
+    }
+
+    const fallbackTotal =
       (apiData as ApiAny)?.pagination?.totalItems ||
       (apiData as ApiAny)?.data?.pagination?.totalItems ||
-      (apiData as ApiAny)?.responseObject?.data?.pagination?.total ||
-      (apiData as ApiAny)?.responseObject?.data?.pagination?.totalItems ||
-      (apiData as ApiAny)?.responseObject?.data?.pagination?.total_items ||
       (apiData as ApiAny)?.pagination?.total ||
       (apiData as ApiAny)?.total ||
-      doctors.length
-    );
-  }, [query.data, doctors.length]);
+      doctors.length;
+
+    return Number(fallbackTotal) || 0;
+  }, [query.data, paginationObj, doctors.length]);
 
   const totalPages = useMemo(() => {
-    const apiData = query.data;
-    const computedTotalPages = (
-      (apiData as ApiAny)?.pagination?.totalPages ||
-      (apiData as ApiAny)?.data?.pagination?.totalPages ||
-      (apiData as ApiAny)?.responseObject?.data?.pagination?.totalPages ||
-      (apiData as ApiAny)?.responseObject?.data?.pagination?.total_pages ||
-      (apiData as ApiAny)?.totalPages ||
-      1
-    );
-    if (computedTotalPages > 1) return computedTotalPages;
+    const fromPagination =
+      paginationObj?.total_pages ??
+      paginationObj?.totalPages;
+
+    if (fromPagination !== undefined && fromPagination !== null && !isNaN(Number(fromPagination)) && Number(fromPagination) > 0) {
+      return Number(fromPagination);
+    }
+
     return limit ? Math.max(1, Math.ceil(total / limit)) : 1;
-  }, [query.data, total, limit]);
+  }, [paginationObj, total, limit]);
 
   return {
     ...query,

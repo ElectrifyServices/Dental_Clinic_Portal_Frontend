@@ -1,5 +1,6 @@
 import type { ApiAny } from "../../types/api";
-import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import { Plus, Eye, Edit, Trash2, Shield, CheckCircle, Clock, MoreVertical, Filter, X } from "lucide-react";
 
 interface ConsentFormListProps {
   forms: ApiAny[];
@@ -35,6 +36,7 @@ import {
   DataTable,
   Pagination,
   Loading,
+  Label,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -42,6 +44,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/DropdownMenu";
+import { cn } from "@/lib/utils";
 
 export function ConsentFormList({
   forms,
@@ -62,6 +65,14 @@ export function ConsentFormList({
   onPerPageChange,
   isLoading = false,
 }: ConsentFormListProps) {
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilterCount = Object.values(filters).filter((v) => v && v !== "All").length;
+  const clearAllFilters = () => {
+    onFilterChange("status", "All");
+    onFilterChange("procedure", "All");
+    onFilterChange("doctor", "All");
+    onFilterChange("date", "All");
+  };
 
   const columns = [
     {
@@ -218,85 +229,47 @@ export function ConsentFormList({
         />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 shrink-0">
-        <div className="flex-1">
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search by patient or treatment type…"
             value={search}
             onChange={onSearchChange}
+            className="flex-1 min-w-0"
           />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters((v) => !v)}
+            className={cn("gap-2 shrink-0", activeFilterCount > 0 && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" onClick={clearAllFilters} className="gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear all</span>
+            </Button>
+          )}
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-          <Select
-            value={filters.status}
-            onValueChange={(val) => onFilterChange("status", val)}
-          >
-            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Status</SelectItem>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
-            </SelectContent>
-          </Select>
 
-          <Select
-            value={filters.procedure}
-            onValueChange={(val) => onFilterChange("procedure", val)}
-          >
-            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[240px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Procedures" />
-            </SelectTrigger>
-            <SelectContent className="max-h-56">
-              <SelectItem value="All">All Procedures</SelectItem>
-              <SelectItem value="GENERAL_DENTISTRY">General Dentistry</SelectItem>
-              <SelectItem value="TOOTH_EXTRACTION_OR_ORAL_SURGERY">Tooth Extraction / Oral Surgery</SelectItem>
-              <SelectItem value="ROOT_CANAL_TREATMENT_ENDODONTICS">Root Canal Treatment (Endodontics)</SelectItem>
-              <SelectItem value="DENTAL_IMPLANTS">Dental Implants</SelectItem>
-              <SelectItem value="ORTHODONTIC_BRACES_OR_CLEAR_ALIGNERS">Orthodontic Braces / Clear Aligners</SelectItem>
-              <SelectItem value="SCALING_AND_ROOT_PLANING">Scaling and Root Planing</SelectItem>
-              <SelectItem value="CROWN_AND_BRIDGE">Crown and Bridge</SelectItem>
-              <SelectItem value="COMPLETE_PARTIAL_DENTURE">Complete / Partial Denture</SelectItem>
-              <SelectItem value="PEDIATRIC_DENTAL_TREATMENT">Pediatric Dental Treatment</SelectItem>
-              <SelectItem value="TEETH_WHITENING">Teeth Whitening</SelectItem>
-              <SelectItem value="COSMETIC_DENTISTRY_OR_VENEERS">Cosmetic Dentistry / Veneers</SelectItem>
-              <SelectItem value="SEDATION_OR_ANESTHESIA_CONSENT">Sedation / Anesthesia Consent</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.doctor}
-            onValueChange={(val) => onFilterChange("doctor", val)}
-          >
-            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Doctors" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Doctors</SelectItem>
-              {doctorsList.map((doc) => (
-                <SelectItem key={doc.id} value={doc.id}>
-                  {doc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.date}
-            onValueChange={(val) => onFilterChange("date", val)}
-          >
-            <SelectTrigger className="px-3 py-2 bg-background border border-border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shrink-0 h-9 w-[130px] text-left flex items-center justify-between">
-              <SelectValue placeholder="All Time" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Time</SelectItem>
-              <SelectItem value="TODAY">Today</SelectItem>
-              <SelectItem value="THIS_WEEK">This Week</SelectItem>
-              <SelectItem value="THIS_MONTH">This Month</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {showFilters && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <FilterFields
+              filters={filters}
+              onFilterChange={onFilterChange}
+              doctorsList={doctorsList}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
@@ -348,6 +321,92 @@ export function ConsentFormList({
             </ContentCard>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function FilterFields({
+  filters,
+  onFilterChange,
+  doctorsList,
+}: {
+  filters: { status: string; procedure: string; doctor: string; date: string };
+  onFilterChange: (key: string, value: string) => void;
+  doctorsList: { id: string; name: string }[];
+}) {
+  const triggerClass = "h-10 w-full text-left bg-muted/50 border border-border rounded-xl text-xs font-semibold";
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Status</Label>
+        <Select value={filters.status} onValueChange={(val) => onFilterChange("status", val)}>
+          <SelectTrigger className={triggerClass}>
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Status</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="COMPLETED">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Procedure</Label>
+        <Select value={filters.procedure} onValueChange={(val) => onFilterChange("procedure", val)}>
+          <SelectTrigger className={triggerClass}>
+            <SelectValue placeholder="All Procedures" />
+          </SelectTrigger>
+          <SelectContent className="max-h-56">
+            <SelectItem value="All">All Procedures</SelectItem>
+            <SelectItem value="GENERAL_DENTISTRY">General Dentistry</SelectItem>
+            <SelectItem value="TOOTH_EXTRACTION_OR_ORAL_SURGERY">Tooth Extraction / Oral Surgery</SelectItem>
+            <SelectItem value="ROOT_CANAL_TREATMENT_ENDODONTICS">Root Canal Treatment (Endodontics)</SelectItem>
+            <SelectItem value="DENTAL_IMPLANTS">Dental Implants</SelectItem>
+            <SelectItem value="ORTHODONTIC_BRACES_OR_CLEAR_ALIGNERS">Orthodontic Braces / Clear Aligners</SelectItem>
+            <SelectItem value="SCALING_AND_ROOT_PLANING">Scaling and Root Planing</SelectItem>
+            <SelectItem value="CROWN_AND_BRIDGE">Crown and Bridge</SelectItem>
+            <SelectItem value="COMPLETE_PARTIAL_DENTURE">Complete / Partial Denture</SelectItem>
+            <SelectItem value="PEDIATRIC_DENTAL_TREATMENT">Pediatric Dental Treatment</SelectItem>
+            <SelectItem value="TEETH_WHITENING">Teeth Whitening</SelectItem>
+            <SelectItem value="COSMETIC_DENTISTRY_OR_VENEERS">Cosmetic Dentistry / Veneers</SelectItem>
+            <SelectItem value="SEDATION_OR_ANESTHESIA_CONSENT">Sedation / Anesthesia Consent</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Doctor</Label>
+        <Select value={filters.doctor} onValueChange={(val) => onFilterChange("doctor", val)}>
+          <SelectTrigger className={triggerClass}>
+            <SelectValue placeholder="All Doctors" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Doctors</SelectItem>
+            {doctorsList.map((doc) => (
+              <SelectItem key={doc.id} value={doc.id}>
+                {doc.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Time Period</Label>
+        <Select value={filters.date} onValueChange={(val) => onFilterChange("date", val)}>
+          <SelectTrigger className={triggerClass}>
+            <SelectValue placeholder="All Time" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Time</SelectItem>
+            <SelectItem value="TODAY">Today</SelectItem>
+            <SelectItem value="THIS_WEEK">This Week</SelectItem>
+            <SelectItem value="THIS_MONTH">This Month</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

@@ -60,6 +60,11 @@ export const AppointmentsPage: React.FC = () => {
   const [specialistPage, setSpecialistPage] = useState(1);
   const [specialistLimit, setSpecialistLimit] = useState(5);
 
+  const handleSpecialistLimitChange = (limit: number) => {
+    setSpecialistLimit(limit);
+    setSpecialistPage(1);
+  };
+
   const [noShowApptId, setNoShowApptId] = useState<string | null>(null);
   const [noShowReason, setNoShowReason] = useState("");
 
@@ -134,6 +139,9 @@ export const AppointmentsPage: React.FC = () => {
       const response = await checkInAppointment({ id: appt.id });
       const responseData = response?.data ?? response;
 
+      const apptName = (appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "").trim().toLowerCase();
+      const apptPhone = (appt.patientPhone || appt.phone || "").trim();
+
       setPendingCheckInAppt({
         ...appt,
         patientName: responseData?.patient_name || appt.patientName,
@@ -142,7 +150,20 @@ export const AppointmentsPage: React.FC = () => {
       });
       
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
-      const patientId = responseData?.patient_id ?? responseData?.patientId;
+      let patientId = responseData?.patient_id ?? responseData?.patientId;
+
+      // Defensive check: ensure patientId matches appointment's patient name (avoid picking parent for child with same phone)
+      if (patientId) {
+        const matchingPatient = patients.find((p: ApiAny) => p.id === patientId);
+        if (matchingPatient && apptName && matchingPatient.name.trim().toLowerCase() !== apptName) {
+          const actualPatient = patients.find(
+            (p: ApiAny) =>
+              (p.phone || "").trim() === apptPhone &&
+              (p.name || "").trim().toLowerCase() === apptName,
+          );
+          patientId = actualPatient ? actualPatient.id : null;
+        }
+      }
 
       if (!requiresRegistration && patientId) {
         setSelectedPatientId(patientId);
@@ -171,6 +192,19 @@ export const AppointmentsPage: React.FC = () => {
       const responseData = response?.data ?? response;
       let patientId = responseData?.patient_id ?? responseData?.patientId ?? appt.patientId ?? appt.patient_id;
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? false;
+
+      // Defensive check: ensure patientId matches appointment's patient name
+      if (patientId) {
+        const matchingPatient = patients.find((p: ApiAny) => p.id === patientId);
+        if (matchingPatient && sName && matchingPatient.name.trim().toLowerCase() !== sName) {
+          const actualPatient = patients.find(
+            (p: ApiAny) =>
+              (p.phone || "").trim() === sPhone &&
+              (p.name || "").trim().toLowerCase() === sName,
+          );
+          patientId = actualPatient ? actualPatient.id : null;
+        }
+      }
 
       if (!patientId && !requiresRegistration) {
         const existing = patients.find(
@@ -272,7 +306,7 @@ export const AppointmentsPage: React.FC = () => {
             specialistPage={specialistPage}
             setSpecialistPage={setSpecialistPage}
             specialistLimit={specialistLimit}
-            setSpecialistLimit={setSpecialistLimit}
+            setSpecialistLimit={handleSpecialistLimitChange}
             totalSpecialists={totalSpecialists}
             totalSpecialistPages={totalSpecialistPages}
             selectedDate={selectedDate}

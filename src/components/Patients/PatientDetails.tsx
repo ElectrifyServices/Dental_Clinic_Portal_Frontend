@@ -1,5 +1,5 @@
 import type { ApiAny } from "../../types/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { User, Calendar, Stethoscope, Pill, FileText, Heart, CreditCard, AlertCircle } from "lucide-react";
 import { Modal, Button, Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui";
 import { OverviewTab } from "./PatientDetails/OverviewTab";
@@ -25,6 +25,7 @@ import { useTreatmentPlansQuery } from "../../hooks/treatment/useTreatmentPlansQ
 import { toTitleCase } from "@/utils/stringUtils";
 import { toUiTreatment } from "../../utils/treatmentPlanUtils";
 import { useInvoicesQuery } from "../../hooks/billing/useInvoicesQuery";
+import { normalizeInvoice } from "../../hooks/billing/useInvoiceQuery";
 
 interface PatientDetailsProps {
   patient: ApiAny;
@@ -227,10 +228,25 @@ export function PatientDetails({
     }
   }
 
-  const fetchedInvoices = invoicesData?.data?.invoices || invoicesData?.invoices || invoicesData?.data?.data || [];
-  const patientInvoices = fetchedInvoices.length > 0
-    ? fetchedInvoices
-    : invoices.filter((inv) => inv.patientId === patient.id);
+  const rawInvoiceList: ApiAny[] = useMemo(() => {
+    if (!invoicesData) return [];
+    if (Array.isArray(invoicesData)) return invoicesData;
+    const invData = invoicesData as ApiAny;
+    if (Array.isArray(invData.invoices)) return invData.invoices;
+    if (Array.isArray(invData.data?.invoices)) return invData.data.invoices;
+    if (Array.isArray(invData.data?.data)) return invData.data.data;
+    if (Array.isArray(invData.data)) return invData.data;
+    if (Array.isArray(invData.responseObject?.data?.invoices)) return invData.responseObject.data.invoices;
+    if (Array.isArray(invData.responseObject?.data)) return invData.responseObject.data;
+    return [];
+  }, [invoicesData]);
+
+  const patientInvoices = useMemo(() => {
+    const list = rawInvoiceList.length > 0
+      ? rawInvoiceList
+      : invoices.filter((inv) => inv.patientId === patient.id);
+    return list.map((inv) => normalizeInvoice(inv) || inv);
+  }, [rawInvoiceList, invoices, patient?.id]);
 
   const isIncompletePatient = (!patient.gender && !patient.dateOfBirth) || patient.is_direct || patient.status === "incomplete";
 

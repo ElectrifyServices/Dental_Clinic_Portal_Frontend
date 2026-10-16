@@ -1,12 +1,13 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo } from "react";
-import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Clock, Calendar as CalendarIcon, Stethoscope, MoreVertical, Filter, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Badge } from "@/components/ui/Badge";
-import { DataTable } from "@/components/ui";
+import { DataTable, Label } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -92,6 +93,7 @@ export function AppointmentList({
   const filter = apptFilter !== undefined ? apptFilter : localFilter;
   const setFilter = onFilterChange ?? setLocalFilter;
   const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   
@@ -244,23 +246,33 @@ export function AppointmentList({
     {
       key: "status",
       header: "Current Status",
-      render: (a: ApiAny) => (
-        <Badge
-          variant={
-            STATUS_VARIANTS[a.status] ||
-            STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
-            STATUS_VARIANTS[
-              (a.status || "").toLowerCase().replace("_", "-")
-            ] ||
-            "gray"
-          }
-          className="text-[9.5px] px-2.5 py-0.5 font-medium"
-        >
-          {String(a.status || "")
-            .replace("_", " ")
-            .replace("-", " ")}
-        </Badge>
-      ),
+      render: (a: ApiAny) => {
+        const isConsultationDeleted =
+          a.cancelled_reason &&
+          String(a.cancelled_reason).toLowerCase().includes("consultation");
+        const statusLabel = isConsultationDeleted
+          ? "Consultation Deleted"
+          : String(a.status || "")
+              .replace("_", " ")
+              .replace("-", " ");
+        return (
+          <Badge
+            variant={
+              isConsultationDeleted
+                ? "red"
+                : STATUS_VARIANTS[a.status] ||
+                  STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
+                  STATUS_VARIANTS[
+                    (a.status || "").toLowerCase().replace("_", "-")
+                  ] ||
+                  "gray"
+            }
+            className="text-[9.5px] px-2.5 py-0.5 font-medium"
+          >
+            {statusLabel}
+          </Badge>
+        );
+      },
     },
     {
       key: "actions",
@@ -360,9 +372,9 @@ export function AppointmentList({
   return (
     <div className="space-y-2.5 sm:space-y-3">
       {/* Filters row */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-2.5 bg-card/60 p-2 sm:p-2.5 rounded-xl border border-border/60">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
-          <div className="relative flex-1 min-w-[200px]">
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2 bg-card/60 p-2 sm:p-2.5 rounded-xl border border-border/60">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search patient, treatment or doctor..."
@@ -371,63 +383,110 @@ export function AppointmentList({
                 setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="pl-8 h-8.5 sm:h-9 rounded-xl bg-card border-border text-xs"
+              className="pl-8 h-8.5 sm:h-9 rounded-xl bg-card border-border text-xs w-full"
             />
           </div>
-          <div className="flex w-full sm:w-auto items-center gap-1.5">
-            <DatePicker
-              value={startDate || ""}
-              onChange={(val) => {
-                setStartDate(val);
-                setSelectedDate?.(val);
-                setFilter("all");
-                setPage(1);
-              }}
-              className="h-8.5 sm:h-9 rounded-xl bg-card border-border w-28 sm:w-32 text-xs"
-            />
-            <span className="text-muted-foreground text-xs font-medium">to</span>
-            <DatePicker
-              value={endDate}
-              min={startDate || ""}
-              onChange={(val) => {
-                setEndDate(val);
-                setFilter("all");
-                setPage(1);
-              }}
-              className="h-8.5 sm:h-9 rounded-xl bg-card border-border w-28 sm:w-32 text-xs"
-            />
-          </div>
-        </div>
-        <div className="flex bg-muted p-0.5 rounded-xl border border-border self-start lg:self-auto shrink-0">
-          {TYPE_FILTERS.map((f) => (
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters((v) => !v)}
+            className={cn(
+              "h-8.5 sm:h-9 gap-2 shrink-0 text-xs",
+              (filter !== "all" || startDate || endDate) && "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+            )}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Filters</span>
+            {(filter !== "all" || startDate || endDate) && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[9px]">1</span>
+            )}
+          </Button>
+
+          {(filter !== "all" || startDate || endDate) && (
             <Button
               variant="ghost"
-              key={f.id}
               onClick={() => {
-                setFilter(f.id);
+                setFilter("all");
+                setStartDate("");
+                setEndDate("");
                 setPage(1);
-                if (f.id === "today") {
-                  setStartDate(todayStr);
-                  setEndDate(todayStr);
-                  setSelectedDate?.(todayStr);
-                } else if (f.id === "week") {
-                  setStartDate(todayStr);
-                  setEndDate(nextWeekStr);
-                } else if (f.id === "all") {
-                  setStartDate("");
-                  setEndDate("");
-                }
               }}
-              className={`px-3 sm:px-3.5 py-1 rounded-lg text-[9.5px] font-bold uppercase tracking-wider transition-all h-7 sm:h-7.5 ${
-                filter === f.id
-                  ? "bg-card text-primary shadow-xs ring-1 ring-black/5 hover:bg-card"
-                  : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
-              }`}
+              className="h-8.5 sm:h-9 gap-1 text-muted-foreground shrink-0 text-xs"
             >
-              {f.label}
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
             </Button>
-          ))}
+          )}
         </div>
+
+        {showFilters && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="sm:col-span-2 xl:col-span-2">
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Quick Range</Label>
+                <div className="flex bg-muted p-0.5 rounded-xl border border-border w-full">
+                  {TYPE_FILTERS.map((f) => (
+                    <Button
+                      variant="ghost"
+                      key={f.id}
+                      onClick={() => {
+                        setFilter(f.id);
+                        setPage(1);
+                        if (f.id === "today") {
+                          setStartDate(todayStr);
+                          setEndDate(todayStr);
+                          setSelectedDate?.(todayStr);
+                        } else if (f.id === "week") {
+                          setStartDate(todayStr);
+                          setEndDate(nextWeekStr);
+                        } else if (f.id === "all") {
+                          setStartDate("");
+                          setEndDate("");
+                        }
+                      }}
+                      className={`flex-1 px-3 sm:px-3.5 py-1 rounded-lg text-[9.5px] font-bold uppercase tracking-wider transition-all h-7 sm:h-7.5 ${
+                        filter === f.id
+                          ? "bg-card text-primary shadow-xs ring-1 ring-black/5 hover:bg-card"
+                          : "text-muted-foreground/60 hover:text-primary hover:bg-transparent"
+                      }`}
+                    >
+                      {f.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
+                <DatePicker
+                  value={startDate || ""}
+                  onChange={(val) => {
+                    setStartDate(val);
+                    setSelectedDate?.(val);
+                    setFilter("all");
+                    setPage(1);
+                  }}
+                  className="h-10 w-full rounded-xl bg-muted/50 border-border text-xs"
+                />
+              </div>
+
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
+                <DatePicker
+                  value={endDate}
+                  min={startDate || ""}
+                  onChange={(val) => {
+                    setEndDate(val);
+                    setFilter("all");
+                    setPage(1);
+                  }}
+                  className="h-10 w-full rounded-xl bg-muted/50 border-border text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}

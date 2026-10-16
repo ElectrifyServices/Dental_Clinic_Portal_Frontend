@@ -84,7 +84,7 @@ function Calendar({
         selected: "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:shadow-sm",
         today: "[&>button]:border [&>button]:border-primary/50 [&>button]:font-bold",
         outside: "[&>button]:text-muted-foreground/40",
-        disabled: "[&>button]:text-muted-foreground/30 [&>button]:line-through [&>button]:hover:bg-transparent [&>button]:cursor-not-allowed",
+        disabled: "[&>button]:text-muted-foreground/30 [&>button]:line-through [&>button]:hover:bg-transparent [&>button]:cursor-not-allowed [&>button]:pointer-events-none opacity-40 pointer-events-none",
         range_start: "[&>button]:bg-primary [&>button]:text-primary-foreground",
         range_middle: "[&>button]:bg-primary/10 [&>button]:text-foreground [&>button]:rounded-none",
         range_end: "[&>button]:bg-primary [&>button]:text-primary-foreground",

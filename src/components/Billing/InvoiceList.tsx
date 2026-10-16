@@ -2,7 +2,7 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo } from "react";
 import { BillingCard } from "./BillingCard";
-import { Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText, History, MessageCircle, X } from "lucide-react";
+import { Plus, Eye, Trash2, MoreVertical, IndianRupee, Send, FileText, History, MessageCircle, X, Filter } from "lucide-react";
 import { PaymentHistoryModal } from "./PaymentHistoryModal";
 import { InvoicePaymentModal } from "./InvoicePaymentModal";
 import { WhatsappHistoryModal } from "./WhatsappHistoryModal";
@@ -29,9 +29,11 @@ import {
   SelectContent,
   SelectItem,
   Loading,
+  Label,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { cn } from "@/lib/utils";
 
 interface Invoice {
   id: string;
@@ -236,6 +238,7 @@ export function InvoiceList({
     0
   );
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [payInvoice, setPayInvoice] = useState<Invoice | null>(null);
@@ -659,7 +662,7 @@ export function InvoiceList({
           title="Billing & Invoices"
           subtitle={`${invoices.length} total invoices recorded`}
           action={
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 onClick={() => exportInvoices()}
@@ -699,69 +702,47 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 items-center bg-card p-3 rounded-2xl border border-border shadow-sm flex-wrap shrink-0">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by patient name or invoice ID…"
-          className="flex-1 min-w-0 min-w-[200px]"
-        />
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {FILTERS.map((f) => (
-                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {setPaymentMethod && (
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
-                <SelectValue placeholder="Payment Method" />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_METHODS.map((f) => (
-                  <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {setStartDate && setEndDate && (
-            <div className="flex items-center gap-1">
-              <DatePicker
-                value={startDate || ""}
-                onChange={setStartDate}
-                placeholder="Start Date"
-                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted w-[115px]"
-              />
-              <span className="text-xs text-muted-foreground">-</span>
-              <DatePicker
-                min={startDate || ""}
-                value={endDate || ""}
-                onChange={setEndDate}
-                placeholder="End Date"
-                className="h-9 px-2 text-xs font-semibold rounded-xl border border-border bg-muted w-[115px]"
-              />
-            </div>
-          )}
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm max-w-full overflow-x-hidden">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by patient name or invoice ID…"
+            className="flex-1 min-w-0"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsFilterOpen((v) => !v)}
+            className={cn("gap-2 shrink-0", hasFilters && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </Button>
+
           {hasFilters && (
-            <Button
-              variant="outline"
-              onClick={handleClearFilters}
-              className="h-9 px-3 text-xs font-semibold rounded-xl border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
-            >
-              <X className="w-3 h-3 mr-1" />
-              Clear
+            <Button variant="ghost" onClick={handleClearFilters} className="gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
             </Button>
           )}
         </div>
+
+        {isFilterOpen && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <BillingFilterFields
+              status={status}
+              setStatus={setStatus}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
@@ -892,6 +873,88 @@ export function InvoiceList({
             setWhatsappHistoryPatientName(null);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function BillingFilterFields({
+  status,
+  setStatus,
+  paymentMethod,
+  setPaymentMethod,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+}: {
+  status: string;
+  setStatus: (val: string) => void;
+  paymentMethod?: string;
+  setPaymentMethod?: (val: string) => void;
+  startDate?: string;
+  setStartDate?: (val: string) => void;
+  endDate?: string;
+  setEndDate?: (val: string) => void;
+}) {
+  const selectTriggerClass = "h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50";
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Status</Label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className={selectTriggerClass}>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {FILTERS.map((f) => (
+              <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                {f.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {setPaymentMethod && (
+        <div>
+          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Payment Method</Label>
+          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+            <SelectTrigger className={selectTriggerClass}>
+              <SelectValue placeholder="Payment Method" />
+            </SelectTrigger>
+            <SelectContent>
+              {PAYMENT_METHODS.map((f) => (
+                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {setStartDate && (
+        <div>
+          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">From Date</Label>
+          <DatePicker
+            value={startDate || ""}
+            onChange={setStartDate}
+            placeholder="Start Date"
+            className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50"
+          />
+        </div>
+      )}
+      {setEndDate && (
+        <div>
+          <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">To Date</Label>
+          <DatePicker
+            min={startDate || ""}
+            value={endDate || ""}
+            onChange={setEndDate}
+            placeholder="End Date"
+            className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50"
+          />
+        </div>
       )}
     </div>
   );

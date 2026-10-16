@@ -66,6 +66,14 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
 
   const createCategoryMutation = useCreateInventoryCategoryMutation();
 
+  const todayStr = React.useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation();
   const [isDeletingCategory, setIsDeletingCategory] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -388,7 +396,12 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                     <FormItem>
                       <FormLabel>Expiry Date</FormLabel>
                       <FormControl>
-                        <DatePicker value={field.value} onChange={field.onChange} />
+                        <DatePicker
+                          value={field.value}
+                          onChange={field.onChange}
+                          min={todayStr}
+                          placeholder="Select expiry date"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

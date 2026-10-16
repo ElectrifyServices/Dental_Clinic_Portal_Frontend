@@ -250,19 +250,30 @@ export function MedicalRecordsPage() {
         res?.data?.responseObject ||
         [];
       if (Array.isArray(raw) && raw.length > 0) {
-        timeline = raw.map((item: EmrRow) => ({
-          id: item.id,
-          title: item.title || "-",
-          content: item.content || "-",
-          date: item.created_at || item.date || new Date().toISOString(),
-          category: (item.record_type || item.type || "consultation").toLowerCase(),
-          doctorName: item.doctor?.name || item.doctorName || r.lastDoctorName || "-",
-          attachments: Array.isArray(item.attachments)
-            ? item.attachments.map((file: EmrRow) =>
-                typeof file === "string" ? file : file.file_url || file.url
-              )
-            : [],
-        }));
+        timeline = raw.map((item: EmrRow) => {
+          let itemDoctor = "-";
+          if (item.created_by) {
+            const staff = staffMembers?.find((s: StaffRow) => s.id === item.created_by);
+            if (staff) {
+              const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+              const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
+              itemDoctor = (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
+            }
+          }
+          return {
+            id: item.id,
+            title: item.title || "-",
+            content: item.content || "-",
+            date: item.created_at || item.date || new Date().toISOString(),
+            category: (item.record_type || item.type || "consultation").toLowerCase(),
+            doctorName: itemDoctor !== "-" ? itemDoctor : (item.doctorName || r.lastDoctorName || "-"),
+            attachments: Array.isArray(item.attachments)
+              ? item.attachments.map((file: EmrRow) =>
+                  typeof file === "string" ? file : file.file_url || file.url
+                )
+              : [],
+          };
+        });
       }
     } catch (e) {
       console.warn("Failed to fetch full timeline for PDF export", e);

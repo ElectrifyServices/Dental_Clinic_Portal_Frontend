@@ -28,6 +28,7 @@ import {
 } from "@/components/ui";
 import { useEMRListQuery } from "../../hooks/emr/useEMRListQuery";
 import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuery";
+import { useStaffData } from "../../hooks/useStaffData";
 import { useDebounce } from "../../hooks/useDebounce";
 import { downloadMedicalRecordPDF } from "../../utils/pdfGenerator";
 
@@ -245,6 +246,7 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
 
   const effectivePatientId = record.patientId || record.patient_id || record.patient?.id || "";
   const { data: patientDetail } = usePatientDetailQuery(effectivePatientId, !!effectivePatientId);
+  const { staffMembers } = useStaffData();
 
   const queryParams: ApiAny = {
     all: true,
@@ -256,6 +258,15 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
   const { data: apiListData, isLoading } = useEMRListQuery(queryParams, {
     refetchOnMount: "always",
   });
+
+  const resolveDoctorName = (createdById?: string) => {
+    if (!createdById) return "";
+    const staff = staffMembers?.find((s: ApiAny) => s.id === createdById);
+    if (!staff) return "";
+    const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
+    const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
+    return (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
+  };
 
   const detailedRecord = useMemo(() => {
     let rawList: ApiAny[] = [];
@@ -343,18 +354,18 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
       type: (latestItem.record_type || latestItem.type || record.type || "consultation").toLowerCase(),
       title: latestItem.title || record.title || "—",
       content: latestItem.content || record.content || "—",
-      doctorName: latestItem.doctor?.name || record.doctorName || record.lastDoctorName || "—",
+      doctorName: resolveDoctorName(latestItem.created_by) || record.doctorName || record.lastDoctorName || "—",
       timeline: effectiveList.map((item: ApiAny) => ({
         id: item.id,
         title: item.title || "Record Entry",
         content: item.content || "—",
         date: item.created_at || item.date || new Date().toISOString(),
         category: (item.record_type || item.type || "consultation").toLowerCase(),
-        doctorName: item.doctor?.name || item.doctorName || record.doctorName || "—",
+        doctorName: resolveDoctorName(item.created_by) || item.doctorName || record.doctorName || "—",
         attachments: extractAttachments(item),
       })),
     };
-  }, [apiListData, record, patientDetail]);
+  }, [apiListData, record, patientDetail, staffMembers]);
 
   const allTimeline = useMemo(() => detailedRecord.timeline || [], [detailedRecord.timeline]);
 

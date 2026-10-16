@@ -66,22 +66,20 @@ export const PatientsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-      <div className="shrink-0">
-        <PageHeader
-          title="Patients"
-          subtitle="Manage and track patient information"
-          action={
-            <Button
-              onClick={() => handleAddPatient()}
-              className="gap-1.5 h-9 px-3 shadow-lg shadow-primary/10 justify-center font-bold text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Patient</span>
-            </Button>
-          }
-        />
-      </div>
+    <div className="space-y-3 pb-8">
+      <PageHeader
+        title="Patients"
+        subtitle="Manage and track patient information"
+        action={
+          <Button
+            onClick={() => handleAddPatient()}
+            className="gap-1.5 h-9 px-3 shadow-lg shadow-primary/10 justify-center font-bold text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Patient</span>
+          </Button>
+        }
+      />
       <PatientList
         patients={patients}
         isLoading={isPatientsLoading}

@@ -586,7 +586,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               setFormData((prev: ApiAny) => ({ ...prev, gender: val }));
             }}
           >
-            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+            <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
               <SelectValue placeholder="Select Gender" />
             </SelectTrigger>
             <SelectContent>
@@ -607,7 +607,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               setFormData((prev: ApiAny) => ({ ...prev, bloodGroup: val }));
             }}
           >
-            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+            <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
               <SelectValue placeholder="Select Blood Group" />
             </SelectTrigger>
             <SelectContent>
@@ -638,7 +638,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 }));
               }}
             >
-              <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
                 <SelectValue placeholder="Select Relation" />
               </SelectTrigger>
               <SelectContent>
@@ -845,7 +845,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               setFormData((prev: ApiAny) => ({ ...prev, maritalStatus: val }));
             }}
           >
-            <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+            <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
@@ -879,7 +879,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   }}
                   disabled={isCorporate}
                 >
-                  <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between disabled:opacity-80 disabled:bg-muted">
+                  <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between disabled:opacity-80 disabled:bg-muted">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -953,7 +953,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 }));
               }}
             >
-              <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectTrigger className="w-full h-12 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
                 <SelectValue placeholder="Select Relation" />
               </SelectTrigger>
               <SelectContent>
@@ -1008,7 +1008,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                       }
                     }
                   }}
-                  className="rounded-r-none"
+                  className="rounded-r-none h-12"
                   placeholder="Enter custom relation"
                 />
                 <Button
@@ -1022,7 +1022,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                       }));
                     }
                   }}
-                  className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors"
+                  className="px-4 bg-primary text-white rounded-r-md hover:bg-primary/90 transition-colors h-12"
                 >
                   →
                 </Button>

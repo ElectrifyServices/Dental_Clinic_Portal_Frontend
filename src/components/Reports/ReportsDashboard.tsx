@@ -95,28 +95,28 @@ export function ReportsDashboard({ patients: _patients, appointments: _appointme
     <div className="space-y-5">
       {/* Header */}
       <div className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-3 flex-1">
+        <div className="px-4 sm:px-6 pt-5 pb-4 flex flex-col lg:flex-row lg:items-center gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">
               <BarChart3 className="w-5 h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">Clinic Analytics</h1>
-              <p className="text-xs text-slate-500 mt-0.5 font-medium">
+              <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">
                 Performance insights across revenue, patients, appointments & more
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar">
             <FilterTabs
               tabs={PERIODS}
               active={period}
               onChange={setPeriod}
             />
             {!['revenue', 'appointments'].includes(activeTab) && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="gap-2 flex-shrink-0"
                 onClick={handleExport}
                 disabled={isExporting}

@@ -8,14 +8,27 @@ import {
   Trash2,
   RefreshCw,
   MinusCircle,
-  SlidersHorizontal,
+  Filter,
+  X,
   Clock,
   AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { Button, PageHeader, DataTable, SearchInput, StatusBadge, MetricCard, Pagination } from "@/components/ui";
-import { Popover, PopoverTrigger, PopoverContent } from "../ui/Popover";
+import {
+  Button,
+  PageHeader,
+  DataTable,
+  SearchInput,
+  StatusBadge,
+  MetricCard,
+  Pagination,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Label,
+} from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
 import { useInventorySummaryQuery } from "../../hooks/inventory/useInventorySummaryQuery";
@@ -74,7 +87,7 @@ export function InventoryList({
   const [lowStockFilter, setLowStockFilter] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -413,71 +426,57 @@ export function InventoryList({
         </div>
       )}
 
-      <div className="shrink-0 flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-2xl border border-border shadow-sm">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by item name or supplier…"
-          className="flex-1"
-        />
-        {(() => {
-          const visibleTabs = filterTabs.slice(0, 4);
-          const dropdownTabs = filterTabs.slice(4);
-          const isDropdownActive = dropdownTabs.some((t) => t.key === cat);
-          const activeDropdownTab = dropdownTabs.find((t) => t.key === cat);
-          const dropdownLabel = isDropdownActive ? activeDropdownTab?.label : "More Categories";
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center gap-2 bg-card p-4 rounded-2xl border border-border shadow-sm">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by item name or supplier…"
+            className="flex-1 min-w-0"
+          />
 
-          return (
-            <div className="filter-tabs">
-              {visibleTabs.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setCat(t.key)}
-                  className={cat === t.key ? "filter-tab-active" : "filter-tab"}
-                >
-                  {t.label}
-                </button>
-              ))}
-              {dropdownTabs.length > 0 && (
-                <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex items-center gap-1.5 outline-none",
-                        isDropdownActive ? "filter-tab-active" : "filter-tab"
-                      )}
-                    >
-                      <span>{dropdownLabel}</span>
-                      <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-48 p-1.5">
-                    <div className="flex flex-col gap-0.5 max-h-60 overflow-y-auto custom-scrollbar">
-                      {dropdownTabs.map((t) => {
-                        const isSelected = cat === t.key;
-                        return (
-                          <button
-                            key={t.key}
-                            onClick={() => {
-                              setCat(t.key);
-                              setIsDropdownOpen(false);
-                            }}
-                            className={cn(
-                              "w-full text-left px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted/70 transition-all duration-150 active:scale-[0.99]",
-                              isSelected ? "text-primary bg-primary/5" : "text-foreground"
-                            )}
-                          >
-                            {t.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters((v) => !v)}
+            className={cn("gap-2 shrink-0", cat !== "all" && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {cat !== "all" && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">1</span>
+            )}
+          </Button>
+
+          {cat !== "all" && (
+            <Button variant="ghost" onClick={() => setCat("all")} className="gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+            </Button>
+          )}
+        </div>
+
+        {showFilters && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Category</Label>
+                <Select value={cat} onValueChange={setCat}>
+                  <SelectTrigger className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50">
+                    <SelectValue placeholder="All Items" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {filterTabs.map((t) => (
+                      <SelectItem key={t.key} value={t.key} className="text-xs font-medium">
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          );
-        })()}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">

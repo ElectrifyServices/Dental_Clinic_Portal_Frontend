@@ -1,8 +1,9 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity, Ban, Wallet } from 'lucide-react';
+import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity, Ban, Wallet, Filter, X } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
-import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, FilterTabs, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading } from '../ui';
+import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Label } from '../ui';
+import { cn } from '@/lib/utils';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
 import { useUpdateEmployeeStatusMutation } from '../../hooks/corporate/useUpdateEmployeeStatusMutation';
@@ -46,6 +47,7 @@ export function EmployeeManagement({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'corporate' | 'individual'>('all');
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -555,83 +557,99 @@ export function EmployeeManagement({
       {tab === 'list' ? (
         <>
           {/* Controls Container */}
-          <div className="shrink-0 flex flex-col lg:flex-row lg:items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
-            {/* Search Input */}
-            <div className="flex-1 min-w-0">
-              <SearchInput
-                value={search}
-                onChange={val => { setSearch(val); setPage(1); }}
-                placeholder="Search by name, phone…"
-                className="w-full"
-              />
-            </div>
-
-            {/* Filter Tabs + Plan Select */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0">
-              {/* Filter Tabs - Desktop only */}
-              <div className="hidden sm:block shrink-0">
-                <FilterTabs
-                  tabs={planTypeTabs}
-                  active={planTypeFilter}
-                  onChange={handlePlanTypeChange}
+          <div className="shrink-0 space-y-3">
+            <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
+              <div className="flex-1 min-w-0">
+                <SearchInput
+                  value={search}
+                  onChange={val => { setSearch(val); setPage(1); }}
+                  placeholder="Search by name, phone…"
+                  className="w-full"
                 />
               </div>
 
-              {/* Plan Type Select - Mobile only */}
-              <div className="block sm:hidden shrink-0 w-[140px]">
-                <Select
-                  value={planTypeFilter}
-                  onValueChange={handlePlanTypeChange}
-                >
-                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
-                    <SelectValue placeholder="Filter Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {planTypeTabs.map(tab => (
-                      <SelectItem key={tab.key} value={tab.key} className="text-xs">
-                        {tab.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowFilters(v => !v)}
+                className={cn(
+                  "h-10 gap-2 shrink-0",
+                  (planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+                )}
+              >
+                <Filter className="w-4 h-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {(planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && (
+                  <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">
+                    {[planTypeFilter !== 'all', selectedPlanFilter !== 'all'].filter(Boolean).length}
+                  </span>
+                )}
+              </Button>
 
-              {/* Plan Select */}
-              <div className="shrink-0 w-[160px] min-w-[140px]">
-                <Select
-                  value={selectedPlanFilter}
-                  onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}
+              {(planTypeFilter !== 'all' || selectedPlanFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setPlanTypeFilter('all');
+                    setSelectedPlanFilter('all');
+                    setPage(1);
+                  }}
+                  className="h-10 gap-1 text-muted-foreground shrink-0"
                 >
-                  <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-white border-border/60 hover:bg-slate-50">
-                    <SelectValue placeholder="Filter by Plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
-                    {availablePlanOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+                </Button>
+              )}
+
+              {/* Action Buttons — always visible */}
+              <div className="flex items-center gap-2 shrink-0">
+                <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 px-3">
+                  <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Import</span>
+                </Button>
+                <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3">
+                  <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Member</span>
+                </Button>
               </div>
             </div>
 
-            {/* Action Buttons — always visible */}
-            <div className="flex items-center gap-2 shrink-0">
-              <Button onClick={() => setTab('import')} variant="outline" className="gap-1.5 rounded-xl h-10 border-border/60 hover:bg-slate-50 hidden sm:flex">
-                <Upload className="w-4 h-4" /> Import
-              </Button>
-              <Button onClick={() => setTab('import')} variant="outline" size="icon" className="rounded-xl h-10 w-10 border-border/60 hover:bg-slate-50 flex sm:hidden">
-                <Upload className="w-4 h-4" />
-              </Button>
-              <Button onClick={() => { setEditEmp(null); setShowForm(true); }} className="gap-1.5 rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 px-3 hidden sm:flex">
-                <Plus className="w-4 h-4" /> Add Member
-              </Button>
-              <Button onClick={() => { setEditEmp(null); setShowForm(true); }} size="icon" className="rounded-xl shadow-md shadow-primary/15 bg-primary text-white hover:bg-primary/90 h-10 w-10 flex sm:hidden">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            {showFilters && (
+              <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div>
+                    <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Member Type</Label>
+                    <Select value={planTypeFilter} onValueChange={handlePlanTypeChange}>
+                      <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-muted/50 border-border/60">
+                        <SelectValue placeholder="Filter Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {planTypeTabs.map(tab => (
+                          <SelectItem key={tab.key} value={tab.key} className="text-xs">
+                            {tab.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Plan</Label>
+                    <Select value={selectedPlanFilter} onValueChange={val => { setSelectedPlanFilter(val); setPage(1); }}>
+                      <SelectTrigger className="w-full h-10 rounded-xl text-xs bg-muted/50 border-border/60">
+                        <SelectValue placeholder="Filter by Plan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="text-xs font-bold text-primary">All Plans</SelectItem>
+                        {availablePlanOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">

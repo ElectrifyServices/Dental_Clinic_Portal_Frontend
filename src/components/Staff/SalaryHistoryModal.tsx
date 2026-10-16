@@ -28,18 +28,18 @@ export function SalaryHistoryModal({
       onClose={onClose}
       size="md"
       icon={<History className="w-4 h-4" />}
-      headerRight={
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => refetch()}
-          disabled={isLoading || isFetching}
-          className="text-muted-foreground hover:text-foreground h-8 w-8"
-          title="Refresh History"
-        >
-          <RotateCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-primary" : ""}`} />
-        </Button>
-      }
+      // headerRight={
+      //   <Button
+      //     variant="ghost"
+      //     size="icon-sm"
+      //     onClick={() => refetch()}
+      //     disabled={isLoading || isFetching}
+      //     className="text-muted-foreground hover:text-foreground h-8 w-8"
+      //     title="Refresh History"
+      //   >
+      //     <RotateCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-primary" : ""}`} />
+      //   </Button>
+      // }
       footer={
         <div className="flex justify-between items-center w-full">
           <Button

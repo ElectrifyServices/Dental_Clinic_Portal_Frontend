@@ -132,7 +132,6 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedMedicalHistory}
-              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedMedicalHistory(values);
                 setFormData((prev: ApiAny) => ({ ...prev, medicalHistory: values.join('\n') }));
@@ -184,7 +183,6 @@ export const Step2MedicalHistory: React.FC<Step2Props> = ({
             <SearchableSelect
               isMulti
               value={selectedAllergies}
-              popoverClassName="w-[320px] sm:w-[400px] md:w-[480px] max-w-[90vw]"
               onChange={(values: string[]) => {
                 setSelectedAllergies(values);
                 setFormData((prev: ApiAny) => ({ ...prev, allergies: values.join('\n') }));

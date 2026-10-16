@@ -167,25 +167,21 @@ export function PatientList({
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-4">
-      <div className="shrink-0">
-        <PatientStats patients={patients} />
-      </div>
+    <div className="space-y-4">
+      <PatientStats patients={patients} />
 
-      <div className="shrink-0">
-        <PatientFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filterStatus={filterStatusVal}
-          setFilterStatus={setFilterStatusVal}
-          filterCategory={filterCategoryVal}
-          setFilterCategory={setFilterCategoryVal}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-        />
-      </div>
+      <PatientFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterStatus={filterStatusVal}
+        setFilterStatus={setFilterStatusVal}
+        filterCategory={filterCategoryVal}
+        setFilterCategory={setFilterCategoryVal}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+      />
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div>
         {isLoading ? (
           <Loading type="spinner" text="Loading patients..." className="py-14" />
         ) : filteredPatients.length === 0 ? (
@@ -232,7 +228,7 @@ export function PatientList({
         )}
 
         {(displayTotalItems > 0) && onPageChange && (
-          <div className="mt-4 pt-4 border-t border-border">
+          <div className="mt-4 pt-4 pb-6 border-t border-border">
             <Pagination
               page={currentPage}
               totalPages={displayTotalPages}
@@ -240,6 +236,7 @@ export function PatientList({
               perPage={limit}
               onPageChange={onPageChange}
               onPerPageChange={onLimitChange}
+              className="px-0 py-1"
             />
           </div>
         )}

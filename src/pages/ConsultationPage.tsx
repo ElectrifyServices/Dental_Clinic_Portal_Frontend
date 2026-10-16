@@ -48,6 +48,7 @@ export const ConsultationPage: React.FC = () => {
     consultations,
     handleUpdatePatientStatus,
     handleSaveConsultation,
+    handleDeleteConsultation,
     isLoading,
     updateFilters,
     totalItems,
@@ -392,13 +393,14 @@ export const ConsultationPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 pb-8">
       <PatientQueue
         doctorName={state.user?.name || "Doctor"}
         queuedPatients={queuedPatients}
         onSelectPatient={handleSelectPatient}
         onEditConsultation={handleEditConsultation}
         onUpdatePatientStatus={handleUpdatePatientStatus}
+        onDeleteConsultation={handleDeleteConsultation}
         onDirectConsultation={handleDirectConsultation}
         onRegisterNew={handleRegisterNew}
         patients={patients}

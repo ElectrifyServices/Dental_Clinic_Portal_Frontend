@@ -16,6 +16,8 @@ import {
   ChevronsUpDown,
   MoreVertical,
   XCircle,
+  Filter,
+  X,
 } from "lucide-react";
 import {
   Button,
@@ -33,7 +35,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  Label,
 } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { LabWork, LabWorkStatus } from "../../types";
 
 interface LabWorkListProps {
@@ -92,6 +96,8 @@ export function LabWorkList({
   footer,
 }: LabWorkListProps) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilterCount = status !== "all" ? 1 : 0;
 
   const groups = useMemo(() => {
     const map = new Map<string, LabWork[]>();
@@ -302,53 +308,89 @@ export function LabWorkList({
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-card p-3 rounded-2xl border border-border shadow-sm shrink-0">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by patient name or lab name…"
-          className="flex-1 min-w-0"
-        />
-        <div className="flex gap-2 shrink-0">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-9 w-[130px] text-xs font-semibold rounded-xl border border-border bg-muted">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_FILTERS.map((f) => (
-                <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "patient" | "lab")}>
-            <SelectTrigger className="h-9 w-[170px] text-xs font-semibold rounded-xl border border-border bg-muted">
-              <SelectValue placeholder="Group by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="patient" className="text-xs font-medium">Group by Patient</SelectItem>
-              <SelectItem value="lab" className="text-xs font-medium">Group by Lab</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by patient name or lab name…"
+            className="flex-1 min-w-0"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters((v) => !v)}
+            className={cn("h-9 gap-2 shrink-0", activeFilterCount > 0 && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" onClick={() => setStatus("all")} className="h-9 gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+            </Button>
+          )}
+
           {groups.length > 0 && (
             <Button
               variant="outline"
               onClick={toggleAll}
-              className="h-9 text-xs font-semibold rounded-xl gap-1.5"
+              className="h-9 text-xs font-semibold rounded-xl gap-1.5 shrink-0"
             >
               {allExpanded ? (
                 <>
-                  <ChevronsDownUp className="w-3.5 h-3.5" /> Collapse All
+                  <ChevronsDownUp className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Collapse All</span>
                 </>
               ) : (
                 <>
-                  <ChevronsUpDown className="w-3.5 h-3.5" /> Expand All
+                  <ChevronsUpDown className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Expand All</span>
                 </>
               )}
             </Button>
           )}
         </div>
+
+        {showFilters && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_FILTERS.map((f) => (
+                      <SelectItem key={f.key} value={f.key} className="text-xs font-medium">
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Group By</Label>
+                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "patient" | "lab")}>
+                  <SelectTrigger className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50">
+                    <SelectValue placeholder="Group by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="patient" className="text-xs font-medium">Group by Patient</SelectItem>
+                    <SelectItem value="lab" className="text-xs font-medium">Group by Lab</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto">

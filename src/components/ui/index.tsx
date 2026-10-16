@@ -531,22 +531,93 @@ interface PaginationProps {
   onPageChange: (p: number) => void;
   onPerPageChange?: (size: number) => void;
   className?: string;
+  compact?: boolean;
 }
-export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange, className }: PaginationProps) {
+export function Pagination({ page, totalPages, totalItems, perPage, onPageChange, onPerPageChange, className, compact = false }: PaginationProps) {
   if (totalItems === 0) return null;
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, totalItems);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2,
   );
+
+  if (compact) {
+    return (
+      <div className={cn("flex flex-col gap-1.5 p-2 sm:p-2.5", className)}>
+        <div className="flex items-center justify-between gap-1 text-xs">
+          <p className="text-[11px] text-muted-foreground whitespace-nowrap">
+            Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
+          </p>
+          {onPerPageChange && (
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-[11px] font-semibold text-muted-foreground">Rows:</span>
+              <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
+                <SelectTrigger className="h-[26px] text-[11px] px-1.5 w-[58px]">
+                  <SelectValue placeholder={String(perPage)} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)} className="text-xs">
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          {pages.map((p, i) => {
+            const prev = pages[i - 1];
+            return (
+              <React.Fragment key={p}>
+                {prev && p - prev > 1 && (
+                  <span className="text-xs text-muted-foreground px-0.5">…</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onPageChange(p)}
+                  className={cn(
+                    "w-7 h-7 text-xs rounded-md font-medium transition-colors cursor-pointer",
+                    p === page
+                      ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  {p}
+                </button>
+              </React.Fragment>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn("flex items-center justify-between px-4 py-3", className)}>
+    <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-3 w-full px-4 py-3", className)}>
       <div className="flex items-center gap-4">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground whitespace-nowrap">
           Showing <span className="font-semibold text-foreground">{start > totalItems ? totalItems : start}–{end}</span> of <span className="font-semibold text-foreground">{totalItems}</span>
         </p>
         {onPerPageChange && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-xs font-semibold text-muted-foreground">Rows:</span>
             <Select value={String(perPage)} onValueChange={(val) => onPerPageChange(Number(val))}>
               <SelectTrigger className="h-7 text-xs px-2 w-[65px]">
@@ -565,9 +636,10 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
       </div>
       <div className="flex items-center gap-1">
         <button
+          type="button"
           onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+          disabled={page <= 1}
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
         </button>
@@ -579,9 +651,10 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
                 <span className="text-xs text-muted-foreground px-1">…</span>
               )}
               <button
+                type="button"
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  "w-8 h-8 text-xs rounded-md font-medium transition-colors",
+                  "w-8 h-8 text-xs rounded-md font-medium transition-colors cursor-pointer",
                   p === page
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -593,9 +666,10 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
           );
         })}
         <button
+          type="button"
           onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          className="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30 transition-colors"
+          disabled={page >= totalPages}
+          className="w-8 h-8 flex items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -611,14 +685,19 @@ interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   placeholder?: string;
   className?: string;
 }
+let searchInputIdCounter = 0;
 export function SearchInput({ value, onChange, placeholder = "Search…", className = "", ...props }: SearchInputProps) {
+  const inputIdRef = React.useRef<string>();
+  if (!inputIdRef.current) {
+    inputIdRef.current = `search-query-input-${++searchInputIdCounter}`;
+  }
   return (
     <div className={cn("relative", className)}>
       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <input
         type="search"
-        name="search-query-input"
-        autoComplete="new-password"
+        name={inputIdRef.current}
+        autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

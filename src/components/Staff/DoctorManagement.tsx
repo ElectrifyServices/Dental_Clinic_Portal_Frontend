@@ -17,6 +17,8 @@ import {
   LayoutGrid,
   List,
   Users,
+  Filter,
+  X,
 } from "lucide-react";
 import { User as UserType } from "../../types";
 import { createPortal } from "react-dom";
@@ -25,13 +27,19 @@ import {
   PageHeader,
   DataTable,
   SearchInput,
-  FilterTabs,
   Badge,
   Card,
   CardContent,
   Loading,
   Pagination,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Label,
 } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { useSidebar } from "../../contexts/SidebarContext";
 
 interface DoctorManagementProps {
@@ -125,6 +133,7 @@ export function DoctorManagement({
 
   const [statusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
@@ -425,21 +434,34 @@ export function DoctorManagement({
         />
       </div>
 
-      <div className="shrink-0 flex flex-col md:flex-row gap-4 items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search by name, email or role…"
-          className="flex-1 w-full"
-        />
-        <div className="flex flex-row items-center justify-between gap-4 w-full lg:w-auto overflow-hidden">
-          <div className="overflow-x-auto scrollbar-none flex-1">
-            <FilterTabs
-              tabs={ROLE_FILTERS}
-              active={roleFilter}
-              onChange={setRoleFilter}
-            />
-          </div>
+      <div className="shrink-0 space-y-3">
+        <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by name, email or role…"
+            className="flex-1 min-w-0"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsRoleFilterOpen((v) => !v)}
+            className={cn("gap-2 shrink-0", roleFilter !== "all" && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {roleFilter !== "all" && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">1</span>
+            )}
+          </Button>
+
+          {roleFilter !== "all" && (
+            <Button variant="ghost" onClick={() => setRoleFilter("all")} className="gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+            </Button>
+          )}
+
           <div className="flex items-center bg-muted p-1 rounded-xl border border-border shrink-0">
             <Button
               variant="ghost"
@@ -457,6 +479,29 @@ export function DoctorManagement({
             </Button>
           </div>
         </div>
+
+        {isRoleFilterOpen && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Role</Label>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="h-10 w-full text-xs font-semibold rounded-xl border border-border bg-muted/50">
+                    <SelectValue placeholder="All Roles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_FILTERS.map((t) => (
+                      <SelectItem key={t.key} value={t.key} className="text-xs font-medium">
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -479,8 +524,8 @@ export function DoctorManagement({
         <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
           <div className={
             collapsed
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
-              : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              ? "grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              : "grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
           }>
           {filtered.length === 0 ? (
             <div className="col-span-full py-20 bg-card rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center">
