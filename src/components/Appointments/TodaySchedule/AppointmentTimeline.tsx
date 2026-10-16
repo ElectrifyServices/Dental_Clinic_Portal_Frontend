@@ -87,11 +87,16 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     {
       key: "status",
       header: "Status",
-      render: (apt: ApiAny) => (
-        <Badge variant={getStatusVariant(apt.status)}>
-          {apt.status}
-        </Badge>
-      ),
+      render: (apt: ApiAny) => {
+        const isConsultationDeleted =
+          apt.cancelled_reason &&
+          String(apt.cancelled_reason).toLowerCase().includes("consultation");
+        return (
+          <Badge variant={isConsultationDeleted ? "red" : getStatusVariant(apt.status)}>
+            {isConsultationDeleted ? "Consultation Deleted" : apt.status}
+          </Badge>
+        );
+      },
     },
   ];
 

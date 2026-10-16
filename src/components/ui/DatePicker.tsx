@@ -17,6 +17,8 @@ export interface DatePickerProps {
   className?: string
   name?: string
   id?: string
+  startMonth?: Date
+  endMonth?: Date
   /**
    * "dropdown" swaps the month/year caption for select dropdowns — use for
    * long-range pickers like date of birth where paging month-by-month is impractical.
@@ -43,11 +45,29 @@ function formatDisplay(date: Date): string {
 }
 
 const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
-  ({ value, onChange, placeholder = "Select date", disabled, min, max, className, name, id, captionLayout }, ref) => {
+  ({ value, onChange, placeholder = "Select date", disabled, min, max, className, name, id, captionLayout, startMonth, endMonth }, ref) => {
     const [open, setOpen] = React.useState(false)
     const selected = parseDateString(value)
     const minDate = parseDateString(min)
     const maxDate = parseDateString(max)
+
+    const calStartMonth = React.useMemo(() => {
+      if (startMonth) return startMonth
+      if (!minDate) return undefined
+      if (selected && selected < minDate) {
+        return new Date(selected.getFullYear(), selected.getMonth(), 1)
+      }
+      return new Date(minDate.getFullYear(), minDate.getMonth(), 1)
+    }, [startMonth, minDate, selected])
+
+    const calEndMonth = React.useMemo(() => {
+      if (endMonth) return endMonth
+      if (!maxDate) return undefined
+      if (selected && selected > maxDate) {
+        return new Date(selected.getFullYear(), selected.getMonth(), 1)
+      }
+      return new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)
+    }, [endMonth, maxDate, selected])
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -76,19 +96,44 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             mode="single"
             captionLayout={captionLayout}
             selected={selected}
-            defaultMonth={selected}
+            defaultMonth={selected || (minDate && (!selected || selected < minDate) ? minDate : undefined)}
+            startMonth={calStartMonth}
+            endMonth={calEndMonth}
             onSelect={(date) => {
               if (date) {
                 onChange?.(toDateString(date))
                 setOpen(false)
+              } else {
+                onChange?.("")
               }
             }}
             disabled={(date) => {
-              if (minDate && date < minDate) return true
-              if (maxDate && date > maxDate) return true
+              const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+              if (minDate) {
+                const minD = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()).getTime()
+                if (d < minD) return true
+              }
+              if (maxDate) {
+                const maxD = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()).getTime()
+                if (d > maxD) return true
+              }
               return false
             }}
           />
+          {selected && (
+            <div className="pt-2 mt-1 border-t border-border flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  onChange?.("")
+                  setOpen(false)
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
+              >
+                Clear date
+              </button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     )

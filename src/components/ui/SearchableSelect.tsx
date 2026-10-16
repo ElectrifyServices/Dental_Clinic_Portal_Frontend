@@ -281,7 +281,7 @@ export function SearchableSelect({
                 : value === optValue;
               return (
                 <div
-                  key={optValue || i}
+                  key={`${optValue ?? ""}-${i}`}
                   className={cn(
                     "w-full min-w-0 flex items-center justify-between group text-xs font-semibold hover:bg-muted/70 rounded-lg transition-all duration-150 active:scale-[0.99]",
                     isSelected ? "text-primary bg-primary/5" : "text-foreground"

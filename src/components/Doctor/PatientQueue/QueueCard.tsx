@@ -1,6 +1,6 @@
 import type { ApiAny } from "../../../types/api";
 import { useState, useEffect } from "react";
-import { User, Clock, Stethoscope, MessageSquare, AlertTriangle, FileText, CheckCircle, IndianRupee, MessageCircle } from "lucide-react";
+import { User, Clock, Stethoscope, MessageSquare, AlertTriangle, FileText, CheckCircle, IndianRupee, MessageCircle, Trash2 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "@/services/apiClient";
@@ -55,6 +55,7 @@ interface QueueCardProps {
   onUpdatePatientStatus: (id: string, s: string) => void;
   onSelectPatient: (p: ApiAny) => void;
   onEditConsultation?: (p: ApiAny) => void;
+  onDeleteConsultation?: (p: ApiAny) => void;
 }
 
 export function QueueCard({
@@ -65,6 +66,7 @@ export function QueueCard({
   onUpdatePatientStatus,
   onSelectPatient,
   onEditConsultation,
+  onDeleteConsultation,
 }: QueueCardProps) {
   const _waitingTime = useWaitingTime(patient.checkInTime);
   const { setActiveModal, setWhatsappPhone, setWhatsappPatientName } = useModal();
@@ -299,28 +301,60 @@ export function QueueCard({
           {/* Action Button */}
           <div>
             {patient.status === "PENDING" && (
-              <Button
-                onClick={() => {
-                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
-                  onSelectPatient(patient);
-                }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2 h-10"
-              >
-                <Stethoscope className="w-4 h-4" />
-                Start Consultation
-              </Button>
+              <div className="flex gap-2 min-w-0">
+                <Button
+                  onClick={() => {
+                    onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                    onSelectPatient(patient);
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-blue-100 flex items-center justify-center gap-2 h-10 min-w-0"
+                >
+                  <Stethoscope className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Start Consultation</span>
+                </Button>
+                {onDeleteConsultation && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteConsultation(patient);
+                    }}
+                    variant="outline"
+                    title="Delete Consultation"
+                    className="h-10 px-3 bg-white hover:bg-destructive/10 border-destructive/30 text-destructive rounded-xl font-bold shadow-xs shrink-0 flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-xs">Delete</span>
+                  </Button>
+                )}
+              </div>
             )}
             {patient.status === "IN_PROGRESS" && (
-              <Button
-                onClick={() => {
-                  onUpdatePatientStatus(patient.id, "IN_PROGRESS");
-                  onSelectPatient(patient);
-                }}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 h-10"
-              >
-                <FileText className="w-4 h-4" />
-                Continue Consultation
-              </Button>
+              <div className="flex gap-2 min-w-0">
+                <Button
+                  onClick={() => {
+                    onUpdatePatientStatus(patient.id, "IN_PROGRESS");
+                    onSelectPatient(patient);
+                  }}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 h-10 min-w-0"
+                >
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Continue Consultation</span>
+                </Button>
+                {onDeleteConsultation && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteConsultation(patient);
+                    }}
+                    variant="outline"
+                    title="Delete Consultation"
+                    className="h-10 px-3 bg-white hover:bg-destructive/10 border-destructive/30 text-destructive rounded-xl font-bold shadow-xs shrink-0 flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-xs">Delete</span>
+                  </Button>
+                )}
+              </div>
             )}
             {patient.status === "COMPLETED" && (
               <div className="flex gap-2 min-w-0">

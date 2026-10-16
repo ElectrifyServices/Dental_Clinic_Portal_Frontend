@@ -40,10 +40,10 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 }) => {
   useEffect(() => {
     // Auto-select if there is only one doctor in the entire list and no doctor is currently selected
-    if (doctors.length === 1 && selectedDoctorId === null) {
+    if (totalItems === 1 && doctors.length === 1 && selectedDoctorId === null) {
       setSelectedDoctorId(doctors[0].id);
     }
-  }, [doctors, selectedDoctorId, setSelectedDoctorId]);
+  }, [totalItems, doctors, selectedDoctorId, setSelectedDoctorId]);
 
   return (
     <div className="xl:col-span-3 bg-card rounded-2xl border border-border shadow-xs flex flex-col overflow-hidden h-[360px] sm:h-[400px] xl:h-full">
@@ -63,7 +63,7 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 space-y-1.5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto min-h-0 p-2 sm:p-2.5 space-y-1.5 custom-scrollbar">
         <Button
           variant="ghost"
           onClick={() => setSelectedDoctorId(null)}
@@ -111,13 +111,14 @@ export const DoctorSidebar: React.FC<DoctorSidebarProps> = ({
 
       <div className="border-t border-border bg-muted/10 shrink-0">
         <Pagination
+          compact
           page={page}
           totalPages={totalPages}
           totalItems={totalItems}
           perPage={perPage}
           onPageChange={onPageChange}
           onPerPageChange={onPerPageChange}
-          className="px-2.5 py-1.5 text-xs"
+          className="p-2 text-xs"
         />
       </div>
     </div>

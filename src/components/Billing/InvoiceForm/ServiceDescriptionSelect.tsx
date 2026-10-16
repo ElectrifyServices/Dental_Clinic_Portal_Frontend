@@ -114,7 +114,7 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[350px] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[280px] p-0" align="start">
         <div className="flex flex-col max-h-[300px]">
           <div className="flex items-center border-b px-3 sticky top-0 bg-popover z-10">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />

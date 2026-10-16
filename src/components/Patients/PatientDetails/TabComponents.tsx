@@ -2,6 +2,7 @@ import type { ApiAny } from "../../../types/api";
 import { useState } from "react";
 import { Activity, AlertTriangle, Calendar, ChevronDown, CheckCircle, CreditCard, Heart, Image as ImageIcon, Pill, Send, Stethoscope, User, X } from "lucide-react";
 import { Card, Button, Badge, Loading } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
 
 // --- Reusable Empty State Component ---
@@ -366,77 +367,147 @@ export const TreatmentsTab = ({
 export const BillingTab = ({
   patient,
   patientInvoices,
-  getStatusColor,
+  getStatusColor: _getStatusColor,
   handleSendReminder,
 }: {
   patient: ApiAny;
   patientInvoices: ApiAny[];
   getStatusColor: (s: string) => string;
   handleSendReminder: () => void;
-}) => (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-bold text-foreground">Billing History</h3>
-      {patient.outstandingBalance > 0 && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
-          <div className="flex items-center justify-between gap-6">
-            <div>
-              <p className="font-semibold text-red-900">Outstanding Balance</p>
-              <p className="text-2xl font-bold text-destructive">
-                ₹{patient.outstandingBalance.toLocaleString()}
-              </p>
+}) => {
+  const formatInvoiceDate = (dateVal?: string | number | Date) => {
+    if (!dateVal) return null;
+    try {
+      const d = new Date(dateVal);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : String(dateVal);
+    } catch {
+      return String(dateVal);
+    }
+  };
+
+  const getInvoiceStatusBadge = (status?: string) => {
+    const s = (status || "generated").toLowerCase().replace(/_/g, "-");
+    switch (s) {
+      case "paid":
+      case "completed":
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "partially-paid":
+      case "pending":
+      case "scheduled":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      case "generated":
+      case "draft":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "cancelled":
+      case "void":
+        return "bg-rose-100 text-rose-800 border-rose-200";
+      default:
+        return "bg-muted text-muted-foreground border-border";
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold text-foreground">Billing History</h3>
+        {patient.outstandingBalance > 0 && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
+            <div className="flex items-center justify-between gap-6">
+              <div>
+                <p className="font-semibold text-red-900">Outstanding Balance</p>
+                <p className="text-2xl font-bold text-destructive">
+                  ₹{patient.outstandingBalance.toLocaleString()}
+                </p>
+              </div>
+              <Button
+                onClick={handleSendReminder}
+                variant="destructive"
+                className="flex items-center text-sm font-medium h-auto"
+              >
+                <Send className="w-4 h-4 mr-2" /> Send Reminder
+              </Button>
             </div>
-            <Button
-              onClick={handleSendReminder}
-              variant="destructive"
-              className="flex items-center text-sm font-medium h-auto"
-            >
-              <Send className="w-4 h-4 mr-2" /> Send Reminder
-            </Button>
           </div>
-        </div>
+        )}
+      </div>
+      {patientInvoices.map((invoice) => {
+        const invoiceNumber =
+          invoice.invoice_number ||
+          invoice.invoiceNumber ||
+          invoice.bill_number ||
+          invoice.invoiceNo ||
+          invoice.id;
+
+        const issuedDate = formatInvoiceDate(
+          invoice.invoice_date || invoice.date || invoice.created_at || invoice.createdAt
+        );
+
+        const dueDate = formatInvoiceDate(
+          invoice.due_date || invoice.dueDate
+        );
+
+        const amount = Number(
+          invoice.grand_total ??
+          invoice.total_amount ??
+          invoice.total ??
+          invoice.amount ??
+          invoice.billed_amount ??
+          0
+        );
+
+        const statusText = (invoice.status || "GENERATED").toUpperCase();
+
+        return (
+          <Card
+            key={invoice.id || invoiceNumber}
+            className="bg-card rounded-2xl p-4 border border-border shadow-sm hover:border-primary/20 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground text-sm tracking-tight">{invoiceNumber}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                    {issuedDate && <span>Issued: {issuedDate}</span>}
+                    {dueDate && <span>Due: {dueDate}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-bold text-foreground text-base">
+                  ₹{amount.toLocaleString()}
+                </p>
+                <span
+                  className={cn(
+                    "inline-block mt-1 px-2.5 py-0.5 text-[10px] font-bold rounded-full border",
+                    getInvoiceStatusBadge(invoice.status)
+                  )}
+                >
+                  {statusText}
+                </span>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+      {patientInvoices.length === 0 && (
+        <EmptyState
+          icon={CreditCard}
+          title="No invoices found"
+          description="No billing records or invoices have been generated for this patient yet."
+        />
       )}
     </div>
-    {patientInvoices.map((invoice) => (
-      <Card
-        key={invoice.id}
-        className="bg-card rounded-2xl p-4 border border-border shadow-sm"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <CreditCard className="w-5 h-5 text-muted-foreground/60 mr-3" />
-            <div>
-              <p className="font-semibold text-foreground">{invoice.id}</p>
-              <p className="text-sm text-muted-foreground">
-                Issued: {new Date(invoice.date).toLocaleDateString()}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Due: {new Date(invoice.dueDate).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-foreground">
-              ₹{(invoice.amount || invoice.total || 0).toLocaleString()}
-            </p>
-            <span
-              className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}
-            >
-              {invoice.status.toUpperCase()}
-            </span>
-          </div>
-        </div>
-      </Card>
-    ))}
-    {patientInvoices.length === 0 && (
-      <EmptyState
-        icon={CreditCard}
-        title="No invoices found"
-        description="No billing records or invoices have been generated for this patient yet."
-      />
-    )}
-  </div>
-);
+  );
+};
 
 // --- Prescriptions Tab ---
 export const PrescriptionsTab = ({

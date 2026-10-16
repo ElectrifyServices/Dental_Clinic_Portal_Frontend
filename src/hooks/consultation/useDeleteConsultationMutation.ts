@@ -20,6 +20,9 @@ export function useDeleteConsultationMutation() {
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["consultations"] });
+        queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        queryClient.invalidateQueries({ queryKey: ["appointment-stats"] });
+        queryClient.invalidateQueries({ queryKey: ["patient-queue"] });
       },
     },
   });

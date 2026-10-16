@@ -3,8 +3,11 @@ import type { ApiAny } from "../../../types/api";
 import { Input } from "@/components/ui/Input";
 import React from 'react';
 import { FileText, Upload, Shield, CheckCircle2, Trash2, Eye } from 'lucide-react';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, toast } from '@/components/ui';
 import { useModal } from '@/contexts/ModalContext';
+
+const ALLOWED_DOC_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
+const ALLOWED_DOC_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 
 interface Step3Props {
   role: string;
@@ -52,9 +55,20 @@ export function Step3Documentation({ role, documents, onUpload, onRemove }: Step
 
   const handleFileChange = (docType: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      onUpload(docType, file);
+    if (!file) return;
+
+    const extension = `.${file.name.split('.').pop()?.toLowerCase() || ''}`;
+    const isValidExtension = ALLOWED_DOC_EXTENSIONS.includes(extension);
+    const isValidMimeType = !file.type || ALLOWED_DOC_MIME_TYPES.includes(file.type);
+
+    if (!isValidExtension || !isValidMimeType) {
+      toast.error('Only PDF, JPG, JPEG or PNG files are allowed.');
+      e.target.value = '';
+      return;
     }
+
+    onUpload(docType, file);
+    e.target.value = '';
   };
 
   return (

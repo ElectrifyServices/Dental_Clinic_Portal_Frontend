@@ -154,7 +154,7 @@ export function normalizeInvoice(payload: ApiAny, expectedId?: string) {
   
   const total = items.length > 0
     ? (inv.is_complimentary ? 0 : (subtotal - discountAmount + taxAmount))
-    : Number(inv.total_amount ?? inv.total ?? 0);
+    : Number(inv.total_amount ?? inv.grand_total ?? inv.total ?? inv.billed_amount ?? inv.amount ?? 0);
 
   const paidAmount = Number(inv.paid_amount ?? inv.paidAmount ?? 0);
   const pendingAmount = Number(inv.pending_amount ?? inv.pendingAmount ?? 0);

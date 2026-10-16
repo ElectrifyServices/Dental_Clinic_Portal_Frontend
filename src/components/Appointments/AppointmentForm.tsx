@@ -97,6 +97,10 @@ export function AppointmentForm({
     return parsePhoneAndCountry(rawPhone, rawCode);
   }, [appointment]);
 
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
+    appointment?.patientId || (appointment as ApiAny)?.patient_id || null,
+  );
+
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema) as ApiAny,
     defaultValues: {
@@ -237,7 +241,7 @@ export function AppointmentForm({
       ...data,
       duration: Number(data.duration || 15),
       id: appointment?.id || Date.now().toString(),
-      patientId: appointment?.patientId || Date.now().toString(),
+      patientId: selectedPatientId || appointment?.patientId || (appointment as ApiAny)?.patient_id || undefined,
       status: appointment?.status || "scheduled",
     });
   };
@@ -289,11 +293,17 @@ export function AppointmentForm({
     form.setValue(name as keyof AppointmentFormData, value, {
       shouldValidate: true,
     });
+    if (name === "patientName" || name === "patientPhone") {
+      setSelectedPatientId(null);
+    }
     if (name === "patientName" && value.trim().length > 2) {
       const found = apiPatients.find(
         (p: ApiAny) => p.name.toLowerCase() === value.toLowerCase().trim(),
       );
       setSuggestion(found ? { name: found.name, phone: found.phone } : null);
+      if (found?.id) {
+        setSelectedPatientId(found.id);
+      }
     }
   };
 
@@ -370,11 +380,14 @@ export function AppointmentForm({
             errors={errors}
             patients={apiPatients}
             isLoadingPatients={isPatientsLoading || isPatientsFetching}
-            onSelectPatient={(name, phone, countryCode) => {
+            onSelectPatient={(name, phone, countryCode, patientObj) => {
               form.setValue("patientName", name, { shouldValidate: true });
               form.setValue("patientPhone", phone, { shouldValidate: true });
               if (countryCode) {
                 form.setValue("country_code", countryCode, { shouldValidate: true });
+              }
+              if (patientObj?.id) {
+                setSelectedPatientId(patientObj.id);
               }
               setSuggestion(null);
             }}

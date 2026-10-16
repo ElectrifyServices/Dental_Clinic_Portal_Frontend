@@ -1,7 +1,8 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
-import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download as _Download, FileText } from 'lucide-react';
-import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText, Filter, X } from 'lucide-react';
+import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 interface EMRRecord {
   id: string;
@@ -81,7 +82,7 @@ export function EMRList({
   onTypeFilterChange,
   onAddRecord,
   onViewRecord,
-  onExportRecord: _onExportRecord,
+  onExportRecord,
   page,
   onPageChange,
   limit,
@@ -136,9 +137,9 @@ export function EMRList({
           <Button variant="outline" size="icon-sm" onClick={() => onViewRecord(r)} title="View Record">
             <Eye className="w-4 h-4 text-primary" />
           </Button>
-          {/* <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Download Medical History PDF">
+          <Button variant="outline" size="icon-sm" onClick={() => onExportRecord(r)} title="Download Medical History PDF">
             <Download className="w-4 h-4 text-muted-foreground hover:text-primary" />
-          </Button> */}
+          </Button>
         </div>
       )
     }
@@ -146,6 +147,7 @@ export function EMRList({
 
   const itemsPerPage = limit ?? 10;
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const currentPage = page !== undefined ? page : localCurrentPage;
   const setCurrentPage = onPageChange || setLocalCurrentPage;
 
@@ -171,27 +173,57 @@ export function EMRList({
         />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-3 items-center bg-card p-3 sm:p-3.5 rounded-2xl border border-border shadow-xs">
-        <SearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder="Search by patient, title or content…"
-          className="w-full md:flex-1"
-        />
-        <div className="w-full md:w-[220px] shrink-0">
-          <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-            <SelectTrigger className="w-full h-10 bg-card border-border rounded-xl font-medium text-xs">
-              <SelectValue placeholder="Filter by Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {TYPE_FILTERS.map((f) => (
-                <SelectItem key={f.key} value={f.key} className="font-medium text-xs">
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 bg-card p-3 sm:p-3.5 rounded-2xl border border-border shadow-xs">
+          <SearchInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Search by patient, title or content…"
+            className="flex-1 min-w-0"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsFilterOpen((v) => !v)}
+            className={cn("gap-2 shrink-0", typeFilter !== "all" && "border-primary bg-primary/10 text-primary hover:bg-primary/15")}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {typeFilter !== "all" && (
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px]">1</span>
+            )}
+          </Button>
+
+          {typeFilter !== "all" && (
+            <Button variant="ghost" onClick={() => onTypeFilterChange("all")} className="gap-1 text-muted-foreground shrink-0">
+              <X className="w-3 h-3" /> <span className="hidden sm:inline">Clear</span>
+            </Button>
+          )}
         </div>
+
+        {isFilterOpen && (
+          <div className="bg-card p-4 sm:p-5 rounded-2xl border border-border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Advanced Filters</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Type</Label>
+                <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+                  <SelectTrigger className="w-full h-10 bg-muted/50 border-border rounded-xl font-medium text-xs">
+                    <SelectValue placeholder="Filter by Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TYPE_FILTERS.map((f) => (
+                      <SelectItem key={f.key} value={f.key} className="font-medium text-xs">
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <DataTable
