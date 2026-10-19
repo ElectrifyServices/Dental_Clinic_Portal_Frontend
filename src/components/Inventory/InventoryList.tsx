@@ -12,6 +12,7 @@ import {
   X,
   Clock,
   AlertTriangle,
+  SlidersHorizontal,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
