@@ -362,7 +362,7 @@ interface DataTableProps<T> {
   emptyIcon?: React.ReactNode;
   emptyTitle?: string;
   emptySubtitle?: string;
-  rowKey: (row: T) => string;
+  rowKey: (row: T, idx: number) => string;
   footer?: React.ReactNode;
   renderExpandedRow?: (row: T) => React.ReactNode;
   expandedRowIds?: Set<string>;
@@ -403,7 +403,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
               </tr>
             ) : (
               data.map((row, idx) => {
-                const key = rowKey(row) || `row-${idx}`;
+                const key = rowKey(row, idx) || `row-${idx}`;
                 const rowClasses = cn(
                   onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
                   rowClassName?.(row, idx)
