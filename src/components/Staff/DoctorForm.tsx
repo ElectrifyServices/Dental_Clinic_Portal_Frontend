@@ -23,6 +23,7 @@ import {
   useSubmitLabel,
 } from "../../hooks/useFormConfig";
 import {
+  getStaffSchema,
   staffSchema,
   type StaffFormData,
   staffStep1Fields,
@@ -140,13 +141,16 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
     (doctor as ApiAny)?.country_code
   );
 
+  const isEdit = !!doctor;
+
   const form = useForm<StaffFormData>({
-    resolver: zodResolver(staffSchema) as ApiAny,
+    resolver: zodResolver(getStaffSchema(isEdit)) as ApiAny,
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",
       phone: initialPhoneInfo.nationalPhone,
       country_code: initialPhoneInfo.countryCode,
+      country_iso: (doctor as ApiAny)?.country_iso || (doctor as ApiAny)?.countryCode || (doctor as ApiAny)?.country,
       role: doctor?.role ?? "doctor",
       specialization: doctor?.specialization ?? "",
       password: "",
@@ -237,6 +241,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           email: s.email || doctor.email || "",
           phone: staffPhoneInfo.nationalPhone,
           country_code: staffPhoneInfo.countryCode,
+          country_iso: (s as ApiAny)?.country_iso || (s as ApiAny)?.countryCode || (doctor as ApiAny)?.country_iso,
           role: normalizedRole as ApiAny,
           specialization: profile.specialization?.name || profile.specialization_id || doctor.specialization || '',
           password: "",
@@ -281,6 +286,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
           email: doctor.email ?? "",
           phone: docPhoneInfo.nationalPhone,
           country_code: docPhoneInfo.countryCode,
+          country_iso: (doctor as ApiAny)?.country_iso || (doctor as ApiAny)?.countryCode,
           role: doctor.role ?? "doctor",
           specialization: doctor.specialization ?? "",
           password: "",
@@ -485,6 +491,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
       if (data.password) formDataObj.append("password", data.password);
       if (data.phone) formDataObj.append("phone", data.phone);
       formDataObj.append("country_code", data.country_code || "+91");
+      if (data.country_iso) formDataObj.append("country_iso", data.country_iso);
 
       // Pass the mapped UUID instead of name
       formDataObj.append("role_id", roleId);

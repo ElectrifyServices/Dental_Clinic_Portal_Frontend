@@ -47,21 +47,22 @@ interface PageHeaderProps {
   subtitle?: string;
   action?: React.ReactNode;
   children?: React.ReactNode;
+  className?: string;
 }
-export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action, children, className }: PageHeaderProps) {
   return (
-    <div className="flex flex-row flex-wrap items-center justify-between gap-y-3 gap-x-2 mb-0">
+    <div className={cn("flex flex-row flex-wrap items-center justify-between gap-y-3 gap-x-2 mb-0", className)}>
       <div className="flex-1 min-w-[120px]">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
-        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-1">{subtitle}</p>}
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight leading-tight line-clamp-1">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2 line-clamp-1">{subtitle}</p>}
       </div>
       {action && (
-        <div className="flex flex-row items-center justify-end gap-2 shrink-0 order-2 md:order-3">
+        <div className="flex flex-row items-center justify-end gap-2 shrink-0 order-2 xl:order-3">
           {action}
         </div>
       )}
       {children && (
-        <div className="order-3 md:order-2 w-full md:w-auto">
+        <div className="order-3 xl:order-2 w-full xl:w-auto">
           {children}
         </div>
       )}
@@ -374,48 +375,50 @@ export function MetricCard({ label, value, icon, variant = "gray", trend, classN
 
   return (
     <Card className={cn(
-      compact ? "p-2.5 sm:p-3" : "p-4 sm:p-5 md:p-6",
-      "transition-all duration-300 ease-out group",
+      compact ? "p-2.5 sm:p-3" : "p-3 sm:p-3.5 lg:p-4",
+      "flex flex-col justify-between transition-all duration-300 ease-out group overflow-hidden h-full min-h-[110px] sm:min-h-[116px]",
       interactive ? "hover:shadow-card-hover hover:-translate-y-1 hover:border-border/80 cursor-pointer" : "cursor-default",
       className
     )}>
-      <div className={cn("flex items-start justify-between", compact ? "gap-2" : "gap-4")}>
-        <div className="flex-1 min-w-0">
-          <p className={cn(
-            compact ? "text-[10px] sm:text-xs mb-1" : "text-xs mb-3",
-            "font-semibold text-muted-foreground uppercase tracking-wide transition-colors duration-200",
-            interactive ? "group-hover:text-primary/80" : "",
-          )}>
-            {label}
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn(
-              compact ? "text-xl sm:text-2xl" : "text-[28px] sm:text-[32px]",
-              "font-bold text-foreground leading-none"
-            )}>{value}</span>
-            {trend && (
-              <span className={cn("text-xs font-semibold",
-                typeof trend === "object"
-                  ? trend.isUp ? "text-emerald-600" : "text-destructive"
-                  : "text-emerald-600",
-              )}>
-                {typeof trend === "object" ? (
-                  <span className="flex items-center gap-0.5">
-                    {trend.isUp ? "↑" : "↓"} {trend.value}
-                  </span>
-                ) : trend}
-              </span>
-            )}
-          </div>
-        </div>
+      <div className={cn("flex items-start justify-between gap-1.5 sm:gap-2", compact ? "mb-1" : "mb-2")}>
+        <p className={cn(
+          compact ? "text-[10px] sm:text-xs min-h-[1.75rem]" : "text-[10px] sm:text-[11px] xl:text-xs min-h-[2.4rem] sm:min-h-[2.5rem]",
+          "font-semibold text-muted-foreground uppercase tracking-wide transition-colors duration-200 leading-snug line-clamp-2 flex-1 min-w-0 pr-0.5 flex items-start",
+          interactive ? "group-hover:text-primary/80" : "",
+        )}>
+          {label}
+        </p>
         <div className={cn(
-          compact ? "w-8 h-8 sm:w-9 sm:h-9 rounded-lg" : "w-10 h-10 sm:w-11 sm:h-11 rounded-md",
-          "flex items-center justify-center shrink-0 transition-colors duration-300",
+          compact ? "w-7 h-7 sm:w-8 sm:h-8 rounded-lg" : "w-8 h-8 sm:w-8.5 sm:h-8.5 lg:w-9 lg:h-9 rounded-xl",
+          "flex items-center justify-center shrink-0 transition-colors duration-300 [&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-4.5 sm:[&_svg]:h-4.5",
           variants[variant],
           interactive ? hoverVariants[variant] : "",
         )}>
           {icon}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0 mt-auto">
+        <span className={cn(
+          compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl md:text-[24px] lg:text-[26px] xl:text-[28px]",
+          "font-bold text-foreground leading-none tracking-tight truncate max-w-full"
+        )}>
+          {value}
+        </span>
+        {trend && (
+          <span className={cn(
+            "text-xs font-semibold leading-tight shrink-0",
+            typeof trend === "object"
+              ? trend.isUp ? "text-emerald-600" : "text-destructive"
+              : "text-emerald-600",
+          )}>
+            {typeof trend === "object" ? (
+              <span className="flex items-center gap-0.5">
+                {trend.isUp ? "↑" : "↓"} {trend.value}
+              </span>
+            ) : trend}
+          </span>
+        )}
       </div>
     </Card>
   );
@@ -1020,9 +1023,9 @@ const PLAN_COLOR_CLASSES: Record<string, string> = {
 };
 export function PlanBadge({ name, code, color = "blue" }: PlanBadgeProps) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-sm font-medium text-foreground">{name}</span>
-      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
+    <div className="flex items-center gap-1.5 min-w-0 max-w-full">
+      <span className="text-sm font-medium text-foreground truncate">{name}</span>
+      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0", PLAN_COLOR_CLASSES[color] ?? PLAN_COLOR_CLASSES.blue)}>
         {code}
       </span>
     </div>

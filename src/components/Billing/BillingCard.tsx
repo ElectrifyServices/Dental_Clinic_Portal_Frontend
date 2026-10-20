@@ -142,7 +142,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4">
+    <div className="bg-white border border-border/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4 overflow-hidden">
       {/* Patient Header */}
       <div className="flex flex-nowrap items-start gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -179,22 +179,22 @@ export const BillingCard: React.FC<BillingCardProps> = ({
 
       {/* Invoice Key Details Grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-1 text-xs border-t border-slate-50">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
             Invoice No.
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="font-mono font-bold text-foreground">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-mono font-bold text-foreground truncate">
               {invoice.invoice_number || invoice.id}
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wide">
             Amount
           </span>
-          <span className="font-bold text-foreground text-sm">
+          <span className="font-bold text-foreground text-sm truncate">
             ₹{getDisplayAmount(invoice).toLocaleString("en-IN")}
           </span>
         </div>

@@ -47,7 +47,8 @@ export function RecentPatients({ period = 'today', customStart, customEnd }: { p
       title="Patients"
       subtitle={`Registered within · ${periodLabel}`}
       icon={<TrendingUp className="w-4 h-4" />}
-      bodyClassName="p-0 flex flex-col"
+      bodyClassName="p-0 flex flex-col flex-1"
+      className="h-full"
     >
       <div className="p-4 border-b border-border bg-muted/20">
         <SearchInput

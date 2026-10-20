@@ -67,23 +67,23 @@ export const MemberCard: React.FC<MemberCardProps> = ({
   const isLocked = isExpired || isCancelled;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl p-3 shadow-sm hover:shadow-md transition-all space-y-3">
+    <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all space-y-3.5">
       {/* Header: Profile, Name, Contact, Dropdown and Status */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${avatarGrad(employee.name)} flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm`}>
             {employee.name[0]?.toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="font-bold text-foreground text-sm truncate">{employee.name}</h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5 opacity-60 shrink-0" />
-              <span>{formatPhoneWithCountryCode(employee.phone, (employee as ApiAny).country_code || (employee as ApiAny).countryCode)}</span>
+              <span className="truncate">{formatPhoneWithCountryCode(employee.phone, (employee as ApiAny).country_code || (employee as ApiAny).countryCode)}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Status Toggle Button */}
           <Button
             onClick={async (ev) => {
@@ -91,7 +91,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
               if (isLocked) return;
               await onToggleStatus();
             }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide transition-all ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border h-auto uppercase tracking-wide shrink-0 transition-all ${
               isCancelled
                 ? 'bg-violet-50 text-violet-700 border-violet-200 cursor-not-allowed'
                 : isExpired
@@ -111,8 +111,8 @@ export const MemberCard: React.FC<MemberCardProps> = ({
           {/* Actions Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
-                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-muted-foreground hover:bg-muted shrink-0">
+                <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

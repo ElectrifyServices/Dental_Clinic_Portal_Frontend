@@ -13,6 +13,7 @@ interface AppointmentTimelineProps {
 export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
   appointments = [],
   doctors = [],
+  statusVariants = {},
 }) => {
   const sortedAppointments = [...appointments].sort((a, b) => {
     const timeA = a.time || a.bookedTime || "";
