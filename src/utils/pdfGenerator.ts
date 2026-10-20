@@ -25,7 +25,7 @@ const BRANDING_DEFAULTS = {
   CLINIC_HOURS: "Mon-Sat: 10:00 AM – 8:00 PM",
   CLINIC_INSTAGRAM: "@opalsmiles_dental",
   DOCTOR_NAME: "Dr. Rajal Shah",
-  DOCTOR_TITLE: "MDS Prosthodontist & Implantologist",
+  DOCTOR_TITLE: "MDS PROSTHODONTIST & IMPLANTOLOGIST",
   LOGO_URL: logoImg,
 } as const;
 
@@ -56,7 +56,7 @@ function getBrandingTokens() {
         INK_MUTED: inkMutedColor,
         LINE: b.line_color ?? BRANDING_DEFAULTS.LINE,
         PANEL: b.panel_color ?? BRANDING_DEFAULTS.PANEL,
-        CLINIC_NAME: (b.clinic_name && /dantel/i.test(b.clinic_name))
+        CLINIC_NAME: (b.clinic_name && (/dantel/i.test(b.clinic_name) || /^opal\s*smile$/i.test(b.clinic_name.trim())))
           ? "Opal Smiles Dental Studio"
           : (b.clinic_name ?? BRANDING_DEFAULTS.CLINIC_NAME),
         CLINIC_TAGLINE: t.tagline ?? BRANDING_DEFAULTS.CLINIC_TAGLINE,
@@ -415,7 +415,7 @@ function getLetterhead(rightBlock: string, tokens?: ReturnType<typeof getBrandin
   <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1;">
     <div style="font-size: 20px; font-weight: 700; color: ${T.BRAND}; letter-spacing: 0.5px; text-transform: uppercase; line-height:1.3;">${T.DOCTOR_NAME}</div>
     <div style="font-size: 12px; font-weight: 500; color: ${T.INK_MUTED}; margin-top: 4px; letter-spacing: 0.2px; line-height:1.3; text-transform: uppercase;">
-      ${T.DOCTOR_TITLE}
+      MDS PROSTHODONTIST &amp; IMPLANTOLOGIST
     </div>
   </div>
   
@@ -789,7 +789,7 @@ export const downloadConsultationPDF = async ({
   }
 
   const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
-  const specialization = T.DOCTOR_TITLE || "MDS Prosthodontist & Implantologist";
+  const specialization = T.DOCTOR_TITLE || "MDS PROSTHODONTIST & IMPLANTOLOGIST";
 
   // Safely extract patient details from API payload structure
   let patientObj: any = {};
@@ -1283,7 +1283,7 @@ export const downloadCompletedTreatmentPDF = async (treatment: any) => {
 
   // Safely extract doctor & patient details
   const displayDoctorName = (T.DOCTOR_NAME || "Dr. Rajal Shah").toUpperCase();
-  const specialization = T.DOCTOR_TITLE || "MDS Prosthodontist & Implantologist";
+  const specialization = T.DOCTOR_TITLE || "MDS PROSTHODONTIST & IMPLANTOLOGIST";
 
   const patientName = isBlankMode ? "" : (treatmentObj.patient?.name || treatmentObj.patientName || "-");
   const patientId = isBlankMode ? "" : (treatmentObj.patient?.id || treatmentObj.patientId || "-");
@@ -1798,7 +1798,7 @@ export const generateInvoicePDF = async (invoice: any, patient: any) => {
 
   const signatureBlock = `
     <div style="text-align:right; font-family:'Inter',sans-serif; margin-right:12px;">
-      <div style="font-size:12px; font-weight:400; margin-bottom:20px">${"for " + T.CLINIC_NAME}</div>
+      <div style="font-size:12px; font-weight:400; margin-bottom:20px">for Opal Smiles Dental Studio</div>
       <div style="font-size:10px; margin-top:10px;">Authorized Signatory</div>
     </div>
   `;
