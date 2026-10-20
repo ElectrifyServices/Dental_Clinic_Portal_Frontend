@@ -88,8 +88,13 @@ const ROLE_META: Record<
     variant: "green",
     icon: <User className="w-3 h-3" />,
   },
+  staff: {
+    label: "Staff",
+    variant: "amber",
+    icon: <User className="w-3 h-3" />,
+  },
   assistant: {
-    label: "STAFF",
+    label: "Staff",
     variant: "amber",
     icon: <User className="w-3 h-3" />,
   },
@@ -97,9 +102,9 @@ const ROLE_META: Record<
 
 const ROLE_FILTERS = [
   { key: "all", label: "All Roles" },
-  { key: "doctor", label: "Doctors" },
+  { key: "doctor", label: "Doctor" },
   { key: "receptionist", label: "Receptionist" },
-  { key: "staff", label: "STAFF" }, 
+  { key: "staff", label: "Staff" }, 
 ];
 
 export function DoctorManagement({
@@ -146,9 +151,11 @@ export function DoctorManagement({
       s.email?.toLowerCase().includes(q) ||
       (s.specialization || "").toLowerCase().includes(q);
     const isDoctor = s.role === "doctor" || s.originalRoleName?.toLowerCase()?.includes("doctor");
+    const isStaff = s.role === "staff" || s.role === "assistant" || s.originalRoleName?.toLowerCase()?.includes("staff") || s.originalRoleName?.toLowerCase()?.includes("assist");
     const matchRole = roleFilter === "all" || 
                       (roleFilter === "doctor" && isDoctor) ||
-                      (roleFilter !== "doctor" && s.role === roleFilter);
+                      (roleFilter === "staff" && isStaff) ||
+                      (roleFilter !== "doctor" && roleFilter !== "staff" && s.role === roleFilter);
     const matchStatus =
       statusFilter === "all" ||
       (statusFilter === "active" ? s.isActive : !s.isActive);

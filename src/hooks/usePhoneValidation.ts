@@ -18,6 +18,8 @@ import {
 interface UsePhoneValidationOptions {
   /** Dialing code string, e.g. "+91", "+44" */
   dialingCode: string;
+  /** Optional explicit ISO alpha-2 country code e.g. "CA", "US" to resolve shared dialing codes */
+  countryIso?: string;
   /** Called with the sanitized phone string on every keystroke */
   onPhoneChange: (sanitizedValue: string) => void;
   /** Optional: additional side-effects after value change */
@@ -26,15 +28,16 @@ interface UsePhoneValidationOptions {
 
 export function usePhoneValidation({
   dialingCode,
+  countryIso: explicitIso,
   onPhoneChange,
   onAfterChange,
 }: UsePhoneValidationOptions) {
   const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
 
-  /** ISO code derived from dialing code — recalculated when dialingCode changes */
+  /** ISO code derived from explicitIso or fallback to dialing code */
   const countryIso = useMemo(
-    () => isoFromDialingCode(dialingCode),
-    [dialingCode]
+    () => explicitIso || isoFromDialingCode(dialingCode),
+    [dialingCode, explicitIso]
   );
 
   /** Max digit count for the current country's national number */

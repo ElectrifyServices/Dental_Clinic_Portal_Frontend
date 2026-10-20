@@ -681,7 +681,7 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 shrink-0">
         <MetricCard
           label="Total Billed"
           value={`₹${formatIndianCurrency(totalBilled)}`}

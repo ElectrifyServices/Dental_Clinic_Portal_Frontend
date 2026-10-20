@@ -219,6 +219,7 @@ export const COUNTRY_CODES_LIST: CountryCodeItem[] = [
 
 interface CountryCodeSelectProps {
   value?: string;
+  country?: string; // Optional ISO alpha-2 code e.g. "CA", "US", "IN"
   onChange: (val: string) => void;
   /** Optional: also receive the full CountryCodeItem (including ISO alpha-2 country code) on select */
   onCountrySelect?: (item: CountryCodeItem) => void;
@@ -228,6 +229,7 @@ interface CountryCodeSelectProps {
 
 export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
   value = "+91",
+  country,
   onChange,
   onCountrySelect,
   disabled = false,
@@ -236,17 +238,45 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [internalIso, setInternalIso] = useState<string | undefined>(country);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (country) {
+      setInternalIso(country);
+    }
+  }, [country]);
+
   // Find selected country (defaulting to India +91)
   const selectedCountry = useMemo(() => {
+    const targetIso = country || internalIso;
+    if (targetIso) {
+      const matchIso = COUNTRY_CODES_LIST.find(
+        (c) => c.country.toUpperCase() === targetIso.toUpperCase()
+      );
+      if (matchIso && (!value || matchIso.code === value)) {
+        return matchIso;
+      }
+    }
+
+    if (value && value.length === 2 && !value.startsWith("+")) {
+      const matchDirectIso = COUNTRY_CODES_LIST.find(
+        (c) => c.country.toUpperCase() === value.toUpperCase()
+      );
+      if (matchDirectIso) return matchDirectIso;
+    }
+
+    if (value) {
+      const matchCode = COUNTRY_CODES_LIST.find((c) => c.code === value);
+      if (matchCode) return matchCode;
+    }
+
     return (
-      COUNTRY_CODES_LIST.find((c) => c.code === value) ||
       COUNTRY_CODES_LIST.find((c) => c.country === "IN") ||
       COUNTRY_CODES_LIST[0]
     );
-  }, [value]);
+  }, [value, country, internalIso]);
 
   // Filter countries by name, code, ISO, or keywords
   const filteredCountries = useMemo(() => {
@@ -303,6 +333,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({
   };
 
   const handleSelect = (item: CountryCodeItem) => {
+    setInternalIso(item.country);
     onChange(item.code);
     onCountrySelect?.(item);
     setIsOpen(false);

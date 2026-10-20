@@ -24,6 +24,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
 
   const { phoneError, handlePhoneChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
     dialingCode: formData.country_code || "+91",
+    countryIso: formData.country_iso || formData.country,
     onPhoneChange: (sanitized) => {
       onChange({ target: { name: "phone", value: sanitized } });
     },
@@ -146,10 +147,20 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
             <div className="flex items-center gap-2 sm:gap-2.5">
               <CountryCodeSelect
                 value={formData.country_code || "+91"}
+                country={formData.country_iso || formData.country}
                 onChange={(val) => {
                   onChange({ target: { name: "country_code", value: val } });
-                  const newIso = isoFromDialingCode(val);
+                  const newIso = formData.country_iso || isoFromDialingCode(val);
                   const newMax = getPhoneMaxLength(newIso);
+                  if (formData.phone && formData.phone.length > newMax) {
+                    onChange({ target: { name: "phone", value: formData.phone.slice(0, newMax) } });
+                  }
+                  clearPhoneError();
+                }}
+                onCountrySelect={(item) => {
+                  onChange({ target: { name: "country_code", value: item.code } });
+                  onChange({ target: { name: "country_iso", value: item.country } });
+                  const newMax = getPhoneMaxLength(item.country);
                   if (formData.phone && formData.phone.length > newMax) {
                     onChange({ target: { name: "phone", value: formData.phone.slice(0, newMax) } });
                   }

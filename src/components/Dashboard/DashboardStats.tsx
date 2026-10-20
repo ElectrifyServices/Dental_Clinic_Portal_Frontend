@@ -120,13 +120,14 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
   return (
     <div className="space-y-4">
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
         {cards.map((c, i) => (
           <motion.div
             key={c.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.05 }}
+            className="h-full flex flex-col"
           >
             <MetricCard
               label={c.label}
@@ -134,6 +135,7 @@ export function EnhancedDashboardStats({ period = 'today', customStart, customEn
               icon={c.icon}
               variant={c.variant}
               sub={c.sub}
+              className="h-full flex-1"
             />
           </motion.div>
         ))}

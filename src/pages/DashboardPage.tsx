@@ -103,18 +103,19 @@ export const DashboardPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 sm:space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <PageHeader
         title={`${greeting}, ${state.user?.name?.split(' ')[0] ?? 'Doctor'}`}
         subtitle={`${day} · Here's your clinic overview`}
+        className="mb-1 sm:mb-2"
         action={
           <Button onClick={handleAddPatient} className="gap-1.5 shrink-0 shadow-sm">
             <UserPlus className="w-4 h-4" /> Add Patient
           </Button>
         }
       >
-        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
           {period === 'custom' && (
             <div className="flex items-center gap-2">
               <DatePicker
