@@ -12,8 +12,10 @@ import {
   SelectValue, 
   SelectContent, 
   SelectItem,
+  Label,
   Pagination,
-  toast
+  toast,
+  FilterContainer,
 } from "@/components/ui";
 import { 
   MessageCircle, 
@@ -25,7 +27,9 @@ import {
   Send,
   CheckCircle2,
   XCircle,
-  ChevronDown
+  ChevronDown,
+  Filter,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -50,10 +54,17 @@ export function WhatsappHistoryModal({
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
+
+  const activeFiltersCount = (statusFilter !== "all" ? 1 : 0) + (templateFilter !== "all" ? 1 : 0);
+  const handleClearFilters = () => {
+    setStatusFilter("all");
+    setTemplateFilter("all");
+  };
 
   const toggleLogExpand = (logId: string) => {
     setExpandedLogs((prev) => ({
@@ -481,45 +492,106 @@ export function WhatsappHistoryModal({
           </div>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 bg-muted/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-border/80 shrink-0">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by Patient Name or Phone Number..."
-            className="flex-1 w-full"
-          />
-          <div className="flex gap-2 w-full sm:w-auto shrink-0">
-            <div className="flex-1 sm:flex-none">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[130px] h-9 text-xs rounded-xl bg-card border-border">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="sent">Successful</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Search & Common Filter Bar */}
+        <FilterContainer
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          className="shrink-0 space-y-2.5"
+        >
+          <div className="flex items-center gap-2 bg-card p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-border/80 shadow-xs">
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by Patient Name or Phone Number..."
+              className="flex-1 min-w-0 [&>input]:h-9 [&>input]:py-1 [&>input]:text-xs [&>input]:pl-9"
+            />
 
-            <div className="flex-1 sm:flex-none">
-              <Select value={templateFilter} onValueChange={setTemplateFilter}>
-                <SelectTrigger className="w-full sm:w-[160px] h-9 text-xs rounded-xl bg-card border-border">
-                  <SelectValue placeholder="All Templates" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Templates</SelectItem>
-                  {uniqueTemplates.map((t) => (
-                    <SelectItem key={t} value={t} className="text-xs">
-                      {getFriendlyTemplateName(t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsFilterOpen((v) => !v)}
+              className={cn(
+                "h-9 gap-1.5 text-xs shrink-0 rounded-xl",
+                activeFiltersCount > 0 && "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+              )}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFiltersCount > 0 && (
+                <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.2 text-[9px] font-bold">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+
+            {activeFiltersCount > 0 && (
+              <Button
+                variant="ghost"
+                onClick={handleClearFilters}
+                className="h-9 gap-1 text-muted-foreground shrink-0 text-xs px-2.5 rounded-xl"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Clear</span>
+              </Button>
+            )}
           </div>
-        </div>
+
+          {/* Expandable Common Filter Panel */}
+          {isFilterOpen && (
+            <div className="bg-card p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-border shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Advanced Filters
+                </h3>
+                {activeFiltersCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="text-xs text-primary hover:underline font-semibold cursor-pointer"
+                  >
+                    Reset all
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">
+                    Status
+                  </Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full h-9 text-xs rounded-xl bg-muted/40 border-border">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="sent">Successful</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="block text-xs font-semibold mb-1.5 text-muted-foreground">
+                    Template
+                  </Label>
+                  <Select value={templateFilter} onValueChange={setTemplateFilter}>
+                    <SelectTrigger className="w-full h-9 text-xs rounded-xl bg-muted/40 border-border">
+                      <SelectValue placeholder="All Templates" />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      <SelectItem value="all">All Templates</SelectItem>
+                      {uniqueTemplates.map((t) => (
+                        <SelectItem key={t} value={t} className="text-xs">
+                          {getFriendlyTemplateName(t)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+        </FilterContainer>
 
         {/* List Data Table */}
         {isLoading ? (

@@ -301,6 +301,7 @@ export default function ConsultationHistoryModal({
             onSearchChange={setSearch}
             showFilters={showFilters}
             onToggleFilters={() => setShowFilters(!showFilters)}
+            onCloseFilters={() => setShowFilters(false)}
             startDate={startDateStr}
             onStartDateChange={setStartDateStr}
             endDate={endDateStr}

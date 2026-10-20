@@ -100,7 +100,7 @@ export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
                       {...field} 
                       type="number" 
                       min={1} 
-                      value={field.value === 0 ? "" : field.value}
+                      value={field.value ?? ""}
                       onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                       onFocus={(e) => e.target.select()} 
                     />
@@ -114,9 +114,11 @@ export function ConsumeForm({ item, onClose, onSave }: ConsumeFormProps) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>
+                    Reason <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. Used in treatment session" />
+                    <Input {...field} value={field.value ?? ""} placeholder="e.g. Used in treatment session" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

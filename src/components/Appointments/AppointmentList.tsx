@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Badge } from "@/components/ui/Badge";
-import { DataTable, Label } from "@/components/ui";
+import { DataTable, Label, SearchInput, FilterContainer } from "@/components/ui";
 import { AppointmentActionMenu } from "./AppointmentList/AppointmentActionMenu";
 import { useDoctorsListQuery } from "../../hooks/staff/useDoctorsListQuery";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
@@ -34,16 +34,61 @@ interface AppointmentListProps {
 }
 
 const STATUS_VARIANTS: Record<string, ApiAny> = {
-  completed: "green",
-  "in-progress": "blue",
-  "checked-in": "green",
+  // Booked - crisp distinct blue
+  booked: "blue",
+  BOOKED: "blue",
+  Booked: "blue",
+
+  // Rescheduled - distinct vibrant orange
+  rescheduled: "orange",
+  RESCHEDULED: "orange",
+  Rescheduled: "orange",
+
+  // Confirmed - deep indigo
   confirmed: "indigo",
+  CONFIRMED: "indigo",
+  Confirmed: "indigo",
+
+  // In-Progress - active cyan
+  "in-progress": "cyan",
+  in_progress: "cyan",
+  IN_PROGRESS: "cyan",
+  "in progress": "cyan",
+
+  // Checked-In - calm medical teal
+  "checked-in": "teal",
+  checked_in: "teal",
+  CHECKED_IN: "teal",
+  "checked in": "teal",
+
+  // Completed - emerald green
+  completed: "green",
+  COMPLETED: "green",
+  Completed: "green",
+
+  // Scheduled - muted gray
   scheduled: "gray",
+  SCHEDULED: "gray",
+  Scheduled: "gray",
+
+  // Cancelled - alert red
   cancelled: "red",
+  CANCELLED: "red",
+  Cancelled: "red",
+  canceled: "red",
+  CANCELED: "red",
+
+  // No-Show - warning amber
   "no-show": "amber",
+  no_show: "amber",
+  NO_SHOW: "amber",
+  "no show": "amber",
+
+  // Follow-Up - distinct violet
   "follow-up": "violet",
   follow_up: "violet",
   FOLLOW_UP: "violet",
+  "follow up": "violet",
 };
 
 const TYPE_FILTERS = [
@@ -250,23 +295,25 @@ export function AppointmentList({
         const isConsultationDeleted =
           a.cancelled_reason &&
           String(a.cancelled_reason).toLowerCase().includes("consultation");
+        const rawStatus = String(a.status || "");
+        const normStatus = rawStatus.toLowerCase().replace(/[_\s]/g, "-");
         const statusLabel = isConsultationDeleted
           ? "Consultation Deleted"
-          : String(a.status || "")
-              .replace("_", " ")
-              .replace("-", " ");
+          : rawStatus
+              ? rawStatus
+                  .toLowerCase()
+                  .replace(/[_-]/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
+              : "—";
+        const variant = isConsultationDeleted
+          ? "red"
+          : STATUS_VARIANTS[a.status] ||
+            STATUS_VARIANTS[rawStatus.toLowerCase()] ||
+            STATUS_VARIANTS[normStatus] ||
+            "gray";
         return (
           <Badge
-            variant={
-              isConsultationDeleted
-                ? "red"
-                : STATUS_VARIANTS[a.status] ||
-                  STATUS_VARIANTS[(a.status || "").toLowerCase()] ||
-                  STATUS_VARIANTS[
-                    (a.status || "").toLowerCase().replace("_", "-")
-                  ] ||
-                  "gray"
-            }
+            variant={variant}
             className="text-[9.5px] px-2.5 py-0.5 font-medium"
           >
             {statusLabel}
@@ -287,7 +334,7 @@ export function AppointmentList({
             onClick={(e) => {
               e.stopPropagation();
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              const menuHeight = 190;
+              const menuHeight = 240;
               const windowHeight = window.innerHeight;
               let top = rect.bottom + 4;
               if (rect.bottom + menuHeight > windowHeight) {
@@ -372,20 +419,21 @@ export function AppointmentList({
   return (
     <div className="space-y-2.5 sm:space-y-3">
       {/* Filters row */}
-      <div className="space-y-2.5">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="space-y-2.5"
+      >
         <div className="flex items-center gap-2 bg-card/60 p-2 sm:p-2.5 rounded-xl border border-border/60">
-          <div className="relative flex-1 min-w-0">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
-            <Input
-              placeholder="Search patient, treatment or doctor..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-              }}
-              className="pl-8 h-8.5 sm:h-9 rounded-xl bg-card border-border text-xs w-full"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search patient, treatment or doctor..."
+            value={searchTerm}
+            onChange={(val) => {
+              setSearchTerm(val);
+              setPage(1);
+            }}
+            className="flex-1 min-w-0 [&>input]:h-8.5 [&>input]:sm:h-9 [&>input]:rounded-xl [&>input]:bg-card [&>input]:border-border [&>input]:text-xs"
+          />
 
           <Button
             type="button"
@@ -487,7 +535,7 @@ export function AppointmentList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       {/* Table */}
       <DataTable

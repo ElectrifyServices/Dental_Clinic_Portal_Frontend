@@ -130,7 +130,18 @@ export interface Appointment {
   time: string;
   duration: number;
   type: 'consultation' | 'cleaning' | 'filling' | 'extraction' | 'root-canal' | 'crown' | 'orthodontics' | 'surgery' | 'emergency' | 'other';
-  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'checked-in';
+  status:
+    | 'scheduled'
+    | 'confirmed'
+    | 'booked'
+    | 'rescheduled'
+    | 'in-progress'
+    | 'completed'
+    | 'cancelled'
+    | 'no-show'
+    | 'checked-in'
+    | 'follow-up'
+    | string;
   treatment?: string;
   notes?: string;
   fee: number;

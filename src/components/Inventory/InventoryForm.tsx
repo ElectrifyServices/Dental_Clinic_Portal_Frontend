@@ -489,10 +489,15 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
           variant="danger"
           isLoading={deleteCategoryMutation.isPending || isDeletingCategory !== null}
           onConfirm={async () => {
-            setIsDeletingCategory(deleteName);
+            // Both isDeletingCategory (compared against each option's id in
+            // SearchableSelect) and the form's "category" field hold the
+            // category's id, not its display name — using deleteName (the
+            // name) in either comparison below meant they never matched,
+            // so the field kept showing the deleted category's raw id.
+            setIsDeletingCategory(deleteId);
             try {
               await deleteCategoryMutation.mutateAsync({ id: deleteId });
-              if (form.getValues().category === deleteName) {
+              if (form.getValues().category === deleteId) {
                 form.setValue("category", "");
               }
               setDeleteId(null);

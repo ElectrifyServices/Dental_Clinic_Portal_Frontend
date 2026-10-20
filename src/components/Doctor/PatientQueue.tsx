@@ -6,9 +6,8 @@ import { Search, Clock, Stethoscope, CheckCircle, AlertTriangle, History, UserPl
 import { cn } from "@/lib/utils";
 import { useModal } from "@/contexts/ModalContext";
 import ConsultationHistoryModal from "./ConsultationHistoryModal";
-import { DirectConsultationPopup } from "./DirectConsultationPopup";
 import { QueueCard } from "./PatientQueue/QueueCard";
-import { Pagination, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmModal, toast, Label } from "@/components/ui";
+import { Pagination, PageHeader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmModal, toast, Label, SearchInput, FilterContainer } from "@/components/ui";
 
 interface QueuedPatient {
   id: string;
@@ -184,18 +183,18 @@ export function PatientQueue({
       />
 
       {/* Filters */}
-      <div className="space-y-3">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="space-y-3"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-card p-3 rounded-2xl border border-border shadow-sm shrink-0">
-          <div className="relative flex-1 group w-full">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-            <Input
-              type="text"
-              placeholder="Search by patient name, treatment, or concern..."
-              value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search by patient name, treatment, or concern..."
+            value={searchTerm}
+            onChange={(val) => handleSearchChange(val)}
+            className="flex-1 w-full [&>input]:h-11 [&>input]:rounded-xl [&>input]:bg-muted/50 [&>input]:border-border [&>input]:text-sm"
+          />
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
@@ -277,7 +276,7 @@ export function PatientQueue({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       {filteredPatients.length > 0 ? (
         <>

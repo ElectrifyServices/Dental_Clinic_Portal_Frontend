@@ -3,7 +3,19 @@ import { Input } from "@/components/ui/Input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { useMemo, useState, useEffect } from "react";
 import { getDependentByPatientId } from "../../hooks/corporate/dependentStorage";
-import { Save, Plus, User, DollarSign, Stethoscope, ClipboardList, IndianRupee, ShieldCheck } from "lucide-react";
+import {
+  Save,
+  Plus,
+  User,
+  DollarSign,
+  Stethoscope,
+  ClipboardList,
+  Eye,
+  IndianRupee,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Invoice, InvoiceItem } from "../../types";
@@ -78,6 +90,11 @@ export function InvoiceForm({
   const [patientSearchInput, setPatientSearchInput] = useState("");
   const [patientSearchQuery, setPatientSearchQuery] = useState("");
   const [isCorporateBilling, setIsCorporateBilling] = useState(false);
+  // Display-only: when a corporate bill has multiple employee lines, they're
+  // collapsed behind a summary by default instead of all showing open at
+  // once. This never touches the items array or its calculations — it only
+  // decides whether the existing rows are rendered or hidden.
+  const [showCorporateItems, setShowCorporateItems] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -1440,33 +1457,67 @@ export function InvoiceForm({
               <Plus className="w-3.5 h-3.5" /> Add Item
             </Button>
           </div>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-            {items.map((item) => (
-              <InvoiceItemRow
-                key={item.id}
-                item={item}
-                onUpdate={updateItem}
-                onRemove={(id) => {
-                  const currentItems = (form.getValues("items") ??
-                    []) as InvoiceItem[];
-                  const itemToRemove = currentItems.find((i) => i.id === id);
-                  const lid = (itemToRemove as ApiAny)?.linkedId;
-                  if (lid) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      linkedItemIds: prev.linkedItemIds.filter(
-                        (i) => i !== lid,
-                      ),
-                    }));
-                  }
-                  if ((itemToRemove as ApiAny)?.isNewPlanPurchase) {
-                    setSelectedNewPlanId(null);
-                  }
-                  setItems(currentItems.filter((i) => i.id !== id));
-                }}
-              />
-            ))}
-          </div>
+
+          {/* Corporate-only: with "Select Multiple" employees, this list can
+              get long (one row per employee). Collapsed behind a summary by
+              default; once expanded it scrolls inside a fixed-height box
+              instead of growing the form — even with 100+ employees the
+              page height stays the same. Individual billing is untouched:
+              it always renders the full, already-scrollable list, same as
+              before. */}
+          {isCorporateBilling && items.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setShowCorporateItems((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/30 transition-colors"
+            >
+              <span className="text-xs font-bold text-foreground">
+                {items.length} employees added ·{" "}
+                <span className="text-muted-foreground font-semibold">
+                  ₹
+                  {items
+                    .reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
+                    .toLocaleString()}{" "}
+                  total
+                </span>
+              </span>
+              {showCorporateItems ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+              )}
+            </button>
+          ) : null}
+
+          {(!isCorporateBilling || items.length <= 1 || showCorporateItems) && (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+              {items.map((item) => (
+                <InvoiceItemRow
+                  key={item.id}
+                  item={item}
+                  onUpdate={updateItem}
+                  onRemove={(id) => {
+                    const currentItems = (form.getValues("items") ??
+                      []) as InvoiceItem[];
+                    const itemToRemove = currentItems.find((i) => i.id === id);
+                    const lid = (itemToRemove as any)?.linkedId;
+                    if (lid) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        linkedItemIds: prev.linkedItemIds.filter(
+                          (i) => i !== lid,
+                        ),
+                      }));
+                    }
+                    if ((itemToRemove as any)?.isNewPlanPurchase) {
+                      setSelectedNewPlanId(null);
+                    }
+                    setItems(currentItems.filter((i) => i.id !== id));
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">

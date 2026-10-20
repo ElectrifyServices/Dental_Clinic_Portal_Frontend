@@ -124,6 +124,16 @@ export function ServiceDescriptionSelect({ value, onChange }: ServiceDescription
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted mr-1 cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
             <Button
               variant="ghost"
               size="icon"

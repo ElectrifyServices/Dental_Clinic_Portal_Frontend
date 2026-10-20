@@ -2,7 +2,7 @@ import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
 import { Plus, CreditCard, Filter, X } from 'lucide-react';
 import { CorporatePlan, PlanCategory } from '../../types';
-import { Button, Loading, SearchInput, Pagination, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label } from '../ui';
+import { Button, Loading, SearchInput, Pagination, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Label, FilterContainer } from '../ui';
 import { cn } from '@/lib/utils';
 import { useDeleteCorporatePlanMutation } from '../../hooks/corporate/useDeleteCorporatePlanMutation';
 import { useUpdateCorporatePlanStatusMutation } from '../../hooks/corporate/useUpdateCorporatePlanStatusMutation';
@@ -125,7 +125,11 @@ export function CorporatePlanManagement({
     <div className="flex-1 min-h-0 flex flex-col gap-4">
 
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
           <div className="flex-1 min-w-0">
             <SearchInput
@@ -213,7 +217,7 @@ export function CorporatePlanManagement({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto gap-4">
         {/* ── Results count ────────────────────────────────────────────────── */}

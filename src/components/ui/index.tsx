@@ -97,7 +97,19 @@ export function KpiCard({ label, value, colorClass = "text-foreground", icon, su
   );
 }
 
-type StatusBadgeVariant = "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo";
+type StatusBadgeVariant =
+  | "green"
+  | "blue"
+  | "amber"
+  | "red"
+  | "gray"
+  | "violet"
+  | "indigo"
+  | "orange"
+  | "teal"
+  | "cyan"
+  | "purple"
+  | "rose";
 interface StatusBadgeProps {
   variant?: StatusBadgeVariant;
   children: React.ReactNode;
@@ -112,6 +124,11 @@ export function StatusBadge({ variant = "gray", children, className = "" }: Stat
     gray: "bg-muted text-muted-foreground border-transparent dark:bg-slate-900/30 dark:text-slate-700 dark:border-slate-800",
     violet: "bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/30 dark:text-violet-600 dark:border-violet-800/50",
     indigo: "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-600 dark:border-indigo-800/50",
+    orange: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/50",
+    teal: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/50",
+    cyan: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-400 dark:border-cyan-800/50",
+    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800/50",
+    rose: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50",
   };
   return (
     <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border", variantClasses[variant], className)}>{children}</span>
@@ -466,7 +483,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
               </tr>
             ) : (
               data.map((row, idx) => {
-                const key = (rowKey ? rowKey(row, idx) : undefined) || (row as ApiAny)?.id || `row-${idx}`;
+                const key = rowKey(row, idx) || `row-${idx}`;
                 const rowClasses = cn(
                   onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
                   rowClassName?.(row, idx)
@@ -682,31 +699,227 @@ export function Pagination({ page, totalPages, totalItems, perPage, onPageChange
 interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string;
   onChange: (v: string) => void;
+  onClear?: () => void;
   placeholder?: string;
   className?: string;
 }
 let searchInputIdCounter = 0;
-export function SearchInput({ value, onChange, placeholder = "Search…", className = "", ...props }: SearchInputProps) {
+export function SearchInput({
+  value,
+  onChange,
+  onClear,
+  placeholder = "Search…",
+  className = "",
+  ...props
+}: SearchInputProps) {
   const inputIdRef = React.useRef<string>();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
   if (!inputIdRef.current) {
     inputIdRef.current = `search-query-input-${++searchInputIdCounter}`;
   }
+
+  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onChange("");
+    onClear?.();
+    inputRef.current?.focus();
+  };
+
+  const hasValue = Boolean(value && String(value).length > 0);
+
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative flex items-center", className)}>
       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <input
+        ref={inputRef}
         type="search"
         name={inputIdRef.current}
         autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="search-input"
+        className={cn(
+          "search-input [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
+          hasValue && "pr-8 sm:pr-9"
+        )}
         spellCheck="false"
         {...props}
       />
+      {hasValue && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 p-0.5 rounded-full text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors cursor-pointer focus:outline-none"
+          title="Clear search"
+          aria-label="Clear search"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
+}
+
+// ─── FilterContainer ──────────────────────────────────────────────────────────
+export interface FilterContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+export function FilterContainer({
+  isOpen,
+  onClose,
+  children,
+  className = "",
+  ...rest
+}: FilterContainerProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // 1. Direct DOM containment
+      if (containerRef.current && containerRef.current.contains(target)) {
+        return;
+      }
+
+      // 2. Click is inside a Radix UI portal / dropdown / popover / datepicker
+      if (
+        target.closest("[data-radix-portal]") ||
+        target.closest("[data-radix-popper-content-wrapper]") ||
+        target.closest("[role='listbox']") ||
+        target.closest("[role='dialog']") ||
+        target.closest("[role='menu']") ||
+        target.closest("[role='option']") ||
+        target.closest("[data-radix-select-viewport]") ||
+        target.closest("[data-radix-collection-item]") ||
+        target.closest(".rdp") ||
+        target.closest(".popover-content")
+      ) {
+        return;
+      }
+
+      // 3. Geometric check: Even if a portal or backdrop intercepted the event target
+      // (e.g. target is html/body due to pointer-events lock), verify if click coordinates
+      // are physically inside this filter container.
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          return;
+        }
+      }
+
+      // 4. Check if click coordinates fall inside any open dropdown/popover/portal
+      const portals = document.querySelectorAll(
+        "[data-radix-portal], [data-radix-popper-content-wrapper], [role='listbox'], [role='menu'], [role='dialog'], .rdp, .popover-content"
+      );
+      for (let i = 0; i < portals.length; i++) {
+        const pRect = portals[i].getBoundingClientRect();
+        if (
+          pRect.width > 0 &&
+          pRect.height > 0 &&
+          e.clientX >= pRect.left &&
+          e.clientX <= pRect.right &&
+          e.clientY >= pRect.top &&
+          e.clientY <= pRect.bottom
+        ) {
+          return;
+        }
+      }
+
+      // True outside click - collapse filter panel
+      onClose();
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [isOpen, onClose]);
+
+  return (
+    <div ref={containerRef} className={className} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+export function useFilterClickOutside(isOpen: boolean, onClose: () => void) {
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      if (ref.current && ref.current.contains(target)) {
+        return;
+      }
+
+      if (
+        target.closest("[data-radix-portal]") ||
+        target.closest("[data-radix-popper-content-wrapper]") ||
+        target.closest("[role='listbox']") ||
+        target.closest("[role='dialog']") ||
+        target.closest("[role='menu']") ||
+        target.closest("[role='option']") ||
+        target.closest("[data-radix-select-viewport]") ||
+        target.closest("[data-radix-collection-item]") ||
+        target.closest(".rdp") ||
+        target.closest(".popover-content")
+      ) {
+        return;
+      }
+
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          return;
+        }
+      }
+
+      const portals = document.querySelectorAll(
+        "[data-radix-portal], [data-radix-popper-content-wrapper], [role='listbox'], [role='menu'], [role='dialog'], .rdp, .popover-content"
+      );
+      for (let i = 0; i < portals.length; i++) {
+        const pRect = portals[i].getBoundingClientRect();
+        if (
+          pRect.width > 0 &&
+          pRect.height > 0 &&
+          e.clientX >= pRect.left &&
+          e.clientX <= pRect.right &&
+          e.clientY >= pRect.top &&
+          e.clientY <= pRect.bottom
+        ) {
+          return;
+        }
+      }
+
+      onClose();
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [isOpen, onClose]);
+
+  return ref;
 }
 
 // ─── FilterTabs ───────────────────────────────────────────────────────────────

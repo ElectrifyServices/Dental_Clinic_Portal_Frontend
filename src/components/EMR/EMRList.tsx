@@ -1,7 +1,7 @@
 import type { ApiAny } from "../../types/api";
 import React, { useState } from 'react';
 import { Plus, Stethoscope, Pill, Camera, CreditCard, Calendar, Eye, Download, FileText, Filter, X } from 'lucide-react';
-import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@/components/ui';
+import { PageHeader, SearchInput, DataTable, Button, Pagination, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label, FilterContainer } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 interface EMRRecord {
@@ -173,7 +173,11 @@ export function EMRList({
         />
       </div>
 
-      <div className="space-y-3">
+      <FilterContainer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        className="space-y-3"
+      >
         <div className="flex items-center gap-2 bg-card p-3 sm:p-3.5 rounded-2xl border border-border shadow-xs">
           <SearchInput
             value={search}
@@ -224,7 +228,7 @@ export function EMRList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <DataTable
         compact

@@ -17,7 +17,7 @@ import {
   User,
   Check,
 } from "lucide-react";
-import { Button } from "../ui";
+import { Button, SearchInput, FilterContainer } from "../ui";
 
 interface Doctor {
   id: string;
@@ -64,21 +64,6 @@ export function DoctorBooking({
     doctors[0]?.id || null,
   );
   const [showFilters, setShowFilters] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
-
-  // Close filters when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
-      ) {
-        setShowFilters(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -248,17 +233,17 @@ export function DoctorBooking({
       <div className="flex-1 space-y-6">
         {/* Search & Filter Header */}
         <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-            <Input
-              type="text"
-              placeholder="Search by name or department..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-2xl shadow-sm focus:ring-2 focus:ring-primary outline-none text-sm font-medium"
-            />
-          </div>
-          <div className="relative" ref={filterRef}>
+          <SearchInput
+            placeholder="Search by name or department..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+            className="flex-1 [&>input]:h-12 [&>input]:rounded-2xl [&>input]:bg-card [&>input]:border-border [&>input]:text-sm font-medium"
+          />
+          <FilterContainer
+            isOpen={showFilters}
+            onClose={() => setShowFilters(false)}
+            className="relative"
+          >
             <Button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-3 rounded-2xl transition-all shadow-sm border ${showFilters ? "bg-primary text-white border-primary shadow-blue-100" : "bg-card text-muted-foreground border-border hover:text-primary"}`}
@@ -362,7 +347,7 @@ export function DoctorBooking({
                 </div>
               </div>
             )}
-          </div>
+          </FilterContainer>
         </div>
 
         {/* Quick Department Filter Bar */}

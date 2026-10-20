@@ -2,7 +2,7 @@ import type { ApiAny } from "../../types/api";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Upload, Building2, User, Users, Phone, MoreHorizontal, ArrowRightLeft, MessageCircle, Activity, Ban, Wallet, Filter, X } from 'lucide-react';
 import { CorporateEmployee, CorporatePlan, CoverageType } from '../../types';
-import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Label } from '../ui';
+import { DataTable, Pagination, PlanBadge, ConfirmModal, Modal, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, SearchInput, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Loading, Label, FilterContainer } from '../ui';
 import { cn } from '@/lib/utils';
 import { useDeleteEmployeeMutation } from '../../hooks/corporate/useDeleteEmployeeMutation';
 import { useEmployeesQuery } from '../../hooks/corporate/useEmployeesQuery';
@@ -557,7 +557,11 @@ export function EmployeeManagement({
       {tab === 'list' ? (
         <>
           {/* Controls Container */}
-          <div className="shrink-0 space-y-3">
+          <FilterContainer
+            isOpen={showFilters}
+            onClose={() => setShowFilters(false)}
+            className="shrink-0 space-y-3"
+          >
             <div className="flex items-center gap-2 p-3 bg-slate-50/50 rounded-2xl border border-border/50 w-full">
               <div className="flex-1 min-w-0">
                 <SearchInput
@@ -650,7 +654,7 @@ export function EmployeeManagement({
                 </div>
               </div>
             )}
-          </div>
+          </FilterContainer>
 
           <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
           {employeesLoading ? (
