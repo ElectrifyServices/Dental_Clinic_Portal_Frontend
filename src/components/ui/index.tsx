@@ -466,7 +466,7 @@ export function DataTable<T>({ columns, data, emptyIcon, emptyTitle, emptySubtit
               </tr>
             ) : (
               data.map((row, idx) => {
-                const key = (rowKey ? rowKey(row, idx) : undefined) || (row as ApiAny)?.id || `row-${idx}`;
+                const key = rowKey(row, idx) || `row-${idx}`;
                 const rowClasses = cn(
                   onRowClick ? "cursor-pointer hover:bg-muted/30 transition-colors" : "",
                   rowClassName?.(row, idx)

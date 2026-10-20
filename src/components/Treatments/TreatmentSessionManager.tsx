@@ -1236,7 +1236,7 @@ export function TreatmentSessionManager({
                 <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <div className={`w-10 h-10 rounded-xl ${cfg.bgColor} flex items-center justify-center`}>
                     <StatusIcon className={`w-5 h-5 ${cfg.textColor}`} />
-                  </div>
+                  </div> 
                   <div>
                     <h4 className="font-black text-foreground">Session {session.visit_number}</h4>
                     <p className="text-xs text-muted-foreground">{formatDate(getSessionDate(session))}</p>
