@@ -5,13 +5,30 @@ import { ContentCard, Badge, SearchInput, Pagination } from "@/components/ui";
 import { Appointment } from "@/types";
 
 const STATUS_META: Record<string, { label: string; variant: ApiAny }> = {
+  booked: { label: "Booked", variant: "blue" },
+  BOOKED: { label: "Booked", variant: "blue" },
+  rescheduled: { label: "Rescheduled", variant: "orange" },
+  RESCHEDULED: { label: "Rescheduled", variant: "orange" },
   scheduled: { label: "Scheduled", variant: "gray" },
+  SCHEDULED: { label: "Scheduled", variant: "gray" },
   confirmed: { label: "Confirmed", variant: "indigo" },
-  "checked-in": { label: "Checked In", variant: "purple" },
-  "in-progress": { label: "In Progress", variant: "blue" },
+  CONFIRMED: { label: "Confirmed", variant: "indigo" },
+  "checked-in": { label: "Checked In", variant: "teal" },
+  checked_in: { label: "Checked In", variant: "teal" },
+  CHECKED_IN: { label: "Checked In", variant: "teal" },
+  "in-progress": { label: "In Progress", variant: "cyan" },
+  in_progress: { label: "In Progress", variant: "cyan" },
+  IN_PROGRESS: { label: "In Progress", variant: "cyan" },
   completed: { label: "Completed", variant: "green" },
+  COMPLETED: { label: "Completed", variant: "green" },
   cancelled: { label: "Cancelled", variant: "red" },
+  CANCELLED: { label: "Cancelled", variant: "red" },
   "no-show": { label: "No Show", variant: "amber" },
+  no_show: { label: "No Show", variant: "amber" },
+  NO_SHOW: { label: "No Show", variant: "amber" },
+  "follow-up": { label: "Follow Up", variant: "violet" },
+  follow_up: { label: "Follow Up", variant: "violet" },
+  FOLLOW_UP: { label: "Follow Up", variant: "violet" },
 };
 
 export function TodayAppointments({
@@ -96,7 +113,20 @@ export function TodayAppointments({
         <>
           <div className="divide-y divide-border/50 flex-1">
             {appointments.map((appt, i) => {
-              const sm = STATUS_META[appt.status] ?? STATUS_META.scheduled;
+              const raw = String(appt.status || "");
+              const norm = raw.toLowerCase().replace(/[_\s]/g, "-");
+              const sm =
+                STATUS_META[appt.status] ??
+                STATUS_META[raw.toLowerCase()] ??
+                STATUS_META[norm] ?? {
+                  label: raw
+                    ? raw
+                        .toLowerCase()
+                        .replace(/[_-]/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())
+                    : "Scheduled",
+                  variant: "gray",
+                };
               return (
                 <div
                   key={appt.id || i}

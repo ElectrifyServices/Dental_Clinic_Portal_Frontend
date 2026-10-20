@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,11 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
   const activeFilterCount = [filterStatus !== "all", filterCategory !== "all"].filter(Boolean).length;
 
   return (
-    <div className="mb-4 space-y-3">
+    <FilterContainer
+      isOpen={showFilters}
+      onClose={() => setShowFilters(false)}
+      className="mb-4 space-y-3"
+    >
       <div className="flex items-center gap-2 bg-card p-2 rounded-2xl border border-border shadow-sm w-full min-w-0">
         <div className="flex-1 min-w-0">
           <SearchInput
@@ -135,6 +140,6 @@ export const PatientFilters: React.FC<PatientFiltersProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </FilterContainer>
   );
 };

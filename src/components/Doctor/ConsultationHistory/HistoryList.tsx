@@ -2,7 +2,7 @@ import type { ApiAny } from "../../../types/api";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
-import { SearchInput } from "@/components/ui";
+import { SearchInput, FilterContainer } from "@/components/ui";
 import React, { useState } from "react";
 import {
   Search,
@@ -26,6 +26,7 @@ interface HistoryListProps {
   onSearchChange: (val: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
+  onCloseFilters?: () => void;
   startDate: string;
   onStartDateChange: (val: string) => void;
   endDate: string;
@@ -51,6 +52,7 @@ export function HistoryList({
   onSearchChange,
   showFilters,
   onToggleFilters,
+  onCloseFilters,
   startDate,
   onStartDateChange,
   endDate,
@@ -104,7 +106,11 @@ export function HistoryList({
 
   return (
     <div className="flex flex-col h-full" onClick={() => { setActiveDownloadMenuId(null); setActiveSendMenuId(null); }}>
-      <div className="shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => (onCloseFilters ? onCloseFilters() : (showFilters && onToggleFilters()))}
+        className="shrink-0 px-5 py-2.5 border-b border-border bg-muted space-y-2"
+      >
         <div className="flex gap-2">
           <SearchInput
             value={search}
@@ -174,7 +180,7 @@ export function HistoryList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 overflow-y-auto p-4 relative">
         {isLoading && pageData.length === 0 ? (

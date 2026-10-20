@@ -858,19 +858,19 @@ export const downloadConsultationPDF = async ({
 
   // Safely extract patient details from API payload structure
   let patientObj: DynamicPayload = {};
-  if (consultationData.responseObject?.data?.patient) {
+  if (consultationData?.responseObject?.data?.patient) {
     patientObj = consultationData.responseObject.data.patient;
-  } else if (consultationData.data?.patient) {
+  } else if (consultationData?.data?.patient) {
     patientObj = consultationData.data.patient;
-  } else if (consultationData.patient) {
+  } else if (consultationData?.patient) {
     patientObj = consultationData.patient;
-  } else if (consultationData.responseObject?.patient) {
+  } else if (consultationData?.responseObject?.patient) {
     patientObj = consultationData.responseObject.patient;
   }
   const isBlankMode = consultationData?.isBlankMode || false;
 
-  const patientName = isBlankMode ? "" : (patientObj?.name || patient.patientName || "-");
-  const patientId = isBlankMode ? "" : (patientObj?.id || patient.id || "-");
+  const patientName = isBlankMode ? "" : (patientObj?.name || patient?.patientName || patient?.name || "-");
+  const patientId = isBlankMode ? "" : (patientObj?.id || patient?.id || "-");
   const patientCode =
     patientObj?.patient_code ||
     patientObj?.patientCode ||

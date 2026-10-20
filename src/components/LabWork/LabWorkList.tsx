@@ -36,6 +36,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { LabWork, LabWorkStatus } from "../../types";
@@ -308,7 +309,11 @@ export function LabWorkList({
         />
       </div>
 
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm">
           <SearchInput
             value={search}
@@ -391,7 +396,7 @@ export function LabWorkList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
       {isLoading ? (

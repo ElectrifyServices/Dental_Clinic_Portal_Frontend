@@ -22,14 +22,26 @@ interface TodaySchedulePopupProps {
 }
 
 const STATUS_VARIANTS: Record<string, ApiAny> = {
+  booked: "blue",
+  BOOKED: "blue",
+  rescheduled: "orange",
+  RESCHEDULED: "orange",
   completed: "green",
-  "in-progress": "blue",
-  "checked-in": "green",
+  COMPLETED: "green",
+  "in-progress": "cyan",
+  IN_PROGRESS: "cyan",
+  "checked-in": "teal",
+  CHECKED_IN: "teal",
   confirmed: "indigo",
+  CONFIRMED: "indigo",
   scheduled: "gray",
+  SCHEDULED: "gray",
   cancelled: "red",
+  CANCELLED: "red",
   "no-show": "amber",
-  booked: "indigo",
+  NO_SHOW: "amber",
+  "follow-up": "violet",
+  FOLLOW_UP: "violet",
 };
 
 export function TodaySchedulePopup({

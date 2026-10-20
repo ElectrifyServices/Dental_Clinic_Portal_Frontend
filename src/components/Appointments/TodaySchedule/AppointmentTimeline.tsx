@@ -20,13 +20,22 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
     return timeA.localeCompare(timeB);
   });
 
-  const getStatusVariant = (status: string): "green" | "blue" | "amber" | "red" | "gray" | "violet" | "indigo" => {
-    const lower = (status || "").toLowerCase();
-    if (lower === "completed" || lower === "checked-in") return "green";
-    if (lower === "booked" || lower === "confirmed" || lower === "scheduled") return "indigo";
-    if (lower === "in-progress") return "blue";
-    if (lower === "cancelled") return "red";
+  const getStatusVariant = (status: string): ApiAny => {
+    const raw = String(status || "");
+    const lower = raw.toLowerCase().replace(/[_\s]/g, "-");
+    if (statusVariants?.[status]) return statusVariants[status];
+    if (statusVariants?.[raw.toLowerCase()]) return statusVariants[raw.toLowerCase()];
+    if (statusVariants?.[lower]) return statusVariants[lower];
+    if (lower === "completed") return "green";
+    if (lower === "checked-in") return "teal";
+    if (lower === "booked") return "blue";
+    if (lower === "rescheduled") return "orange";
+    if (lower === "confirmed") return "indigo";
+    if (lower === "in-progress") return "cyan";
+    if (lower === "cancelled" || lower === "canceled") return "red";
     if (lower === "no-show") return "amber";
+    if (lower === "follow-up") return "violet";
+    if (lower === "scheduled") return "gray";
     return "gray";
   };
 
@@ -91,9 +100,18 @@ export const AppointmentTimeline: React.FC<AppointmentTimelineProps> = ({
         const isConsultationDeleted =
           apt.cancelled_reason &&
           String(apt.cancelled_reason).toLowerCase().includes("consultation");
+        const rawStatus = String(apt.status || "");
+        const statusLabel = isConsultationDeleted
+          ? "Consultation Deleted"
+          : rawStatus
+              ? rawStatus
+                  .toLowerCase()
+                  .replace(/[_-]/g, " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())
+              : "—";
         return (
           <Badge variant={isConsultationDeleted ? "red" : getStatusVariant(apt.status)}>
-            {isConsultationDeleted ? "Consultation Deleted" : apt.status}
+            {statusLabel}
           </Badge>
         );
       },

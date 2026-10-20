@@ -13,6 +13,21 @@ interface DayAgendaProps {
   checkingInApptId?: string | null;
 }
 
+const getAptBadgeVariant = (status: string): ApiAny => {
+  const lower = (status || "").toLowerCase().replace(/[_\s]/g, "-");
+  if (lower === "completed") return "green";
+  if (lower === "checked-in") return "teal";
+  if (lower === "booked") return "blue";
+  if (lower === "rescheduled") return "orange";
+  if (lower === "confirmed") return "indigo";
+  if (lower === "in-progress") return "cyan";
+  if (lower === "cancelled" || lower === "canceled") return "red";
+  if (lower === "no-show") return "amber";
+  if (lower === "follow-up") return "violet";
+  if (lower === "scheduled") return "gray";
+  return "blue";
+};
+
 export const DayAgenda: React.FC<DayAgendaProps> = ({
   selectedDate,
   appointments,
@@ -48,10 +63,13 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                   {formatTime(apt.time)}
                 </span>
                 <Badge
-                  variant={apt.status === "checked-in" ? "green" : "blue"}
+                  variant={getAptBadgeVariant(apt.status || "booked")}
                   className="text-[7.5px] uppercase tracking-wider px-1.5 py-0.5"
                 >
-                  {apt.status || "Booked"}
+                  {String(apt.status || "Booked")
+                    .toLowerCase()
+                    .replace(/[_-]/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
                 </Badge>
               </div>
               <div className="flex items-center gap-2">

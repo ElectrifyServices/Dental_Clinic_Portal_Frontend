@@ -29,18 +29,44 @@ export function AppointmentStatusWidget({ period = 'today', customStart, customE
 
   const statusStyles: Record<string, { bg: string, color: string }> = {
     'Completed': { bg: 'bg-emerald-500', color: '#10b981' },
-    'Scheduled': { bg: 'bg-blue-500', color: '#3b82f6' },
+    'COMPLETED': { bg: 'bg-emerald-500', color: '#10b981' },
+    'Booked': { bg: 'bg-blue-500', color: '#3b82f6' },
+    'BOOKED': { bg: 'bg-blue-500', color: '#3b82f6' },
+    'Rescheduled': { bg: 'bg-orange-500', color: '#f97316' },
+    'RESCHEDULED': { bg: 'bg-orange-500', color: '#f97316' },
+    'Checked In': { bg: 'bg-teal-500', color: '#14b8a6' },
+    'CHECKED_IN': { bg: 'bg-teal-500', color: '#14b8a6' },
     'Confirmed': { bg: 'bg-indigo-500', color: '#6366f1' },
-    'In Progress': { bg: 'bg-amber-500', color: '#f59e0b' },
+    'CONFIRMED': { bg: 'bg-indigo-500', color: '#6366f1' },
+    'Scheduled': { bg: 'bg-slate-400', color: '#94a3b8' },
+    'SCHEDULED': { bg: 'bg-slate-400', color: '#94a3b8' },
+    'In Progress': { bg: 'bg-cyan-500', color: '#06b6d4' },
+    'IN_PROGRESS': { bg: 'bg-cyan-500', color: '#06b6d4' },
     'Cancelled': { bg: 'bg-rose-500', color: '#f43f5e' },
-    'No Show': { bg: 'bg-gray-500', color: '#6b7280' },
+    'CANCELLED': { bg: 'bg-rose-500', color: '#f43f5e' },
+    'No Show': { bg: 'bg-amber-500', color: '#f59e0b' },
+    'NO_SHOW': { bg: 'bg-amber-500', color: '#f59e0b' },
+    'Follow Up': { bg: 'bg-purple-500', color: '#a855f7' },
+    'FOLLOW_UP': { bg: 'bg-purple-500', color: '#a855f7' },
   };
 
-  let mappedStatuses = breakdown.map((s: ApiAny) => ({
-    label: s.status,
-    value: s.count || 0,
-    ...(statusStyles[s.status] || { bg: 'bg-purple-500', color: '#a855f7' })
-  }));
+  let mappedStatuses = breakdown.map((s: ApiAny) => {
+    const raw = String(s.status || "");
+    const formattedLabel = raw
+      .toLowerCase()
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const style =
+      statusStyles[raw] ||
+      statusStyles[formattedLabel] ||
+      statusStyles[raw.toUpperCase()] ||
+      { bg: 'bg-slate-400', color: '#94a3b8' };
+    return {
+      label: formattedLabel,
+      value: s.count || 0,
+      ...style,
+    };
+  });
 
   if (total === 0 && mappedStatuses.length === 0) {
     mappedStatuses = [{ label: 'No Data', value: 1, bg: 'bg-gray-200', color: '#e5e7eb' }];

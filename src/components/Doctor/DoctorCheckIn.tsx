@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { SearchInput } from "@/components/ui";
 import {
   Select,
   SelectContent,
@@ -214,16 +215,12 @@ export function DoctorCheckIn({
       {/* Filters */}
       <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground/60" />
-            <Input
-              type="text"
-              placeholder="Search by patient name, treatment, or concern..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search by patient name, treatment, or concern..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+            className="flex-1 [&>input]:h-12 [&>input]:rounded-xl [&>input]:border-border [&>input]:text-sm"
+          />
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-48 rounded-xl">
               <SelectValue />

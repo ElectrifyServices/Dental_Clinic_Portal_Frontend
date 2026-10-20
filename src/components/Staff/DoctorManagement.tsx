@@ -38,6 +38,7 @@ import {
   SelectContent,
   SelectItem,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "../../contexts/SidebarContext";
@@ -434,7 +435,11 @@ export function DoctorManagement({
         />
       </div>
 
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={isRoleFilterOpen}
+        onClose={() => setIsRoleFilterOpen(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm">
           <SearchInput
             value={search}
@@ -502,7 +507,7 @@ export function DoctorManagement({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       {isLoading ? (
         <Card className="flex flex-1 min-h-0 flex-col items-center justify-center py-24 rounded-2xl">

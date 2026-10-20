@@ -30,6 +30,7 @@ import {
   SelectItem,
   Loading,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import { createPortal } from "react-dom";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -702,7 +703,11 @@ export function InvoiceList({
         />
       </div>
 
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2 bg-card p-3 rounded-2xl border border-border shadow-sm max-w-full overflow-x-hidden">
           <SearchInput
             value={search}
@@ -743,7 +748,7 @@ export function InvoiceList({
             />
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
       {isLoading ? (

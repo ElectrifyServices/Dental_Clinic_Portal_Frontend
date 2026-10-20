@@ -1,7 +1,39 @@
 import type { ApiAny } from "../../../types/api";
-import React, { useState } from "react";
-import { FileText, Pill, Stethoscope, ChevronDown, Clock, ShieldAlert, AlertCircle, X, Filter, Activity } from "lucide-react";
-import { SearchInput, Button, Loading, Card, Badge, DataTable, ErrorState, DatePicker } from "@/components/ui";
+import React, { useState, useMemo } from "react";
+import {
+  FileText,
+  Pill,
+  Stethoscope,
+  ChevronDown,
+  Clock,
+  ShieldAlert,
+  AlertCircle,
+  X,
+  Filter,
+  Activity,
+  Calendar as CalendarIcon,
+  Download,
+  History,
+  RefreshCw,
+  Printer,
+  Sparkles,
+} from "lucide-react";
+import {
+  SearchInput,
+  Button,
+  Loading,
+  Card,
+  Badge,
+  DataTable,
+  ErrorState,
+  DatePicker,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  toast,
+} from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { downloadConsultationPDF } from "../../../utils/pdfGenerator";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
 
@@ -33,361 +65,533 @@ export function PreviousConsultationsView({
   onClearFilters,
 }: PreviousConsultationsViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [activeDownloadMenuId, setActiveDownloadMenuId] = useState<string | null>(null);
 
-  const handleDownloadPDF = (record: ApiAny, type: ApiAny) => {
-    if (!patient) {
-      console.error("Patient details missing for PDF download");
-      return;
+  const handleDownloadPDF = async (record: ApiAny, type: ApiAny) => {
+    const toastId = toast.loading("Generating PDF report...");
+    try {
+      const patientInfo = {
+        id: patient?.id || record.patient_id || record.patient?.id || "—",
+        patientName: patient?.patientName || patient?.name || record.patientName || record.patient?.name || "—",
+        phone: patient?.patientPhone || patient?.phone || record.patient_phone || record.patient?.phone || "—",
+        doctorName: (record as ApiAny).doctorName || record.doctor?.name || (patient as ApiAny)?.doctorName || "—",
+        treatmentType: record.treatmentType || record.treatment_type,
+        gender: patient?.gender || patient?.patientHistory?.gender || record.patient?.gender || "—",
+        bloodGroup: patient?.bloodGroup || patient?.blood_group || patient?.patientHistory?.bloodGroup || record.patient?.blood_group || "—",
+      };
+
+      await downloadConsultationPDF({
+        type: type || "FULL",
+        patient: patientInfo,
+        consultationData: record,
+        toothChartState: record?.toothChartState || {},
+      });
+      toast.success("PDF Downloaded successfully!", { id: toastId });
+    } catch (err: ApiAny) {
+      console.error("PDF generation failed:", err);
+      toast.error("Failed to generate PDF report", { id: toastId });
     }
-    const pdfData = {
-      ...record,
-      patient: patient
-    };
-    downloadConsultationPDF(pdfData, type);
   };
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const getDateParts = (dateStr?: string) => {
+    if (!dateStr) return { day: "--", month: "---", year: "----", time: "" };
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return { day: "--", month: "---", year: "----", time: "" };
+      return {
+        day: d.toLocaleDateString("en-US", { day: "2-digit" }),
+        month: d.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+        year: d.getFullYear().toString(),
+        time: d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true }),
+      };
+    } catch {
+      return { day: "--", month: "---", year: "----", time: "" };
+    }
   };
 
   // Parse response structure dynamically to handle arrays, nested data, or wrapper objects
-  const consultationsList = React.useMemo(() => {
+  const consultationsList = useMemo(() => {
     if (!consultations) return [];
     if (Array.isArray(consultations)) {
       return consultations;
     }
     const anyData = consultations as ApiAny;
-    // Handle standard { data: [...] }
-    if (Array.isArray(anyData.data)) {
-      return anyData.data;
-    }
-    // Handle { consultations: [...] }
-    if (Array.isArray(anyData.consultations)) {
-      return anyData.consultations;
-    }
-    // Handle double-nested { data: { consultations: [...] } }
-    if (anyData.data && Array.isArray(anyData.data.consultations)) {
-      return anyData.data.consultations;
-    }
-    // Handle double-nested { data: { data: [...] } }
-    if (anyData.data && Array.isArray(anyData.data.data)) {
-      return anyData.data.data;
-    }
-
+    if (Array.isArray(anyData.data)) return anyData.data;
+    if (Array.isArray(anyData.consultations)) return anyData.consultations;
+    if (anyData.data && Array.isArray(anyData.data.consultations)) return anyData.data.consultations;
+    if (anyData.data && Array.isArray(anyData.data.data)) return anyData.data.data;
     return [];
   }, [consultations]);
 
-  const hasActiveFilters = !!(searchVal || dateFrom || dateTo);
+  const hasActiveFilters = Boolean(searchVal || dateFrom || dateTo);
+
+  // Compute KPI statistics
+  const stats = useMemo(() => {
+    const total = consultationsList.length;
+    const followUps = consultationsList.filter((c: ApiAny) => c.is_follow_up).length;
+    const totalPrescriptions = consultationsList.reduce(
+      (sum: number, c: ApiAny) => sum + (c.prescriptions?.length || 0),
+      0
+    );
+    const totalProcedures = consultationsList.reduce(
+      (sum: number, c: ApiAny) => sum + ((c.treatments || c.treatment_plans)?.length || 0),
+      0
+    );
+    return { total, followUps, totalPrescriptions, totalProcedures };
+  }, [consultationsList]);
 
   return (
-    <div className="space-y-6">
-      {/* Search & Date Filter Row */}
-      <div className="flex flex-col gap-3 bg-muted/30 p-4 rounded-2xl border border-border/60">
-        {/* Top row: search only (full width) */}
+    <div className="space-y-4 sm:space-y-5">
+      {/* ── Top KPI Stat Cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 shrink-0">
+        <div className="bg-card border border-border/80 rounded-xl p-3 flex items-center justify-between shadow-xs">
+          <div className="space-y-0.5 min-w-0">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+              Consultations
+            </span>
+            <span className="text-lg sm:text-2xl font-black text-foreground block">
+              {stats.total}
+            </span>
+          </div>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <History className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border/80 rounded-xl p-3 flex items-center justify-between shadow-xs">
+          <div className="space-y-0.5 min-w-0">
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block truncate">
+              Follow-ups
+            </span>
+            <span className="text-lg sm:text-2xl font-black text-amber-600 dark:text-amber-400 block">
+              {stats.followUps}
+            </span>
+          </div>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <RefreshCw className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border/80 rounded-xl p-3 flex items-center justify-between shadow-xs">
+          <div className="space-y-0.5 min-w-0">
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block truncate">
+              Prescriptions
+            </span>
+            <span className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 block">
+              {stats.totalPrescriptions}
+            </span>
+          </div>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Pill className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border/80 rounded-xl p-3 flex items-center justify-between shadow-xs">
+          <div className="space-y-0.5 min-w-0">
+            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block truncate">
+              Procedures
+            </span>
+            <span className="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 block">
+              {stats.totalProcedures}
+            </span>
+          </div>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <Activity className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Search & Date Range Filter Bar ── */}
+      <div className="flex flex-col md:flex-row gap-2.5 sm:gap-3 bg-muted/40 p-2.5 sm:p-3.5 rounded-2xl border border-border/80 shadow-xs">
         <SearchInput
           value={searchVal}
           onChange={onSearchChange}
-          placeholder="Search by diagnosis, doctor, tooth condition..."
+          placeholder="Search by diagnosis, doctor, medicine, or condition..."
+          className="flex-1 min-w-0 [&>input]:h-9.5 [&>input]:text-xs [&>input]:rounded-xl"
         />
 
-        {/* Bottom row: date range + clear filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Date Range:</span>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 bg-card border border-border px-2.5 py-1 rounded-xl shadow-2xs">
+            <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <span className="text-[10.5px] font-bold text-muted-foreground uppercase tracking-wide">From:</span>
+            <DatePicker
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(val) => onDateFromChange(val)}
+              className="h-7 text-xs border-0 bg-transparent p-0 shadow-none focus:ring-0 focus-visible:ring-0 font-medium"
+              placeholder="Start Date"
+            />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-muted-foreground">From</span>
-              <DatePicker
-                value={dateFrom}
-                max={dateTo || undefined}
-                onChange={(val) => onDateFromChange(val)}
-                className="w-auto h-auto px-3 py-1.5"
-              />
-            </div>
-            <span className="text-muted-foreground text-xs font-bold">—</span>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-muted-foreground">To</span>
-              <DatePicker
-                value={dateTo}
-                min={dateFrom || undefined}
-                onChange={(val) => onDateToChange(val)}
-                className="w-auto h-auto px-3 py-1.5"
-              />
-            </div>
+
+          <div className="flex items-center gap-1.5 bg-card border border-border px-2.5 py-1 rounded-xl shadow-2xs">
+            <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <span className="text-[10.5px] font-bold text-muted-foreground uppercase tracking-wide">To:</span>
+            <DatePicker
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(val) => onDateToChange(val)}
+              className="h-7 text-xs border-0 bg-transparent p-0 shadow-none focus:ring-0 focus-visible:ring-0 font-medium"
+              placeholder="End Date"
+            />
           </div>
+
           {hasActiveFilters && (
             <Button
               onClick={onClearFilters}
-              variant="destructive"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-destructive border border-destructive/30 bg-destructive/5 rounded-xl hover:bg-destructive/10 transition-all h-auto"
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl px-2.5"
             >
               <X className="w-3.5 h-3.5" />
-              Clear All
+              Clear
             </Button>
           )}
         </div>
       </div>
 
+      {/* ── Loading State ── */}
       {isLoading && (
-        <Loading type="spinner" text="Fetching records from database..." />
+        <div className="py-16 flex flex-col items-center justify-center">
+          <Loading type="spinner" text="Fetching consultation records..." />
+        </div>
       )}
 
+      {/* ── Error State ── */}
       {isError && (
-        <ErrorState 
+        <ErrorState
           title="Failed to load history"
           message="An error occurred while fetching the patient's previous consultations. Please try again."
         />
       )}
 
+      {/* ── Empty State ── */}
       {!isLoading && !isError && consultationsList.length === 0 && (
-        <div className="text-center py-16 bg-muted/30 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-2">
-          <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mb-2">
-            <Clock className="w-7 h-7 text-muted-foreground/60" />
+        <div className="text-center py-16 bg-muted/20 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-3">
+          <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground/60 shadow-xs">
+            <History className="w-7 h-7" />
           </div>
-          <h4 className="text-sm font-bold text-foreground">No previous consultations found</h4>
-          <p className="text-xs text-muted-foreground max-w-sm">
-            This patient has no recorded consultations in the system yet.
-          </p>
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-foreground">
+              {hasActiveFilters ? "No matching consultations found" : "No previous consultations found"}
+            </h4>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {hasActiveFilters
+                ? "Try adjusting your search criteria or resetting date filters."
+                : "This patient has no recorded consultations in the system yet."}
+            </p>
+          </div>
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={onClearFilters} className="mt-2 text-xs rounded-xl">
+              Reset Filters
+            </Button>
+          )}
         </div>
       )}
 
+      {/* ── Consultations List Cards ── */}
       {!isLoading && !isError && consultationsList.length > 0 && (
-        <div className="space-y-4">
-          {consultationsList.map((c, _idx) => {
+        <div className="space-y-3">
+          {consultationsList.map((c: ApiAny) => {
             const isExpanded = expandedId === c.id;
             const reportAvailability = getConsultationReportAvailability(c);
+            const dateParts = getDateParts(c.created_at);
+
+            const doctorName = c.doctor?.name || c.doctor_name || "Doctor";
+            const treatmentsCount = (c.treatments || c.treatment_plans || []).length;
+            const prescriptionsCount = (c.prescriptions || []).length;
+            const findingsCount = (c.tooth_findings || []).length;
+
             return (
               <Card
                 key={c.id}
-                className={`group relative overflow-visible transition-all duration-400 bg-card rounded-2xl ${
+                className={cn(
+                  "group transition-all duration-200 bg-card rounded-2xl overflow-hidden",
                   isExpanded
-                    ? "border-primary/30 shadow-xl shadow-primary/5 ring-1 ring-primary/20 z-10"
-                    : "border-border/60 shadow-sm hover:border-primary/40 hover:shadow-md"
-                }`}
+                    ? "border-primary/40 shadow-lg ring-1 ring-primary/20"
+                    : "border-border/80 shadow-xs hover:border-primary/40 hover:shadow-md"
+                )}
               >
-                {/* Left accent bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl transition-colors duration-300 ${isExpanded ? "bg-primary" : "bg-muted-foreground/20 group-hover:bg-primary/50"}`} />
-
-                {/* Collapsible Header */}
+                {/* ── Card Header (Clickable) ── */}
                 <div
                   onClick={() => toggleExpand(c.id)}
-                  className="p-5 pl-7 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer select-none transition-colors hover:bg-muted/5 gap-4 sm:gap-0"
+                  className="p-3.5 sm:p-4.5 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer select-none hover:bg-muted/30 transition-colors gap-3 sm:gap-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-1 min-w-0 pr-4">
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 w-full h-3 bg-primary/10" />
-                        <span className="block text-lg font-black leading-none mt-1">{formatDate(c.created_at).split(',')[0].split(' ')[0]}</span>
-                        <span className="block text-[9px] font-bold uppercase tracking-widest mt-0.5">{formatDate(c.created_at).split(',')[0].split(' ').slice(1).join(' ')}</span>
-                      </div>
+                  {/* Left: Date Badge + Doctor + Diagnosis */}
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    {/* Professional Date Block */}
+                    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 border border-primary/20 flex flex-col items-center justify-center shrink-0 shadow-2xs">
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-primary/80 leading-none">
+                        {dateParts.month}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black leading-none my-0.5 text-foreground">
+                        {dateParts.day}
+                      </span>
+                      <span className="text-[9px] font-bold text-muted-foreground leading-none">
+                        {dateParts.year}
+                      </span>
                     </div>
 
-                    <div className="hidden sm:block h-10 w-px bg-border shrink-0" />
+                    <div className="hidden sm:block h-10 w-px bg-border/80 shrink-0" />
 
-                    <div className="flex flex-col gap-1.5 min-w-0">
+                    {/* Metadata: Doctor, Badges, Diagnosis */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="bg-muted/50 text-[10px] uppercase font-bold text-muted-foreground border-border/50 gap-1.5 pl-1.5">
-                           <div className="w-4 h-4 rounded-full bg-background flex items-center justify-center shadow-sm">
-                              <Stethoscope className="w-2.5 h-2.5 text-primary" />
-                           </div>
-                           Dr. {c.doctor?.name || "Unknown"}
-                        </Badge>
-                        {c.is_follow_up && (
-                          <Badge variant="amber" className="text-[10px] uppercase font-black tracking-widest py-0.5 px-2 rounded-md shadow-sm border border-amber-200">
+                        {/* Doctor Badge */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-muted/60 border border-border/80 text-foreground">
+                          <Stethoscope className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>Dr. {doctorName}</span>
+                        </div>
+
+                        {/* Visit Type Badge */}
+                        {c.is_follow_up ? (
+                          <Badge variant="amber" className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
                             Follow-Up
                           </Badge>
+                        ) : (
+                          <Badge variant="emerald" className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
+                            Checkup
+                          </Badge>
                         )}
+
+                        {/* Cost Badge */}
                         {c.total_estimated_cost > 0 && (
-                          <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-md ml-auto sm:ml-0">
-                            ₹{c.total_estimated_cost}
+                          <span className="text-[11px] font-black text-foreground bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+                            ₹{Number(c.total_estimated_cost).toLocaleString()}
+                          </span>
+                        )}
+
+                        {/* Time */}
+                        {dateParts.time && (
+                          <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 ml-auto sm:ml-0">
+                            <Clock className="w-3 h-3 opacity-60" />
+                            {dateParts.time}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm font-medium text-foreground truncate max-w-md">
-                        {c.diagnosis_desc ? (
-                          <span><span className="text-muted-foreground">Dx:</span> {c.diagnosis_desc}</span>
-                        ) : (
-                          <span className="italic text-muted-foreground text-xs">No primary diagnosis specified</span>
+
+                      {/* Diagnosis Line */}
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-1.5 truncate">
+                        <span className="text-xs font-bold text-primary/90 shrink-0">Dx:</span>
+                        <span className="truncate">
+                          {c.diagnosis_desc || <span className="italic text-muted-foreground text-xs font-normal">No specific diagnosis recorded</span>}
+                        </span>
+                      </div>
+
+                      {/* Summary Chips */}
+                      <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                        {prescriptionsCount > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50">
+                            <Pill className="w-3 h-3" />
+                            {prescriptionsCount} {prescriptionsCount === 1 ? "Medicine" : "Medicines"}
+                          </span>
                         )}
-                      </p>
+                        {treatmentsCount > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border border-indigo-200/50">
+                            <Activity className="w-3 h-3" />
+                            {treatmentsCount} {treatmentsCount === 1 ? "Procedure" : "Procedures"}
+                          </span>
+                        )}
+                        {findingsCount > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50">
+                            <ShieldAlert className="w-3 h-3" />
+                            {findingsCount} {findingsCount === 1 ? "Tooth Finding" : "Findings"}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="relative">                      
-                      {activeDownloadMenuId === c.id && (
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {/* Right: Actions & Toggle */}
+                  <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                    {/* PDF Reports Dropdown */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
-                            variant="ghost"
-                            onClick={(e) => { if (reportAvailability.clinical) { e.stopPropagation(); handleDownloadPDF(c, 'CLINICAL'); setActiveDownloadMenuId(null); } }}
-                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.clinical ? "text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                            variant="outline"
+                            size="sm"
+                            className="h-8.5 gap-1.5 text-xs rounded-xl font-bold border-border/80 hover:bg-primary/10 hover:text-primary hover:border-primary/40 shadow-2xs"
                           >
-                            <Activity className="w-3.5 h-3.5 text-primary shrink-0" /> Clinical Observations
+                            <Download className="w-3.5 h-3.5 text-primary" />
+                            <span className="hidden sm:inline">Reports</span>
+                            <ChevronDown className="w-3 h-3 opacity-60" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={(e) => { if (reportAvailability.treatment) { e.stopPropagation(); handleDownloadPDF(c, 'TREATMENT'); setActiveDownloadMenuId(null); } }}
-                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.treatment ? "text-muted-foreground hover:bg-purple-50 hover:text-purple-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52 rounded-xl p-1 shadow-lg">
+                          <DropdownMenuItem
+                            onClick={() => handleDownloadPDF(c, "FULL")}
+                            className="gap-2 text-xs font-semibold cursor-pointer"
                           >
-                            <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" /> Treatment Planning
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={(e) => { if (reportAvailability.prescription) { e.stopPropagation(); handleDownloadPDF(c, 'PRESCRIPTION'); setActiveDownloadMenuId(null); } }}
-                            className={`w-full px-4 py-2 text-left text-xs font-semibold flex items-center justify-start gap-2 h-auto rounded-none ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                            <FileText className="w-3.5 h-3.5 text-primary" />
+                            Full Summary Report
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!reportAvailability.clinical}
+                            onClick={() => handleDownloadPDF(c, "CLINICAL")}
+                            className={cn(
+                              "gap-2 text-xs font-medium cursor-pointer",
+                              !reportAvailability.clinical && "opacity-50 cursor-not-allowed"
+                            )}
                           >
-                            <Pill className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Prescription Only
-                          </Button>
-                          <div className="h-px bg-muted my-1" />
-                          <Button
-                            variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(c, 'FULL'); setActiveDownloadMenuId(null); }}
-                            className="w-full px-4 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted flex items-center justify-start gap-2 h-auto rounded-none"
+                            <Activity className="w-3.5 h-3.5 text-blue-600" />
+                            Clinical Observations
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!reportAvailability.treatment}
+                            onClick={() => handleDownloadPDF(c, "TREATMENT")}
+                            className={cn(
+                              "gap-2 text-xs font-medium cursor-pointer",
+                              !reportAvailability.treatment && "opacity-50 cursor-not-allowed"
+                            )}
                           >
-                            <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Full Summary
-                          </Button>
-                        </div>
-                      )}
+                            <Stethoscope className="w-3.5 h-3.5 text-purple-600" />
+                            Treatment Planning
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!reportAvailability.prescription}
+                            onClick={() => handleDownloadPDF(c, "PRESCRIPTION")}
+                            className={cn(
+                              "gap-2 text-xs font-medium cursor-pointer",
+                              !reportAvailability.prescription && "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            <Pill className="w-3.5 h-3.5 text-emerald-600" />
+                            Prescription Only
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isExpanded ? "bg-primary/10 text-primary" : "bg-transparent text-muted-foreground"}`}>
-                      <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+
+                    {/* Expand/Collapse Chevron Button */}
+                    <div
+                      className={cn(
+                        "w-8.5 h-8.5 rounded-xl border flex items-center justify-center transition-colors",
+                        isExpanded
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                          : "bg-card border-border/80 text-muted-foreground group-hover:border-primary/40 group-hover:text-foreground"
+                      )}
+                    >
+                      <ChevronDown
+                        className={cn("w-4 h-4 transition-transform duration-300", isExpanded && "rotate-180")}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Expanded Content */}
+                {/* ── Expanded Content ── */}
                 {isExpanded && (
-                  <div className="p-7 pl-9 border-t border-border/40 bg-linear-to-b from-muted/10 to-transparent space-y-8 animate-in slide-in-from-top-2 duration-300">
-                    
+                  <div className="p-4 sm:p-6 border-t border-border/80 bg-muted/15 space-y-6 animate-in slide-in-from-top-2 duration-200">
                     {/* Clinical Details Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Left Column */}
-                      <div className="space-y-6">
-                        {/* Observations */}
-                        <div className="relative">
-                          <h5 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
-                            <FileText className="w-4 h-4" /> Clinical Observations
-                          </h5>
-                          <div className="bg-card border border-border/60 p-4.5 rounded-xl shadow-sm relative">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
-                            <p className="text-[14px] text-foreground/80 whitespace-pre-wrap font-medium leading-relaxed pl-1.5">
-                              {c.observations_desc || <span className="italic text-muted-foreground">No observations recorded.</span>}
-                            </p>
-                          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Clinical Observations */}
+                      <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Clinical Observations</span>
                         </div>
-
-                        {/* Findings & Tooth Notes */}
-                        <div className="relative">
-                          <h5 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
-                            <ShieldAlert className="w-4 h-4" /> Findings & Chart
-                          </h5>
-                          <div className="bg-card border border-border/60 p-4.5 rounded-xl shadow-sm relative">
-                             <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl" />
-                             <div className="pl-1.5">
-                                {c.tooth_findings && c.tooth_findings.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {c.tooth_findings.map((f: ApiAny, i: number) => (
-                                      <div key={i} className="flex items-center gap-2 bg-amber-50/80 border border-amber-200/60 rounded-lg pr-3 py-1 text-sm font-semibold shadow-sm">
-                                        <span className="bg-amber-100 text-amber-800 px-2 h-6 rounded-md flex items-center justify-center text-[11px] font-black shrink-0 ml-1">
-                                          {f.tooth_number === "FM" ? "FM" : f.tooth_number}
-                                        </span>
-                                        <span className="text-amber-900">
-                                          {f.condition === 'OTHER' && f.other_condition ? f.other_condition : f.condition}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-sm italic text-muted-foreground font-medium">No specific tooth chart conditions recorded.</span>
-                                )}
-                             </div>
-                          </div>
-                        </div>
+                        <p className="text-xs sm:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">
+                          {c.observations_desc || (
+                            <span className="italic text-muted-foreground text-xs">No observations recorded.</span>
+                          )}
+                        </p>
                       </div>
 
-                      {/* Right Column */}
-                      <div className="space-y-6">
-                        {/* Diagnosis */}
-                        <div className="relative">
-                          <h5 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
-                            <Stethoscope className="w-4 h-4" /> Diagnosis & Conclusion
-                          </h5>
-                          <div className="bg-card border border-border/60 p-4.5 rounded-xl shadow-sm relative">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
-                            <p className="text-[14px] text-foreground/80 whitespace-pre-wrap font-medium leading-relaxed pl-1.5">
-                              {c.diagnosis_desc || <span className="italic text-muted-foreground">No diagnosis details provided.</span>}
-                            </p>
-                          </div>
+                      {/* Diagnosis & Conclusion */}
+                      <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                          <Stethoscope className="w-3.5 h-3.5" />
+                          <span>Diagnosis & Conclusion</span>
                         </div>
+                        <p className="text-xs sm:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">
+                          {c.diagnosis_desc || (
+                            <span className="italic text-muted-foreground text-xs">No diagnosis details provided.</span>
+                          )}
+                        </p>
+                      </div>
 
-                        {/* Additional Notes */}
-                        {c.additional_notes && (
-                          <div className="relative">
-                            <h5 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-3">
-                              <AlertCircle className="w-4 h-4" /> Secondary Notes
-                            </h5>
-                            <div className="bg-card border border-border/60 p-4.5 rounded-xl shadow-sm relative">
-                              <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 rounded-l-xl" />
-                              <p className="text-[14px] text-foreground/80 whitespace-pre-wrap font-medium leading-relaxed pl-1.5">
-                                {c.additional_notes}
-                              </p>
-                            </div>
+                      {/* Tooth Findings & Chart */}
+                      <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs space-y-2.5">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span>Tooth Chart & Findings</span>
+                        </div>
+                        {c.tooth_findings && c.tooth_findings.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {c.tooth_findings.map((f: ApiAny, i: number) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-lg px-2 py-1 text-xs font-semibold"
+                              >
+                                <span className="bg-amber-200/80 dark:bg-amber-800/40 text-amber-900 dark:text-amber-200 px-1.5 py-0.5 rounded text-[10px] font-black">
+                                  {f.tooth_number === "FM" ? "FM" : `#${f.tooth_number}`}
+                                </span>
+                                <span className="text-amber-900 dark:text-amber-300 text-[11px]">
+                                  {f.condition === "OTHER" && f.other_condition ? f.other_condition : f.condition}
+                                </span>
+                              </div>
+                            ))}
                           </div>
+                        ) : (
+                          <p className="text-xs italic text-muted-foreground">
+                            No specific tooth chart conditions recorded.
+                          </p>
                         )}
+                      </div>
+
+                      {/* Additional / Secondary Notes */}
+                      <div className="bg-card border border-border/80 rounded-xl p-4 shadow-2xs space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>Doctor Notes & Follow-up</span>
+                        </div>
+                        <p className="text-xs sm:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">
+                          {c.additional_notes || (
+                            <span className="italic text-muted-foreground text-xs">No secondary notes recorded.</span>
+                          )}
+                        </p>
                       </div>
                     </div>
 
-                    <hr className="border-border/60" />
-
-                    {/* Treatment Plan Section */}
-                    <div>
-                      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
-                        <div>
-                          <h5 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                            <Stethoscope className="w-4.5 h-4.5" /> Treatment Plan
+                    {/* ── Treatment Plan Section ── */}
+                    <div className="bg-card border border-border/80 rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+                        <div className="space-y-0.5">
+                          <h5 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                            <Activity className="w-4 h-4 text-primary" />
+                            <span>Recommended Treatment Plan</span>
                           </h5>
                           {(c.treatment_plan_description || c.treatment_plan || c.treatmentPlan) && (
-                            <p className="text-sm text-muted-foreground font-semibold mt-2 max-w-2xl bg-muted/40 p-3 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground">
                               {c.treatment_plan_description || c.treatment_plan || c.treatmentPlan}
                             </p>
                           )}
                         </div>
-                        {c.total_estimated_cost !== undefined && c.total_estimated_cost > 0 && (
-                          <div className="bg-primary/5 px-5 py-2.5 rounded-xl border border-primary/20 shrink-0 shadow-sm flex flex-col items-end">
-                            <span className="block text-[10px] font-black uppercase tracking-widest text-primary/70 mb-0.5">Est. Total Cost</span>
-                            <span className="block text-xl font-black text-primary leading-none">₹{c.total_estimated_cost.toLocaleString()}</span>
+                        {c.total_estimated_cost > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-muted-foreground uppercase">Estimated Cost:</span>
+                            <span className="text-sm font-black text-foreground bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-lg">
+                              ₹{Number(c.total_estimated_cost).toLocaleString()}
+                            </span>
                           </div>
                         )}
                       </div>
 
                       {(c.treatments || c.treatment_plans) && (c.treatments || c.treatment_plans).length > 0 ? (
-                        <div className="bg-card rounded-xl shadow-sm border border-border/60 overflow-hidden">
+                        <div className="overflow-hidden border border-border/70 rounded-xl">
                           <DataTable
+                            compact
                             columns={[
                               {
-                                key: "tooth_number",
+                                key: "tooth",
                                 header: "Tooth",
                                 render: (t: ApiAny) => {
                                   const tooth = t.tooth_number !== undefined ? t.tooth_number : t.tooth;
                                   return (
-                                    <span className="font-black text-xs bg-muted px-2 py-1.5 rounded-md border border-border/50 shadow-sm">
-                                      {tooth === "FM" ? "Full Mouth" : (tooth ? `#${tooth}` : "All")}
+                                    <span className="font-bold text-xs bg-muted px-2 py-1 rounded-md border border-border/60">
+                                      {tooth === "FM" ? "Full Mouth" : tooth ? `#${tooth}` : "All"}
                                     </span>
                                   );
                                 },
@@ -395,70 +599,91 @@ export function PreviousConsultationsView({
                               {
                                 key: "procedure",
                                 header: "Procedure",
-                                render: (t: ApiAny) => <span className="font-bold text-foreground text-[13px]">{t.procedure || t.treatment_name}</span>,
+                                render: (t: ApiAny) => (
+                                  <span className="font-bold text-foreground text-xs">
+                                    {t.procedure || t.treatment_name}
+                                  </span>
+                                ),
                               },
                               {
                                 key: "sessions",
                                 header: "Sessions",
-                                render: (t: ApiAny) => <span className="font-semibold text-muted-foreground">{Array.isArray(t.sessions) ? t.sessions.length : (t.sessions || 1)}</span>,
+                                render: (t: ApiAny) => (
+                                  <span className="text-xs text-muted-foreground font-medium">
+                                    {Array.isArray(t.sessions) ? t.sessions.length : t.sessions || 1}
+                                  </span>
+                                ),
                               },
                               {
                                 key: "est_cost",
-                                header: "Cost (₹)",
+                                header: "Cost",
                                 align: "right",
                                 render: (t: ApiAny) => (
-                                  <span className="font-black text-foreground">
+                                  <span className="font-bold text-xs text-foreground">
                                     ₹{(t.est_cost || t.cost || 0).toLocaleString()}
                                   </span>
                                 ),
                               },
                               {
-                                key: "is_active",
+                                key: "status",
                                 header: "Status",
                                 align: "center",
                                 render: (t: ApiAny) => (
-                                  <Badge variant={t.is_active !== false && t.status !== "completed" ? "emerald" : "gray"} className="text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow-sm">
-                                    {t.is_active !== false && t.status !== "completed" ? "Active" : (t.status || "Inactive")}
+                                  <Badge
+                                    variant={t.is_active !== false && t.status !== "completed" ? "emerald" : "gray"}
+                                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                  >
+                                    {t.is_active !== false && t.status !== "completed" ? "Active" : t.status || "Inactive"}
                                   </Badge>
                                 ),
                               },
                             ]}
                             data={c.treatments || c.treatment_plans}
-                            rowKey={(t: ApiAny) => t.id || `${t.tooth_number || t.tooth}-${t.procedure || t.treatment_name}`}
+                            rowKey={(t: ApiAny, idx: number) => t.id || `${t.tooth || t.tooth_number}-${idx}`}
                           />
-                         </div>
+                        </div>
                       ) : (
-                        <div className="bg-card border border-dashed border-border/60 rounded-xl p-5 text-center flex items-center justify-center gap-2">
-                           <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                           <span className="text-sm font-semibold text-muted-foreground italic">No individual treatment item details recorded.</span>
+                        <div className="text-center py-4 bg-muted/20 border border-dashed border-border/80 rounded-xl text-xs text-muted-foreground">
+                          No itemized procedures specified in this consultation.
                         </div>
                       )}
                     </div>
 
-                    {/* Prescriptions Section */}
-                    <div>
-                      <h5 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-4">
-                        <Pill className="w-4.5 h-4.5" /> Prescriptions
-                      </h5>
+                    {/* ── Prescriptions Section ── */}
+                    <div className="bg-card border border-border/80 rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                        <h5 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                          <Pill className="w-4 h-4 text-emerald-600" />
+                          <span>Prescribed Medications</span>
+                        </h5>
+                        {reportAvailability.prescription && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownloadPDF(c, "PRESCRIPTION")}
+                            className="h-7 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 gap-1.5"
+                          >
+                            <Download className="w-3 h-3" />
+                            Download Rx PDF
+                          </Button>
+                        )}
+                      </div>
+
                       {c.prescriptions && c.prescriptions.length > 0 ? (
-                        <div className="bg-card rounded-xl shadow-sm border border-border/60 overflow-hidden">
+                        <div className="overflow-hidden border border-border/70 rounded-xl">
                           <DataTable
+                            compact
                             columns={[
                               {
                                 key: "medicine",
                                 header: "Medicine",
                                 render: (pr: ApiAny) => {
-                                  let medName = "";
                                   const m = pr.medicine_name || pr.medicine;
-                                  if (typeof m === 'object' && m !== null) {
-                                    medName = String(m.name || m.medicine_name || "");
-                                  } else {
-                                    medName = String(m || "");
-                                  }
+                                  const name = typeof m === "object" && m !== null ? m.name || m.medicine_name || "" : String(m || "");
                                   return (
-                                    <span className="font-black text-foreground text-[14px]">
-                                      {medName.trim() || "—"}
-                                    </span>
+                                    <div className="font-bold text-foreground text-xs">
+                                      {name.trim() || "—"}
+                                    </div>
                                   );
                                 },
                               },
@@ -466,7 +691,7 @@ export function PreviousConsultationsView({
                                 key: "dosage",
                                 header: "Dosage",
                                 render: (pr: ApiAny) => (
-                                  <span className="font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/50 text-[11px] uppercase tracking-wider shadow-sm">
+                                  <span className="font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded text-[11px] border border-amber-200/50">
                                     {pr.dosage || "—"}
                                   </span>
                                 ),
@@ -474,33 +699,48 @@ export function PreviousConsultationsView({
                               {
                                 key: "timing",
                                 header: "Timing",
-                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.timing || "—"}</span>,
+                                render: (pr: ApiAny) => (
+                                  <span className="text-xs text-muted-foreground font-medium">
+                                    {pr.timing || "—"}
+                                  </span>
+                                ),
                               },
                               {
                                 key: "frequency",
-                                header: "Freq",
-                                render: (pr: ApiAny) => <span className="font-semibold text-muted-foreground text-[13px]">{pr.frequency || "—"}</span>,
+                                header: "Frequency",
+                                render: (pr: ApiAny) => (
+                                  <span className="text-xs text-muted-foreground font-medium">
+                                    {pr.frequency || "—"}
+                                  </span>
+                                ),
                               },
                               {
                                 key: "duration",
                                 header: "Duration",
-                                render: (pr: ApiAny) => <span className="font-bold text-[13px] text-foreground/80">{pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || 'Days'}` : "—"}</span>,
+                                render: (pr: ApiAny) => (
+                                  <span className="text-xs text-foreground font-semibold">
+                                    {pr.duration ? `${pr.duration} ${pr.duration_type || pr.durationUnit || "Days"}` : "—"}
+                                  </span>
+                                ),
                               },
                               {
                                 key: "qty",
                                 header: "Qty",
                                 align: "right",
-                                render: (pr: ApiAny) => <span className="font-black text-lg text-foreground/80">{pr.qty || "—"}</span>,
+                                render: (pr: ApiAny) => (
+                                  <span className="font-black text-xs text-foreground">
+                                    {pr.qty || "—"}
+                                  </span>
+                                ),
                               },
                             ]}
                             data={c.prescriptions}
-                            rowKey={(pr: ApiAny) => pr.id || pr.medicine_name || Math.random().toString()}
+                            rowKey={(pr: ApiAny, idx: number) => pr.id || `${pr.medicine_name}-${idx}`}
                           />
                         </div>
                       ) : (
-                        <div className="bg-card border border-dashed border-border/60 rounded-xl p-5 text-center flex items-center justify-center gap-2">
-                           <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                           <span className="text-sm font-semibold text-muted-foreground italic">No medicines prescribed in this session.</span>
+                        <div className="text-center py-4 bg-muted/20 border border-dashed border-border/80 rounded-xl text-xs text-muted-foreground">
+                          No medications prescribed during this session.
                         </div>
                       )}
                     </div>

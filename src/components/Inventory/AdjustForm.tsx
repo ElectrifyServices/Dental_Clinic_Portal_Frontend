@@ -28,7 +28,8 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
   const form = useForm<AdjustFormData>({
     resolver: zodResolver(adjustSchema) as ApiAny,
     defaultValues: {
-      quantity: 0,
+      quantity: "" as unknown as number,
+      reason: "",
       reference_id: "",
     },
   });
@@ -38,6 +39,7 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
       id: item.id,
       quantity_delta: data.quantity,
       reason: data.reason,
+      reference_id: data.reference_id,
     });
   };
 
@@ -98,8 +100,12 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
                       {...field}
                       type="number"
                       placeholder="(+5 or -2)"
-                      value={field.value === 0 ? "" : field.value}
-                      onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? "" : Number(e.target.value)
+                        )
+                      }
                       onFocus={(e) => e.target.select()}
                     />
                   </FormControl>
@@ -112,9 +118,15 @@ export function AdjustForm({ item, onClose, onSave }: AdjustFormProps) {
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>
+                    Reason <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. Audit mismatch correction" />
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder="e.g. Audit mismatch correction"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

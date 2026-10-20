@@ -21,6 +21,8 @@ import {
   SearchableSelect,
   toast,
   Pagination,
+  SearchInput,
+  FilterContainer,
 } from "@/components/ui";
 import { TreatmentStats } from "./TreatmentList/TreatmentStats";
 import { downloadCompletedTreatmentPDF } from "../../utils/pdfGenerator";
@@ -604,8 +606,8 @@ export function TreatmentList({
     [search, statusFilter, currentPage, advancedFilters, onParamsChange]
   );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleSearchChange = (valOrEvent: string | React.ChangeEvent<HTMLInputElement>) => {
+    const value = typeof valOrEvent === "string" ? valOrEvent : valOrEvent.target.value;
     setSearch(value);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => notify({ search: value, page: 1 }), 400);
@@ -769,18 +771,23 @@ export function TreatmentList({
         <TreatmentStats totals={totals} isLoading={isStatsLoading && !totals.all && !totals.active && !totals.completed && !totals.planned} />
       </div>
 
-      <div className="min-w-0 shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
+        className="min-w-0 shrink-0 space-y-3"
+      >
         <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4 lg:flex-row lg:items-center">
-          <div className="relative min-w-0 flex-1 group">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-            <Input
-              type="text"
-              placeholder="Search by patient, procedure, tooth or doctor..."
-              value={search}
-              onChange={handleSearchChange}
-              className="h-11 w-full pl-12 pr-4 text-sm border border-border rounded-xl bg-muted/50 focus:bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-medium"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search by patient, procedure, tooth or doctor..."
+            value={search}
+            onChange={handleSearchChange}
+            onClear={() => {
+              setSearch("");
+              clearTimeout(debounceRef.current);
+              notify({ search: "", page: 1 });
+            }}
+            className="min-w-0 flex-1 [&>input]:h-11 [&>input]:rounded-xl [&>input]:bg-muted/50 [&>input]:border-border [&>input]:text-sm font-medium"
+          />
 
           <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-end lg:w-auto lg:min-w-[420px]">
             <div className="flex items-center bg-muted p-1 rounded-xl border border-border/50 overflow-x-auto scrollbar-none max-w-full flex-nowrap md:flex-1">
@@ -895,7 +902,7 @@ export function TreatmentList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <ContentCard
         bodyClassName="flex-1 p-0 overflow-auto"

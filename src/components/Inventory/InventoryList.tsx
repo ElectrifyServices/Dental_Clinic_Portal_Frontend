@@ -29,6 +29,7 @@ import {
   SelectContent,
   SelectItem,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useInventoryListQuery } from "../../hooks/inventory/useInventoryListQuery";
@@ -427,7 +428,11 @@ export function InventoryList({
         </div>
       )}
 
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2 bg-card p-4 rounded-2xl border border-border shadow-sm">
           <SearchInput
             value={search}
@@ -478,7 +483,7 @@ export function InventoryList({
             </div>
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         <DataTable

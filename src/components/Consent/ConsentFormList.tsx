@@ -37,6 +37,7 @@ import {
   Pagination,
   Loading,
   Label,
+  FilterContainer,
 } from "@/components/ui";
 import {
   DropdownMenu,
@@ -229,7 +230,11 @@ export function ConsentFormList({
         />
       </div>
 
-      <div className="shrink-0 space-y-3">
+      <FilterContainer
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        className="shrink-0 space-y-3"
+      >
         <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search by patient or treatment type…"
@@ -270,7 +275,7 @@ export function ConsentFormList({
             />
           </div>
         )}
-      </div>
+      </FilterContainer>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         {isLoading && forms.length === 0 ? (

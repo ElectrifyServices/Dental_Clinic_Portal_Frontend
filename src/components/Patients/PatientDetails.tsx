@@ -251,15 +251,30 @@ export function PatientDetails({
   const isIncompletePatient = (!patient.gender && !patient.dateOfBirth) || patient.is_direct || patient.status === "incomplete";
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const s = String(status || "").toLowerCase().replace(/[_\s]/g, "-");
+    switch (s) {
       case "completed":
       case "paid":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+      case "booked":
+        return "bg-blue-50 text-blue-700 border border-blue-200";
+      case "rescheduled":
+        return "bg-orange-50 text-orange-700 border border-orange-200";
+      case "checked-in":
+        return "bg-teal-50 text-teal-700 border border-teal-200";
+      case "confirmed":
+        return "bg-indigo-50 text-indigo-700 border border-indigo-200";
       case "pending":
       case "scheduled":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-muted text-muted-foreground border border-border";
       case "in-progress":
-        return "bg-primary/10 text-primary";
+        return "bg-cyan-50 text-cyan-700 border border-cyan-200";
+      case "cancelled":
+        return "bg-red-50 text-red-700 border border-red-200";
+      case "no-show":
+        return "bg-amber-50 text-amber-700 border border-amber-200";
+      case "follow-up":
+        return "bg-violet-50 text-violet-700 border border-violet-100";
       default:
         return "bg-muted text-foreground";
     }

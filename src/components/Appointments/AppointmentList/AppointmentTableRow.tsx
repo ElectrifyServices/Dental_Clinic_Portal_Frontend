@@ -92,12 +92,29 @@ export const AppointmentTableRow: React.FC<AppointmentTableRowProps> = ({
         </div>
       </td>
       <td className="px-6 py-4">
-        <Badge
-          variant={statusVariants[a.status] || statusVariants[(a.status || "").toLowerCase()] || statusVariants[(a.status || "").toLowerCase().replace("_", "-")] || "gray"}
-          className="text-[10px] px-3 py-0.5 font-medium"
-        >
-          {String(a.status || "").replace("_", " ").replace("-", " ")}
-        </Badge>
+        {(() => {
+          const rawStatus = String(a.status || "");
+          const normStatus = rawStatus.toLowerCase().replace(/[_\s]/g, "-");
+          const variant =
+            statusVariants[a.status] ||
+            statusVariants[rawStatus.toLowerCase()] ||
+            statusVariants[normStatus] ||
+            "gray";
+          const label = rawStatus
+            ? rawStatus
+                .toLowerCase()
+                .replace(/[_-]/g, " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase())
+            : "—";
+          return (
+            <Badge
+              variant={variant}
+              className="text-[10px] px-3 py-0.5 font-medium"
+            >
+              {label}
+            </Badge>
+          );
+        })()}
       </td>
       <td className="px-6 py-4 text-center">
         <Button
