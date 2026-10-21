@@ -19,6 +19,7 @@ import { useTreatmentPlanQuery } from "../../hooks/treatment/useTreatmentPlanQue
 import { useSendSessionPrescriptionMutation } from "../../hooks/treatment/useSendSessionPrescriptionMutation";
 import { useModal } from "../../contexts/ModalContext";
 import { ConsultationFeedback } from "./ConsultationFeedback";
+import { formatFileSize, formatFileExtension } from "../../utils/treatmentPlanUtils";
 import { downloadConsultationPDF } from "../../utils/pdfGenerator";
 import apiClient from "../../services/apiClient";
 
@@ -785,13 +786,6 @@ export function TreatmentSessionManager({
     });
   };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes || bytes <= 0) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const getSessionDate = (session: TreatmentSessionResponse) =>
     session.visit_date ||
     (session as ApiAny).scheduledDate ||
@@ -1431,14 +1425,19 @@ export function TreatmentSessionManager({
               {session.attachments?.length > 0 && (
                 <div>
                   <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <Paperclip className="w-3 h-3" /> Attachments
+                    <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                    <span>Attachments</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/80">
+                      ({session.attachments.length})
+                    </span>
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {session.attachments.map((attachment) => {
                       const fileSize = formatFileSize(Number(attachment.file_size));
-                      const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
+                      const fileExt = formatFileExtension(attachment);
+                      const fileMeta = [fileSize, fileExt]
                         .filter(Boolean)
-                        .join(" | ");
+                        .join(" • ");
 
                       return (
                         <a
@@ -1446,22 +1445,23 @@ export function TreatmentSessionManager({
                           href={attachment.file_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/60"
+                          title={attachment.file_name || "Attachment"}
+                          className="group flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2 transition-colors hover:border-emerald-300 hover:bg-emerald-50/60 min-w-0 w-full overflow-hidden"
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
                             <FileText className="w-4 h-4" />
                           </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-bold text-foreground">
+                          <span className="min-w-0 flex-1 overflow-hidden">
+                            <span className="block truncate text-sm font-bold text-foreground group-hover:text-emerald-700 transition-colors">
                               {attachment.file_name || "Attachment"}
                             </span>
                             {fileMeta && (
-                              <span className="block text-[11px] font-semibold text-muted-foreground">
+                              <span className="block truncate text-[11px] font-semibold text-muted-foreground">
                                 {fileMeta}
                               </span>
                             )}
                           </span>
-                          <ExternalLink className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <ExternalLink className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-emerald-700 transition-colors" />
                         </a>
                       );
                     })}
@@ -1932,13 +1932,14 @@ export function TreatmentSessionManager({
                         return (
                           <div
                             key={`${name}-${size}-${index}`}
-                            className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2"
+                            className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2 min-w-0 overflow-hidden"
                           >
                             <a
                               href={url || "#"}
                               target={url ? "_blank" : undefined}
                               rel="noreferrer"
-                              className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-85 transition-opacity"
+                              title={name}
+                              className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-85 transition-opacity overflow-hidden"
                               onClick={(e) => { if (!url) e.preventDefault(); }}
                             >
                               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden shrink-0 border border-slate-100">
@@ -1948,9 +1949,9 @@ export function TreatmentSessionManager({
                                   <FileText className="w-4 h-4" />
                                 )}
                               </div>
-                              <div className="min-w-0 flex-1">
+                              <div className="min-w-0 flex-1 overflow-hidden">
                                 <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-[11px] text-muted-foreground truncate">
                                   {size >= 1024 * 1024
                                     ? `${(size / 1024 / 1024).toFixed(1)} MB`
                                     : `${Math.max(1, Math.round(size / 1024))} KB`}

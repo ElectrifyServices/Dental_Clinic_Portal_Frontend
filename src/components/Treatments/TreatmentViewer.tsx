@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
 import { ConsultationFeedback } from "./ConsultationFeedback";
+import { formatFileSize, formatFileExtension } from "../../utils/treatmentPlanUtils";
 
 interface TreatmentViewerProps {
   treatmentId: string; // Changed from treatment: any to treatmentId
@@ -218,13 +219,6 @@ export function TreatmentViewer({
       default:
         return <ClockIcon className="w-4 h-4 text-gray-400" />;
     }
-  };
-
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes || bytes <= 0) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const statusVariant = (
@@ -579,7 +573,7 @@ export function TreatmentViewer({
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 ml-9">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 ml-2 sm:ml-9">
                           <div className="flex items-center gap-2">
                             <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
                             <div>
@@ -637,7 +631,7 @@ export function TreatmentViewer({
                           session.paid_amount ||
                           session.payment_method ||
                           session.attachments?.length > 0) && (
-                          <div className="mt-3 ml-9 p-2.5 bg-muted/30 rounded-lg border border-border/50">
+                          <div className="mt-3 ml-2 sm:ml-9 p-2.5 bg-muted/30 rounded-lg border border-border/50">
                             {session.work_done && (
                               <div className="mb-2">
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-1">
@@ -689,15 +683,19 @@ export function TreatmentViewer({
                             {session.attachments?.length > 0 && (
                               <div className={session.work_done || session.session_findings || session.next_session_plan ? "mt-2 pt-2 border-t border-border/50" : ""}>
                                 <p className="text-[9px] font-black uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
-                                  <Paperclip className="w-3.5 h-3.5 text-emerald-600" />
-                                  Attachments
+                                  <Paperclip className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                  <span>Attachments</span>
+                                  <span className="text-[9px] font-bold text-muted-foreground/80">
+                                    ({session.attachments.length})
+                                  </span>
                                 </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                                   {session.attachments.map((attachment: ApiAny) => {
                                     const fileSize = formatFileSize(Number(attachment.file_size));
-                                    const fileMeta = [fileSize, attachment.file_type || attachment.file_extension]
+                                    const fileExt = formatFileExtension(attachment);
+                                    const fileMeta = [fileSize, fileExt]
                                       .filter(Boolean)
-                                      .join(" | ");
+                                      .join(" • ");
 
                                     return (
                                       <a
@@ -705,22 +703,23 @@ export function TreatmentViewer({
                                         href={attachment.file_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                                        title={attachment.file_name || "Attachment"}
+                                        className="group flex items-center gap-2.5 rounded-lg border border-border/70 bg-background px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 min-w-0 w-full overflow-hidden"
                                       >
                                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
                                           <FileText className="w-4 h-4" />
                                         </span>
-                                        <span className="min-w-0 flex-1">
-                                          <span className="block truncate">
+                                        <span className="min-w-0 flex-1 overflow-hidden">
+                                          <span className="block truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                                             {attachment.file_name || "Attachment"}
                                           </span>
                                           {fileMeta && (
-                                            <span className="block text-[10px] font-bold text-muted-foreground">
+                                            <span className="block truncate text-[10px] font-bold text-muted-foreground">
                                               {fileMeta}
                                             </span>
                                           )}
                                         </span>
-                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                                        <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
                                       </a>
                                     );
                                   })}

@@ -435,3 +435,52 @@ export function toApiUpdatePlan(formData: ApiAny): UpdateTreatmentPlanVariables 
 
   return updateData;
 }
+
+export function formatFileSize(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function formatFileExtension(attachment: {
+  file_extension?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+}): string {
+  // 1. If clean extension provided, use it
+  if (attachment.file_extension) {
+    const clean = attachment.file_extension.replace(/^\./, "").trim();
+    if (clean && clean.length <= 6) return clean.toUpperCase();
+  }
+
+  // 2. Extract from file_name if present
+  if (attachment.file_name && attachment.file_name.includes(".")) {
+    const ext = attachment.file_name.split(".").pop()?.trim();
+    if (ext && ext.length <= 6 && !ext.includes("/")) {
+      return ext.toUpperCase();
+    }
+  }
+
+  // 3. Map MIME type to standard readable badge
+  if (attachment.file_type) {
+    const mime = attachment.file_type.toLowerCase();
+    if (mime.includes("spreadsheetml") || mime.includes("excel")) return "XLSX";
+    if (mime.includes("wordprocessingml") || mime.includes("msword")) return "DOCX";
+    if (mime.includes("presentationml") || mime.includes("powerpoint")) return "PPTX";
+    if (mime.includes("pdf")) return "PDF";
+    if (mime.includes("csv")) return "CSV";
+    if (mime.includes("zip") || mime.includes("compressed")) return "ZIP";
+    if (mime.includes("text/plain")) return "TXT";
+    if (mime.startsWith("image/")) {
+      const sub = mime.split("/")[1]?.split("+")[0]?.trim();
+      return sub && sub.length <= 5 ? sub.toUpperCase() : "IMAGE";
+    }
+    const parts = mime.split("/");
+    if (parts.length === 2 && parts[1].length <= 5) {
+      return parts[1].toUpperCase();
+    }
+  }
+
+  return "";
+}
