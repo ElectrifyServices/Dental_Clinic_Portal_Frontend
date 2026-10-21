@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { usePatientData } from "../hooks/usePatientData";
 import { useModal } from "../contexts/ModalContext";
 import { exportPatientReport } from "../utils/exportPatient";
@@ -66,17 +66,17 @@ export const PatientsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="space-y-5 sm:space-y-6 pb-8">
       <PageHeader
         title="Patients"
         subtitle="Manage and track patient information"
+        className="pb-2 sm:pb-3 mb-1 sm:mb-2"
         action={
           <Button
             onClick={() => handleAddPatient()}
-            className="gap-1.5 h-9 px-3 shadow-lg shadow-primary/10 justify-center font-bold text-xs"
+            className="gap-1.5 shrink-0 shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Patient</span>
+            <UserPlus className="w-4 h-4" /> Add Patient
           </Button>
         }
       />
