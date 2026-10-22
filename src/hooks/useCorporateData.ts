@@ -5,24 +5,27 @@ import { useCorporatePlansQuery } from './corporate/useCorporatePlansQuery';
 import { CorporatePlan, PlanBenefitType } from '../types';
 import { mapProcedureLabelToKey } from '../constants/consent.constants';
 import { useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export function useCorporateData(params?: { search?: string; status?: string; planType?: string; enabled?: boolean; }) {
   const [localPlans, setLocalPlans] = useLocalStorage<ApiAny[]>('corporatePlans', demoCorporatePlans);
   const [corporateEmployees, setCorporateEmployees] = useLocalStorage<ApiAny[]>('corporateEmployees', []);
 
+  const location = useLocation();
+
   const isEnabled = useMemo(() => {
     if (params?.enabled === false) return false;
-    const path = window.location.pathname;
+    const path = location.pathname;
     const allowed = path.includes('/membership') || path.includes('/patients') || path.includes('/billing') || path.includes('/patient-queue') || path.includes('/appointments') || path.includes('/dashboard');
     return allowed;
-  }, [params?.enabled]);
+  }, [params?.enabled, location.pathname]);
 
   const { data: apiPlansData, refetch: refetchPlans, isLoading: isPlansLoading } = useCorporatePlansQuery({
     enabled: isEnabled,
     search: params?.search,
     status: params?.status,
     planType: params?.planType,
-    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const mapBackendPlanToFrontend = (plan: ApiAny): CorporatePlan => {
@@ -142,10 +145,12 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
 
   const handleDeleteCorporatePlan = (id: string) => {
     setLocalPlans(prev => prev.filter(p => p.id !== id));
+    refetchPlans();
   };
 
   const handleToggleCorporatePlan = (id: string) => {
     setLocalPlans(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
+    refetchPlans();
   };
 
   const handleSaveEmployee = (emp: ApiAny) => {
@@ -203,6 +208,7 @@ export function useCorporateData(params?: { search?: string; status?: string; pl
     handleDeleteCorporateEmployee, handleUpdateCorporateEmployee,
     handleChangeEmployeePlan,
     isPlansLoading,
+    refetchPlans,
     refetchCorporate: refetchPlans,
   };
 }

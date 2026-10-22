@@ -191,12 +191,12 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
                         Item Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Dental Mirror" />
+                        <Input {...field} placeholder="e.g. Dental Mirror" className="h-11 rounded-xl px-4" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,8 +206,8 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
                         Category <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
@@ -218,6 +218,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           placeholder="Select category..."
                           searchPlaceholder="Search categories..."
                           isLoading={isLoadingCategories}
+                          className="hover:translate-y-0 active:translate-y-0"
                           onCreateOption={async (val) => {
                             try {
                               const res = await createCategoryMutation.mutateAsync({ name: val });
@@ -266,10 +267,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="description"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Description</FormLabel>
+                    <FormItem className="col-span-2 space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Description</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Optional description" />
+                        <Input {...field} placeholder="Optional description" className="h-11 rounded-xl px-4" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -288,9 +289,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="currentStock"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Current Stock <span className="text-destructive">*</span>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                        Current Stock
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -300,6 +301,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
+                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -310,9 +312,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="minStock"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Min Stock <span className="text-destructive">*</span>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                        Min Stock
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -322,6 +324,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
+                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -332,9 +335,9 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="maxStock"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Max Stock <span className="text-destructive">*</span>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                        Max Stock
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -344,6 +347,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
+                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -354,13 +358,13 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="unit"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Unit <span className="text-destructive">*</span>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">
+                        Unit
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 rounded-xl px-4">
                             <SelectValue placeholder="Select unit" />
                           </SelectTrigger>
                         </FormControl>
@@ -380,10 +384,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="batchNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Batch Number</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Batch Number</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. BATCH-001" />
+                        <Input {...field} placeholder="e.g. BATCH-001" className="h-11 rounded-xl px-4" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -393,8 +397,8 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="expiryDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiry Date</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Expiry Date</FormLabel>
                       <FormControl>
                         <DatePicker
                           value={field.value}
@@ -431,8 +435,8 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="cost"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit Cost (₹)</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Unit Cost (₹)</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -442,6 +446,7 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                           value={field.value === 0 ? "" : field.value}
                           onChange={(e) => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
                           onFocus={(e) => e.target.select()} 
+                          className="h-11 rounded-xl px-4"
                         />
                       </FormControl>
                       <FormMessage />
@@ -452,10 +457,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="supplier"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Supplier</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Supplier</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Supplier name" />
+                        <Input {...field} placeholder="Supplier name" className="h-11 rounded-xl px-4" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -465,10 +470,10 @@ export function InventoryForm({ onClose, onSave, item, isLoading }: InventoryFor
                   control={form.control}
                   name="warranty"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Warranty</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-sm font-semibold text-foreground leading-normal block">Warranty</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. 1 year" />
+                        <Input {...field} placeholder="e.g. 1 year" className="h-11 rounded-xl px-4" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

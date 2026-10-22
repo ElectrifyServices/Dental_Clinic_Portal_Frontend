@@ -5,6 +5,7 @@ import { Modal, Button, ContentCard, Badge, Loading } from "@/components/ui";
 import { useTreatmentPlanQuery } from "@/hooks/treatment/useTreatmentPlanQuery";
 import { ConsultationFeedback } from "./ConsultationFeedback";
 import { formatFileSize, formatFileExtension } from "../../utils/treatmentPlanUtils";
+import { formatDisplayDate } from "../../utils/dateUtils";
 
 interface TreatmentViewerProps {
   treatmentId: string; // Changed from treatment: any to treatmentId
@@ -114,7 +115,7 @@ export function TreatmentViewer({
                 return hasFm ? `<span title="Full Mouth" style="cursor:help; font-weight:bold; color:#059669;">${display}</span>` : display;
               })()}</p>
               <p><strong>Doctor:</strong> ${treatment.doctor?.name || treatment.doctorName}</p>
-              <p><strong>Date:</strong> ${new Date(treatment.treatment_date).toLocaleDateString()}</p>
+              <p><strong>Date:</strong> ${formatDisplayDate(treatment.treatment_date)}</p>
               <p><strong>Status:</strong> ${treatment.status}</p>
             </div>
           </div>
@@ -136,7 +137,7 @@ export function TreatmentViewer({
                   <h4 style="margin: 0;">Session ${session.visit_number}</h4>
                   <span class="session-status status-${session.status?.toLowerCase()}">${session.status}</span>
                 </div>
-                <p><strong>Date:</strong> ${new Date(session.visit_date).toLocaleDateString()}</p>
+                <p><strong>Date:</strong> ${formatDisplayDate(session.visit_date)}</p>
                 <p><strong>Duration:</strong> ${session.duration_min} mins</p>
                 <p><strong>Fee:</strong> ₹${parseInt(session.session_fee).toLocaleString()}</p>
                 ${session.work_done
@@ -184,7 +185,7 @@ export function TreatmentViewer({
           </div>
 
           <div class="footer">
-            <p>Confidential medical document. Generated on ${new Date().toLocaleDateString()}</p>
+            <p>Confidential medical document. Generated on ${formatDisplayDate(new Date())}</p>
           </div>
         </body>
       </html>
@@ -330,11 +331,7 @@ export function TreatmentViewer({
                   Treatment Date
                 </span>
                 <span className="text-sm font-black text-foreground">
-                  {new Date(treatment.treatment_date).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
+                  {formatDisplayDate(treatment.treatment_date)}
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-emerald-100/50 pb-1.5">
@@ -343,10 +340,7 @@ export function TreatmentViewer({
                 </span>
                 <span className="text-sm font-black text-foreground">
                   {treatment.next_appointment
-                    ? new Date(treatment.next_appointment).toLocaleDateString(
-                      "en-IN",
-                      { day: "2-digit", month: "short", year: "numeric" }
-                    )
+                    ? formatDisplayDate(treatment.next_appointment)
                     : "N/A"}
                 </span>
               </div>
@@ -581,14 +575,9 @@ export function TreatmentViewer({
                                 Date
                               </p>
                               <p className="text-xs font-semibold">
-                                {session.visit_date ? new Date(session.visit_date).toLocaleDateString(
-                                  "en-IN",
-                                  {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  }
-                                ) : "Not Scheduled"}
+                                {session.visit_date
+                                  ? formatDisplayDate(session.visit_date)
+                                  : "Not Scheduled"}
                               </p>
                             </div>
                           </div>

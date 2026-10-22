@@ -13,6 +13,7 @@ import {
 import { Card } from "@/components/ui";
 import { PlanCoverageCard } from "./PlanCoverageCard";
 import { formatPhoneWithCountryCode } from "@/utils/phoneUtils";
+import { formatDisplayDate } from "@/utils/dateUtils";
 
 interface OverviewTabProps {
   patient: ApiAny;
@@ -24,19 +25,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   patientAppointments,
 }) => {
   const formatLastVisitDate = (visitVal?: string | number | Date) => {
-    if (!visitVal) return "No visits yet";
-    try {
-      const d = new Date(visitVal);
-      return !isNaN(d.getTime())
-        ? d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : String(visitVal);
-    } catch (_e) {
-      return String(visitVal);
-    }
+    if (!visitVal || visitVal === "No visits yet" || visitVal === "No visits") return "No visits yet";
+    const formatted = formatDisplayDate(visitVal);
+    return formatted === "—" ? "No visits yet" : formatted;
   };
 
   return (
@@ -69,7 +60,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div>
               <p className="text-sm text-muted-foreground">Date of Birth</p>
               <p className="font-medium text-foreground">
-                {new Date(patient.dateOfBirth).toLocaleDateString()}
+                {formatDisplayDate(patient.dateOfBirth || patient.dob)}
               </p>
             </div>
           </div>
@@ -152,11 +143,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               </div>
               <span className="text-sm font-bold text-primary">
                 {patient.created_at || patient.createdAt
-                  ? new Date(patient.created_at || patient.createdAt).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                  ? formatDisplayDate(patient.created_at || patient.createdAt)
                   : "New Registration"}
               </span>
             </div>
