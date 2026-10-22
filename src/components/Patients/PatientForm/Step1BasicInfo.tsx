@@ -60,7 +60,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const nameContainerRef = useRef<HTMLDivElement>(null);
+  const phoneContainerRef = useRef<HTMLDivElement>(null);
 
   const { phoneError, handlePhoneChange: phoneValidationChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
     dialingCode: formData.country_code || "+91",
@@ -115,14 +116,25 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   }, [rawPatientsData]);
 
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setFocusedField(null);
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (focusedField === "name") {
+        if (nameContainerRef.current && !nameContainerRef.current.contains(target)) {
+          setFocusedField(null);
+        }
+      } else if (focusedField === "phone") {
+        if (phoneContainerRef.current && !phoneContainerRef.current.contains(target)) {
+          setFocusedField(null);
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [focusedField]);
 
   const handleSelectPatient = (p: ApiAny) => {
     setFormData((prev: ApiAny) => ({
@@ -463,8 +475,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative" ref={dropdownRef}>
-        <div className="space-y-1 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative">
+        <div className="space-y-1 relative" ref={nameContainerRef}>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
             Full Name <span className="text-destructive">*</span>
@@ -474,6 +486,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             name="name"
             value={formData.name || ""}
             onFocus={() => setFocusedField("name")}
+            onKeyDown={(e) => {
+              if (e.key === "Tab" || e.key === "Escape") {
+                setFocusedField(null);
+              }
+            }}
             onChange={(e) => {
               let val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
               val = val.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
@@ -497,7 +514,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           )}
         </div>
 
-        <div className="space-y-1 relative">
+        <div className="space-y-1 relative" ref={phoneContainerRef}>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number <span className="text-destructive">*</span>
@@ -516,6 +533,11 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               name="phone"
               value={formData.phone || ""}
               onFocus={() => setFocusedField("phone")}
+              onKeyDown={(e) => {
+                if (e.key === "Tab" || e.key === "Escape") {
+                  setFocusedField(null);
+                }
+              }}
               maxLength={maxLength}
               onChange={(e) => {
                 phoneValidationChange(e);
@@ -547,6 +569,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
             type="email"
             name="email"
             value={formData.email || ""}
+            onFocus={() => setFocusedField(null)}
             onChange={handleChange}
             className={
               validationErrors.email

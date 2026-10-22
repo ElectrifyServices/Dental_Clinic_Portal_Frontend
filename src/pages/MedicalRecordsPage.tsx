@@ -6,6 +6,7 @@ import { useEMRListQuery } from "../hooks/emr/useEMRListQuery";
 import apiClient from "../services/apiClient";
 import { useMemo, useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
+import { extractDoctorName } from "../utils/doctorUtils";
 
 /**
  * The EMR list endpoint returns its rows under several different wrappers
@@ -107,15 +108,11 @@ export function MedicalRecordsPage() {
       }
 
       // Resolve last doctor
-      let lastDoctorName = "-";
-      if (latestRecord.created_by) {
-        const staff = staffMembers?.find((s: StaffRow) => s.id === latestRecord.created_by);
-        if (staff) {
-          const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
-          const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
-          lastDoctorName = (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
-        }
-      }
+      const lastDoctorRecord = groupRecords.find((r: EmrRow) => extractDoctorName(r, staffMembers));
+      const lastDoctorName =
+        extractDoctorName(latestRecord, staffMembers) ||
+        (lastDoctorRecord ? extractDoctorName(lastDoctorRecord, staffMembers) : "") ||
+        "-";
 
       const patientObj = groupRecords.find((r: EmrRow) => r.patient && (r.patient.name || r.patient.phone || r.patient.patient_code || r.patient.patientCode))?.patient || latestRecord.patient || {};
       const patientName = patientObj.name || latestRecord.patient?.name || "-";
@@ -164,15 +161,7 @@ export function MedicalRecordsPage() {
           : [],
         timeline: groupRecords.map((r: EmrRow) => {
           const formattedItemDate = r.created_at || new Date().toISOString();
-          let itemDoctor = "-";
-          if (r.created_by) {
-            const staff = staffMembers?.find((s: StaffRow) => s.id === r.created_by);
-            if (staff) {
-              const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
-              const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
-              itemDoctor = (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
-            }
-          }
+          const itemDoctor = extractDoctorName(r, staffMembers) || "-";
           return {
             id: r.id,
             title: r.title || "-",
@@ -251,15 +240,7 @@ export function MedicalRecordsPage() {
         [];
       if (Array.isArray(raw) && raw.length > 0) {
         timeline = raw.map((item: EmrRow) => {
-          let itemDoctor = "-";
-          if (item.created_by) {
-            const staff = staffMembers?.find((s: StaffRow) => s.id === item.created_by);
-            if (staff) {
-              const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
-              const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
-              itemDoctor = (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
-            }
-          }
+          const itemDoctor = extractDoctorName(item, staffMembers) || "-";
           return {
             id: item.id,
             title: item.title || "-",

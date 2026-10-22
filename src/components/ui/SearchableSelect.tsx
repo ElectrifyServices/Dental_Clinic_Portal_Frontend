@@ -186,7 +186,7 @@ export function SearchableSelect({
             type="button"
             disabled={disabled || isLoading}
             className={cn(
-              "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm hover:border-border/80 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer transition-all duration-200 ease-out min-w-0 overflow-hidden",
+              "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2.5 text-sm font-semibold shadow-sm hover:border-border/80 hover:translate-y-0 active:translate-y-0 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 text-left cursor-pointer transition-all duration-200 ease-out min-w-0 overflow-hidden",
               !value && "text-muted-foreground",
               className
             )}

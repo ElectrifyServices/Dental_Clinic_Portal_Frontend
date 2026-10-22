@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, Calendar, ChevronDown, CheckCircle, CreditCard
 import { Card, Button, Badge, Loading } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { usePatientDocumentsQuery } from "../../../hooks/patients/usePatientDocumentsQuery";
+import { formatDisplayDate } from "@/utils/dateUtils";
 
 // --- Reusable Empty State Component ---
 const EmptyState = ({
@@ -157,7 +158,7 @@ export const AppointmentsTab = ({
                 {appointment.treatmentType || appointment.type}
               </p>
               <p className="text-xs text-primary font-bold mt-1">
-                {appointment.date} • {appointment.time} • {appointment.duration || 15} mins
+                {formatDisplayDate(appointment.date)} • {appointment.time} • {appointment.duration || 15} mins
               </p>
               <p className="text-xs text-muted-foreground/80 mt-1 font-semibold">
                 Doctor: Dr. {appointment.doctorName || appointment.doctor}
@@ -259,8 +260,8 @@ export const TreatmentsTab = ({
                           Tooth:{" "}
                           <span className="font-bold">{String(treatment.tooth) === "-1" || String(treatment.tooth) === "FM" ? "Full Mouth" : `#${treatment.tooth}`}</span>
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-1">
-                          {new Date(treatment.date).toLocaleDateString()}
+                        <p className="text-[10px] text-muted-foreground font-semibold mt-1">
+                          {formatDisplayDate(treatment.date)}
                         </p>
                       </div>
                     </div>
@@ -350,7 +351,7 @@ export const TreatmentsTab = ({
                         ₹{treatment.cost.toLocaleString()}
                       </p>
                       <p className="text-[10px] text-green-600 font-bold uppercase">
-                        {new Date(treatment.date).toLocaleDateString()}
+                        {formatDisplayDate(treatment.date)}
                       </p>
                     </div>
                   </div>
@@ -377,18 +378,7 @@ export const BillingTab = ({
 }) => {
   const formatInvoiceDate = (dateVal?: string | number | Date) => {
     if (!dateVal) return null;
-    try {
-      const d = new Date(dateVal);
-      return !isNaN(d.getTime())
-        ? d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : String(dateVal);
-    } catch {
-      return String(dateVal);
-    }
+    return formatDisplayDate(dateVal);
   };
 
   const getInvoiceStatusBadge = (status?: string) => {
@@ -557,17 +547,7 @@ export const PrescriptionsTab = ({
 
   const getRecordDate = (record: ApiAny) => {
     const dateVal = record.date || record.treatment_date || record.created_at || record.createdAt || record.visit_date;
-    if (!dateVal) return "—";
-    try {
-      const d = new Date(dateVal);
-      return !isNaN(d.getTime()) ? d.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }) : String(dateVal);
-    } catch (_e) {
-      return String(dateVal);
-    }
+    return formatDisplayDate(dateVal);
   };
 
   const getRecordTreatment = (record: ApiAny) => {
@@ -844,14 +824,7 @@ export const DocumentsTab = ({
                     </Badge>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    {(() => {
-                      const dateVal = doc.uploaded_at || doc.date || doc.created_at;
-                      if (!dateVal) return "Unknown date";
-                      const d = new Date(dateVal);
-                      return !isNaN(d.getTime()) 
-                        ? d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) 
-                        : "Unknown date";
-                    })()}
+                    {formatDisplayDate(doc.uploaded_at || doc.date || doc.created_at)}
                   </p>
                 </Card>
               );
@@ -969,7 +942,9 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: ApiAny[] }) => {
                   <Calendar className="w-3 h-3" /> Last Visit
                 </p>
                 <p className="font-bold text-foreground text-sm">
-                  {member.lastVisit || "No visits"}
+                  {member.lastVisit && member.lastVisit !== "No visits"
+                    ? formatDisplayDate(member.lastVisit)
+                    : "No visits"}
                 </p>
               </div>
               <div className="bg-muted rounded-xl p-2.5 col-span-2">

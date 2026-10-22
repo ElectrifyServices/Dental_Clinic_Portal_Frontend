@@ -51,7 +51,7 @@ export function useCorporatePlansQuery(params: CorporatePlansParams = {}) {
     data: body,
     options: {
       enabled,
-      staleTime: params.staleTime !== undefined ? params.staleTime : 5 * 60 * 1000,
+      staleTime: params.staleTime !== undefined ? params.staleTime : 0,
       refetchOnWindowFocus: false,
       ...(params.refetchOnMount !== undefined ? { refetchOnMount: params.refetchOnMount } : {}),
     },

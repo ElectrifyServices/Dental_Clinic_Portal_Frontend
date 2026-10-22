@@ -63,6 +63,7 @@ export const CorporatePlansPage: React.FC = () => {
     handleBulkSaveEmployees,
     handleChangeEmployeePlan,
     isPlansLoading,
+    refetchCorporate,
   } = useCorporateData({
     search: debouncedSearch,
     status: filter === "all" ? undefined : filter.toUpperCase(),
@@ -148,7 +149,12 @@ export const CorporatePlansPage: React.FC = () => {
             return (
               <button
                 key={key}
-                onClick={() => setActiveTab(key)}
+                onClick={() => {
+                  if (key === "plans" && activeTab !== "plans") {
+                    refetchCorporate();
+                  }
+                  setActiveTab(key);
+                }}
                 className={`flex-1 flex items-center justify-center gap-3 px-4 py-2.5 border-b-2 transition-all group
                   ${active ? TAB_ACCENT[key] : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"}`}
               >

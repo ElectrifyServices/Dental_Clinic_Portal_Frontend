@@ -31,6 +31,7 @@ import { usePatientDetailQuery } from "../../hooks/patients/usePatientDetailQuer
 import { useStaffData } from "../../hooks/useStaffData";
 import { useDebounce } from "../../hooks/useDebounce";
 import { downloadMedicalRecordPDF } from "../../utils/pdfGenerator";
+import { extractDoctorName, formatDoctorDisplayName } from "../../utils/doctorUtils";
 
 interface EMRViewerProps {
   record: ApiAny;
@@ -259,21 +260,13 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
     refetchOnMount: "always",
   });
 
-  const resolveDoctorName = (createdById?: string) => {
-    if (!createdById) return "";
-    const staff = staffMembers?.find((s: ApiAny) => s.id === createdById);
-    if (!staff) return "";
-    const isDoctor = staff.role === "doctor" || staff.originalRoleName?.toLowerCase().includes("doctor");
-    const startsWithDr = staff.name?.toLowerCase().startsWith("dr") || staff.name?.toLowerCase().startsWith("dr.");
-    return (isDoctor && !startsWithDr) ? `Dr ${staff.name}` : staff.name;
-  };
-
   const detailedRecord = useMemo(() => {
     let rawList: ApiAny[] = [];
     if (apiListData) {
       if (Array.isArray(apiListData)) rawList = apiListData;
       else if (Array.isArray((apiListData as ApiAny).data?.data)) rawList = (apiListData as ApiAny).data.data;
       else if (Array.isArray((apiListData as ApiAny).data)) rawList = (apiListData as ApiAny).data;
+      else if (Array.isArray((apiListData as ApiAny).responseObject?.data?.data)) rawList = (apiListData as ApiAny).responseObject.data.data;
       else if (Array.isArray((apiListData as ApiAny).responseObject?.data)) rawList = (apiListData as ApiAny).responseObject.data;
       else if (Array.isArray((apiListData as ApiAny).responseObject)) rawList = (apiListData as ApiAny).responseObject;
     }
@@ -333,6 +326,13 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
         .filter((a: ApiAny) => a.url);
     };
 
+    // Find the primary attending doctor from the latest record with a doctor, or fallback to record
+    const latestDoctorRecord = effectiveList.find((item: ApiAny) => extractDoctorName(item, staffMembers));
+    const headerDoctorName =
+      extractDoctorName(latestItem, staffMembers) ||
+      (latestDoctorRecord ? extractDoctorName(latestDoctorRecord, staffMembers) : "") ||
+      formatDoctorDisplayName(record.doctorName || record.lastDoctorName);
+
     return {
       ...record,
       patientName,
@@ -354,14 +354,14 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
       type: (latestItem.record_type || latestItem.type || record.type || "consultation").toLowerCase(),
       title: latestItem.title || record.title || "—",
       content: latestItem.content || record.content || "—",
-      doctorName: resolveDoctorName(latestItem.created_by) || record.doctorName || record.lastDoctorName || "—",
+      doctorName: headerDoctorName || "—",
       timeline: effectiveList.map((item: ApiAny) => ({
         id: item.id,
         title: item.title || "Record Entry",
         content: item.content || "—",
         date: item.created_at || item.date || new Date().toISOString(),
         category: (item.record_type || item.type || "consultation").toLowerCase(),
-        doctorName: resolveDoctorName(item.created_by) || item.doctorName || record.doctorName || "—",
+        doctorName: extractDoctorName(item, staffMembers) || "—",
         attachments: extractAttachments(item),
       })),
     };
@@ -519,10 +519,11 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
         className: "w-[240px]",
         render: (item: ApiAny) => {
           const doc =
-            item.doctorName && item.doctorName !== "—" && item.doctorName !== "N/A"
-              ? item.doctorName.toLowerCase().startsWith("dr")
-                ? item.doctorName
-                : `Dr. ${item.doctorName}`
+            item.doctorName &&
+            item.doctorName !== "—" &&
+            item.doctorName !== "-" &&
+            item.doctorName !== "N/A"
+              ? item.doctorName
               : null;
           return (
             <div className="min-w-0 pr-2">
@@ -709,9 +710,11 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" /> Last Visit: {formattedLastDate}
                     </span>
-                    {detailedRecord.doctorName && detailedRecord.doctorName !== "—" && (
+                    {detailedRecord.doctorName &&
+                      detailedRecord.doctorName !== "—" &&
+                      detailedRecord.doctorName !== "-" && (
                       <span className="flex items-center gap-1.5">
-                        <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/70" /> Dr: {detailedRecord.doctorName}
+                        <Stethoscope className="w-3.5 h-3.5 text-muted-foreground/70" /> {detailedRecord.doctorName}
                       </span>
                     )}
                   </div>
@@ -875,12 +878,12 @@ function EMRViewerContent({ record, onClose }: EMRViewerProps) {
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  {item.doctorName && item.doctorName !== "—" && (
+                                  {item.doctorName &&
+                                    item.doctorName !== "—" &&
+                                    item.doctorName !== "-" && (
                                     <span className="flex items-center gap-1 font-medium">
                                       <Stethoscope className="w-3.5 h-3.5 text-primary/70" />
-                                      {item.doctorName.toLowerCase().startsWith("dr")
-                                        ? item.doctorName
-                                        : `Dr. ${item.doctorName}`}
+                                      {item.doctorName}
                                     </span>
                                   )}
                                   <span className="font-semibold text-foreground/80">{formattedDate}</span>
