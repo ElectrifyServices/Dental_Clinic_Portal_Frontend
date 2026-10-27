@@ -238,6 +238,14 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
     const updated = form.benefits.map((b, i) => {
       if (i !== idx) return b;
       const nb = { ...b, [field]: val } as PlanBenefit;
+      if (field === 'type') {
+        const isFlagOnly = ['priority_scheduling', 'unlimited_consultations', 'fluoride_application'].includes(val);
+        if (isFlagOnly) {
+          nb.value = 0;
+        } else if (val === 'complimentary_session') {
+          nb.value = 1;
+        }
+      }
       if (field !== 'description') nb.description = autoDesc(nb);
       return nb;
     });
@@ -733,8 +741,15 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                 {/* Accordion Toggle Header for the whole block when collapsed */}
                 {!isExpanded && (
                   <div className="cursor-pointer select-none text-sm font-semibold text-muted-foreground pt-2" onClick={(e) => toggleBenefit(idx, e)}>
-                    {b.type === 'custom' ? b.customName || 'Custom Benefit' : BENEFIT_LABELS[b.type] || 'Benefit Details'}
-                    {b.value ? ` - ${b.value}` : ''}
+                    {b.type === 'custom'
+                      ? `${b.customName || 'Custom Benefit'}${b.value ? ` (${b.value}%)` : ''}`
+                      : ['flat_discount', 'treatment_discount'].includes(b.type)
+                        ? `${b.value ? `${b.value}% ` : ''}${BENEFIT_LABELS[b.type] || 'Discount'}`
+                        : b.type === 'capped_discount'
+                          ? `${b.value ? `${b.value}% ` : ''}${BENEFIT_LABELS[b.type] || 'Discount'}${b.cap ? ` (Max ₹${b.cap})` : ''}`
+                          : ['free_consultations', 'free_treatments', 'complimentary_session'].includes(b.type)
+                            ? `${BENEFIT_LABELS[b.type] || 'Benefit Details'}${b.value && b.value > 1 ? ` (${b.value} sessions)` : ''}`
+                            : BENEFIT_LABELS[b.type] || 'Benefit Details'}
                   </div>
                 )}
 
