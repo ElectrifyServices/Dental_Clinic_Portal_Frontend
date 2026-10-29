@@ -81,6 +81,8 @@ export const ConsultationPage: React.FC = () => {
         specificTreatment: c.specificTreatment,
         appointmentNotes: c.appointmentNotes,
         appointmentCost: c.appointmentCost,
+        doctorId: c.doctorId || c.doctor_id || c.doctor?.id,
+        doctorName: c.doctorName || c.doctor?.name,
       };
     });
   }, [consultations]);
@@ -174,6 +176,9 @@ export const ConsultationPage: React.FC = () => {
         p.phone.replace(/\D/g, "") === cleanPhone
     ) : null;
 
+    const fallbackDocId = dId || (activeDoctors.some((d: any) => d.id === state.user?.id) ? state.user?.id : activeDoctors[0]?.id) || "";
+    const fallbackDocName = dName || (activeDoctors.find((d: any) => d.id === fallbackDocId)?.name) || state.user?.name || "Doctor";
+
     if (ex) {
       setSelectedPatientForDiagnose({
         id: `WALK-${Date.now()}`,
@@ -184,8 +189,8 @@ export const ConsultationPage: React.FC = () => {
         treatmentType: ex.treatmentType || "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
@@ -207,8 +212,8 @@ export const ConsultationPage: React.FC = () => {
         treatmentType: "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
@@ -304,6 +309,7 @@ export const ConsultationPage: React.FC = () => {
             est_cost: parseFloat(tp.cost) || 0,
             discount_value: parseFloat(tp.discount_value) || 0,
             treatment_date: tp.planDate || new Date().toISOString().split('T')[0],
+            start_time: tp.startTime || undefined,
             is_active: tp.isActive ?? true
           };
         });

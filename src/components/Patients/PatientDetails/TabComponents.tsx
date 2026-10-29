@@ -2,17 +2,25 @@ import { useState } from "react";
 import {
   Activity,
   AlertTriangle,
+  Briefcase,
   Calendar,
   ChevronDown,
   CheckCircle,
+  Cigarette,
   CreditCard,
+  Droplet,
   Heart,
   Image as ImageIcon,
+  Mail,
+  MapPin,
+  Phone,
   Pill,
   Printer,
   Send,
   Stethoscope,
   User,
+  UserCheck,
+  Users,
   X,
 } from "lucide-react";
 import { Card, Button, Badge, Loading } from "@/components/ui";
@@ -411,37 +419,41 @@ export const BillingTab = ({
         </div>
       )}
     </div>
-    {patientInvoices.map((invoice) => (
-      <Card
-        key={invoice.id}
-        className="bg-card rounded-2xl p-6 border border-border shadow-sm"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <CreditCard className="w-5 h-5 text-muted-foreground/60 mr-3" />
-            <div>
-              <p className="font-semibold text-foreground">{invoice.id}</p>
-              <p className="text-sm text-muted-foreground">
-                Issued: {new Date(invoice.date).toLocaleDateString()}
+    {patientInvoices.map((invoice) => {
+      const issuedDate = invoice.invoice_date || invoice.date;
+      const issuedFormatted = issuedDate && !isNaN(new Date(issuedDate).getTime())
+        ? new Date(issuedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+        : "—";
+
+      return (
+        <Card
+          key={invoice.id}
+          className="bg-card rounded-2xl p-6 border border-border shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <CreditCard className="w-5 h-5 text-muted-foreground/60 mr-3" />
+              <div>
+                <p className="font-semibold text-foreground">
+                  {invoice.invoice_number || invoice.invoiceNumber || "Invoice"}
+                </p>
+                <p className="text-sm text-muted-foreground">Issued: {issuedFormatted}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-foreground">
+                ₹{(invoice.grand_total ?? invoice.amount ?? invoice.total ?? 0).toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Due: {new Date(invoice.dueDate).toLocaleDateString()}
-              </p>
+              <span
+                className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor((invoice.status || "").toLowerCase())}`}
+              >
+                {(invoice.status || "—").toUpperCase()}
+              </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-bold text-foreground">
-              ₹{(invoice.amount || invoice.total || 0).toLocaleString()}
-            </p>
-            <span
-              className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}
-            >
-              {invoice.status.toUpperCase()}
-            </span>
-          </div>
-        </div>
-      </Card>
-    ))}
+        </Card>
+      );
+    })}
     {patientInvoices.length === 0 && (
       <EmptyState
         icon={CreditCard}
@@ -841,14 +853,23 @@ export const DocumentsTab = ({
 
 // --- Family Tab ---
 export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
-  const calculateAge = (dob: string) => {
-    if (!dob) return "N/A";
+  const calculateAge = (dob?: string) => {
+    if (!dob) return null;
     const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return null;
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     return age;
+  };
+
+  const formatDate = (val?: string) => {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d.getTime())
+      ? null
+      : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   };
 
   return (
@@ -866,77 +887,75 @@ export const FamilyTab = ({ familyMembers }: { familyMembers: any[] }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {familyMembers.map((member) => (
-          <Card
-            key={member.id}
-            className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-sm">
-                  {member.name?.[0]?.toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">
-                    {member.name}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black uppercase rounded tracking-wider">
-                      {member.relation || "Relation N/A"}
-                    </span>
-                    <span className="text-xs text-muted-foreground/60 font-medium">
-                      ID: {member.patientCode || member.patient_code || member.id}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
-              >
-                {member.status || "Active"}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {familyMembers.map((member) => {
+          const age = calculateAge(member.dateOfBirth);
+          const lastVisit = formatDate(member.lastVisit);
 
-            <div className="grid grid-cols-2 gap-3 mt-4 border-t border-border pt-4">
-              <div className="bg-muted rounded-xl p-2.5">
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <User className="w-3 h-3" /> Age
-                </p>
-                <p className="font-bold text-foreground text-sm">
-                  {calculateAge(member.dateOfBirth)} Years
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl p-2.5">
-                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Calendar className="w-3 h-3" /> Last Visit
-                </p>
-                <p className="font-bold text-foreground text-sm">
-                  {member.lastVisit || "No visits"}
-                </p>
-              </div>
-              <div className="bg-muted rounded-xl p-2.5 col-span-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <CreditCard className="w-3 h-3" /> Outstanding Balance
-                    </p>
-                    <p
-                      className={`font-bold text-sm ${member.outstandingBalance > 0 ? "text-destructive" : "text-green-600"}`}
-                    >
-                      ₹{(member.outstandingBalance || 0).toLocaleString()}
-                    </p>
+          const details: { icon: any; label: string; value: string }[] = [];
+          if (age !== null) details.push({ icon: User, label: "Age", value: `${age} Years` });
+          if (member.gender) details.push({ icon: Users, label: "Gender", value: member.gender });
+          if (member.bloodGroup)
+            details.push({ icon: Droplet, label: "Blood Group", value: String(member.bloodGroup).replace(/_/g, " ") });
+          details.push({ icon: Calendar, label: "Last Visit", value: lastVisit || "No visits yet" });
+          if (member.totalVisits)
+            details.push({ icon: Activity, label: "Total Visits", value: String(member.totalVisits) });
+          if (member.phone)
+            details.push({ icon: Phone, label: "Phone", value: `${member.countryCode || ""} ${member.phone}`.trim() });
+          if (member.email) details.push({ icon: Mail, label: "Email", value: member.email });
+          if (member.address) details.push({ icon: MapPin, label: "Address", value: member.address });
+          if (member.occupation) details.push({ icon: Briefcase, label: "Occupation", value: member.occupation });
+          if (member.maritalStatus) details.push({ icon: Heart, label: "Marital Status", value: member.maritalStatus });
+          if (member.referredBy) details.push({ icon: UserCheck, label: "Referred By", value: member.referredBy });
+          if (member.habits) details.push({ icon: Cigarette, label: "Habits", value: member.habits });
+
+          return (
+            <Card
+              key={member.id}
+              className="bg-card rounded-2xl p-5 border border-border hover:shadow-md transition-all group shadow-sm"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-sm">
+                    {member.name?.[0]?.toUpperCase()}
                   </div>
-                  {member.outstandingBalance > 0 && (
-                    <span className="text-[10px] font-black text-red-500 bg-destructive/10 px-2 py-1 rounded uppercase animate-pulse">
-                      Payment Due
-                    </span>
-                  )}
+                  <div>
+                    <p className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">
+                      {member.name}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black uppercase rounded tracking-wider">
+                        {member.relation || "Relation N/A"}
+                      </span>
+                      <span className="text-xs text-muted-foreground/60 font-medium">
+                        ID: {member.patientCode || member.patient_code || member.id}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
+                >
+                  {member.status || "Active"}
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+
+              <div className="grid grid-cols-2 gap-3 mt-4 border-t border-border pt-4">
+                {details.map((d, i) => (
+                  <div
+                    key={i}
+                    className={`bg-muted rounded-xl p-2.5 ${d.value.length > 28 ? "col-span-2" : ""}`}
+                  >
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <d.icon className="w-3 h-3" /> {d.label}
+                    </p>
+                    <p className="font-bold text-foreground text-sm break-words">{d.value}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {familyMembers.length === 0 && (

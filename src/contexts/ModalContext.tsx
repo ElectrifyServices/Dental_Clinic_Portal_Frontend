@@ -15,6 +15,12 @@ interface ModalContextType {
   selectedItemId: string;
   setSelectedItemId: (id: string) => void;
 
+  // Which session inside selectedItemId's plan the Session Timeline modal
+  // should land on — shared (not local to ModalRegistry) so other pages,
+  // e.g. Appointments check-in, can open straight to a specific session.
+  selectedSessionId: string | null;
+  setSelectedSessionId: (id: string | null) => void;
+
   selectedEMRRecord: any;
   setSelectedEMRRecord: (record: any) => void;
 
@@ -76,6 +82,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedItemId, setSelectedItemId] = useState('');
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedEMRRecord, setSelectedEMRRecord] = useState<any>(null);
   const [selectedConsentForm, setSelectedConsentForm] = useState<any>(null);
   const [selectedStaffForSalary, setSelectedStaffForSalary] = useState<any>(null);
@@ -161,6 +168,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         selectedAppointment, setSelectedAppointment,
         selectedPatientId, setSelectedPatientId,
         selectedItemId, setSelectedItemId,
+        selectedSessionId, setSelectedSessionId,
         selectedEMRRecord, setSelectedEMRRecord,
         selectedConsentForm, setSelectedConsentForm,
         selectedStaffForSalary, setSelectedStaffForSalary,

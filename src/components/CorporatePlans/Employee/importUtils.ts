@@ -30,8 +30,8 @@ export function parseXlsx(file: File, plans: CorporatePlan[]): Promise<{ rows: P
           const planCodeUpper = planCode.toUpperCase();
           const companyName = String(r['Company'] || r['CompanyName'] || r['company'] || r['company_name'] || '').trim();
 
-          if (!name) { errors.push(`Row ${row}: Name is required`); return; }
-          if (!phone) { errors.push(`Row ${row}: Phone is required`); return; }
+          if (!name) { errors.push(`Row ${row}: Name is required`); }
+          if (!phone) { errors.push(`Row ${row}: Phone is required`); }
 
           const plan = plans.find(p => 
             p.id.toUpperCase() === planCodeUpper ||

@@ -7,6 +7,7 @@ import {
   Pill,
   FileText,
   File,
+  Camera,
 } from "lucide-react";
 import { PDFReportType } from "../../../utils/pdfGenerator";
 import { getConsultationReportAvailability } from "../../../utils/consultationReportUtils";
@@ -112,7 +113,31 @@ export function CompletionView({
             </Card>
 
             <Card 
-              className="cursor-pointer hover:border-orange-300 hover:bg-orange-50/30 transition-colors group"
+              className={`transition-colors group ${
+                reportAvailability.xray 
+                  ? "cursor-pointer hover:border-cyan-300 hover:bg-cyan-50/30" 
+                  : "opacity-50 cursor-not-allowed bg-muted/20"
+              }`}
+              onClick={() => reportAvailability.xray && onDownloadPDF("XRAY")}
+            >
+              <CardContent className="flex items-center gap-5 p-6">
+                <div className={`p-3 rounded-lg transition-colors ${
+                  reportAvailability.xray
+                    ? "bg-cyan-100 text-cyan-700 group-hover:bg-cyan-700 group-hover:text-white"
+                    : "bg-cyan-50 text-cyan-400"
+                }`}>
+                  <Camera className="w-6 h-6" />
+                </div>
+                <div className="text-left flex-1">
+                  <div className="font-semibold text-lg text-foreground">X-Ray &amp; Radiology</div>
+                  <div className="text-sm text-muted-foreground">Scans &amp; Imaging Report</div>
+                </div>
+                <File className={`w-5 h-5 ${reportAvailability.xray ? "text-muted-foreground group-hover:text-cyan-600" : "text-muted-foreground/30"}`} />
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:border-orange-300 hover:bg-orange-50/30 transition-colors group md:col-span-2"
               onClick={() => onDownloadPDF("FULL")}
             >
               <CardContent className="flex items-center gap-5 p-6">

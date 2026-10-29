@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { AlertTriangle, LayoutGrid, ListFilter, MessageCircle, UserX } from "lucide-react";
 import { useAppointmentData } from "../hooks/useAppointmentData";
@@ -49,10 +50,13 @@ export const AppointmentsPage: React.FC = () => {
     showConfirm,
     setPendingCheckInAppt,
     setSelectedPatientId,
+    setSelectedItemId,
+    setSelectedSessionId,
     setWhatsappPhone,
     setWhatsappPatientName,
   } = useModal();
 
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("calendar");
   const [checkingInApptId, setCheckingInApptId] = useState<string | null>(null);
   const [specialistSearch, setSpecialistSearch] = useState("");
@@ -131,11 +135,46 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   const { mutateAsync: checkInAppointment } = useCheckInAppointmentMutation();
+  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
+
+  // Shared by both check-in handlers below: an appointment created for a
+  // treatment plan session isn't a fresh walk-in, so it should never go
+  // through the patient-verification / consultation-queue flow — it just
+  // needs to be marked CHECKED_IN, then hand off straight to that session
+  // in Treatments.
+  const redirectToTreatmentSession = async (
+    appt: any,
+    responseData: any,
+  ): Promise<boolean> => {
+    if (!responseData?.is_treatment_session) return false;
+
+    const patientId = responseData?.patient_id ?? responseData?.patientId;
+    if (patientId) {
+      try {
+        await checkInAfterRegistration({ id: appt.id, patient_id: patientId });
+      } catch {
+        toast.error("Failed to check in treatment session");
+        return true;
+      }
+    }
+
+    // Open the Session Timeline modal directly via the shared modal context
+    // instead of navigating with query params — ModalRegistry is mounted
+    // globally, so this opens the modal immediately without depending on a
+    // route change to carry the plan/session ids across.
+    setSelectedItemId(responseData.treatment_plan_id);
+    setSelectedSessionId(responseData.treatment_session_id ?? null);
+    setActiveModal("sessionManager");
+    navigate("/treatments");
+    return true;
+  };
 
   const handleCheckInPatient = async (appt: any) => {
     try {
       const response = await checkInAppointment({ id: appt.id });
       const responseData = response?.data ?? response;
+
+      if (await redirectToTreatmentSession(appt, responseData)) return;
 
       setPendingCheckInAppt({
         ...appt,
@@ -143,7 +182,7 @@ export const AppointmentsPage: React.FC = () => {
         patientPhone: responseData?.patient_phone || appt.patientPhone,
         country_code: responseData?.patient_country_code || appt.country_code || "+91",
       });
-      
+
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? true;
       const patientId = responseData?.patient_id ?? responseData?.patientId;
 
@@ -159,19 +198,20 @@ export const AppointmentsPage: React.FC = () => {
     }
   };
 
-  const { mutateAsync: checkInAfterRegistration } = useCheckInAfterRegistrationMutation();
-
   const handleDirectCheckInPatient = async (appt: any) => {
     setCheckingInApptId(appt.id);
     try {
       // First update the appointment status
       const response = await checkInAppointment({ id: appt.id });
-      
+
       const rawName = appt.patientName || (typeof appt.patient === 'object' ? appt.patient?.name : appt.patient) || "";
       const sName = String(rawName).toLowerCase().trim();
       const sPhone = (appt.patientPhone || appt.phone || "").trim();
-      
+
       const responseData = response?.data ?? response;
+
+      if (await redirectToTreatmentSession(appt, responseData)) return;
+
       let patientId = responseData?.patient_id ?? responseData?.patientId ?? appt.patientId ?? appt.patient_id;
       const requiresRegistration = responseData?.requires_registration ?? responseData?.requiresRegistration ?? false;
 
@@ -199,6 +239,12 @@ export const AppointmentsPage: React.FC = () => {
             status: "waiting",
             treatmentType: appt.treatment || appt.type,
             patientConcern: appt.patientConcern || "",
+            // Was missing — PatientConsultation then had no real doctor to
+            // resolve and fell back to the "1" placeholder, so the
+            // Treatment Planning slots query was checking a doctor that
+            // doesn't exist instead of the one this appointment was with.
+            doctorId: appt.doctorId,
+            doctorName: appt.doctorName,
           },
         ]);
         

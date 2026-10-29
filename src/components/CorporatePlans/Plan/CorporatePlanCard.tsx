@@ -68,6 +68,7 @@ export function CorporatePlanCard({
     (new Date(plan.validTo).getTime() - Date.now()) / 86400000
   );
   const isExpiringSoon = daysLeft > 0 && daysLeft < 30;
+  const planCode = plan.code || (plan as any).plan_code || (plan as any).planCode;
 
   return (
     <TooltipProvider>
@@ -82,11 +83,19 @@ export function CorporatePlanCard({
         <div className="p-5 flex-1 flex flex-col">
           {/* Top row: type icon + status + menu */}
           <div className="flex items-center justify-between mb-4">
-            <div className={`w-9 h-9 rounded-xl ${theme.bg} flex items-center justify-center border border-current/10`}>
-              {isIndividual
-                ? <User className="w-4.5 h-4.5" />
-                : <Building2 className="w-4.5 h-4.5" />
-              }
+            <div className="flex items-center gap-2">
+              <div className={`w-9 h-9 rounded-xl ${theme.bg} flex items-center justify-center border border-current/10`}>
+                {isIndividual
+                  ? <User className="w-4.5 h-4.5" />
+                  : <Building2 className="w-4.5 h-4.5" />
+                }
+              </div>
+              {planCode && (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-50 text-slate-600 rounded-lg border border-slate-200 flex items-center gap-1 shadow-2xs" title="Plan Code">
+                  <span className="text-[8px] text-slate-400 font-sans font-extrabold uppercase tracking-wider">CODE:</span>
+                  <span>{planCode}</span>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5">

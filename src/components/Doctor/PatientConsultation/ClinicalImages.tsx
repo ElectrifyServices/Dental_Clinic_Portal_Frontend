@@ -11,6 +11,8 @@ interface ClinicalImagesProps {
   onXrayUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onRemoveXray?: (index: number) => void;
+  onSendWhatsApp?: () => void;
+  isSendingWhatsApp?: boolean;
 }
 
 export function ClinicalImages({
@@ -27,10 +29,12 @@ export function ClinicalImages({
     <div className="px-6">
       {/* Clinical Images */}
       <div className="space-y-2">
-        <Label className="block text-sm font-semibold text-muted-foreground flex items-center gap-2">
-          <Camera className="w-4 h-4 text-primary" />
-          Clinical Images
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label className="block text-sm font-semibold text-muted-foreground flex items-center gap-2">
+            <Camera className="w-4 h-4 text-primary" />
+            Clinical Images &amp; X-Rays
+          </Label>
+        </div>
         
         <div className="border-2 border-dashed border-border rounded-xl p-4 bg-muted min-h-[160px] flex flex-col justify-center">
           <Input

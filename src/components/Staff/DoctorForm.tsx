@@ -23,6 +23,7 @@ import {
 } from "../../hooks/useFormConfig";
 import {
   staffSchema,
+  staffCreateSchema,
   type StaffFormData,
   staffStep1Fields,
   staffStep2Fields,
@@ -95,7 +96,7 @@ export function DoctorForm({ onClose, onSave, doctor }: DoctorFormProps) {
   };
 
   const form = useForm<StaffFormData>({
-    resolver: zodResolver(staffSchema) as any,
+    resolver: zodResolver(doctor ? staffSchema : staffCreateSchema) as any,
     defaultValues: {
       name: doctor?.name ?? "",
       email: doctor?.email ?? "",

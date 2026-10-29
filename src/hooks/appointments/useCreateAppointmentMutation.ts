@@ -15,6 +15,9 @@ export interface CreateAppointmentPayload {
   concern?: string;
   notes?: string;
   status: string;
+  // Only honored by the backend when the logged-in staff's role is "doctor" —
+  // lets a doctor double-book an already-occupied slot from this UI only.
+  override_slot_conflict?: boolean;
 }
 
 export interface CreateAppointmentResponse {

@@ -12,11 +12,14 @@ export function useCreateConsultationMutation() {
     endpoint: "/consultations",
     method: "post",
     transformRequest: (variables: any) => {
-      if (variables.attachments && variables.attachments.length > 0) {
+      const fileAttachments = (variables.attachments || []).filter(
+        (f: any) => f instanceof File || f instanceof Blob,
+      );
+      if (fileAttachments.length > 0) {
         const formData = new FormData();
         Object.keys(variables).forEach((key) => {
           if (key === "attachments") {
-            variables.attachments.forEach((file: File) => {
+            fileAttachments.forEach((file: File) => {
               formData.append("attachments", file);
             });
           } else if (variables[key] !== undefined && variables[key] !== null) {
@@ -31,12 +34,7 @@ export function useCreateConsultationMutation() {
       }
       return variables;
     },
-    headers: (variables: any) => {
-      if (variables.attachments && variables.attachments.length > 0) {
-        return { "Content-Type": "multipart/form-data" };
-      }
-      return undefined;
-    },
+    headers: () => undefined,
     options: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["consultations"] });

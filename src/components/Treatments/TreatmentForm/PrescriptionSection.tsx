@@ -53,8 +53,6 @@ export function PrescriptionSection({
 
   const medicinesList = React.useMemo(() => {
     if (!rawMedicines) return [];
-    // Debug: remove after confirming correct shape
-    console.log("[PrescriptionSection] rawMedicines:", rawMedicines);
     let list: any[] = [];
     if (Array.isArray(rawMedicines)) {
       list = rawMedicines;
@@ -79,7 +77,6 @@ export function PrescriptionSection({
     } else if (rawMedicines && Array.isArray((rawMedicines as any).results)) {
       list = (rawMedicines as any).results;
     }
-    console.log("[PrescriptionSection] resolved medicinesList:", list);
     return list;
   }, [rawMedicines]);
 
@@ -89,7 +86,6 @@ export function PrescriptionSection({
       // Always prefer the UUID field; never fall back to name string
       value: m.id || m._id || m.uuid || m.medicine_id || m.value || (typeof m === "string" ? m : ""),
     }));
-    console.log("[PrescriptionSection] selectOptions sample:", opts.slice(0, 3));
     return opts;
   }, [medicinesList]);
 

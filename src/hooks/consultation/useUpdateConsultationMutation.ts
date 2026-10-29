@@ -12,11 +12,14 @@ export function useUpdateConsultationMutation() {
     getEndpoint: (variables) => `/consultations/${variables.id}`,
     method: "patch",
     transformRequest: (variables: any) => {
-      if (variables.attachments && variables.attachments.length > 0) {
+      const fileAttachments = (variables.attachments || []).filter(
+        (f: any) => f instanceof File || f instanceof Blob,
+      );
+      if (fileAttachments.length > 0) {
         const formData = new FormData();
         Object.keys(variables).forEach((key) => {
           if (key === "attachments") {
-            variables.attachments.forEach((file: File) => {
+            fileAttachments.forEach((file: File) => {
               formData.append("attachments", file);
             });
           } else if (variables[key] !== undefined && variables[key] !== null) {
@@ -31,12 +34,7 @@ export function useUpdateConsultationMutation() {
       }
       return variables;
     },
-    headers: (variables: any) => {
-      if (variables.attachments && variables.attachments.length > 0) {
-        return { "Content-Type": "multipart/form-data" };
-      }
-      return undefined;
-    },
+    headers: () => undefined,
     options: {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries({ queryKey: ["consultations"] });

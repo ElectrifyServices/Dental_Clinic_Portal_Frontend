@@ -328,7 +328,12 @@ export function InvoiceViewer({
                 <div className="pt-2 border-t border-border/50">
                   <Badge className="text-xs py-1 px-2.5 font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
                     🏢 Corporate Invoice • {
-                      invoice.items?.filter((i: any) => i.item_type === "MEMBERSHIP" || (i.description && i.description.startsWith("Employee Membership"))).length || invoice.items?.length || 0
+                      invoice.items?.filter((i: any) => 
+                        i.item_type === "MEMBERSHIP" || 
+                        (i.description && (i.description.startsWith("Employee Membership") || i.description.startsWith("Corporate Membership"))) ||
+                        !!i.billing_description_name
+                      ).reduce((sum: number, i: any) => sum + Number(i.quantity ?? i.qty ?? 1), 0) ||
+                      invoice.items?.reduce((sum: number, i: any) => sum + Number(i.quantity ?? i.qty ?? 1), 0) || 0
                     } Employee(s) Billed
                   </Badge>
                 </div>

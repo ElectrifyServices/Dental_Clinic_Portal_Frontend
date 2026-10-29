@@ -122,6 +122,7 @@ export function PatientDetails({
       relation: m.id === apiData?.primary?.id
         ? "PRIMARY"
         : (m.relation_type || m.relation || m.relationship || "Family"),
+      countryCode: m.country_code || m.countryCode || "",
       phone: m.phone,
       email: m.email,
       dateOfBirth: m.date_of_birth || m.dateOfBirth || m.dob,
@@ -129,9 +130,13 @@ export function PatientDetails({
       bloodGroup: m.blood_group || m.bloodGroup,
       status: m.is_active ? "active" : "inactive",
       lastVisit: m.last_visit_date || m.lastVisit || null,
-      outstandingBalance: m.outstanding_balance || m.outstandingBalance || 0,
       totalVisits: m.total_visits || 0,
       profilePicture: m.profile_picture_url || null,
+      address: m.address || null,
+      occupation: m.occupation || null,
+      maritalStatus: m.marital_status || m.maritalStatus || null,
+      referredBy: m.referred_by || m.referredBy || null,
+      habits: m.habits || null,
     }))
     : familyMembers;
 

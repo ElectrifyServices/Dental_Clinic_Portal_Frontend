@@ -3,7 +3,7 @@ import html2canvas from "html2canvas";
 import logoImg from "../logo.png";
 import { formatPhoneWithCountryCode } from "./phoneUtils";
 
-export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION";
+export type PDFReportType = "FULL" | "CLINICAL" | "TREATMENT" | "PRESCRIPTION" | "XRAY";
 
 // ---------------------------------------------------------------------------
 // Brand tokens — read dynamically from login API (stored in localStorage).
@@ -763,6 +763,204 @@ function detailsGrid(rows: Array<[string, string, string, string]>, tokens?: Ret
 }
 
 // ---------------------------------------------------------------------------
+// Pure Images-to-PDF generator (for X-Rays / Scans without header & footer)
+// ---------------------------------------------------------------------------
+
+interface LoadedImageData {
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: "JPEG" | "PNG";
+}
+
+async function convertImageToDataUrl(
+  source: string | File | Blob,
+): Promise<LoadedImageData | null> {
+  try {
+    // 1. Direct File or Blob
+    if (source instanceof Blob) {
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(source);
+      });
+      if (!dataUrl) return null;
+      return getImageDimensions(dataUrl);
+    }
+
+    if (typeof source === "string") {
+      // 2. Already a data URL
+      if (source.startsWith("data:")) {
+        return getImageDimensions(source);
+      }
+
+      // 3. Local blob: URL (fetch blob and read with FileReader)
+      if (source.startsWith("blob:")) {
+        try {
+          const res = await fetch(source);
+          const blob = await res.blob();
+          return convertImageToDataUrl(blob);
+        } catch (blobErr) {
+          console.warn("Could not fetch blob URL:", blobErr);
+        }
+      }
+
+      // 4. Remote HTTP/HTTPS URL
+      try {
+        const res = await fetch(source, { mode: "cors" });
+        if (res.ok) {
+          const blob = await res.blob();
+          return convertImageToDataUrl(blob);
+        }
+      } catch {
+        // Fallback to Image element
+      }
+
+      return await new Promise<LoadedImageData | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const isPng = source.toLowerCase().endsWith(".png");
+              const format = isPng ? "PNG" : "JPEG";
+              const dataUrl = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.95);
+              resolve({
+                dataUrl,
+                width: canvas.width,
+                height: canvas.height,
+                format,
+              });
+              return;
+            }
+          } catch (e) {
+            console.warn("Canvas toDataURL failed:", e);
+          }
+          resolve(null);
+        };
+        img.onerror = () => {
+          // If crossOrigin anonymous failed, try without crossOrigin as last resort
+          const retryImg = new Image();
+          retryImg.onload = () => {
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = retryImg.naturalWidth || retryImg.width;
+              canvas.height = retryImg.naturalHeight || retryImg.height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(retryImg, 0, 0);
+                resolve({
+                  dataUrl: canvas.toDataURL("image/jpeg", 0.95),
+                  width: canvas.width,
+                  height: canvas.height,
+                  format: "JPEG",
+                });
+                return;
+              }
+            } catch {
+              // Tainted canvas
+            }
+            resolve(null);
+          };
+          retryImg.onerror = () => resolve(null);
+          retryImg.src = source;
+        };
+        img.src = source;
+      });
+    }
+  } catch (err) {
+    console.warn("Error converting image:", err);
+  }
+  return null;
+}
+
+function getImageDimensions(dataUrl: string): Promise<LoadedImageData | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const isPng = dataUrl.startsWith("data:image/png");
+      resolve({
+        dataUrl,
+        width: img.naturalWidth || img.width || 800,
+        height: img.naturalHeight || img.height || 600,
+        format: isPng ? "PNG" : "JPEG",
+      });
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+export const downloadImagesOnlyPDF = async (
+  sources: Array<string | File | Blob>,
+  outputFileName: string,
+) => {
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 10;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+
+  let pagesAdded = 0;
+
+  for (let i = 0; i < sources.length; i++) {
+    const item = sources[i];
+    const imgData = await convertImageToDataUrl(item);
+    if (!imgData) continue;
+
+    if (pagesAdded > 0) {
+      doc.addPage("a4", "portrait");
+    }
+
+    const imgRatio = imgData.width / imgData.height;
+    const pageRatio = maxWidth / maxHeight;
+    let renderWidth = maxWidth;
+    let renderHeight = maxHeight;
+
+    if (imgRatio > pageRatio) {
+      renderWidth = maxWidth;
+      renderHeight = maxWidth / imgRatio;
+    } else {
+      renderHeight = maxHeight;
+      renderWidth = maxHeight * imgRatio;
+    }
+
+    const posX = margin + (maxWidth - renderWidth) / 2;
+    const posY = margin + (maxHeight - renderHeight) / 2;
+
+    doc.addImage(
+      imgData.dataUrl,
+      imgData.format,
+      posX,
+      posY,
+      renderWidth,
+      renderHeight,
+      undefined,
+      "FAST",
+    );
+    pagesAdded++;
+  }
+
+  if (pagesAdded === 0) {
+    throw new Error("Unable to render images to PDF: No valid images found or loaded.");
+  }
+
+  doc.save(outputFileName);
+};
+
+// ---------------------------------------------------------------------------
 // Consultation / clinical / treatment / prescription report
 // ---------------------------------------------------------------------------
 
@@ -772,6 +970,48 @@ export const downloadConsultationPDF = async ({
   consultationData,
   toothChartState = {},
 }: PDFGeneratorParams) => {
+  if (type === "XRAY") {
+    const rawCandidates: Array<string | File | Blob> = [
+      ...(Array.isArray(consultationData.rawImages) ? consultationData.rawImages : []),
+      ...(Array.isArray(consultationData.rawXrays) ? consultationData.rawXrays : []),
+      ...(Array.isArray(consultationData.images) ? consultationData.images : []),
+      ...(Array.isArray(consultationData.xrayFiles) ? consultationData.xrayFiles : []),
+      ...(Array.isArray(consultationData.data?.xrayFiles) ? consultationData.data.xrayFiles : []),
+      ...(Array.isArray(consultationData.data?.images) ? consultationData.data.images : []),
+      ...(Array.isArray(consultationData.clinical_images) ? consultationData.clinical_images : []),
+      ...(Array.isArray(consultationData.attachments) ? consultationData.attachments : []),
+    ];
+
+    const validSources: Array<string | File | Blob> = [];
+    const seen = new Set<string>();
+
+    for (const item of rawCandidates) {
+      if (!item) continue;
+      if (item instanceof Blob) {
+        validSources.push(item);
+      } else if (typeof item === "string") {
+        if (!seen.has(item)) {
+          seen.add(item);
+          validSources.push(item);
+        }
+      } else if (typeof item === "object") {
+        const url = (item as any).file_url || (item as any).url || (item as any).preview;
+        if (url && typeof url === "string" && !seen.has(url)) {
+          seen.add(url);
+          validSources.push(url);
+        }
+      }
+    }
+
+    if (validSources.length > 0) {
+      const outputFileName = `${patient.patientName || "Patient"}_xray_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      await downloadImagesOnlyPDF(validSources, outputFileName);
+      return;
+    } else {
+      throw new Error("No X-ray or clinical images found to generate report.");
+    }
+  }
+
   const pdfContainer = makeOffscreenContainer();
   // Resolve branding tokens from API (falls back to hardcoded defaults)
   const T = getBrandingTokens();
@@ -1055,19 +1295,48 @@ export const downloadConsultationPDF = async ({
 
   const getXraySection = () => {
     if (isBlankMode) return "";
-    const xrayFiles =
-      consultationData.xrayFiles || consultationData.data?.xrayFiles || [];
+    const rawXrayCandidates =
+      consultationData.xrayFiles ||
+      consultationData.data?.xrayFiles ||
+      consultationData.images ||
+      consultationData.data?.images ||
+      consultationData.clinical_images ||
+      consultationData.attachments ||
+      consultationData.rawImages ||
+      consultationData.rawXrays ||
+      [];
+
+    const xrayFiles = (Array.isArray(rawXrayCandidates) ? rawXrayCandidates : [])
+      .map((item: any) => {
+        if (typeof item === "string") return item;
+        if (item?.file_url) return item.file_url;
+        if (item?.url) return item.url;
+        if (item?.preview) return item.preview;
+        if (typeof window !== "undefined" && item instanceof File) {
+          try {
+            return URL.createObjectURL(item);
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      })
+      .filter(Boolean);
+
     if (!xrayFiles || xrayFiles.length === 0) return "";
+    const cardWidth = xrayFiles.length === 1 ? "100%" : xrayFiles.length === 2 ? "48%" : "30%";
+    const imgHeight = xrayFiles.length === 1 ? "320px" : xrayFiles.length === 2 ? "220px" : "130px";
+
     return `
 <div style="padding: 8px 40px 10px;">
-        ${sectionLabel("Diagnostic Imaging (X-Ray)", !isBlankMode)}
+        ${sectionLabel("Diagnostic Imaging (X-Ray & Radiology)", !isBlankMode)}
 <div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:15px; width:100%;">
           ${xrayFiles
         .map(
           (url: string, i: number) => `
-<div style="width:30%; border:1px solid ${T.LINE}; border-radius:10px; overflow:hidden; background:${T.PANEL}; box-sizing:border-box;" data-avoid-break="true">
-<img src="${url}" style="width:100%; height:130px; object-fit:cover;" />
-<div style="padding:6px; text-align:center; font-size:12px; color:${T.INK_MUTED}; font-weight:400; background:#ffffff;">Image #${i + 1}</div>
+<div style="width:${cardWidth}; border:1px solid ${T.LINE}; border-radius:10px; overflow:hidden; background:${T.PANEL}; box-sizing:border-box;" data-avoid-break="true">
+<img src="${url}" style="width:100%; height:${imgHeight}; object-fit:contain; background:#0b0f14;" />
+<div style="padding:6px; text-align:center; font-size:12px; color:${T.INK_MUTED}; font-weight:400; background:#ffffff;">Scan #${i + 1}</div>
 </div>
           `,
         )
@@ -1247,6 +1516,10 @@ ${isBlankMode
     reportTitle = "Prescription";
     fileNameSuffix = "prescription";
     htmlContent += getPatientInfo(reportTitle) + getPrescriptionSection();
+  } else if (type === "XRAY") {
+    reportTitle = "Dental Radiology & X-Ray Report";
+    fileNameSuffix = "xray_report";
+    htmlContent += getPatientInfo(reportTitle) + getXraySection();
   } else {
     htmlContent +=
       getPatientInfo(reportTitle) +
@@ -1266,7 +1539,9 @@ ${isBlankMode
         ? "Blank_Treatment_Plan.pdf"
         : type === "PRESCRIPTION"
           ? "Blank_Prescription.pdf"
-          : "Blank_Full_Summary.pdf"
+          : type === "XRAY"
+            ? "Blank_Xray_Report.pdf"
+            : "Blank_Full_Summary.pdf"
     : `${patient.patientName}_${fileNameSuffix}_${new Date().toISOString().split("T")[0]}.pdf`;
 
   await renderContainerToPDF(pdfContainer, outputFileName);

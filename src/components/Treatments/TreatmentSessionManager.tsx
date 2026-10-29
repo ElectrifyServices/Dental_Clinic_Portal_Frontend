@@ -117,6 +117,17 @@ const getTodayInputValue = () => {
   return local.toISOString().split("T")[0];
 };
 
+// Pre-fills the schedule-session date input with the session's own visit
+// date (e.g. one already set from a consultation) instead of always
+// resetting it to today.
+const toDateInputValue = (d?: string | Date | null) => {
+  if (!d) return getTodayInputValue();
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return getTodayInputValue();
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().split("T")[0];
+};
+
 const convert12to24 = (time12?: string) => {
   if (!time12) return "";
   const trimmed = time12.trim();
@@ -439,6 +450,7 @@ export function TreatmentSessionManager({
   }, [nextSessionDraft.date, nextSlotsResponse]);
 
   const [showNewSession, setShowNewSession] = useState(false);
+
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [sessionPreviousPaidAmt, setSessionPreviousPaidAmt] = useState<number>(0);
@@ -457,11 +469,39 @@ export function TreatmentSessionManager({
 
   const [newSession, setNewSession] = useState({
     date: "",
-    time: "09:00 AM",
+    time: "",
     duration: 45,
     cost: 0,
     clinical_objectives: "",
   });
+
+  // "Add Session" — same real-slots pattern as nextSlots above, for the
+  // plan's own (currently treating) doctor. Previously this was a hardcoded
+  // list of times with no idea which slots were actually free.
+  const { data: newSessionSlotsResponse, isLoading: isNewSessionSlotsLoading } = useAvailableSlotsQuery(
+    assignedDoctorId || null,
+    newSession.date || null,
+  );
+
+  const newSessionSlots = useMemo(() => {
+    if (!newSessionSlotsResponse?.data?.slots || !newSession.date) return [];
+
+    return newSessionSlotsResponse.data.slots.map((slot: any) => {
+      const time24 = convert12to24(slot.time);
+      const slotDateTime = new Date(`${newSession.date}T${time24}:00`);
+      const isPast =
+        newSession.date === getTodayInputValue() &&
+        !Number.isNaN(slotDateTime.getTime()) &&
+        slotDateTime.getTime() < Date.now();
+
+      return {
+        time12: slot.time,
+        time24,
+        appointmentCount: slot.appointment_count || 0,
+        isDisabled: slot.disabled === true || isPast,
+      };
+    });
+  }, [newSession.date, newSessionSlotsResponse]);
 
   const [completeForm, setCompleteForm] = useState({
     work_done: "",
@@ -824,7 +864,7 @@ export function TreatmentSessionManager({
   const startSchedulingSession = (session: TreatmentSessionResponse) => {
     setSchedulingSessionId(session.id);
     setScheduleDraft({
-      date: getTodayInputValue(),
+      date: toDateInputValue(getSessionDate(session)),
       time: convert12to24(getSessionTime(session)),
       duration: session.duration_min ?? 45,
     });
@@ -844,6 +884,7 @@ export function TreatmentSessionManager({
 
   const handleAddSession = async () => {
     if (!newSession.date) { showToast("Please select a date", "error"); return; }
+    if (!newSession.time) { showToast("Please select a slot", "error"); return; }
     try {
       // The fee is not captured here — it is entered when the session is
       // marked COMPLETED (CreateTreatmentSessionDto has no session_fee, so
@@ -851,13 +892,16 @@ export function TreatmentSessionManager({
       await addSession.mutateAsync({
         planId: treatmentId,
         visit_date: newSession.date,
-        start_time: newSession.time,
+        start_time: convert12to24(newSession.time),
         duration_min: newSession.duration,
         clinical_objectives: newSession.clinical_objectives,
+        // Book this session against the doctor whose slots were actually
+        // shown, not whatever the plan happens to default to.
+        doctor_id: assignedDoctorId || undefined,
       });
       showToast("Session scheduled successfully!");
       setShowNewSession(false);
-      setNewSession({ date: "", time: "09:00 AM", duration: 45, cost: 0, clinical_objectives: "" });
+      setNewSession({ date: "", time: "", duration: 45, cost: 0, clinical_objectives: "" });
       refetch();
     } catch (err: any) {
       showToast(extractApiError(err, "Failed to schedule session"), "error");
@@ -946,6 +990,7 @@ export function TreatmentSessionManager({
         sessionId: session.id,
         status: "SCHEDULED",
         visit_date: scheduleDraft.date,
+        start_time: scheduleDraft.time,
         duration_min: scheduleDraft.duration,
       });
       showToast("Session scheduled successfully!");
@@ -1235,7 +1280,7 @@ export function TreatmentSessionManager({
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
                     <span className="font-medium">
-                      {/* {appointmentTime} • */}
+                      {appointmentTime && appointmentTime !== "N/A" ? `${appointmentTime} • ` : ""}
                       {session.duration_min ?? 45} min
                     </span>
                   </div>
@@ -2277,7 +2322,7 @@ export function TreatmentSessionManager({
             footer={
               <div className="flex gap-3 w-full">
                 <Button variant="outline" onClick={() => setShowNewSession(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleAddSession} disabled={!newSession.date || addSession.isPending} className="flex-1 gap-2">
+                <Button onClick={handleAddSession} disabled={!newSession.date || !newSession.time || addSession.isPending} className="flex-1 gap-2">
                   {addSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Schedule Session
                 </Button>
@@ -2288,20 +2333,9 @@ export function TreatmentSessionManager({
               <div>
                 <Label className="text-sm font-semibold block mb-2">Visit Date <span className="text-red-500">*</span></Label>
                 <Input type="date" value={newSession.date}
-                  onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
+                  onChange={(e) => setNewSession({ ...newSession, time: "", date: e.target.value })}
                   min={new Date().toISOString().split("T")[0]}
                   className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none" />
-              </div>
-              <div>
-                <Label className="text-sm font-semibold block mb-2">Start Time</Label>
-                <Select value={newSession.time} onValueChange={(val) => setNewSession({ ...newSession, time: val })}>
-                  <SelectTrigger className="w-full px-3 py-2 rounded-xl border focus:ring-2 focus:ring-primary/20 outline-none"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["09:00 AM", "10:00 AM", "11:00 AM", "11:30 AM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"].map(t => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
               <div>
                 <Label className="text-sm font-semibold block mb-2">Duration (minutes)</Label>
@@ -2316,6 +2350,64 @@ export function TreatmentSessionManager({
                   on the "Complete Session" form, which is where the amount
                   actually becomes billable. */}
             </div>
+
+            {/* Real slots for the doctor this plan is actually with — same
+                data the Treatments calendar and Appointments module use —
+                instead of a fixed list of times unrelated to availability. */}
+            {assignedDoctorId && newSession.date ? (
+              <div className="space-y-3 border-t pt-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-bold text-foreground">Available Slots</p>
+                  {isNewSessionSlotsLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
+                </div>
+
+                {isNewSessionSlotsLoading ? (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                      <div key={index} className="h-10 rounded-xl bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : newSessionSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-44 overflow-y-auto custom-scrollbar pr-1">
+                    {newSessionSlots.map((slot) => {
+                      const isSelected = newSession.time === slot.time24;
+                      return (
+                        <Button
+                          key={slot.time24}
+                          type="button"
+                          disabled={slot.isDisabled}
+                          onClick={() => !slot.isDisabled && setNewSession({ ...newSession, time: slot.time24 })}
+                          className={[
+                            "h-10 rounded-xl border text-[11px] font-bold transition-all px-2 py-1",
+                            isSelected
+                              ? "bg-primary border-primary text-white hover:bg-primary"
+                              : slot.isDisabled
+                                ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed hover:bg-red-50"
+                                : "bg-white border-border text-foreground hover:bg-muted hover:border-primary/30",
+                          ].join(" ")}
+                        >
+                          {slot.time12} ({slot.appointmentCount})
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No slots available for the selected date.
+                  </p>
+                )}
+              </div>
+            ) : newSession.date ? (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-6">
+                This treatment has no linked doctor, so slots cannot be loaded.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground border-t pt-4 mb-6">
+                Select a date to load available slots.
+              </p>
+            )}
+
             <div className="mb-6">
               <Label className="text-sm font-semibold block mb-2">Clinical Objectives</Label>
               <Textarea value={newSession.clinical_objectives} rows={3}

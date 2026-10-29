@@ -54,6 +54,9 @@ export const QueuePage: React.FC = () => {
         p.phone.replace(/\D/g, "") === cleanPhone
     ) : null;
 
+    const fallbackDocId = dId || (activeDoctors.some((d: any) => d.id === state.user?.id) ? state.user?.id : activeDoctors[0]?.id) || "";
+    const fallbackDocName = dName || (activeDoctors.find((d: any) => d.id === fallbackDocId)?.name) || state.user?.name || "Doctor";
+
     if (ex) {
       setSelectedPatientForDiagnose({
         id: `WALK-${Date.now()}`,
@@ -64,9 +67,14 @@ export const QueuePage: React.FC = () => {
         treatmentType: ex.treatmentType || "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        // Was missing here (present in the "new patient" branch below) —
+        // without it, PatientConsultation treats this as a regular queue
+        // consultation and skips resolving the logged-in doctor, falling
+        // back to whatever doctorId happens to be, including the "1" stub.
+        isDirect: true,
         patientHistory: {
           medicalHistory: ex.medicalHistory || [],
           allergies: ex.allergies || [],
@@ -86,8 +94,8 @@ export const QueuePage: React.FC = () => {
         treatmentType: "General Consultation",
         patientConcern: "",
         status: "in-consultation",
-        doctorId: dId || state.user?.id || "1",
-        doctorName: dName || state.user?.name || "Doctor",
+        doctorId: fallbackDocId,
+        doctorName: fallbackDocName,
         appointmentTime: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isDirect: true,
         patientHistory: {
