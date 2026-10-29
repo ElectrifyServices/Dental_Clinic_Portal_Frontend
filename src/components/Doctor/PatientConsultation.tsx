@@ -6,6 +6,7 @@ import {
 } from "../../utils/pdfGenerator";
 import { Modal, Button, Input, Label, SearchableSelect } from "@/components/ui";
 import { CountryCodeSelect } from "@/components/ui/CountryCodeSelect";
+import apiClient from "../../services/apiClient";
 import { fetchConsultationDetail } from "../../hooks/consultation/useConsultationQuery";
 import { formatPhoneWithCountryCode, isoFromDialingCode, getPhoneMaxLength, getPhonePlaceholder, sanitizePhoneInput } from "../../utils/phoneUtils";
 
@@ -460,36 +461,64 @@ export function PatientConsultation({
   const { doctors: apiDoctors } = useDoctorsListQuery();
   const formDoctors = apiDoctors && apiDoctors.length > 0 ? apiDoctors : doctors;
 
+  const resolvedDoctorId = useMemo(() => {
+    if ((patient as any).isDirect && directDoctorId && directDoctorId !== "1") {
+      const match = formDoctors.find((d: any) => d.id === directDoctorId);
+      if (match) return match.id;
+    }
+
+    const pDoctorId = patient.doctorId || (patient as any).doctor_id || (patient as any).doctor?.id;
+    if (pDoctorId && pDoctorId !== "1") {
+      const match = formDoctors.find((d: any) => d.id === pDoctorId);
+      if (match) return match.id;
+    }
+
+    const loggedInId = state.user?.id;
+    const loggedInEmail = state.user?.email;
+    if (loggedInId) {
+      const matchUser = formDoctors.find(
+        (d: any) => d.id === loggedInId || (loggedInEmail && d.email === loggedInEmail)
+      );
+      if (matchUser) return matchUser.id;
+    }
+
+    if (directDoctorId && directDoctorId !== "1") {
+      const match = formDoctors.find((d: any) => d.id === directDoctorId);
+      if (match) return match.id;
+    }
+
+    if (followUpDoctorId && followUpDoctorId !== "1") {
+      const match = formDoctors.find((d: any) => d.id === followUpDoctorId);
+      if (match) return match.id;
+    }
+
+    if (formDoctors.length > 0) {
+      return formDoctors[0].id;
+    }
+
+    return pDoctorId && pDoctorId !== "1" ? pDoctorId : "";
+  }, [patient, directDoctorId, formDoctors, state.user, followUpDoctorId]);
+
   useEffect(() => {
-    if (!(patient as any).isDirect || !formDoctors?.length) return;
+    if (!formDoctors?.length) return;
 
-    const loggedInUserId = state.user?.id || "";
-    const loggedInUserRole = String(state.user?.role || "").toLowerCase();
-    const hasSelectedDoctor = formDoctors.some((d: any) => d.id === directDoctorId);
-
-    if (hasSelectedDoctor) return;
-
-    if (loggedInUserRole === "doctor") {
-      const matchingDoctor = formDoctors.find((d: any) => d.id === loggedInUserId);
-      if (matchingDoctor) {
-        setDirectDoctorId(matchingDoctor.id);
-        return;
+    if (!directDoctorId || directDoctorId === "1" || !formDoctors.some((d: any) => d.id === directDoctorId)) {
+      if (resolvedDoctorId) {
+        setDirectDoctorId(resolvedDoctorId);
+      } else if (formDoctors.length > 0) {
+        setDirectDoctorId(formDoctors[0].id);
       }
     }
-
-    if (patient.doctorId && formDoctors.some((d: any) => d.id === patient.doctorId)) {
-      setDirectDoctorId(patient.doctorId);
-    }
-  }, [patient, formDoctors, directDoctorId, state.user]);
+  }, [formDoctors, directDoctorId, resolvedDoctorId]);
 
   useEffect(() => {
     if (formDoctors && formDoctors.length > 0) {
-      const isValid = formDoctors.some((d: any) => d.id === followUpDoctorId);
+      const isValid = formDoctors.some((d: any) => d.id === followUpDoctorId && d.id !== "1");
       if (!isValid) {
-        setFollowUpDoctorId(formDoctors[0].id);
+        setFollowUpDoctorId(resolvedDoctorId || formDoctors[0].id);
       }
     }
-  }, [formDoctors, followUpDoctorId]);
+  }, [formDoctors, followUpDoctorId, resolvedDoctorId]);
 
   const { data: consultations, isLoading: isLoadingHistory, isError: isHistoryError, refetch: refetchConsultations } = usePatientConsultationsQuery(
     patient.patientId || patient.id,
@@ -547,16 +576,49 @@ export function PatientConsultation({
     const toastId = toast.loading("Generating PDF report...");
     try {
       let finalConsultationData = { ...consultationData };
+      const cId =
+        consultationIdOverride ||
+        createdConsultationId ||
+        initialData?.id ||
+        (patient as any).consultationId ||
+        patient.id;
+
+      // When downloading XRAY, if consultation is already saved on server, fetch the backend PDF directly
+      if (type === "XRAY" && cId && cId.length === 36 && !cId.startsWith("WALK-")) {
+        try {
+          const res = await apiClient.get(`/consultations/${cId}/xray`, {
+            responseType: "blob",
+          });
+          if (res.data && res.data.size > 200) {
+            const blob = new Blob([res.data], { type: "application/pdf" });
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = `${patient.patientName || "Patient"}_xray_report_${new Date().toISOString().split("T")[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+
+            // Fire and forget send API if not skipped
+            if (!skipSendApi) {
+              sendMutation.mutateAsync({ id: cId, type }).catch((sendErr) => {
+                console.warn("Could not trigger send API call:", sendErr);
+              });
+            }
+
+            toast.success("PDF Downloaded successfully!", { id: toastId });
+            return;
+          }
+        } catch (apiErr) {
+          console.warn("Backend X-ray PDF download failed, falling back to client-side:", apiErr);
+        }
+      }
+
       try {
-        const consultationId =
-          consultationIdOverride ||
-          createdConsultationId ||
-          initialData?.id ||
-          (patient as any).consultationId ||
-          patient.id;
         // Only fetch if it looks like a valid UUID (36 chars)
-        if (consultationId && consultationId.length === 36) {
-          const detailData = await fetchConsultationDetail(consultationId, type);
+        if (cId && cId.length === 36) {
+          const detailData = await fetchConsultationDetail(cId, type);
           if (detailData) {
             finalConsultationData = { ...finalConsultationData, ...detailData };
           }
@@ -578,12 +640,6 @@ export function PatientConsultation({
 
       // Fire and forget the send API call so the user receives the document
       try {
-        const cId =
-          consultationIdOverride ||
-          createdConsultationId ||
-          initialData?.id ||
-          (patient as any).consultationId ||
-          patient.id;
         if (!skipSendApi && cId && cId.length === 36 && !cId.startsWith("WALK-")) {
           await sendMutation.mutateAsync({ id: cId, type });
         }
@@ -594,6 +650,31 @@ export function PatientConsultation({
       toast.success("PDF Downloaded successfully!", { id: toastId });
     } catch (error) {
       toast.error("Failed to generate PDF", { id: toastId });
+    }
+  };
+
+  const handleSendXrayWhatsApp = async () => {
+    const totalImages = (consultationData.images?.length || 0) + (consultationData.rawImages?.length || 0);
+    if (totalImages === 0) {
+      toast.error("Please upload at least one X-ray or clinical image before sending.");
+      return;
+    }
+    const cId =
+      createdConsultationId ||
+      initialData?.id ||
+      (patient as any).consultationId;
+
+    if (!cId || cId.length !== 36 || cId.startsWith("WALK-")) {
+      toast.error("Please complete the consultation first so the X-ray report is saved.");
+      return;
+    }
+
+    const toastId = toast.loading("Sending X-Ray report to patient WhatsApp...");
+    try {
+      await sendMutation.mutateAsync({ id: cId, type: "XRAY" });
+      toast.success("X-Ray report sent to patient WhatsApp successfully!", { id: toastId });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send X-Ray report", { id: toastId });
     }
   };
 
@@ -844,10 +925,8 @@ export function PatientConsultation({
         attachments: [...(consultationData.rawImages || []), ...(consultationData.rawXrays || [])],
         toothChartState,
         consultationDate: new Date().toISOString(),
-        doctorId: (patient as any).isDirect ? directDoctorId : (patient.doctorId || "1"),
-        doctorName: (patient as any).isDirect
-          ? (selectedDoctor?.name || "")
-          : (patient.doctorName || "Dr. Sharma"),
+        doctorId: resolvedDoctorId,
+        doctorName: formDoctors.find((d: any) => d.id === resolvedDoctorId)?.name || patient.doctorName || "Doctor",
         status: "completed",
         followUpDoctorId,
         followUpDate,
@@ -1113,6 +1192,7 @@ export function PatientConsultation({
 
             <TreatmentPlanning
               patientId={directPatientId || (patient as any).patient_id || patient.patientId || patient.id}
+              doctorId={resolvedDoctorId}
               toothChartState={toothChartState}
               requiresTreatment={consultationData.requiresTreatment}
               treatmentPlans={consultationData.treatmentPlans}

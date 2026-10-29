@@ -175,11 +175,22 @@ export function AppointmentList({
               {patientName.charAt(0)}
             </div>
             <div>
-              <div 
-                className="font-semibold text-foreground leading-tight mb-0.5 capitalize truncate max-w-[150px]" 
-                title={patientName}
-              >
-                {patientName}
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="font-semibold text-foreground leading-tight mb-0.5 capitalize truncate max-w-[150px]"
+                  title={patientName}
+                >
+                  {patientName}
+                </div>
+                {a.treatment_session_id && (
+                  <Badge
+                    variant="violet"
+                    className="text-[8px] px-1.5 py-0 font-bold uppercase tracking-wider shrink-0"
+                    title="This appointment is a treatment plan session, not a fresh booking"
+                  >
+                    Session
+                  </Badge>
+                )}
               </div>
               <div className="text-[10px] text-muted-foreground font-medium">
                 {formatPhoneWithCountryCode(a.patientPhone || a.phone, a.country_code)}

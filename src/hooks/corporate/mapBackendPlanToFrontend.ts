@@ -60,14 +60,16 @@ export function mapBackendPlanToFrontend(plan: any): CorporatePlan {
         'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
         'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
       ];
-      const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
-        const key = mapProcedureLabelToKey(proc);
-        if (!standardKeys.includes(key)) {
-          customTreatmentText = proc;
-          return 'other';
-        }
-        return key;
-      });
+      const treatmentTypes = (b.clinical_procedures || [])
+        .filter((proc: string) => proc?.toLowerCase() !== "teeth whitening")
+        .map((proc: string) => {
+          const key = mapProcedureLabelToKey(proc);
+          if (!standardKeys.includes(key)) {
+            customTreatmentText = proc;
+            return 'other';
+          }
+          return key;
+        });
 
       return {
         id: b.id,

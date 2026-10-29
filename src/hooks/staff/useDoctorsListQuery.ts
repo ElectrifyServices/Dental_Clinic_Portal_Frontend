@@ -78,6 +78,11 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
   const total = useMemo(() => {
     const apiData = query.data;
     return (
+      // useApiQuery already unwraps responseObject, so this is the actual
+      // shape the /staff/list endpoint sends back — the other guesses below
+      // never matched it, which is why pagination looked stuck at 1 page
+      // regardless of how many doctors existed.
+      (apiData as any)?.pagination?.total_items ||
       (apiData as any)?.pagination?.totalItems ||
       (apiData as any)?.data?.pagination?.totalItems ||
       (apiData as any)?.responseObject?.data?.pagination?.total ||
@@ -92,6 +97,7 @@ export function useDoctorsListQuery(search?: string, pageOrOptions?: number | an
   const totalPages = useMemo(() => {
     const apiData = query.data;
     const computedTotalPages = (
+      (apiData as any)?.pagination?.total_pages ||
       (apiData as any)?.pagination?.totalPages ||
       (apiData as any)?.data?.pagination?.totalPages ||
       (apiData as any)?.responseObject?.data?.pagination?.totalPages ||

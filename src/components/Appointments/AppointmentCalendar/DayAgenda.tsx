@@ -58,9 +58,20 @@ export const DayAgenda: React.FC<DayAgendaProps> = ({
                   {(apt.patientName || "?").charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-foreground truncate tracking-tight">
-                    {apt.patientName}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11px] font-bold text-foreground truncate tracking-tight">
+                      {apt.patientName}
+                    </p>
+                    {apt.treatment_session_id && (
+                      <Badge
+                        variant="violet"
+                        className="text-[7px] px-1 py-0 font-bold uppercase tracking-wider shrink-0"
+                        title="This appointment is a treatment plan session, not a fresh booking"
+                      >
+                        Session
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-medium">
                     <Stethoscope className="w-2.5 h-2.5" />
                     <span className="truncate">

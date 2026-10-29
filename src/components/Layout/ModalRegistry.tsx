@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 import { useModal } from "../../contexts/ModalContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppData } from "../../hooks/useAppData";
 import { exportPatientReport } from "../../utils/exportPatient";
 
@@ -83,7 +84,6 @@ function ModalRegistryContent() {
   };
 
   const queryClient = useQueryClient();
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const {
     activeModal,
     setActiveModal,
@@ -93,6 +93,8 @@ function ModalRegistryContent() {
     setSelectedPatientId,
     selectedItemId,
     setSelectedItemId,
+    selectedSessionId,
+    setSelectedSessionId,
     selectedEMRRecord,
     setSelectedEMRRecord,
     selectedConsentForm,
@@ -121,6 +123,7 @@ function ModalRegistryContent() {
     doctorAvailability,
     setDoctorAvailability,
     showToast,
+    showConfirm,
     confirmConfig,
     setConfirmConfig,
     whatsappPhone,
@@ -128,6 +131,9 @@ function ModalRegistryContent() {
     whatsappPatientName,
     setWhatsappPatientName,
   } = useModal();
+
+  const { state: authState } = useAuth();
+  const isDoctorRole = (authState.user?.role || "").toLowerCase() === "doctor";
 
   const { data: editConsultationRaw, isLoading: isEditLoading } = useConsultationQuery(
     selectedPatientForDiagnose?.consultationId,
@@ -210,6 +216,9 @@ function ModalRegistryContent() {
         discount: parseFloat(t.discount_value) || 0,
         isActive: t.is_active ?? true,
         planDate: t.treatment_date ? t.treatment_date.split('T')[0] : new Date().toISOString().split('T')[0],
+        // Re-editing an existing plan: show the first session's saved time
+        // instead of resetting the dropdown back to "Optional" each time.
+        startTime: t.sessions?.find((s: any) => s.visit_number === 1)?.start_time || "",
       };
     });
 
@@ -515,6 +524,90 @@ function ModalRegistryContent() {
     };
   }, [apiConsentDetail, selectedConsentForm, staffMembers, patients]);
 
+  const handleAppointmentSave = async (apt: any, overrideSlotConflict = false) => {
+    try {
+      const statusMap: Record<string, string> = {
+        'scheduled': 'BOOKED',
+        'booked': 'BOOKED',
+        'checked-in': 'CHECKED_IN',
+        'completed': 'COMPLETED',
+        'cancelled': 'CANCELLED',
+        'no-show': 'NO_SHOW',
+        'follow-up': 'FOLLOW_UP',
+      };
+
+      const payload = {
+        doctor_id: apt.doctorId,
+        patient_name: apt.patientName,
+        country_code: apt.country_code || "+91",
+        patient_phone: apt.patientPhone,
+        date: apt.date,
+        start_time: apt.time,
+        specific_treatment: apt.treatment || "General",
+        treatment_type: apt.treatmentType || "",
+        slot_duration_mins: Number(apt.duration) || 15,
+        treatment_cost: Number(apt.fee) || 0,
+        concern: apt.patientConcern || "",
+        notes: apt.notes || "",
+        status: statusMap[(apt.status || "").toLowerCase()] || "BOOKED"
+      };
+
+      const isNew = !apt.id || apt.id.length > 20 === false;
+      if (isNew) {
+        // Only attach patient_id if it's a valid uuid (length > 20)
+        if (apt.patientId && apt.patientId.length > 20) {
+          (payload as any).patient_id = apt.patientId;
+        }
+        // Doctor-only override: the backend ignores this flag for anyone
+        // not logged in with the "doctor" role, so it's a no-op otherwise.
+        if (overrideSlotConflict) {
+          (payload as any).override_slot_conflict = true;
+        }
+
+        const response = await createAppointmentMutation(payload);
+        // Optionally update apt ID from response
+        apt.id = response.id || apt.id;
+      } else {
+        // Call edit/update API via PUT request
+        await updateAppointmentMutation({
+          id: apt.id,
+          payload: payload
+        });
+      }
+
+      handleSaveAppointment(apt);
+      setActiveModal(null);
+      setSelectedAppointment(null);
+      setIsFollowUpBooking(false);
+      toast.success(isNew ? "Appointment created successfully!" : "Appointment updated successfully!");
+    } catch (error: any) {
+      const isSlotConflict = error?.status?.statusCode === 409;
+
+      if (isSlotConflict && isDoctorRole && !overrideSlotConflict) {
+        const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+          error?.status?.statusDesc ||
+          error?.message ||
+          "This slot is already booked.";
+        showConfirm(
+          "Slot Already Booked",
+          `${msg} Do you want to book this appointment anyway?`,
+          () => handleAppointmentSave(apt, true),
+          "Book Anyway",
+          "danger",
+        );
+        return;
+      }
+
+      const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
+        error?.response?.data?.statusDesc ||
+        error?.response?.data?.message ||
+        error?.status?.statusDesc ||
+        error?.message ||
+        "Failed to save appointment";
+      toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+    }
+  };
+
   return (
     <>
       {activeModal === "appointmentForm" && (
@@ -526,67 +619,7 @@ function ModalRegistryContent() {
           doctorAvailability={doctorAvailability}
           appointments={appointments}
           patients={patients}
-          onSave={async (apt: any) => {
-            try {
-              const statusMap: Record<string, string> = {
-                'scheduled': 'BOOKED',
-                'booked': 'BOOKED',
-                'checked-in': 'CHECKED_IN',
-                'completed': 'COMPLETED',
-                'cancelled': 'CANCELLED',
-                'no-show': 'NO_SHOW',
-                'follow-up': 'FOLLOW_UP',
-              };
-
-              const payload = {
-                doctor_id: apt.doctorId,
-                patient_name: apt.patientName,
-                country_code: apt.country_code || "+91",
-                patient_phone: apt.patientPhone,
-                date: apt.date,
-                start_time: apt.time,
-                specific_treatment: apt.treatment || "General",
-                treatment_type: apt.treatmentType || "",
-                slot_duration_mins: Number(apt.duration) || 15,
-                treatment_cost: Number(apt.fee) || 0,
-                concern: apt.patientConcern || "",
-                notes: apt.notes || "",
-                status: statusMap[(apt.status || "").toLowerCase()] || "BOOKED"
-              };
-
-              const isNew = !apt.id || apt.id.length > 20 === false;
-              if (isNew) {
-                // Only attach patient_id if it's a valid uuid (length > 20)
-                if (apt.patientId && apt.patientId.length > 20) {
-                  (payload as any).patient_id = apt.patientId;
-                }
-
-                const response = await createAppointmentMutation(payload);
-                // Optionally update apt ID from response
-                apt.id = response.id || apt.id;
-              } else {
-                // Call edit/update API via PUT request
-                await updateAppointmentMutation({
-                  id: apt.id,
-                  payload: payload
-                });
-              }
-
-              handleSaveAppointment(apt);
-              setActiveModal(null);
-              setSelectedAppointment(null);
-              setIsFollowUpBooking(false);
-              toast.success(isNew ? "Appointment created successfully!" : "Appointment updated successfully!");
-            } catch (error: any) {
-              const msg = error?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc ||
-                error?.response?.data?.statusDesc ||
-                error?.response?.data?.message ||
-                error?.status?.statusDesc ||
-                error?.message ||
-                "Failed to save appointment";
-              toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
-            }
-          }}
+          onSave={handleAppointmentSave}
         />
       )}
 
@@ -628,6 +661,11 @@ function ModalRegistryContent() {
                     treatmentType:
                       pendingCheckInAppt.treatment || pendingCheckInAppt.type,
                     patientConcern: pendingCheckInAppt.patientConcern || "",
+                    // Same fix as the direct check-in path in
+                    // AppointmentsPage — without this the consultation had
+                    // no real doctor and fell back to the "1" placeholder.
+                    doctorId: pendingCheckInAppt.doctorId,
+                    doctorName: pendingCheckInAppt.doctorName,
                   },
                 ]);
 
@@ -772,6 +810,7 @@ function ModalRegistryContent() {
                     est_cost: parseFloat(tp.cost) || 0,
                     discount_value: parseFloat(tp.discount) || 0,
                     treatment_date: tp.planDate || tp.treatmentDate || tp.treatment_date || new Date().toISOString().split('T')[0],
+                    start_time: tp.startTime || undefined,
                     is_active: tp.isActive ?? true
                   };
                 });

@@ -77,6 +77,17 @@ export function PreviousConsultationsView({
     });
   };
 
+  const parseDateBadge = (dateStr?: string) => {
+    if (!dateStr) return { day: "--", month: "", year: "" };
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return { day: "--", month: "", year: "" };
+    return {
+      day: date.toLocaleDateString("en-IN", { day: "numeric" }),
+      month: date.toLocaleDateString("en-IN", { month: "short" }).toUpperCase(),
+      year: date.getFullYear().toString(),
+    };
+  };
+
   // Parse response structure dynamically to handle arrays, nested data, or wrapper objects
   const consultationsList = React.useMemo(() => {
     if (!consultations) return [];
@@ -206,11 +217,27 @@ export function PreviousConsultationsView({
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 flex-1 min-w-0 pr-4">
                     <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 w-full h-3 bg-primary/10" />
-                        <span className="block text-lg font-black leading-none mt-1">{formatDate(c.created_at).split(',')[0].split(' ')[0]}</span>
-                        <span className="block text-[9px] font-bold uppercase tracking-widest mt-0.5">{formatDate(c.created_at).split(',')[0].split(' ').slice(1).join(' ')}</span>
-                      </div>
+                      {(() => {
+                        const rawDate = c.created_at || c.createdAt || c.date || c.consultation_date;
+                        const dateParts = parseDateBadge(rawDate);
+                        return (
+                          <div
+                            title={formatDate(rawDate)}
+                            className="w-14 min-w-[56px] h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15 flex flex-col items-center justify-center text-primary shadow-sm relative overflow-hidden shrink-0 pb-1 select-none"
+                          >
+                            <div className="absolute top-0 w-full h-1.5 bg-primary/20" />
+                            <span className="block text-base font-black leading-none text-foreground mt-1.5">
+                              {dateParts.day}
+                            </span>
+                            <span className="block text-[9px] font-extrabold uppercase tracking-wider text-primary leading-tight mt-0.5">
+                              {dateParts.month}
+                            </span>
+                            <span className="block text-[8.5px] font-bold text-muted-foreground leading-tight">
+                              {dateParts.year}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="hidden sm:block h-10 w-[1px] bg-border shrink-0" />

@@ -437,6 +437,17 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
                     </Button>
+                    <Button
+                      onClick={(e) => {
+                        if (!reportAvailability.xray) return;
+                        e.stopPropagation();
+                        onDownloadPDF(fullRecord, "XRAY");
+                        setShowPrintMenu(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                    >
+                      <Camera className="w-4.5 h-4.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
+                    </Button>
                     <div className="h-px bg-muted my-1.5" />
                      <Button
                       onClick={(e) => {
@@ -500,6 +511,17 @@ export function HistoryDetail({ record, onDownloadPDF, onSendPDF, onDeleteClick:
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.prescription ? "text-muted-foreground hover:bg-emerald-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
                     >
                       <Pill className="w-4.5 h-4.5 text-emerald-600 shrink-0" /> Prescription Only
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        if (!reportAvailability.xray) return;
+                        e.stopPropagation();
+                        onSendPDF(fullRecord, "XRAY");
+                        setShowSendMenu(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex justify-start items-center gap-3 transition-colors bg-transparent border-transparent h-auto rounded-none ${reportAvailability.xray ? "text-muted-foreground hover:bg-cyan-50 cursor-pointer" : "opacity-50 cursor-not-allowed text-muted-foreground/60 hover:bg-transparent"}`}
+                    >
+                      <Camera className="w-4.5 h-4.5 text-cyan-600 shrink-0" /> X-Ray &amp; Radiology
                     </Button>
                     <div className="h-px bg-muted my-1.5" />
                     <Button

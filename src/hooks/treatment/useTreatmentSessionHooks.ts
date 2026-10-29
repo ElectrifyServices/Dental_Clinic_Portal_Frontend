@@ -182,6 +182,7 @@ export interface AddSessionVariables {
   start_time?: string;          // "09:00 AM"
   duration_min?: number;
   clinical_objectives?: string;
+  doctor_id?: string;           // defaults to the plan's own doctor when omitted
 }
 
 export function useAddTreatmentSessionMutation() {

@@ -5,6 +5,7 @@ import {
   PDFReportType,
 } from "../../utils/pdfGenerator";
 import { Modal, Button, ConfirmModal, toast, Pagination } from "@/components/ui";
+import apiClient from "../../services/apiClient";
 import { useConsultationsQuery } from "../../hooks/consultation/useConsultationsQuery";
 import { useDeleteConsultationMutation } from "../../hooks/consultation/useDeleteConsultationMutation";
 import { useSendConsultationMutation } from "../../hooks/consultation/useSendConsultationMutation";
@@ -106,7 +107,10 @@ export default function ConsultationHistoryModal({
     }
 
     return params;
-  }, [page, debouncedSearch, filterSort, startDateStr, endDateStr]);
+    // pageSize was missing here — the "Rows" dropdown updated state, but the
+    // query never re-ran with the new limit until something else (search,
+    // sort, dates) happened to also change and recompute this memo.
+  }, [page, pageSize, debouncedSearch, filterSort, startDateStr, endDateStr]);
 
   const { data: apiData, isFetching } = useConsultationsQuery(queryParams);
 
@@ -125,6 +129,29 @@ export default function ConsultationHistoryModal({
   ) => {
     const toastId = toast.loading("Generating PDF report...");
     try {
+      if (type === "XRAY" && record?.id) {
+        try {
+          const res = await apiClient.get(`/consultations/${record.id}/xray`, {
+            responseType: "blob",
+          });
+          if (res.data && res.data.size > 200) {
+            const blob = new Blob([res.data], { type: "application/pdf" });
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = `${record.patientName || record.patient?.name || "Patient"}_xray_report_${new Date().toISOString().split("T")[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+            toast.success("PDF Downloaded successfully!", { id: toastId });
+            return;
+          }
+        } catch (apiErr) {
+          console.warn("Backend X-ray PDF download failed, falling back to client-side:", apiErr);
+        }
+      }
+
       let consultationData = { ...record };
       
       const detailData = await fetchConsultationDetail(record.id, type);

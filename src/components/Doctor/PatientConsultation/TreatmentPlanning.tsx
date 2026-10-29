@@ -9,6 +9,8 @@ import { useCreateProcedureMutation } from "@/hooks/procedures/useCreateProcedur
 import { useUpdateProcedureMutation } from "@/hooks/procedures/useUpdateProcedureMutation";
 import { useDeleteProcedureMutation } from "@/hooks/procedures/useDeleteProcedureMutation";
 import { useModal } from "@/contexts/ModalContext";
+import { useAvailableSlotsQuery } from "@/hooks/appointments/useAvailableSlotsQuery";
+import { useDoctorsListQuery } from "@/hooks/staff/useDoctorsListQuery";
 
 interface TreatmentPlan {
   id: string;
@@ -22,6 +24,10 @@ interface TreatmentPlan {
   status: string;
   condition?: string;
   planDate?: string;
+  // First-session start time — the plan date was always set to today with
+  // no time of its own, so this session could never block the doctor's
+  // calendar until someone later opened it in Treatments and scheduled it.
+  startTime?: string;
 }
 
 const conditionLabels: Record<string, string> = {
@@ -53,6 +59,7 @@ interface TreatmentPlanningProps {
   isEditMode?: boolean;
   originalSessionsMap?: Record<string, number>;
   patientId?: string;
+  doctorId?: string;
 }
 
 const defaultProcedures = [
@@ -109,9 +116,53 @@ export function TreatmentPlanning({
   isEditMode = false,
   originalSessionsMap = {},
   patientId,
+  doctorId,
 }: TreatmentPlanningProps) {
   const effectivePatientId = patientId && !patientId.startsWith("WALK-") ? patientId : undefined;
   const { data: rawProceduresData, isLoading: isProceduresLoading, isError: isProceduresError, refetch: refetchProcedures } = useProcedureQuery({ all: true, patient_id: effectivePatientId });
+
+  const { doctors: apiDoctors } = useDoctorsListQuery();
+  const effectiveDoctorId = React.useMemo(() => {
+    if (doctorId && doctorId !== "1") return doctorId;
+    if (apiDoctors && apiDoctors.length > 0) return apiDoctors[0].id;
+    return null;
+  }, [doctorId, apiDoctors]);
+
+  // First-session Start Time now shows this doctor's real slots for today —
+  // the plan date here always defaults to today (there's no date picker),
+  // so "today" is the only date that makes sense to check availability for.
+  const todayStr = React.useMemo(() => {
+    const today = new Date();
+    const localYear = today.getFullYear();
+    const localMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const localDay = String(today.getDate()).padStart(2, "0");
+    return `${localYear}-${localMonth}-${localDay}`;
+  }, []);
+  const { data: slotsResponse, isLoading: isSlotsLoading } = useAvailableSlotsQuery(
+    effectiveDoctorId,
+    todayStr,
+  );
+  const startTimeSlots = React.useMemo(() => {
+    const rawData = (slotsResponse as any)?.data || slotsResponse;
+    const rawSlots =
+      rawData?.slots ||
+      (slotsResponse as any)?.responseObject?.data?.slots ||
+      [];
+    if (!Array.isArray(rawSlots)) return [];
+    return rawSlots.map((slot: any) => {
+      const timeStr = slot.time || "";
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = (time || "").split(":");
+      if (hours === "12") hours = "00";
+      if (modifier === "PM") hours = String(parseInt(hours, 10) + 12);
+      const time24 = `${(hours || "00").padStart(2, "0")}:${minutes || "00"}`;
+      return {
+        value: time24,
+        label: slot.time,
+        disabled: slot.disabled === true,
+      };
+    });
+  }, [slotsResponse]);
   const { confirmDelete } = useModal();
   const createProcedureMutation = useCreateProcedureMutation();
   const updateProcedureMutation = useUpdateProcedureMutation();
@@ -388,6 +439,47 @@ export function TreatmentPlanning({
           </div>
         );
       },
+    },
+    {
+      key: "startTime",
+      header: "Start Time",
+      className: "py-3 px-4 text-xs font-bold text-purple-900 uppercase tracking-wider",
+      // Only the first session is scheduled from here — sessions after the
+      // first stay PLANNED either way, so there is nothing to pick a time
+      // for until they're scheduled later in Treatments.
+      render: (plan: TreatmentPlan, index: number) => (
+        <Select
+          value={plan.startTime || ""}
+          onValueChange={(val) => onUpdatePlan(index, "startTime", val)}
+          disabled={!effectiveDoctorId || isSlotsLoading}
+        >
+          <SelectTrigger className="w-28 h-9 text-xs rounded-lg border-purple-200">
+            <SelectValue
+              placeholder={
+                !effectiveDoctorId
+                  ? "No doctor"
+                  : isSlotsLoading
+                    ? "Loading..."
+                    : "Optional"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {startTimeSlots.length === 0 && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                No slots available today
+              </div>
+            )}
+            {startTimeSlots.map((slot) => (
+              <SelectItem key={slot.value} value={slot.value} disabled={slot.disabled}>
+                <span className={slot.disabled ? "line-through text-red-400" : ""}>
+                  {slot.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
     },
     // {
     //   key: "planDate",

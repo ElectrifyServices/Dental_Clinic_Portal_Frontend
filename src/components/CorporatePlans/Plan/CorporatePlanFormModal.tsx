@@ -142,7 +142,9 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             'full-mouth-rehab', 'veneers-cosmetic', 'child-dentistry', 'crown',
             'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
           ];
-          const treatmentTypes = (b.clinical_procedures || []).map((proc: string) => {
+          const treatmentTypes = (b.clinical_procedures || []).filter((proc: string) => {
+            return proc?.toLowerCase() !== "teeth whitening";
+          }).map((proc: string) => {
             const key = mapProcedureLabelToKey(proc);
             if (!standardKeys.includes(key)) {
               customTreatmentText = proc;
@@ -307,6 +309,15 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
       let clinical_procedures: string[] = [];
       if (b.type === "free_consultations" || b.type === "unlimited_consultations") clinical_procedures = ["Consultation"];
       else if (b.type === "fluoride_application") clinical_procedures = ["Fluoride Application"];
+      else if (b.type === "complimentary_session") {
+        const selected = Array.isArray(b.treatmentTypes)
+          ? b.treatmentTypes.map(t => {
+              if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
+              return TREATMENT_LABELS[t] || t;
+            })
+          : [];
+        clinical_procedures = Array.from(new Set(["Teeth Cleaning", "Teeth Whitening", ...selected]));
+      }
       else if (Array.isArray(b.treatmentTypes)) {
         clinical_procedures = b.treatmentTypes.map(t => {
           if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;

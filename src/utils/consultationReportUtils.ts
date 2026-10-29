@@ -28,5 +28,16 @@ export function getConsultationReportAvailability(record: any) {
       typeof item.medicine === "string" ? item.medicine : "",
     )));
 
-  return { clinical, treatment, prescription };
+  const xray =
+    (Array.isArray(record?.images) && record.images.length > 0) ||
+    (Array.isArray(record?.rawImages) && record.rawImages.length > 0) ||
+    (Array.isArray(record?.xrayFiles) && record.xrayFiles.length > 0) ||
+    (Array.isArray(record?.rawXrays) && record.rawXrays.length > 0) ||
+    (Array.isArray(record?.clinical_images) && record.clinical_images.length > 0) ||
+    (Array.isArray(record?.attachments) &&
+      record.attachments.some((a: any) =>
+        ((a?.file_type || a?.mimetype || "") as string).startsWith("image/"),
+      ));
+
+  return { clinical, treatment, prescription, xray };
 }

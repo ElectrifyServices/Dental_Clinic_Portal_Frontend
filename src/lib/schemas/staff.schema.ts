@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-export const staffSchema = z.object({
+const staffBaseObject = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Invalid email address').or(z.literal('')).optional(),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
   phone: z.string().min(1, 'Phone number is required'),
   country_code: z.string().optional(),
   role: z.enum(['super_admin', 'admin', 'doctor', 'receptionist', 'nurse', 'assistant', 'staff'], {
@@ -28,10 +28,29 @@ export const staffSchema = z.object({
   consultationFee: z.string().optional(),
   isActive: z.boolean().default(true),
   avatar: z.string().optional(),
-}).refine(
+});
+
+/** Used when editing an existing staff member — password fields are hidden/optional. */
+export const staffSchema = staffBaseObject.refine(
   (data) => !data.password || data.password === data.confirmPassword,
   { message: 'Passwords do not match', path: ['confirmPassword'] },
 );
+
+/** Used when onboarding a new staff member — a login password is mandatory. */
+export const staffCreateSchema = staffBaseObject
+  .extend({
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+      .regex(/[a-z]/, 'Password must contain a lowercase letter')
+      .regex(/[0-9]/, 'Password must contain a number'),
+    confirmPassword: z.string().min(1, 'Please confirm the password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type StaffFormData = z.infer<typeof staffSchema>;
 

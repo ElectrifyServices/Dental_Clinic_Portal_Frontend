@@ -29,9 +29,12 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
     setImporting(false);
   };
 
+  const hasWarnings = importErrors.length > 0 || importRows.some(r => !r.name || !r.phone || !r.corporatePlanId);
+
   const handleImportConfirm = async () => {
+    if (hasWarnings) return;
     const valid = importRows.filter(r => r.name && r.phone && r.corporatePlanId);
-    if (!valid.length) return;
+    if (!valid.length || valid.length !== importRows.length) return;
 
     setImporting(true);
     try {
@@ -114,11 +117,21 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       )}
 
       {importErrors.length > 0 && (
-        <div className="card border-amber-200 bg-amber-50 p-4 space-y-1">
-          <p className="text-xs font-bold text-amber-800 flex items-center gap-1">
-            <AlertTriangle className="w-3.5 h-3.5" /> {importErrors.length} warning{importErrors.length > 1 ? 's' : ''}
+        <div className="card border-amber-200 bg-amber-50 p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold text-amber-800 flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> {importErrors.length} warning{importErrors.length > 1 ? 's' : ''} found
+            </p>
+            <span className="text-xs font-semibold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded">
+              Import blocked: Fix all warnings to proceed
+            </span>
+          </div>
+          <p className="text-xs text-amber-700">
+            Please resolve the following issues in the Excel/CSV file and re-upload. No records will be imported while warnings exist:
           </p>
-          {importErrors.map((e, i) => <p key={i} className="text-xs text-amber-700">{e}</p>)}
+          <div className="space-y-1">
+            {importErrors.map((e, i) => <p key={i} className="text-xs text-amber-800">• {e}</p>)}
+          </div>
         </div>
       )}
 
@@ -126,8 +139,22 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Preview — {importRows.length} row{importRows.length > 1 ? 's' : ''}</p>
-            <Button onClick={handleImportConfirm} variant="default" className="gap-2" disabled={importing}>
-              <CheckCircle className="w-4 h-4" /> Import {importRows.filter(r => r.name && r.phone && r.corporatePlanId).length} Employees
+            <Button
+              onClick={handleImportConfirm}
+              variant="default"
+              className="gap-2"
+              disabled={importing || hasWarnings}
+              title={hasWarnings ? "Please resolve all warnings in the file before importing" : undefined}
+            >
+              {hasWarnings ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 text-amber-300" /> Fix Warnings to Import
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" /> Import {importRows.length} Employees
+                </>
+              )}
             </Button>
           </div>
           <DataTable

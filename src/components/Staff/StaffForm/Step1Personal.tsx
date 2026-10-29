@@ -124,10 +124,12 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
           </div>
         </LabeledField>
 
-        <LabeledField label="Email Address" error={errors.email?.message}>
+        <LabeledField label="Email Address" required error={errors.email?.message}>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input type="email" name="email" value={formData.email} onChange={onChange}
+              required
+              autoComplete="off"
                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.email ? 'border-destructive ring-destructive/20' : ''}`}
               placeholder="sameer@clinic.com" />
           </div>
@@ -173,6 +175,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 value={formData.password}
                 onChange={onChange}
                 required
+                autoComplete="new-password"
                 className={`w-full px-4 pr-24 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.password ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"
               />
@@ -246,6 +249,7 @@ export function Step1Personal({ formData, onChange, fileInputRef, onImageUpload,
                 value={formData.confirmPassword}
                 onChange={onChange}
                 required
+                autoComplete="new-password"
                 className={`w-full px-4 pr-10 py-2.5 border rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none ${errors.confirmPassword ? 'border-destructive ring-destructive/20' : ''}`}
                 placeholder="••••••••"
               />
