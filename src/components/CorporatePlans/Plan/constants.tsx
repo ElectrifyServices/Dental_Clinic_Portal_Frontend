@@ -79,11 +79,15 @@ export function autoDesc(b: PlanBenefit): string {
     case 'capped_discount': return `${b.value}% discount (max ₹${b.cap?.toLocaleString() || '...'} per visit)`;
     case 'unlimited_consultations': return 'Unlimited diagnostic check-ups and consultations for one year';
     case 'complimentary_session': {
-      const list = (b.treatmentTypes || []).map(t => {
+      // Teeth cleaning + whitening are always included (hardcoded on the
+      // backend for this benefit type regardless of selection) — any extra
+      // Applicable Treatments picked here are additional, appended after.
+      const extra = (b.treatmentTypes || []).map(t => {
         if (t === 'other' && b.customTreatmentText) return b.customTreatmentText;
         return TREATMENT_LABELS[t] || t;
       });
-      return `One complimentary ${list.join(', ') || 'teeth cleaning and whitening'} session`;
+      const base = 'One complimentary teeth cleaning and teeth whitening';
+      return extra.length ? `${base}, ${extra.join(', ')} session` : `${base} session`;
     }
     case 'priority_scheduling': return 'Priority appointment scheduling';
     case 'fluoride_application': return 'Fluoride application for kids, as needed';

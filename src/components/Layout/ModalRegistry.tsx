@@ -1566,33 +1566,83 @@ function ModalRegistryContent() {
           size="md"
           icon={<AlertTriangle className="w-6 h-6 text-amber-500" />}
           footer={
-            <div className="flex flex-col gap-2 w-full">
-              <Button
-                onClick={() => {
-                  setPatientFormType("normal");
-                  setSelectedPatientId("");
-                  setPreFilledPatientData({
-                    name: pendingCheckInAppt?.patientName || "",
-                    phone:
-                      pendingCheckInAppt?.patientPhone ||
-                      pendingCheckInAppt?.phone ||
-                      "",
-                    country_code: pendingCheckInAppt?.country_code || "+91",
-                  });
-                  setActiveModal("patientForm");
-                }}
-                className="w-full py-6"
-              >
-                Register New Patient
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setActiveModal(null)}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-            </div>
+            pendingCheckInAppt?.existingPatientSamePhone ? (
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  onClick={() => {
+                    setParentPatientId(pendingCheckInAppt.existingPatientSamePhone.id);
+                    setPatientFormType("person");
+                    setSelectedPatientId("");
+                    setPreFilledPatientData({
+                      name: pendingCheckInAppt?.patientName || "",
+                      phone:
+                        pendingCheckInAppt?.patientPhone ||
+                        pendingCheckInAppt?.phone ||
+                        "",
+                      country_code: pendingCheckInAppt?.country_code || "+91",
+                    });
+                    setActiveModal("patientForm");
+                  }}
+                  className="w-full py-6"
+                >
+                  Yes, Link to {pendingCheckInAppt.existingPatientSamePhone.name}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPatientFormType("normal");
+                    setSelectedPatientId("");
+                    setPreFilledPatientData({
+                      name: pendingCheckInAppt?.patientName || "",
+                      phone:
+                        pendingCheckInAppt?.patientPhone ||
+                        pendingCheckInAppt?.phone ||
+                        "",
+                      country_code: pendingCheckInAppt?.country_code || "+91",
+                    });
+                    setActiveModal("patientForm");
+                  }}
+                  className="w-full"
+                >
+                  No, Register as New Patient
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveModal(null)}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  onClick={() => {
+                    setPatientFormType("normal");
+                    setSelectedPatientId("");
+                    setPreFilledPatientData({
+                      name: pendingCheckInAppt?.patientName || "",
+                      phone:
+                        pendingCheckInAppt?.patientPhone ||
+                        pendingCheckInAppt?.phone ||
+                        "",
+                      country_code: pendingCheckInAppt?.country_code || "+91",
+                    });
+                    setActiveModal("patientForm");
+                  }}
+                  className="w-full py-6"
+                >
+                  Register New Patient
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveModal(null)}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )
           }
         >
           <p className="text-sm text-muted-foreground text-center px-4">
@@ -1602,6 +1652,15 @@ function ModalRegistryContent() {
             </span>
             . Please register the patient before checking in.
           </p>
+          {pendingCheckInAppt?.existingPatientSamePhone && (
+            <p className="text-sm text-muted-foreground text-center px-4 mt-3">
+              This phone number is already registered to{" "}
+              <span className="font-bold text-foreground">
+                {pendingCheckInAppt.existingPatientSamePhone.name}
+              </span>
+              . Would you like to link this patient to them as a family member?
+            </p>
+          )}
         </Modal>
       )}
 

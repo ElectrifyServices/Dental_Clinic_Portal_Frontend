@@ -61,7 +61,14 @@ export function mapBackendPlanToFrontend(plan: any): CorporatePlan {
         'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
       ];
       const treatmentTypes = (b.clinical_procedures || [])
-        .filter((proc: string) => proc?.toLowerCase() !== "teeth whitening")
+        .filter((proc: string) => {
+          const lower = proc?.toLowerCase();
+          if (lower === "teeth whitening") return false;
+          // Teeth cleaning is always hardcoded in for this benefit type on
+          // the backend, so don't show it as a separately-selected chip.
+          if (b.type === "COMPLIMENTARY_SESSION" && lower === "teeth cleaning") return false;
+          return true;
+        })
         .map((proc: string) => {
           const key = mapProcedureLabelToKey(proc);
           if (!standardKeys.includes(key)) {

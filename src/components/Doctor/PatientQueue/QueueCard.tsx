@@ -10,12 +10,14 @@ import {
   CheckCircle,
   IndianRupee,
   MessageCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 import { toTitleCase } from "@/utils/stringUtils";
 import { getFileUrl } from "@/services/apiClient";
 import { useModal } from "@/contexts/ModalContext";
+import { BenefitUsageModal } from "@/components/CorporatePlans/Employee/BenefitUsageModal";
 
 // Calculate age from DOB
 const calcAge = (dob: string) => {
@@ -83,6 +85,8 @@ export function QueueCard({
   const gender = fullPatient?.gender || "";
   
   const [showAllAllergies, setShowAllAllergies] = useState(false);
+  const [showBenefitUsage, setShowBenefitUsage] = useState(false);
+  const isMembershipPatient = fullPatient?.category === "membership";
   
   const extractNames = (list: any, keyName: string) => {
     if (!list) return [];
@@ -171,6 +175,20 @@ export function QueueCard({
                   {getStatusIcon(patient.status)}
                   {patient.status.replace("_", " ")}
                 </span>
+                {isMembershipPatient && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowBenefitUsage(true);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider border bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer"
+                    title="View membership benefits usage"
+                  >
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    Member
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -356,6 +374,17 @@ export function QueueCard({
           </div>
         </div>
       </CardContent>
+      {isMembershipPatient && showBenefitUsage && (
+        <BenefitUsageModal
+          isOpen={showBenefitUsage}
+          onClose={() => setShowBenefitUsage(false)}
+          employee={{
+            id: fullPatient?.id,
+            name: patient.patientName,
+            phone: patient.patientPhone,
+          }}
+        />
+      )}
     </Card>
   );
 }
