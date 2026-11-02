@@ -143,7 +143,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
             'denture', 'toothache', 'swelling-infection', 'broken-tooth', 'trauma-injury'
           ];
           const treatmentTypes = (b.clinical_procedures || []).filter((proc: string) => {
-            return proc?.toLowerCase() !== "teeth whitening";
+            const lower = proc?.toLowerCase();
+            if (lower === "teeth whitening") return false;
+            // Teeth cleaning is always hardcoded in for this benefit type on
+            // the backend, so don't show it as a separately-selected chip.
+            if (b.type === "COMPLIMENTARY_SESSION" && lower === "teeth cleaning") return false;
+            return true;
           }).map((proc: string) => {
             const key = mapProcedureLabelToKey(proc);
             if (!standardKeys.includes(key)) {
@@ -843,7 +848,12 @@ export function CorporatePlanFormModal({ showForm, setShowForm, editing, onSave 
                       <div className="md:col-span-3">
                         <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Applicable Treatments</Label>
                         <div className="flex flex-wrap gap-2">
-                          {Object.entries(TREATMENT_LABELS).map(([key, label]) => (
+                          {Object.entries(TREATMENT_LABELS)
+                            // Teeth cleaning is already baked into this benefit
+                            // type on the backend, so it shouldn't appear as a
+                            // separately selectable "extra" treatment here.
+                            .filter(([key]) => !(b.type === 'complimentary_session' && key === 'cleaning'))
+                            .map(([key, label]) => (
                             <label
                               key={key}
                               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-bold ${b.treatmentTypes?.includes(key)

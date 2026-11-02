@@ -32,6 +32,7 @@ import {
   Loading,
   Badge,
   Switch,
+  toast,
 } from "@/components/ui";
 import { sanitizeNumericString } from "@/utils/inputUtils";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
@@ -258,6 +259,31 @@ export function InvoiceForm({
     }
     return null;
   }, [membershipCheckData]);
+
+  // Any corporate (COMPANY) enrollment on this patient's member record,
+  // regardless of status (active or cancelled) — used to block the
+  // individual "Membership Plan Suggestions" flow for someone who already
+  // has a corporate Member row, since re-enrolling them in a new individual
+  // plan would collide with that existing row's unique name+phone constraint.
+  const existingCorporateMembership = useMemo(() => {
+    if (!membershipCheckData) return null;
+    const target = (membershipCheckData as any).responseObject?.data ?? (membershipCheckData as any).data ?? membershipCheckData;
+    const memberships = target?.memberships;
+    if (!Array.isArray(memberships)) return null;
+    const corporateEntry = memberships.find(
+      (m: any) => (m.plan?.plan_type || m.plan?.planType) === "COMPANY",
+    );
+    return corporateEntry?.plan ?? null;
+  }, [membershipCheckData]);
+
+  useEffect(() => {
+    if (existingCorporateMembership && !isCorporateBilling) {
+      toast(
+        `This patient already has a membership plan: ${existingCorporateMembership.plan_name || existingCorporateMembership.planName || "Corporate Plan"}`,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingCorporateMembership?.id]);
 
   // GET list of all individual plans
   const { data: rawPlansList } = useCorporatePlansQuery({
@@ -1344,7 +1370,7 @@ export function InvoiceForm({
           </div>
         ) : (
           <>
-            {formData.patientId && !isMembershipCheckLoading && !activeMembership && !isCorporateBilling && (
+            {formData.patientId && !isMembershipCheckLoading && !activeMembership && !isCorporateBilling && !existingCorporateMembership && (
               <div className="flex items-center gap-2 px-1 py-1.5 bg-purple-50/30 border border-purple-100/50 rounded-xl">
                 <input
                   type="checkbox"
@@ -1359,7 +1385,7 @@ export function InvoiceForm({
               </div>
             )}
 
-            {showMembershipSuggestions && formData.patientId && !activeMembership && !isCorporateBilling && (
+            {showMembershipSuggestions && formData.patientId && !activeMembership && !isCorporateBilling && !existingCorporateMembership && (
               <Card className="bg-gradient-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">

@@ -38,6 +38,7 @@ export function PatientForm({
     loading,
     setLoading,
     validationErrors,
+    isFamilyMember,
     matchedCorporateEmp,
     acceptCorporateEmployee,
     handleChange,
@@ -48,7 +49,7 @@ export function PatientForm({
     handleImageUpload,
     handleConsentFormUpload,
     handleDentalFilesUpload,
-  } = usePatientForm(patient);
+  } = usePatientForm(patient, type);
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
@@ -257,7 +258,7 @@ export function PatientForm({
               matchedCorporateEmp={matchedCorporateEmp}
               acceptCorporateEmployee={acceptCorporateEmployee}
               corporatePlans={corporatePlans}
-              type={type}
+              type={isFamilyMember ? "person" : type}
               handleCustomRelation={handleCustomRelation}
               applyCustomRelation={applyCustomRelation}
               handleImageUpload={handleImageUpload}

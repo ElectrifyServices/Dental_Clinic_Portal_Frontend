@@ -21,7 +21,15 @@ const REVERSE_BLOOD_GROUP_MAP: Record<string, string> = {
   "O_NEGATIVE": "O-",
 };
 
-export const usePatientForm = (patient: any) => {
+export const usePatientForm = (patient: any, type?: "normal" | "person") => {
+  // True both for the "Person" (new family member) flow and when editing an
+  // existing patient who is already a family member under a primary patient
+  // (identified by a primary_patient_id set on them) — Relation applies to
+  // both cases, not just brand-new family member registration.
+  const isFamilyMember =
+    type === "person" ||
+    !!(patient?.primary_patient_id || patient?.primaryPatientId || patient?.parentId);
+
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
@@ -203,6 +211,7 @@ export const usePatientForm = (patient: any) => {
         defaultDiscount: patient.discount_percentage !== undefined ? patient.discount_percentage : (patient.defaultDiscount !== undefined ? patient.defaultDiscount : 0),
         isFOC: patient.is_foc || patient.isFOC || false,
         habit: patient.habits || patient.habit || "",
+        relation: patient.relation_type || patient.relationType || patient.relation || "",
       };
 
       for (const [k, v] of Object.entries(merged)) {
@@ -319,6 +328,10 @@ export const usePatientForm = (patient: any) => {
       const email = form.getValues("email");
       if (email && !/\S+@\S+\.\S+/.test(email))
         errors.email = "Please enter a valid email address";
+      if (isFamilyMember) {
+        const relation = form.getValues("relation")?.trim();
+        if (!relation) errors.relation = "Relation is required";
+      }
     }
     if (stepNumber === 2) {
       // Previous Dentist Details validation removed as per request
@@ -459,6 +472,7 @@ export const usePatientForm = (patient: any) => {
     loading,
     setLoading,
     validationErrors,
+    isFamilyMember,
     matchedCorporateEmp,
     acceptCorporateEmployee,
     handleChange,

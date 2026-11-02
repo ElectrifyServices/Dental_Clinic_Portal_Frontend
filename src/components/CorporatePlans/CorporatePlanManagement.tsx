@@ -80,13 +80,28 @@ export function CorporatePlanManagement({
   };
 
   const handleDelete = (id: string) => {
+    const plan = plans.find((p) => p.id === id);
+
+    if (plan && plan.currentMembers > 0) {
+      showConfirm(
+        'Cannot Delete Plan',
+        `"${plan.name}" has ${plan.currentMembers} member${plan.currentMembers === 1 ? '' : 's'} currently enrolled. Remove or transfer ${plan.currentMembers === 1 ? 'that member' : 'those members'} to another plan before deleting it.`,
+        () => {},
+        'Got it',
+        'primary',
+      );
+      return;
+    }
+
     confirmDelete('Delete Plan', 'This plan will be permanently removed. Members on this plan will be affected.', async () => {
       try {
         await deletePlanMutation.mutateAsync({ id });
         onDelete(id);
         showToast('Plan deleted');
       } catch (err: any) {
-        showToast(err?.response?.data?.message || err?.message || 'Failed to delete plan', 'error');
+        // Backend guard (defense in depth): a member may have been enrolled
+        // between the list load and this click.
+        showToast(err?.response?.data?.responseStatusList?.statusList?.[0]?.statusDesc || err?.response?.data?.message || err?.message || 'Failed to delete plan', 'error');
       }
     });
   };

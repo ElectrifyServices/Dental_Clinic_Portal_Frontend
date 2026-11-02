@@ -70,7 +70,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const nameFieldRef = useRef<HTMLDivElement>(null);
+  const phoneFieldRef = useRef<HTMLDivElement>(null);
 
   const { phoneError, handlePhoneChange: phoneValidationChange, clearPhoneError, countryIso, maxLength } = usePhoneValidation({
     dialingCode: formData.country_code || "+91",
@@ -126,7 +127,10 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const insideName = nameFieldRef.current?.contains(target);
+      const insidePhone = phoneFieldRef.current?.contains(target);
+      if (!insideName && !insidePhone) {
         setFocusedField(null);
       }
     };
@@ -425,7 +429,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                     </span>
                   </p>
                   <p className="text-xs text-primary-foreground/80 truncate">
-                    {plan?.companyName} · ID: {plan?.enrollmentId}
+                    {plan?.companyName}
                   </p>
                 </div>
                 {plan && (
@@ -465,7 +469,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
               ) : (
                 <CardContent className="px-4 py-3">
                   <p className="text-xs text-amber-700 font-medium">
-                    Employee found but no active plan assigned. Click to fill available info.
+                    We found this person, but they don't have an active membership plan right now. Click to fill in their available details.
                   </p>
                 </CardContent>
               )}
@@ -473,8 +477,8 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           );
         })()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative" ref={dropdownRef}>
-        <div className="space-y-1 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+        <div className="space-y-1 relative" ref={nameFieldRef}>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <User className="w-4 h-4 inline mr-2" />
             Full Name <span className="text-destructive">*</span>
@@ -507,7 +511,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
           )}
         </div>
 
-        <div className="space-y-1 relative">
+        <div className="space-y-1 relative" ref={phoneFieldRef}>
           <Label className="block text-sm font-semibold text-muted-foreground mb-1">
             <Phone className="w-4 h-4 inline mr-2" />
             Phone Number <span className="text-destructive">*</span>
@@ -641,7 +645,7 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
         {type === "person" && (
           <div>
             <Label className="block text-sm font-semibold text-muted-foreground mb-1">
-              Relation
+              Relation <span className="text-destructive">*</span>
             </Label>
             <Select
               value={formData.relation || ""}
@@ -653,7 +657,9 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                 }));
               }}
             >
-              <SelectTrigger className="w-full h-10 px-4 border border-input rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between">
+              <SelectTrigger className={`w-full h-10 px-4 border rounded-md focus:ring-2 focus:ring-primary bg-card text-sm text-left flex items-center justify-between ${
+                validationErrors.relation ? "border-destructive bg-destructive/5" : "border-input"
+              }`}>
                 <SelectValue placeholder="Select Relation" />
               </SelectTrigger>
               <SelectContent>
@@ -694,6 +700,12 @@ export const Step1BasicInfo: React.FC<Step1Props> = ({
                   →
                 </Button>
               </div>
+            )}
+            {validationErrors.relation && (
+              <p className="text-destructive text-xs mt-1 flex items-center">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {validationErrors.relation}
+              </p>
             )}
           </div>
         )}

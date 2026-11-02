@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { X, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Download, AlertTriangle, CheckCircle, PartyPopper } from 'lucide-react';
 import { FileUploadZone, DataTable, Badge, PlanBadge, Button } from '../../ui';
+import { Dialog, DialogContent } from '../../ui/Dialog';
 import { CorporateEmployee, CorporatePlan } from '../../../types';
 import { parseXlsx, downloadTemplate } from './importUtils';
 import { useBulkImportEmployeeMutation } from '../../../hooks/corporate/useBulkImportEmployeeMutation';
@@ -17,6 +18,8 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
   const [importRows, setImportRows] = useState<Partial<CorporateEmployee>[]>([]);
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
+  const [successCount, setSuccessCount] = useState<number | null>(null);
+  const pendingSavedRef = useRef<CorporateEmployee[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const bulkImportMutation = useBulkImportEmployeeMutation();
@@ -72,10 +75,10 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
       queryClient.invalidateQueries({ queryKey: ["member"] });
       queryClient.invalidateQueries({ queryKey: ["companies"] });
 
-      onBulkSave(valid as CorporateEmployee[]);
+      pendingSavedRef.current = valid as CorporateEmployee[];
       setImportRows([]);
       setImportErrors([]);
-      setTab('list');
+      setSuccessCount(valid.length);
     } catch (err: any) {
       setImportErrors(prev => [
         err?.response?.data?.message || err?.message || "Failed to bulk import employees on backend",
@@ -180,6 +183,43 @@ export function EmployeeImportTab({ plans, activePlans, setTab, onBulkSave }: Em
           />
         </div>
       )}
+
+      <Dialog open={successCount !== null} onOpenChange={(open) => {
+        if (!open) {
+          setSuccessCount(null);
+          const saved = pendingSavedRef.current;
+          pendingSavedRef.current = null;
+          if (saved) onBulkSave(saved);
+        }
+      }}>
+        <DialogContent className="max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+              <CheckCircle className="w-9 h-9 text-emerald-600" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-foreground flex items-center justify-center gap-2">
+                Import Successful <PartyPopper className="w-5 h-5 text-amber-500" />
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {successCount} employee{successCount === 1 ? '' : 's'} {successCount === 1 ? 'has' : 'have'} been successfully imported and added to the membership.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setSuccessCount(null);
+                const saved = pendingSavedRef.current;
+                pendingSavedRef.current = null;
+                if (saved) onBulkSave(saved);
+              }}
+              variant="default"
+              className="w-full gap-2"
+            >
+              <CheckCircle className="w-4 h-4" /> Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

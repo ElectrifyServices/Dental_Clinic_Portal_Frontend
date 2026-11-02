@@ -191,6 +191,21 @@ export const AppointmentsPage: React.FC = () => {
         setActiveModal("patientForm");
         toast.success("Please verify patient details before check-in");
       } else {
+        const finalPhone = (responseData?.patient_phone || appt.patientPhone || "").trim();
+        const finalName = (responseData?.patient_name || appt.patientName || "").toLowerCase().trim();
+        const samePhoneMatch = finalPhone
+          ? patients.find(
+              (p) =>
+                (p.phone || "").trim() === finalPhone &&
+                (p.name || "").toLowerCase().trim() !== finalName,
+            )
+          : undefined;
+        setPendingCheckInAppt((prev) => ({
+          ...prev,
+          existingPatientSamePhone: samePhoneMatch
+            ? { id: samePhoneMatch.id, name: samePhoneMatch.name, phone: samePhoneMatch.phone }
+            : undefined,
+        }));
         setActiveModal("patientNotFound");
       }
     } catch (err) {
@@ -260,7 +275,19 @@ export const AppointmentsPage: React.FC = () => {
         
         toast.success("Patient checked in directly");
       } else {
-        setPendingCheckInAppt(appt);
+        const samePhoneMatch = sPhone
+          ? patients.find(
+              (p) =>
+                (p.phone || "").trim() === sPhone &&
+                (p.name || "").toLowerCase().trim() !== sName,
+            )
+          : undefined;
+        setPendingCheckInAppt({
+          ...appt,
+          existingPatientSamePhone: samePhoneMatch
+            ? { id: samePhoneMatch.id, name: samePhoneMatch.name, phone: samePhoneMatch.phone }
+            : undefined,
+        });
         setActiveModal("patientNotFound");
       }
     } catch (err) {

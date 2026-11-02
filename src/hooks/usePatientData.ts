@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePatientQuery } from './patients/usePatientQuery';
 import { useDeletePatientMutation } from './patients/useDeletePatientMutation';
@@ -37,8 +37,11 @@ export function usePatientData(params?: { enabled?: boolean }) {
 
   const debouncedSearch = useDebounce(patientSearch, 500);
 
-  // Reset page to 1 when filters change
-  useMemo(() => {
+  // Reset page to 1 when filters change — useEffect, not useMemo: useMemo is
+  // only a performance optimization and isn't guaranteed to re-run on every
+  // dependency change, so the page reset could silently be skipped, leaving
+  // stale pagination (e.g. "page 2 of 4") showing over an empty filtered list.
+  useEffect(() => {
     setPatientPage(1);
   }, [debouncedSearch, patientStatus, patientCategory]);
 

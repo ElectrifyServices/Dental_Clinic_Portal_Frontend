@@ -136,7 +136,16 @@ export function CorporatePlanCard({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onDelete(plan.id)}
-                    className="cursor-pointer text-destructive focus:text-destructive font-bold text-xs p-2.5 rounded-xl"
+                    title={
+                      plan.currentMembers > 0
+                        ? `Cannot delete — ${plan.currentMembers} member${plan.currentMembers === 1 ? "" : "s"} enrolled`
+                        : undefined
+                    }
+                    className={
+                      plan.currentMembers > 0
+                        ? "cursor-pointer text-muted-foreground font-bold text-xs p-2.5 rounded-xl"
+                        : "cursor-pointer text-destructive focus:text-destructive font-bold text-xs p-2.5 rounded-xl"
+                    }
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
                   </DropdownMenuItem>

@@ -30,12 +30,23 @@ export const exportPatientReport = async (
 
   if (!patient) return;
 
+  const formatDate = (value: string | number | Date | null | undefined, opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }) => {
+    if (!value) return 'N/A';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-IN', opts);
+  };
+
   // 1. Fetch appointments
   let patientAppointments: any[] = [];
   try {
-    const aptRes = await apiClient.request({ url: `/patient/appointment-history/${patientId}`, method: 'get' });
+    const aptRes = await apiClient.request({
+      url: `/patient/appointment-history/${patientId}`,
+      method: 'post',
+      data: { limit: 100 },
+    });
     const parsed = parseApiResponse(aptRes.data);
-    const rawList = parsed.data || [];
+    const rawList = parsed.data?.history || [];
     patientAppointments = rawList.map((a: any) => ({
       ...a,
       id: a.id,
@@ -62,18 +73,17 @@ export const exportPatientReport = async (
   let patientTreatments: any[] = [];
   try {
     const treatRes = await apiClient.request({
-      url: `treatment/patient/list`,
+      url: `treatment/patient/${patientId}/list`,
       method: 'post',
-      data: { filters: { patientId: [patientId] }, all: true }
     });
     const parsed = parseApiResponse(treatRes.data);
     const rawList = parsed.data?.data || parsed.data || [];
     patientTreatments = rawList.map((t: any) => ({
       ...t,
       id: t.id,
-      name: t.procedure || t.name || "",
+      name: t.procedure || "",
       date: t.treatment_date ? t.treatment_date.split('T')[0] : "",
-      notes: t.notes || "",
+      notes: t.clinical_notes || t.notes || "",
       cost: t.est_cost || t.cost || 0,
       status: (t.status || "planned").toLowerCase(),
       patientId: t.patient_id,
@@ -305,7 +315,7 @@ export const exportPatientReport = async (
                   </div>
                   <div class="item">
                     <div class="label">Date of Birth</div>
-                    <div class="value">${patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                    <div class="value">${formatDate(patient.dateOfBirth, { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                   </div>
                   <div class="item">
                     <div class="label">Gender</div>
@@ -360,8 +370,8 @@ export const exportPatientReport = async (
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .map((a) => `
                     <tr>
-                      <td>${new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                      <td>${a.time}</td>
+                      <td>${formatDate(a.date)}</td>
+                      <td>${a.time || 'N/A'}</td>
                       <td>${a.treatment || a.type || 'General Consultation'}</td>
                       <td style="font-weight:600; color: ${a.status === 'COMPLETED' ? '#16a34a' : '#2563eb'}">${a.status.toUpperCase()}</td>
                     </tr>
@@ -391,7 +401,7 @@ export const exportPatientReport = async (
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .map((t) => `
                     <tr>
-                      <td>${new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                      <td>${formatDate(t.date)}</td>
                       <td>${t.name || t.treatmentName || 'N/A'}</td>
                       <td>${t.notes || '—'}</td>
                       <td style="font-weight:600;">${(t.status || 'completed').toUpperCase()}</td>
@@ -412,7 +422,7 @@ export const exportPatientReport = async (
                   <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                       <span style="font-weight: 700; font-size: 11px;">${p.treatment}</span>
-                      <span style="color: #64748b; font-size: 10px;">${new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span style="color: #64748b; font-size: 10px;">${formatDate(p.date, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     </div>
                     <table class="data-table" style="margin: 0;">
                       <thead>
@@ -456,7 +466,7 @@ export const exportPatientReport = async (
                     ${patientInvoices.map((inv) => `
                     <tr>
                       <td style="font-weight:600;">${inv.invoice_number || inv.id}</td>
-                      <td>${new Date(inv.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                      <td>${formatDate(inv.date)}</td>
                       <td>₹${(inv.total || inv.amount || 0).toLocaleString('en-IN')}</td>
                       <td style="font-weight:600; color: ${inv.status === 'paid' ? '#16a34a' : '#dc2626'}">${(inv.status || '').toUpperCase()}</td>
                     </tr>
